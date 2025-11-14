@@ -23,6 +23,109 @@ export default function DocumentContent({
 }) {
   const [showComments, setShowComments] = useState({});
   const queryClient = useQueryClient();
+
+  // Auto-accept suggestions that meet threshold
+  React.useEffect(() => {
+    const checkAndAcceptSuggestions = async () => {
+      if (!document || !suggestions.length) return;
+      
+      const pendingSuggestions = suggestions.filter(s => s.status === 'pending');
+      
+      for (const suggestion of pendingSuggestions) {
+        const totalVotes = (suggestion.proVotes || 0) + (suggestion.conVotes || 0);
+        if (totalVotes > 0) {
+          const consensus = suggestion.proVotes / totalVotes;
+          
+          if (consensus >= document.threshold) {
+            try {
+              // Handle edit_section type
+              if (suggestion.type === 'edit_section') {
+                const section = sections.find(s => s.id === suggestion.sectionId);
+                if (section) {
+                  const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
+                  const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
+                  
+                  await base44.entities.DocumentVersion.create({
+                    documentId: suggestion.documentId,
+                    sectionId: section.id,
+                    content: section.content,
+                    changeDescription: `לפני: ${suggestion.title}`,
+                    version: nextVersion,
+                    changeType: 'suggestion_accepted',
+                    suggestionId: suggestion.id
+                  });
+                  
+                  await base44.entities.Section.update(section.id, {
+                    content: suggestion.newContent,
+                    lastEditedBy: section.created_by
+                  });
+                  
+                  await base44.entities.DocumentVersion.create({
+                    documentId: suggestion.documentId,
+                    sectionId: section.id,
+                    content: suggestion.newContent,
+                    changeDescription: suggestion.title,
+                    version: nextVersion + 1,
+                    changeType: 'suggestion_accepted',
+                    suggestionId: suggestion.id
+                  });
+                }
+              } 
+              // Handle new_section type
+              else if (suggestion.type === 'new_section') {
+                const allSections = await base44.entities.Section.filter({ 
+                  documentId: suggestion.documentId,
+                  topicId: suggestion.topicId 
+                }, 'order');
+                
+                let newOrder;
+                if (suggestion.insertPosition !== undefined && suggestion.insertPosition !== null) {
+                  const sectionsToUpdate = allSections.filter(s => s.order >= suggestion.insertPosition);
+                  for (const sec of sectionsToUpdate) {
+                    await base44.entities.Section.update(sec.id, { order: sec.order + 1 });
+                  }
+                  newOrder = suggestion.insertPosition;
+                } else {
+                  const maxOrder = allSections.length > 0 ? Math.max(...allSections.map(s => s.order)) : -1;
+                  newOrder = maxOrder + 1;
+                }
+                
+                const newSection = await base44.entities.Section.create({
+                  documentId: suggestion.documentId,
+                  topicId: suggestion.topicId,
+                  content: suggestion.newContent,
+                  order: newOrder,
+                  lastEditedBy: suggestion.created_by
+                });
+                
+                await base44.entities.DocumentVersion.create({
+                  documentId: suggestion.documentId,
+                  sectionId: newSection.id,
+                  content: suggestion.newContent,
+                  changeDescription: suggestion.title,
+                  version: 1,
+                  changeType: 'section_created',
+                  suggestionId: suggestion.id
+                });
+              }
+
+              await base44.entities.Suggestion.update(suggestion.id, { 
+                status: 'accepted',
+                suggestionConsensus: consensus 
+              });
+            } catch (error) {
+              console.error('Error auto-accepting suggestion:', error);
+            }
+          }
+        }
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
+      queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
+    };
+    
+    checkAndAcceptSuggestions();
+  }, [suggestions, document, sections, queryClient]);
   
   const { data: users } = useQuery({
     queryKey: ['users'],
