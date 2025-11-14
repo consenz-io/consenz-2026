@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
@@ -19,8 +19,24 @@ export default function DocumentView() {
   const { t, isRTL } = useLanguage();
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
+  const scrollToSectionId = searchParams.get('scrollTo');
   const [showCreateSuggestion, setShowCreateSuggestion] = useState(false);
   const [editingSection, setEditingSection] = useState(null);
+
+  useEffect(() => {
+    if (scrollToSectionId && sections.length > 0) {
+      setTimeout(() => {
+        const element = document.getElementById(`section-${scrollToSectionId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+          setTimeout(() => {
+            element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+          }, 2000);
+        }
+      }, 300);
+    }
+  }, [scrollToSectionId, sections]);
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],

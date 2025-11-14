@@ -115,6 +115,7 @@ const translations = {
     adminAccessRequired: "Admin access required",
     version: "Version",
     restoredFromVersion: "Restored from version {version}",
+    viewInDocument: "View in Document",
   },
   he: {
     // ניווט
@@ -230,6 +231,7 @@ const translations = {
     adminAccessRequired: "נדרשת הרשאת מנהל",
     version: "גרסה",
     restoredFromVersion: "שוחזר מגרסה {version}",
+    viewInDocument: "צפה במסמך",
   },
   ar: {
     // التنقل
@@ -344,6 +346,7 @@ const translations = {
     adminAccessRequired: "مطلوب وصول المسؤول",
     version: "إصدار",
     restoredFromVersion: "تم الاستعادة من الإصدار {version}",
+    viewInDocument: "عرض في المستند",
   }
 };
 

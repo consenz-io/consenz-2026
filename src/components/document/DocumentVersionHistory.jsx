@@ -1,8 +1,10 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RotateCcw, Clock } from "lucide-react";
+import { RotateCcw, Clock, ExternalLink } from "lucide-react";
 import SectionDiff from "./SectionDiff";
 import { useLanguage } from "@/components/LanguageContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -64,7 +66,15 @@ export default function DocumentVersionHistory({
 
   return (
     <div className="space-y-4">
-      <h2 className={`text-xl font-bold text-slate-900 ${isRTL ? 'text-right' : 'text-left'}`}>{sectionName}</h2>
+      <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <h2 className={`text-xl font-bold text-slate-900 ${isRTL ? 'text-right' : 'text-left'}`}>{sectionName}</h2>
+        <Link to={`${createPageUrl("DocumentView")}?id=${documentId}&scrollTo=${sectionId}`}>
+          <Button variant="ghost" size="sm">
+            <ExternalLink className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+            {t('viewInDocument')}
+          </Button>
+        </Link>
+      </div>
       {sortedVersions.map((version, index) => {
         const previousVersion = sortedVersions[index + 1];
         return (
