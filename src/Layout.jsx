@@ -106,14 +106,14 @@ export default function Layout({ children, currentPageName }) {
             {user && (
               <SidebarGroup>
                 <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
-                  Quick Actions
+                  {t('newDocument')}
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <div className="px-3 py-2">
                     <Link to={createPageUrl("CreateDocument")}>
                       <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                        <Plus className="w-4 h-4 mr-2" />
-                        New Document
+                        <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('newDocument')}
                       </Button>
                     </Link>
                   </div>
@@ -124,18 +124,37 @@ export default function Layout({ children, currentPageName }) {
             {user && (
               <SidebarGroup>
                 <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
-                  Your Stats
+                  {t('yourStats')}
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <div className="px-3 py-2 space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">Suggestions</span>
+                      <span className="text-slate-600">{t('suggestions')}</span>
                       <span className="font-semibold">{user.suggestionsCreated || 0}</span>
                     </div>
                   </div>
                 </SidebarGroupContent>
               </SidebarGroup>
             )}
+
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
+                Language
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <div className="px-3 py-2 space-y-2">
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="w-full p-2 border border-slate-200 rounded-lg text-sm"
+                  >
+                    <option value="en">English</option>
+                    <option value="he">עברית</option>
+                    <option value="ar">العربية</option>
+                  </select>
+                </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
           </SidebarContent>
 
           <SidebarFooter className="border-t border-slate-200 p-4">
@@ -160,8 +179,8 @@ export default function Layout({ children, currentPageName }) {
                   onClick={handleLogout}
                   className="w-full"
                 >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
+                  <LogOut className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t('logout')}
                 </Button>
               </div>
             ) : (
@@ -169,7 +188,7 @@ export default function Layout({ children, currentPageName }) {
                 onClick={() => base44.auth.redirectToLogin()}
                 className="w-full"
               >
-                Sign In
+                {t('signIn')}
               </Button>
             )}
           </SidebarFooter>

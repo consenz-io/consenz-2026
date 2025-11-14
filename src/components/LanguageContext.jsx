@@ -72,6 +72,7 @@ const translations = {
     insertSectionHere: "Insert section here",
     votingEnded: "Voting ended",
     remaining: "remaining",
+    language: "Language",
   },
   he: {
     // ניווט
@@ -144,6 +145,7 @@ const translations = {
     insertSectionHere: "הוסף סעיף כאן",
     votingEnded: "ההצבעה הסתיימה",
     remaining: "נותרו",
+    language: "שפה",
   },
   ar: {
     // التنقل
@@ -216,6 +218,7 @@ const translations = {
     insertSectionHere: "أدخل قسم هنا",
     votingEnded: "انتهى التصويت",
     remaining: "متبقية",
+    language: "اللغة",
   }
 };
 
