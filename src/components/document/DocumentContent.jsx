@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +20,17 @@ export default function DocumentContent({
   isAdmin,
   user 
 }) {
+  const { data: users } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => base44.entities.User.list(),
+    initialData: [],
+  });
+
+  const getUserName = (email) => {
+    const user = users.find(u => u.email === email);
+    return user?.full_name || email;
+  };
+
   const getSectionsForTopic = (topicId) => {
     return sections.filter(s => s.topicId === topicId).sort((a, b) => a.order - b.order);
   };
@@ -156,7 +169,7 @@ export default function DocumentContent({
                                     <span className="font-medium">{suggestion.conVotes || 0}</span>
                                   </div>
                                   <Badge variant="outline" className="text-xs">
-                                    By {suggestion.created_by}
+                                    By {getUserName(suggestion.created_by)}
                                   </Badge>
                                   <Button
                                     variant="ghost"

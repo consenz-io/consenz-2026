@@ -1,13 +1,24 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, ThumbsUp, ThumbsDown, MessageSquare, ArrowRight } from "lucide-react";
 
 export default function SuggestionsList({ suggestions, document, user, isAdmin }) {
+  const { data: users } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => base44.entities.User.list(),
+    initialData: [],
+  });
+
+  const getUserName = (email) => {
+    const user = users.find(u => u.email === email);
+    return user?.full_name || email;
+  };
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending':

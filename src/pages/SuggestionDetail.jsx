@@ -96,6 +96,17 @@ export default function SuggestionDetail() {
     enabled: !!suggestionId,
   });
 
+  const { data: users } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => base44.entities.User.list(),
+    initialData: [],
+  });
+
+  const getUserName = (email) => {
+    const user = users.find(u => u.email === email);
+    return user?.full_name || email;
+  };
+
   const voteMutation = useMutation({
     mutationFn: async (vote) => {
       if (!user) throw new Error("Must be logged in to vote");
@@ -400,7 +411,7 @@ export default function SuggestionDetail() {
                   <div key={arg.id} className="p-3 bg-green-50 border border-green-200 rounded-lg">
                     <p className="text-sm text-slate-700">{arg.content}</p>
                     <div className="text-xs text-slate-500 mt-2">
-                      By {arg.created_by} • {new Date(arg.created_date).toLocaleDateString()}
+                      By {getUserName(arg.created_by)} • {new Date(arg.created_date).toLocaleDateString()}
                     </div>
                   </div>
                 ))
@@ -459,7 +470,7 @@ export default function SuggestionDetail() {
                   <div key={arg.id} className="p-3 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-sm text-slate-700">{arg.content}</p>
                     <div className="text-xs text-slate-500 mt-2">
-                      By {arg.created_by} • {new Date(arg.created_date).toLocaleDateString()}
+                      By {getUserName(arg.created_by)} • {new Date(arg.created_date).toLocaleDateString()}
                     </div>
                   </div>
                 ))

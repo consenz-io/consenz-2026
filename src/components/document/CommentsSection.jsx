@@ -23,6 +23,17 @@ export default function CommentsSection({ entityType, entityId, user }) {
     initialData: [],
   });
 
+  const { data: users } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => base44.entities.User.list(),
+    initialData: [],
+  });
+
+  const getUserName = (email) => {
+    const user = users.find(u => u.email === email);
+    return user?.full_name || email;
+  };
+
   const createCommentMutation = useMutation({
     mutationFn: async (data) => {
       return await base44.entities.Comment.create(data);
@@ -64,13 +75,13 @@ export default function CommentsSection({ entityType, entityId, user }) {
           <div className="flex gap-3">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
               <span className="text-white font-medium text-sm">
-                {comment.created_by?.charAt(0)?.toUpperCase() || 'U'}
+                {getUserName(comment.created_by)?.charAt(0)?.toUpperCase() || 'U'}
               </span>
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-medium text-sm text-slate-900">
-                  {comment.created_by}
+                  {getUserName(comment.created_by)}
                 </span>
                 <span className="text-xs text-slate-500">
                   {new Date(comment.created_date).toLocaleDateString('he-IL', {
@@ -127,7 +138,7 @@ export default function CommentsSection({ entityType, entityId, user }) {
           {replyTo && (
             <div className="flex items-center gap-2 text-sm text-slate-600 bg-blue-50 p-2 rounded">
               <Reply className="w-4 h-4" />
-              <span>משיב ל-{replyTo.created_by}</span>
+              <span>משיב ל-{getUserName(replyTo.created_by)}</span>
               <Button
                 type="button"
                 variant="ghost"
