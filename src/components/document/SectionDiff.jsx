@@ -2,32 +2,92 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 
 export default function SectionDiff({ originalContent, newContent }) {
-  // Simple word-level diff highlighting
-  const getContentWords = (html) => {
+  const getTextContent = (html) => {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
-    return tempDiv.textContent.split(/\s+/);
+    return tempDiv.textContent || '';
   };
 
-  const originalWords = getContentWords(originalContent);
-  const newWords = getContentWords(newContent);
+  const originalText = getTextContent(originalContent);
+  const newText = getTextContent(newContent);
+
+  const computeDiff = () => {
+    const originalWords = originalText.split(/(\s+)/);
+    const newWords = newText.split(/(\s+)/);
+    
+    const result = [];
+    let i = 0, j = 0;
+
+    while (i < originalWords.length || j < newWords.length) {
+      if (i >= originalWords.length) {
+        result.push({ type: 'added', text: newWords.slice(j).join('') });
+        break;
+      }
+      if (j >= newWords.length) {
+        result.push({ type: 'removed', text: originalWords.slice(i).join('') });
+        break;
+      }
+
+      if (originalWords[i] === newWords[j]) {
+        result.push({ type: 'unchanged', text: originalWords[i] });
+        i++;
+        j++;
+      } else {
+        let foundMatch = false;
+        for (let k = j + 1; k < Math.min(j + 10, newWords.length); k++) {
+          if (originalWords[i] === newWords[k]) {
+            result.push({ type: 'added', text: newWords.slice(j, k).join('') });
+            j = k;
+            foundMatch = true;
+            break;
+          }
+        }
+        if (!foundMatch) {
+          for (let k = i + 1; k < Math.min(i + 10, originalWords.length); k++) {
+            if (newWords[j] === originalWords[k]) {
+              result.push({ type: 'removed', text: originalWords.slice(i, k).join('') });
+              i = k;
+              foundMatch = true;
+              break;
+            }
+          }
+        }
+        if (!foundMatch) {
+          result.push({ type: 'removed', text: originalWords[i] });
+          result.push({ type: 'added', text: newWords[j] });
+          i++;
+          j++;
+        }
+      }
+    }
+
+    return result;
+  };
+
+  const diff = computeDiff();
 
   return (
-    <div className="grid md:grid-cols-2 gap-4">
-      <Card className="p-4 bg-red-50 border-red-200">
-        <div className="text-sm font-semibold text-red-700 mb-2">Original</div>
-        <div 
-          className="prose prose-sm max-w-none text-slate-700"
-          dangerouslySetInnerHTML={{ __html: originalContent }}
-        />
-      </Card>
-      <Card className="p-4 bg-green-50 border-green-200">
-        <div className="text-sm font-semibold text-green-700 mb-2">Proposed</div>
-        <div 
-          className="prose prose-sm max-w-none text-slate-700"
-          dangerouslySetInnerHTML={{ __html: newContent }}
-        />
-      </Card>
-    </div>
+    <Card className="p-4 bg-slate-50 border-slate-200">
+      <div className="text-sm font-semibold text-slate-700 mb-3">Proposed Changes</div>
+      <div className="prose prose-sm max-w-none leading-relaxed">
+        {diff.map((part, idx) => {
+          if (part.type === 'removed') {
+            return (
+              <span key={idx} className="bg-red-100 text-red-800 line-through px-1 rounded">
+                {part.text}
+              </span>
+            );
+          } else if (part.type === 'added') {
+            return (
+              <span key={idx} className="bg-green-100 text-green-800 px-1 rounded font-medium">
+                {part.text}
+              </span>
+            );
+          } else {
+            return <span key={idx}>{part.text}</span>;
+          }
+        })}
+      </div>
+    </Card>
   );
 }
