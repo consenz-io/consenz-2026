@@ -66,6 +66,7 @@ export default function CreateSuggestionModal({
         timerEndsAt: timerEndsAt.toISOString(),
         proVotes: 0,
         conVotes: 0,
+        insertPosition: editingSection?.insertPosition,
       });
 
       await base44.auth.updateMe({

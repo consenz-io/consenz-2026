@@ -68,8 +68,8 @@ export default function DocumentView() {
     setShowCreateSuggestion(true);
   };
 
-  const handleNewSection = (topicId) => {
-    setEditingSection({ topicId, isNew: true });
+  const handleNewSection = (topicId, insertPosition) => {
+    setEditingSection({ topicId, isNew: true, insertPosition });
     setShowCreateSuggestion(true);
   };
 

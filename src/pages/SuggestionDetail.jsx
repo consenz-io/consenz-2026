@@ -209,14 +209,27 @@ export default function SuggestionDetail() {
         const sections = await base44.entities.Section.filter({ 
           documentId: suggestion.documentId,
           topicId: suggestion.topicId 
-        });
-        const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order)) : -1;
+        }, 'order');
+        
+        let newOrder;
+        if (suggestion.insertPosition !== undefined && suggestion.insertPosition !== null) {
+          // Insert at specific position - update orders of sections after this position
+          const sectionsToUpdate = sections.filter(s => s.order >= suggestion.insertPosition);
+          for (const section of sectionsToUpdate) {
+            await base44.entities.Section.update(section.id, { order: section.order + 1 });
+          }
+          newOrder = suggestion.insertPosition;
+        } else {
+          // Insert at end
+          const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order)) : -1;
+          newOrder = maxOrder + 1;
+        }
         
         const newSection = await base44.entities.Section.create({
           documentId: suggestion.documentId,
           topicId: suggestion.topicId,
           content: suggestion.newContent,
-          order: maxOrder + 1,
+          order: newOrder,
           lastEditedBy: user.id
         });
         
