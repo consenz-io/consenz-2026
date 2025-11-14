@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { FileText, Home, User, Settings, LogOut, Plus, Globe } from "lucide-react";
-import { useLanguage } from "@/components/LanguageContext";
+import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
 import {
   Sidebar,
   SidebarContent,
@@ -21,7 +21,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-export default function Layout({ children, currentPageName }) {
+function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
   const queryClient = useQueryClient();
   const { language, setLanguage, t, isRTL } = useLanguage();
@@ -208,5 +208,13 @@ export default function Layout({ children, currentPageName }) {
         </main>
       </div>
     </SidebarProvider>
+  );
+}
+
+export default function Layout({ children, currentPageName }) {
+  return (
+    <LanguageProvider>
+      <LayoutContent children={children} currentPageName={currentPageName} />
+    </LanguageProvider>
   );
 }
