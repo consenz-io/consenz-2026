@@ -10,6 +10,8 @@ import { ArrowLeft, History, GitCompare, RotateCcw, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import SectionDiff from "../components/document/SectionDiff";
+import DocumentVersionHistory from "../components/document/DocumentVersionHistory";
+import { useLanguage } from "@/components/LanguageContext";
 
 export default function DocumentVersions() {
   const [searchParams] = useSearchParams();
@@ -18,6 +20,7 @@ export default function DocumentVersions() {
   const [selectedVersions, setSelectedVersions] = useState([]);
   const [error, setError] = useState(null);
   const queryClient = useQueryClient();
+  const { t, isRTL } = useLanguage();
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
@@ -124,6 +127,12 @@ export default function DocumentVersions() {
     return `Section ${sectionIndex + 1}`;
   };
 
+  const groupedVersions = versions.reduce((acc, version) => {
+    acc[version.sectionId] = acc[version.sectionId] || [];
+    acc[version.sectionId].push(version);
+    return acc;
+  }, {});
+
   if (docLoading || versionsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
@@ -168,8 +177,10 @@ export default function DocumentVersions() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">היסטוריית גרסאות</h1>
-              <p className="text-slate-600 mt-1">{document.title}</p>
+              <h1 className={`text-3xl font-bold text-slate-900 ${isRTL ? 'text-right' : 'text-left'}`}>
+                {t('versionHistory')}
+              </h1>
+              <p className={`text-slate-600 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>{document.title}</p>
             </div>
           </div>
           <Button
@@ -179,8 +190,8 @@ export default function DocumentVersions() {
               setSelectedVersions([]);
             }}
           >
-            <GitCompare className="w-4 h-4 mr-2" />
-            {compareMode ? 'בטל השוואה' : 'השווה גרסאות'}
+            <GitCompare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+            {compareMode ? t('cancelComparison') : t('compareVersions')}
           </Button>
         </div>
 
@@ -193,25 +204,26 @@ export default function DocumentVersions() {
         {compareMode && selectedVersions.length === 2 && (
           <Card className="bg-white border-blue-200">
             <CardHeader>
-              <CardTitle>השוואת גרסאות</CardTitle>
+              <CardTitle>{t('compareVersions')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <Badge className="mb-2">גרסה {selectedVersions[0].version}</Badge>
+                <div className={`grid grid-cols-2 gap-4 mb-4 ${isRTL ? 'grid-flow-col-dense' : ''}`}>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                    <Badge className="mb-2">{t('version')} {selectedVersions[0].version}</Badge>
                     <p className="text-sm text-slate-600">
-                      {new Date(selectedVersions[0].created_date).toLocaleString('he-IL')}
+                      {new Date(selectedVersions[0].created_date).toLocaleString(isRTL ? 'he-IL' : 'en-US')}
                     </p>
                   </div>
-                  <div>
-                    <Badge className="mb-2">גרסה {selectedVersions[1].version}</Badge>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                    <Badge className="mb-2">{t('version')} {selectedVersions[1].version}</Badge>
                     <p className="text-sm text-slate-600">
-                      {new Date(selectedVersions[1].created_date).toLocaleString('he-IL')}
+                      {new Date(selectedVersions[1].created_date).toLocaleString(isRTL ? 'he-IL' : 'en-US')}
                     </p>
                   </div>
                 </div>
                 <SectionDiff
+                  key={`compare-${selectedVersions[0].id}-${selectedVersions[1].id}`}
                   originalContent={selectedVersions[0].content}
                   newContent={selectedVersions[1].content}
                 />
@@ -220,77 +232,36 @@ export default function DocumentVersions() {
           </Card>
         )}
 
-        <div className="space-y-4">
+        <div className="space-y-8">
           {versions.length === 0 ? (
             <Card className="bg-white border-slate-200">
               <CardContent className="p-12 text-center">
                 <History className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">אין גרסאות קודמות</h3>
-                <p className="text-slate-600">שינויים במסמך ישמרו אוטומטית כגרסאות</p>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('noPreviousVersions')}</h3>
+                <p className="text-slate-600">{t('documentChangesSavedAutomatically')}</p>
               </CardContent>
             </Card>
           ) : (
-            versions.map((version, index) => (
-              <Card
-                key={version.id}
-                className={`bg-white border-slate-200 hover:shadow-lg transition-all ${
-                  compareMode && selectedVersions.find(v => v.id === version.id)
-                    ? 'border-blue-500 ring-2 ring-blue-200'
-                    : ''
-                } ${compareMode ? 'cursor-pointer' : ''}`}
-                onClick={() => handleVersionSelect(version)}
-              >
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge variant="outline">גרסה {version.version}</Badge>
-                        <Badge className="bg-blue-100 text-blue-800">
-                          {getSectionName(version.sectionId)}
-                        </Badge>
-                        <Badge variant="outline">{getChangeTypeLabel(version.changeType)}</Badge>
-                      </div>
-                      <CardTitle className="text-lg">{version.changeDescription || 'שינוי ללא תיאור'}</CardTitle>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          {new Date(version.created_date).toLocaleString('he-IL')}
-                        </div>
-                        <span>על ידי {getUserName(version.created_by)}</span>
-                      </div>
-                    </div>
-                    {isAdmin && !compareMode && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (confirm('האם לשחזר גרסה זו? הגרסה הנוכחית תישמר בהיסטוריה.')) {
-                            restoreVersionMutation.mutate(version);
-                          }
-                        }}
-                        disabled={restoreVersionMutation.isPending}
-                      >
-                        <RotateCcw className="w-4 h-4 mr-2" />
-                        שחזר גרסה
-                      </Button>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {index < versions.length - 1 ? (
-                    <SectionDiff
-                      originalContent={versions[index + 1].content}
-                      newContent={version.content}
-                    />
-                  ) : (
-                    <div 
-                      className="prose prose-sm max-w-none text-slate-700 p-4 bg-slate-50 rounded-lg"
-                      dangerouslySetInnerHTML={{ __html: version.content }}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            ))
+            Object.keys(groupedVersions)
+              .sort((a, b) => {
+                const sectionA = sections.find(s => s.id === a);
+                const sectionB = sections.find(s => s.id === b);
+                return (sectionA?.order || 0) - (sectionB?.order || 0);
+              })
+              .map(sectionId => (
+                <DocumentVersionHistory
+                  key={sectionId}
+                  sectionId={sectionId}
+                  sectionName={getSectionName(sectionId)}
+                  versions={groupedVersions[sectionId]}
+                  isAdmin={isAdmin}
+                  getUserName={getUserName}
+                  getChangeTypeLabel={getChangeTypeLabel}
+                  documentId={documentId}
+                  userId={user?.id}
+                  setError={setError}
+                />
+              ))
           )}
         </div>
       </div>
