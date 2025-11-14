@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   ArrowLeft, ThumbsUp, ThumbsDown, MessageSquare, Clock, 
-  CheckCircle, XCircle, AlertCircle, Loader2 
+  CheckCircle, XCircle, AlertCircle, Loader2, Trash2 
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import CommentsSection from "../components/document/CommentsSection";
@@ -197,6 +197,22 @@ export default function SuggestionDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
       queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
+    },
+    onError: (err) => {
+      setError(err.message);
+      setTimeout(() => setError(null), 5000);
+    }
+  });
+
+  const deleteSuggestionMutation = useMutation({
+    mutationFn: async () => {
+      if (!user || user.email !== suggestion.created_by) {
+        throw new Error("Only the creator can delete this suggestion");
+      }
+      await base44.entities.Suggestion.delete(suggestionId);
+    },
+    onSuccess: () => {
+      navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}`);
     },
     onError: (err) => {
       setError(err.message);

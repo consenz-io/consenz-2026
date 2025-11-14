@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar } from "@/components/ui/avatar";
-import { MessageSquare, Send, Reply } from "lucide-react";
+import { MessageSquare, Send, Reply, Trash2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function CommentsSection({ entityType, entityId, user }) {
@@ -46,6 +46,19 @@ export default function CommentsSection({ entityType, entityId, user }) {
     },
     onError: (err) => {
       setError(err.message || "Failed to post comment");
+    },
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: async (commentId) => {
+      return await base44.entities.Comment.delete(commentId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', entityType, entityId] });
+      setError(null);
+    },
+    onError: (err) => {
+      setError(err.message || "Failed to delete comment");
     },
   });
 
@@ -95,17 +108,31 @@ export default function CommentsSection({ entityType, entityId, user }) {
               <p className="text-sm text-slate-700 whitespace-pre-wrap break-words">
                 {comment.content}
               </p>
-              {user && !isReply && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setReplyTo(comment)}
-                  className="mt-2 h-7 text-xs"
-                >
-                  <Reply className="w-3 h-3 mr-1" />
-                  השב
-                </Button>
-              )}
+              <div className="flex gap-2 mt-2">
+                {user && !isReply && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setReplyTo(comment)}
+                    className="h-7 text-xs"
+                  >
+                    <Reply className="w-3 h-3 mr-1" />
+                    השב
+                  </Button>
+                )}
+                {user && user.email === comment.created_by && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => deleteCommentMutation.mutate(comment.id)}
+                    disabled={deleteCommentMutation.isPending}
+                    className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="w-3 h-3 mr-1" />
+                    מחק
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </Card>
