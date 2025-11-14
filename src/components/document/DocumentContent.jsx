@@ -82,7 +82,6 @@ export default function DocumentContent({
               ) : (
                 topicSections.map((section, index) => {
                   const sectionSuggestions = getSuggestionsForSection(section.id);
-                  const [showComments, setShowComments] = useState(false);
                   
                   return (
                     <div key={section.id} className="space-y-3">
@@ -103,7 +102,7 @@ export default function DocumentContent({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setShowComments(!showComments)}
+                                onClick={() => toggleComments(`section-${section.id}`)}
                                 className="text-slate-600 hover:text-blue-600"
                               >
                                 <MessageSquare className="w-4 h-4 mr-1" />
@@ -123,7 +122,7 @@ export default function DocumentContent({
                           )}
                         </div>
 
-                        {showComments && (
+                        {showComments[`section-${section.id}`] && (
                           <div className="mt-4 pt-4 border-t border-slate-200">
                             <CommentsSection
                               entityType="section"
@@ -137,8 +136,6 @@ export default function DocumentContent({
                       {sectionSuggestions.length > 0 && (
                         <div className="space-y-3 ml-8">
                           {sectionSuggestions.map(suggestion => {
-                            const [showSuggComments, setShowSuggComments] = useState(false);
-                            
                             return (
                               <Card key={suggestion.id} className="bg-amber-50/50 border-amber-200">
                                 <CardContent className="p-4">
@@ -183,7 +180,7 @@ export default function DocumentContent({
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => setShowSuggComments(!showSuggComments)}
+                                    onClick={() => toggleComments(`suggestion-${suggestion.id}`)}
                                     className="mr-auto"
                                   >
                                     <MessageSquare className="w-4 h-4 mr-1" />
@@ -191,7 +188,7 @@ export default function DocumentContent({
                                   </Button>
                                 </div>
 
-                                {showSuggComments && (
+                                {showComments[`suggestion-${suggestion.id}`] && (
                                   <div className="mt-4 pt-4 border-t border-amber-300">
                                     <CommentsSection
                                       entityType="suggestion"
