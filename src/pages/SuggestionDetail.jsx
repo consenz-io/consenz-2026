@@ -12,6 +12,7 @@ import {
   ArrowLeft, ThumbsUp, ThumbsDown, MessageSquare, Clock, 
   CheckCircle, XCircle, AlertCircle, Loader2, Trash2 
 } from "lucide-react";
+import VotesNeededCounter from "../components/document/VotesNeededCounter";
 import { Skeleton } from "@/components/ui/skeleton";
 import CommentsSection from "../components/document/CommentsSection";
 
@@ -27,6 +28,7 @@ export default function SuggestionDetail() {
     queryKey: ['suggestion', suggestionId],
     queryFn: () => base44.entities.Suggestion.filter({ id: suggestionId }).then(s => s[0]),
     enabled: !!suggestionId,
+    refetchInterval: 3000, // רענון כל 3 שניות
   });
 
   const { data: document } = useQuery({

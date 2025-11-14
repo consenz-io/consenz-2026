@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Plus, AlertCircle, ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
+import VotesNeededCounter from "./VotesNeededCounter";
 import SectionDiff from "./SectionDiff";
 import CommentsSection from "./CommentsSection";
 
@@ -165,7 +166,7 @@ export default function DocumentContent({
                                   newContent={suggestion.newContent}
                                 />
 
-                                <div className="flex items-center gap-4 mt-3 text-sm">
+                                <div className="flex items-center gap-4 mt-3 text-sm flex-wrap">
                                   <div className="flex items-center gap-1 text-green-600">
                                     <ThumbsUp className="w-4 h-4" />
                                     <span className="font-medium">{suggestion.proVotes || 0}</span>
@@ -174,6 +175,7 @@ export default function DocumentContent({
                                     <ThumbsDown className="w-4 h-4" />
                                     <span className="font-medium">{suggestion.conVotes || 0}</span>
                                   </div>
+                                  <VotesNeededCounter suggestion={suggestion} document={document} />
                                   <Badge variant="outline" className="text-xs">
                                     By {getUserName(suggestion.created_by)}
                                   </Badge>

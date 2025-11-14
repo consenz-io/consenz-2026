@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, ThumbsUp, ThumbsDown, MessageSquare, ArrowRight } from "lucide-react";
+import VotesNeededCounter from "./VotesNeededCounter";
 
 export default function SuggestionsList({ suggestions, document, user, isAdmin }) {
   const { data: users } = useQuery({
@@ -82,7 +83,7 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
                     <p className="text-sm text-slate-600 line-clamp-2">{suggestion.explanation}</p>
                   )}
                   
-                  <div className="flex flex-wrap gap-4 text-sm">
+                  <div className="flex flex-wrap gap-4 text-sm items-center">
                     <div className="flex items-center gap-2 text-green-600">
                       <ThumbsUp className="w-4 h-4" />
                       <span className="font-medium">{suggestion.proVotes || 0}</span>
@@ -97,6 +98,7 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
                         <span>{getTimeRemaining(suggestion.timerEndsAt)} left</span>
                       </div>
                     )}
+                    <VotesNeededCounter suggestion={suggestion} document={document} />
                   </div>
 
                   <div className="text-xs text-slate-400">
