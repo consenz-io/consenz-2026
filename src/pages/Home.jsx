@@ -1,4 +1,3 @@
-
 import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -139,7 +138,7 @@ export default function Home() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {documents.map((doc) => (
-              <Link key={doc.id} to={createPageUrl("DocumentView", `?id=${doc.id}`)}>
+              <Link key={doc.id} to={`${createPageUrl("DocumentView")}?id=${doc.id}`}>
                 <Card className="bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-200 cursor-pointer h-full">
                   <CardHeader>
                     <div className="flex items-start justify-between">
