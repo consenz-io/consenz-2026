@@ -104,6 +104,17 @@ const translations = {
     documentNotFound: "Document not found",
     goHome: "Go Home",
     document: "Document",
+    versionHistory: "Version History",
+    compareVersions: "Compare Versions",
+    cancelComparison: "Cancel Comparison",
+    noPreviousVersions: "No Previous Versions",
+    documentChangesSavedAutomatically: "Document changes are saved automatically as versions.",
+    changeWithoutDescription: "Change without description",
+    confirmRestoreVersion: "Are you sure you want to restore this version? The current version will be saved in history.",
+    restoreVersion: "Restore Version",
+    adminAccessRequired: "Admin access required",
+    version: "Version",
+    restoredFromVersion: "Restored from version {version}",
   },
   he: {
     // ניווט
@@ -208,6 +219,17 @@ const translations = {
     documentNotFound: "המסמך לא נמצא",
     goHome: "חזור לדף הבית",
     document: "מסמך",
+    versionHistory: "היסטוריית גרסאות",
+    compareVersions: "השווה גרסאות",
+    cancelComparison: "בטל השוואה",
+    noPreviousVersions: "אין גרסאות קודמות",
+    documentChangesSavedAutomatically: "שינויים במסמך נשמרים אוטומטית כגרסאות.",
+    changeWithoutDescription: "שינוי ללא תיאור",
+    confirmRestoreVersion: "האם לשחזר גרסה זו? הגרסה הנוכחית תישמר בהיסטוריה.",
+    restoreVersion: "שחזר גרסה",
+    adminAccessRequired: "נדרשת הרשאת מנהל",
+    version: "גרסה",
+    restoredFromVersion: "שוחזר מגרסה {version}",
   },
   ar: {
     // التنقل
@@ -311,6 +333,17 @@ const translations = {
     documentNotFound: "المستند غير موجود",
     goHome: "العودة إلى الصفحة الرئيسية",
     document: "المستند",
+    versionHistory: "سجل الإصدارات",
+    compareVersions: "مقارنة الإصدارات",
+    cancelComparison: "إلغاء المقارنة",
+    noPreviousVersions: "لا توجد إصدارات سابقة",
+    documentChangesSavedAutomatically: "يتم حفظ تغييرات المستند تلقائيًا كإصدارات.",
+    changeWithoutDescription: "تغيير بدون وصف",
+    confirmRestoreVersion: "هل أنت متأكد أنك تريد استعادة هذا الإصدار؟ سيتم حفظ الإصدار الحالي في السجل.",
+    restoreVersion: "استعادة الإصدار",
+    adminAccessRequired: "مطلوب وصول المسؤول",
+    version: "إصدار",
+    restoredFromVersion: "تم الاستعادة من الإصدار {version}",
   }
 };
 
