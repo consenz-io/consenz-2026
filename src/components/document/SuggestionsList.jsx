@@ -11,7 +11,7 @@ import VotesNeededCounter from "./VotesNeededCounter";
 import { useLanguage } from "@/components/LanguageContext";
 
 export default function SuggestionsList({ suggestions, document, user, isAdmin }) {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: () => base44.entities.User.list(),
@@ -82,7 +82,14 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
               <CardContent>
                 <div className="space-y-3">
                   {suggestion.explanation && (
-                    <p className="text-sm text-slate-600 line-clamp-2">{suggestion.explanation}</p>
+                    <p className="text-sm text-slate-600 line-clamp-2" style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>{suggestion.explanation}</p>
+                  )}
+                  {suggestion.newContent && (
+                    <div
+                      className="text-sm text-slate-700 line-clamp-3 bg-slate-50 p-3 rounded border border-slate-200"
+                      style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}
+                      dangerouslySetInnerHTML={{ __html: suggestion.newContent }}
+                    />
                   )}
                   
                   <div className="flex flex-wrap gap-4 text-sm items-center">
