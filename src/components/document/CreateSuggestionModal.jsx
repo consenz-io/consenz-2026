@@ -38,7 +38,6 @@ export default function CreateSuggestionModal({
   const existingSection = !isNewSection ? sections.find(s => s.id === editingSection?.id) : null;
 
   const [formData, setFormData] = useState({
-    title: isNewSection ? "" : `Edit: ${existingSection?.content?.substring(0, 30) || ''}...`,
     topicId: editingSection?.topicId || topics[0]?.id || "",
     newContent: existingSection?.content || "",
     explanation: "",
@@ -53,6 +52,7 @@ export default function CreateSuggestionModal({
       timerEndsAt.setHours(timerEndsAt.getHours() + (document.defaultSuggestionLifetimeHours || 72));
 
       let targetTopicId = data.topicId;
+      let topicTitle = '';
       
       // Create new topic if needed
       if (isCreatingNewTopic && newTopicName.trim()) {
@@ -66,14 +66,23 @@ export default function CreateSuggestionModal({
         });
         
         targetTopicId = newTopic.id;
+        topicTitle = newTopicName.trim();
+      } else {
+        const topic = topics.find(t => t.id === targetTopicId);
+        topicTitle = topic?.title || '';
       }
+
+      // Generate automatic title
+      const autoTitle = isNewSection 
+        ? `New section in ${topicTitle}`
+        : `Edit section in ${topicTitle}`;
 
       const suggestion = await base44.entities.Suggestion.create({
         documentId: document.id,
         sectionId: isNewSection ? null : editingSection.id,
         topicId: targetTopicId,
         type: isNewSection ? 'new_section' : 'edit_section',
-        title: data.title,
+        title: autoTitle,
         newContent: data.newContent,
         explanation: data.explanation,
         status: 'pending',
@@ -122,11 +131,6 @@ export default function CreateSuggestionModal({
     e.preventDefault();
     setError(null);
 
-    if (!formData.title.trim()) {
-      setError("Title is required");
-      return;
-    }
-
     if (!formData.newContent.trim()) {
       setError("Content is required");
       return;
@@ -167,16 +171,6 @@ export default function CreateSuggestionModal({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="title">Suggestion Title</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="Brief title for your suggestion"
-            />
-          </div>
-
           {isNewSection && (
             <div className="space-y-2">
               <Label htmlFor="topic">Topic</Label>
