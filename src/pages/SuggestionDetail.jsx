@@ -78,7 +78,7 @@ export default function SuggestionDetail() {
     enabled: !!suggestionId && !!user?.id,
   });
 
-  const { data: arguments, isLoading: argsLoading } = useQuery({
+  const { data: args, isLoading: argsLoading } = useQuery({
     queryKey: ['arguments', suggestionId],
     queryFn: () => base44.entities.Argument.filter({ suggestionId }, '-created_date'),
     initialData: [],
@@ -240,8 +240,8 @@ export default function SuggestionDetail() {
     return `${hours}h remaining`;
   };
 
-  const proArgs = arguments.filter(a => a.type === 'pro');
-  const conArgs = arguments.filter(a => a.type === 'con');
+  const proArgs = args.filter(a => a.type === 'pro');
+  const conArgs = args.filter(a => a.type === 'con');
   const consensusScore = suggestion.proVotes + suggestion.conVotes > 0 
     ? (suggestion.proVotes / (suggestion.proVotes + suggestion.conVotes) * 100).toFixed(0)
     : 50;
