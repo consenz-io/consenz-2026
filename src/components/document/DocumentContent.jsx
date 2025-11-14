@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Plus, AlertCircle, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Edit, Plus, AlertCircle, ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
 import SectionDiff from "./SectionDiff";
+import CommentsSection from "./CommentsSection";
 
 export default function DocumentContent({ 
   document, 
@@ -59,6 +60,7 @@ export default function DocumentContent({
               ) : (
                 topicSections.map((section, index) => {
                   const sectionSuggestions = getSuggestionsForSection(section.id);
+                  const [showComments, setShowComments] = useState(false);
                   
                   return (
                     <div key={section.id} className="space-y-3">
@@ -72,8 +74,19 @@ export default function DocumentContent({
                               className="prose prose-sm max-w-none text-slate-700"
                               dangerouslySetInnerHTML={{ __html: section.content }}
                             />
-                            <div className="text-xs text-slate-400 mt-3">
-                              Last edited {new Date(section.updated_date).toLocaleDateString()}
+                            <div className="flex items-center justify-between mt-3">
+                              <div className="text-xs text-slate-400">
+                                Last edited {new Date(section.updated_date).toLocaleDateString()}
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowComments(!showComments)}
+                                className="text-slate-600 hover:text-blue-600"
+                              >
+                                <MessageSquare className="w-4 h-4 mr-1" />
+                                תגובות
+                              </Button>
                             </div>
                           </div>
                           {user && (
@@ -87,13 +100,26 @@ export default function DocumentContent({
                             </Button>
                           )}
                         </div>
+
+                        {showComments && (
+                          <div className="mt-4 pt-4 border-t border-slate-200">
+                            <CommentsSection
+                              entityType="section"
+                              entityId={section.id}
+                              user={user}
+                            />
+                          </div>
+                        )}
                       </div>
 
                       {sectionSuggestions.length > 0 && (
                         <div className="space-y-3 ml-8">
-                          {sectionSuggestions.map(suggestion => (
-                            <Card key={suggestion.id} className="bg-amber-50/50 border-amber-200">
-                              <CardContent className="p-4">
+                          {sectionSuggestions.map(suggestion => {
+                            const [showSuggComments, setShowSuggComments] = useState(false);
+                            
+                            return (
+                              <Card key={suggestion.id} className="bg-amber-50/50 border-amber-200">
+                                <CardContent className="p-4">
                                 <div className="flex items-start justify-between gap-3 mb-3">
                                   <div className="flex items-center gap-2">
                                     <AlertCircle className="w-4 h-4 text-amber-600" />
@@ -132,10 +158,30 @@ export default function DocumentContent({
                                   <Badge variant="outline" className="text-xs">
                                     By {suggestion.created_by}
                                   </Badge>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setShowSuggComments(!showSuggComments)}
+                                    className="mr-auto"
+                                  >
+                                    <MessageSquare className="w-4 h-4 mr-1" />
+                                    תגובות
+                                  </Button>
                                 </div>
+
+                                {showSuggComments && (
+                                  <div className="mt-4 pt-4 border-t border-amber-300">
+                                    <CommentsSection
+                                      entityType="suggestion"
+                                      entityId={suggestion.id}
+                                      user={user}
+                                    />
+                                  </div>
+                                )}
                               </CardContent>
                             </Card>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
