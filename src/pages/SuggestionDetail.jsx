@@ -13,6 +13,7 @@ import {
   CheckCircle, XCircle, AlertCircle, Loader2 
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import CommentsSection from "../components/document/CommentsSection";
 
 export default function SuggestionDetail() {
   const [searchParams] = useSearchParams();
@@ -502,6 +503,19 @@ export default function SuggestionDetail() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="bg-white border-slate-200">
+          <CardHeader>
+            <CardTitle>תגובות על ההצעה</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CommentsSection
+              entityType="suggestion"
+              entityId={suggestionId}
+              user={user}
+            />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
