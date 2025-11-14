@@ -139,6 +139,24 @@ export default function DocumentContent({
                   const sectionSuggestions = getSuggestionsForSection(section.id);
                   
                   return (
+                    <React.Fragment key={section.id}>
+                      {index > 0 && user && (
+                        <div className="group relative h-4 flex items-center justify-center -my-2">
+                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="h-full flex items-center justify-center">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => onNewSection(topic.id, index)}
+                                className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
+                              >
+                                <Plus className="w-4 h-4 mr-1" />
+                                הוסף סעיף כאן
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     <div key={section.id} className="space-y-3">
                       <div className="group relative p-4 border border-slate-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/50 transition-all">
                         <div className="flex justify-between items-start gap-4">
@@ -301,6 +319,24 @@ export default function DocumentContent({
                         </div>
                       )}
                     </div>
+                    {index === topicSections.length - 1 && user && (
+                      <div className="group relative h-4 flex items-center justify-center mt-2">
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="h-full flex items-center justify-center">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => onNewSection(topic.id, index + 1)}
+                              className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
+                            >
+                              <Plus className="w-4 h-4 mr-1" />
+                              הוסף סעיף כאן
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    </React.Fragment>
                   );
                 })
               )}
