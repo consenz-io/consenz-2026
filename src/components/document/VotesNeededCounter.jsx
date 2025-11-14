@@ -1,8 +1,10 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Target, TrendingUp } from "lucide-react";
+import { useLanguage } from "@/components/LanguageContext";
 
 export default function VotesNeededCounter({ suggestion, document }) {
+  const { t } = useLanguage();
   const calculateVotesNeeded = () => {
     const proVotes = suggestion.proVotes || 0;
     const conVotes = suggestion.conVotes || 0;
@@ -41,7 +43,7 @@ export default function VotesNeededCounter({ suggestion, document }) {
     return (
       <Badge className="bg-green-100 text-green-800 border-green-300 flex items-center gap-1">
         <TrendingUp className="w-3 h-3" />
-        עבר את סף הקונסנזוס!
+        {t('passedConsensusThreshold')}
       </Badge>
     );
   }
@@ -50,7 +52,7 @@ export default function VotesNeededCounter({ suggestion, document }) {
     return (
       <Badge variant="outline" className="flex items-center gap-1 text-amber-700">
         <Target className="w-3 h-3" />
-        דרושה הסכמה מלאה
+        {t('fullAgreementNeeded')}
       </Badge>
     );
   }
@@ -58,7 +60,7 @@ export default function VotesNeededCounter({ suggestion, document }) {
   return (
     <Badge variant="outline" className="flex items-center gap-1">
       <Target className="w-3 h-3" />
-      חסרים {votesNeeded} תומכים לאישור
+      {t('votesNeededToPass').replace('{count}', votesNeeded)}
     </Badge>
   );
 }

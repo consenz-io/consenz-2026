@@ -1,7 +1,9 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
+import { useLanguage } from "@/components/LanguageContext";
 
 export default function SectionDiff({ originalContent, newContent }) {
+  const { t } = useLanguage();
   const getTextContent = (html) => {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
@@ -68,7 +70,7 @@ export default function SectionDiff({ originalContent, newContent }) {
 
   return (
     <Card className="p-4 bg-slate-50 border-slate-200">
-      <div className="text-sm font-semibold text-slate-700 mb-3">Proposed Changes</div>
+      <div className="text-sm font-semibold text-slate-700 mb-3">{t('proposedChanges')}</div>
       <div className="prose prose-sm max-w-none leading-relaxed">
         {diff.map((part, idx) => {
           if (part.type === 'removed') {

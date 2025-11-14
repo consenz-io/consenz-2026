@@ -8,8 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, ThumbsUp, ThumbsDown, MessageSquare, ArrowRight } from "lucide-react";
 import VotesNeededCounter from "./VotesNeededCounter";
+import { useLanguage } from "@/components/LanguageContext";
 
 export default function SuggestionsList({ suggestions, document, user, isAdmin }) {
+  const { t } = useLanguage();
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: () => base44.entities.User.list(),
@@ -38,7 +40,7 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
     const end = new Date(timerEndsAt);
     const diff = end - now;
     
-    if (diff <= 0) return 'Ended';
+    if (diff <= 0) return t('votingEnded');
     
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(hours / 24);
@@ -53,8 +55,8 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
         <Card className="bg-white border-slate-200">
           <CardContent className="p-12 text-center">
             <MessageSquare className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-            <h3 className="text-xl font-semibold text-slate-900 mb-2">No Suggestions Yet</h3>
-            <p className="text-slate-600">Be the first to suggest a change to this document</p>
+            <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('noSuggestionsYet')}</h3>
+            <p className="text-slate-600">{t('beFirstToSuggest')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -66,10 +68,10 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <Badge variant="outline" className={getStatusColor(suggestion.status)}>
-                        {suggestion.status}
+                        {t(suggestion.status)}
                       </Badge>
                       <Badge variant="outline">
-                        {suggestion.type === 'new_section' ? 'New Section' : 'Edit Section'}
+                        {suggestion.type === 'new_section' ? t('newSection') : t('editSection')}
                       </Badge>
                     </div>
                     <CardTitle className="text-lg">{suggestion.title}</CardTitle>
@@ -95,14 +97,14 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
                     {suggestion.status === 'pending' && suggestion.timerEndsAt && (
                       <div className="flex items-center gap-2 text-slate-600">
                         <Clock className="w-4 h-4" />
-                        <span>{getTimeRemaining(suggestion.timerEndsAt)} left</span>
+                        <span>{getTimeRemaining(suggestion.timerEndsAt)} {t('left')}</span>
                       </div>
                     )}
                     <VotesNeededCounter suggestion={suggestion} document={document} />
                   </div>
 
                   <div className="text-xs text-slate-400">
-                    Created {new Date(suggestion.created_date).toLocaleDateString()} by {getUserName(suggestion.created_by)}
+                    {t('created')} {new Date(suggestion.created_date).toLocaleDateString()} {t('by')} {getUserName(suggestion.created_by)}
                   </div>
                 </div>
               </CardContent>

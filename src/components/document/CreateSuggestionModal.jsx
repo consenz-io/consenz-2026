@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Sparkles } from "lucide-react";
+import { useLanguage } from "@/components/LanguageContext";
 
 const POINTS_COST = 200;
 
@@ -27,6 +28,7 @@ export default function CreateSuggestionModal({
   onClose 
 }) {
   const queryClient = useQueryClient();
+  const { t, isRTL } = useLanguage();
   const [error, setError] = useState(null);
   
   const currentUser = user;
@@ -132,12 +134,12 @@ export default function CreateSuggestionModal({
     setError(null);
 
     if (!formData.newContent.trim()) {
-      setError("Content is required");
+      setError(t('content'));
       return;
     }
 
     if (isCreatingNewTopic && !newTopicName.trim()) {
-      setError("Topic name is required");
+      setError(t('topic'));
       return;
     }
 
@@ -148,7 +150,7 @@ export default function CreateSuggestionModal({
     return (
       <Dialog open onOpenChange={onClose}>
         <DialogContent className="max-w-2xl">
-          <div className="py-8 text-center">טוען...</div>
+          <div className="py-8 text-center">{t('loading')}</div>
         </DialogContent>
       </Dialog>
     );
@@ -159,7 +161,7 @@ export default function CreateSuggestionModal({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isNewSection ? 'Suggest New Section' : 'Suggest Edit to Section'}
+            {isNewSection ? t('suggestNewSection') : t('suggestEditSection')}
           </DialogTitle>
         </DialogHeader>
 
@@ -173,7 +175,7 @@ export default function CreateSuggestionModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           {isNewSection && (
             <div className="space-y-2">
-              <Label htmlFor="topic">Topic</Label>
+              <Label htmlFor="topic">{t('topic')}</Label>
               <div className="flex items-center gap-2 mb-2">
                 <input
                   type="checkbox"
@@ -183,14 +185,14 @@ export default function CreateSuggestionModal({
                   className="w-4 h-4"
                 />
                 <Label htmlFor="newTopic" className="text-sm font-normal cursor-pointer">
-                  Create new topic
+                  {t('createNewTopic')}
                 </Label>
               </div>
               {isCreatingNewTopic ? (
                 <Input
                   value={newTopicName}
                   onChange={(e) => setNewTopicName(e.target.value)}
-                  placeholder="Enter new topic name..."
+                  placeholder={t('enterNewTopicName')}
                 />
               ) : (
                 <Select
@@ -214,38 +216,38 @@ export default function CreateSuggestionModal({
 
           <div>
             <Label htmlFor="content">
-              {isNewSection ? 'Section Content' : 'Proposed Changes'}
+              {isNewSection ? t('sectionContent') : t('proposedChanges')}
             </Label>
             <Textarea
               id="content"
               value={formData.newContent}
               onChange={(e) => setFormData({ ...formData, newContent: e.target.value })}
-              placeholder="Enter the content..."
+              placeholder={t('enterContent')}
               rows={8}
             />
           </div>
 
           <div>
-            <Label htmlFor="explanation">Explanation (Optional)</Label>
+            <Label htmlFor="explanation">{t('explanation')}</Label>
             <Textarea
               id="explanation"
               value={formData.explanation}
               onChange={(e) => setFormData({ ...formData, explanation: e.target.value })}
-              placeholder="Explain why this change is needed..."
+              placeholder={t('explainChange')}
               rows={3}
             />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              {t('cancel')}
             </Button>
             <Button 
               type="submit" 
               disabled={createSuggestionMutation.isPending}
               className="bg-gradient-to-r from-blue-600 to-indigo-600"
             >
-              {createSuggestionMutation.isPending ? "Creating..." : "Create Suggestion"}
+              {createSuggestionMutation.isPending ? t('creating') : t('createSuggestion')}
             </Button>
           </DialogFooter>
         </form>

@@ -9,12 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, History } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLanguage } from "@/components/LanguageContext";
 
 import DocumentContent from "../components/document/DocumentContent";
 import SuggestionsList from "../components/document/SuggestionsList";
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 
 export default function DocumentView() {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
   const [showCreateSuggestion, setShowCreateSuggestion] = useState(false);

@@ -7,8 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar } from "@/components/ui/avatar";
 import { MessageSquare, Send, Reply, Trash2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useLanguage } from "@/components/LanguageContext";
 
 export default function CommentsSection({ entityType, entityId, user }) {
+  const { t } = useLanguage();
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [error, setError] = useState(null);
@@ -117,7 +119,7 @@ export default function CommentsSection({ entityType, entityId, user }) {
                     className="h-7 text-xs"
                   >
                     <Reply className="w-3 h-3 mr-1" />
-                    השב
+                    {t('reply')}
                   </Button>
                 )}
                 {user && user.email === comment.created_by && (
@@ -129,7 +131,7 @@ export default function CommentsSection({ entityType, entityId, user }) {
                     className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
                   >
                     <Trash2 className="w-3 h-3 mr-1" />
-                    מחק
+                    {t('delete')}
                   </Button>
                 )}
               </div>
@@ -151,7 +153,7 @@ export default function CommentsSection({ entityType, entityId, user }) {
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-slate-700">
         <MessageSquare className="w-5 h-5" />
-        <h3 className="font-semibold">תגובות ({comments.length})</h3>
+        <h3 className="font-semibold">{t('commentsCount')} ({comments.length})</h3>
       </div>
 
       {error && (
@@ -165,7 +167,7 @@ export default function CommentsSection({ entityType, entityId, user }) {
           {replyTo && (
             <div className="flex items-center gap-2 text-sm text-slate-600 bg-blue-50 p-2 rounded">
               <Reply className="w-4 h-4" />
-              <span>משיב ל-{getUserName(replyTo.created_by)}</span>
+              <span>{t('replyingTo')} {getUserName(replyTo.created_by)}</span>
               <Button
                 type="button"
                 variant="ghost"
@@ -173,14 +175,14 @@ export default function CommentsSection({ entityType, entityId, user }) {
                 onClick={() => setReplyTo(null)}
                 className="mr-auto h-6"
               >
-                ביטול
+                {t('cancel')}
               </Button>
             </div>
           )}
           <Textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            placeholder={replyTo ? "כתוב תגובה..." : "הוסף תגובה..."}
+            placeholder={replyTo ? t('writeReply') : t('addComment')}
             className="min-h-[80px]"
             dir="auto"
           />
@@ -191,7 +193,7 @@ export default function CommentsSection({ entityType, entityId, user }) {
               size="sm"
             >
               <Send className="w-4 h-4 mr-2" />
-              פרסם תגובה
+              {t('postComment')}
             </Button>
           </div>
         </form>
@@ -199,10 +201,10 @@ export default function CommentsSection({ entityType, entityId, user }) {
 
       <div className="space-y-3">
         {isLoading ? (
-          <div className="text-center py-8 text-slate-500">טוען תגובות...</div>
+          <div className="text-center py-8 text-slate-500">{t('loadingComments')}</div>
         ) : topLevelComments.length === 0 ? (
           <div className="text-center py-8 text-slate-500">
-            אין תגובות עדיין. {user && "היה הראשון להגיב!"}
+            {t('noCommentsYet')} {user && t('beFirstToComment')}
           </div>
         ) : (
           topLevelComments.map(comment => (
