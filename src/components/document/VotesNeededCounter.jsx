@@ -8,7 +8,7 @@ export default function VotesNeededCounter({ suggestion, document }) {
   const calculateVotesNeeded = () => {
     const proVotes = suggestion.proVotes || 0;
     const conVotes = suggestion.conVotes || 0;
-    const threshold = document.threshold || 0.5;
+    const threshold = document?.threshold || 0.5;
     const totalVotes = proVotes + conVotes;
 
     if (totalVotes === 0) {
@@ -23,14 +23,24 @@ export default function VotesNeededCounter({ suggestion, document }) {
       return 0;
     }
 
-    // אם threshold = 1, אי אפשר להגיע (צריך 100% ללא הצבעות נגד)
+    // אם threshold = 1, צריך שכל ההצבעות יהיו בעד
     if (threshold >= 1) {
-      return conVotes > 0 ? Infinity : 1;
+      return conVotes > 0 ? Infinity : (1 - proVotes);
     }
 
-    // חישוב כמה הצבעות בעד נדרשות
-    const votesNeeded = (threshold * totalVotes - proVotes) / (1 - threshold);
-    return Math.ceil(Math.max(0, votesNeeded));
+    // חישוב מתמטי נכון: כמה pro votes נדרשות כדי להגיע ל-threshold
+    // threshold = proVotes / (proVotes + conVotes)
+    // נפתור עבור proVotes החדש:
+    // threshold * (proVotes_new + conVotes) = proVotes_new
+    // threshold * proVotes_new + threshold * conVotes = proVotes_new
+    // threshold * conVotes = proVotes_new - threshold * proVotes_new
+    // threshold * conVotes = proVotes_new * (1 - threshold)
+    // proVotes_new = (threshold * conVotes) / (1 - threshold)
+    
+    const proVotesNeeded = (threshold * conVotes) / (1 - threshold);
+    const additionalVotesNeeded = Math.ceil(proVotesNeeded) - proVotes;
+    
+    return Math.max(1, additionalVotesNeeded);
   };
 
   const votesNeeded = calculateVotesNeeded();

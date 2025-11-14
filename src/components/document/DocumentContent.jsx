@@ -11,6 +11,7 @@ import VotesNeededCounter from "./VotesNeededCounter";
 import SectionDiff from "./SectionDiff";
 import CommentsSection from "./CommentsSection";
 import { useLanguage } from "@/components/LanguageContext";
+import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAutoAccept";
 
 export default function DocumentContent({ 
   document, 
@@ -26,108 +27,7 @@ export default function DocumentContent({
   const queryClient = useQueryClient();
   const { t, isRTL } = useLanguage();
 
-  // Auto-accept suggestions that meet threshold
-  React.useEffect(() => {
-    const checkAndAcceptSuggestions = async () => {
-      if (!document || !suggestions.length) return;
-      
-      const pendingSuggestions = suggestions.filter(s => s.status === 'pending');
-      
-      for (const suggestion of pendingSuggestions) {
-        const totalVotes = (suggestion.proVotes || 0) + (suggestion.conVotes || 0);
-        if (totalVotes > 0) {
-          const consensus = suggestion.proVotes / totalVotes;
-          
-          if (consensus >= document.threshold) {
-            try {
-              // Handle edit_section type
-              if (suggestion.type === 'edit_section') {
-                const section = sections.find(s => s.id === suggestion.sectionId);
-                if (section) {
-                  const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
-                  const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
-                  
-                  await base44.entities.DocumentVersion.create({
-                    documentId: suggestion.documentId,
-                    sectionId: section.id,
-                    content: section.content,
-                    changeDescription: `לפני: ${suggestion.title}`,
-                    version: nextVersion,
-                    changeType: 'suggestion_accepted',
-                    suggestionId: suggestion.id
-                  });
-                  
-                  await base44.entities.Section.update(section.id, {
-                    content: suggestion.newContent,
-                    lastEditedBy: section.created_by
-                  });
-                  
-                  await base44.entities.DocumentVersion.create({
-                    documentId: suggestion.documentId,
-                    sectionId: section.id,
-                    content: suggestion.newContent,
-                    changeDescription: suggestion.title,
-                    version: nextVersion + 1,
-                    changeType: 'suggestion_accepted',
-                    suggestionId: suggestion.id
-                  });
-                }
-              } 
-              // Handle new_section type
-              else if (suggestion.type === 'new_section') {
-                const allSections = await base44.entities.Section.filter({ 
-                  documentId: suggestion.documentId,
-                  topicId: suggestion.topicId 
-                }, 'order');
-                
-                let newOrder;
-                if (suggestion.insertPosition !== undefined && suggestion.insertPosition !== null) {
-                  const sectionsToUpdate = allSections.filter(s => s.order >= suggestion.insertPosition);
-                  for (const sec of sectionsToUpdate) {
-                    await base44.entities.Section.update(sec.id, { order: sec.order + 1 });
-                  }
-                  newOrder = suggestion.insertPosition;
-                } else {
-                  const maxOrder = allSections.length > 0 ? Math.max(...allSections.map(s => s.order)) : -1;
-                  newOrder = maxOrder + 1;
-                }
-                
-                const newSection = await base44.entities.Section.create({
-                  documentId: suggestion.documentId,
-                  topicId: suggestion.topicId,
-                  content: suggestion.newContent,
-                  order: newOrder,
-                  lastEditedBy: suggestion.created_by
-                });
-                
-                await base44.entities.DocumentVersion.create({
-                  documentId: suggestion.documentId,
-                  sectionId: newSection.id,
-                  content: suggestion.newContent,
-                  changeDescription: suggestion.title,
-                  version: 1,
-                  changeType: 'section_created',
-                  suggestionId: suggestion.id
-                });
-              }
-
-              await base44.entities.Suggestion.update(suggestion.id, { 
-                status: 'accepted',
-                suggestionConsensus: consensus 
-              });
-            } catch (error) {
-              console.error('Error auto-accepting suggestion:', error);
-            }
-          }
-        }
-      }
-      
-      queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
-      queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
-    };
-    
-    checkAndAcceptSuggestions();
-  }, [suggestions, document, sections, queryClient]);
+  // הסרתי את ה-useEffect - אישור אוטומטי מתבצע רק דרך voteMutation
   
   const { data: users } = useQuery({
     queryKey: ['users'],
@@ -184,82 +84,10 @@ export default function DocumentContent({
         });
       }
 
-      // Check if suggestion reached consensus threshold
-      const totalVotes = updatedSuggestion.proVotes + updatedSuggestion.conVotes;
-      if (totalVotes > 0 && updatedSuggestion.status === 'pending') {
-        const consensus = updatedSuggestion.proVotes / totalVotes;
-        if (consensus >= document.threshold) {
-          // Auto-accept suggestion
-          if (updatedSuggestion.type === 'edit_section' && section) {
-            const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
-            const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
-            
-            await base44.entities.DocumentVersion.create({
-              documentId: updatedSuggestion.documentId,
-              sectionId: section.id,
-              content: section.content,
-              changeDescription: `לפני: ${updatedSuggestion.title}`,
-              version: nextVersion,
-              changeType: 'suggestion_accepted',
-              suggestionId: updatedSuggestion.id
-            });
-            
-            await base44.entities.Section.update(section.id, {
-              content: updatedSuggestion.newContent,
-              lastEditedBy: user.id
-            });
-            
-            await base44.entities.DocumentVersion.create({
-              documentId: updatedSuggestion.documentId,
-              sectionId: section.id,
-              content: updatedSuggestion.newContent,
-              changeDescription: updatedSuggestion.title,
-              version: nextVersion + 1,
-              changeType: 'suggestion_accepted',
-              suggestionId: updatedSuggestion.id
-            });
-          } else if (updatedSuggestion.type === 'new_section') {
-            const allSections = await base44.entities.Section.filter({ 
-              documentId: updatedSuggestion.documentId,
-              topicId: updatedSuggestion.topicId 
-            }, 'order');
-            
-            let newOrder;
-            if (updatedSuggestion.insertPosition !== undefined && updatedSuggestion.insertPosition !== null) {
-              const sectionsToUpdate = allSections.filter(s => s.order >= updatedSuggestion.insertPosition);
-              for (const sec of sectionsToUpdate) {
-                await base44.entities.Section.update(sec.id, { order: sec.order + 1 });
-              }
-              newOrder = updatedSuggestion.insertPosition;
-            } else {
-              const maxOrder = allSections.length > 0 ? Math.max(...allSections.map(s => s.order)) : -1;
-              newOrder = maxOrder + 1;
-            }
-            
-            const newSection = await base44.entities.Section.create({
-              documentId: updatedSuggestion.documentId,
-              topicId: updatedSuggestion.topicId,
-              content: updatedSuggestion.newContent,
-              order: newOrder,
-              lastEditedBy: user.id
-            });
-            
-            await base44.entities.DocumentVersion.create({
-              documentId: updatedSuggestion.documentId,
-              sectionId: newSection.id,
-              content: updatedSuggestion.newContent,
-              changeDescription: updatedSuggestion.title,
-              version: 1,
-              changeType: 'section_created',
-              suggestionId: updatedSuggestion.id
-            });
-          }
-
-          await base44.entities.Suggestion.update(suggestionId, { 
-            status: 'accepted',
-            suggestionConsensus: consensus 
-          });
-        }
+      // בדיקה והפעלת אישור אוטומטי אם עברנו את הסף
+      const { shouldAccept } = checkSuggestionConsensus(updatedSuggestion, document);
+      if (shouldAccept) {
+        await autoAcceptSuggestion(updatedSuggestion, user.id);
       }
     },
     onSuccess: () => {

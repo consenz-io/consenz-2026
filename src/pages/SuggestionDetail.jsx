@@ -15,6 +15,7 @@ import {
 import VotesNeededCounter from "../components/document/VotesNeededCounter";
 import { Skeleton } from "@/components/ui/skeleton";
 import CommentsSection from "../components/document/CommentsSection";
+import { checkSuggestionConsensus, autoAcceptSuggestion } from "../components/document/suggestionAutoAccept";
 
 export default function SuggestionDetail() {
   const [searchParams] = useSearchParams();
@@ -138,82 +139,10 @@ export default function SuggestionDetail() {
         });
       }
 
-      // Check if suggestion reached consensus threshold
-      const totalVotes = updatedSuggestion.proVotes + updatedSuggestion.conVotes;
-      if (totalVotes > 0 && updatedSuggestion.status === 'pending') {
-        const consensus = updatedSuggestion.proVotes / totalVotes;
-        if (consensus >= document.threshold) {
-          // Auto-accept suggestion
-          if (updatedSuggestion.type === 'edit_section' && section) {
-            const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
-            const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
-            
-            await base44.entities.DocumentVersion.create({
-              documentId: updatedSuggestion.documentId,
-              sectionId: section.id,
-              content: section.content,
-              changeDescription: `לפני: ${updatedSuggestion.title}`,
-              version: nextVersion,
-              changeType: 'suggestion_accepted',
-              suggestionId: updatedSuggestion.id
-            });
-            
-            await base44.entities.Section.update(section.id, {
-              content: updatedSuggestion.newContent,
-              lastEditedBy: user.id
-            });
-            
-            await base44.entities.DocumentVersion.create({
-              documentId: updatedSuggestion.documentId,
-              sectionId: section.id,
-              content: updatedSuggestion.newContent,
-              changeDescription: updatedSuggestion.title,
-              version: nextVersion + 1,
-              changeType: 'suggestion_accepted',
-              suggestionId: updatedSuggestion.id
-            });
-          } else if (updatedSuggestion.type === 'new_section') {
-            const sections = await base44.entities.Section.filter({ 
-              documentId: updatedSuggestion.documentId,
-              topicId: updatedSuggestion.topicId 
-            }, 'order');
-            
-            let newOrder;
-            if (updatedSuggestion.insertPosition !== undefined && updatedSuggestion.insertPosition !== null) {
-              const sectionsToUpdate = sections.filter(s => s.order >= updatedSuggestion.insertPosition);
-              for (const sec of sectionsToUpdate) {
-                await base44.entities.Section.update(sec.id, { order: sec.order + 1 });
-              }
-              newOrder = updatedSuggestion.insertPosition;
-            } else {
-              const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order)) : -1;
-              newOrder = maxOrder + 1;
-            }
-            
-            const newSection = await base44.entities.Section.create({
-              documentId: updatedSuggestion.documentId,
-              topicId: updatedSuggestion.topicId,
-              content: updatedSuggestion.newContent,
-              order: newOrder,
-              lastEditedBy: user.id
-            });
-            
-            await base44.entities.DocumentVersion.create({
-              documentId: updatedSuggestion.documentId,
-              sectionId: newSection.id,
-              content: updatedSuggestion.newContent,
-              changeDescription: updatedSuggestion.title,
-              version: 1,
-              changeType: 'section_created',
-              suggestionId: updatedSuggestion.id
-            });
-          }
-
-          await base44.entities.Suggestion.update(suggestionId, { 
-            status: 'accepted',
-            suggestionConsensus: consensus 
-          });
-        }
+      // בדיקה והפעלת אישור אוטומטי אם עברנו את הסף
+      const { shouldAccept } = checkSuggestionConsensus(updatedSuggestion, document);
+      if (shouldAccept) {
+        await autoAcceptSuggestion(updatedSuggestion, user.id);
       }
     },
     onSuccess: () => {
