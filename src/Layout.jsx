@@ -31,16 +31,15 @@ export default function Layout({ children, currentPageName }) {
   });
 
   React.useEffect(() => {
-    const initializeUserPoints = async () => {
-      if (user && user.points === undefined) {
+    const initializeUserData = async () => {
+      if (user && user.suggestionsCreated === undefined) {
         await base44.auth.updateMe({ 
-          points: 1000,
           suggestionsCreated: 0
         });
         queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       }
     };
-    initializeUserPoints();
+    initializeUserData();
   }, [user, queryClient]);
 
   const handleLogout = () => {

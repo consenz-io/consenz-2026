@@ -46,10 +46,6 @@ export default function CreateSuggestionModal({
 
   const createSuggestionMutation = useMutation({
     mutationFn: async (data) => {
-      if (currentUser.points < POINTS_COST) {
-        throw new Error(`You need at least ${POINTS_COST} points to create a suggestion`);
-      }
-
       const timerEndsAt = new Date();
       timerEndsAt.setHours(timerEndsAt.getHours() + (document.defaultSuggestionLifetimeHours || 72));
 
@@ -69,7 +65,6 @@ export default function CreateSuggestionModal({
       });
 
       await base44.auth.updateMe({
-        points: currentUser.points - POINTS_COST,
         suggestionsCreated: (currentUser.suggestionsCreated || 0) + 1,
       });
 
@@ -212,7 +207,7 @@ export default function CreateSuggestionModal({
             </Button>
             <Button 
               type="submit" 
-              disabled={createSuggestionMutation.isPending || (currentUser?.points ?? 1000) < POINTS_COST}
+              disabled={createSuggestionMutation.isPending}
               className="bg-gradient-to-r from-blue-600 to-indigo-600"
             >
               {createSuggestionMutation.isPending ? "Creating..." : "Create Suggestion"}
