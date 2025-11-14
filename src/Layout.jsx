@@ -27,6 +27,7 @@ export default function Layout({ children, currentPageName }) {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     retry: false,
+    staleTime: 0,
   });
 
   React.useEffect(() => {
