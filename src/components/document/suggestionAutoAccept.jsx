@@ -123,6 +123,14 @@ export async function autoAcceptSuggestion(suggestion, userId) {
       suggestionConsensus: consensus 
     });
     
+    // Award 200 points to suggestion creator when accepted
+    const suggestionCreator = await base44.entities.User.filter({ email: suggestion.created_by });
+    if (suggestionCreator.length > 0) {
+      await base44.entities.User.update(suggestionCreator[0].id, {
+        points: (suggestionCreator[0].points || 1000) + 200
+      });
+    }
+    
     return true;
   } catch (error) {
     console.error('Error auto-accepting suggestion:', error);

@@ -105,15 +105,15 @@ export default function Profile() {
         )}
 
         <div className="grid md:grid-cols-3 gap-6">
-          <Card className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
+          <Card className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-2 border-blue-400">
             <CardContent className="p-6">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                   <Sparkles className="w-6 h-6" />
                 </div>
                 <div>
-                  <div className="text-3xl font-bold">{user.points || 0}</div>
-                  <div className="text-sm text-blue-100">Points</div>
+                  <div className="text-4xl font-bold">{user.points || 1000}</div>
+                  <div className="text-sm text-blue-100 font-medium">נקודות גיימיפיקציה</div>
                 </div>
               </div>
             </CardContent>
@@ -251,9 +251,9 @@ export default function Profile() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                <span className="text-slate-700">Total Points</span>
-                <span className="font-bold text-blue-600">{user.points || 0}</span>
+              <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <span className="text-slate-700 font-medium">נקודות גיימיפיקציה</span>
+                <span className="font-bold text-2xl text-blue-600">{user.points || 1000}</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
                 <span className="text-slate-700">Suggestions Created</span>

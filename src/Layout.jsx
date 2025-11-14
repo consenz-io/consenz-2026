@@ -34,11 +34,18 @@ function LayoutContent({ children, currentPageName }) {
 
   React.useEffect(() => {
     const initializeUserData = async () => {
-      if (user && user.suggestionsCreated === undefined) {
-        await base44.auth.updateMe({ 
-          suggestionsCreated: 0
-        });
-        queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      if (user) {
+        const needsUpdate = {};
+        if (user.suggestionsCreated === undefined) {
+          needsUpdate.suggestionsCreated = 0;
+        }
+        if (user.points === undefined) {
+          needsUpdate.points = 1000;
+        }
+        if (Object.keys(needsUpdate).length > 0) {
+          await base44.auth.updateMe(needsUpdate);
+          queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+        }
       }
     };
     initializeUserData();
@@ -128,6 +135,10 @@ function LayoutContent({ children, currentPageName }) {
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <div className="px-3 py-2 space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-600">נקודות</span>
+                      <span className="font-bold text-lg text-blue-600">{user.points || 1000}</span>
+                    </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-600">{t('suggestions')}</span>
                       <span className="font-semibold">{user.suggestionsCreated || 0}</span>

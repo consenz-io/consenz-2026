@@ -59,6 +59,12 @@ export default function CreateSuggestionModal({
 
   const createSuggestionMutation = useMutation({
     mutationFn: async (data) => {
+      // Check if user has enough points
+      const currentPoints = currentUser.points || 1000;
+      if (currentPoints < POINTS_COST) {
+        throw new Error(`אין מספיק נקודות ליצירת הצעה (נדרשות ${POINTS_COST} נקודות, יש לך ${currentPoints})`);
+      }
+
       const timerEndsAt = new Date();
       timerEndsAt.setHours(timerEndsAt.getHours() + (document.defaultSuggestionLifetimeHours || 72));
 
@@ -106,8 +112,10 @@ export default function CreateSuggestionModal({
         originalLanguage: detectedLanguage,
       });
 
+      // Deduct 200 points for creating suggestion
       await base44.auth.updateMe({
         suggestionsCreated: (currentUser.suggestionsCreated || 0) + 1,
+        points: currentPoints - POINTS_COST
       });
 
       const interactions = await base44.entities.UserInteraction.filter({ 
@@ -183,6 +191,19 @@ export default function CreateSuggestionModal({
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-slate-700">עלות יצירת הצעה:</span>
+            <span className="font-bold text-blue-600">{POINTS_COST} נקודות</span>
+          </div>
+          <div className="flex items-center justify-between text-sm mt-1">
+            <span className="text-slate-700">הנקודות שלך:</span>
+            <span className={`font-bold ${(currentUser?.points || 1000) >= POINTS_COST ? 'text-green-600' : 'text-red-600'}`}>
+              {currentUser?.points || 1000} נקודות
+            </span>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {isNewSection && (
