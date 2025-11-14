@@ -32,6 +32,7 @@ export default function CreateSuggestionModal({
   const { data: currentUser, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
+    refetchOnMount: 'always',
   });
   
   const isNewSection = editingSection?.isNew;
