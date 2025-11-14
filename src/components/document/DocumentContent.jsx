@@ -173,7 +173,7 @@ export default function DocumentContent({
                         </div>
                       )}
                     <div key={section.id} className="space-y-3">
-                      <div className="group relative p-4 border border-slate-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/50 transition-all">
+                      <div id={`section-${section.id}`} className="group relative p-4 border border-slate-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/50 transition-all">
                         <div className={`flex justify-between items-start gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <div className="flex-1">
                             <div className="text-sm font-medium text-slate-500 mb-2">
