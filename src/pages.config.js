@@ -5,6 +5,7 @@ import Profile from './pages/Profile';
 import DocumentAdmin from './pages/DocumentAdmin';
 import SuggestionDetail from './pages/SuggestionDetail';
 import DocumentVersions from './pages/DocumentVersions';
+import DocumentCleanView from './pages/DocumentCleanView';
 import Layout from './Layout.jsx';
 
 
@@ -16,6 +17,7 @@ export const PAGES = {
     "DocumentAdmin": DocumentAdmin,
     "SuggestionDetail": SuggestionDetail,
     "DocumentVersions": DocumentVersions,
+    "DocumentCleanView": DocumentCleanView,
 }
 
 export const pagesConfig = {
