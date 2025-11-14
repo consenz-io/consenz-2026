@@ -36,15 +36,23 @@ export default function DocumentContent({
     initialData: [],
   });
 
-  const { data: allComments } = useQuery({
-    queryKey: ['allComments', document?.id],
+  const { data: sectionComments } = useQuery({
+    queryKey: ['sectionComments', document?.id],
     queryFn: () => base44.entities.Comment.filter({ rootEntityType: 'section' }),
     initialData: [],
     enabled: !!document?.id,
   });
 
+  const { data: suggestionComments } = useQuery({
+    queryKey: ['suggestionComments', document?.id],
+    queryFn: () => base44.entities.Comment.filter({ rootEntityType: 'suggestion' }),
+    initialData: [],
+    enabled: !!document?.id,
+  });
+
   const getCommentsCount = (entityType, entityId) => {
-    return allComments.filter(c => c.rootEntityType === entityType && c.rootEntityId === entityId).length;
+    const comments = entityType === 'section' ? sectionComments : suggestionComments;
+    return comments.filter(c => c.rootEntityId === entityId).length;
   };
 
   const { data: userVotes } = useQuery({

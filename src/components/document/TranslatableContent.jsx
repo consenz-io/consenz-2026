@@ -24,27 +24,26 @@ export default function TranslatableContent({
   onUpdate,
   className = "" 
 }) {
-  const { language } = useLanguage();
+  const { language, isRTL } = useLanguage();
   const [showOriginal, setShowOriginal] = useState(false);
   const queryClient = useQueryClient();
 
   const originalLanguage = entity.originalLanguage || 'he';
   const translations = entity.translations || {};
   const needsTranslation = !showOriginal && language !== originalLanguage && !translations[language];
+  
+  const displayLanguage = showOriginal ? originalLanguage : language;
+  const isDisplayRTL = displayLanguage === 'he' || displayLanguage === 'ar';
 
   const translateMutation = useMutation({
     mutationFn: async () => {
+      const plainText = content.replace(/<[^>]*>/g, '');
+      
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Translate the following HTML content to ${languagePrompts[language]}. 
-        
-IMPORTANT INSTRUCTIONS:
-- Keep all HTML tags exactly as they are
-- Only translate the text content, not the HTML structure
-- Maintain the same formatting and structure
-- Return ONLY the translated HTML, nothing else
+        prompt: `Translate the following text to ${languagePrompts[language]}. Return ONLY the translated text, nothing else.
 
-Content to translate:
-${content}`,
+Text to translate:
+${plainText}`,
         add_context_from_internet: false,
       });
 
@@ -83,6 +82,7 @@ ${content}`,
         <>
           <div 
             className={className}
+            style={{ direction: isDisplayRTL ? 'rtl' : 'ltr', textAlign: isDisplayRTL ? 'right' : 'left' }}
             dangerouslySetInnerHTML={{ __html: displayContent }}
           />
           
