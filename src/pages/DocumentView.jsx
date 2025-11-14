@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -210,6 +209,7 @@ export default function DocumentView() {
               document={document}
               topics={topics}
               sections={sections}
+              suggestions={suggestions}
               onEditSection={handleEditSection}
               onNewSection={handleNewSection}
               isAdmin={isAdmin}
