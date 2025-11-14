@@ -2,6 +2,7 @@ import Home from './pages/Home';
 import CreateDocument from './pages/CreateDocument';
 import DocumentView from './pages/DocumentView';
 import Profile from './pages/Profile';
+import DocumentAdmin from './pages/DocumentAdmin';
 import Layout from './Layout.jsx';
 
 
@@ -10,6 +11,7 @@ export const PAGES = {
     "CreateDocument": CreateDocument,
     "DocumentView": DocumentView,
     "Profile": Profile,
+    "DocumentAdmin": DocumentAdmin,
 }
 
 export const pagesConfig = {
