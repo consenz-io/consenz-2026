@@ -100,7 +100,7 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
                   </div>
 
                   <div className="text-xs text-slate-400">
-                    Created {new Date(suggestion.created_date).toLocaleDateString()} by {suggestion.created_by}
+                    Created {new Date(suggestion.created_date).toLocaleDateString()} by {getUserName(suggestion.created_by)}
                   </div>
                 </div>
               </CardContent>
