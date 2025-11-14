@@ -1,7 +1,8 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { FileText, Home, User, Settings, LogOut, Plus } from "lucide-react";
+import { FileText, Home, User, Settings, LogOut, Plus, Globe } from "lucide-react";
+import { useLanguage } from "@/components/LanguageContext";
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +24,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const queryClient = useQueryClient();
+  const { language, setLanguage, t, isRTL } = useLanguage();
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
@@ -48,12 +50,12 @@ export default function Layout({ children, currentPageName }) {
 
   const navigationItems = [
     {
-      title: "Home",
+      title: t('home'),
       url: createPageUrl("Home"),
       icon: Home,
     },
     {
-      title: "My Documents",
+      title: t('myDocuments'),
       url: createPageUrl("MyDocuments"),
       icon: FileText,
     },

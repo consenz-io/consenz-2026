@@ -10,6 +10,7 @@ import { Edit, Plus, AlertCircle, ThumbsUp, ThumbsDown, MessageSquare } from "lu
 import VotesNeededCounter from "./VotesNeededCounter";
 import SectionDiff from "./SectionDiff";
 import CommentsSection from "./CommentsSection";
+import { useLanguage } from "@/components/LanguageContext";
 
 export default function DocumentContent({ 
   document, 
@@ -23,6 +24,7 @@ export default function DocumentContent({
 }) {
   const [showComments, setShowComments] = useState({});
   const queryClient = useQueryClient();
+  const { t, isRTL } = useLanguage();
 
   // Auto-accept suggestions that meet threshold
   React.useEffect(() => {
@@ -308,8 +310,8 @@ export default function DocumentContent({
                     size="sm"
                     onClick={() => onNewSection(topic.id)}
                   >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Section
+                    <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {t('addSection')}
                   </Button>
                 )}
               </div>
@@ -317,7 +319,7 @@ export default function DocumentContent({
             <CardContent className="p-6 space-y-4">
               {topicSections.length === 0 ? (
                 <div className="text-center py-8 text-slate-500">
-                  No sections yet. {user && "Click 'Add Section' to start."}
+                  {t('noSectionsYet')}
                 </div>
               ) : (
                 topicSections.map((section, index) => {
@@ -355,7 +357,7 @@ export default function DocumentContent({
                             />
                             <div className="flex items-center justify-between mt-3">
                               <div className="text-xs text-slate-400">
-                                Last edited {new Date(section.updated_date).toLocaleDateString()}
+                                {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString()}
                               </div>
                               <Button
                                 variant="ghost"
@@ -363,8 +365,8 @@ export default function DocumentContent({
                                 onClick={() => toggleComments(`section-${section.id}`)}
                                 className="text-slate-600 hover:text-blue-600"
                               >
-                                <MessageSquare className="w-4 h-4 mr-1" />
-                                תגובות
+                                <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                {t('comments')}
                               </Button>
                             </div>
                           </div>
@@ -401,12 +403,12 @@ export default function DocumentContent({
                                   <div className="flex items-center gap-2">
                                     <AlertCircle className="w-4 h-4 text-amber-600" />
                                     <span className="text-sm font-semibold text-amber-900">
-                                      Pending Edit Suggestion
+                                      {t('pendingEditSuggestion')}
                                     </span>
                                   </div>
                                   <Link to={`${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`}>
                                     <Button size="sm" variant="outline">
-                                      View Details
+                                      {t('viewDetails')}
                                     </Button>
                                   </Link>
                                 </div>
@@ -440,7 +442,7 @@ export default function DocumentContent({
                                         disabled={voteMutation.isPending}
                                         className={getUserVote(suggestion.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}
                                       >
-                                        <ThumbsUp className="w-4 h-4 mr-1" />
+                                        <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                         {suggestion.proVotes || 0}
                                       </Button>
                                       <Button
@@ -457,7 +459,7 @@ export default function DocumentContent({
                                         disabled={voteMutation.isPending}
                                         className={getUserVote(suggestion.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}
                                       >
-                                        <ThumbsDown className="w-4 h-4 mr-1" />
+                                        <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                         {suggestion.conVotes || 0}
                                       </Button>
                                     </>
@@ -475,16 +477,16 @@ export default function DocumentContent({
                                   )}
                                   <VotesNeededCounter suggestion={suggestion} document={document} />
                                   <Badge variant="outline" className="text-xs">
-                                    By {getUserName(suggestion.created_by)}
+                                    {t('by')} {getUserName(suggestion.created_by)}
                                   </Badge>
                                   <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => toggleComments(`suggestion-${suggestion.id}`)}
-                                    className="mr-auto"
+                                    className={isRTL ? 'ml-auto' : 'mr-auto'}
                                   >
-                                    <MessageSquare className="w-4 h-4 mr-1" />
-                                    תגובות
+                                    <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                    {t('comments')}
                                   </Button>
                                 </div>
 
@@ -514,8 +516,8 @@ export default function DocumentContent({
                               onClick={() => onNewSection(topic.id, index + 1)}
                               className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
                             >
-                              <Plus className="w-4 h-4 mr-1" />
-                              הוסף סעיף כאן
+                              <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                              {t('insertSectionHere')}
                             </Button>
                           </div>
                         </div>
@@ -533,7 +535,7 @@ export default function DocumentContent({
       {topics.length === 0 && (
         <Card className="bg-white border-slate-200">
           <CardContent className="p-12 text-center">
-            <p className="text-slate-500">No topics defined yet.</p>
+            <p className="text-slate-500">{t('noTopicsYet')}</p>
           </CardContent>
         </Card>
       )}
