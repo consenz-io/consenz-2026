@@ -17,6 +17,15 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Sparkles } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
+const detectLanguage = (text) => {
+  const hebrewPattern = /[\u0590-\u05FF]/;
+  const arabicPattern = /[\u0600-\u06FF]/;
+  
+  if (hebrewPattern.test(text)) return 'he';
+  if (arabicPattern.test(text)) return 'ar';
+  return 'en';
+};
+
 const POINTS_COST = 200;
 
 export default function CreateSuggestionModal({ 

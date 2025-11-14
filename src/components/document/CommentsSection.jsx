@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { MessageSquare, Send, Reply, Trash2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
+import TranslatableContent from "./TranslatableContent";
 
 export default function CommentsSection({ entityType, entityId, user }) {
   const { t } = useLanguage();
@@ -39,7 +40,17 @@ export default function CommentsSection({ entityType, entityId, user }) {
 
   const createCommentMutation = useMutation({
     mutationFn: async (data) => {
-      return await base44.entities.Comment.create(data);
+      const hebrewPattern = /[\u0590-\u05FF]/;
+      const arabicPattern = /[\u0600-\u06FF]/;
+      let detectedLanguage = 'en';
+      
+      if (hebrewPattern.test(data.content)) detectedLanguage = 'he';
+      else if (arabicPattern.test(data.content)) detectedLanguage = 'ar';
+      
+      return await base44.entities.Comment.create({
+        ...data,
+        originalLanguage: detectedLanguage
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', entityType, entityId] });
@@ -108,9 +119,12 @@ export default function CommentsSection({ entityType, entityId, user }) {
                   })}
                 </span>
               </div>
-              <p className="text-sm text-slate-700 whitespace-pre-wrap break-words">
-                {comment.content}
-              </p>
+              <TranslatableContent
+                content={comment.content}
+                entity={comment}
+                entityType="Comment"
+                className="text-sm text-slate-700 whitespace-pre-wrap break-words"
+              />
               <div className="flex gap-2 mt-2">
                 {user && !isReply && (
                   <Button

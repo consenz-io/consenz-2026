@@ -10,6 +10,7 @@ import { Edit, Plus, AlertCircle, ThumbsUp, ThumbsDown, MessageSquare } from "lu
 import VotesNeededCounter from "./VotesNeededCounter";
 import SectionDiff from "./SectionDiff";
 import CommentsSection from "./CommentsSection";
+import TranslatableContent from "./TranslatableContent";
 import { useLanguage } from "@/components/LanguageContext";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAutoAccept";
 
@@ -190,10 +191,11 @@ export default function DocumentContent({
                             <div className="text-sm font-medium text-slate-500 mb-2">
                               Section {index + 1}
                             </div>
-                            <div 
+                            <TranslatableContent
+                              content={section.content}
+                              entity={section}
+                              entityType="Section"
                               className="prose prose-sm max-w-none text-slate-700"
-                              style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}
-                              dangerouslySetInnerHTML={{ __html: section.content }}
                             />
                             <div className={`flex items-center justify-between mt-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                               <div className="text-xs text-slate-400">
@@ -260,10 +262,15 @@ export default function DocumentContent({
                                   )}
                                 </div>
 
-                                <SectionDiff 
-                                  originalContent={section.content}
-                                  newContent={suggestion.newContent}
-                                />
+                                <div className="space-y-2">
+                                  <div className="text-xs font-semibold text-slate-500 mb-1">תוכן מוצע:</div>
+                                  <TranslatableContent
+                                    content={suggestion.newContent}
+                                    entity={suggestion}
+                                    entityType="Suggestion"
+                                    className="prose prose-sm max-w-none p-3 bg-green-50 rounded border border-green-200"
+                                  />
+                                </div>
 
                                 <div className="flex items-center gap-4 mt-3 text-sm flex-wrap">
                                   {user && document?.votingButtonsEnabled ? (
