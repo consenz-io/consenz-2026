@@ -221,14 +221,55 @@ export default function DocumentContent({
                                 />
 
                                 <div className="flex items-center gap-4 mt-3 text-sm flex-wrap">
-                                  <div className="flex items-center gap-1 text-green-600">
-                                    <ThumbsUp className="w-4 h-4" />
-                                    <span className="font-medium">{suggestion.proVotes || 0}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1 text-red-600">
-                                    <ThumbsDown className="w-4 h-4" />
-                                    <span className="font-medium">{suggestion.conVotes || 0}</span>
-                                  </div>
+                                  {user && document?.votingButtonsEnabled ? (
+                                    <>
+                                      <Button
+                                        variant={getUserVote(suggestion.id)?.vote === 'pro' ? 'default' : 'outline'}
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          voteMutation.mutate({
+                                            suggestionId: suggestion.id,
+                                            vote: 'pro',
+                                            currentVote: getUserVote(suggestion.id)
+                                          });
+                                        }}
+                                        disabled={voteMutation.isPending}
+                                        className={getUserVote(suggestion.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}
+                                      >
+                                        <ThumbsUp className="w-4 h-4 mr-1" />
+                                        {suggestion.proVotes || 0}
+                                      </Button>
+                                      <Button
+                                        variant={getUserVote(suggestion.id)?.vote === 'con' ? 'default' : 'outline'}
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          voteMutation.mutate({
+                                            suggestionId: suggestion.id,
+                                            vote: 'con',
+                                            currentVote: getUserVote(suggestion.id)
+                                          });
+                                        }}
+                                        disabled={voteMutation.isPending}
+                                        className={getUserVote(suggestion.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}
+                                      >
+                                        <ThumbsDown className="w-4 h-4 mr-1" />
+                                        {suggestion.conVotes || 0}
+                                      </Button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div className="flex items-center gap-1 text-green-600">
+                                        <ThumbsUp className="w-4 h-4" />
+                                        <span className="font-medium">{suggestion.proVotes || 0}</span>
+                                      </div>
+                                      <div className="flex items-center gap-1 text-red-600">
+                                        <ThumbsDown className="w-4 h-4" />
+                                        <span className="font-medium">{suggestion.conVotes || 0}</span>
+                                      </div>
+                                    </>
+                                  )}
                                   <VotesNeededCounter suggestion={suggestion} document={document} />
                                   <Badge variant="outline" className="text-xs">
                                     By {getUserName(suggestion.created_by)}
