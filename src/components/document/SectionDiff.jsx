@@ -68,10 +68,11 @@ export default function SectionDiff({ originalContent, newContent }) {
 
   const diff = computeDiff();
 
+  const { isRTL } = useLanguage();
   return (
     <Card className="p-4 bg-slate-50 border-slate-200">
       <div className="text-sm font-semibold text-slate-700 mb-3">{t('proposedChanges')}</div>
-      <div className="prose prose-sm max-w-none leading-relaxed">
+      <div className="prose prose-sm max-w-none leading-relaxed" style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
         {diff.map((part, idx) => {
           if (part.type === 'removed') {
             return (

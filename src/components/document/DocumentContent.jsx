@@ -353,6 +353,7 @@ export default function DocumentContent({
                             </div>
                             <div 
                               className="prose prose-sm max-w-none text-slate-700"
+                              style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}
                               dangerouslySetInnerHTML={{ __html: section.content }}
                             />
                             <div className={`flex items-center justify-between mt-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -413,7 +414,7 @@ export default function DocumentContent({
                                   </Link>
                                 </div>
                                 
-                                <div className="text-sm text-slate-700 mb-3">
+                                <div className="text-sm text-slate-700 mb-3" style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
                                   <strong>{suggestion.title}</strong>
                                   {suggestion.explanation && (
                                     <p className="text-slate-600 mt-1">{suggestion.explanation}</p>
