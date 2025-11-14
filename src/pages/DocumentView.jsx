@@ -23,21 +23,6 @@ export default function DocumentView() {
   const [showCreateSuggestion, setShowCreateSuggestion] = useState(false);
   const [editingSection, setEditingSection] = useState(null);
 
-  useEffect(() => {
-    if (scrollToSectionId && sections.length > 0) {
-      setTimeout(() => {
-        const element = document.getElementById(`section-${scrollToSectionId}`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-          setTimeout(() => {
-            element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
-          }, 2000);
-        }
-      }, 300);
-    }
-  }, [scrollToSectionId, sections]);
-
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
     queryFn: () => base44.entities.Document.filter({ id: documentId }).then(docs => docs[0]),
@@ -81,6 +66,21 @@ export default function DocumentView() {
     },
     enabled: !!user?.id && !!documentId,
   });
+
+  useEffect(() => {
+    if (scrollToSectionId && sections.length > 0) {
+      setTimeout(() => {
+        const element = document.getElementById(`section-${scrollToSectionId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+          setTimeout(() => {
+            element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+          }, 2000);
+        }
+      }, 300);
+    }
+  }, [scrollToSectionId, sections]);
 
   const handleEditSection = (section) => {
     setEditingSection(section);
