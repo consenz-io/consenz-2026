@@ -70,7 +70,7 @@ export default function DocumentView() {
   useEffect(() => {
     if (scrollToSectionId && sections.length > 0) {
       setTimeout(() => {
-        const element = document.getElementById(`section-${scrollToSectionId}`);
+        const element = window.document.getElementById(`section-${scrollToSectionId}`);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
           element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
