@@ -277,22 +277,39 @@ export default function SuggestionDetail() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Link to={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}`}>
-            <Button variant="outline" size="icon">
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">{suggestion.title}</h1>
-            {document && (
-              <p className="text-slate-600 mt-1">
-                <Link to={`${createPageUrl("DocumentView")}?id=${document.id}`} className="hover:underline">
-                  {document.title}
-                </Link>
-              </p>
-            )}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link to={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}`}>
+              <Button variant="outline" size="icon">
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">{suggestion.title}</h1>
+              {document && (
+                <p className="text-slate-600 mt-1">
+                  <Link to={`${createPageUrl("DocumentView")}?id=${document.id}`} className="hover:underline">
+                    {document.title}
+                  </Link>
+                </p>
+              )}
+            </div>
           </div>
+          {user && user.email === suggestion.created_by && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                if (confirm('האם אתה בטוח שברצונך למחוק הצעה זו?')) {
+                  deleteSuggestionMutation.mutate();
+                }
+              }}
+              disabled={deleteSuggestionMutation.isPending}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              מחק הצעה
+            </Button>
+          )}
         </div>
 
         {error && (
