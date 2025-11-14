@@ -78,8 +78,9 @@ export default function DocumentVersionHistory({
       {sortedVersions.map((version, index) => {
         const previousVersion = sortedVersions[index + 1];
         return (
-          <Card key={version.id} className="bg-white border-slate-200 hover:shadow-lg transition-all">
-            <CardHeader>
+          <Link key={version.id} to={`${createPageUrl("DocumentView")}?id=${documentId}&scrollTo=${sectionId}`}>
+            <Card className="bg-white border-slate-200 hover:shadow-lg transition-all cursor-pointer">
+              <CardHeader>
               <div className={`flex justify-between items-start gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className="flex-1">
                   <div className={`flex items-center gap-2 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -103,7 +104,9 @@ export default function DocumentVersionHistory({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       if (confirm(t('confirmRestoreVersion'))) {
                         restoreVersionMutation.mutate(version);
                       }
@@ -131,7 +134,8 @@ export default function DocumentVersionHistory({
                 />
               )}
             </CardContent>
-          </Card>
+            </Card>
+          </Link>
         );
       })}
     </div>
