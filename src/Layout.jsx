@@ -18,15 +18,29 @@ import {
 } from "@/components/ui/sidebar";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
+  const queryClient = useQueryClient();
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     retry: false,
   });
+
+  React.useEffect(() => {
+    const initializeUserPoints = async () => {
+      if (user && user.points === undefined) {
+        await base44.auth.updateMe({ 
+          points: 1000,
+          suggestionsCreated: 0
+        });
+        queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      }
+    };
+    initializeUserPoints();
+  }, [user, queryClient]);
 
   const handleLogout = () => {
     base44.auth.logout();
