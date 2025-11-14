@@ -88,6 +88,8 @@ export default function CreateSuggestionModal({
         ? `New section in ${topicTitle}`
         : `Edit section in ${topicTitle}`;
 
+      const detectedLanguage = detectLanguage(data.newContent);
+      
       const suggestion = await base44.entities.Suggestion.create({
         documentId: document.id,
         sectionId: isNewSection ? null : editingSection.id,
@@ -101,6 +103,7 @@ export default function CreateSuggestionModal({
         proVotes: 0,
         conVotes: 0,
         insertPosition: editingSection?.insertPosition,
+        originalLanguage: detectedLanguage,
       });
 
       await base44.auth.updateMe({
