@@ -277,10 +277,17 @@ export default function DocumentVersions() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div 
-                    className="prose prose-sm max-w-none text-slate-700 p-4 bg-slate-50 rounded-lg"
-                    dangerouslySetInnerHTML={{ __html: version.content }}
-                  />
+                  {index < versions.length - 1 ? (
+                    <SectionDiff
+                      originalContent={versions[index + 1].content}
+                      newContent={version.content}
+                    />
+                  ) : (
+                    <div 
+                      className="prose prose-sm max-w-none text-slate-700 p-4 bg-slate-50 rounded-lg"
+                      dangerouslySetInnerHTML={{ __html: version.content }}
+                    />
+                  )}
                 </CardContent>
               </Card>
             ))
