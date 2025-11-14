@@ -132,10 +132,6 @@ export default function CreateSuggestionModal({
           <DialogTitle>
             {isNewSection ? 'Suggest New Section' : 'Suggest Edit to Section'}
           </DialogTitle>
-          <div className="flex items-center gap-2 text-sm text-slate-600 mt-2">
-            <Sparkles className="w-4 h-4" />
-            <span>Cost: {POINTS_COST} points (You have: {currentUser?.points ?? 1000})</span>
-          </div>
         </DialogHeader>
 
         {error && (

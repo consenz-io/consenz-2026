@@ -127,10 +127,6 @@ export default function Layout({ children, currentPageName }) {
                 <SidebarGroupContent>
                   <div className="px-3 py-2 space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">Points</span>
-                      <span className="font-bold text-blue-600">{user.points || 1000}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-600">Suggestions</span>
                       <span className="font-semibold">{user.suggestionsCreated || 0}</span>
                     </div>
