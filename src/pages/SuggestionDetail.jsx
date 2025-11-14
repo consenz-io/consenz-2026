@@ -394,7 +394,7 @@ export default function SuggestionDetail() {
             )}
 
             <div className="flex items-center justify-between pt-4 border-t">
-              <div className="flex gap-6">
+              <div className="flex gap-6 flex-wrap items-center">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">{suggestion.proVotes || 0}</div>
                   <div className="text-xs text-slate-500">Pro Votes</div>
@@ -407,6 +407,7 @@ export default function SuggestionDetail() {
                   <div className="text-2xl font-bold text-blue-600">{consensusScore}%</div>
                   <div className="text-xs text-slate-500">Consensus</div>
                 </div>
+                <VotesNeededCounter suggestion={suggestion} document={document} />
               </div>
 
               {user && suggestion.status === 'pending' && document?.votingButtonsEnabled && (
