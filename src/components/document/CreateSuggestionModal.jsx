@@ -44,15 +44,34 @@ export default function CreateSuggestionModal({
     explanation: "",
   });
 
+  const [isCreatingNewTopic, setIsCreatingNewTopic] = useState(false);
+  const [newTopicName, setNewTopicName] = useState("");
+
   const createSuggestionMutation = useMutation({
     mutationFn: async (data) => {
       const timerEndsAt = new Date();
       timerEndsAt.setHours(timerEndsAt.getHours() + (document.defaultSuggestionLifetimeHours || 72));
 
+      let targetTopicId = data.topicId;
+      
+      // Create new topic if needed
+      if (isCreatingNewTopic && newTopicName.trim()) {
+        const existingTopics = await base44.entities.Topic.filter({ documentId: document.id }, 'order');
+        const maxOrder = existingTopics.length > 0 ? Math.max(...existingTopics.map(t => t.order)) : -1;
+        
+        const newTopic = await base44.entities.Topic.create({
+          documentId: document.id,
+          title: newTopicName.trim(),
+          order: maxOrder + 1
+        });
+        
+        targetTopicId = newTopic.id;
+      }
+
       const suggestion = await base44.entities.Suggestion.create({
         documentId: document.id,
         sectionId: isNewSection ? null : editingSection.id,
-        topicId: data.topicId,
+        topicId: targetTopicId,
         type: isNewSection ? 'new_section' : 'edit_section',
         title: data.title,
         newContent: data.newContent,
@@ -91,6 +110,7 @@ export default function CreateSuggestionModal({
       queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       queryClient.invalidateQueries({ queryKey: ['document', document.id] });
+      queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
       onClose();
     },
     onError: (err) => {
@@ -109,6 +129,11 @@ export default function CreateSuggestionModal({
 
     if (!formData.newContent.trim()) {
       setError("Content is required");
+      return;
+    }
+
+    if (isCreatingNewTopic && !newTopicName.trim()) {
+      setError("Topic name is required");
       return;
     }
 
@@ -153,23 +178,43 @@ export default function CreateSuggestionModal({
           </div>
 
           {isNewSection && (
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="topic">Topic</Label>
-              <Select
-                value={formData.topicId}
-                onValueChange={(value) => setFormData({ ...formData, topicId: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {topics.map((topic) => (
-                    <SelectItem key={topic.id} value={topic.id}>
-                      {topic.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  type="checkbox"
+                  id="newTopic"
+                  checked={isCreatingNewTopic}
+                  onChange={(e) => setIsCreatingNewTopic(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <Label htmlFor="newTopic" className="text-sm font-normal cursor-pointer">
+                  Create new topic
+                </Label>
+              </div>
+              {isCreatingNewTopic ? (
+                <Input
+                  value={newTopicName}
+                  onChange={(e) => setNewTopicName(e.target.value)}
+                  placeholder="Enter new topic name..."
+                />
+              ) : (
+                <Select
+                  value={formData.topicId}
+                  onValueChange={(value) => setFormData({ ...formData, topicId: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {topics.map((topic) => (
+                      <SelectItem key={topic.id} value={topic.id}>
+                        {topic.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           )}
 
