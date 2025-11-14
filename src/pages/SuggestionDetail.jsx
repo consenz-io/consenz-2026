@@ -172,6 +172,20 @@ export default function SuggestionDetail() {
       if (!isAdmin) throw new Error("Admin access required");
       
       if (status === 'accepted' && suggestion.type === 'edit_section' && section) {
+        // Save current version before updating
+        const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
+        const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
+        
+        await base44.entities.DocumentVersion.create({
+          documentId: suggestion.documentId,
+          sectionId: section.id,
+          content: section.content,
+          changeDescription: suggestion.title,
+          version: nextVersion,
+          changeType: 'suggestion_accepted',
+          suggestionId: suggestion.id
+        });
+        
         await base44.entities.Section.update(section.id, {
           content: suggestion.newContent,
           lastEditedBy: user.id
@@ -183,12 +197,23 @@ export default function SuggestionDetail() {
         });
         const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order)) : -1;
         
-        await base44.entities.Section.create({
+        const newSection = await base44.entities.Section.create({
           documentId: suggestion.documentId,
           topicId: suggestion.topicId,
           content: suggestion.newContent,
           order: maxOrder + 1,
           lastEditedBy: user.id
+        });
+        
+        // Create initial version for new section
+        await base44.entities.DocumentVersion.create({
+          documentId: suggestion.documentId,
+          sectionId: newSection.id,
+          content: suggestion.newContent,
+          changeDescription: suggestion.title,
+          version: 1,
+          changeType: 'section_created',
+          suggestionId: suggestion.id
         });
       }
 
@@ -197,6 +222,7 @@ export default function SuggestionDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
       queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
+      queryClient.invalidateQueries({ queryKey: ['versions'] });
     },
     onError: (err) => {
       setError(err.message);

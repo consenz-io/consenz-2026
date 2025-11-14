@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft } from "lucide-react";
+import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, History } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import DocumentContent from "../components/document/DocumentContent";
