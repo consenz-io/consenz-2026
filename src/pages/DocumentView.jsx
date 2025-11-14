@@ -51,6 +51,7 @@ export default function DocumentView() {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     retry: false,
+    staleTime: 0,
   });
 
   const { data: isAdmin } = useQuery({

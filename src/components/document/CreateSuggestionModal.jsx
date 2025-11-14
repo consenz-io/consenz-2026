@@ -29,12 +29,7 @@ export default function CreateSuggestionModal({
   const queryClient = useQueryClient();
   const [error, setError] = useState(null);
   
-  const { data: currentUser, isLoading: userLoading } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-    staleTime: 0,
-    cacheTime: 0,
-  });
+  const currentUser = user;
   
   const isNewSection = editingSection?.isNew;
   const existingSection = !isNewSection ? sections.find(s => s.id === editingSection?.id) : null;
@@ -122,7 +117,7 @@ export default function CreateSuggestionModal({
     createSuggestionMutation.mutate(formData);
   };
 
-  if (userLoading || !currentUser) {
+  if (!currentUser) {
     return (
       <Dialog open onOpenChange={onClose}>
         <DialogContent className="max-w-2xl">
