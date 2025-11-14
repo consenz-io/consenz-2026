@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, Plus, Trash2, AlertCircle, Upload, Loader2 } from "lucide-react";
+import { FileText, Plus, Trash2, AlertCircle, Upload, Loader2, CheckCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function CreateDocument() {
@@ -19,6 +19,18 @@ export default function CreateDocument() {
   const queryClient = useQueryClient();
   const [error, setError] = useState(null);
   const [creationMode, setCreationMode] = useState("manual");
+
+  const { data: user, isLoading: userLoading } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+    retry: false,
+  });
+
+  const { data: existingDocuments } = useQuery({
+    queryKey: ['allDocuments'],
+    queryFn: () => base44.entities.Document.list(),
+    initialData: [],
+  });
 
   const [formData, setFormData] = useState({
     title: "",
@@ -32,52 +44,82 @@ export default function CreateDocument() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [extractedStructure, setExtractedStructure] = useState(null);
+  const [processingStage, setProcessingStage] = useState("");
+
+  useEffect(() => {
+    if (!userLoading && !user) {
+      base44.auth.redirectToLogin(window.location.pathname);
+    }
+  }, [user, userLoading]);
+
+  const validateUrlName = (urlName) => {
+    if (!urlName || urlName.trim() === "") {
+      return "URL name is required";
+    }
+    if (!/^[a-z0-9-]+$/.test(urlName)) {
+      return "URL name can only contain lowercase letters, numbers, and hyphens";
+    }
+    const exists = existingDocuments.some(doc => doc.urlName === urlName);
+    if (exists) {
+      return "This URL name is already taken. Please choose another.";
+    }
+    return null;
+  };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    const validTypes = [
+      'application/pdf', 
+      'application/msword', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    
     if (!validTypes.includes(file.type)) {
-      setError("Please upload a PDF or Word document");
+      setError("Please upload a PDF or Word document (.pdf, .doc, .docx)");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError("File size must be less than 10MB");
       return;
     }
 
     setUploadedFile(file);
     setError(null);
     setIsProcessing(true);
+    setProcessingStage("Uploading file...");
 
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setProcessingStage("Analyzing document structure...");
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `Analyze this document and extract its structure. Divide it into logical topics and sections.
-        
-For each topic, identify:
-- A clear topic title
-- All sections under that topic with their full content
 
-Return a JSON structure like this:
+IMPORTANT INSTRUCTIONS:
+1. Identify main topics/chapters based on document headings
+2. Under each topic, extract sections with their complete content
+3. Preserve all original text - do not summarize
+4. If the document has no clear structure, create logical groupings
+5. Minimum: create at least 1 topic with 1 section
+6. Keep section content clear and well-formatted
+
+Return ONLY valid JSON in this exact format:
 {
-  "title": "Suggested document title",
+  "title": "Document Title Here",
   "topics": [
     {
-      "title": "Topic Title",
+      "title": "Topic 1 Title",
       "sections": [
         {
-          "content": "Full section content here..."
+          "content": "Complete section content here with all details..."
         }
       ]
     }
   ]
-}
-
-Important:
-- Preserve the original document structure as much as possible
-- Keep the full content of each section
-- Use meaningful topic and section titles
-- If the document has clear headings, use them as topic titles
-- If sections have subheadings, preserve them in the content`,
+}`,
         file_urls: [file_url],
         response_json_schema: {
           type: "object",
@@ -95,73 +137,122 @@ Important:
                       type: "object",
                       properties: {
                         content: { type: "string" }
-                      }
+                      },
+                      required: ["content"]
                     }
                   }
-                }
+                },
+                required: ["title", "sections"]
               }
             }
-          }
+          },
+          required: ["title", "topics"]
         }
       });
 
-      if (result && result.topics && result.topics.length > 0) {
-        setExtractedStructure(result);
-        setFormData({
-          ...formData,
-          title: result.title || file.name.replace(/\.[^/.]+$/, ""),
-          urlName: (result.title || file.name.replace(/\.[^/.]+$/, ""))
-            .toLowerCase()
-            .replace(/\s+/g, '-')
-            .replace(/[^a-z0-9-]/g, ''),
-        });
-        setTopics(result.topics.map(topic => ({
-          title: topic.title,
-          sections: topic.sections.map(section => ({
-            content: section.content
-          }))
-        })));
-      } else {
-        throw new Error("Could not extract structure from document");
+      setProcessingStage("Validating extracted data...");
+
+      if (!result || !result.topics || !Array.isArray(result.topics)) {
+        throw new Error("Failed to extract valid document structure");
       }
+
+      const validTopics = result.topics.filter(topic => {
+        return topic.title && 
+               topic.sections && 
+               Array.isArray(topic.sections) && 
+               topic.sections.length > 0 &&
+               topic.sections.some(section => section.content && section.content.trim().length > 0);
+      });
+
+      if (validTopics.length === 0) {
+        throw new Error("No valid topics found in document. Please try manual creation.");
+      }
+
+      const cleanTopics = validTopics.map(topic => ({
+        title: topic.title.trim(),
+        sections: topic.sections
+          .filter(section => section.content && section.content.trim().length > 0)
+          .map(section => ({
+            content: section.content.trim()
+          }))
+      }));
+
+      setExtractedStructure({ ...result, topics: cleanTopics });
+      
+      const suggestedTitle = result.title?.trim() || file.name.replace(/\.[^/.]+$/, "");
+      const suggestedUrlName = suggestedTitle
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .substring(0, 50);
+
+      setFormData({
+        ...formData,
+        title: suggestedTitle,
+        urlName: suggestedUrlName,
+      });
+      
+      setTopics(cleanTopics);
+      setProcessingStage("Complete!");
+
     } catch (err) {
-      setError(err.message || "Failed to process document");
+      console.error("File processing error:", err);
+      setError(err.message || "Failed to process document. Please try manual creation or a different file.");
       setUploadedFile(null);
+      setExtractedStructure(null);
     } finally {
       setIsProcessing(false);
+      setTimeout(() => setProcessingStage(""), 2000);
     }
   };
 
   const createDocMutation = useMutation({
     mutationFn: async (data) => {
+      const urlError = validateUrlName(data.urlName);
+      if (urlError) {
+        throw new Error(urlError);
+      }
+
+      const validTopics = data.topics.filter(t => 
+        t.title && t.title.trim() && 
+        t.sections && t.sections.length > 0 &&
+        t.sections.some(s => s.content && s.content.trim())
+      );
+
+      if (validTopics.length === 0) {
+        throw new Error("Please add at least one topic with one section");
+      }
+
       const doc = await base44.entities.Document.create({
-        title: data.title,
-        urlName: data.urlName,
+        title: data.title.trim(),
+        urlName: data.urlName.trim(),
         privacy: data.privacy,
         votingButtonsEnabled: data.votingButtonsEnabled,
         defaultSuggestionLifetimeHours: data.defaultSuggestionLifetimeHours,
+        avgSuggestionConsensus: 0.5,
+        totalUsersInteracted: 0,
+        threshold: 0,
       });
 
-      const user = await base44.auth.me();
       await base44.entities.DocumentAdmin.create({
         documentId: doc.id,
         userId: user.id,
       });
 
-      for (let i = 0; i < data.topics.length; i++) {
-        const topicData = data.topics[i];
-        if (!topicData.title.trim()) continue;
-
+      for (let i = 0; i < validTopics.length; i++) {
+        const topicData = validTopics[i];
+        
         const topic = await base44.entities.Topic.create({
           documentId: doc.id,
-          title: topicData.title,
+          title: topicData.title.trim(),
           order: i,
         });
 
-        for (let j = 0; j < topicData.sections.length; j++) {
-          const sectionContent = topicData.sections[j].content;
-          if (!sectionContent.trim()) continue;
-
+        const validSections = topicData.sections.filter(s => s.content && s.content.trim());
+        
+        for (let j = 0; j < validSections.length; j++) {
+          const sectionContent = validSections[j].content.trim();
+          
           await base44.entities.Section.create({
             documentId: doc.id,
             topicId: topic.id,
@@ -176,10 +267,12 @@ Important:
     },
     onSuccess: (doc) => {
       queryClient.invalidateQueries({ queryKey: ['publicDocuments'] });
+      queryClient.invalidateQueries({ queryKey: ['allDocuments'] });
       navigate(createPageUrl("DocumentView", `?id=${doc.id}`));
     },
     onError: (err) => {
-      setError(err.message || "Failed to create document");
+      console.error("Document creation error:", err);
+      setError(err.message || "Failed to create document. Please try again.");
     },
   });
 
@@ -187,17 +280,34 @@ Important:
     e.preventDefault();
     setError(null);
 
-    if (!formData.title.trim()) {
-      setError("Title is required");
+    if (!formData.title || !formData.title.trim()) {
+      setError("Document title is required");
       return;
     }
 
-    if (!formData.urlName.trim()) {
-      setError("URL name is required");
+    if (formData.title.trim().length < 3) {
+      setError("Title must be at least 3 characters long");
       return;
     }
 
-    createDocMutation.mutate({ ...formData, topics });
+    const urlError = validateUrlName(formData.urlName);
+    if (urlError) {
+      setError(urlError);
+      return;
+    }
+
+    const validTopics = topics.filter(t => 
+      t.title && t.title.trim() && 
+      t.sections && t.sections.length > 0 &&
+      t.sections.some(s => s.content && s.content.trim())
+    );
+
+    if (validTopics.length === 0) {
+      setError("Please add at least one topic with one section containing content");
+      return;
+    }
+
+    createDocMutation.mutate({ ...formData, topics: validTopics });
   };
 
   const addTopic = () => {
@@ -205,6 +315,10 @@ Important:
   };
 
   const removeTopic = (index) => {
+    if (topics.length === 1) {
+      setError("Document must have at least one topic");
+      return;
+    }
     setTopics(topics.filter((_, i) => i !== index));
   };
 
@@ -216,9 +330,36 @@ Important:
 
   const removeSection = (topicIndex, sectionIndex) => {
     const newTopics = [...topics];
+    if (newTopics[topicIndex].sections.length === 1) {
+      setError("Each topic must have at least one section");
+      return;
+    }
     newTopics[topicIndex].sections = newTopics[topicIndex].sections.filter((_, i) => i !== sectionIndex);
     setTopics(newTopics);
   };
+
+  const resetUpload = () => {
+    setUploadedFile(null);
+    setExtractedStructure(null);
+    setTopics([{ title: "", sections: [{ content: "" }] }]);
+    setFormData({
+      ...formData,
+      title: "",
+      urlName: "",
+    });
+  };
+
+  if (userLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
@@ -235,26 +376,41 @@ Important:
           </Alert>
         )}
 
-        <Tabs value={creationMode} onValueChange={setCreationMode} className="mb-6">
+        <Tabs value={creationMode} onValueChange={(val) => {
+          setCreationMode(val);
+          setError(null);
+        }} className="mb-6">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="manual">Manual Creation</TabsTrigger>
-            <TabsTrigger value="upload">Upload Document</TabsTrigger>
+            <TabsTrigger value="manual">
+              <FileText className="w-4 h-4 mr-2" />
+              Manual Creation
+            </TabsTrigger>
+            <TabsTrigger value="upload">
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Document
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="upload" className="mt-6">
-            <Card className="border-2 border-dashed border-slate-300">
+            <Card className="border-2 border-dashed border-slate-300 bg-white">
               <CardHeader>
                 <CardTitle>Upload & Sync Document</CardTitle>
                 <CardDescription>
-                  Upload a PDF or Word document. We'll automatically extract topics and sections.
+                  Upload a PDF or Word document. AI will automatically extract topics and sections.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {!uploadedFile && !isProcessing && (
                   <div className="text-center py-12">
-                    <Upload className="w-16 h-16 mx-auto mb-4 text-slate-400" />
+                    <div className="w-20 h-20 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Upload className="w-10 h-10 text-blue-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Upload Your Document</h3>
+                    <p className="text-sm text-slate-600 mb-4">
+                      We'll analyze it and extract the structure automatically
+                    </p>
                     <label htmlFor="file-upload" className="cursor-pointer">
-                      <Button type="button" asChild>
+                      <Button type="button" asChild className="bg-gradient-to-r from-blue-600 to-indigo-600">
                         <span>
                           <Upload className="w-4 h-4 mr-2" />
                           Choose File
@@ -268,8 +424,8 @@ Important:
                         className="hidden"
                       />
                     </label>
-                    <p className="text-sm text-slate-500 mt-4">
-                      Supported formats: PDF, DOC, DOCX
+                    <p className="text-xs text-slate-500 mt-4">
+                      Supported: PDF, DOC, DOCX • Max size: 10MB
                     </p>
                   </div>
                 )}
@@ -278,27 +434,34 @@ Important:
                   <div className="text-center py-12">
                     <Loader2 className="w-16 h-16 mx-auto mb-4 text-blue-600 animate-spin" />
                     <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                      Processing Document...
+                      Processing Document
                     </h3>
-                    <p className="text-slate-600">
-                      Analyzing structure and extracting topics and sections
-                    </p>
+                    <p className="text-slate-600">{processingStage}</p>
+                    <div className="mt-4 max-w-md mx-auto">
+                      <div className="w-full bg-slate-200 rounded-full h-2">
+                        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }} />
+                      </div>
+                    </div>
                   </div>
                 )}
 
                 {uploadedFile && !isProcessing && extractedStructure && (
                   <div className="space-y-4">
                     <Alert className="bg-green-50 border-green-200">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
                       <AlertDescription className="text-green-800">
-                        ✓ Document processed successfully! Found {extractedStructure.topics.length} topics.
-                        Review and edit below, then create your document.
+                        <strong>Success!</strong> Found {extractedStructure.topics.length} topics with{' '}
+                        {extractedStructure.topics.reduce((sum, t) => sum + t.sections.length, 0)} sections.
+                        Review and edit below.
                       </AlertDescription>
                     </Alert>
-                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
                       <div className="flex items-center gap-3">
-                        <FileText className="w-8 h-8 text-blue-600" />
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <FileText className="w-6 h-6 text-blue-600" />
+                        </div>
                         <div>
-                          <p className="font-medium">{uploadedFile.name}</p>
+                          <p className="font-medium text-slate-900">{uploadedFile.name}</p>
                           <p className="text-sm text-slate-500">
                             {(uploadedFile.size / 1024).toFixed(2)} KB
                           </p>
@@ -306,11 +469,8 @@ Important:
                       </div>
                       <Button
                         variant="outline"
-                        onClick={() => {
-                          setUploadedFile(null);
-                          setExtractedStructure(null);
-                          setTopics([{ title: "", sections: [{ content: "" }] }]);
-                        }}
+                        onClick={resetUpload}
+                        size="sm"
                       >
                         Upload Different File
                       </Button>
@@ -324,31 +484,41 @@ Important:
 
         {(creationMode === "manual" || extractedStructure) && (
           <form onSubmit={handleSubmit} className="space-y-6">
-            <Card>
+            <Card className="bg-white">
               <CardHeader>
                 <CardTitle>Document Details</CardTitle>
                 <CardDescription>Basic information about your document</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="title">Document Title</Label>
+                  <Label htmlFor="title">Document Title *</Label>
                   <Input
                     id="title"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     placeholder="e.g., Community Constitution"
+                    required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="urlName">URL Name</Label>
+                  <Label htmlFor="urlName">URL Name *</Label>
                   <Input
                     id="urlName"
                     value={formData.urlName}
-                    onChange={(e) => setFormData({ ...formData, urlName: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
+                      setFormData({ ...formData, urlName: cleaned });
+                    }}
                     placeholder="e.g., community-constitution"
+                    required
                   />
-                  <p className="text-sm text-slate-500 mt-1">Used in the document URL</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Used in URL • Only lowercase letters, numbers, and hyphens
+                  </p>
+                  {formData.urlName && validateUrlName(formData.urlName) && (
+                    <p className="text-xs text-red-600 mt-1">{validateUrlName(formData.urlName)}</p>
+                  )}
                 </div>
 
                 <div>
@@ -361,15 +531,24 @@ Important:
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="public_view_open_participation">Public - Open Participation</SelectItem>
-                      <SelectItem value="public_view_closed_participation">Public View - Closed Participation</SelectItem>
-                      <SelectItem value="private_invite_only">Private - Invite Only</SelectItem>
+                      <SelectItem value="public_view_open_participation">
+                        🌐 Public - Open Participation
+                      </SelectItem>
+                      <SelectItem value="public_view_closed_participation">
+                        👀 Public View - Closed Participation
+                      </SelectItem>
+                      <SelectItem value="private_invite_only">
+                        🔒 Private - Invite Only
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="voting">Enable Voting Buttons</Label>
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                  <div>
+                    <Label htmlFor="voting" className="text-base">Enable Voting Buttons</Label>
+                    <p className="text-sm text-slate-500">Allow users to vote on suggestions</p>
+                  </div>
                   <Switch
                     id="voting"
                     checked={formData.votingButtonsEnabled}
@@ -379,7 +558,7 @@ Important:
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-white">
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <div>
@@ -398,55 +577,67 @@ Important:
               </CardHeader>
               <CardContent className="space-y-6">
                 {topics.map((topic, topicIndex) => (
-                  <div key={topicIndex} className="border border-slate-200 rounded-lg p-4 space-y-4">
-                    <div className="flex gap-2">
-                      <Input
-                        value={topic.title}
-                        onChange={(e) => {
-                          const newTopics = [...topics];
-                          newTopics[topicIndex].title = e.target.value;
-                          setTopics(newTopics);
-                        }}
-                        placeholder="Topic title"
-                        className="flex-1"
-                      />
+                  <div key={topicIndex} className="border-2 border-slate-200 rounded-lg p-4 space-y-4 bg-slate-50">
+                    <div className="flex gap-2 items-start">
+                      <div className="flex-1">
+                        <Label className="text-xs text-slate-500 mb-1">Topic {topicIndex + 1}</Label>
+                        <Input
+                          value={topic.title}
+                          onChange={(e) => {
+                            const newTopics = [...topics];
+                            newTopics[topicIndex].title = e.target.value;
+                            setTopics(newTopics);
+                          }}
+                          placeholder="Enter topic title..."
+                          className="bg-white"
+                        />
+                      </div>
                       {topics.length > 1 && (
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
                           onClick={() => removeTopic(topicIndex)}
+                          className="mt-6"
                         >
                           <Trash2 className="w-4 h-4 text-red-500" />
                         </Button>
                       )}
                     </div>
 
-                    {topic.sections.map((section, sectionIndex) => (
-                      <div key={sectionIndex} className="flex gap-2 items-start pl-4">
-                        <Textarea
-                          value={section.content}
-                          onChange={(e) => {
-                            const newTopics = [...topics];
-                            newTopics[topicIndex].sections[sectionIndex].content = e.target.value;
-                            setTopics(newTopics);
-                          }}
-                          placeholder="Section content"
-                          className="flex-1"
-                          rows={3}
-                        />
-                        {topic.sections.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeSection(topicIndex, sectionIndex)}
-                          >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
+                    <div className="space-y-3">
+                      {topic.sections.map((section, sectionIndex) => (
+                        <div key={sectionIndex} className="flex gap-2 items-start pl-4 border-l-2 border-blue-200">
+                          <div className="flex-1">
+                            <Label className="text-xs text-slate-500 mb-1">
+                              Section {sectionIndex + 1}
+                            </Label>
+                            <Textarea
+                              value={section.content}
+                              onChange={(e) => {
+                                const newTopics = [...topics];
+                                newTopics[topicIndex].sections[sectionIndex].content = e.target.value;
+                                setTopics(newTopics);
+                              }}
+                              placeholder="Enter section content..."
+                              className="bg-white"
+                              rows={4}
+                            />
+                          </div>
+                          {topic.sections.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeSection(topicIndex, sectionIndex)}
+                              className="mt-6"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
 
                     <Button
                       type="button"
@@ -456,7 +647,7 @@ Important:
                       className="ml-4"
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      Add Section
+                      Add Section to "{topic.title || 'this topic'}"
                     </Button>
                   </div>
                 ))}
@@ -468,16 +659,26 @@ Important:
                 type="button"
                 variant="outline"
                 onClick={() => navigate(createPageUrl("Home"))}
+                disabled={createDocMutation.isPending}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                disabled={createDocMutation.isPending}
+                disabled={createDocMutation.isPending || !formData.title || !formData.urlName}
                 className="bg-gradient-to-r from-blue-600 to-indigo-600"
               >
-                <FileText className="w-4 h-4 mr-2" />
-                {createDocMutation.isPending ? "Creating..." : "Create Document"}
+                {createDocMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Create Document
+                  </>
+                )}
               </Button>
             </div>
           </form>
