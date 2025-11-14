@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +29,12 @@ export default function CreateSuggestionModal({
   const queryClient = useQueryClient();
   const [error, setError] = useState(null);
   
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+    initialData: user,
+  });
+  
   const isNewSection = editingSection?.isNew;
   const existingSection = !isNewSection ? sections.find(s => s.id === editingSection?.id) : null;
 
@@ -41,7 +47,7 @@ export default function CreateSuggestionModal({
 
   const createSuggestionMutation = useMutation({
     mutationFn: async (data) => {
-      if (user.points < POINTS_COST) {
+      if (currentUser.points < POINTS_COST) {
         throw new Error(`You need at least ${POINTS_COST} points to create a suggestion`);
       }
 
@@ -63,19 +69,19 @@ export default function CreateSuggestionModal({
       });
 
       await base44.auth.updateMe({
-        points: user.points - POINTS_COST,
-        suggestionsCreated: (user.suggestionsCreated || 0) + 1,
+        points: currentUser.points - POINTS_COST,
+        suggestionsCreated: (currentUser.suggestionsCreated || 0) + 1,
       });
 
       const interactions = await base44.entities.UserInteraction.filter({ 
         documentId: document.id, 
-        userId: user.id 
+        userId: currentUser.id 
       });
       
       if (interactions.length === 0) {
         await base44.entities.UserInteraction.create({
           documentId: document.id,
-          userId: user.id,
+          userId: currentUser.id,
           firstInteractionAt: new Date().toISOString(),
         });
 
@@ -123,7 +129,7 @@ export default function CreateSuggestionModal({
           </DialogTitle>
           <div className="flex items-center gap-2 text-sm text-slate-600 mt-2">
             <Sparkles className="w-4 h-4" />
-            <span>Cost: {POINTS_COST} points (You have: {user?.points || 0})</span>
+            <span>Cost: {POINTS_COST} points (You have: {currentUser?.points || 0})</span>
           </div>
         </DialogHeader>
 
@@ -196,7 +202,7 @@ export default function CreateSuggestionModal({
             </Button>
             <Button 
               type="submit" 
-              disabled={createSuggestionMutation.isPending || (user?.points || 0) < POINTS_COST}
+              disabled={createSuggestionMutation.isPending || (currentUser?.points || 0) < POINTS_COST}
               className="bg-gradient-to-r from-blue-600 to-indigo-600"
             >
               {createSuggestionMutation.isPending ? "Creating..." : "Create Suggestion"}
