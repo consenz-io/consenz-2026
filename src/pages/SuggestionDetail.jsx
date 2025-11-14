@@ -174,23 +174,36 @@ export default function SuggestionDetail() {
       if (!isAdmin) throw new Error("Admin access required");
       
       if (status === 'accepted' && suggestion.type === 'edit_section' && section) {
-        // Save current version before updating
+        // Get existing versions to calculate next version number
         const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
         const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
         
+        // Save version with OLD content before updating
         await base44.entities.DocumentVersion.create({
           documentId: suggestion.documentId,
           sectionId: section.id,
           content: section.content,
-          changeDescription: suggestion.title,
+          changeDescription: `לפני: ${suggestion.title}`,
           version: nextVersion,
           changeType: 'suggestion_accepted',
           suggestionId: suggestion.id
         });
         
+        // Update section with new content
         await base44.entities.Section.update(section.id, {
           content: suggestion.newContent,
           lastEditedBy: user.id
+        });
+        
+        // Save version with NEW content after updating
+        await base44.entities.DocumentVersion.create({
+          documentId: suggestion.documentId,
+          sectionId: section.id,
+          content: suggestion.newContent,
+          changeDescription: suggestion.title,
+          version: nextVersion + 1,
+          changeType: 'suggestion_accepted',
+          suggestionId: suggestion.id
         });
       } else if (status === 'accepted' && suggestion.type === 'new_section') {
         const sections = await base44.entities.Section.filter({ 
