@@ -31,6 +31,9 @@ export default function CreateSuggestionModal({
   
   const currentUser = user;
   
+  console.log('CreateSuggestionModal - currentUser:', currentUser);
+  console.log('CreateSuggestionModal - currentUser.points:', currentUser?.points);
+  
   const isNewSection = editingSection?.isNew;
   const existingSection = !isNewSection ? sections.find(s => s.id === editingSection?.id) : null;
 
@@ -136,7 +139,7 @@ export default function CreateSuggestionModal({
           </DialogTitle>
           <div className="flex items-center gap-2 text-sm text-slate-600 mt-2">
             <Sparkles className="w-4 h-4" />
-            <span>Cost: {POINTS_COST} points (You have: {currentUser.points || 0})</span>
+            <span>Cost: {POINTS_COST} points (You have: {currentUser?.points ?? 1000})</span>
           </div>
         </DialogHeader>
 
@@ -209,7 +212,7 @@ export default function CreateSuggestionModal({
             </Button>
             <Button 
               type="submit" 
-              disabled={createSuggestionMutation.isPending || currentUser.points < POINTS_COST}
+              disabled={createSuggestionMutation.isPending || (currentUser?.points ?? 1000) < POINTS_COST}
               className="bg-gradient-to-r from-blue-600 to-indigo-600"
             >
               {createSuggestionMutation.isPending ? "Creating..." : "Create Suggestion"}
