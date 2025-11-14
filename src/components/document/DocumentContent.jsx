@@ -35,6 +35,17 @@ export default function DocumentContent({
     initialData: [],
   });
 
+  const { data: allComments } = useQuery({
+    queryKey: ['allComments', document?.id],
+    queryFn: () => base44.entities.Comment.filter({ rootEntityType: 'section' }),
+    initialData: [],
+    enabled: !!document?.id,
+  });
+
+  const getCommentsCount = (entityType, entityId) => {
+    return allComments.filter(c => c.rootEntityType === entityType && c.rootEntityId === entityId).length;
+  };
+
   const { data: userVotes } = useQuery({
     queryKey: ['userVotes', document?.id, user?.id],
     queryFn: async () => {
@@ -195,7 +206,7 @@ export default function DocumentContent({
                                 className="text-slate-600 hover:text-blue-600"
                               >
                                 <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                {t('comments')}
+                                {t('comments')} ({getCommentsCount('section', section.id)})
                               </Button>
                             </div>
                           </div>
@@ -315,7 +326,7 @@ export default function DocumentContent({
                                     className={isRTL ? 'ml-auto' : 'mr-auto'}
                                   >
                                     <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                    {t('comments')}
+                                    {t('comments')} ({getCommentsCount('suggestion', suggestion.id)})
                                   </Button>
                                 </div>
 
