@@ -80,6 +80,8 @@ export default function DocumentContent({
       const section = sections.find(s => s.id === suggestion?.sectionId);
       
       let updatedSuggestion;
+      let wasAcceptedBefore = false;
+      
       if (currentVote) {
         if (currentVote.vote === vote) {
           await base44.entities.Vote.delete(currentVote.id);
@@ -102,12 +104,32 @@ export default function DocumentContent({
         updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, {
           [vote === 'pro' ? 'proVotes' : 'conVotes']: (suggestion[vote === 'pro' ? 'proVotes' : 'conVotes'] || 0) + 1
         });
+
+        // Award +10 points to suggestion creator for each "pro" vote
+        if (vote === 'pro') {
+          const suggestionCreator = await base44.entities.User.filter({ email: suggestion.created_by }).then(u => u[0]);
+          if (suggestionCreator) {
+            await base44.entities.User.update(suggestionCreator.id, {
+              points: (suggestionCreator.points || 1000) + 10
+            });
+          }
+        }
       }
 
       // בדיקה והפעלת אישור אוטומטי אם עברנו את הסף
       const { shouldAccept } = checkSuggestionConsensus(updatedSuggestion, document);
-      if (shouldAccept) {
+      if (shouldAccept && suggestion.status === 'pending') {
+        wasAcceptedBefore = false;
         await autoAcceptSuggestion(updatedSuggestion, user.id);
+        
+        // Award +50 points to voter if vote influenced acceptance
+        if (!currentVote && vote === 'pro') {
+          await base44.auth.updateMe({
+            points: (user.points || 1000) + 50
+          });
+        }
+      } else if (suggestion.status === 'accepted') {
+        wasAcceptedBefore = true;
       }
     },
     onSuccess: () => {
