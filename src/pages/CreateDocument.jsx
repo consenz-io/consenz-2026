@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -71,11 +72,11 @@ export default function CreateDocument() {
     if (!file) return;
 
     const validTypes = [
-      'application/pdf', 
-      'application/msword', 
+      'application/pdf',
+      'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ];
-    
+
     if (!validTypes.includes(file.type)) {
       setError("Please upload a PDF or Word document (.pdf, .doc, .docx)");
       return;
@@ -157,9 +158,9 @@ Return ONLY valid JSON in this exact format:
       }
 
       const validTopics = result.topics.filter(topic => {
-        return topic.title && 
-               topic.sections && 
-               Array.isArray(topic.sections) && 
+        return topic.title &&
+               topic.sections &&
+               Array.isArray(topic.sections) &&
                topic.sections.length > 0 &&
                topic.sections.some(section => section.content && section.content.trim().length > 0);
       });
@@ -178,7 +179,7 @@ Return ONLY valid JSON in this exact format:
       }));
 
       setExtractedStructure({ ...result, topics: cleanTopics });
-      
+
       const suggestedTitle = result.title?.trim() || file.name.replace(/\.[^/.]+$/, "");
       const suggestedUrlName = suggestedTitle
         .toLowerCase()
@@ -191,7 +192,7 @@ Return ONLY valid JSON in this exact format:
         title: suggestedTitle,
         urlName: suggestedUrlName,
       });
-      
+
       setTopics(cleanTopics);
       setProcessingStage("Complete!");
 
@@ -213,8 +214,8 @@ Return ONLY valid JSON in this exact format:
         throw new Error(urlError);
       }
 
-      const validTopics = data.topics.filter(t => 
-        t.title && t.title.trim() && 
+      const validTopics = data.topics.filter(t =>
+        t.title && t.title.trim() &&
         t.sections && t.sections.length > 0 &&
         t.sections.some(s => s.content && s.content.trim())
       );
@@ -241,7 +242,7 @@ Return ONLY valid JSON in this exact format:
 
       for (let i = 0; i < validTopics.length; i++) {
         const topicData = validTopics[i];
-        
+
         const topic = await base44.entities.Topic.create({
           documentId: doc.id,
           title: topicData.title.trim(),
@@ -249,10 +250,10 @@ Return ONLY valid JSON in this exact format:
         });
 
         const validSections = topicData.sections.filter(s => s.content && s.content.trim());
-        
+
         for (let j = 0; j < validSections.length; j++) {
           const sectionContent = validSections[j].content.trim();
-          
+
           await base44.entities.Section.create({
             documentId: doc.id,
             topicId: topic.id,
@@ -268,7 +269,7 @@ Return ONLY valid JSON in this exact format:
     onSuccess: (doc) => {
       queryClient.invalidateQueries({ queryKey: ['publicDocuments'] });
       queryClient.invalidateQueries({ queryKey: ['allDocuments'] });
-      navigate(createPageUrl("DocumentView", `?id=${doc.id}`));
+      navigate(`${createPageUrl("DocumentView")}?id=${doc.id}`);
     },
     onError: (err) => {
       console.error("Document creation error:", err);
@@ -296,8 +297,8 @@ Return ONLY valid JSON in this exact format:
       return;
     }
 
-    const validTopics = topics.filter(t => 
-      t.title && t.title.trim() && 
+    const validTopics = topics.filter(t =>
+      t.title && t.title.trim() &&
       t.sections && t.sections.length > 0 &&
       t.sections.some(s => s.content && s.content.trim())
     );
@@ -564,8 +565,8 @@ Return ONLY valid JSON in this exact format:
                   <div>
                     <CardTitle>Topics & Sections</CardTitle>
                     <CardDescription>
-                      {extractedStructure 
-                        ? "Review and edit the extracted structure" 
+                      {extractedStructure
+                        ? "Review and edit the extracted structure"
                         : "Structure your document with topics and sections"}
                     </CardDescription>
                   </div>

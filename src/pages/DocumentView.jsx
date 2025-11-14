@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -101,7 +102,6 @@ export default function DocumentView() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-4">
             <Link to={createPageUrl("Home")}>
@@ -136,7 +136,7 @@ export default function DocumentView() {
               </Button>
             )}
             {isAdmin && (
-              <Link to={createPageUrl("DocumentAdmin", `?id=${documentId}`)}>
+              <Link to={`${createPageUrl("DocumentAdmin")}?id=${documentId}`}>
                 <Button variant="outline">
                   <Settings className="w-4 h-4 mr-2" />
                   Admin
@@ -146,7 +146,6 @@ export default function DocumentView() {
           </div>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="bg-white/80 backdrop-blur-sm">
             <CardContent className="p-4">
@@ -198,7 +197,6 @@ export default function DocumentView() {
           </Card>
         </div>
 
-        {/* Content Tabs */}
         <Tabs defaultValue="document" className="space-y-6">
           <TabsList className="bg-white/80 backdrop-blur-sm">
             <TabsTrigger value="document">Document</TabsTrigger>

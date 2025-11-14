@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -46,7 +47,7 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
         </Card>
       ) : (
         suggestions.map((suggestion) => (
-          <Link key={suggestion.id} to={createPageUrl("SuggestionDetail", `?id=${suggestion.id}`)}>
+          <Link key={suggestion.id} to={`${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`}>
             <Card className="bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all cursor-pointer">
               <CardHeader>
                 <div className="flex justify-between items-start gap-4">
