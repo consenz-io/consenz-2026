@@ -63,8 +63,8 @@ function LayoutContent({ children, currentPageName }) {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 to-blue-50">
-        <Sidebar className="border-r border-slate-200">
+      <div className={`min-h-screen flex w-full bg-gradient-to-br from-slate-50 to-blue-50 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <Sidebar className={isRTL ? "border-l border-slate-200" : "border-r border-slate-200"}>
           <SidebarHeader className="border-b border-slate-200 p-4">
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
