@@ -23,6 +23,7 @@ export default function CommentsSection({ entityType, entityId, user }) {
       rootEntityId: entityId 
     }, '-created_date'),
     initialData: [],
+    enabled: !!entityType && !!entityId,
   });
 
   const { data: users } = useQuery({
