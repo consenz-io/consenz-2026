@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -37,7 +38,6 @@ export default function CreateDocument() {
     urlName: "",
     privacy: "public_view_open_participation",
     votingButtonsEnabled: true,
-    gamificationEnabled: true,
     defaultSuggestionLifetimeHours: 72,
   });
 
@@ -229,7 +229,6 @@ Return ONLY valid JSON in this exact format:
         urlName: data.urlName.trim(),
         privacy: data.privacy,
         votingButtonsEnabled: data.votingButtonsEnabled,
-        gamificationEnabled: data.gamificationEnabled,
         defaultSuggestionLifetimeHours: data.defaultSuggestionLifetimeHours,
         avgSuggestionConsensus: 0.5,
         totalUsersInteracted: 0,
@@ -555,19 +554,6 @@ Return ONLY valid JSON in this exact format:
                     id="voting"
                     checked={formData.votingButtonsEnabled}
                     onCheckedChange={(checked) => setFormData({ ...formData, votingButtonsEnabled: checked })}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <div>
-                    <Label htmlFor="gamification" className="text-base font-medium">Enable Gamification System</Label>
-                    <p className="text-sm text-slate-600">Award points and rewards to contributors</p>
-                    <p className="text-xs text-slate-500 mt-1">When enabled, users earn points for creating suggestions, voting, and more</p>
-                  </div>
-                  <Switch
-                    id="gamification"
-                    checked={formData.gamificationEnabled}
-                    onCheckedChange={(checked) => setFormData({ ...formData, gamificationEnabled: checked })}
                   />
                 </div>
               </CardContent>
