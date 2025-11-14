@@ -302,7 +302,7 @@ export default function DocumentContent({
         return (
           <Card key={topic.id} className="bg-white border-slate-200">
             <CardHeader className="border-b border-slate-100">
-              <div className="flex justify-between items-center">
+              <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <CardTitle className="text-2xl">{topic.title}</CardTitle>
                 {user && (
                   <Button
@@ -346,7 +346,7 @@ export default function DocumentContent({
                       )}
                     <div key={section.id} className="space-y-3">
                       <div className="group relative p-4 border border-slate-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/50 transition-all">
-                        <div className="flex justify-between items-start gap-4">
+                        <div className={`flex justify-between items-start gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <div className="flex-1">
                             <div className="text-sm font-medium text-slate-500 mb-2">
                               Section {index + 1}
@@ -355,7 +355,7 @@ export default function DocumentContent({
                               className="prose prose-sm max-w-none text-slate-700"
                               dangerouslySetInnerHTML={{ __html: section.content }}
                             />
-                            <div className="flex items-center justify-between mt-3">
+                            <div className={`flex items-center justify-between mt-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                               <div className="text-xs text-slate-400">
                                 {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString()}
                               </div>
@@ -399,7 +399,7 @@ export default function DocumentContent({
                             return (
                               <Card key={suggestion.id} className="bg-amber-50/50 border-amber-200">
                                 <CardContent className="p-4">
-                                <div className="flex items-start justify-between gap-3 mb-3">
+                                <div className={`flex items-start justify-between gap-3 mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                                   <div className="flex items-center gap-2">
                                     <AlertCircle className="w-4 h-4 text-amber-600" />
                                     <span className="text-sm font-semibold text-amber-900">

@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 
 export default function Home() {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const { data: documents, isLoading } = useQuery({
     queryKey: ['publicDocuments'],
     queryFn: () => base44.entities.Document.list('-created_date', 20),
@@ -142,7 +142,7 @@ export default function Home() {
               <Link key={doc.id} to={`${createPageUrl("DocumentView")}?id=${doc.id}`}>
                 <Card className="bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-200 cursor-pointer h-full">
                   <CardHeader>
-                    <div className="flex items-start justify-between">
+                    <div className={`flex items-start justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <CardTitle className="text-lg">{doc.title}</CardTitle>
                       <Badge variant="outline" className={
                         doc.privacy === 'public_view_open_participation' 
