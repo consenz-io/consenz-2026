@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, History } from "lucide-react";
+import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, History, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 
@@ -157,6 +157,12 @@ export default function DocumentView() {
               <Button variant="outline">
                 <History className="w-4 h-4 mr-2" />
                 {t('versions')}
+              </Button>
+            </Link>
+            <Link to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`}>
+              <Button variant="outline">
+                <FileText className="w-4 h-4 mr-2" />
+                תצוגה נקייה
               </Button>
             </Link>
             {isAdmin && (
