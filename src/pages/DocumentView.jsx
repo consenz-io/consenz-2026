@@ -92,9 +92,9 @@ export default function DocumentView() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-6xl mx-auto text-center py-20">
-          <h1 className="text-2xl font-bold text-slate-900">Document not found</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t('documentNotFound')}</h1>
           <Link to={createPageUrl("Home")}>
-            <Button className="mt-4">Go Home</Button>
+            <Button className="mt-4">{t('goHome')}</Button>
           </Link>
         </div>
       </div>
@@ -134,20 +134,20 @@ export default function DocumentView() {
                 className="bg-gradient-to-r from-blue-600 to-indigo-600"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                New Suggestion
+                {t('newSuggestion')}
               </Button>
             )}
             <Link to={`${createPageUrl("DocumentVersions")}?id=${documentId}`}>
               <Button variant="outline">
                 <History className="w-4 h-4 mr-2" />
-                גרסאות
+                {t('versions')}
               </Button>
             </Link>
             {isAdmin && (
               <Link to={`${createPageUrl("DocumentAdmin")}?id=${documentId}`}>
                 <Button variant="outline">
                   <Settings className="w-4 h-4 mr-2" />
-                  Admin
+                  {t('admin')}
                 </Button>
               </Link>
             )}
@@ -161,7 +161,7 @@ export default function DocumentView() {
                 <Users className="w-8 h-8 text-blue-600" />
                 <div>
                   <div className="text-2xl font-bold">{document.totalUsersInteracted || 0}</div>
-                  <div className="text-xs text-slate-600">Contributors</div>
+                  <div className="text-xs text-slate-600">{t('contributors')}</div>
                 </div>
               </div>
             </CardContent>
@@ -172,7 +172,7 @@ export default function DocumentView() {
                 <MessageSquare className="w-8 h-8 text-indigo-600" />
                 <div>
                   <div className="text-2xl font-bold">{suggestions.length}</div>
-                  <div className="text-xs text-slate-600">Suggestions</div>
+                  <div className="text-xs text-slate-600">{t('suggestions')}</div>
                 </div>
               </div>
             </CardContent>
@@ -185,7 +185,7 @@ export default function DocumentView() {
                   <div className="text-2xl font-bold">
                     {((document.avgSuggestionConsensus || 0) * 100).toFixed(0)}%
                   </div>
-                  <div className="text-xs text-slate-600">Consensus</div>
+                  <div className="text-xs text-slate-600">{t('consensus')}</div>
                 </div>
               </div>
             </CardContent>
@@ -198,7 +198,7 @@ export default function DocumentView() {
                 </div>
                 <div>
                   <div className="text-2xl font-bold">{document.threshold?.toFixed(1) || 0}</div>
-                  <div className="text-xs text-slate-600">Threshold</div>
+                  <div className="text-xs text-slate-600">{t('threshold')}</div>
                 </div>
               </div>
             </CardContent>
@@ -207,9 +207,9 @@ export default function DocumentView() {
 
         <Tabs defaultValue="document" className="space-y-6">
           <TabsList className="bg-white/80 backdrop-blur-sm">
-            <TabsTrigger value="document">Document</TabsTrigger>
+            <TabsTrigger value="document">{t('document')}</TabsTrigger>
             <TabsTrigger value="suggestions">
-              Suggestions ({suggestions.filter(s => s.status === 'pending').length})
+              {t('suggestions')} ({suggestions.filter(s => s.status === 'pending').length})
             </TabsTrigger>
           </TabsList>
 

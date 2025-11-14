@@ -32,24 +32,23 @@ export default function Home() {
         <div className="relative max-w-7xl mx-auto px-6 py-20 md:py-32">
           <div className="text-center space-y-6">
             <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-4 py-1">
-              Democratic Collaboration Platform
+              {t('democraticCollaboration')}
             </Badge>
             <h1 className="text-4xl md:text-6xl font-bold text-slate-900 leading-tight">
-              Build Consensus,
+              {t('buildConsensus').split(',')[0]},
               <br />
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Draft Together
+                {t('buildConsensus').split(',')[1]?.trim()}
               </span>
             </h1>
             <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
-              Collaborative platform for drafting policy documents, constitutions, and decisions
-              through transparent voting and dynamic consensus algorithms.
+              {t('platformDescription')}
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
               {user ? (
                 <Link to={createPageUrl("CreateDocument")}>
                   <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                    Create Document
+                    {t('newDocument')}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
@@ -59,12 +58,12 @@ export default function Home() {
                   onClick={() => base44.auth.redirectToLogin()}
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                 >
-                  Get Started
+                  {t('getStarted')}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               )}
               <Button size="lg" variant="outline">
-                Learn More
+                {t('learnMore')}
               </Button>
             </div>
           </div>
@@ -75,7 +74,7 @@ export default function Home() {
               <CardContent className="p-6 text-center">
                 <FileText className="w-8 h-8 mx-auto mb-3 text-blue-600" />
                 <div className="text-3xl font-bold text-slate-900">{documents.length}</div>
-                <div className="text-sm text-slate-600">Active Documents</div>
+                <div className="text-sm text-slate-600">{t('activeDocuments')}</div>
               </CardContent>
             </Card>
             <Card className="bg-white/80 backdrop-blur-sm border-slate-200">
@@ -84,7 +83,7 @@ export default function Home() {
                 <div className="text-3xl font-bold text-slate-900">
                   {documents.reduce((sum, d) => sum + (d.totalUsersInteracted || 0), 0)}
                 </div>
-                <div className="text-sm text-slate-600">Collaborators</div>
+                <div className="text-sm text-slate-600">{t('collaborators')}</div>
               </CardContent>
             </Card>
             <Card className="bg-white/80 backdrop-blur-sm border-slate-200">
@@ -93,7 +92,7 @@ export default function Home() {
                 <div className="text-3xl font-bold text-slate-900">
                   {(documents.reduce((sum, d) => sum + (d.avgSuggestionConsensus || 0), 0) / (documents.length || 1) * 100).toFixed(0)}%
                 </div>
-                <div className="text-sm text-slate-600">Avg Consensus</div>
+                <div className="text-sm text-slate-600">{t('avgConsensus')}</div>
               </CardContent>
             </Card>
           </div>
@@ -104,8 +103,8 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-6 py-16">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h2 className="text-3xl font-bold text-slate-900">Recent Documents</h2>
-            <p className="text-slate-600 mt-2">Browse and contribute to ongoing collaborative drafts</p>
+            <h2 className="text-3xl font-bold text-slate-900">{t('recentDocuments')}</h2>
+            <p className="text-slate-600 mt-2">{t('browseContribute')}</p>
           </div>
         </div>
 
@@ -128,11 +127,11 @@ export default function Home() {
           <Card className="bg-white border-slate-200">
             <CardContent className="p-12 text-center">
               <FileText className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">No Documents Yet</h3>
-              <p className="text-slate-600 mb-4">Be the first to create a collaborative document</p>
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('noDocumentsYet')}</h3>
+              <p className="text-slate-600 mb-4">{t('beFirstToCreate')}</p>
               {user && (
                 <Link to={createPageUrl("CreateDocument")}>
-                  <Button>Create Document</Button>
+                  <Button>{t('newDocument')}</Button>
                 </Link>
               )}
             </CardContent>
@@ -158,11 +157,11 @@ export default function Home() {
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 text-sm text-slate-600">
                         <Users className="w-4 h-4" />
-                        <span>{doc.totalUsersInteracted || 0} contributors</span>
+                        <span>{doc.totalUsersInteracted || 0} {t('contributors')}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-slate-600">
                         <TrendingUp className="w-4 h-4" />
-                        <span>{((doc.avgSuggestionConsensus || 0) * 100).toFixed(0)}% consensus</span>
+                        <span>{((doc.avgSuggestionConsensus || 0) * 100).toFixed(0)}% {t('consensus')}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-slate-600">
                         <Clock className="w-4 h-4" />
