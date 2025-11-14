@@ -134,6 +134,12 @@ export default function DocumentView() {
                 New Suggestion
               </Button>
             )}
+            <Link to={`${createPageUrl("DocumentVersions")}?id=${documentId}`}>
+              <Button variant="outline">
+                <History className="w-4 h-4 mr-2" />
+                גרסאות
+              </Button>
+            </Link>
             {isAdmin && (
               <Link to={`${createPageUrl("DocumentAdmin")}?id=${documentId}`}>
                 <Button variant="outline">
