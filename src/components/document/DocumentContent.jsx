@@ -20,6 +20,8 @@ export default function DocumentContent({
   isAdmin,
   user 
 }) {
+  const [showComments, setShowComments] = useState({});
+  
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: () => base44.entities.User.list(),
@@ -29,6 +31,13 @@ export default function DocumentContent({
   const getUserName = (email) => {
     const user = users.find(u => u.email === email);
     return user?.full_name || email;
+  };
+
+  const toggleComments = (id) => {
+    setShowComments(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
   };
 
   const getSectionsForTopic = (topicId) => {
