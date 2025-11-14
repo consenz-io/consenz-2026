@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,11 +22,65 @@ export default function DocumentContent({
   user 
 }) {
   const [showComments, setShowComments] = useState({});
+  const queryClient = useQueryClient();
   
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: () => base44.entities.User.list(),
     initialData: [],
+  });
+
+  const { data: userVotes } = useQuery({
+    queryKey: ['userVotes', document?.id, user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const allVotes = await base44.entities.Vote.filter({ userId: user.id });
+      return allVotes.filter(v => 
+        suggestions.some(s => s.id === v.suggestionId)
+      );
+    },
+    enabled: !!user?.id && suggestions.length > 0,
+    initialData: [],
+  });
+
+  const getUserVote = (suggestionId) => {
+    return userVotes?.find(v => v.suggestionId === suggestionId);
+  };
+
+  const voteMutation = useMutation({
+    mutationFn: async ({ suggestionId, vote, currentVote }) => {
+      if (!user) throw new Error("יש להתחבר כדי להצביע");
+
+      const suggestion = suggestions.find(s => s.id === suggestionId);
+      
+      if (currentVote) {
+        if (currentVote.vote === vote) {
+          await base44.entities.Vote.delete(currentVote.id);
+          await base44.entities.Suggestion.update(suggestionId, {
+            [vote === 'pro' ? 'proVotes' : 'conVotes']: Math.max(0, (suggestion[vote === 'pro' ? 'proVotes' : 'conVotes'] || 0) - 1)
+          });
+        } else {
+          await base44.entities.Vote.update(currentVote.id, { vote });
+          await base44.entities.Suggestion.update(suggestionId, {
+            proVotes: suggestion.proVotes + (vote === 'pro' ? 1 : -1),
+            conVotes: suggestion.conVotes + (vote === 'con' ? 1 : -1)
+          });
+        }
+      } else {
+        await base44.entities.Vote.create({
+          suggestionId,
+          userId: user.id,
+          vote
+        });
+        await base44.entities.Suggestion.update(suggestionId, {
+          [vote === 'pro' ? 'proVotes' : 'conVotes']: (suggestion[vote === 'pro' ? 'proVotes' : 'conVotes'] || 0) + 1
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
+      queryClient.invalidateQueries({ queryKey: ['userVotes'] });
+    },
   });
 
   const getUserName = (email) => {
