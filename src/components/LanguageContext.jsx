@@ -123,6 +123,10 @@ const translations = {
     gamificationPoints: "Gamification Points",
     suggestionsCreated: "Suggestions Created",
     accountType: "Account Type",
+    translateAll: "Translate All",
+    translating: "Translating...",
+    translateSection: "Translate Section",
+    translatedFrom: "Translated from",
   },
   he: {
     // ניווט
@@ -246,6 +250,10 @@ const translations = {
     gamificationPoints: "נקודות גיימיפיקציה",
     suggestionsCreated: "הצעות שנוצרו",
     accountType: "סוג חשבון",
+    translateAll: "תרגם הכל",
+    translating: "מתרגם...",
+    translateSection: "תרגם סעיף",
+    translatedFrom: "תורגם מ",
   },
   ar: {
     // التنقل
@@ -368,6 +376,10 @@ const translations = {
     gamificationPoints: "نقاط التلعيب",
     suggestionsCreated: "المقترحات المنشأة",
     accountType: "نوع الحساب",
+    translateAll: "ترجمة الكل",
+    translating: "جاري الترجمة...",
+    translateSection: "ترجمة القسم",
+    translatedFrom: "مترجم من",
   }
 };
 
