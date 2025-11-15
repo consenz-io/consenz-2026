@@ -53,7 +53,7 @@ const translations = {
     avgConsensus: "Avg Consensus",
     threshold: "Threshold",
     activeDocuments: "Active Documents",
-    collaborators: "Collaborators",
+    collaborators: "Participants",
     
     // Home
     democraticCollaboration: "Democratic Collaboration Platform",
@@ -199,7 +199,7 @@ const translations = {
     avgConsensus: "קונצנזוס ממוצע",
     threshold: "סף",
     activeDocuments: "מסמכים פעילים",
-    collaborators: "משתפי פעולה",
+    collaborators: "משתתפים",
     
     // דף הבית
     democraticCollaboration: "פלטפורמת שיתוף פעולה דמוקרטי",
@@ -345,7 +345,7 @@ const translations = {
     avgConsensus: "متوسط الإجماع",
     threshold: "العتبة",
     activeDocuments: "الوثائق النشطة",
-    collaborators: "المتعاونون",
+    collaborators: "المشاركون",
     
     // الصفحة الرئيسية
     democraticCollaboration: "منصة التعاون الديمقراطي",
