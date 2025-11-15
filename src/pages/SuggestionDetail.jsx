@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   ArrowLeft, ThumbsUp, ThumbsDown, MessageSquare, Clock, 
-  CheckCircle, XCircle, AlertCircle, Loader2, Trash2 
+  CheckCircle, XCircle, AlertCircle, Loader2, Trash2, ChevronLeft, ChevronRight 
 } from "lucide-react";
 import VotesNeededCounter from "../components/document/VotesNeededCounter";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,14 +18,17 @@ import CommentsSection from "../components/document/CommentsSection";
 import SectionDiff from "../components/document/SectionDiff";
 import TranslatableContent from "../components/document/TranslatableContent";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "../components/document/suggestionAutoAccept";
+import { useLanguage } from "@/components/LanguageContext";
 
 export default function SuggestionDetail() {
+  const { t, isRTL } = useLanguage();
   const [searchParams] = useSearchParams();
   const suggestionId = searchParams.get('id');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [newArgument, setNewArgument] = useState({ type: null, content: "" });
   const [error, setError] = useState(null);
+  const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
 
   const { data: suggestion, isLoading: suggestionLoading } = useQuery({
     queryKey: ['suggestion', suggestionId],
@@ -106,6 +109,15 @@ export default function SuggestionDetail() {
     }, '-created_date'),
     initialData: [],
     enabled: !!suggestionId,
+  });
+
+  const { data: sectionVersions } = useQuery({
+    queryKey: ['sectionVersions', suggestion?.sectionId],
+    queryFn: () => base44.entities.DocumentVersion.filter({ 
+      sectionId: suggestion.sectionId 
+    }, '-version'),
+    initialData: [],
+    enabled: !!suggestion?.sectionId && suggestion?.type === 'edit_section',
   });
 
   const { data: users } = useQuery({
@@ -475,6 +487,9 @@ export default function SuggestionDetail() {
   const consensusScore = suggestion.proVotes + suggestion.conVotes > 0 
     ? (suggestion.proVotes / (suggestion.proVotes + suggestion.conVotes) * 100).toFixed(0)
     : 50;
+
+  const currentVersion = sectionVersions[currentVersionIndex];
+  const displayContent = currentVersionIndex === 0 ? section?.content : currentVersion?.content;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
