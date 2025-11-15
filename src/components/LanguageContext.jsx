@@ -169,6 +169,10 @@ const translations = {
     acceptSuggestion: "Accept Suggestion",
     rejectSuggestion: "Reject Suggestion",
     sectionHistory: "Section History",
+    createNewDocument: "Create New Document",
+    fillDetailsBelow: "Fill in the details below to create a new collaborative document",
+    signInToViewPrivate: "Sign in to view private documents",
+    signInToParticipate: "Sign in to participate and create suggestions",
   },
   he: {
     // ניווט
@@ -338,6 +342,10 @@ const translations = {
     acceptSuggestion: "אשר הצעה",
     rejectSuggestion: "דחה הצעה",
     sectionHistory: "היסטוריית סעיף",
+    createNewDocument: "יצירת מסמך חדש",
+    fillDetailsBelow: "מלא את הפרטים למטה כדי ליצור מסמך שיתופי חדש",
+    signInToViewPrivate: "התחבר כדי לצפות במסמכים פרטיים",
+    signInToParticipate: "התחבר כדי להשתתף וליצור הצעות",
   },
   ar: {
     // التنقل
@@ -506,6 +514,10 @@ const translations = {
     acceptSuggestion: "قبول الاقتراح",
     rejectSuggestion: "رفض الاقتراح",
     sectionHistory: "تاريخ القسم",
+    createNewDocument: "إنشاء مستند جديد",
+    fillDetailsBelow: "املأ التفاصيل أدناه لإنشاء مستند تعاوني جديد",
+    signInToViewPrivate: "سجل الدخول لعرض المستندات الخاصة",
+    signInToParticipate: "سجل الدخول للمشاركة وإنشاء مقترحات",
   }
 };
 
