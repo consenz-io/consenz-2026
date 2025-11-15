@@ -247,19 +247,37 @@ export default function LearnMore() {
                 variant="outline"
                 onClick={() => setActiveStep(Math.max(0, activeStep - 1))}
                 disabled={activeStep === 0}
-                className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                className="flex items-center gap-2"
               >
-                {isRTL ? <ChevronRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-                {isRTL ? "הקודם" : "Previous"}
+                {isRTL ? (
+                  <>
+                    <ChevronRight className="w-4 h-4" />
+                    <span>הקודם</span>
+                  </>
+                ) : (
+                  <>
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Previous</span>
+                  </>
+                )}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setActiveStep(Math.min(steps.length - 1, activeStep + 1))}
                 disabled={activeStep === steps.length - 1}
-                className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
+                className="flex items-center gap-2"
               >
-                {isRTL ? "הבא" : "Next"}
-                {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                {isRTL ? (
+                  <>
+                    <span>הבא</span>
+                    <ArrowLeft className="w-4 h-4" />
+                  </>
+                ) : (
+                  <>
+                    <span>Next</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </>
+                )}
               </Button>
             </div>
           </CardContent>
