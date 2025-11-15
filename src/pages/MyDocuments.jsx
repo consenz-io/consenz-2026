@@ -1,0 +1,186 @@
+import React from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { FileText, Users, TrendingUp } from "lucide-react";
+import { useLanguage } from "@/components/LanguageContext";
+
+export default function MyDocuments() {
+  const { t, isRTL } = useLanguage();
+
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+    retry: false,
+  });
+
+  const { data: userInteractions, isLoading: interactionsLoading } = useQuery({
+    queryKey: ['userInteractions', user?.id],
+    queryFn: () => base44.entities.UserInteraction.filter({ userId: user.id }),
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
+  const { data: allDocuments, isLoading: documentsLoading } = useQuery({
+    queryKey: ['allDocuments'],
+    queryFn: () => base44.entities.Document.list('-created_date'),
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
+  const { data: suggestions } = useQuery({
+    queryKey: ['mySuggestions', user?.id],
+    queryFn: () => base44.entities.Suggestion.filter({ created_by: user.email }),
+    enabled: !!user?.email,
+    initialData: [],
+  });
+
+  const { data: votes } = useQuery({
+    queryKey: ['myVotes', user?.id],
+    queryFn: () => base44.entities.Vote.filter({ userId: user.id }),
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
+  const { data: allSuggestions } = useQuery({
+    queryKey: ['allSuggestions'],
+    queryFn: () => base44.entities.Suggestion.list(),
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+        <div className="max-w-6xl mx-auto text-center py-20">
+          <p className="text-slate-600">{t('signIn')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (interactionsLoading || documentsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <Skeleton className="h-12 w-64" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-64 w-full" />)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // קבלת מסמכים שהמשתמש השתתף בהם
+  const interactedDocumentIds = userInteractions.map(ui => ui.documentId);
+  const suggestedDocumentIds = suggestions.map(s => s.documentId);
+  const votedSuggestions = allSuggestions.filter(s => 
+    votes.some(v => v.suggestionId === s.id)
+  );
+  const votedDocumentIds = votedSuggestions.map(s => s.documentId);
+
+  const myDocumentIds = new Set([
+    ...interactedDocumentIds,
+    ...suggestedDocumentIds,
+    ...votedDocumentIds
+  ]);
+
+  const myDocuments = allDocuments.filter(doc => myDocumentIds.has(doc.id));
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+      <div className="max-w-6xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">{t('myDocuments')}</h1>
+          <p className="text-slate-600 mt-2">
+            מסמכים שהשתתפת בהם ({myDocuments.length})
+          </p>
+        </div>
+
+        {myDocuments.length === 0 ? (
+          <Card className="bg-white border-slate-200">
+            <CardContent className="p-12 text-center">
+              <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <p className="text-slate-500 mb-4">עדיין לא השתתפת באף מסמך</p>
+              <Link to={createPageUrl("Home")}>
+                <span className="text-blue-600 hover:underline">{t('browseContribute')}</span>
+              </Link>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {myDocuments.map((doc) => {
+              const mySuggestionsCount = suggestions.filter(s => s.documentId === doc.id).length;
+              const myVotesCount = votedSuggestions.filter(s => s.documentId === doc.id).length;
+
+              return (
+                <Link key={doc.id} to={`${createPageUrl("DocumentView")}?id=${doc.id}`}>
+                  <Card className="bg-white/80 backdrop-blur-sm border-slate-200 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer h-full">
+                    <CardHeader className="border-b border-slate-100">
+                      <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="text-xl line-clamp-2">{doc.title}</CardTitle>
+                        <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-4 space-y-4">
+                      <div className="flex gap-2 flex-wrap">
+                        <Badge variant="outline" className={
+                          doc.privacy === 'public_view_open_participation' 
+                            ? 'bg-green-50 text-green-700 border-green-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                        }>
+                          {doc.privacy.replace(/_/g, ' ')}
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-slate-400" />
+                          <div className="text-sm">
+                            <div className="font-semibold text-slate-700">
+                              {doc.totalUsersInteracted || 0}
+                            </div>
+                            <div className="text-xs text-slate-500">{t('contributors')}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="w-4 h-4 text-slate-400" />
+                          <div className="text-sm">
+                            <div className="font-semibold text-slate-700">
+                              {((doc.avgSuggestionConsensus || 0) * 100).toFixed(0)}%
+                            </div>
+                            <div className="text-xs text-slate-500">{t('consensus')}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-3 border-t border-slate-100">
+                        <div className="flex items-center justify-between text-xs text-slate-500">
+                          <div>
+                            ההצעות שלי: <span className="font-semibold text-blue-600">{mySuggestionsCount}</span>
+                          </div>
+                          <div>
+                            ההצבעות שלי: <span className="font-semibold text-green-600">{myVotesCount}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-xs text-slate-400">
+                        {t('created')} {new Date(doc.created_date).toLocaleDateString()}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
