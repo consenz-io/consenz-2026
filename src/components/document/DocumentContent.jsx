@@ -77,7 +77,7 @@ export default function DocumentContent({
       if (!user) throw new Error("יש להתחבר כדי להצביע");
 
       const suggestion = suggestions.find(s => s.id === suggestionId);
-      const section = sections.find(s => s.id => suggestion?.sectionId);
+      const section = sections.find(s => s.id === suggestion?.sectionId);
       
       let updatedSuggestion;
       let wasAcceptedBefore = false;
