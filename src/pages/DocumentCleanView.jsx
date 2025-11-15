@@ -144,12 +144,12 @@ ${section.content}`;
                 {translatingAll ? (
                   <>
                     <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
-                    מתרגם...
+                    {t('translating')}
                   </>
                 ) : (
                   <>
                     <Globe className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    תרגם הכל
+                    {t('translateAll')}
                   </>
                 )}
               </Button>
@@ -227,19 +227,19 @@ ${section.content}`;
                                     {translateSectionMutation.isPending ? (
                                       <>
                                         <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                                        מתרגם...
+                                        {t('translating')}
                                       </>
                                     ) : (
                                       <>
                                         <Globe className="w-3 h-3 mr-1" />
-                                        תרגם סעיף
+                                        {t('translateSection')}
                                       </>
                                     )}
                                   </Button>
                                 )}
                                 {needsTranslation && hasTranslation && (
                                   <div className="mt-2 text-xs text-slate-500 italic print:hidden">
-                                    (תורגם מ-{section.originalLanguage === 'en' ? 'English' : section.originalLanguage === 'he' ? 'עברית' : 'العربية'})
+                                    ({t('translatedFrom')} {section.originalLanguage === 'en' ? 'English' : section.originalLanguage === 'he' ? 'עברית' : 'العربية'})
                                   </div>
                                 )}
                               </div>
