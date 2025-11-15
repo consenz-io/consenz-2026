@@ -564,11 +564,37 @@ export default function SuggestionDetail() {
               </div>
             )}
 
-            {suggestion.type === 'edit_section' && suggestion.originalContent ? (
+            {suggestion.type === 'edit_section' && sectionVersions.length > 1 && (
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <span className="text-sm font-medium text-slate-700">
+                  {currentVersionIndex === 0 ? 'גרסה נוכחית' : `גרסה ${currentVersion?.version || 0}`}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentVersionIndex(Math.min(currentVersionIndex + 1, sectionVersions.length - 1))}
+                    disabled={currentVersionIndex >= sectionVersions.length - 1}
+                  >
+                    {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentVersionIndex(Math.max(0, currentVersionIndex - 1))}
+                    disabled={currentVersionIndex === 0}
+                  >
+                    {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {suggestion.type === 'edit_section' && displayContent ? (
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">שינויים מוצעים</h3>
                 <SectionDiff
-                  originalContent={suggestion.originalContent}
+                  originalContent={displayContent}
                   newContent={suggestion.newContent}
                 />
               </div>
