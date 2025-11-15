@@ -252,7 +252,14 @@ export default function SuggestionDetail() {
       console.log('[POINTS DEBUG] Should accept suggestion:', shouldAccept);
       if (shouldAccept) {
         console.log('[POINTS DEBUG] Auto-accepting suggestion...');
-        await autoAcceptSuggestion(updatedSuggestion, user.id, document);
+        const accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
+        
+        if (accepted) {
+          // רענון כל הקווריות הרלוונטיות
+          queryClient.invalidateQueries({ queryKey: ['sections'] });
+          queryClient.invalidateQueries({ queryKey: ['allVersions'] });
+          queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+        }
         
         // Award +50 points to voter if vote influenced acceptance (only if gamification enabled)
         if (!userVote && vote === 'pro' && document.gamificationEnabled) {
