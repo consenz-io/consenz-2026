@@ -376,7 +376,7 @@ export default function DocumentContent({
                           <Loader2 className="w-3 h-3 animate-spin" />
                           <span>{t('translating')}</span>
                         </div>
-                      ) : !showTranslatedTopics[topic.id] && !topic.translations?.[language] ? (
+                      ) : !topic.translations?.[language] ? (
                         <Button
                           variant="ghost"
                           size="sm"

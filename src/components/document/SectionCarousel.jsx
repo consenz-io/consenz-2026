@@ -289,7 +289,7 @@ export default function SectionCarousel({
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>{t('translating')}</span>
                   </div>
-                ) : !showTranslated[currentView.data.id] && !currentView.data.translations?.[language] ? (
+                ) : !currentView.data.translations?.[language] ? (
                   <Button
                     variant="ghost"
                     size="sm"
