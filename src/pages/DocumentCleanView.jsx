@@ -4,9 +4,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Printer, Globe, Loader2 } from "lucide-react";
+import { ArrowLeft, Printer, Globe, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
+import SectionDiff from "@/components/document/SectionDiff";
 
 export default function DocumentCleanView() {
   const { t, isRTL, language } = useLanguage();
@@ -18,6 +20,7 @@ export default function DocumentCleanView() {
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
   const [showTranslatedSections, setShowTranslatedSections] = useState({});
   const [translatingAll, setTranslatingAll] = useState(false);
+  const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
 
@@ -41,7 +44,41 @@ export default function DocumentCleanView() {
     enabled: !!documentId,
   });
 
-  if (docLoading || topicsLoading || sectionsLoading) {
+  const { data: allVersions, isLoading: versionsLoading } = useQuery({
+    queryKey: ['allVersions', documentId],
+    queryFn: () => base44.entities.DocumentVersion.filter({ documentId }, '-version'),
+    initialData: [],
+    enabled: !!documentId,
+  });
+
+  // קבוצת גרסאות לפי גרסה (כך שכל גרסה תכיל את כל הסעיפים שלה)
+  const versionGroups = React.useMemo(() => {
+    if (!allVersions.length) return [];
+    
+    const groups = {};
+    allVersions.forEach(v => {
+      if (!groups[v.version]) {
+        groups[v.version] = [];
+      }
+      groups[v.version].push(v);
+    });
+    
+    // מיון הגרסאות בסדר יורד (החדשה ביותר קודם)
+    const sortedVersions = Object.keys(groups)
+      .map(Number)
+      .sort((a, b) => b - a)
+      .map(versionNum => ({
+        version: versionNum,
+        sections: groups[versionNum]
+      }));
+    
+    return sortedVersions;
+  }, [allVersions]);
+
+  const currentVersion = versionGroups[currentVersionIndex];
+  const previousVersion = versionGroups[currentVersionIndex + 1];
+
+  if (docLoading || topicsLoading || sectionsLoading || versionsLoading) {
     return (
       <div className="min-h-screen bg-white p-8">
         <div className="max-w-4xl mx-auto space-y-6">
@@ -233,6 +270,33 @@ ${text}`;
             </Button>
           </Link>
           <div className="flex items-center gap-2">
+            {versionGroups.length > 1 && (
+              <div className="flex items-center gap-2 border-l border-slate-300 pl-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentVersionIndex(Math.min(currentVersionIndex + 1, versionGroups.length - 1))}
+                  disabled={currentVersionIndex >= versionGroups.length - 1}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                <Badge variant="outline" className="px-3">
+                  {currentVersionIndex === 0 ? (
+                    language === 'he' ? 'גרסה נוכחית' : language === 'ar' ? 'النسخة الحالية' : 'Current Version'
+                  ) : (
+                    `${language === 'he' ? 'גרסה' : language === 'ar' ? 'إصدار' : 'Version'} ${currentVersion?.version || 0}`
+                  )}
+                </Badge>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentVersionIndex(Math.max(0, currentVersionIndex - 1))}
+                  disabled={currentVersionIndex === 0}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
             {needsTranslation && (
               <Button 
                 className="bg-blue-600 hover:bg-blue-700 text-white"
