@@ -282,7 +282,7 @@ ${text}`;
                   onClick={() => setCurrentVersionIndex(Math.min(currentVersionIndex + 1, versionGroups.length - 1))}
                   disabled={currentVersionIndex >= versionGroups.length - 1}
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                 </Button>
                 <Badge variant="outline" className="px-3">
                   {currentVersionIndex === 0 ? (
@@ -297,7 +297,7 @@ ${text}`;
                   onClick={() => setCurrentVersionIndex(Math.max(0, currentVersionIndex - 1))}
                   disabled={currentVersionIndex === 0}
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 </Button>
               </div>
             )}
