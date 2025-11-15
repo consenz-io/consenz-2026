@@ -38,8 +38,9 @@ export default function CreateSuggestionModal({
   onClose 
 }) {
   const queryClient = useQueryClient();
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const [error, setError] = useState(null);
+  const [isLoadingTranslation, setIsLoadingTranslation] = useState(false);
   
   const currentUser = user;
   
@@ -51,12 +52,74 @@ export default function CreateSuggestionModal({
 
   const [formData, setFormData] = useState({
     topicId: editingSection?.topicId || topics[0]?.id || "",
-    newContent: existingSection?.content || "",
+    newContent: "",
     explanation: "",
   });
 
   const [isCreatingNewTopic, setIsCreatingNewTopic] = useState(false);
   const [newTopicName, setNewTopicName] = useState("");
+
+  // Load translated content on mount
+  React.useEffect(() => {
+    const loadContent = async () => {
+      if (!existingSection) return;
+      
+      const sectionOriginalLang = existingSection.originalLanguage || 'he';
+      
+      // If viewing in same language as original, use original content
+      if (sectionOriginalLang === language) {
+        setFormData(prev => ({ ...prev, newContent: existingSection.content }));
+        return;
+      }
+      
+      // If translation exists, use it
+      if (existingSection.translations?.[language]) {
+        setFormData(prev => ({ ...prev, newContent: existingSection.translations[language] }));
+        return;
+      }
+      
+      // Otherwise, translate
+      setIsLoadingTranslation(true);
+      try {
+        const languageNames = { en: 'English', he: 'Hebrew', ar: 'Arabic' };
+        const targetLangName = languageNames[language];
+        
+        const prompt = `You are a professional translator. Translate the following HTML content to ${targetLangName}.
+
+CRITICAL INSTRUCTIONS:
+- Keep ALL HTML tags exactly as they are (including <p>, <strong>, <em>, <ul>, <li>, etc.)
+- Only translate the TEXT CONTENT between the tags
+- Return ONLY the translated HTML, nothing else
+- Do not add any explanations or comments
+- Do not escape HTML characters
+- Maintain exact same structure and formatting
+
+HTML content to translate:
+${existingSection.content}
+
+Return ONLY the translated HTML:`;
+
+        const result = await base44.integrations.Core.InvokeLLM({ prompt });
+        let translatedContent = typeof result === 'string' ? result : result.content || result;
+        translatedContent = translatedContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+        
+        setFormData(prev => ({ ...prev, newContent: translatedContent }));
+        
+        // Save translation to cache
+        const updatedTranslations = { ...existingSection.translations, [language]: translatedContent };
+        await base44.entities.Section.update(existingSection.id, {
+          translations: updatedTranslations
+        });
+      } catch (err) {
+        console.error('Translation error:', err);
+        setFormData(prev => ({ ...prev, newContent: existingSection.content }));
+      } finally {
+        setIsLoadingTranslation(false);
+      }
+    };
+    
+    loadContent();
+  }, [existingSection?.id, language]);
 
   const createSuggestionMutation = useMutation({
     mutationFn: async (data) => {
@@ -286,23 +349,18 @@ export default function CreateSuggestionModal({
             <Label htmlFor="content">
               {isNewSection ? t('sectionContent') : t('proposedChanges')}
             </Label>
-            <Textarea
-              id="content"
-              value={formData.newContent}
-              onChange={(e) => setFormData({ ...formData, newContent: e.target.value })}
-              placeholder={t('enterContent')}
-              rows={8}
-            />
-            {formData.newContent && (
-              <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 mt-2">
-                <div className="text-xs text-slate-600 mb-2">תצוגה מקדימה:</div>
-                <TranslatableContent
-                  content={formData.newContent}
-                  entity={{ content: formData.newContent, originalLanguage: detectLanguage(formData.newContent), translations: {} }}
-                  entityType="preview"
-                  className="prose prose-sm max-w-none"
-                />
+            {isLoadingTranslation ? (
+              <div className="border border-slate-200 rounded-lg p-4 bg-slate-50 text-center text-slate-500">
+                {t('translating')}
               </div>
+            ) : (
+              <Textarea
+                id="content"
+                value={formData.newContent}
+                onChange={(e) => setFormData({ ...formData, newContent: e.target.value })}
+                placeholder={t('enterContent')}
+                rows={8}
+              />
             )}
           </div>
 
