@@ -121,6 +121,16 @@ export default function CreateSuggestionModal({
       
       if (gamificationEnabled) {
         updateData.points = currentPoints - POINTS_COST;
+        
+        // Create points transaction record
+        await base44.entities.PointsTransaction.create({
+          userId: currentUser.id,
+          amount: -POINTS_COST,
+          action: 'suggestion_created',
+          description: `יצירת הצעה: ${autoTitle}`,
+          relatedEntityId: suggestion.id,
+          relatedEntityType: 'suggestion'
+        });
       }
       
       await base44.auth.updateMe(updateData);

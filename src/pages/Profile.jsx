@@ -279,6 +279,47 @@ export default function Profile() {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="bg-white border-slate-200">
+          <CardHeader>
+            <CardTitle>היסטוריית נקודות</CardTitle>
+            <CardDescription>כל הפעולות שהשפיעו על הניקוד שלך</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {pointsTransactions.length === 0 ? (
+              <p className="text-slate-500 text-center py-8">אין עדיין היסטוריית נקודות</p>
+            ) : (
+              <div className="space-y-3">
+                {pointsTransactions.map((transaction) => (
+                  <div 
+                    key={transaction.id}
+                    className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-900">{transaction.description}</p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {new Date(transaction.created_date).toLocaleString('he-IL', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                    <div className={`text-xl font-bold px-3 py-1 rounded ${
+                      transaction.amount > 0 
+                        ? 'text-green-600 bg-green-50' 
+                        : 'text-red-600 bg-red-50'
+                    }`}>
+                      {transaction.amount > 0 ? '+' : ''}{transaction.amount}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
