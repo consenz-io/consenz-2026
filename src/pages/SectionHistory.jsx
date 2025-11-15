@@ -117,7 +117,7 @@ export default function SectionHistory() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse justify-start' : 'justify-start'}`}>
+        <div className={`flex items-center gap-4 w-full ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
           <Link to={`${createPageUrl("DocumentView")}?id=${document?.id}&scrollTo=${sectionId}`}>
             <Button variant="outline" size="icon">
               {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
