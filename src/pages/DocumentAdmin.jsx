@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Settings, ArrowLeft, Save, Trash2, UserPlus, X, AlertCircle, CheckCircle, Users, Search, Ban } from "lucide-react";
+import { Settings, ArrowLeft, Save, Trash2, UserPlus, X, AlertCircle, CheckCircle, Users, Search, Ban, Mail } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DocumentAdmin() {
@@ -23,6 +23,7 @@ export default function DocumentAdmin() {
   const [success, setSuccess] = useState(null);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
@@ -178,6 +179,59 @@ export default function DocumentAdmin() {
       setTimeout(() => setError(null), 5000);
     },
   });
+
+  const sendInviteMutation = useMutation({
+    mutationFn: async (email) => {
+      const token = Math.random().toString(36).substring(2, 15);
+      
+      await base44.entities.Invitation.create({
+        documentId,
+        email: email.trim(),
+        invitedBy: user.id,
+        token
+      });
+
+      const signupUrl = `${window.location.origin}?invite=${token}`;
+      
+      await base44.integrations.Core.SendEmail({
+        to: email.trim(),
+        subject: `הזמנה להצטרף למסמך: ${document.title}`,
+        body: `
+שלום,
+
+הוזמנת על ידי ${user.full_name} להצטרף למסמך "${document.title}" בפלטפורמת Consenz.
+
+כדי להצטרף:
+1. לחץ על הקישור הבא להרשמה: ${signupUrl}
+2. צור חשבון חדש או התחבר עם חשבון קיים
+3. לאחר ההרשמה תוכל לגשת למסמך ולהשתתף בדיונים
+
+הקישור להרשמה: ${signupUrl}
+
+בברכה,
+צוות Consenz
+        `
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['invitations', documentId] });
+      setInviteEmail("");
+      setSuccess("הזמנה נשלחה בהצלחה!");
+      setTimeout(() => setSuccess(null), 3000);
+    },
+    onError: (err) => {
+      setError(err.message || "שליחת ההזמנה נכשלה");
+      setTimeout(() => setError(null), 5000);
+    },
+  });
+
+  const handleSendInvite = () => {
+    if (!inviteEmail || !inviteEmail.trim()) {
+      setError("אנא הזן כתובת מייל");
+      return;
+    }
+    sendInviteMutation.mutate(inviteEmail.trim());
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -377,6 +431,32 @@ export default function DocumentAdmin() {
             </CardContent>
           </Card>
         </form>
+
+        <Card className="bg-white">
+          <CardHeader>
+            <CardTitle>הזמנת משתתפים</CardTitle>
+            <CardDescription>שלח הזמנות למשתמשים חדשים להצטרף למסמך</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="הזן כתובת מייל"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                dir="rtl"
+              />
+              <Button
+                onClick={handleSendInvite}
+                disabled={sendInviteMutation.isPending}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                שלח הזמנה
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="bg-white">
           <CardHeader>
