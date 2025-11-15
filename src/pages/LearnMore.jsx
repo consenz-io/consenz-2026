@@ -217,26 +217,26 @@ export default function LearnMore() {
         </div>
 
         {/* Active Step Content */}
-        <Card className={`bg-white/80 backdrop-blur-sm border-slate-200 shadow-xl ${isRTL ? 'text-right' : 'text-left'}`}>
+        <Card className="bg-white/80 backdrop-blur-sm border-slate-200 shadow-xl" dir={isRTL ? 'rtl' : 'ltr'}>
           <CardHeader>
-            <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className="flex items-center gap-4">
               <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${steps[activeStep].color} flex items-center justify-center shadow-lg flex-shrink-0`}>
                 {React.createElement(steps[activeStep].icon, { className: "w-8 h-8 text-white" })}
               </div>
-              <div className={`flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div className="flex-1">
                 <CardTitle className="text-2xl">{steps[activeStep].title}</CardTitle>
                 <p className="text-slate-600 mt-1">{steps[activeStep].description}</p>
               </div>
             </div>
           </CardHeader>
-          <CardContent className={isRTL ? 'text-right' : 'text-left'}>
+          <CardContent>
             <div className="space-y-4">
               {steps[activeStep].steps.map((stepText, index) => (
-                <div key={index} className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div key={index} className="flex items-start gap-3">
                   <div className={`flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br ${steps[activeStep].color} flex items-center justify-center text-white font-bold shadow-lg`}>
                     {index + 1}
                   </div>
-                  <p className={`text-slate-700 pt-1 flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>{stepText}</p>
+                  <p className="text-slate-700 pt-1 flex-1">{stepText}</p>
                 </div>
               ))}
             </div>
