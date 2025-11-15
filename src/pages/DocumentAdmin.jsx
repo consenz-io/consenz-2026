@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Settings, ArrowLeft, Save, Trash2, UserPlus, X, AlertCircle, CheckCircle, Users, Search, Ban, Key } from "lucide-react";
+import { Settings, ArrowLeft, Save, Trash2, UserPlus, X, AlertCircle, CheckCircle, Users, Search, Ban } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DocumentAdmin() {
@@ -521,25 +521,6 @@ export default function DocumentAdmin() {
                               className={targetUser.blocked ? 'text-green-600 border-green-300' : 'text-red-600 border-red-300'}
                             >
                               <Ban className="w-4 h-4" />
-                            </Button>
-
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const newPassword = prompt('Enter new password for ' + targetUser.full_name);
-                                if (newPassword && newPassword.length >= 6) {
-                                  updateUserMutation.mutate({
-                                    userId: targetUser.id,
-                                    data: { password: newPassword }
-                                  });
-                                  alert('Password updated successfully!');
-                                } else if (newPassword) {
-                                  alert('Password must be at least 6 characters');
-                                }
-                              }}
-                            >
-                              <Key className="w-4 h-4" />
                             </Button>
                           </div>
                         )}
