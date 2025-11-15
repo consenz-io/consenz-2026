@@ -23,7 +23,7 @@ export function checkSuggestionConsensus(suggestion, document) {
 /**
  * מקבל הצעה אוטומטית - מיישם את השינוי במסמך
  */
-export async function autoAcceptSuggestion(suggestion, userId) {
+export async function autoAcceptSuggestion(suggestion, userId, document) {
   const { shouldAccept, consensus } = checkSuggestionConsensus(
     suggestion, 
     { threshold: suggestion.document?.threshold || 0.5 }
@@ -123,12 +123,15 @@ export async function autoAcceptSuggestion(suggestion, userId) {
       suggestionConsensus: consensus 
     });
     
-    // Award 200 points to suggestion creator when accepted
-    const suggestionCreator = await base44.entities.User.filter({ email: suggestion.created_by });
-    if (suggestionCreator.length > 0) {
-      await base44.entities.User.update(suggestionCreator[0].id, {
-        points: (suggestionCreator[0].points || 1000) + 200
-      });
+    // Award 200 points to suggestion creator when accepted (only if gamification enabled)
+    const gamificationEnabled = document?.gamificationEnabled || false;
+    if (gamificationEnabled) {
+      const suggestionCreator = await base44.entities.User.filter({ email: suggestion.created_by });
+      if (suggestionCreator.length > 0) {
+        await base44.entities.User.update(suggestionCreator[0].id, {
+          points: (suggestionCreator[0].points || 1000) + 200
+        });
+      }
     }
     
     return true;

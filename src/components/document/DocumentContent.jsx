@@ -105,8 +105,8 @@ export default function DocumentContent({
           [vote === 'pro' ? 'proVotes' : 'conVotes']: (suggestion[vote === 'pro' ? 'proVotes' : 'conVotes'] || 0) + 1
         });
 
-        // Award +10 points to suggestion creator for each "pro" vote
-        if (vote === 'pro') {
+        // Award +10 points to suggestion creator for each "pro" vote (only if gamification enabled)
+        if (vote === 'pro' && document.gamificationEnabled) {
           const suggestionCreator = await base44.entities.User.filter({ email: suggestion.created_by }).then(u => u[0]);
           if (suggestionCreator) {
             await base44.entities.User.update(suggestionCreator.id, {
@@ -120,10 +120,10 @@ export default function DocumentContent({
       const { shouldAccept } = checkSuggestionConsensus(updatedSuggestion, document);
       if (shouldAccept && suggestion.status === 'pending') {
         wasAcceptedBefore = false;
-        await autoAcceptSuggestion(updatedSuggestion, user.id);
+        await autoAcceptSuggestion(updatedSuggestion, user.id, document);
         
-        // Award +50 points to voter if vote influenced acceptance
-        if (!currentVote && vote === 'pro') {
+        // Award +50 points to voter if vote influenced acceptance (only if gamification enabled)
+        if (!currentVote && vote === 'pro' && document.gamificationEnabled) {
           await base44.auth.updateMe({
             points: (user.points || 1000) + 50
           });
