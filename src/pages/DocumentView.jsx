@@ -294,10 +294,6 @@ export default function DocumentView() {
           }}
         />
       )}
-
-      {user && document?.gamificationEnabled && (
-        <PointsDebugger userId={user.id} documentId={documentId} />
-      )}
     </div>
   );
 }
