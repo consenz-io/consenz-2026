@@ -91,6 +91,31 @@ export default function SectionCarousel({
         </div>
       </div>
 
+      {/* כפתורי דפדוף */}
+      {allViews.length > 1 && (
+        <div className={`flex items-center justify-between mb-4 pb-4 border-b border-slate-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrev}
+            className="flex items-center gap-2"
+          >
+            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            <span className="text-xs">{t('previousSuggestion')}</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNext}
+            className="flex items-center gap-2"
+          >
+            <span className="text-xs">{t('nextSuggestion')}</span>
+            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </Button>
+        </div>
+      )}
+
       {/* תוכן */}
       <div className="min-h-[200px]">
         {currentView.type === 'current' ? (
@@ -248,52 +273,19 @@ export default function SectionCarousel({
         )}
       </div>
 
-      {/* כפתורי דפדוף */}
-      <div className={`flex items-center justify-between mt-6 pt-4 border-t border-slate-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-        {/* כפתור שמאל/ימין */}
-        <div>
+      {/* כפתורים מרכזיים - ערוך/תגובה בתצוגה נוכחית */}
+      {isFirstView && user && (
+        <div className="flex justify-center gap-2 mt-4 pt-4 border-t border-slate-200">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            onClick={handlePrev}
-            className="flex items-center gap-2"
+            onClick={() => onEditSection(section)}
           >
-            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            {isFirstView && sortedSuggestions.length > 0 && (
-              <span className="text-xs">{t('viewDetails')}</span>
-            )}
+            <Edit className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+            {t('editSection')}
           </Button>
         </div>
-
-        {/* כפתורים מרכזיים - ערוך/תגובה בתצוגה נוכחית */}
-        {isFirstView && user && (
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onEditSection(section)}
-            >
-              <Edit className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-              {t('editSection')}
-            </Button>
-          </div>
-        )}
-
-        {/* כפתור ימין/שמאל */}
-        <div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNext}
-            className="flex items-center gap-2"
-          >
-            {isLastView && (
-              <span className="text-xs">{t('sectionHistory')}</span>
-            )}
-            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </Button>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
