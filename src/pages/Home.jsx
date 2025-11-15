@@ -24,6 +24,24 @@ export default function Home() {
     retry: false,
   });
 
+  const { data: acceptedSuggestions } = useQuery({
+    queryKey: ['acceptedSuggestions'],
+    queryFn: () => base44.entities.Suggestion.filter({ status: 'accepted' }),
+    initialData: [],
+  });
+
+  const calculateAverageConsensus = () => {
+    if (acceptedSuggestions.length === 0) return 0;
+    
+    const consensusScores = acceptedSuggestions.map(s => {
+      const total = (s.proVotes || 0) + (s.conVotes || 0);
+      return total > 0 ? (s.proVotes / total) : 0;
+    });
+    
+    const sum = consensusScores.reduce((acc, score) => acc + score, 0);
+    return (sum / consensusScores.length * 100).toFixed(0);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Hero Section */}
@@ -90,7 +108,7 @@ export default function Home() {
               <CardContent className="p-6 text-center">
                 <TrendingUp className="w-8 h-8 mx-auto mb-3 text-purple-600" />
                 <div className="text-3xl font-bold text-slate-900">
-                  {(documents.reduce((sum, d) => sum + (d.avgSuggestionConsensus || 0), 0) / (documents.length || 1) * 100).toFixed(0)}%
+                  {calculateAverageConsensus()}%
                 </div>
                 <div className="text-sm text-slate-600">{t('avgConsensus')}</div>
               </CardContent>
@@ -161,7 +179,17 @@ export default function Home() {
                       </div>
                       <div className="flex items-center gap-2 text-sm text-slate-600">
                         <TrendingUp className="w-4 h-4" />
-                        <span>{((doc.avgSuggestionConsensus || 0) * 100).toFixed(0)}% {t('consensus')}</span>
+                        <span>
+                          {(() => {
+                            const docSuggestions = acceptedSuggestions.filter(s => s.documentId === doc.id);
+                            if (docSuggestions.length === 0) return '0';
+                            const avg = docSuggestions.reduce((sum, s) => {
+                              const total = (s.proVotes || 0) + (s.conVotes || 0);
+                              return sum + (total > 0 ? (s.proVotes / total) : 0);
+                            }, 0) / docSuggestions.length;
+                            return (avg * 100).toFixed(0);
+                          })()}% {t('consensus')}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-slate-600">
                         <Clock className="w-4 h-4" />

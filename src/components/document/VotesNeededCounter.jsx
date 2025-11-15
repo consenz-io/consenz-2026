@@ -3,12 +3,23 @@ import { Badge } from "@/components/ui/badge";
 import { Target, TrendingUp } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
-export default function VotesNeededCounter({ suggestion, document }) {
+export default function VotesNeededCounter({ suggestion, document, acceptedSuggestions = [] }) {
   const { t } = useLanguage();
   const calculateVotesNeeded = () => {
     const proVotes = suggestion.proVotes || 0;
     const conVotes = suggestion.conVotes || 0;
-    const threshold = document?.threshold || 0.5;
+    
+    // חישוב threshold דינמי מההצעות שאושרו
+    const docAcceptedSuggestions = acceptedSuggestions.filter(s => s.documentId === document?.id && s.status === 'accepted');
+    let threshold = 0.5;
+    if (docAcceptedSuggestions.length > 0) {
+      const avg = docAcceptedSuggestions.reduce((sum, s) => {
+        const total = (s.proVotes || 0) + (s.conVotes || 0);
+        return sum + (total > 0 ? (s.proVotes / total) : 0);
+      }, 0) / docAcceptedSuggestions.length;
+      threshold = avg;
+    }
+    
     const totalVotes = proVotes + conVotes;
 
     if (totalVotes === 0) {

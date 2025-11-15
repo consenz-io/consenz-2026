@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 /**
  * בדיקה אם הצעה עברה את סף הקונסנזוס ויכולה להתקבל אוטומטית
  */
-export function checkSuggestionConsensus(suggestion, document) {
+export async function checkSuggestionConsensus(suggestion, document) {
   const totalVotes = (suggestion.proVotes || 0) + (suggestion.conVotes || 0);
   
   // חייבות להיות לפחות הצבעה אחת
@@ -12,7 +12,21 @@ export function checkSuggestionConsensus(suggestion, document) {
   }
   
   const consensus = suggestion.proVotes / totalVotes;
-  const threshold = document.threshold || 0.5;
+  
+  // חישוב threshold דינמי מההצעות שאושרו במסמך
+  const acceptedSuggestions = await base44.entities.Suggestion.filter({ 
+    documentId: document.id, 
+    status: 'accepted' 
+  });
+  
+  let threshold = 0.5;
+  if (acceptedSuggestions.length > 0) {
+    const avg = acceptedSuggestions.reduce((sum, s) => {
+      const total = (s.proVotes || 0) + (s.conVotes || 0);
+      return sum + (total > 0 ? (s.proVotes / total) : 0);
+    }, 0) / acceptedSuggestions.length;
+    threshold = avg;
+  }
   
   // בדיקה אם עברנו את הסף
   const shouldAccept = consensus >= threshold;

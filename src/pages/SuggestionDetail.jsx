@@ -34,6 +34,13 @@ export default function SuggestionDetail() {
     refetchInterval: 3000, // רענון כל 3 שניות
   });
 
+  const { data: allDocumentSuggestions } = useQuery({
+    queryKey: ['allDocumentSuggestions', suggestion?.documentId],
+    queryFn: () => base44.entities.Suggestion.filter({ documentId: suggestion.documentId }),
+    enabled: !!suggestion?.documentId,
+    initialData: [],
+  });
+
   const { data: document } = useQuery({
     queryKey: ['document', suggestion?.documentId],
     queryFn: () => base44.entities.Document.filter({ id: suggestion.documentId }).then(d => d[0]),

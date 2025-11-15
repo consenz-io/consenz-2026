@@ -496,7 +496,7 @@ export default function DocumentContent({
                                       </div>
                                     </>
                                   )}
-                                  <VotesNeededCounter suggestion={suggestion} document={document} />
+                                  <VotesNeededCounter suggestion={suggestion} document={document} acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')} />
                                   <Badge variant="outline" className="text-xs">
                                     {t('by')} {getUserName(suggestion.created_by)}
                                   </Badge>
