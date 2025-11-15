@@ -6,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, History, MessageSquare } from "lucide-react";
+import { ArrowLeft, ArrowRight, History, MessageSquare } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import SectionDiff from "../components/document/SectionDiff";
@@ -120,7 +120,7 @@ export default function SectionHistory() {
         <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
           <Link to={`${createPageUrl("DocumentView")}?id=${document?.id}&scrollTo=${sectionId}`}>
             <Button variant="outline" size="icon">
-              <ArrowLeft className="w-4 h-4" />
+              {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
             </Button>
           </Link>
           <div>
