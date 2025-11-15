@@ -25,14 +25,15 @@ export default function TranslatableContent({
   className = "" 
 }) {
   const { language, isRTL } = useLanguage();
-  const [showOriginal, setShowOriginal] = useState(false);
+  const [showTranslated, setShowTranslated] = useState(false);
   const queryClient = useQueryClient();
 
   const originalLanguage = entity.originalLanguage || 'he';
   const translations = entity.translations || {};
-  const needsTranslation = !showOriginal && language !== originalLanguage && !translations[language];
+  const hasTranslation = translations[language];
+  const needsTranslation = language !== originalLanguage;
   
-  const displayLanguage = showOriginal ? originalLanguage : language;
+  const displayLanguage = showTranslated && hasTranslation ? language : originalLanguage;
   const isDisplayRTL = displayLanguage === 'he' || displayLanguage === 'ar';
 
   const translateMutation = useMutation({
@@ -76,15 +77,14 @@ Return ONLY the translated HTML:`;
       }
 
       queryClient.invalidateQueries();
+      setShowTranslated(true);
       return translatedText;
     },
   });
 
-  const displayContent = showOriginal 
-    ? content 
-    : (translations[language] || translateMutation.data || content);
-
-  const isTranslatedView = !showOriginal && (translations[language] || translateMutation.isSuccess);
+  const displayContent = showTranslated && (translations[language] || translateMutation.isSuccess)
+    ? (translations[language] || translateMutation.data)
+    : content;
 
   return (
     <div className="space-y-2">
@@ -101,13 +101,19 @@ Return ONLY the translated HTML:`;
             dangerouslySetInnerHTML={{ __html: displayContent }}
           />
           
-          {language !== originalLanguage && (
+          {needsTranslation && (
             <div className="flex items-center gap-2 pt-2">
-              {!isTranslatedView && !translateMutation.isPending && (
+              {!showTranslated && !translateMutation.isPending && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => translateMutation.mutate()}
+                  onClick={() => {
+                    if (hasTranslation) {
+                      setShowTranslated(true);
+                    } else {
+                      translateMutation.mutate();
+                    }
+                  }}
                   className="text-xs text-blue-600 hover:text-blue-700"
                 >
                   <Languages className="w-3 h-3 mr-1" />
@@ -115,15 +121,15 @@ Return ONLY the translated HTML:`;
                 </Button>
               )}
               
-              {isTranslatedView && (
+              {(showTranslated || translateMutation.isSuccess) && hasTranslation && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setShowOriginal(!showOriginal)}
+                  onClick={() => setShowTranslated(!showTranslated)}
                   className="text-xs text-slate-600 hover:text-slate-700"
                 >
                   <Languages className="w-3 h-3 mr-1" />
-                  {showOriginal ? `${languageNames[language]} (מתורגם)` : `${languageNames[originalLanguage]} (מקור)`}
+                  {showTranslated ? `${languageNames[originalLanguage]} (מקור)` : `${languageNames[language]} (מתורגם)`}
                 </Button>
               )}
             </div>

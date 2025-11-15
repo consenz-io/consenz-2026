@@ -14,6 +14,9 @@ export default function DocumentCleanView() {
   const [translatedSections, setTranslatedSections] = useState({});
   const [translatedTopics, setTranslatedTopics] = useState({});
   const [translatedDocTitle, setTranslatedDocTitle] = useState(null);
+  const [showTranslatedDoc, setShowTranslatedDoc] = useState(false);
+  const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
+  const [showTranslatedSections, setShowTranslatedSections] = useState({});
   const [translatingAll, setTranslatingAll] = useState(false);
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
@@ -151,9 +154,11 @@ ${text}`;
       } else {
         setTranslatedDocTitle(document.translations[language]);
       }
+      setShowTranslatedDoc(true);
     }
 
     // Translate topics
+    const newShowTranslatedTopics = {};
     for (const topic of topics) {
       if (topic.originalLanguage && topic.originalLanguage !== language) {
         if (!topic.translations?.[language]) {
@@ -176,10 +181,13 @@ ${text}`;
             [topic.id]: topic.translations[language]
           }));
         }
+        newShowTranslatedTopics[topic.id] = true;
       }
     }
+    setShowTranslatedTopics(newShowTranslatedTopics);
 
     // Translate sections
+    const newShowTranslatedSections = {};
     for (const section of sections) {
       if (section.originalLanguage !== language) {
         if (!section.translations?.[language]) {
@@ -190,8 +198,10 @@ ${text}`;
             [section.id]: section.translations[language]
           }));
         }
+        newShowTranslatedSections[section.id] = true;
       }
     }
+    setShowTranslatedSections(newShowTranslatedSections);
     
     setTranslatingAll(false);
   };
@@ -251,10 +261,37 @@ ${text}`;
         {/* Document Title */}
         <div className="mb-12 pb-8 border-b-2 border-slate-300">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            {document.originalLanguage && document.originalLanguage !== language
+            {document.originalLanguage && document.originalLanguage !== language && showTranslatedDoc
               ? (translatedDocTitle || document.translations?.[language] || document.title)
               : document.title}
           </h1>
+          {document.originalLanguage && document.originalLanguage !== language && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-blue-600 hover:text-blue-700 mb-2 print:hidden"
+              onClick={async () => {
+                if (!translatedDocTitle && !document.translations?.[language]) {
+                  const translatedTitle = await translateTextMutation.mutateAsync({ 
+                    text: document.title, 
+                    targetLanguage: language, 
+                    isHtml: false 
+                  });
+                  const updatedTranslations = { ...document.translations, [language]: translatedTitle };
+                  await base44.entities.Document.update(document.id, {
+                    translations: updatedTranslations
+                  });
+                  setTranslatedDocTitle(translatedTitle);
+                  setShowTranslatedDoc(true);
+                } else {
+                  setShowTranslatedDoc(!showTranslatedDoc);
+                }
+              }}
+            >
+              <Globe className="w-3 h-3 mr-1" />
+              {showTranslatedDoc ? 'הצג מקור' : t('translateSection')}
+            </Button>
+          )}
           <p className="text-slate-600">
             {new Date(document.created_date).toLocaleDateString('he-IL', {
               year: 'numeric',
@@ -275,11 +312,49 @@ ${text}`;
               return (
                 <div key={topic.id} className="space-y-6 break-inside-avoid">
                   {/* Topic Title */}
-                  <h2 className="text-2xl font-bold text-slate-800 border-b border-slate-300 pb-2">
-                    {topicIndex + 1}. {topic.originalLanguage && topic.originalLanguage !== language
-                      ? (translatedTopics[topic.id] || topic.translations?.[language] || topic.title)
-                      : topic.title}
-                  </h2>
+                  <div className="border-b border-slate-300 pb-2 mb-6">
+                    <h2 className="text-2xl font-bold text-slate-800">
+                      {topicIndex + 1}. {topic.originalLanguage && topic.originalLanguage !== language && showTranslatedTopics[topic.id]
+                        ? (translatedTopics[topic.id] || topic.translations?.[language] || topic.title)
+                        : topic.title}
+                    </h2>
+                    {topic.originalLanguage && topic.originalLanguage !== language && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs text-blue-600 hover:text-blue-700 mt-1 print:hidden"
+                        onClick={async () => {
+                          if (!translatedTopics[topic.id] && !topic.translations?.[language]) {
+                            const translatedTitle = await translateTextMutation.mutateAsync({ 
+                              text: topic.title, 
+                              targetLanguage: language, 
+                              isHtml: false 
+                            });
+                            const updatedTranslations = { ...topic.translations, [language]: translatedTitle };
+                            await base44.entities.Topic.update(topic.id, {
+                              translations: updatedTranslations
+                            });
+                            setTranslatedTopics(prev => ({
+                              ...prev,
+                              [topic.id]: translatedTitle
+                            }));
+                            setShowTranslatedTopics(prev => ({
+                              ...prev,
+                              [topic.id]: true
+                            }));
+                          } else {
+                            setShowTranslatedTopics(prev => ({
+                              ...prev,
+                              [topic.id]: !prev[topic.id]
+                            }));
+                          }
+                        }}
+                      >
+                        <Globe className="w-3 h-3 mr-1" />
+                        {showTranslatedTopics[topic.id] ? 'הצג מקור' : t('translateSection')}
+                      </Button>
+                    )}
+                  </div>
 
                   {/* Sections */}
                   {topicSections.length === 0 ? (
@@ -289,7 +364,7 @@ ${text}`;
                       {topicSections.map((section, sectionIndex) => {
                         const needsTranslation = section.originalLanguage !== language;
                         const hasTranslation = translatedSections[section.id] || section.translations?.[language];
-                        const displayContent = needsTranslation && hasTranslation 
+                        const displayContent = needsTranslation && hasTranslation && showTranslatedSections[section.id]
                           ? (translatedSections[section.id] || section.translations[language])
                           : section.content;
 
@@ -304,12 +379,25 @@ ${text}`;
                                   className="text-slate-700 leading-relaxed prose prose-slate max-w-none"
                                   dangerouslySetInnerHTML={{ __html: displayContent }}
                                 />
-                                {needsTranslation && !hasTranslation && (
+                                {needsTranslation && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
                                     className="mt-2 text-blue-600 hover:text-blue-700 print:hidden opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={() => translateSectionMutation.mutate({ section, targetLanguage: language })}
+                                    onClick={async () => {
+                                      if (!hasTranslation) {
+                                        await translateSectionMutation.mutateAsync({ section, targetLanguage: language });
+                                        setShowTranslatedSections(prev => ({
+                                          ...prev,
+                                          [section.id]: true
+                                        }));
+                                      } else {
+                                        setShowTranslatedSections(prev => ({
+                                          ...prev,
+                                          [section.id]: !prev[section.id]
+                                        }));
+                                      }
+                                    }}
                                     disabled={translateSectionMutation.isPending}
                                   >
                                     {translateSectionMutation.isPending ? (
@@ -320,15 +408,10 @@ ${text}`;
                                     ) : (
                                       <>
                                         <Globe className="w-3 h-3 mr-1" />
-                                        {t('translateSection')}
+                                        {showTranslatedSections[section.id] ? 'הצג מקור' : t('translateSection')}
                                       </>
                                     )}
                                   </Button>
-                                )}
-                                {needsTranslation && hasTranslation && (
-                                  <div className="mt-2 text-xs text-slate-500 italic print:hidden">
-                                    ({t('translatedFrom')} {section.originalLanguage === 'en' ? 'English' : section.originalLanguage === 'he' ? 'עברית' : 'العربية'})
-                                  </div>
                                 )}
                               </div>
                             </div>
