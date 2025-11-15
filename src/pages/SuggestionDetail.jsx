@@ -622,7 +622,7 @@ export default function SuggestionDetail() {
                     onClick={() => handleNavigateToVersion('older')}
                     disabled={isOldestVersion}
                   >
-                    {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                    {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                   </Button>
                   <Button
                     variant="outline"
@@ -630,7 +630,7 @@ export default function SuggestionDetail() {
                     onClick={() => handleNavigateToVersion('newer')}
                     disabled={isNewestVersion}
                   >
-                    {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                   </Button>
                 </div>
               </div>
