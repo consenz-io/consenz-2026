@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
-  ArrowLeft, ThumbsUp, ThumbsDown, MessageSquare, Clock, 
+  ArrowLeft, ArrowRight, ThumbsUp, ThumbsDown, MessageSquare, Clock, 
   CheckCircle, XCircle, AlertCircle, Loader2, Trash2, ChevronLeft, ChevronRight 
 } from "lucide-react";
 import VotesNeededCounter from "../components/document/VotesNeededCounter";
@@ -544,7 +544,7 @@ export default function SuggestionDetail() {
           <div className="flex items-center gap-4">
             <Link to={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}`}>
               <Button variant="outline" size="icon">
-                <ArrowLeft className="w-4 h-4" />
+                {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
               </Button>
             </Link>
             <div>
