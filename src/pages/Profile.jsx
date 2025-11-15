@@ -253,73 +253,72 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white">
-          <CardHeader>
-            <CardTitle>Activity Summary</CardTitle>
-            <CardDescription>Your contribution to the platform</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <span className="text-slate-700 font-medium">נקודות גיימיפיקציה</span>
-                <span className="font-bold text-2xl text-blue-600">{user.points || 1000}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                <span className="text-slate-700">Suggestions Created</span>
-                <span className="font-bold text-indigo-600">{user.suggestionsCreated || 0}</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                <span className="text-slate-700">Account Type</span>
-                <Badge className={
-                  user.role === 'admin' 
-                    ? 'bg-purple-100 text-purple-800'
-                    : 'bg-blue-100 text-blue-800'
-                }>
-                  {user.role || 'user'}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         <Card className="bg-white border-slate-200">
           <CardHeader>
-            <CardTitle>היסטוריית נקודות</CardTitle>
-            <CardDescription>כל הפעולות שהשפיעו על הניקוד שלך</CardDescription>
+            <CardTitle>{t('activitySummary')}</CardTitle>
+            <CardDescription>{t('contributionDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
-            {pointsTransactions.length === 0 ? (
-              <p className="text-slate-500 text-center py-8">אין עדיין היסטוריית נקודות</p>
-            ) : (
-              <div className="space-y-3">
-                {pointsTransactions.map((transaction) => (
-                  <div 
-                    key={transaction.id}
-                    className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-slate-900">{transaction.description}</p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {new Date(transaction.created_date).toLocaleString('he-IL', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
-                    <div className={`text-xl font-bold px-3 py-1 rounded ${
-                      transaction.amount > 0 
-                        ? 'text-green-600 bg-green-50' 
-                        : 'text-red-600 bg-red-50'
-                    }`}>
-                      {transaction.amount > 0 ? '+' : ''}{transaction.amount}
-                    </div>
-                  </div>
-                ))}
+            <div className="space-y-4">
+              {/* Stats Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pb-4 border-b border-slate-200">
+                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <span className="text-slate-700 font-medium text-sm">{t('gamificationPoints')}</span>
+                  <span className="font-bold text-xl text-blue-600">{user.points || 1000}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <span className="text-slate-700 text-sm">{t('suggestionsCreated')}</span>
+                  <span className="font-bold text-xl text-indigo-600">{user.suggestionsCreated || 0}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                  <span className="text-slate-700 text-sm">{t('accountType')}</span>
+                  <Badge className={
+                    user.role === 'admin' 
+                      ? 'bg-purple-100 text-purple-800'
+                      : 'bg-blue-100 text-blue-800'
+                  }>
+                    {user.role || 'user'}
+                  </Badge>
+                </div>
               </div>
-            )}
+
+              {/* Points History */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 mb-3">{t('pointsHistory')}</h3>
+                {pointsTransactions.length === 0 ? (
+                  <p className="text-slate-500 text-center py-8 text-sm">{t('noPointsHistory')}</p>
+                ) : (
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {pointsTransactions.map((transaction) => (
+                      <div 
+                        key={transaction.id}
+                        className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors"
+                      >
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-slate-900">{transaction.description}</p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            {new Date(transaction.created_date).toLocaleString(isRTL ? 'he-IL' : 'en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                        <div className={`text-lg font-bold px-2 py-1 rounded ${
+                          transaction.amount > 0 
+                            ? 'text-green-600 bg-green-50' 
+                            : 'text-red-600 bg-red-50'
+                        }`}>
+                          {transaction.amount > 0 ? '+' : ''}{transaction.amount}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
