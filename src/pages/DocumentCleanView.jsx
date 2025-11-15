@@ -156,7 +156,7 @@ ${section.content}`;
             )}
             <Button variant="outline" size="sm" onClick={handlePrint}>
               <Printer className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              הדפס
+              {language === 'en' ? 'Print' : language === 'ar' ? 'طباعة' : 'הדפס'}
             </Button>
           </div>
         </div>
