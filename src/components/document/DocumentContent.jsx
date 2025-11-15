@@ -28,7 +28,29 @@ export default function DocumentContent({
   const queryClient = useQueryClient();
   const { t, isRTL } = useLanguage();
 
-  // הסרתי את ה-useEffect - אישור אוטומטי מתבצע רק דרך voteMutation
+  // בדיקה ואישור אוטומטי של הצעות שעברו את רף הקונסנזוס
+  React.useEffect(() => {
+    if (!document || !suggestions || !user) return;
+
+    const checkAndAutoAccept = async () => {
+      for (const suggestion of suggestions) {
+        if (suggestion.status !== 'pending') continue;
+
+        const { shouldAccept } = checkSuggestionConsensus(suggestion, document);
+        if (shouldAccept) {
+          console.log('[AUTO-ACCEPT] Auto-accepting suggestion:', suggestion.id);
+          await autoAcceptSuggestion(suggestion, user.id, document);
+          
+          // Refresh data
+          queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
+          queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
+          queryClient.invalidateQueries({ queryKey: ['versions'] });
+        }
+      }
+    };
+
+    checkAndAutoAccept();
+  }, [suggestions, document, user, queryClient]);
   
   const { data: users } = useQuery({
     queryKey: ['users'],
