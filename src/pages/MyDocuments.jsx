@@ -10,7 +10,7 @@ import { FileText, Users, TrendingUp } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
 export default function MyDocuments() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -98,7 +98,11 @@ export default function MyDocuments() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">{t('myDocuments')}</h1>
           <p className="text-slate-600 mt-2">
-            מסמכים שהשתתפת בהם ({myDocuments.length})
+            {language === 'ar' 
+              ? `الوثائق التي شاركت فيها (${myDocuments.length})`
+              : language === 'he'
+              ? `מסמכים שהשתתפת בהם (${myDocuments.length})`
+              : `Documents you participated in (${myDocuments.length})`}
           </p>
         </div>
 
@@ -106,7 +110,13 @@ export default function MyDocuments() {
           <Card className="bg-white border-slate-200">
             <CardContent className="p-12 text-center">
               <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500 mb-4">עדיין לא השתתפת באף מסמך</p>
+              <p className="text-slate-500 mb-4">
+                {language === 'ar'
+                  ? 'لم تشارك بعد في أي وثيقة'
+                  : language === 'he'
+                  ? 'עדיין לא השתתפת באף מסמך'
+                  : "You haven't participated in any document yet"}
+              </p>
               <Link to={createPageUrl("Home")}>
                 <span className="text-blue-600 hover:underline">{t('browseContribute')}</span>
               </Link>
@@ -162,10 +172,20 @@ export default function MyDocuments() {
                       <div className="pt-3 border-t border-slate-100">
                         <div className="flex items-center justify-between text-xs text-slate-500">
                           <div>
-                            ההצעות שלי: <span className="font-semibold text-blue-600">{mySuggestionsCount}</span>
+                            {language === 'ar' 
+                              ? 'مقترحاتي: ' 
+                              : language === 'he' 
+                              ? 'ההצעות שלי: ' 
+                              : 'My suggestions: '}
+                            <span className="font-semibold text-blue-600">{mySuggestionsCount}</span>
                           </div>
                           <div>
-                            ההצבעות שלי: <span className="font-semibold text-green-600">{myVotesCount}</span>
+                            {language === 'ar' 
+                              ? 'أصواتي: ' 
+                              : language === 'he' 
+                              ? 'ההצבעות שלי: ' 
+                              : 'My votes: '}
+                            <span className="font-semibold text-green-600">{myVotesCount}</span>
                           </div>
                         </div>
                       </div>
