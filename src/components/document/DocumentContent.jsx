@@ -33,19 +33,26 @@ export default function DocumentContent({
     if (!document || !suggestions || !user) return;
 
     const checkAndAutoAccept = async () => {
+      let hasChanges = false;
       for (const suggestion of suggestions) {
         if (suggestion.status !== 'pending') continue;
 
-        const { shouldAccept } = checkSuggestionConsensus(suggestion, document);
+        const { shouldAccept } = await checkSuggestionConsensus(suggestion, document);
         if (shouldAccept) {
           console.log('[AUTO-ACCEPT] Auto-accepting suggestion:', suggestion.id);
-          await autoAcceptSuggestion(suggestion, user.id, document);
-          
-          // Refresh data
-          queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
-          queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
-          queryClient.invalidateQueries({ queryKey: ['versions'] });
+          const accepted = await autoAcceptSuggestion(suggestion, user.id, document);
+          if (accepted) {
+            hasChanges = true;
+          }
         }
+      }
+      
+      // Refresh data only if changes occurred
+      if (hasChanges) {
+        queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
+        queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
+        queryClient.invalidateQueries({ queryKey: ['allVersions'] });
+        queryClient.invalidateQueries({ queryKey: ['document', document.id] });
       }
     };
 

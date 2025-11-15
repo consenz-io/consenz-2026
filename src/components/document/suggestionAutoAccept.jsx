@@ -8,7 +8,7 @@ export async function checkSuggestionConsensus(suggestion, document) {
   
   // חייבות להיות לפחות הצבעה אחת
   if (totalVotes === 0) {
-    return { shouldAccept: false, consensus: 0 };
+    return { shouldAccept: false, consensus: 0, threshold: 0.5 };
   }
   
   const consensus = suggestion.proVotes / totalVotes;
@@ -29,21 +29,34 @@ export async function checkSuggestionConsensus(suggestion, document) {
   }
   
   // בדיקה אם עברנו את הסף
-  const shouldAccept = consensus >= threshold;
+  const shouldAccept = consensus >= threshold && totalVotes > 0;
   
-  return { shouldAccept, consensus };
+  console.log('[CONSENSUS CHECK]', {
+    suggestionId: suggestion.id,
+    proVotes: suggestion.proVotes,
+    conVotes: suggestion.conVotes,
+    consensus: consensus.toFixed(2),
+    threshold: threshold.toFixed(2),
+    shouldAccept
+  });
+  
+  return { shouldAccept, consensus, threshold };
 }
 
 /**
  * מקבל הצעה אוטומטית - מיישם את השינוי במסמך
  */
 export async function autoAcceptSuggestion(suggestion, userId, document) {
-  const { shouldAccept, consensus } = checkSuggestionConsensus(
-    suggestion, 
-    { threshold: suggestion.document?.threshold || 0.5 }
-  );
+  // בדיקה נוספת שההצעה אכן ממתינה
+  if (suggestion.status !== 'pending') {
+    console.log('[AUTO-ACCEPT] Suggestion already processed:', suggestion.id, suggestion.status);
+    return false;
+  }
   
-  if (!shouldAccept || suggestion.status !== 'pending') {
+  const { shouldAccept, consensus } = await checkSuggestionConsensus(suggestion, document);
+  
+  if (!shouldAccept) {
+    console.log('[AUTO-ACCEPT] Suggestion does not meet threshold:', suggestion.id);
     return false;
   }
 
