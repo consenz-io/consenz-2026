@@ -369,7 +369,7 @@ export default function DocumentContent({
             <CardHeader className="border-b border-slate-100">
               <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className="flex-1">
-                  <CardTitle className="text-2xl">
+                  <CardTitle className={`text-2xl ${isRTL ? 'text-right' : 'text-left'}`}>
                     {showTranslatedTopics[topic.id] && topic.translations?.[language]?.title
                       ? topic.translations[language].title
                       : topic.title}
