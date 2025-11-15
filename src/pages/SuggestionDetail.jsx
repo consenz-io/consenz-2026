@@ -488,7 +488,13 @@ export default function SuggestionDetail() {
     : 50;
 
   const handleNavigateToVersion = (direction) => {
+    console.log('[DEBUG] Navigate version:', direction);
+    console.log('[DEBUG] sectionVersions:', sectionVersions);
+    console.log('[DEBUG] current suggestionId:', suggestionId);
+    
     const currentIndex = sectionVersions.findIndex(v => v.suggestionId === suggestionId);
+    console.log('[DEBUG] currentIndex:', currentIndex);
+    
     let targetIndex;
     
     if (direction === 'newer') {
@@ -497,17 +503,26 @@ export default function SuggestionDetail() {
       targetIndex = currentIndex + 1;
     }
     
+    console.log('[DEBUG] targetIndex:', targetIndex);
+    
     if (targetIndex >= 0 && targetIndex < sectionVersions.length) {
       const targetVersion = sectionVersions[targetIndex];
+      console.log('[DEBUG] targetVersion:', targetVersion);
+      
       if (targetVersion.suggestionId) {
+        console.log('[DEBUG] Navigating to:', targetVersion.suggestionId);
         navigate(`${createPageUrl("SuggestionDetail")}?id=${targetVersion.suggestionId}`);
+      } else {
+        console.log('[DEBUG] No suggestionId in target version');
       }
+    } else {
+      console.log('[DEBUG] targetIndex out of bounds');
     }
   };
 
   const currentVersionIndex = sectionVersions.findIndex(v => v.suggestionId === suggestionId);
   const isNewestVersion = currentVersionIndex === 0;
-  const isOldestVersion = currentVersionIndex === sectionVersions.length - 1;
+  const isOldestVersion = currentVersionIndex === sectionVersions.length - 1 || currentVersionIndex === -1;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
