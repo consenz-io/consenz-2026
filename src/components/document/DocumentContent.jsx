@@ -106,6 +106,16 @@ export default function DocumentContent({
                 const newPoints = Math.max(0, (freshUser.points || 1000) - 10);
                 await base44.entities.User.update(freshUser.id, { points: newPoints });
                 console.log('[POINTS DEBUG] Updated user points to:', newPoints);
+                
+                // Create points transaction record
+                await base44.entities.PointsTransaction.create({
+                  userId: suggestionCreator.id,
+                  amount: -10,
+                  action: 'vote_canceled',
+                  description: `ביטול הצבעה בעד על ההצעה: ${suggestion.title}`,
+                  relatedEntityId: suggestion.id,
+                  relatedEntityType: 'suggestion'
+                });
               }
             }
           }
@@ -138,6 +148,18 @@ export default function DocumentContent({
                   const newPoints = Math.max(0, (freshUser.points || 1000) + pointsChange);
                   await base44.entities.User.update(freshUser.id, { points: newPoints });
                   console.log('[POINTS DEBUG] Updated user points to:', newPoints);
+                  
+                  // Create points transaction record
+                  await base44.entities.PointsTransaction.create({
+                    userId: suggestionCreator.id,
+                    amount: pointsChange,
+                    action: 'vote_received',
+                    description: pointsChange > 0 
+                      ? `קיבל הצבעה בעד על ההצעה: ${suggestion.title}`
+                      : `הצבעה השתנתה מבעד לנגד על ההצעה: ${suggestion.title}`,
+                    relatedEntityId: suggestion.id,
+                    relatedEntityType: 'suggestion'
+                  });
                 }
               }
             }
@@ -168,6 +190,16 @@ export default function DocumentContent({
               const newPoints = (freshUser.points || 1000) + 10;
               await base44.entities.User.update(freshUser.id, { points: newPoints });
               console.log('[POINTS DEBUG] Updated user points to:', newPoints);
+              
+              // Create points transaction record
+              await base44.entities.PointsTransaction.create({
+                userId: suggestionCreator.id,
+                amount: 10,
+                action: 'vote_received',
+                description: `קיבל הצבעה בעד על ההצעה: ${suggestion.title}`,
+                relatedEntityId: suggestion.id,
+                relatedEntityType: 'suggestion'
+              });
             }
           }
         }
@@ -190,6 +222,16 @@ export default function DocumentContent({
             points: newPoints
           });
           console.log('[POINTS DEBUG] Voter points updated from', currentPoints, 'to', newPoints);
+          
+          // Create points transaction record
+          await base44.entities.PointsTransaction.create({
+            userId: user.id,
+            amount: 50,
+            action: 'vote_influenced_acceptance',
+            description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${suggestion.title}`,
+            relatedEntityId: suggestion.id,
+            relatedEntityType: 'suggestion'
+          });
         }
       } else if (suggestion.status === 'accepted') {
         wasAcceptedBefore = true;

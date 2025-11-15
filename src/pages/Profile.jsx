@@ -25,6 +25,13 @@ export default function Profile() {
     retry: false,
   });
 
+  const { data: pointsTransactions } = useQuery({
+    queryKey: ['pointsTransactions', user?.id],
+    queryFn: () => base44.entities.PointsTransaction.filter({ userId: user.id }, '-created_date'),
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
   const [formData, setFormData] = useState({
     full_name: user?.full_name || "",
   });

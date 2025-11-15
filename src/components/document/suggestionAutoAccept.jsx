@@ -141,6 +141,16 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
             points: newPoints
           });
           console.log('[POINTS DEBUG] Updated user points to:', newPoints);
+          
+          // Create points transaction record
+          await base44.entities.PointsTransaction.create({
+            userId: creatorId,
+            amount: 200,
+            action: 'suggestion_accepted',
+            description: `ההצעה שלך התקבלה: ${suggestion.title}`,
+            relatedEntityId: suggestion.id,
+            relatedEntityType: 'suggestion'
+          });
         }
       }
     }
