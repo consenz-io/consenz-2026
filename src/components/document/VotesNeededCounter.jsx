@@ -34,11 +34,6 @@ export default function VotesNeededCounter({ suggestion, document, acceptedSugge
       return 0;
     }
 
-    // אם threshold = 1, צריך שכל ההצבעות יהיו בעד
-    if (threshold >= 1) {
-      return conVotes > 0 ? Infinity : (1 - proVotes);
-    }
-
     // חישוב מתמטי נכון: כמה pro votes נדרשות כדי להגיע ל-threshold
     // threshold = proVotes / (proVotes + conVotes)
     // נפתור עבור proVotes החדש:
@@ -48,7 +43,10 @@ export default function VotesNeededCounter({ suggestion, document, acceptedSugge
     // threshold * conVotes = proVotes_new * (1 - threshold)
     // proVotes_new = (threshold * (proVotes + conVotes)) / (1 - threshold)
     
-    const totalNeeded = (threshold * (proVotes + conVotes)) / (1 - threshold);
+    // אם threshold קרוב מאוד ל-1 (>=0.99), נשתמש ב-0.99 כדי לחשב מספר ממשי
+    const effectiveThreshold = threshold >= 0.99 ? 0.99 : threshold;
+    
+    const totalNeeded = (effectiveThreshold * (proVotes + conVotes)) / (1 - effectiveThreshold);
     const additionalVotesNeeded = Math.ceil(totalNeeded) - proVotes;
     
     return Math.max(1, additionalVotesNeeded);
@@ -65,15 +63,6 @@ export default function VotesNeededCounter({ suggestion, document, acceptedSugge
       <Badge className="bg-green-100 text-green-800 border-green-300 flex items-center gap-1">
         <TrendingUp className="w-3 h-3" />
         {t('passedConsensusThreshold')}
-      </Badge>
-    );
-  }
-
-  if (votesNeeded === Infinity) {
-    return (
-      <Badge variant="outline" className="flex items-center gap-1 text-amber-700">
-        <Target className="w-3 h-3" />
-        {t('fullAgreementNeeded')}
       </Badge>
     );
   }
