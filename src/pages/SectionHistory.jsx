@@ -307,8 +307,15 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
         </div>
       )}
 
-      <div className="text-xs text-slate-500">
-        הוצעה על ידי {getUserName(suggestion.created_by)} ב-{new Date(suggestion.created_date).toLocaleString('he-IL')}
+      <div className="space-y-1">
+        <div className="text-xs text-slate-500">
+          פורסמה על ידי {getUserName(suggestion.created_by)} ב-{new Date(suggestion.created_date).toLocaleString('he-IL')}
+        </div>
+        {suggestion.status === 'accepted' && suggestion.updated_date && (
+          <div className="text-xs text-green-600 font-medium">
+            התקבלה ב-{new Date(suggestion.updated_date).toLocaleString('he-IL')}
+          </div>
+        )}
       </div>
     </div>
   );
