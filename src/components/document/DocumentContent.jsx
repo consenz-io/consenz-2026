@@ -316,6 +316,8 @@ export default function DocumentContent({
       });
       const translatedTitle = (typeof titleResult === 'string' ? titleResult : titleResult.content || titleResult).trim();
 
+      console.log('[TRANSLATE DEBUG] Translated title:', translatedTitle);
+
       const newTranslations = {
         ...(topic.translations || {}),
         [language]: {
@@ -329,6 +331,10 @@ export default function DocumentContent({
 
       return { topicId: topic.id, translations: newTranslations };
     },
+    onMutate: async (topic) => {
+      // מגדיר מראש שאנחנו מציגים תרגום
+      setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: true }));
+    },
     onSuccess: (data) => {
       queryClient.setQueryData(['topics', document.id], (oldData) => {
         if (!oldData) return oldData;
@@ -338,7 +344,6 @@ export default function DocumentContent({
             : t
         );
       });
-      setShowTranslatedTopics(prev => ({ ...prev, [data.topicId]: true }));
     }
   });
 

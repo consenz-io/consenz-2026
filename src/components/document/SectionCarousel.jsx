@@ -92,6 +92,8 @@ export default function SectionCarousel({
       const translatedTitle = (typeof titleResult === 'string' ? titleResult : titleResult.content || titleResult)
         .replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
 
+      console.log('[TRANSLATE DEBUG] Translated title:', translatedTitle);
+
       // תרגום הסבר
       let translatedExplanation = suggestion.explanation || '';
       if (suggestion.explanation) {
@@ -113,6 +115,8 @@ export default function SectionCarousel({
       const translatedContent = (typeof contentResult === 'string' ? contentResult : contentResult.content || contentResult)
         .replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
 
+      console.log('[TRANSLATE DEBUG] Translated content:', translatedContent);
+
       const newTranslations = {
         ...(suggestion.translations || {}),
         [language]: {
@@ -128,6 +132,10 @@ export default function SectionCarousel({
 
       return { suggestionId: suggestion.id, translations: newTranslations, suggestion };
     },
+    onMutate: async (suggestion) => {
+      // מגדיר מראש שאנחנו מציגים תרגום
+      setShowTranslated(prev => ({ ...prev, [suggestion.id]: true }));
+    },
     onSuccess: (data) => {
       // עדכון הדאטה באופן מיידי בקאש
       queryClient.setQueryData(['suggestions', document.id], (oldData) => {
@@ -138,7 +146,6 @@ export default function SectionCarousel({
             : s
         );
       });
-      setShowTranslated(prev => ({ ...prev, [data.suggestionId]: true }));
     }
   });
 
