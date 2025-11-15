@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -6,11 +6,14 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Users, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FileText, Users, TrendingUp, Languages, Loader2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
 export default function MyDocuments() {
   const { t, isRTL, language } = useLanguage();
+  const [translatedTitles, setTranslatedTitles] = useState({});
+  const [translating, setTranslating] = useState({});
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -92,6 +95,31 @@ export default function MyDocuments() {
 
   const myDocuments = allDocuments.filter(doc => myDocumentIds.has(doc.id));
 
+  const handleTranslateTitle = async (doc) => {
+    if (translatedTitles[doc.id]) {
+      // אם כבר יש תרגום, הסר אותו (חזור למקורי)
+      setTranslatedTitles(prev => {
+        const newState = { ...prev };
+        delete newState[doc.id];
+        return newState;
+      });
+      return;
+    }
+
+    setTranslating(prev => ({ ...prev, [doc.id]: true }));
+    try {
+      const targetLang = language === 'ar' ? 'Arabic' : language === 'he' ? 'Hebrew' : 'English';
+      const response = await base44.integrations.Core.InvokeLLM({
+        prompt: `Translate the following text to ${targetLang}. Return ONLY the translation, nothing else:\n\n${doc.title}`,
+      });
+      setTranslatedTitles(prev => ({ ...prev, [doc.id]: response }));
+    } catch (error) {
+      console.error('Translation error:', error);
+    } finally {
+      setTranslating(prev => ({ ...prev, [doc.id]: false }));
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -129,15 +157,37 @@ export default function MyDocuments() {
               const myVotesCount = votedSuggestions.filter(s => s.documentId === doc.id).length;
 
               return (
-                <Link key={doc.id} to={`${createPageUrl("DocumentView")}?id=${doc.id}`}>
-                  <Card className="bg-white/80 backdrop-blur-sm border-slate-200 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer h-full">
-                    <CardHeader className="border-b border-slate-100">
-                      <div className="flex items-start justify-between gap-2">
-                        <CardTitle className="text-xl line-clamp-2">{doc.title}</CardTitle>
-                        <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                <Card key={doc.id} className="bg-white/80 backdrop-blur-sm border-slate-200 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 h-full">
+                  <CardHeader className="border-b border-slate-100">
+                    <div className="flex items-start justify-between gap-2">
+                      <Link to={`${createPageUrl("DocumentView")}?id=${doc.id}`} className="flex-1 cursor-pointer">
+                        <CardTitle className="text-xl line-clamp-2">
+                          {translatedTitles[doc.id] || doc.title}
+                        </CardTitle>
+                      </Link>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleTranslateTitle(doc);
+                          }}
+                          disabled={translating[doc.id]}
+                        >
+                          {translating[doc.id] ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                          ) : (
+                            <Languages className={`w-4 h-4 ${translatedTitles[doc.id] ? 'text-green-600' : 'text-slate-400'}`} />
+                          )}
+                        </Button>
+                        <FileText className="w-5 h-5 text-blue-600" />
                       </div>
-                    </CardHeader>
-                    <CardContent className="pt-4 space-y-4">
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-4 space-y-4">
                       <div className="flex gap-2 flex-wrap">
                         <Badge variant="outline" className={
                           doc.privacy === 'public_view_open_participation' 
@@ -194,8 +244,7 @@ export default function MyDocuments() {
                         {t('created')} {new Date(doc.created_date).toLocaleDateString()}
                       </div>
                     </CardContent>
-                  </Card>
-                </Link>
+                </Card>
               );
             })}
           </div>
