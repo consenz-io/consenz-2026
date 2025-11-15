@@ -179,77 +179,86 @@ ${text}`;
   const translateAllSections = async () => {
     setTranslatingAll(true);
     
-    // Translate document title
-    const docOriginalLang = document.originalLanguage || 'he';
-    if (docOriginalLang !== language) {
-      if (!document.translations?.[language]) {
-        const translatedTitle = await translateTextMutation.mutateAsync({ 
-          text: document.title, 
-          targetLanguage: language, 
-          isHtml: false 
-        });
-        const updatedTranslations = { ...document.translations, [language]: translatedTitle };
-        await base44.entities.Document.update(document.id, {
-          translations: updatedTranslations,
-          originalLanguage: docOriginalLang
-        });
-        setTranslatedDocTitle(translatedTitle);
-      } else {
-        setTranslatedDocTitle(document.translations[language]);
-      }
-      setShowTranslatedDoc(true);
-    }
-
-    // Translate topics
-    const newShowTranslatedTopics = {};
-    for (const topic of topics) {
-      const topicOriginalLang = topic.originalLanguage || 'he';
-      if (topicOriginalLang !== language) {
-        if (!topic.translations?.[language]) {
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+    
+    try {
+      // Translate document title
+      const docOriginalLang = document.originalLanguage || 'he';
+      if (docOriginalLang !== language) {
+        if (!document.translations?.[language]) {
           const translatedTitle = await translateTextMutation.mutateAsync({ 
-            text: topic.title, 
+            text: document.title, 
             targetLanguage: language, 
             isHtml: false 
           });
-          const updatedTranslations = { ...topic.translations, [language]: translatedTitle };
-          await base44.entities.Topic.update(topic.id, {
+          const updatedTranslations = { ...document.translations, [language]: translatedTitle };
+          await base44.entities.Document.update(document.id, {
             translations: updatedTranslations,
-            originalLanguage: topicOriginalLang
+            originalLanguage: docOriginalLang
           });
-          setTranslatedTopics(prev => ({
-            ...prev,
-            [topic.id]: translatedTitle
-          }));
+          setTranslatedDocTitle(translatedTitle);
+          await delay(1000);
         } else {
-          setTranslatedTopics(prev => ({
-            ...prev,
-            [topic.id]: topic.translations[language]
-          }));
+          setTranslatedDocTitle(document.translations[language]);
         }
-        newShowTranslatedTopics[topic.id] = true;
+        setShowTranslatedDoc(true);
       }
-    }
-    setShowTranslatedTopics(newShowTranslatedTopics);
 
-    // Translate sections
-    const newShowTranslatedSections = {};
-    for (const section of sections) {
-      const sectionOriginalLang = section.originalLanguage || 'he';
-      if (sectionOriginalLang !== language) {
-        if (!section.translations?.[language]) {
-          await translateSectionMutation.mutateAsync({ section, targetLanguage: language });
-        } else {
-          setTranslatedSections(prev => ({
-            ...prev,
-            [section.id]: section.translations[language]
-          }));
+      // Translate topics
+      const newShowTranslatedTopics = {};
+      for (const topic of topics) {
+        const topicOriginalLang = topic.originalLanguage || 'he';
+        if (topicOriginalLang !== language) {
+          if (!topic.translations?.[language]) {
+            const translatedTitle = await translateTextMutation.mutateAsync({ 
+              text: topic.title, 
+              targetLanguage: language, 
+              isHtml: false 
+            });
+            const updatedTranslations = { ...topic.translations, [language]: translatedTitle };
+            await base44.entities.Topic.update(topic.id, {
+              translations: updatedTranslations,
+              originalLanguage: topicOriginalLang
+            });
+            setTranslatedTopics(prev => ({
+              ...prev,
+              [topic.id]: translatedTitle
+            }));
+            await delay(1000);
+          } else {
+            setTranslatedTopics(prev => ({
+              ...prev,
+              [topic.id]: topic.translations[language]
+            }));
+          }
+          newShowTranslatedTopics[topic.id] = true;
         }
-        newShowTranslatedSections[section.id] = true;
       }
+      setShowTranslatedTopics(newShowTranslatedTopics);
+
+      // Translate sections
+      const newShowTranslatedSections = {};
+      for (const section of sections) {
+        const sectionOriginalLang = section.originalLanguage || 'he';
+        if (sectionOriginalLang !== language) {
+          if (!section.translations?.[language]) {
+            await translateSectionMutation.mutateAsync({ section, targetLanguage: language });
+            await delay(1000);
+          } else {
+            setTranslatedSections(prev => ({
+              ...prev,
+              [section.id]: section.translations[language]
+            }));
+          }
+          newShowTranslatedSections[section.id] = true;
+        }
+      }
+      setShowTranslatedSections(newShowTranslatedSections);
+    } catch (error) {
+      console.error('Translation error:', error);
+    } finally {
+      setTranslatingAll(false);
     }
-    setShowTranslatedSections(newShowTranslatedSections);
-    
-    setTranslatingAll(false);
   };
 
   const needsTranslation = sections.some(s => (s.originalLanguage || 'he') !== language) || 
