@@ -232,11 +232,11 @@ export default function LearnMore() {
           <CardContent>
             <div className="space-y-4">
               {steps[activeStep].steps.map((stepText, index) => (
-                <div key={index} className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div key={index} className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse text-right' : 'text-left'}`}>
                   <div className={`flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br ${steps[activeStep].color} flex items-center justify-center text-white font-bold shadow-lg`}>
                     {index + 1}
                   </div>
-                  <p className={`text-slate-700 pt-1 ${isRTL ? 'text-right' : 'text-left'}`}>{stepText}</p>
+                  <p className={`text-slate-700 pt-1 flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>{stepText}</p>
                 </div>
               ))}
             </div>
