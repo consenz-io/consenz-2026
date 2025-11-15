@@ -163,7 +163,7 @@ export default function DocumentView() {
             <Link to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`}>
               <Button variant="outline">
                 <FileText className="w-4 h-4 mr-2" />
-                תצוגה נקייה
+                {t('viewCurrentVersion')}
               </Button>
             </Link>
             {isAdmin && (
