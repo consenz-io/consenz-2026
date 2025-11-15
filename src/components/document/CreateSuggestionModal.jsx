@@ -101,7 +101,8 @@ Return ONLY the translated HTML:`;
 
         const result = await base44.integrations.Core.InvokeLLM({ prompt });
         let translatedContent = typeof result === 'string' ? result : result.content || result;
-        translatedContent = translatedContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+        // Remove markdown code blocks
+        translatedContent = translatedContent.replace(/```html\s*/gi, '').replace(/```\s*/g, '').trim();
         
         setFormData(prev => ({ ...prev, newContent: translatedContent }));
         
