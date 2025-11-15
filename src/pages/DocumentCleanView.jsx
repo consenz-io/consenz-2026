@@ -8,7 +8,7 @@ import { ArrowLeft, Printer, Globe, Loader2, ChevronLeft, ChevronRight } from "l
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
-import SectionDiff from "@/components/document/SectionDiff";
+import InlineDiff from "@/components/document/InlineDiff";
 
 export default function DocumentCleanView() {
   const { t, isRTL, language } = useLanguage();
@@ -452,12 +452,10 @@ ${text}`;
                               </span>
                               <div className="flex-1">
                                 {isViewingHistory && previousVersionContent ? (
-                                  <div className="space-y-4">
-                                    <SectionDiff
-                                      originalContent={previousVersionContent}
-                                      newContent={currentVersionContent}
-                                    />
-                                  </div>
+                                  <InlineDiff
+                                    originalContent={previousVersionContent}
+                                    newContent={currentVersionContent}
+                                  />
                                 ) : (
                                   <>
                                     <div 
