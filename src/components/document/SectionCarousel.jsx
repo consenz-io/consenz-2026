@@ -93,7 +93,7 @@ export default function SectionCarousel({
         .replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
 
       // תרגום הסבר
-      let translatedExplanation = null;
+      let translatedExplanation = suggestion.explanation || '';
       if (suggestion.explanation) {
         const explanationPrompt = `Translate the following HTML content to ${languagePrompts[language]}. Keep ALL HTML tags. Return ONLY the translated HTML:\n${suggestion.explanation}`;
         const explanationResult = await base44.integrations.Core.InvokeLLM({
@@ -126,10 +126,18 @@ export default function SectionCarousel({
         translations: newTranslations
       });
 
-      queryClient.invalidateQueries();
-      return { suggestionId: suggestion.id, translations: newTranslations };
+      return { suggestionId: suggestion.id, translations: newTranslations, suggestion };
     },
     onSuccess: (data) => {
+      // עדכון הדאטה באופן מיידי בקאש
+      queryClient.setQueryData(['suggestions', document.id], (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.map(s => 
+          s.id === data.suggestionId 
+            ? { ...s, translations: data.translations }
+            : s
+        );
+      });
       setShowTranslated(prev => ({ ...prev, [data.suggestionId]: true }));
     }
   });
