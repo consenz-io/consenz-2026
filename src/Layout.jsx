@@ -22,10 +22,6 @@ import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import NotificationBell from "@/components/notifications/NotificationBell";
 
-// Import document content fonts
-import "@fontsource/amiri";
-import "@fontsource/noto-serif-hebrew";
-
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
   const queryClient = useQueryClient();

@@ -6,10 +6,11 @@ export default function DocumentTextContent({ content, className = "" }) {
       className={`document-content ${className}`}
       dangerouslySetInnerHTML={{ __html: content }}
       style={{
-        fontFamily: "'Amiri', 'Noto Serif Hebrew', 'Noto Serif', Georgia, serif",
+        fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
         fontSize: "1.125rem",
         lineHeight: "1.8",
-        letterSpacing: "0.01em"
+        letterSpacing: "0.01em",
+        fontWeight: "400"
       }}
     />
   );
