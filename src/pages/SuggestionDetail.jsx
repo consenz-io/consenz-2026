@@ -260,7 +260,11 @@ export default function SuggestionDetail() {
       }
 
       // יצירת התראה למחבר ההצעה על הצבעה חדשה
-      await notifyVoteOnSuggestion({ suggestion, voterEmail: user.email });
+      try {
+        await notifyVoteOnSuggestion({ suggestion, voterEmail: user.email });
+      } catch (notifError) {
+        console.error('[VOTE NOTIFICATION ERROR]', notifError);
+      }
 
       // בדיקה והפעלת אישור אוטומטי אם עברנו את הסף
       const { shouldAccept } = checkSuggestionConsensus(updatedSuggestion, document);
@@ -411,7 +415,11 @@ export default function SuggestionDetail() {
       await base44.entities.Suggestion.update(suggestionId, { status });
       
       // שליחת התראה על שינוי סטטוס
-      await notifySuggestionStatusChange({ suggestion, newStatus: status });
+      try {
+        await notifySuggestionStatusChange({ suggestion, newStatus: status });
+      } catch (notifError) {
+        console.error('[STATUS NOTIFICATION ERROR]', notifError);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });

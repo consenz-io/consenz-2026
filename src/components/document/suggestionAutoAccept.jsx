@@ -1,4 +1,5 @@
 import { base44 } from "@/api/base44Client";
+import { notifySuggestionStatusChange } from "../notifications/createNotification";
 
 /**
  * בדיקה אם הצעה עברה את סף הקונסנזוס ויכולה להתקבל אוטומטית
