@@ -439,6 +439,11 @@ ${text}`;
                           ? (translatedSections[section.id] || section.translations[language])
                           : section.content;
 
+                        // מציאת גרסה קודמת של הסעיף הזה
+                        const previousVersionContent = previousVersion?.sections.find(v => v.sectionId === section.id)?.content;
+                        const isViewingHistory = currentVersionIndex > 0;
+                        const currentVersionContent = currentVersion?.sections.find(v => v.sectionId === section.id)?.content || section.content;
+
                         return (
                           <div key={section.id} className="break-inside-avoid">
                             <div className="flex gap-4 group">
@@ -446,43 +451,54 @@ ${text}`;
                                 {topicIndex + 1}.{sectionIndex + 1}
                               </span>
                               <div className="flex-1">
-                                <div 
-                                  className="text-slate-700 leading-relaxed prose prose-slate max-w-none"
-                                  dangerouslySetInnerHTML={{ __html: displayContent }}
-                                />
-                                {needsTranslation && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="mt-2 text-blue-600 hover:text-blue-700 print:hidden opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={async () => {
-                                      if (!hasTranslation) {
-                                        await translateSectionMutation.mutateAsync({ section, targetLanguage: language });
-                                        setShowTranslatedSections(prev => ({
-                                          ...prev,
-                                          [section.id]: true
-                                        }));
-                                      } else {
-                                        setShowTranslatedSections(prev => ({
-                                          ...prev,
-                                          [section.id]: !prev[section.id]
-                                        }));
-                                      }
-                                    }}
-                                    disabled={translateSectionMutation.isPending}
-                                  >
-                                    {translateSectionMutation.isPending ? (
-                                      <>
-                                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                                        {t('translating')}
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Globe className="w-3 h-3 mr-1" />
-                                        {showTranslatedSections[section.id] ? 'הצג מקור' : t('translateSection')}
-                                      </>
+                                {isViewingHistory && previousVersionContent ? (
+                                  <div className="space-y-4">
+                                    <SectionDiff
+                                      originalContent={previousVersionContent}
+                                      newContent={currentVersionContent}
+                                    />
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div 
+                                      className="text-slate-700 leading-relaxed prose prose-slate max-w-none"
+                                      dangerouslySetInnerHTML={{ __html: displayContent }}
+                                    />
+                                    {needsTranslation && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="mt-2 text-blue-600 hover:text-blue-700 print:hidden opacity-0 group-hover:opacity-100 transition-opacity"
+                                        onClick={async () => {
+                                          if (!hasTranslation) {
+                                            await translateSectionMutation.mutateAsync({ section, targetLanguage: language });
+                                            setShowTranslatedSections(prev => ({
+                                              ...prev,
+                                              [section.id]: true
+                                            }));
+                                          } else {
+                                            setShowTranslatedSections(prev => ({
+                                              ...prev,
+                                              [section.id]: !prev[section.id]
+                                            }));
+                                          }
+                                        }}
+                                        disabled={translateSectionMutation.isPending}
+                                      >
+                                        {translateSectionMutation.isPending ? (
+                                          <>
+                                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                            {t('translating')}
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Globe className="w-3 h-3 mr-1" />
+                                            {showTranslatedSections[section.id] ? 'הצג מקור' : t('translateSection')}
+                                          </>
+                                        )}
+                                      </Button>
                                     )}
-                                  </Button>
+                                  </>
                                 )}
                               </div>
                             </div>
