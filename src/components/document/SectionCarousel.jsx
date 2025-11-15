@@ -158,23 +158,19 @@ export default function SectionCarousel({
           // תצוגת הצעה - diff
           <>
             <div className="mb-3">
-              <div className="text-sm font-semibold text-amber-900 mb-2">
+              <TranslatableContent
+                content={currentView.data.title}
+                entity={currentView.data}
+                entityType="Suggestion"
+                renderContent={(content) => <div className="text-sm font-semibold text-amber-900 mb-2">{content}</div>}
+              />
+              {currentView.data.explanation && (
                 <TranslatableContent
-                  content={currentView.data.title}
+                  content={currentView.data.explanation}
                   entity={currentView.data}
                   entityType="Suggestion"
-                  renderContent={(content) => <span>{content}</span>}
+                  renderContent={(content) => <p className="text-sm text-slate-600 mb-3">{content}</p>}
                 />
-              </div>
-              {currentView.data.explanation && (
-                <p className="text-sm text-slate-600 mb-3">
-                  <TranslatableContent
-                    content={currentView.data.explanation}
-                    entity={currentView.data}
-                    entityType="Suggestion"
-                    renderContent={(content) => <span>{content}</span>}
-                  />
-                </p>
               )}
             </div>
             
