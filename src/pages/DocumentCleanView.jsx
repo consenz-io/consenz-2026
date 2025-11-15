@@ -267,12 +267,6 @@ ${text}`;
       {/* Header - Hidden on print */}
       <div className="bg-slate-50 border-b border-slate-200 p-4 print:hidden sticky top-0 z-10">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
-            <Button variant="outline" size="sm">
-              <ArrowLeft className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {t('document')}
-            </Button>
-          </Link>
           <div className="flex items-center gap-2">
             {versionGroups.length > 1 && (
               <div className="flex items-center gap-2 border-l border-slate-300 pl-2">
@@ -326,6 +320,12 @@ ${text}`;
               {language === 'en' ? 'Print' : language === 'ar' ? 'طباعة' : 'הדפס'}
             </Button>
           </div>
+          <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
+            <Button variant="outline" size="sm">
+              <ArrowLeft className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {language === 'ar' ? 'العودة إلى النقاش' : language === 'he' ? 'חזרה לדיון' : 'Back to Discussion'}
+            </Button>
+          </Link>
         </div>
       </div>
 
