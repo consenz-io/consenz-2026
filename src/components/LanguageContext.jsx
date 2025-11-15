@@ -127,6 +127,14 @@ const translations = {
     translating: "Translating...",
     translateSection: "Translate Section",
     translatedFrom: "Translated from",
+    points: "Points",
+    navigation: "Navigation",
+    costToCreate: "Cost to create suggestion:",
+    yourPoints: "Your points:",
+    originalContent: "Original Content:",
+    cleanView: "Clean View",
+    section: "Section",
+    history: "History",
   },
   he: {
     // ניווט
@@ -254,6 +262,14 @@ const translations = {
     translating: "מתרגם...",
     translateSection: "תרגם סעיף",
     translatedFrom: "תורגם מ",
+    points: "נקודות",
+    navigation: "ניווט",
+    costToCreate: "עלות יצירת הצעה:",
+    yourPoints: "הנקודות שלך:",
+    originalContent: "התוכן המקורי:",
+    cleanView: "תצוגה נקייה",
+    section: "סעיף",
+    history: "היסטוריה",
   },
   ar: {
     // التنقل
@@ -380,6 +396,14 @@ const translations = {
     translating: "جاري الترجمة...",
     translateSection: "ترجمة القسم",
     translatedFrom: "مترجم من",
+    points: "نقاط",
+    navigation: "التنقل",
+    costToCreate: "تكلفة إنشاء اقتراح:",
+    yourPoints: "نقاطك:",
+    originalContent: "المحتوى الأصلي:",
+    cleanView: "عرض نظيف",
+    section: "القسم",
+    history: "التاريخ",
   }
 };
 
