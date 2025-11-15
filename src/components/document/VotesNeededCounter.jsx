@@ -46,10 +46,10 @@ export default function VotesNeededCounter({ suggestion, document, acceptedSugge
     // threshold * proVotes_new + threshold * conVotes = proVotes_new
     // threshold * conVotes = proVotes_new - threshold * proVotes_new
     // threshold * conVotes = proVotes_new * (1 - threshold)
-    // proVotes_new = (threshold * conVotes) / (1 - threshold)
+    // proVotes_new = (threshold * (proVotes + conVotes)) / (1 - threshold)
     
-    const proVotesNeeded = (threshold * conVotes) / (1 - threshold);
-    const additionalVotesNeeded = Math.ceil(proVotesNeeded) - proVotes;
+    const totalNeeded = (threshold * (proVotes + conVotes)) / (1 - threshold);
+    const additionalVotesNeeded = Math.ceil(totalNeeded) - proVotes;
     
     return Math.max(1, additionalVotesNeeded);
   };
