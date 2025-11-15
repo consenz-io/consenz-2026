@@ -293,6 +293,17 @@ export default function CreateSuggestionModal({
               placeholder={t('enterContent')}
               rows={8}
             />
+            {formData.newContent && (
+              <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 mt-2">
+                <div className="text-xs text-slate-600 mb-2">תצוגה מקדימה:</div>
+                <TranslatableContent
+                  content={formData.newContent}
+                  entity={{ content: formData.newContent, originalLanguage: detectLanguage(formData.newContent), translations: {} }}
+                  entityType="preview"
+                  className="prose prose-sm max-w-none"
+                />
+              </div>
+            )}
           </div>
 
           <div>
