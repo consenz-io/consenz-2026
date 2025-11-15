@@ -19,6 +19,7 @@ import SectionDiff from "../components/document/SectionDiff";
 import TranslatableContent from "../components/document/TranslatableContent";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "../components/document/suggestionAutoAccept";
 import { useLanguage } from "@/components/LanguageContext";
+import { notifyVoteOnSuggestion, notifySuggestionStatusChange } from "../components/notifications/createNotification";
 
 export default function SuggestionDetail() {
   const { t, isRTL } = useLanguage();
@@ -258,6 +259,9 @@ export default function SuggestionDetail() {
         }
       }
 
+      // יצירת התראה למחבר ההצעה על הצבעה חדשה
+      await notifyVoteOnSuggestion({ suggestion, voterEmail: user.email });
+
       // בדיקה והפעלת אישור אוטומטי אם עברנו את הסף
       const { shouldAccept } = checkSuggestionConsensus(updatedSuggestion, document);
       console.log('[POINTS DEBUG] Should accept suggestion:', shouldAccept);
@@ -405,6 +409,9 @@ export default function SuggestionDetail() {
       }
 
       await base44.entities.Suggestion.update(suggestionId, { status });
+      
+      // שליחת התראה על שינוי סטטוס
+      await notifySuggestionStatusChange({ suggestion, newStatus: status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
