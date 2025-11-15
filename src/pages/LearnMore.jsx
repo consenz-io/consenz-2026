@@ -177,7 +177,7 @@ export default function LearnMore() {
             </Button>
           </Link>
           
-          <div className="text-center space-y-6">
+          <div className={`text-center space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
             <h1 className="text-5xl md:text-6xl font-bold text-slate-900">
               {isRTL ? "איך Consenz עובד?" : "How Consenz Works?"}
             </h1>
@@ -191,7 +191,7 @@ export default function LearnMore() {
       </section>
 
       {/* Interactive Tutorial */}
-      <section className="max-w-7xl mx-auto px-6 py-16">
+      <section className={`max-w-7xl mx-auto px-6 py-16 ${isRTL ? 'rtl' : 'ltr'}`}>
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-slate-900 mb-4">
             {isRTL ? "מדריך שלב אחר שלב" : "Step-by-Step Guide"}
@@ -223,7 +223,7 @@ export default function LearnMore() {
               <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${steps[activeStep].color} flex items-center justify-center shadow-lg`}>
                 {React.createElement(steps[activeStep].icon, { className: "w-8 h-8 text-white" })}
               </div>
-              <div>
+              <div className={isRTL ? 'text-right' : 'text-left'}>
                 <CardTitle className="text-2xl">{steps[activeStep].title}</CardTitle>
                 <p className="text-slate-600 mt-1">{steps[activeStep].description}</p>
               </div>
@@ -236,7 +236,7 @@ export default function LearnMore() {
                   <div className={`flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br ${steps[activeStep].color} flex items-center justify-center text-white font-bold shadow-lg`}>
                     {index + 1}
                   </div>
-                  <p className="text-slate-700 pt-1">{stepText}</p>
+                  <p className={`text-slate-700 pt-1 ${isRTL ? 'text-right' : 'text-left'}`}>{stepText}</p>
                 </div>
               ))}
             </div>
@@ -265,7 +265,7 @@ export default function LearnMore() {
       </section>
 
       {/* Visual Flow Diagram */}
-      <section className="max-w-7xl mx-auto px-6 py-16">
+      <section className={`max-w-7xl mx-auto px-6 py-16 ${isRTL ? 'rtl' : 'ltr'}`}>
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-slate-900 mb-4">
             {isRTL ? "תהליך העבודה" : "The Workflow"}
@@ -365,7 +365,7 @@ export default function LearnMore() {
       </section>
 
       {/* Key Features */}
-      <section className="max-w-7xl mx-auto px-6 py-16">
+      <section className={`max-w-7xl mx-auto px-6 py-16 ${isRTL ? 'rtl' : 'ltr'}`}>
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-slate-900 mb-4">
             {isRTL ? "תכונות מרכזיות" : "Key Features"}
@@ -383,7 +383,7 @@ export default function LearnMore() {
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
                     {React.createElement(feature.icon, { className: "w-6 h-6 text-white" })}
                   </div>
-                  <div>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
                     <h3 className="font-bold text-slate-900 mb-2">{feature.title}</h3>
                     <p className="text-sm text-slate-600">{feature.description}</p>
                   </div>
@@ -395,10 +395,10 @@ export default function LearnMore() {
       </section>
 
       {/* Example: Consensus Calculation */}
-      <section className="max-w-7xl mx-auto px-6 py-16">
+      <section className={`max-w-7xl mx-auto px-6 py-16 ${isRTL ? 'rtl' : 'ltr'}`}>
         <Card className="bg-gradient-to-br from-slate-50 to-blue-50 border-slate-200">
           <CardHeader>
-            <CardTitle className="text-2xl">
+            <CardTitle className={`text-2xl ${isRTL ? 'text-right' : 'text-left'}`}>
               {isRTL ? "איך מחושב סף הקונצנזוס?" : "How is the Consensus Threshold Calculated?"}
             </CardTitle>
           </CardHeader>
@@ -407,7 +407,7 @@ export default function LearnMore() {
               <div className="p-4 bg-white rounded-lg border border-slate-200">
                 <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Badge className="bg-blue-600">1</Badge>
-                  <div>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
                     <p className="font-semibold text-slate-900">
                       {isRTL ? "התחלה עם ערך ברירת מחדל" : "Start with default value"}
                     </p>
@@ -423,7 +423,7 @@ export default function LearnMore() {
               <div className="p-4 bg-white rounded-lg border border-slate-200">
                 <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Badge className="bg-indigo-600">2</Badge>
-                  <div>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
                     <p className="font-semibold text-slate-900">
                       {isRTL ? "איסוף נתונים מהצעות שהתקבלו" : "Collect data from accepted suggestions"}
                     </p>
@@ -439,7 +439,7 @@ export default function LearnMore() {
               <div className="p-4 bg-white rounded-lg border border-slate-200">
                 <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Badge className="bg-purple-600">3</Badge>
-                  <div>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
                     <p className="font-semibold text-slate-900">
                       {isRTL ? "עדכון דינמי של הסף" : "Dynamic threshold update"}
                     </p>
@@ -455,7 +455,7 @@ export default function LearnMore() {
               <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                 <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                  <div>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
                     <p className="font-semibold text-green-900">
                       {isRTL ? "תוצאה: אלגוריתם מותאם לקהילה" : "Result: Community-adapted algorithm"}
                     </p>
@@ -470,7 +470,7 @@ export default function LearnMore() {
             </div>
 
             {/* Visual Example */}
-            <div className="mt-8">
+            <div className={`mt-8 ${isRTL ? 'text-right' : 'text-left'}`}>
               <h4 className="font-bold text-slate-900 mb-4">
                 {isRTL ? "דוגמה מספרית" : "Numerical Example"}
               </h4>
@@ -535,7 +535,7 @@ export default function LearnMore() {
       </section>
 
       {/* CTA Section */}
-      <section className="max-w-7xl mx-auto px-6 py-16">
+      <section className={`max-w-7xl mx-auto px-6 py-16 ${isRTL ? 'rtl' : 'ltr'}`}>
         <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 border-0 text-white">
           <CardContent className="p-12 text-center">
             <h2 className="text-3xl font-bold mb-4">
