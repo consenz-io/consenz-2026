@@ -356,7 +356,7 @@ export default function DocumentContent({
                         </div>
                       )}
                     <div key={section.id} className="space-y-3">
-                      <div id={`section-${section.id}`} className="group relative p-4 border border-slate-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/50 transition-all">
+                      <div id={`section-${section.id}`} className="group relative p-6 border-2 border-slate-300 rounded-lg hover:border-blue-400 hover:shadow-md transition-all bg-gradient-to-br from-white to-slate-50/30">
                         <div className={`flex justify-between items-start gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-2">
@@ -461,6 +461,9 @@ export default function DocumentContent({
                                       entity={suggestion}
                                       entityType="Suggestion"
                                       className="prose prose-sm max-w-none p-3 bg-green-50 rounded border border-green-200"
+                                      renderContent={(content) => (
+                                        <DocumentTextContent content={content} />
+                                      )}
                                     />
                                   )}
                                 </div>

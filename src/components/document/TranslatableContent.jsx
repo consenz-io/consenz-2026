@@ -22,7 +22,8 @@ export default function TranslatableContent({
   entity, 
   entityType,
   onUpdate,
-  className = "" 
+  className = "",
+  renderContent = null
 }) {
   const { language, isRTL } = useLanguage();
   const [showTranslated, setShowTranslated] = useState(false);
@@ -95,11 +96,17 @@ Return ONLY the translated HTML:`;
         </div>
       ) : (
         <>
-          <div 
-            className={className}
-            style={{ direction: isDisplayRTL ? 'rtl' : 'ltr', textAlign: isDisplayRTL ? 'right' : 'left' }}
-            dangerouslySetInnerHTML={{ __html: displayContent }}
-          />
+          {renderContent ? (
+            <div style={{ direction: isDisplayRTL ? 'rtl' : 'ltr', textAlign: isDisplayRTL ? 'right' : 'left' }}>
+              {renderContent(displayContent)}
+            </div>
+          ) : (
+            <div 
+              className={className}
+              style={{ direction: isDisplayRTL ? 'rtl' : 'ltr', textAlign: isDisplayRTL ? 'right' : 'left' }}
+              dangerouslySetInnerHTML={{ __html: displayContent }}
+            />
+          )}
           
           {needsTranslation && (
             <div className="flex items-center gap-2 pt-2">
