@@ -605,6 +605,32 @@ export default function SuggestionDetail() {
               </div>
             )}
 
+            {suggestion.type === 'edit_section' && suggestionVersions.length > 1 && currentVersionIndex >= 0 && (
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <span className="text-sm font-medium text-slate-700">
+                  {isNewestVersion ? t('currentVersion') : `${t('version')} ${suggestionVersions[currentVersionIndex]?.version || 0}`}
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleNavigateToVersion('older')}
+                    disabled={isOldestVersion}
+                  >
+                    {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleNavigateToVersion('newer')}
+                    disabled={isNewestVersion}
+                  >
+                    {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {suggestion.type === 'edit_section' && suggestion.originalContent ? (
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedChanges')}</h3>
