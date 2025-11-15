@@ -116,6 +116,13 @@ const translations = {
     version: "Version",
     restoredFromVersion: "Restored from version {version}",
     viewInDocument: "View in Document",
+    activitySummary: "Activity Summary",
+    contributionDescription: "Your contribution and points history",
+    pointsHistory: "Points History",
+    noPointsHistory: "No points history yet",
+    gamificationPoints: "Gamification Points",
+    suggestionsCreated: "Suggestions Created",
+    accountType: "Account Type",
   },
   he: {
     // ניווט
@@ -232,6 +239,13 @@ const translations = {
     version: "גרסה",
     restoredFromVersion: "שוחזר מגרסה {version}",
     viewInDocument: "צפה במסמך",
+    activitySummary: "סיכום פעילות",
+    contributionDescription: "התרומה שלך והיסטוריית הנקודות",
+    pointsHistory: "היסטוריית נקודות",
+    noPointsHistory: "אין עדיין היסטוריית נקודות",
+    gamificationPoints: "נקודות גיימיפיקציה",
+    suggestionsCreated: "הצעות שנוצרו",
+    accountType: "סוג חשבון",
   },
   ar: {
     // التنقل
@@ -347,6 +361,13 @@ const translations = {
     version: "إصدار",
     restoredFromVersion: "تم الاستعادة من الإصدار {version}",
     viewInDocument: "عرض في المستند",
+    activitySummary: "ملخص النشاط",
+    contributionDescription: "مساهمتك وتاريخ النقاط",
+    pointsHistory: "تاريخ النقاط",
+    noPointsHistory: "لا يوجد تاريخ نقاط حتى الآن",
+    gamificationPoints: "نقاط التلعيب",
+    suggestionsCreated: "المقترحات المنشأة",
+    accountType: "نوع الحساب",
   }
 };
 
