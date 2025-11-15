@@ -88,14 +88,30 @@ export default function Home() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-            <Card className="bg-white/80 backdrop-blur-sm border-slate-200">
+            <Card 
+              className="bg-white/80 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all"
+              onClick={() => {
+                const element = document.getElementById('recent-documents-section');
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}
+            >
               <CardContent className="p-6 text-center">
                 <FileText className="w-8 h-8 mx-auto mb-3 text-blue-600" />
                 <div className="text-3xl font-bold text-slate-900">{documents.length}</div>
                 <div className="text-sm text-slate-600">{t('activeDocuments')}</div>
               </CardContent>
             </Card>
-            <Card className="bg-white/80 backdrop-blur-sm border-slate-200">
+            <Card 
+              className="bg-white/80 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all"
+              onClick={() => {
+                const element = document.getElementById('recent-documents-section');
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}
+            >
               <CardContent className="p-6 text-center">
                 <Users className="w-8 h-8 mx-auto mb-3 text-indigo-600" />
                 <div className="text-3xl font-bold text-slate-900">
@@ -104,7 +120,15 @@ export default function Home() {
                 <div className="text-sm text-slate-600">{t('collaborators')}</div>
               </CardContent>
             </Card>
-            <Card className="bg-white/80 backdrop-blur-sm border-slate-200">
+            <Card 
+              className="bg-white/80 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all"
+              onClick={() => {
+                const element = document.getElementById('recent-documents-section');
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+              }}
+            >
               <CardContent className="p-6 text-center">
                 <TrendingUp className="w-8 h-8 mx-auto mb-3 text-purple-600" />
                 <div className="text-3xl font-bold text-slate-900">
@@ -118,7 +142,7 @@ export default function Home() {
       </section>
 
       {/* Recent Documents */}
-      <section className="max-w-7xl mx-auto px-6 py-16">
+      <section id="recent-documents-section" className="max-w-7xl mx-auto px-6 py-16">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h2 className="text-3xl font-bold text-slate-900">{t('recentDocuments')}</h2>

@@ -23,6 +23,7 @@ export default function DocumentView() {
   const scrollToSectionId = searchParams.get('scrollTo');
   const [showCreateSuggestion, setShowCreateSuggestion] = useState(false);
   const [editingSection, setEditingSection] = useState(null);
+  const [activeTab, setActiveTab] = useState("document");
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
@@ -178,7 +179,7 @@ export default function DocumentView() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-white/80 backdrop-blur-sm">
+          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all" onClick={() => setActiveTab("document")}>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <Users className="w-8 h-8 text-blue-600" />
@@ -189,7 +190,7 @@ export default function DocumentView() {
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-white/80 backdrop-blur-sm">
+          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all" onClick={() => setActiveTab("suggestions")}>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <MessageSquare className="w-8 h-8 text-indigo-600" />
@@ -200,7 +201,7 @@ export default function DocumentView() {
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-white/80 backdrop-blur-sm">
+          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all" onClick={() => setActiveTab("document")}>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <TrendingUp className="w-8 h-8 text-purple-600" />
@@ -213,7 +214,7 @@ export default function DocumentView() {
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-white/80 backdrop-blur-sm">
+          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all" onClick={() => setActiveTab("document")}>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold">
@@ -246,7 +247,7 @@ export default function DocumentView() {
           </Card>
         </div>
 
-        <Tabs defaultValue="document" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-white/80 backdrop-blur-sm">
             <TabsTrigger value="document">{t('document')}</TabsTrigger>
             <TabsTrigger value="suggestions">
