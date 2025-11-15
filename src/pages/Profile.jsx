@@ -11,10 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { User, Mail, Shield, Sparkles, FileText, CheckCircle, AlertCircle, Edit2, Save, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLanguage } from "@/components/LanguageContext";
 
 export default function Profile() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t, isRTL } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
@@ -120,7 +122,7 @@ export default function Profile() {
                 </div>
                 <div>
                   <div className="text-4xl font-bold">{user.points || 1000}</div>
-                  <div className="text-sm text-blue-100 font-medium">נקודות גיימיפיקציה</div>
+                  <div className="text-sm text-blue-100 font-medium">{t('gamificationPoints')}</div>
                 </div>
               </div>
             </CardContent>
@@ -134,7 +136,7 @@ export default function Profile() {
                 </div>
                 <div>
                   <div className="text-3xl font-bold text-slate-900">{user.suggestionsCreated || 0}</div>
-                  <div className="text-sm text-slate-600">Suggestions</div>
+                  <div className="text-sm text-slate-600">{t('suggestions')}</div>
                 </div>
               </div>
             </CardContent>
