@@ -182,17 +182,44 @@ export default function DocumentAdmin() {
 
   const sendInviteMutation = useMutation({
     mutationFn: async (email) => {
-      const token = Math.random().toString(36).substring(2, 15);
+      console.log('🔄 Starting invitation process for:', email.trim());
       
-      await base44.entities.Invitation.create({
+      // בדיקת תקינות מייל
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        throw new Error("כתובת המייל אינה תקינה");
+      }
+
+      // בדיקה אם כבר קיימת הזמנה ממתינה
+      const existingInvitations = await base44.entities.Invitation.filter({ 
+        documentId, 
+        email: email.trim(),
+        status: 'pending'
+      });
+      
+      if (existingInvitations.length > 0) {
+        console.log('⚠️ Invitation already exists for this email');
+        throw new Error("כבר קיימת הזמנה ממתינה עבור כתובת מייל זו");
+      }
+
+      const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      console.log('🎟️ Generated token:', token.substring(0, 10) + '...');
+      
+      // יצירת הזמנה במערכת
+      console.log('💾 Creating invitation record...');
+      const invitation = await base44.entities.Invitation.create({
         documentId,
         email: email.trim(),
         invitedBy: user.id,
         token
       });
+      console.log('✅ Invitation record created:', invitation.id);
 
       const signupUrl = `${window.location.origin}?invite=${token}`;
+      console.log('🔗 Signup URL:', signupUrl);
       
+      // שליחת מייל
+      console.log('📧 Sending email to:', email.trim());
       await base44.integrations.Core.SendEmail({
         to: email.trim(),
         subject: `הזמנה להצטרף למסמך: ${document.title}`,
@@ -212,24 +239,38 @@ export default function DocumentAdmin() {
 צוות Consenz
         `
       });
+      console.log('✅ Email sent successfully');
+      
+      return { email: email.trim(), token };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('✅ Invitation process completed successfully for:', data.email);
       queryClient.invalidateQueries({ queryKey: ['invitations', documentId] });
       setInviteEmail("");
-      setSuccess("הזמנה נשלחה בהצלחה!");
-      setTimeout(() => setSuccess(null), 3000);
+      setSuccess(`הזמנה נשלחה בהצלחה לכתובת ${data.email}!`);
+      setTimeout(() => setSuccess(null), 5000);
     },
     onError: (err) => {
-      setError(err.message || "שליחת ההזמנה נכשלה");
+      console.error('❌ Invitation failed:', err);
+      console.error('Error details:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      });
+      setError(err.message || "שליחת ההזמנה נכשלה. אנא נסה שוב.");
       setTimeout(() => setError(null), 5000);
     },
   });
 
   const handleSendInvite = () => {
+    console.log('📨 Attempting to send invitation...');
     if (!inviteEmail || !inviteEmail.trim()) {
+      console.log('❌ Email field is empty');
       setError("אנא הזן כתובת מייל");
+      setTimeout(() => setError(null), 3000);
       return;
     }
+    console.log('✅ Email field validated, starting mutation');
     sendInviteMutation.mutate(inviteEmail.trim());
   };
 
@@ -452,7 +493,7 @@ export default function DocumentAdmin() {
                 className="bg-green-600 hover:bg-green-700"
               >
                 <Mail className="w-4 h-4 mr-2" />
-                שלח הזמנה
+                {sendInviteMutation.isPending ? "שולח..." : "שלח הזמנה"}
               </Button>
             </div>
           </CardContent>
