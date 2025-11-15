@@ -11,6 +11,7 @@ import VotesNeededCounter from "./VotesNeededCounter";
 import SectionDiff from "./SectionDiff";
 import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
+import DocumentTextContent from "./DocumentTextContent";
 import { useLanguage } from "@/components/LanguageContext";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAutoAccept";
 
@@ -377,7 +378,10 @@ export default function DocumentContent({
                               content={section.content}
                               entity={section}
                               entityType="Section"
-                              className="prose prose-sm max-w-none text-slate-700"
+                              className="prose prose-sm max-w-none"
+                              renderContent={(content) => (
+                                <DocumentTextContent content={content} className="text-slate-800" />
+                              )}
                             />
                             <div className={`flex items-center justify-between mt-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                               <div className="text-xs text-slate-400">

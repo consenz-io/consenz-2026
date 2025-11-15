@@ -72,7 +72,17 @@ export default function SectionDiff({ originalContent, newContent }) {
   return (
     <Card className="p-4 bg-slate-50 border-slate-200">
       <div className="text-sm font-semibold text-slate-700 mb-3">{t('proposedChanges')}</div>
-      <div className="prose prose-sm max-w-none leading-relaxed" style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
+      <div 
+        className="prose prose-sm max-w-none" 
+        style={{ 
+          direction: isRTL ? 'rtl' : 'ltr', 
+          textAlign: isRTL ? 'right' : 'left',
+          fontFamily: "'Amiri', 'Noto Serif Hebrew', 'Noto Serif', Georgia, serif",
+          fontSize: "1.125rem",
+          lineHeight: "1.8",
+          letterSpacing: "0.01em"
+        }}
+      >
         {diff.map((part, idx) => {
           if (part.type === 'removed') {
             return (
