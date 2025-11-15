@@ -95,8 +95,8 @@ export default function Profile() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">My Profile</h1>
-          <p className="text-slate-600 mt-2">Manage your account information and view your stats</p>
+          <h1 className="text-3xl font-bold text-slate-900">{t('profile')}</h1>
+          <p className="text-slate-600 mt-2">{t('contributionDescription')}</p>
         </div>
 
         {error && (
@@ -150,7 +150,7 @@ export default function Profile() {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-slate-900 capitalize">{user.role || 'User'}</div>
-                  <div className="text-sm text-slate-600">Role</div>
+                  <div className="text-sm text-slate-600">{t('role')}</div>
                 </div>
               </div>
             </CardContent>
@@ -161,19 +161,19 @@ export default function Profile() {
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle>Personal Information</CardTitle>
+                <CardTitle>{t('personalInformation')}</CardTitle>
                 <CardDescription>Your account details</CardDescription>
               </div>
               {!isEditing ? (
                 <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
-                  <Edit2 className="w-4 h-4 mr-2" />
-                  Edit
+                  <Edit2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t('editProfile')}
                 </Button>
               ) : (
                 <div className="flex gap-2">
                   <Button onClick={handleCancel} variant="outline" size="sm">
-                    <X className="w-4 h-4 mr-2" />
-                    Cancel
+                    <X className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {t('cancel')}
                   </Button>
                   <Button 
                     onClick={handleSubmit}
@@ -181,8 +181,8 @@ export default function Profile() {
                     size="sm"
                     className="bg-gradient-to-r from-blue-600 to-indigo-600"
                   >
-                    <Save className="w-4 h-4 mr-2" />
-                    Save
+                    <Save className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {t('saveChanges')}
                   </Button>
                 </div>
               )}
@@ -198,7 +198,7 @@ export default function Profile() {
                   <div>
                     <Label htmlFor="full_name" className="flex items-center gap-2">
                       <User className="w-4 h-4" />
-                      Display Name
+                      {t('displayName')}
                     </Label>
                     {isEditing ? (
                       <Input
@@ -216,7 +216,7 @@ export default function Profile() {
                   <div>
                     <Label className="flex items-center gap-2">
                       <Mail className="w-4 h-4" />
-                      Email
+                      {t('email')}
                     </Label>
                     <p className="text-slate-700 mt-1">{user.email}</p>
                     <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
@@ -225,7 +225,7 @@ export default function Profile() {
                   <div>
                     <Label className="flex items-center gap-2">
                       <Shield className="w-4 h-4" />
-                      Role
+                      {t('role')}
                     </Label>
                     <div className="mt-1">
                       <Badge variant="outline" className={
