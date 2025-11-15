@@ -233,12 +233,20 @@ export default function DocumentContent({
       }
 
       // בדיקה והפעלת אישור אוטומטי אם עברנו את הסף
-      const { shouldAccept } = checkSuggestionConsensus(updatedSuggestion, document);
+      const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
       console.log('[POINTS DEBUG] Should accept suggestion:', shouldAccept, 'Current status:', suggestion.status);
       if (shouldAccept && suggestion.status === 'pending') {
         wasAcceptedBefore = false;
         console.log('[POINTS DEBUG] Auto-accepting suggestion...');
-        await autoAcceptSuggestion(updatedSuggestion, user.id, document);
+        const accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
+        
+        if (accepted) {
+          // רענון כל הקווריות הרלוונטיות
+          queryClient.invalidateQueries({ queryKey: ['sections'] });
+          queryClient.invalidateQueries({ queryKey: ['allVersions'] });
+          queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+          queryClient.invalidateQueries({ queryKey: ['document'] });
+        }
         
         // Award +50 points to voter if vote influenced acceptance (only if gamification enabled)
         if (!currentVote && vote === 'pro' && document.gamificationEnabled) {
