@@ -264,12 +264,28 @@ export default function DocumentAdmin() {
 
   const handleSendInvite = () => {
     console.log('📨 Attempting to send invitation...');
+    console.log('Current state:', {
+      inviteEmail,
+      documentId,
+      documentTitle: document?.title,
+      userName: user?.full_name,
+      userId: user?.id
+    });
+    
     if (!inviteEmail || !inviteEmail.trim()) {
       console.log('❌ Email field is empty');
       setError("אנא הזן כתובת מייל");
       setTimeout(() => setError(null), 3000);
       return;
     }
+
+    if (!document || !user) {
+      console.log('❌ Missing document or user data');
+      setError("טוען נתונים, אנא נסה שוב בעוד רגע");
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+    
     console.log('✅ Email field validated, starting mutation');
     sendInviteMutation.mutate(inviteEmail.trim());
   };
@@ -484,18 +500,49 @@ export default function DocumentAdmin() {
                 type="email"
                 placeholder="הזן כתובת מייל"
                 value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
+                onChange={(e) => {
+                  console.log('Input changed:', e.target.value);
+                  setInviteEmail(e.target.value);
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSendInvite();
+                  }
+                }}
                 dir="rtl"
               />
               <Button
-                onClick={handleSendInvite}
-                disabled={sendInviteMutation.isPending}
+                onClick={(e) => {
+                  console.log('Button clicked!');
+                  e.preventDefault();
+                  handleSendInvite();
+                }}
+                disabled={sendInviteMutation.isPending || !document || !user}
                 className="bg-green-600 hover:bg-green-700"
               >
                 <Mail className="w-4 h-4 mr-2" />
                 {sendInviteMutation.isPending ? "שולח..." : "שלח הזמנה"}
               </Button>
             </div>
+            
+            {sendInviteMutation.isError && (
+              <Alert variant="destructive" className="mt-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {sendInviteMutation.error?.message || "שגיאה בשליחת ההזמנה"}
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {sendInviteMutation.isSuccess && (
+              <Alert className="bg-green-50 border-green-200 mt-2">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  ההזמנה נשלחה בהצלחה!
+                </AlertDescription>
+              </Alert>
+            )}
           </CardContent>
         </Card>
 
