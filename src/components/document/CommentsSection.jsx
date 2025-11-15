@@ -9,6 +9,7 @@ import { MessageSquare, Send, Reply, Trash2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
+import { notifyNewComment } from "../notifications/createNotification";
 
 export default function CommentsSection({ entityType, entityId, user }) {
   const { t } = useLanguage();
@@ -47,10 +48,33 @@ export default function CommentsSection({ entityType, entityId, user }) {
       if (hebrewPattern.test(data.content)) detectedLanguage = 'he';
       else if (arabicPattern.test(data.content)) detectedLanguage = 'ar';
       
-      return await base44.entities.Comment.create({
+      const comment = await base44.entities.Comment.create({
         ...data,
         originalLanguage: detectedLanguage
       });
+      
+      // שליחת התראה על תגובה חדשה
+      if (entityType === 'suggestion') {
+        const suggestions = await base44.entities.Suggestion.filter({ id: entityId });
+        if (suggestions.length > 0) {
+          await notifyNewComment({ 
+            comment, 
+            targetEntity: suggestions[0], 
+            targetEntityType: 'suggestion' 
+          });
+        }
+      } else if (entityType === 'section') {
+        const sections = await base44.entities.Section.filter({ id: entityId });
+        if (sections.length > 0) {
+          await notifyNewComment({ 
+            comment, 
+            targetEntity: sections[0], 
+            targetEntityType: 'section' 
+          });
+        }
+      }
+      
+      return comment;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', entityType, entityId] });
