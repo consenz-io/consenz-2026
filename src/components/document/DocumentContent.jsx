@@ -430,7 +430,7 @@ export default function DocumentContent({
                                 </div>
 
                                 <div className="space-y-2">
-                                  <div className="text-xs font-semibold text-slate-500 mb-1">שינויים מוצעים:</div>
+                                  <div className="text-xs font-semibold text-slate-500 mb-1">{t('proposedChanges')}:</div>
                                   {suggestion.originalContent ? (
                                     <SectionDiff
                                       originalContent={suggestion.originalContent}

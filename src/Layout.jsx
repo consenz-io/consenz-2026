@@ -87,7 +87,7 @@ function LayoutContent({ children, currentPageName }) {
           <SidebarContent className="p-2">
             <SidebarGroup>
               <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
-                Navigation
+                {t('navigation')}
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
@@ -136,7 +136,7 @@ function LayoutContent({ children, currentPageName }) {
                 <SidebarGroupContent>
                   <div className="px-3 py-2 space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">נקודות</span>
+                      <span className="text-slate-600">{t('points')}</span>
                       <span className="font-bold text-lg text-blue-600">{user.points || 1000}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -150,7 +150,7 @@ function LayoutContent({ children, currentPageName }) {
 
             <SidebarGroup>
               <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
-                Language
+                {t('language')}
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <div className="px-3 py-2 space-y-2">
