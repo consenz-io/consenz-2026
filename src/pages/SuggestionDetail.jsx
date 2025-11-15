@@ -140,15 +140,20 @@ export default function SuggestionDetail() {
 
         // Award +10 points to suggestion creator for each "pro" vote (only if gamification enabled)
         if (vote === 'pro' && document.gamificationEnabled) {
+          console.log('[POINTS DEBUG] Vote PRO - awarding +10 points to suggestion creator:', suggestion.created_by);
           const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+          console.log('[POINTS DEBUG] Found creators:', suggestionCreatorList.length);
           if (suggestionCreatorList.length > 0) {
             const suggestionCreator = suggestionCreatorList[0];
             // Fetch fresh data to avoid race conditions
             const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
+            console.log('[POINTS DEBUG] Fresh user points before:', freshUser?.points);
             if (freshUser) {
+              const newPoints = (freshUser.points || 1000) + 10;
               await base44.entities.User.update(freshUser.id, {
-                points: (freshUser.points || 1000) + 10
+                points: newPoints
               });
+              console.log('[POINTS DEBUG] Updated user points to:', newPoints);
             }
           }
         }
@@ -156,14 +161,20 @@ export default function SuggestionDetail() {
 
       // בדיקה והפעלת אישור אוטומטי אם עברנו את הסף
       const { shouldAccept } = checkSuggestionConsensus(updatedSuggestion, document);
+      console.log('[POINTS DEBUG] Should accept suggestion:', shouldAccept);
       if (shouldAccept) {
+        console.log('[POINTS DEBUG] Auto-accepting suggestion...');
         await autoAcceptSuggestion(updatedSuggestion, user.id, document);
         
         // Award +50 points to voter if vote influenced acceptance (only if gamification enabled)
         if (!userVote && vote === 'pro' && document.gamificationEnabled) {
+          console.log('[POINTS DEBUG] Awarding +50 points to voter who influenced acceptance');
+          const currentPoints = user.points || 1000;
+          const newPoints = currentPoints + 50;
           await base44.auth.updateMe({
-            points: (user.points || 1000) + 50
+            points: newPoints
           });
+          console.log('[POINTS DEBUG] Voter points updated from', currentPoints, 'to', newPoints);
         }
       }
     },
