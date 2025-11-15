@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Settings, ArrowLeft, Save, Trash2, UserPlus, X, AlertCircle, CheckCircle, Users, Search, Ban, Mail } from "lucide-react";
+import { Settings, ArrowLeft, Save, Trash2, UserPlus, X, AlertCircle, CheckCircle, Users, Search, Ban, Mail, Copy, Link2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DocumentAdmin() {
@@ -180,7 +180,9 @@ export default function DocumentAdmin() {
     },
   });
 
-  const sendInviteMutation = useMutation({
+  const [generatedInviteLink, setGeneratedInviteLink] = useState(null);
+
+  const createInviteMutation = useMutation({
     mutationFn: async (email) => {
       console.log('🔄 Starting invitation process for:', email.trim());
       
@@ -199,7 +201,9 @@ export default function DocumentAdmin() {
       
       if (existingInvitations.length > 0) {
         console.log('⚠️ Invitation already exists for this email');
-        throw new Error("כבר קיימת הזמנה ממתינה עבור כתובת מייל זו");
+        const existingToken = existingInvitations[0].token;
+        const signupUrl = `${window.location.origin}?invite=${existingToken}`;
+        return { email: email.trim(), token: existingToken, signupUrl, isExisting: true };
       }
 
       const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -207,70 +211,40 @@ export default function DocumentAdmin() {
       
       // יצירת הזמנה במערכת
       console.log('💾 Creating invitation record...');
-      const invitation = await base44.entities.Invitation.create({
+      await base44.entities.Invitation.create({
         documentId,
         email: email.trim(),
         invitedBy: user.id,
         token
       });
-      console.log('✅ Invitation record created:', invitation.id);
+      console.log('✅ Invitation record created');
 
       const signupUrl = `${window.location.origin}?invite=${token}`;
       console.log('🔗 Signup URL:', signupUrl);
       
-      // שליחת מייל
-      console.log('📧 Sending email to:', email.trim());
-      await base44.integrations.Core.SendEmail({
-        to: email.trim(),
-        subject: `הזמנה להצטרף למסמך: ${document.title}`,
-        body: `
-שלום,
-
-הוזמנת על ידי ${user.full_name} להצטרף למסמך "${document.title}" בפלטפורמת Consenz.
-
-כדי להצטרף:
-1. לחץ על הקישור הבא להרשמה: ${signupUrl}
-2. צור חשבון חדש או התחבר עם חשבון קיים
-3. לאחר ההרשמה תוכל לגשת למסמך ולהשתתף בדיונים
-
-הקישור להרשמה: ${signupUrl}
-
-בברכה,
-צוות Consenz
-        `
-      });
-      console.log('✅ Email sent successfully');
-      
-      return { email: email.trim(), token };
+      return { email: email.trim(), token, signupUrl, isExisting: false };
     },
     onSuccess: (data) => {
-      console.log('✅ Invitation process completed successfully for:', data.email);
+      console.log('✅ Invitation created successfully for:', data.email);
       queryClient.invalidateQueries({ queryKey: ['invitations', documentId] });
+      setGeneratedInviteLink(data);
       setInviteEmail("");
-      setSuccess(`הזמנה נשלחה בהצלחה לכתובת ${data.email}!`);
+      if (data.isExisting) {
+        setSuccess(`נמצאה הזמנה קיימת עבור ${data.email}`);
+      } else {
+        setSuccess(`הזמנה נוצרה עבור ${data.email}!`);
+      }
       setTimeout(() => setSuccess(null), 5000);
     },
     onError: (err) => {
       console.error('❌ Invitation failed:', err);
-      console.error('Error details:', {
-        message: err.message,
-        stack: err.stack,
-        name: err.name
-      });
-      setError(err.message || "שליחת ההזמנה נכשלה. אנא נסה שוב.");
+      setError(err.message || "יצירת ההזמנה נכשלה. אנא נסה שוב.");
       setTimeout(() => setError(null), 5000);
     },
   });
 
-  const handleSendInvite = () => {
-    console.log('📨 Attempting to send invitation...');
-    console.log('Current state:', {
-      inviteEmail,
-      documentId,
-      documentTitle: document?.title,
-      userName: user?.full_name,
-      userId: user?.id
-    });
+  const handleCreateInvite = () => {
+    console.log('📨 Attempting to create invitation...');
     
     if (!inviteEmail || !inviteEmail.trim()) {
       console.log('❌ Email field is empty');
@@ -286,8 +260,40 @@ export default function DocumentAdmin() {
       return;
     }
     
-    console.log('✅ Email field validated, starting mutation');
-    sendInviteMutation.mutate(inviteEmail.trim());
+    console.log('✅ Email field validated, creating invitation');
+    setGeneratedInviteLink(null);
+    createInviteMutation.mutate(inviteEmail.trim());
+  };
+
+  const copyInviteLink = () => {
+    if (generatedInviteLink?.signupUrl) {
+      navigator.clipboard.writeText(generatedInviteLink.signupUrl);
+      setSuccess("הקישור הועתק ללוח!");
+      setTimeout(() => setSuccess(null), 2000);
+    }
+  };
+
+  const copyInviteMessage = () => {
+    if (generatedInviteLink) {
+      const message = `שלום,
+
+הוזמנת על ידי ${user.full_name} להצטרף למסמך "${document.title}" בפלטפורמת Consenz.
+
+כדי להצטרף:
+1. לחץ על הקישור הבא להרשמה
+2. צור חשבון חדש או התחבר עם חשבון קיים
+3. לאחר ההרשמה תוכל לגשת למסמך ולהשתתף בדיונים
+
+קישור ההזמנה:
+${generatedInviteLink.signupUrl}
+
+בברכה,
+צוות Consenz`;
+      
+      navigator.clipboard.writeText(message);
+      setSuccess("הטקסט המלא הועתק ללוח!");
+      setTimeout(() => setSuccess(null), 2000);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -501,47 +507,70 @@ export default function DocumentAdmin() {
                 placeholder="הזן כתובת מייל"
                 value={inviteEmail}
                 onChange={(e) => {
-                  console.log('Input changed:', e.target.value);
                   setInviteEmail(e.target.value);
+                  setGeneratedInviteLink(null);
                 }}
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    handleSendInvite();
+                    handleCreateInvite();
                   }
                 }}
                 dir="rtl"
               />
               <Button
                 onClick={(e) => {
-                  console.log('Button clicked!');
                   e.preventDefault();
-                  handleSendInvite();
+                  handleCreateInvite();
                 }}
-                disabled={sendInviteMutation.isPending || !document || !user}
+                disabled={createInviteMutation.isPending || !document || !user}
                 className="bg-green-600 hover:bg-green-700"
               >
-                <Mail className="w-4 h-4 mr-2" />
-                {sendInviteMutation.isPending ? "שולח..." : "שלח הזמנה"}
+                <Link2 className="w-4 h-4 mr-2" />
+                {createInviteMutation.isPending ? "יוצר..." : "צור קישור הזמנה"}
               </Button>
             </div>
             
-            {sendInviteMutation.isError && (
-              <Alert variant="destructive" className="mt-2">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  {sendInviteMutation.error?.message || "שגיאה בשליחת ההזמנה"}
-                </AlertDescription>
-              </Alert>
-            )}
-            
-            {sendInviteMutation.isSuccess && (
-              <Alert className="bg-green-50 border-green-200 mt-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">
-                  ההזמנה נשלחה בהצלחה!
-                </AlertDescription>
-              </Alert>
+            {generatedInviteLink && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3" dir="rtl">
+                <div>
+                  <Label className="text-sm font-semibold text-blue-900">
+                    קישור הזמנה עבור: {generatedInviteLink.email}
+                  </Label>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      value={generatedInviteLink.signupUrl}
+                      readOnly
+                      className="font-mono text-sm"
+                      dir="ltr"
+                    />
+                    <Button
+                      onClick={copyInviteLink}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Copy className="w-4 h-4 ml-2" />
+                      העתק קישור
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="pt-2 border-t border-blue-200">
+                  <Button
+                    onClick={copyInviteMessage}
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                  >
+                    <Mail className="w-4 h-4 ml-2" />
+                    העתק טקסט מלא לשליחה במייל
+                  </Button>
+                </div>
+                
+                <p className="text-xs text-blue-700">
+                  שלח את הקישור או את הטקסט המלא למוזמן באמצעות המייל או האפליקציה המועדפת עליך
+                </p>
+              </div>
             )}
           </CardContent>
         </Card>
