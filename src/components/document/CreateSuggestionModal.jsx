@@ -105,6 +105,7 @@ export default function CreateSuggestionModal({
         type: isNewSection ? 'new_section' : 'edit_section',
         title: autoTitle,
         newContent: data.newContent,
+        originalContent: isNewSection ? null : existingSection?.content,
         explanation: data.explanation,
         status: 'pending',
         timerEndsAt: timerEndsAt.toISOString(),

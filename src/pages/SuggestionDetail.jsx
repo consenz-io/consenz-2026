@@ -15,6 +15,7 @@ import {
 import VotesNeededCounter from "../components/document/VotesNeededCounter";
 import { Skeleton } from "@/components/ui/skeleton";
 import CommentsSection from "../components/document/CommentsSection";
+import SectionDiff from "../components/document/SectionDiff";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "../components/document/suggestionAutoAccept";
 
 export default function SuggestionDetail() {
@@ -526,27 +527,35 @@ export default function SuggestionDetail() {
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-2">Proposed Content</h3>
-              <div 
-                className="prose prose-sm max-w-none p-4 bg-blue-50 border border-blue-200 rounded-lg"
-                dangerouslySetInnerHTML={{ __html: suggestion.newContent }}
-              />
-            </div>
-
             {suggestion.explanation && (
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">Explanation</h3>
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">הסבר</h3>
                 <p className="text-slate-600">{suggestion.explanation}</p>
               </div>
             )}
 
-            {section && (
+            {suggestion.type === 'edit_section' && suggestion.originalContent ? (
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">Current Content</h3>
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">שינויים מוצעים</h3>
+                <SectionDiff
+                  originalContent={suggestion.originalContent}
+                  newContent={suggestion.newContent}
+                />
+              </div>
+            ) : suggestion.type === 'new_section' ? (
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">תוכן מוצע</h3>
                 <div 
-                  className="prose prose-sm max-w-none p-4 bg-slate-50 border border-slate-200 rounded-lg"
-                  dangerouslySetInnerHTML={{ __html: section.content }}
+                  className="prose prose-sm max-w-none p-4 bg-green-50 border border-green-200 rounded-lg"
+                  dangerouslySetInnerHTML={{ __html: suggestion.newContent }}
+                />
+              </div>
+            ) : (
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">תוכן מוצע</h3>
+                <div 
+                  className="prose prose-sm max-w-none p-4 bg-blue-50 border border-blue-200 rounded-lg"
+                  dangerouslySetInnerHTML={{ __html: suggestion.newContent }}
                 />
               </div>
             )}

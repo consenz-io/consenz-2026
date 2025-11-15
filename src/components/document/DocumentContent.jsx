@@ -418,13 +418,20 @@ export default function DocumentContent({
                                 </div>
 
                                 <div className="space-y-2">
-                                  <div className="text-xs font-semibold text-slate-500 mb-1">תוכן מוצע:</div>
-                                  <TranslatableContent
-                                    content={suggestion.newContent}
-                                    entity={suggestion}
-                                    entityType="Suggestion"
-                                    className="prose prose-sm max-w-none p-3 bg-green-50 rounded border border-green-200"
-                                  />
+                                  <div className="text-xs font-semibold text-slate-500 mb-1">שינויים מוצעים:</div>
+                                  {suggestion.originalContent ? (
+                                    <SectionDiff
+                                      originalContent={suggestion.originalContent}
+                                      newContent={suggestion.newContent}
+                                    />
+                                  ) : (
+                                    <TranslatableContent
+                                      content={suggestion.newContent}
+                                      entity={suggestion}
+                                      entityType="Suggestion"
+                                      className="prose prose-sm max-w-none p-3 bg-green-50 rounded border border-green-200"
+                                    />
+                                  )}
                                 </div>
 
                                 <div className="flex items-center gap-4 mt-3 text-sm flex-wrap">
