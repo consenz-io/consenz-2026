@@ -8,7 +8,6 @@ import DocumentVersions from './pages/DocumentVersions';
 import DocumentCleanView from './pages/DocumentCleanView';
 import MyDocuments from './pages/MyDocuments';
 import SectionHistory from './pages/SectionHistory';
-import InviteUser from './pages/InviteUser';
 import Layout from './Layout.jsx';
 
 
@@ -23,7 +22,6 @@ export const PAGES = {
     "DocumentCleanView": DocumentCleanView,
     "MyDocuments": MyDocuments,
     "SectionHistory": SectionHistory,
-    "InviteUser": InviteUser,
 }
 
 export const pagesConfig = {
