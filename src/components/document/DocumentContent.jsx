@@ -360,16 +360,16 @@ export default function DocumentContent({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 w-full overflow-x-hidden">
       {topics.map((topic) => {
         const topicSections = getSectionsForTopic(topic.id);
         
         return (
-          <Card key={topic.id} className="bg-white border-slate-200">
-            <CardHeader className="border-b border-slate-100">
-              <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <div className="flex-1">
-                  <CardTitle className={`text-2xl ${isRTL ? 'text-right' : 'text-left'}`}>
+          <Card key={topic.id} className="bg-white border-slate-200 w-full overflow-hidden">
+            <CardHeader className="border-b border-slate-100 p-4 md:p-6">
+              <div className={`flex flex-col md:flex-row justify-between md:items-center gap-3 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+                <div className="flex-1 min-w-0">
+                  <CardTitle className={`text-lg md:text-2xl break-words ${isRTL ? 'text-right' : 'text-left'}`}>
                     {showTranslatedTopics[topic.id] && topic.translations?.[language]?.title
                       ? topic.translations[language].title
                       : topic.title}
@@ -386,20 +386,20 @@ export default function DocumentContent({
                           variant="ghost"
                           size="sm"
                           onClick={() => translateTopicMutation.mutate(topic)}
-                          className="text-blue-600 hover:text-blue-700 h-8 text-xs"
+                          className="text-blue-600 hover:text-blue-700 h-8 text-xs px-2"
                         >
                           <Languages className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                          תרגם ל{languageNames[language]}
+                          <span className="truncate">תרגם ל{languageNames[language]}</span>
                         </Button>
                       ) : (
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: !prev[topic.id] }))}
-                          className="text-slate-600 hover:text-slate-700 h-8 text-xs"
+                          className="text-slate-600 hover:text-slate-700 h-8 text-xs px-2"
                         >
                           <Languages className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                          {showTranslatedTopics[topic.id] ? `${languageNames[topic.originalLanguage || 'he']} (מקור)` : `${languageNames[language]} (מתורגם)`}
+                          <span className="truncate">{showTranslatedTopics[topic.id] ? `${languageNames[topic.originalLanguage || 'he']} (מקור)` : `${languageNames[language]} (מתורגם)`}</span>
                         </Button>
                       )}
                     </div>
@@ -410,6 +410,7 @@ export default function DocumentContent({
                     variant="outline"
                     size="sm"
                     onClick={() => onNewSection(topic.id)}
+                    className="w-full md:w-auto"
                   >
                     <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                     {t('addSection')}
@@ -417,9 +418,9 @@ export default function DocumentContent({
                 )}
               </div>
             </CardHeader>
-            <CardContent className="p-6 space-y-4">
+            <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
               {topicSections.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
+                <div className="text-center py-6 md:py-8 text-slate-500 text-sm md:text-base">
                   {t('noSectionsYet')}
                 </div>
               ) : (
@@ -489,9 +490,9 @@ export default function DocumentContent({
       })}
 
       {topics.length === 0 && (
-        <Card className="bg-white border-slate-200">
-          <CardContent className="p-12 text-center">
-            <p className="text-slate-500">{t('noTopicsYet')}</p>
+        <Card className="bg-white border-slate-200 w-full overflow-hidden">
+          <CardContent className="p-6 md:p-12 text-center">
+            <p className="text-slate-500 text-sm md:text-base">{t('noTopicsYet')}</p>
           </CardContent>
         </Card>
       )}
