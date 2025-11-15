@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Sparkles } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import TranslatableContent from "./TranslatableContent";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -264,6 +265,20 @@ export default function CreateSuggestionModal({
                   </SelectContent>
                 </Select>
               )}
+            </div>
+          )}
+
+          {!isNewSection && existingSection && (
+            <div>
+              <Label>התוכן המקורי:</Label>
+              <div className="border border-slate-200 rounded-lg p-4 bg-slate-50 mt-2">
+                <TranslatableContent
+                  content={existingSection.content}
+                  entity={existingSection}
+                  entityType="section"
+                  className="prose prose-sm max-w-none"
+                />
+              </div>
             </div>
           )}
 
