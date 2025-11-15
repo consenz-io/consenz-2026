@@ -502,12 +502,15 @@ export default function SuggestionDetail() {
     ? (suggestion.proVotes / (suggestion.proVotes + suggestion.conVotes) * 100).toFixed(0)
     : 50;
 
+  // סינון רק גרסאות עם suggestionId
+  const suggestionVersions = sectionVersions.filter(v => v.suggestionId);
+
   const handleNavigateToVersion = (direction) => {
     console.log('[DEBUG] Navigate version:', direction);
-    console.log('[DEBUG] sectionVersions:', sectionVersions);
+    console.log('[DEBUG] suggestionVersions:', suggestionVersions);
     console.log('[DEBUG] current suggestionId:', suggestionId);
     
-    const currentIndex = sectionVersions.findIndex(v => v.suggestionId === suggestionId);
+    const currentIndex = suggestionVersions.findIndex(v => v.suggestionId === suggestionId);
     console.log('[DEBUG] currentIndex:', currentIndex);
     
     let targetIndex;
@@ -520,24 +523,19 @@ export default function SuggestionDetail() {
     
     console.log('[DEBUG] targetIndex:', targetIndex);
     
-    if (targetIndex >= 0 && targetIndex < sectionVersions.length) {
-      const targetVersion = sectionVersions[targetIndex];
+    if (targetIndex >= 0 && targetIndex < suggestionVersions.length) {
+      const targetVersion = suggestionVersions[targetIndex];
       console.log('[DEBUG] targetVersion:', targetVersion);
-      
-      if (targetVersion.suggestionId) {
-        console.log('[DEBUG] Navigating to:', targetVersion.suggestionId);
-        navigate(`${createPageUrl("SuggestionDetail")}?id=${targetVersion.suggestionId}`);
-      } else {
-        console.log('[DEBUG] No suggestionId in target version');
-      }
+      console.log('[DEBUG] Navigating to:', targetVersion.suggestionId);
+      navigate(`${createPageUrl("SuggestionDetail")}?id=${targetVersion.suggestionId}`);
     } else {
       console.log('[DEBUG] targetIndex out of bounds');
     }
   };
 
-  const currentVersionIndex = sectionVersions.findIndex(v => v.suggestionId === suggestionId);
+  const currentVersionIndex = suggestionVersions.findIndex(v => v.suggestionId === suggestionId);
   const isNewestVersion = currentVersionIndex === 0;
-  const isOldestVersion = currentVersionIndex === sectionVersions.length - 1 || currentVersionIndex === -1;
+  const isOldestVersion = currentVersionIndex === suggestionVersions.length - 1 || currentVersionIndex === -1;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
@@ -612,10 +610,10 @@ export default function SuggestionDetail() {
               </div>
             )}
 
-            {suggestion.type === 'edit_section' && sectionVersions.length > 1 && currentVersionIndex >= 0 && (
+            {suggestion.type === 'edit_section' && suggestionVersions.length > 1 && currentVersionIndex >= 0 && (
               <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
                 <span className="text-sm font-medium text-slate-700">
-                  {isNewestVersion ? 'גרסה נוכחית' : `גרסה ${sectionVersions[currentVersionIndex]?.version || 0}`}
+                  {isNewestVersion ? 'גרסה נוכחית' : `גרסה ${suggestionVersions[currentVersionIndex]?.version || 0}`}
                 </span>
                 <div className="flex items-center gap-2">
                   <Button
