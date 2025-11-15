@@ -133,7 +133,7 @@ export default function SuggestionDetail() {
 
   const voteMutation = useMutation({
     mutationFn: async (vote) => {
-      if (!user) throw new Error("Must be logged in to vote");
+      if (!user) throw new Error(t('mustBeLoggedInToVote'));
 
       console.log('[POINTS DEBUG] Vote by:', user.email, 'on suggestion by:', suggestion.created_by);
 
@@ -316,8 +316,8 @@ export default function SuggestionDetail() {
 
   const addArgumentMutation = useMutation({
     mutationFn: async ({ type, content }) => {
-      if (!user) throw new Error("Must be logged in");
-      if (!content.trim()) throw new Error("Argument content is required");
+      if (!user) throw new Error(t('mustBeLoggedIn'));
+      if (!content.trim()) throw new Error(t('argumentContentRequired'));
 
       await base44.entities.Argument.create({
         suggestionId,
@@ -338,7 +338,7 @@ export default function SuggestionDetail() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async (status) => {
-      if (!isAdmin) throw new Error("Admin access required");
+      if (!isAdmin) throw new Error(t('adminAccessRequired'));
       
       if (status === 'accepted' && suggestion.type === 'edit_section' && section) {
         // Get existing versions to calculate next version number
@@ -435,7 +435,7 @@ export default function SuggestionDetail() {
   const deleteSuggestionMutation = useMutation({
     mutationFn: async () => {
       if (!user || user.email !== suggestion.created_by) {
-        throw new Error("Only the creator can delete this suggestion");
+        throw new Error(t('onlyCreatorCanDelete'));
       }
       await base44.entities.Suggestion.delete(suggestionId);
     },
@@ -463,9 +463,9 @@ export default function SuggestionDetail() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-5xl mx-auto text-center py-20">
-          <h1 className="text-2xl font-bold text-slate-900">Suggestion not found</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t('suggestionNotFound')}</h1>
           <Button className="mt-4" onClick={() => navigate(createPageUrl("Home"))}>
-            Go Home
+            {t('goHome')}
           </Button>
         </div>
       </div>
@@ -487,13 +487,13 @@ export default function SuggestionDetail() {
     const end = new Date(timerEndsAt);
     const diff = end - now;
     
-    if (diff <= 0) return 'Voting ended';
+    if (diff <= 0) return t('votingEnded');
     
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(hours / 24);
     
-    if (days > 0) return `${days}d ${hours % 24}h remaining`;
-    return `${hours}h remaining`;
+    if (days > 0) return `${days}d ${hours % 24}h ${t('remaining')}`;
+    return `${hours}h ${t('remaining')}`;
   };
 
   const proArgs = args.filter(a => a.type === 'pro');
@@ -563,14 +563,14 @@ export default function SuggestionDetail() {
               variant="destructive"
               size="sm"
               onClick={() => {
-                if (confirm('האם אתה בטוח שברצונך למחוק הצעה זו?')) {
+                if (confirm(t('confirmDeleteSuggestion'))) {
                   deleteSuggestionMutation.mutate();
                 }
               }}
               disabled={deleteSuggestionMutation.isPending}
             >
-              <Trash2 className="w-4 h-4 mr-2" />
-              מחק הצעה
+              <Trash2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {t('deleteSuggestion')}
             </Button>
           )}
         </div>
@@ -590,7 +590,7 @@ export default function SuggestionDetail() {
                   {suggestion.status}
                 </Badge>
                 <Badge variant="outline">
-                  {suggestion.type === 'new_section' ? 'New Section' : 'Edit Section'}
+                  {suggestion.type === 'new_section' ? t('newSection') : t('editSection')}
                 </Badge>
                 {topic && <Badge variant="outline">{topic.title}</Badge>}
               </div>
@@ -605,7 +605,7 @@ export default function SuggestionDetail() {
           <CardContent className="space-y-6">
             {suggestion.explanation && (
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">הסבר</h3>
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('explanation')}</h3>
                 <p className="text-slate-600">{suggestion.explanation}</p>
               </div>
             )}
@@ -613,7 +613,7 @@ export default function SuggestionDetail() {
             {suggestion.type === 'edit_section' && suggestionVersions.length > 1 && currentVersionIndex >= 0 && (
               <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
                 <span className="text-sm font-medium text-slate-700">
-                  {isNewestVersion ? 'גרסה נוכחית' : `גרסה ${suggestionVersions[currentVersionIndex]?.version || 0}`}
+                  {isNewestVersion ? t('currentVersion') : `${t('version')} ${suggestionVersions[currentVersionIndex]?.version || 0}`}
                 </span>
                 <div className="flex items-center gap-2">
                   <Button
@@ -638,7 +638,7 @@ export default function SuggestionDetail() {
 
             {suggestion.type === 'edit_section' && suggestion.originalContent ? (
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">שינויים מוצעים</h3>
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedChanges')}</h3>
                 <SectionDiff
                   originalContent={suggestion.originalContent}
                   newContent={suggestion.newContent}
@@ -646,7 +646,7 @@ export default function SuggestionDetail() {
               </div>
             ) : suggestion.type === 'new_section' ? (
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">תוכן מוצע</h3>
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedContent')}</h3>
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                   <TranslatableContent
                     content={suggestion.newContent}
@@ -661,7 +661,7 @@ export default function SuggestionDetail() {
               </div>
             ) : (
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">תוכן מוצע</h3>
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedContent')}</h3>
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <TranslatableContent
                     content={suggestion.newContent}
@@ -680,15 +680,15 @@ export default function SuggestionDetail() {
               <div className="flex gap-6 flex-wrap items-center">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">{suggestion.proVotes || 0}</div>
-                  <div className="text-xs text-slate-500">Pro Votes</div>
+                  <div className="text-xs text-slate-500">{t('proVotes')}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-red-600">{suggestion.conVotes || 0}</div>
-                  <div className="text-xs text-slate-500">Con Votes</div>
+                  <div className="text-xs text-slate-500">{t('conVotes')}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">{consensusScore}%</div>
-                  <div className="text-xs text-slate-500">Consensus</div>
+                  <div className="text-xs text-slate-500">{t('consensus')}</div>
                 </div>
                 <VotesNeededCounter 
                   suggestion={suggestion} 
@@ -705,8 +705,8 @@ export default function SuggestionDetail() {
                     disabled={voteMutation.isPending}
                     className={userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}
                   >
-                    <ThumbsUp className="w-4 h-4 mr-2" />
-                    Vote Pro
+                    <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {t('votePro')}
                   </Button>
                   <Button
                     variant={userVote?.vote === 'con' ? 'default' : 'outline'}
@@ -714,8 +714,8 @@ export default function SuggestionDetail() {
                     disabled={voteMutation.isPending}
                     className={userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}
                   >
-                    <ThumbsDown className="w-4 h-4 mr-2" />
-                    Vote Con
+                    <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {t('voteCon')}
                   </Button>
                 </div>
               )}
@@ -728,16 +728,16 @@ export default function SuggestionDetail() {
                   disabled={updateStatusMutation.isPending}
                   className="bg-green-600 hover:bg-green-700"
                 >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Accept Suggestion
+                  <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t('acceptSuggestion')}
                 </Button>
                 <Button
                   onClick={() => updateStatusMutation.mutate('rejected')}
                   disabled={updateStatusMutation.isPending}
                   variant="destructive"
                 >
-                  <XCircle className="w-4 h-4 mr-2" />
-                  Reject Suggestion
+                  <XCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t('rejectSuggestion')}
                 </Button>
               </div>
             )}
@@ -749,18 +749,18 @@ export default function SuggestionDetail() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-green-700">
                 <ThumbsUp className="w-5 h-5" />
-                Pro Arguments ({proArgs.length})
+                {t('proArguments')} ({proArgs.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {proArgs.length === 0 ? (
-                <p className="text-sm text-slate-500">No pro arguments yet</p>
+                <p className="text-sm text-slate-500">{t('noProArgumentsYet')}</p>
               ) : (
                 proArgs.map(arg => (
                   <div key={arg.id} className="p-3 bg-green-50 border border-green-200 rounded-lg">
                     <p className="text-sm text-slate-700">{arg.content}</p>
                     <div className="text-xs text-slate-500 mt-2">
-                      By {getUserName(arg.created_by)} • {new Date(arg.created_date).toLocaleDateString()}
+                      {t('by')} {getUserName(arg.created_by)} • {new Date(arg.created_date).toLocaleDateString()}
                     </div>
                   </div>
                 ))
@@ -772,7 +772,7 @@ export default function SuggestionDetail() {
                   onClick={() => setNewArgument({ type: 'pro', content: "" })}
                   className="w-full"
                 >
-                  Add Pro Argument
+                  {t('addProArgument')}
                 </Button>
               )}
               {newArgument.type === 'pro' && (
@@ -780,7 +780,7 @@ export default function SuggestionDetail() {
                   <Textarea
                     value={newArgument.content}
                     onChange={(e) => setNewArgument({ ...newArgument, content: e.target.value })}
-                    placeholder="Write your pro argument..."
+                    placeholder={t('writeProArgument')}
                     rows={3}
                   />
                   <div className="flex gap-2">
@@ -789,14 +789,14 @@ export default function SuggestionDetail() {
                       onClick={() => addArgumentMutation.mutate(newArgument)}
                       disabled={addArgumentMutation.isPending || !newArgument.content.trim()}
                     >
-                      Submit
+                      {t('submit')}
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => setNewArgument({ type: null, content: "" })}
                     >
-                      Cancel
+                      {t('cancel')}
                     </Button>
                   </div>
                 </div>
@@ -808,18 +808,18 @@ export default function SuggestionDetail() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-red-700">
                 <ThumbsDown className="w-5 h-5" />
-                Con Arguments ({conArgs.length})
+                {t('conArguments')} ({conArgs.length})
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {conArgs.length === 0 ? (
-                <p className="text-sm text-slate-500">No con arguments yet</p>
+                <p className="text-sm text-slate-500">{t('noConArgumentsYet')}</p>
               ) : (
                 conArgs.map(arg => (
                   <div key={arg.id} className="p-3 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-sm text-slate-700">{arg.content}</p>
                     <div className="text-xs text-slate-500 mt-2">
-                      By {getUserName(arg.created_by)} • {new Date(arg.created_date).toLocaleDateString()}
+                      {t('by')} {getUserName(arg.created_by)} • {new Date(arg.created_date).toLocaleDateString()}
                     </div>
                   </div>
                 ))
@@ -831,7 +831,7 @@ export default function SuggestionDetail() {
                   onClick={() => setNewArgument({ type: 'con', content: "" })}
                   className="w-full"
                 >
-                  Add Con Argument
+                  {t('addConArgument')}
                 </Button>
               )}
               {newArgument.type === 'con' && (
@@ -839,7 +839,7 @@ export default function SuggestionDetail() {
                   <Textarea
                     value={newArgument.content}
                     onChange={(e) => setNewArgument({ ...newArgument, content: e.target.value })}
-                    placeholder="Write your con argument..."
+                    placeholder={t('writeConArgument')}
                     rows={3}
                   />
                   <div className="flex gap-2">
@@ -848,14 +848,14 @@ export default function SuggestionDetail() {
                       onClick={() => addArgumentMutation.mutate(newArgument)}
                       disabled={addArgumentMutation.isPending || !newArgument.content.trim()}
                     >
-                      Submit
+                      {t('submit')}
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => setNewArgument({ type: null, content: "" })}
                     >
-                      Cancel
+                      {t('cancel')}
                     </Button>
                   </div>
                 </div>
@@ -866,7 +866,7 @@ export default function SuggestionDetail() {
 
         <Card className="bg-white border-slate-200">
           <CardHeader>
-            <CardTitle>תגובות על ההצעה</CardTitle>
+            <CardTitle>{t('commentsOnSuggestion')}</CardTitle>
           </CardHeader>
           <CardContent>
             <CommentsSection
