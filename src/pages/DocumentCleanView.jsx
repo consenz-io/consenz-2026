@@ -228,9 +228,9 @@ ${text}`;
             </Button>
           </Link>
           <div className="flex items-center gap-2">
-            {needsTranslation && !allTranslated && (
+            {needsTranslation && (
               <Button 
-                variant="outline" 
+                className="bg-blue-600 hover:bg-blue-700 text-white"
                 size="sm" 
                 onClick={translateAllSections}
                 disabled={translatingAll}
