@@ -6,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, TrendingUp, Users, Clock, ArrowRight } from "lucide-react";
+import { FileText, TrendingUp, Users, Clock, ArrowRight, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 
@@ -67,7 +67,7 @@ export default function Home() {
                 <Link to={createPageUrl("CreateDocument")}>
                   <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
                     {t('newDocument')}
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    {isRTL ? <ArrowLeft className="w-4 h-4 mr-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
                   </Button>
                 </Link>
               ) : (
@@ -77,7 +77,7 @@ export default function Home() {
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                 >
                   {t('getStarted')}
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  {isRTL ? <ArrowLeft className="w-4 h-4 mr-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
                 </Button>
               )}
               <Link to={createPageUrl("LearnMore")}>
