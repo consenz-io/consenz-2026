@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RotateCcw, Clock, ExternalLink } from "lucide-react";
+import { RotateCcw, Clock, ExternalLink, MessageSquare } from "lucide-react";
 import SectionDiff from "./SectionDiff";
 import { useLanguage } from "@/components/LanguageContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -78,16 +78,23 @@ export default function DocumentVersionHistory({
       {sortedVersions.map((version, index) => {
         const previousVersion = sortedVersions[index + 1];
         return (
-          <Link key={version.id} to={`${createPageUrl("DocumentView")}?id=${documentId}&scrollTo=${sectionId}`}>
-            <Card className="bg-white border-slate-200 hover:shadow-lg transition-all cursor-pointer">
+          <Card key={version.id} className="bg-white border-slate-200 hover:shadow-lg transition-all">
               <CardHeader>
               <div className={`flex justify-between items-start gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className="flex-1">
-                  <div className={`flex items-center gap-2 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={`flex items-center gap-2 mb-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Badge variant="outline">{t('version')} {version.version}</Badge>
                     <Badge className="bg-blue-100 text-blue-800">
                       {getChangeTypeLabel(version.changeType)}
                     </Badge>
+                    {version.suggestionId && (
+                      <Link to={`${createPageUrl("SuggestionDetail")}?id=${version.suggestionId}`}>
+                        <Badge className="bg-green-600 hover:bg-green-700 cursor-pointer flex items-center gap-1">
+                          <MessageSquare className="w-3 h-3" />
+                          צפה בדיון
+                        </Badge>
+                      </Link>
+                    )}
                   </div>
                   <CardTitle className={`text-lg ${isRTL ? 'text-right' : 'text-left'}`}>
                     {version.changeDescription || t('changeWithoutDescription')}
@@ -135,7 +142,6 @@ export default function DocumentVersionHistory({
               )}
             </CardContent>
             </Card>
-          </Link>
         );
       })}
     </div>

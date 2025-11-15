@@ -187,8 +187,9 @@ export default function SectionHistory() {
                         </Badge>
                         {group.suggestionId && (
                           <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.suggestionId}`}>
-                            <Button size="sm" variant="outline">
-                              צפה בהצעה
+                            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                              <MessageSquare className="w-4 h-4 mr-1" />
+                              צפה בדיון המלא
                             </Button>
                           </Link>
                         )}
