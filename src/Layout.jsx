@@ -20,6 +20,7 @@ import {
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
