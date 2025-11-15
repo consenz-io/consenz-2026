@@ -538,13 +538,15 @@ export default function SuggestionDetail() {
   const isOldestVersion = currentVersionIndex === suggestionVersions.length - 1 || currentVersionIndex === -1;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div className={`flex items-center justify-between gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <PageHeader 
-            title={suggestion.title}
-            backUrl={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}`}
-          />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
+      <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 w-full overflow-x-hidden">
+        <div className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-3 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+          <div className="flex-1 min-w-0 w-full">
+            <PageHeader 
+              title={suggestion.title}
+              backUrl={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}`}
+            />
+          </div>
           {user && user.email === suggestion.created_by && (
             <Button
               variant="destructive"
@@ -555,6 +557,7 @@ export default function SuggestionDetail() {
                 }
               }}
               disabled={deleteSuggestionMutation.isPending}
+              className="w-full md:w-auto shrink-0"
             >
               <Trash2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               {t('deleteSuggestion')}
@@ -577,27 +580,27 @@ export default function SuggestionDetail() {
           </Alert>
         )}
 
-        <Card className="bg-white border-slate-200">
-          <CardHeader>
-            <div className="flex flex-wrap items-start justify-between gap-4">
+        <Card className="bg-white border-slate-200 w-full overflow-hidden">
+          <CardHeader className="p-4 md:p-6">
+            <div className="flex flex-col md:flex-row items-start md:justify-between gap-3">
               <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className={getStatusColor(suggestion.status)}>
+                <Badge variant="outline" className={`${getStatusColor(suggestion.status)} text-xs`}>
                   {suggestion.status}
                 </Badge>
-                <Badge variant="outline">
+                <Badge variant="outline" className="text-xs">
                   {suggestion.type === 'new_section' ? t('newSection') : t('editSection')}
                 </Badge>
-                {topic && <Badge variant="outline">{topic.title}</Badge>}
+                {topic && <Badge variant="outline" className="text-xs truncate max-w-[200px]">{topic.title}</Badge>}
               </div>
               {suggestion.status === 'pending' && suggestion.timerEndsAt && (
-                <Badge variant="outline" className="flex items-center gap-1">
+                <Badge variant="outline" className="flex items-center gap-1 text-xs shrink-0">
                   <Clock className="w-3 h-3" />
                   {getTimeRemaining(suggestion.timerEndsAt)}
                 </Badge>
               )}
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 md:space-y-6 p-3 md:p-6 overflow-x-hidden">
             {suggestion.explanation && (
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('explanation')}</h3>
@@ -606,8 +609,8 @@ export default function SuggestionDetail() {
             )}
 
             {suggestion.type === 'edit_section' && suggestionVersions.length > 1 && currentVersionIndex >= 0 && (
-              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <span className="text-sm font-medium text-slate-700">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <span className="text-xs md:text-sm font-medium text-slate-700">
                   {isNewestVersion ? t('currentVersion') : `${t('version')} ${suggestionVersions[currentVersionIndex]?.version || 0}`}
                 </span>
                 <div className="flex items-center gap-2">
@@ -671,45 +674,47 @@ export default function SuggestionDetail() {
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-4 border-t">
-              <div className="flex gap-6 flex-wrap items-center">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 pt-4 border-t">
+              <div className="flex gap-3 md:gap-6 flex-wrap items-center">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{suggestion.proVotes || 0}</div>
-                  <div className="text-xs text-slate-500">{t('proVotes')}</div>
+                  <div className="text-xl md:text-2xl font-bold text-green-600">{suggestion.proVotes || 0}</div>
+                  <div className="text-[10px] md:text-xs text-slate-500">{t('proVotes')}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">{suggestion.conVotes || 0}</div>
-                  <div className="text-xs text-slate-500">{t('conVotes')}</div>
+                  <div className="text-xl md:text-2xl font-bold text-red-600">{suggestion.conVotes || 0}</div>
+                  <div className="text-[10px] md:text-xs text-slate-500">{t('conVotes')}</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{consensusScore}%</div>
-                  <div className="text-xs text-slate-500">{t('consensus')}</div>
+                  <div className="text-xl md:text-2xl font-bold text-blue-600">{consensusScore}%</div>
+                  <div className="text-[10px] md:text-xs text-slate-500">{t('consensus')}</div>
                 </div>
-                <VotesNeededCounter 
-                  suggestion={suggestion} 
-                  document={document}
-                  acceptedSuggestions={allDocumentSuggestions.filter(s => s.status === 'accepted')}
-                />
+                <div className="flex-1">
+                  <VotesNeededCounter 
+                    suggestion={suggestion} 
+                    document={document}
+                    acceptedSuggestions={allDocumentSuggestions.filter(s => s.status === 'accepted')}
+                  />
+                </div>
               </div>
 
               {user && suggestion.status === 'pending' && document?.votingButtonsEnabled && (
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full md:w-auto">
                   <Button
                     variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
                     onClick={() => voteMutation.mutate('pro')}
                     disabled={voteMutation.isPending}
-                    className={userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}
+                    className={`flex-1 md:flex-initial text-xs md:text-sm ${userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
                   >
-                    <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
                     {t('votePro')}
                   </Button>
                   <Button
                     variant={userVote?.vote === 'con' ? 'default' : 'outline'}
                     onClick={() => voteMutation.mutate('con')}
                     disabled={voteMutation.isPending}
-                    className={userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}
+                    className={`flex-1 md:flex-initial text-xs md:text-sm ${userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
                   >
-                    <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
                     {t('voteCon')}
                   </Button>
                 </div>
@@ -717,11 +722,11 @@ export default function SuggestionDetail() {
             </div>
 
             {isAdmin && suggestion.status === 'pending' && (
-              <div className="flex gap-2 pt-4 border-t">
+              <div className="flex flex-col md:flex-row gap-2 pt-4 border-t">
                 <Button
                   onClick={() => updateStatusMutation.mutate('accepted')}
                   disabled={updateStatusMutation.isPending}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-green-600 hover:bg-green-700 w-full md:w-auto text-xs md:text-sm"
                 >
                   <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {t('acceptSuggestion')}
@@ -730,6 +735,7 @@ export default function SuggestionDetail() {
                   onClick={() => updateStatusMutation.mutate('rejected')}
                   disabled={updateStatusMutation.isPending}
                   variant="destructive"
+                  className="w-full md:w-auto text-xs md:text-sm"
                 >
                   <XCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {t('rejectSuggestion')}
@@ -739,15 +745,15 @@ export default function SuggestionDetail() {
           </CardContent>
         </Card>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="bg-white border-slate-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-green-700">
-                <ThumbsUp className="w-5 h-5" />
+        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
+          <Card className="bg-white border-slate-200 w-full overflow-hidden">
+            <CardHeader className="p-4 md:p-6">
+              <CardTitle className="flex items-center gap-2 text-green-700 text-base md:text-lg">
+                <ThumbsUp className="w-4 h-4 md:w-5 md:h-5" />
                 {t('proArguments')} ({proArgs.length})
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 p-3 md:p-6 overflow-x-hidden">
               {proArgs.length === 0 ? (
                 <p className="text-sm text-slate-500">{t('noProArgumentsYet')}</p>
               ) : (
@@ -799,14 +805,14 @@ export default function SuggestionDetail() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white border-slate-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-red-700">
-                <ThumbsDown className="w-5 h-5" />
+          <Card className="bg-white border-slate-200 w-full overflow-hidden">
+            <CardHeader className="p-4 md:p-6">
+              <CardTitle className="flex items-center gap-2 text-red-700 text-base md:text-lg">
+                <ThumbsDown className="w-4 h-4 md:w-5 md:h-5" />
                 {t('conArguments')} ({conArgs.length})
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 p-3 md:p-6 overflow-x-hidden">
               {conArgs.length === 0 ? (
                 <p className="text-sm text-slate-500">{t('noConArgumentsYet')}</p>
               ) : (
@@ -859,11 +865,11 @@ export default function SuggestionDetail() {
           </Card>
         </div>
 
-        <Card className="bg-white border-slate-200">
-          <CardHeader>
-            <CardTitle>{t('commentsOnSuggestion')}</CardTitle>
+        <Card className="bg-white border-slate-200 w-full overflow-hidden">
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="text-base md:text-lg">{t('commentsOnSuggestion')}</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 md:p-6 overflow-x-hidden">
             <CommentsSection
               entityType="suggestion"
               entityId={suggestionId}
