@@ -6,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, History, GitCompare, RotateCcw, Clock } from "lucide-react";
+import { ArrowLeft, ArrowRight, History, GitCompare, RotateCcw, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import SectionDiff from "../components/document/SectionDiff";
@@ -169,18 +169,18 @@ export default function DocumentVersions() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className={`flex items-center justify-between gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
               <Button variant="outline" size="icon">
-                <ArrowLeft className="w-4 h-4" />
+                {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
               </Button>
             </Link>
-            <div>
-              <h1 className={`text-3xl font-bold text-slate-900 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <div className={isRTL ? 'text-right' : ''}>
+              <h1 className="text-3xl font-bold text-slate-900">
                 {t('versionHistory')}
               </h1>
-              <p className={`text-slate-600 mt-1 ${isRTL ? 'text-right' : 'text-left'}`}>{document.title}</p>
+              <p className="text-slate-600 mt-1">{document.title}</p>
             </div>
           </div>
           <Button

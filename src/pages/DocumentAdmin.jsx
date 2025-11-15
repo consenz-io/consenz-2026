@@ -390,8 +390,8 @@ ${generatedInviteLink.signupUrl}
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Document Settings</h1>
-            <p className="text-slate-600 mt-1">{document.title}</p>
+            <h1 className="text-3xl font-bold text-slate-900 text-center flex-1">Document Settings</h1>
+            <p className="text-slate-600 mt-1 text-center">{document.title}</p>
           </div>
         </div>
 
