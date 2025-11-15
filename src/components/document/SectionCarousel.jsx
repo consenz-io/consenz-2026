@@ -162,14 +162,22 @@ export default function SectionCarousel({
                 content={currentView.data.title}
                 entity={currentView.data}
                 entityType="Suggestion"
-                renderContent={(content) => <div className="text-sm font-semibold text-amber-900 mb-2">{content}</div>}
+                renderContent={(content) => (
+                  <div className="text-sm font-semibold text-amber-900 mb-2">
+                    <DocumentTextContent content={content} />
+                  </div>
+                )}
               />
               {currentView.data.explanation && (
                 <TranslatableContent
                   content={currentView.data.explanation}
                   entity={currentView.data}
                   entityType="Suggestion"
-                  renderContent={(content) => <p className="text-sm text-slate-600 mb-3">{content}</p>}
+                  renderContent={(content) => (
+                    <p className="text-sm text-slate-600 mb-3">
+                      <DocumentTextContent content={content} />
+                    </p>
+                  )}
                 />
               )}
             </div>
