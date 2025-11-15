@@ -242,22 +242,24 @@ export default function LearnMore() {
             </div>
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between mt-8">
+            <div className={`flex justify-between mt-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Button
                 variant="outline"
                 onClick={() => setActiveStep(Math.max(0, activeStep - 1))}
                 disabled={activeStep === 0}
+                className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
               >
-                {isRTL ? <ChevronRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4 mr-2" />}
+                {isRTL ? <ChevronRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
                 {isRTL ? "הקודם" : "Previous"}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setActiveStep(Math.min(steps.length - 1, activeStep + 1))}
                 disabled={activeStep === steps.length - 1}
+                className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}
               >
                 {isRTL ? "הבא" : "Next"}
-                {isRTL ? <ChevronRight className="w-4 h-4 mr-2" /> : <ChevronRight className="w-4 h-4 ml-2" />}
+                {isRTL ? <ArrowLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
               </Button>
             </div>
           </CardContent>
@@ -275,9 +277,9 @@ export default function LearnMore() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-5 gap-4">
+        <div className={`grid md:grid-cols-5 gap-4 ${isRTL ? 'rtl' : 'ltr'}`}>
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-            <CardContent className={`p-6 ${isRTL ? 'text-center' : 'text-center'}`}>
+            <CardContent className="p-6">
               <div className="w-12 h-12 mx-auto mb-4 bg-blue-600 rounded-full flex items-center justify-center">
                 <FileText className="w-6 h-6 text-white" />
               </div>
@@ -291,11 +293,11 @@ export default function LearnMore() {
           </Card>
 
           <div className="flex items-center justify-center">
-            <ArrowRight className="w-8 h-8 text-slate-400" />
+            {isRTL ? <ArrowLeft className="w-8 h-8 text-slate-400" /> : <ArrowRight className="w-8 h-8 text-slate-400" />}
           </div>
 
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-            <CardContent className={`p-6 ${isRTL ? 'text-center' : 'text-center'}`}>
+            <CardContent className="p-6">
               <div className="w-12 h-12 mx-auto mb-4 bg-purple-600 rounded-full flex items-center justify-center">
                 <Edit3 className="w-6 h-6 text-white" />
               </div>
@@ -309,11 +311,11 @@ export default function LearnMore() {
           </Card>
 
           <div className="flex items-center justify-center">
-            <ArrowRight className="w-8 h-8 text-slate-400" />
+            {isRTL ? <ArrowLeft className="w-8 h-8 text-slate-400" /> : <ArrowRight className="w-8 h-8 text-slate-400" />}
           </div>
 
           <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-            <CardContent className={`p-6 ${isRTL ? 'text-center' : 'text-center'}`}>
+            <CardContent className="p-6">
               <div className="w-12 h-12 mx-auto mb-4 bg-green-600 rounded-full flex items-center justify-center">
                 <Vote className="w-6 h-6 text-white" />
               </div>
@@ -327,11 +329,11 @@ export default function LearnMore() {
           </Card>
 
           <div className="flex items-center justify-center">
-            <ArrowRight className="w-8 h-8 text-slate-400" />
+            {isRTL ? <ArrowLeft className="w-8 h-8 text-slate-400" /> : <ArrowRight className="w-8 h-8 text-slate-400" />}
           </div>
 
           <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-            <CardContent className={`p-6 ${isRTL ? 'text-center' : 'text-center'}`}>
+            <CardContent className="p-6">
               <div className="w-12 h-12 mx-auto mb-4 bg-orange-600 rounded-full flex items-center justify-center">
                 <MessageSquare className="w-6 h-6 text-white" />
               </div>
@@ -345,11 +347,11 @@ export default function LearnMore() {
           </Card>
 
           <div className="flex items-center justify-center">
-            <ArrowRight className="w-8 h-8 text-slate-400" />
+            {isRTL ? <ArrowLeft className="w-8 h-8 text-slate-400" /> : <ArrowRight className="w-8 h-8 text-slate-400" />}
           </div>
 
           <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200">
-            <CardContent className={`p-6 ${isRTL ? 'text-center' : 'text-center'}`}>
+            <CardContent className="p-6">
               <div className="w-12 h-12 mx-auto mb-4 bg-indigo-600 rounded-full flex items-center justify-center">
                 <CheckCircle className="w-6 h-6 text-white" />
               </div>
@@ -479,12 +481,12 @@ export default function LearnMore() {
                   <p className="text-sm font-medium text-blue-900 mb-2">
                     {isRTL ? "הצעה 1 התקבלה" : "Suggestion 1 Accepted"}
                   </p>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
+                  <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <ThumbsUp className="w-4 h-4 text-green-600" />
                       <span className="font-bold">8</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <ThumbsDown className="w-4 h-4 text-red-600" />
                       <span className="font-bold">2</span>
                     </div>
@@ -498,12 +500,12 @@ export default function LearnMore() {
                   <p className="text-sm font-medium text-purple-900 mb-2">
                     {isRTL ? "הצעה 2 התקבלה" : "Suggestion 2 Accepted"}
                   </p>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
+                  <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <ThumbsUp className="w-4 h-4 text-green-600" />
                       <span className="font-bold">5</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <ThumbsDown className="w-4 h-4 text-red-600" />
                       <span className="font-bold">1</span>
                     </div>
