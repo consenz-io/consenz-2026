@@ -14,7 +14,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import DocumentContent from "../components/document/DocumentContent";
 import SuggestionsList from "../components/document/SuggestionsList";
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
-import PointsDebugger from "../components/document/PointsDebugger";
+
 
 export default function DocumentView() {
   const { t, isRTL } = useLanguage();
