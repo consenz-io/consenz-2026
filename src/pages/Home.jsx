@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, TrendingUp, Users, Clock, ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
-import NotificationTester from "@/components/notifications/NotificationTester";
 
 export default function Home() {
   const { t, isRTL } = useLanguage();
@@ -81,9 +80,11 @@ export default function Home() {
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               )}
-              <Button size="lg" variant="outline">
-                {t('learnMore')}
-              </Button>
+              <Link to={createPageUrl("LearnMore")}>
+                <Button size="lg" variant="outline">
+                  {t('learnMore')}
+                </Button>
+              </Link>
             </div>
           </div>
 
@@ -228,8 +229,6 @@ export default function Home() {
           </div>
         )}
       </section>
-
-      {user && <NotificationTester />}
     </div>
   );
 }
