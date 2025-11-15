@@ -34,6 +34,10 @@ function LayoutContent({ children, currentPageName }) {
   });
 
   React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  React.useEffect(() => {
     const initializeUserData = async () => {
       if (user) {
         const needsUpdate = {};
