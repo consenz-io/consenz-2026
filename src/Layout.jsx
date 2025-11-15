@@ -186,7 +186,9 @@ function LayoutContent({ children, currentPageName }) {
                       </div>
                     </div>
                   </Link>
-                  <NotificationBell user={user} />
+                  <div data-notification-bell>
+                    <NotificationBell user={user} />
+                  </div>
                 </div>
                 <Button
                   variant="outline"
