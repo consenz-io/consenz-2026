@@ -542,23 +542,10 @@ export default function SuggestionDetail() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className={`flex items-center justify-between gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <Link to={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}`}>
-              <Button variant="outline" size="icon">
-                {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-              </Button>
-            </Link>
-            <div className={isRTL ? 'text-right' : ''}>
-              <h1 className="text-3xl font-bold text-slate-900">{suggestion.title}</h1>
-              {document && (
-                <p className="text-slate-600 mt-1">
-                  <Link to={`${createPageUrl("DocumentView")}?id=${document.id}`} className="hover:underline">
-                    {document.title}
-                  </Link>
-                </p>
-              )}
-            </div>
-          </div>
+          <PageHeader 
+            title={suggestion.title}
+            backUrl={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}`}
+          />
           {user && user.email === suggestion.created_by && (
             <Button
               variant="destructive"
@@ -575,6 +562,14 @@ export default function SuggestionDetail() {
             </Button>
           )}
         </div>
+        
+        {document && (
+          <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>
+            <Link to={`${createPageUrl("DocumentView")}?id=${document.id}`} className="hover:underline">
+              {document.title}
+            </Link>
+          </p>
+        )}
 
         {error && (
           <Alert variant="destructive">

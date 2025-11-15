@@ -171,19 +171,10 @@ export default function DocumentVersions() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className={`flex items-center justify-between gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
-              <Button variant="outline" size="icon">
-                {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-              </Button>
-            </Link>
-            <div className={isRTL ? 'text-right' : ''}>
-              <h1 className="text-3xl font-bold text-slate-900">
-                {t('versionHistory')}
-              </h1>
-              <p className="text-slate-600 mt-1">{document.title}</p>
-            </div>
-          </div>
+          <PageHeader 
+            title={t('versionHistory')}
+            backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
+          />
           <Button
             variant={compareMode ? "default" : "outline"}
             onClick={() => {
@@ -195,6 +186,10 @@ export default function DocumentVersions() {
             {compareMode ? t('cancelComparison') : t('compareVersions')}
           </Button>
         </div>
+        
+        {document && (
+          <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>{document.title}</p>
+        )}
 
         {error && (
           <Alert variant="destructive">
