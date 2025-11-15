@@ -70,18 +70,29 @@ export default function DocumentCleanView() {
       const languageNames = { en: 'English', he: 'Hebrew', ar: 'Arabic' };
       const targetLangName = languageNames[targetLanguage];
 
-      const prompt = `Translate the following HTML content to ${targetLangName}. 
-Keep all HTML tags intact and only translate the text content.
-Maintain the same structure and formatting.
+      const prompt = `You are a professional translator. Translate the following HTML content to ${targetLangName}.
 
-Content to translate:
-${section.content}`;
+CRITICAL INSTRUCTIONS:
+- Keep ALL HTML tags exactly as they are (including <p>, <strong>, <em>, <ul>, <li>, etc.)
+- Only translate the TEXT CONTENT between the tags
+- Return ONLY the translated HTML, nothing else
+- Do not add any explanations or comments
+- Do not escape HTML characters
+- Maintain exact same structure and formatting
+
+HTML content to translate:
+${section.content}
+
+Return ONLY the translated HTML:`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,
       });
 
-      const translatedContent = typeof result === 'string' ? result : result.content || result;
+      let translatedContent = typeof result === 'string' ? result : result.content || result;
+      
+      // Clean up any markdown code blocks that might be added
+      translatedContent = translatedContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
 
       // Update section with translation
       const updatedTranslations = { ...section.translations, [targetLanguage]: translatedContent };
