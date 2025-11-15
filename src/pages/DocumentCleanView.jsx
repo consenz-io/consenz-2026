@@ -139,7 +139,8 @@ ${text}`;
     setTranslatingAll(true);
     
     // Translate document title
-    if (document.originalLanguage && document.originalLanguage !== language) {
+    const docOriginalLang = document.originalLanguage || 'he';
+    if (docOriginalLang !== language) {
       if (!document.translations?.[language]) {
         const translatedTitle = await translateTextMutation.mutateAsync({ 
           text: document.title, 
@@ -148,7 +149,8 @@ ${text}`;
         });
         const updatedTranslations = { ...document.translations, [language]: translatedTitle };
         await base44.entities.Document.update(document.id, {
-          translations: updatedTranslations
+          translations: updatedTranslations,
+          originalLanguage: docOriginalLang
         });
         setTranslatedDocTitle(translatedTitle);
       } else {
@@ -160,7 +162,8 @@ ${text}`;
     // Translate topics
     const newShowTranslatedTopics = {};
     for (const topic of topics) {
-      if (topic.originalLanguage && topic.originalLanguage !== language) {
+      const topicOriginalLang = topic.originalLanguage || 'he';
+      if (topicOriginalLang !== language) {
         if (!topic.translations?.[language]) {
           const translatedTitle = await translateTextMutation.mutateAsync({ 
             text: topic.title, 
@@ -169,7 +172,8 @@ ${text}`;
           });
           const updatedTranslations = { ...topic.translations, [language]: translatedTitle };
           await base44.entities.Topic.update(topic.id, {
-            translations: updatedTranslations
+            translations: updatedTranslations,
+            originalLanguage: topicOriginalLang
           });
           setTranslatedTopics(prev => ({
             ...prev,
@@ -189,7 +193,8 @@ ${text}`;
     // Translate sections
     const newShowTranslatedSections = {};
     for (const section of sections) {
-      if (section.originalLanguage !== language) {
+      const sectionOriginalLang = section.originalLanguage || 'he';
+      if (sectionOriginalLang !== language) {
         if (!section.translations?.[language]) {
           await translateSectionMutation.mutateAsync({ section, targetLanguage: language });
         } else {
@@ -206,15 +211,15 @@ ${text}`;
     setTranslatingAll(false);
   };
 
-  const needsTranslation = sections.some(s => s.originalLanguage !== language) || 
-    topics.some(t => t.originalLanguage && t.originalLanguage !== language) ||
-    (document.originalLanguage && document.originalLanguage !== language);
+  const needsTranslation = sections.some(s => (s.originalLanguage || 'he') !== language) || 
+    topics.some(t => (t.originalLanguage || 'he') !== language) ||
+    ((document.originalLanguage || 'he') !== language);
     
   const allTranslated = sections.every(s => 
-    s.originalLanguage === language || translatedSections[s.id] || s.translations?.[language]
+    (s.originalLanguage || 'he') === language || translatedSections[s.id] || s.translations?.[language]
   ) && topics.every(t => 
-    !t.originalLanguage || t.originalLanguage === language || translatedTopics[t.id] || t.translations?.[language]
-  ) && (!document.originalLanguage || document.originalLanguage === language || translatedDocTitle || document.translations?.[language]);
+    (t.originalLanguage || 'he') === language || translatedTopics[t.id] || t.translations?.[language]
+  ) && ((document.originalLanguage || 'he') === language || translatedDocTitle || document.translations?.[language]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -261,11 +266,11 @@ ${text}`;
         {/* Document Title */}
         <div className="mb-12 pb-8 border-b-2 border-slate-300">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            {document.originalLanguage && document.originalLanguage !== language && showTranslatedDoc
+            {(document.originalLanguage || 'he') !== language && showTranslatedDoc
               ? (translatedDocTitle || document.translations?.[language] || document.title)
               : document.title}
           </h1>
-          {document.originalLanguage && document.originalLanguage !== language && (
+          {(document.originalLanguage || 'he') !== language && (
             <Button
               variant="ghost"
               size="sm"
@@ -279,7 +284,8 @@ ${text}`;
                   });
                   const updatedTranslations = { ...document.translations, [language]: translatedTitle };
                   await base44.entities.Document.update(document.id, {
-                    translations: updatedTranslations
+                    translations: updatedTranslations,
+                    originalLanguage: document.originalLanguage || 'he'
                   });
                   setTranslatedDocTitle(translatedTitle);
                   setShowTranslatedDoc(true);
@@ -314,11 +320,11 @@ ${text}`;
                   {/* Topic Title */}
                   <div className="border-b border-slate-300 pb-2 mb-6">
                     <h2 className="text-2xl font-bold text-slate-800">
-                      {topicIndex + 1}. {topic.originalLanguage && topic.originalLanguage !== language && showTranslatedTopics[topic.id]
+                      {topicIndex + 1}. {(topic.originalLanguage || 'he') !== language && showTranslatedTopics[topic.id]
                         ? (translatedTopics[topic.id] || topic.translations?.[language] || topic.title)
                         : topic.title}
                     </h2>
-                    {topic.originalLanguage && topic.originalLanguage !== language && (
+                    {(topic.originalLanguage || 'he') !== language && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -332,7 +338,8 @@ ${text}`;
                             });
                             const updatedTranslations = { ...topic.translations, [language]: translatedTitle };
                             await base44.entities.Topic.update(topic.id, {
-                              translations: updatedTranslations
+                              translations: updatedTranslations,
+                              originalLanguage: topic.originalLanguage || 'he'
                             });
                             setTranslatedTopics(prev => ({
                               ...prev,
@@ -362,7 +369,7 @@ ${text}`;
                   ) : (
                     <div className="space-y-6">
                       {topicSections.map((section, sectionIndex) => {
-                        const needsTranslation = section.originalLanguage !== language;
+                        const needsTranslation = (section.originalLanguage || 'he') !== language;
                         const hasTranslation = translatedSections[section.id] || section.translations?.[language];
                         const displayContent = needsTranslation && hasTranslation && showTranslatedSections[section.id]
                           ? (translatedSections[section.id] || section.translations[language])
