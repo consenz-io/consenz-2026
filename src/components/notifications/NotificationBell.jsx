@@ -22,13 +22,12 @@ export default function NotificationBell({ user }) {
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
-      console.log('[NOTIFICATIONS] Fetching notifications for user:', user.id);
       const notifs = await base44.entities.Notification.filter({ userId: user.id }, '-created_date', 50);
-      console.log('[NOTIFICATIONS] Fetched', notifs.length, 'notifications');
       return notifs;
     },
     enabled: !!user?.id,
-    refetchInterval: 5000, // רענון כל 5 שניות
+    staleTime: 30000, // נשאר רלוונטי ל-30 שניות
+    refetchOnWindowFocus: true, // רענון רק כשחוזרים לחלון
   });
 
   const markAsReadMutation = useMutation({
