@@ -6,7 +6,7 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Plus, AlertCircle, ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
+import { Edit, Plus, AlertCircle, ThumbsUp, ThumbsDown, MessageSquare, History } from "lucide-react";
 import VotesNeededCounter from "./VotesNeededCounter";
 import SectionDiff from "./SectionDiff";
 import CommentsSection from "./CommentsSection";
@@ -343,8 +343,20 @@ export default function DocumentContent({
                       <div id={`section-${section.id}`} className="group relative p-4 border border-slate-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/50 transition-all">
                         <div className={`flex justify-between items-start gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <div className="flex-1">
-                            <div className="text-sm font-medium text-slate-500 mb-2">
-                              Section {index + 1}
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="text-sm font-medium text-slate-500">
+                                Section {index + 1}
+                              </div>
+                              <Link to={`${createPageUrl("SectionHistory")}?id=${section.id}`}>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-blue-600"
+                                >
+                                  <History className="w-4 h-4 mr-1" />
+                                  היסטוריה
+                                </Button>
+                              </Link>
                             </div>
                             <TranslatableContent
                               content={section.content}

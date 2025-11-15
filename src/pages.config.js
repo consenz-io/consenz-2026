@@ -7,6 +7,7 @@ import SuggestionDetail from './pages/SuggestionDetail';
 import DocumentVersions from './pages/DocumentVersions';
 import DocumentCleanView from './pages/DocumentCleanView';
 import MyDocuments from './pages/MyDocuments';
+import SectionHistory from './pages/SectionHistory';
 import Layout from './Layout.jsx';
 
 
@@ -20,6 +21,7 @@ export const PAGES = {
     "DocumentVersions": DocumentVersions,
     "DocumentCleanView": DocumentCleanView,
     "MyDocuments": MyDocuments,
+    "SectionHistory": SectionHistory,
 }
 
 export const pagesConfig = {
