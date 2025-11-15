@@ -596,7 +596,11 @@ export default function SuggestionDetail() {
                   <div className="text-2xl font-bold text-blue-600">{consensusScore}%</div>
                   <div className="text-xs text-slate-500">Consensus</div>
                 </div>
-                <VotesNeededCounter suggestion={suggestion} document={document} />
+                <VotesNeededCounter 
+                  suggestion={suggestion} 
+                  document={document}
+                  acceptedSuggestions={allDocumentSuggestions.filter(s => s.status === 'accepted')}
+                />
               </div>
 
               {user && suggestion.status === 'pending' && document?.votingButtonsEnabled && (

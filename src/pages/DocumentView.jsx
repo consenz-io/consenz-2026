@@ -217,10 +217,28 @@ export default function DocumentView() {
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold">
-                  {document.threshold?.toFixed(0) || 0}
+                  {(() => {
+                    const acceptedDocSuggestions = suggestions.filter(s => s.status === 'accepted');
+                    if (acceptedDocSuggestions.length === 0) return '0';
+                    const avg = acceptedDocSuggestions.reduce((sum, s) => {
+                      const total = (s.proVotes || 0) + (s.conVotes || 0);
+                      return sum + (total > 0 ? (s.proVotes / total) : 0);
+                    }, 0) / acceptedDocSuggestions.length;
+                    return (avg * 100).toFixed(0);
+                  })()}
                 </div>
                 <div>
-                  <div className="text-2xl font-bold">{document.threshold?.toFixed(1) || 0}</div>
+                  <div className="text-2xl font-bold">
+                    {(() => {
+                      const acceptedDocSuggestions = suggestions.filter(s => s.status === 'accepted');
+                      if (acceptedDocSuggestions.length === 0) return '0.0';
+                      const avg = acceptedDocSuggestions.reduce((sum, s) => {
+                        const total = (s.proVotes || 0) + (s.conVotes || 0);
+                        return sum + (total > 0 ? (s.proVotes / total) : 0);
+                      }, 0) / acceptedDocSuggestions.length;
+                      return avg.toFixed(2);
+                    })()}
+                  </div>
                   <div className="text-xs text-slate-600">{t('threshold')}</div>
                 </div>
               </div>
