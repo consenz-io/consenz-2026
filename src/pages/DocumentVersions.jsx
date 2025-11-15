@@ -136,10 +136,10 @@ export default function DocumentVersions() {
 
   if (docLoading || versionsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="max-w-6xl mx-auto space-y-6">
-          <Skeleton className="h-12 w-64" />
-          <Skeleton className="h-96 w-full" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
+        <div className="max-w-6xl mx-auto space-y-4 md:space-y-6">
+          <Skeleton className="h-10 md:h-12 w-48 md:w-64" />
+          <Skeleton className="h-64 md:h-96 w-full" />
         </div>
       </div>
     );
@@ -147,9 +147,9 @@ export default function DocumentVersions() {
 
   if (!document) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="max-w-6xl mx-auto text-center py-20">
-          <h1 className="text-2xl font-bold text-slate-900">Document not found</h1>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
+        <div className="max-w-6xl mx-auto text-center py-12 md:py-20">
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900">Document not found</h1>
           <Link to={createPageUrl("Home")}>
             <Button className="mt-4">Go Home</Button>
           </Link>
@@ -168,21 +168,25 @@ export default function DocumentVersions() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className={`flex items-center justify-between gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <PageHeader 
-            title={t('versionHistory')}
-            backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
-          />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
+      <div className="max-w-6xl mx-auto space-y-4 md:space-y-6 w-full overflow-x-hidden">
+        <div className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-3 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+          <div className="flex-1 min-w-0 w-full">
+            <PageHeader 
+              title={t('versionHistory')}
+              backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
+            />
+          </div>
           <Button
             variant={compareMode ? "default" : "outline"}
             onClick={() => {
               setCompareMode(!compareMode);
               setSelectedVersions([]);
             }}
+            className="w-full md:w-auto text-xs md:text-sm shrink-0"
+            size="sm"
           >
-            <GitCompare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+            <GitCompare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
             {compareMode ? t('cancelComparison') : t('compareVersions')}
           </Button>
         </div>
@@ -198,22 +202,22 @@ export default function DocumentVersions() {
         )}
 
         {compareMode && selectedVersions.length === 2 && (
-          <Card className="bg-white border-blue-200">
-            <CardHeader>
-              <CardTitle>{t('compareVersions')}</CardTitle>
+          <Card className="bg-white border-blue-200 w-full overflow-hidden">
+            <CardHeader className="p-4 md:p-6">
+              <CardTitle className="text-base md:text-lg">{t('compareVersions')}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 md:p-6 overflow-x-hidden">
               <div className="space-y-4">
-                <div className={`grid grid-cols-2 gap-4 mb-4 ${isRTL ? 'grid-flow-col-dense' : ''}`}>
+                <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 ${isRTL ? 'md:grid-flow-col-dense' : ''}`}>
                   <div className={isRTL ? 'text-right' : 'text-left'}>
-                    <Badge className="mb-2">{t('version')} {selectedVersions[0].version}</Badge>
-                    <p className="text-sm text-slate-600">
+                    <Badge className="mb-2 text-xs">{t('version')} {selectedVersions[0].version}</Badge>
+                    <p className="text-xs md:text-sm text-slate-600">
                       {new Date(selectedVersions[0].created_date).toLocaleString(isRTL ? 'he-IL' : 'en-US')}
                     </p>
                   </div>
                   <div className={isRTL ? 'text-right' : 'text-left'}>
-                    <Badge className="mb-2">{t('version')} {selectedVersions[1].version}</Badge>
-                    <p className="text-sm text-slate-600">
+                    <Badge className="mb-2 text-xs">{t('version')} {selectedVersions[1].version}</Badge>
+                    <p className="text-xs md:text-sm text-slate-600">
                       {new Date(selectedVersions[1].created_date).toLocaleString(isRTL ? 'he-IL' : 'en-US')}
                     </p>
                   </div>
@@ -228,13 +232,13 @@ export default function DocumentVersions() {
           </Card>
         )}
 
-        <div className="space-y-8">
+        <div className="space-y-6 md:space-y-8">
           {versions.length === 0 ? (
-            <Card className="bg-white border-slate-200">
-              <CardContent className="p-12 text-center">
-                <History className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('noPreviousVersions')}</h3>
-                <p className="text-slate-600">{t('documentChangesSavedAutomatically')}</p>
+            <Card className="bg-white border-slate-200 w-full overflow-hidden">
+              <CardContent className="p-6 md:p-12 text-center">
+                <History className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-4 text-slate-300" />
+                <h3 className="text-lg md:text-xl font-semibold text-slate-900 mb-2">{t('noPreviousVersions')}</h3>
+                <p className="text-sm md:text-base text-slate-600">{t('documentChangesSavedAutomatically')}</p>
               </CardContent>
             </Card>
           ) : (
