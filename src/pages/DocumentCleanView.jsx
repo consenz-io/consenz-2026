@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
 import InlineDiff from "@/components/document/InlineDiff";
+import PageHeader from "@/components/PageHeader";
 
 export default function DocumentCleanView() {
   const { t, isRTL, language } = useLanguage();
@@ -329,12 +330,12 @@ ${text}`;
               {language === 'en' ? 'Print' : language === 'ar' ? 'طباعة' : 'הדפס'}
             </Button>
           </div>
-          <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
-            <Button variant="outline" size="sm">
-              <ArrowLeft className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {language === 'ar' ? 'العودة إلى النقاش' : language === 'he' ? 'חזרה לדיון' : 'Back to Discussion'}
-            </Button>
-          </Link>
+          <div className="print:hidden">
+            <PageHeader 
+              title=""
+              backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
+            />
+          </div>
         </div>
       </div>
 
