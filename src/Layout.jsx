@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { FileText, Home, User, Settings, LogOut, Plus, Globe } from "lucide-react";
+import { FileText, Home, User, Settings, LogOut, Plus, Globe, Mail } from "lucide-react";
 import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
 import {
   Sidebar,
@@ -66,6 +66,11 @@ function LayoutContent({ children, currentPageName }) {
       title: t('myDocuments'),
       url: createPageUrl("MyDocuments"),
       icon: FileText,
+    },
+    {
+      title: 'הזמן משתמשים',
+      url: createPageUrl("InviteUser"),
+      icon: Mail,
     },
   ];
 
