@@ -251,8 +251,8 @@ export default function LearnMore() {
               >
                 {isRTL ? (
                   <>
-                    <ChevronRight className="w-4 h-4" />
                     <span>הקודם</span>
+                    <ChevronRight className="w-4 h-4" />
                   </>
                 ) : (
                   <>
