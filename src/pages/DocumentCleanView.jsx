@@ -271,9 +271,9 @@ ${text}`;
   return (
     <div className="min-h-screen bg-white">
       {/* Header - Hidden on print */}
-      <div className="bg-slate-50 border-b border-slate-200 p-4 print:hidden sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
+      <div className="bg-slate-50 border-b border-slate-200 p-3 md:p-4 print:hidden sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             {versionGroups.length > 1 && (
               <div className="flex items-center gap-2 border-l border-slate-300 pl-2">
                 <Button
@@ -284,11 +284,11 @@ ${text}`;
                 >
                   {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                 </Button>
-                <Badge variant="outline" className="px-3">
+                <Badge variant="outline" className="px-2 md:px-3 text-xs">
                   {currentVersionIndex === 0 ? (
-                    language === 'he' ? 'גרסה נוכחית' : language === 'ar' ? 'النسخة الحالية' : 'Current Version'
+                    language === 'he' ? 'נוכחית' : language === 'ar' ? 'حالية' : 'Current'
                   ) : (
-                    `${language === 'he' ? 'גרסה' : language === 'ar' ? 'إصدار' : 'Version'} ${currentVersion?.version || 0}`
+                    `${language === 'he' ? 'ג׳' : language === 'ar' ? 'إ' : 'V'} ${currentVersion?.version || 0}`
                   )}
                 </Badge>
                 <Button
@@ -310,18 +310,18 @@ ${text}`;
               >
                 {translatingAll ? (
                   <>
-                    <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
-                    {t('translating')}
+                    <Loader2 className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'} animate-spin`} />
+                    <span className="hidden md:inline">{t('translating')}</span>
                   </>
                 ) : (
                   <>
-                    <Globe className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {t('translateAll')}
+                    <Globe className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
+                    <span className="hidden md:inline">{t('translateAll')}</span>
                   </>
                 )}
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={handlePrint}>
+            <Button variant="outline" size="sm" onClick={handlePrint} className="hidden md:flex">
               <Printer className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               {language === 'en' ? 'Print' : language === 'ar' ? 'طباعة' : 'הדפס'}
             </Button>
@@ -336,10 +336,10 @@ ${text}`;
       </div>
 
       {/* Document Content */}
-      <div className="max-w-4xl mx-auto p-8 print:p-12">
+      <div className="max-w-4xl mx-auto p-4 md:p-8 print:p-12">
         {/* Document Title */}
-        <div className="mb-12 pb-8 border-b-2 border-slate-300">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2">
+        <div className="mb-8 md:mb-12 pb-6 md:pb-8 border-b-2 border-slate-300">
+          <h1 className="text-2xl md:text-4xl font-bold text-slate-900 mb-2 leading-tight">
             {(document.originalLanguage || 'he') !== language && showTranslatedDoc
               ? (translatedDocTitle || document.translations?.[language] || document.title)
               : document.title}
@@ -375,7 +375,7 @@ ${text}`;
         </div>
 
         {/* Topics and Sections */}
-        <div className="space-y-12">
+        <div className="space-y-8 md:space-y-12">
           {topics.length === 0 ? (
             <p className="text-slate-500 text-center py-8">{t('noTopicsYet')}</p>
           ) : (
@@ -383,10 +383,10 @@ ${text}`;
               const topicSections = sections.filter(s => s.topicId === topic.id);
               
               return (
-                <div key={topic.id} className="space-y-6 break-inside-avoid">
+                <div key={topic.id} className="space-y-4 md:space-y-6 break-inside-avoid">
                   {/* Topic Title */}
-                  <div className="border-b border-slate-300 pb-2 mb-6">
-                    <h2 className="text-2xl font-bold text-slate-800">
+                  <div className="border-b border-slate-300 pb-2 mb-4 md:mb-6">
+                    <h2 className="text-xl md:text-2xl font-bold text-slate-800 leading-tight">
                       {topicIndex + 1}. {(topic.originalLanguage || 'he') !== language && showTranslatedTopics[topic.id]
                         ? (translatedTopics[topic.id] || topic.translations?.[language] || topic.title)
                         : topic.title}
@@ -432,9 +432,9 @@ ${text}`;
 
                   {/* Sections */}
                   {topicSections.length === 0 ? (
-                    <p className="text-slate-500 italic pr-4">{t('noSectionsYet')}</p>
+                    <p className="text-slate-500 italic pr-2 md:pr-4">{t('noSectionsYet')}</p>
                   ) : (
-                    <div className="space-y-6">
+                    <div className="space-y-4 md:space-y-6">
                       {topicSections.map((section, sectionIndex) => {
                         const needsTranslation = (section.originalLanguage || 'he') !== language;
                         const hasTranslation = translatedSections[section.id] || section.translations?.[language];
@@ -450,8 +450,8 @@ ${text}`;
                         return (
                           <div key={section.id} className="break-inside-avoid">
                             <Link to={`${createPageUrl("SectionHistory")}?id=${section.id}`}>
-                              <div className="flex gap-4 group cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
-                                <span className="text-slate-500 font-medium min-w-[2rem]">
+                              <div className="flex gap-2 md:gap-4 group cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
+                                <span className="text-slate-500 font-medium min-w-[1.5rem] md:min-w-[2rem] text-sm md:text-base">
                                   {topicIndex + 1}.{sectionIndex + 1}
                                 </span>
                                 <div className="flex-1">
@@ -463,7 +463,7 @@ ${text}`;
                                 ) : (
                                   <>
                                     <div 
-                                      className="text-slate-700 leading-relaxed prose prose-slate max-w-none"
+                                      className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none"
                                       dangerouslySetInnerHTML={{ __html: displayContent }}
                                     />
                                     {needsTranslation && (
@@ -517,7 +517,7 @@ ${text}`;
         </div>
 
         {/* Footer */}
-        <div className="mt-16 pt-8 border-t border-slate-300 text-center text-slate-500 text-sm">
+        <div className="mt-12 md:mt-16 pt-6 md:pt-8 border-t border-slate-300 text-center text-slate-500 text-xs md:text-sm">
           <p>מסמך זה נוצר באמצעות פלטפורמת Consenz</p>
         </div>
       </div>
