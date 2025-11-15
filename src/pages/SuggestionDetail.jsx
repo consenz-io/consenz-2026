@@ -114,9 +114,7 @@ export default function SuggestionDetail() {
     mutationFn: async (vote) => {
       if (!user) throw new Error("Must be logged in to vote");
 
-      // Check if voter is not the suggestion creator
-      const isOwnSuggestion = user.email === suggestion.created_by;
-      console.log('[POINTS DEBUG] Is own suggestion:', isOwnSuggestion, 'User:', user.email, 'Creator:', suggestion.created_by);
+      console.log('[POINTS DEBUG] Vote by:', user.email, 'on suggestion by:', suggestion.created_by);
 
       let updatedSuggestion;
       if (userVote) {
@@ -128,8 +126,8 @@ export default function SuggestionDetail() {
             [vote === 'pro' ? 'proVotes' : 'conVotes']: Math.max(0, (suggestion[vote === 'pro' ? 'proVotes' : 'conVotes'] || 0) - 1)
           });
           
-          // Remove 10 points from suggestion creator if it was a "pro" vote (only if gamification enabled and not own suggestion)
-          if (vote === 'pro' && document.gamificationEnabled && !isOwnSuggestion) {
+          // Remove 10 points from suggestion creator if it was a "pro" vote (only if gamification enabled)
+          if (vote === 'pro' && document.gamificationEnabled) {
             console.log('[POINTS DEBUG] Removing -10 points from suggestion creator for canceled pro vote');
             const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
             if (suggestionCreatorList.length > 0) {
@@ -161,8 +159,8 @@ export default function SuggestionDetail() {
             conVotes: suggestion.conVotes + (vote === 'con' ? 1 : -1)
           });
           
-          // Handle points for vote direction change (only if gamification enabled and not own suggestion)
-          if (document.gamificationEnabled && !isOwnSuggestion) {
+          // Handle points for vote direction change (only if gamification enabled)
+          if (document.gamificationEnabled) {
             const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
             if (suggestionCreatorList.length > 0) {
               const suggestionCreator = suggestionCreatorList[0];
@@ -210,8 +208,8 @@ export default function SuggestionDetail() {
           [vote === 'pro' ? 'proVotes' : 'conVotes']: (suggestion[vote === 'pro' ? 'proVotes' : 'conVotes'] || 0) + 1
         });
 
-        // Award +10 points to suggestion creator for each "pro" vote (only if gamification enabled and not own suggestion)
-        if (vote === 'pro' && document.gamificationEnabled && !isOwnSuggestion) {
+        // Award +10 points to suggestion creator for each "pro" vote (only if gamification enabled)
+        if (vote === 'pro' && document.gamificationEnabled) {
           console.log('[POINTS DEBUG] Vote PRO - awarding +10 points to suggestion creator:', suggestion.created_by);
           const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
           console.log('[POINTS DEBUG] Found creators:', suggestionCreatorList.length);
