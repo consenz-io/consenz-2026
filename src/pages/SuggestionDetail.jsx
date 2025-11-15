@@ -28,7 +28,6 @@ export default function SuggestionDetail() {
   const queryClient = useQueryClient();
   const [newArgument, setNewArgument] = useState({ type: null, content: "" });
   const [error, setError] = useState(null);
-  const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
 
   const { data: suggestion, isLoading: suggestionLoading } = useQuery({
     queryKey: ['suggestion', suggestionId],
@@ -488,8 +487,27 @@ export default function SuggestionDetail() {
     ? (suggestion.proVotes / (suggestion.proVotes + suggestion.conVotes) * 100).toFixed(0)
     : 50;
 
-  const currentVersion = sectionVersions[currentVersionIndex];
-  const displayContent = currentVersionIndex === 0 ? section?.content : currentVersion?.content;
+  const handleNavigateToVersion = (direction) => {
+    const currentIndex = sectionVersions.findIndex(v => v.suggestionId === suggestionId);
+    let targetIndex;
+    
+    if (direction === 'newer') {
+      targetIndex = currentIndex - 1;
+    } else {
+      targetIndex = currentIndex + 1;
+    }
+    
+    if (targetIndex >= 0 && targetIndex < sectionVersions.length) {
+      const targetVersion = sectionVersions[targetIndex];
+      if (targetVersion.suggestionId) {
+        navigate(`${createPageUrl("SuggestionDetail")}?id=${targetVersion.suggestionId}`);
+      }
+    }
+  };
+
+  const currentVersionIndex = sectionVersions.findIndex(v => v.suggestionId === suggestionId);
+  const isNewestVersion = currentVersionIndex === 0;
+  const isOldestVersion = currentVersionIndex === sectionVersions.length - 1;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
@@ -564,25 +582,25 @@ export default function SuggestionDetail() {
               </div>
             )}
 
-            {suggestion.type === 'edit_section' && sectionVersions.length > 1 && (
+            {suggestion.type === 'edit_section' && sectionVersions.length > 1 && currentVersionIndex >= 0 && (
               <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
                 <span className="text-sm font-medium text-slate-700">
-                  {currentVersionIndex === 0 ? 'גרסה נוכחית' : `גרסה ${currentVersion?.version || 0}`}
+                  {isNewestVersion ? 'גרסה נוכחית' : `גרסה ${sectionVersions[currentVersionIndex]?.version || 0}`}
                 </span>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentVersionIndex(Math.min(currentVersionIndex + 1, sectionVersions.length - 1))}
-                    disabled={currentVersionIndex >= sectionVersions.length - 1}
+                    onClick={() => handleNavigateToVersion('older')}
+                    disabled={isOldestVersion}
                   >
                     {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentVersionIndex(Math.max(0, currentVersionIndex - 1))}
-                    disabled={currentVersionIndex === 0}
+                    onClick={() => handleNavigateToVersion('newer')}
+                    disabled={isNewestVersion}
                   >
                     {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                   </Button>
@@ -590,11 +608,11 @@ export default function SuggestionDetail() {
               </div>
             )}
 
-            {suggestion.type === 'edit_section' && displayContent ? (
+            {suggestion.type === 'edit_section' && suggestion.originalContent ? (
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">שינויים מוצעים</h3>
                 <SectionDiff
-                  originalContent={displayContent}
+                  originalContent={suggestion.originalContent}
                   newContent={suggestion.newContent}
                 />
               </div>
