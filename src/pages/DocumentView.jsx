@@ -120,29 +120,29 @@ export default function DocumentView() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-4 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-          <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6">
+      <div className="max-w-6xl mx-auto space-y-4 md:space-y-6">
+        <div className={`flex flex-col gap-3 md:gap-4 ${isRTL ? 'md:flex-row-reverse' : ''} md:flex-row md:justify-between md:items-center`}>
+          <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Link to={createPageUrl("Home")}>
               <Button variant="outline" size="icon">
                 <ArrowLeft className="w-4 h-4" />
               </Button>
             </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">{document.title}</h1>
-              <div className="flex gap-2 mt-2">
-                <Badge variant="outline" className={
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl md:text-3xl font-bold text-slate-900 truncate">{document.title}</h1>
+              <div className="flex gap-2 mt-1 md:mt-2">
+                <Badge variant="outline" className={`text-xs ${
                   document.privacy === 'public_view_open_participation' 
                     ? 'bg-green-50 text-green-700 border-green-200'
                     : 'bg-amber-50 text-amber-700 border-amber-200'
-                }>
+                }`}>
                   {document.privacy.replace(/_/g, ' ')}
                 </Badge>
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {user && (
               <Button
                 onClick={() => {
@@ -150,74 +150,76 @@ export default function DocumentView() {
                   setShowCreateSuggestion(true);
                 }}
                 className="bg-gradient-to-r from-blue-600 to-indigo-600"
+                size="sm"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                {t('newSuggestion')}
+                <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                <span className="hidden sm:inline">{t('newSuggestion')}</span>
+                <span className="sm:hidden">הצעה</span>
               </Button>
             )}
             <Link to={`${createPageUrl("DocumentVersions")}?id=${documentId}`}>
-              <Button variant="outline">
-                <History className="w-4 h-4 mr-2" />
-                {t('versions')}
+              <Button variant="outline" size="sm">
+                <History className="w-4 h-4 md:mr-2" />
+                <span className="hidden md:inline">{t('versions')}</span>
               </Button>
             </Link>
             <Link to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`}>
-              <Button variant="outline">
-                <FileText className="w-4 h-4 mr-2" />
-                {t('viewCurrentVersion')}
+              <Button variant="outline" size="sm" className="hidden sm:flex">
+                <FileText className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {t('cleanView')}
               </Button>
             </Link>
             {isAdmin && (
               <Link to={`${createPageUrl("DocumentAdmin")}?id=${documentId}`}>
-                <Button variant="outline">
-                  <Settings className="w-4 h-4 mr-2" />
-                  {t('admin')}
+                <Button variant="outline" size="sm">
+                  <Settings className="w-4 h-4 md:mr-2" />
+                  <span className="hidden md:inline">{t('admin')}</span>
                 </Button>
               </Link>
             )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all" onClick={() => setActiveTab("document")}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <Users className="w-8 h-8 text-blue-600" />
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-2 md:gap-3">
+                <Users className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
                 <div>
-                  <div className="text-2xl font-bold">{document.totalUsersInteracted || 0}</div>
-                  <div className="text-xs text-slate-600">{t('contributors')}</div>
+                  <div className="text-xl md:text-2xl font-bold">{document.totalUsersInteracted || 0}</div>
+                  <div className="text-[10px] md:text-xs text-slate-600">{t('contributors')}</div>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all" onClick={() => setActiveTab("suggestions")}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <MessageSquare className="w-8 h-8 text-indigo-600" />
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-2 md:gap-3">
+                <MessageSquare className="w-6 h-6 md:w-8 md:h-8 text-indigo-600" />
                 <div>
-                  <div className="text-2xl font-bold">{suggestions.length}</div>
-                  <div className="text-xs text-slate-600">{t('suggestions')}</div>
+                  <div className="text-xl md:text-2xl font-bold">{suggestions.length}</div>
+                  <div className="text-[10px] md:text-xs text-slate-600">{t('suggestions')}</div>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all" onClick={() => setActiveTab("document")}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <TrendingUp className="w-8 h-8 text-purple-600" />
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-2 md:gap-3">
+                <TrendingUp className="w-6 h-6 md:w-8 md:h-8 text-purple-600" />
                 <div>
-                  <div className="text-2xl font-bold">
+                  <div className="text-xl md:text-2xl font-bold">
                     {((document.avgSuggestionConsensus || 0) * 100).toFixed(0)}%
                   </div>
-                  <div className="text-xs text-slate-600">{t('consensus')}</div>
+                  <div className="text-[10px] md:text-xs text-slate-600">{t('consensus')}</div>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all" onClick={() => setActiveTab("document")}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold">
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs md:text-sm">
                   {(() => {
                     const acceptedDocSuggestions = suggestions.filter(s => s.status === 'accepted');
                     if (acceptedDocSuggestions.length === 0) return '0';
@@ -229,7 +231,7 @@ export default function DocumentView() {
                   })()}
                 </div>
                 <div>
-                  <div className="text-2xl font-bold">
+                  <div className="text-xl md:text-2xl font-bold">
                     {(() => {
                       const acceptedDocSuggestions = suggestions.filter(s => s.status === 'accepted');
                       if (acceptedDocSuggestions.length === 0) return '0.0';
@@ -240,17 +242,17 @@ export default function DocumentView() {
                       return avg.toFixed(2);
                     })()}
                   </div>
-                  <div className="text-xs text-slate-600">{t('threshold')}</div>
+                  <div className="text-[10px] md:text-xs text-slate-600">{t('threshold')}</div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-white/80 backdrop-blur-sm">
-            <TabsTrigger value="document">{t('document')}</TabsTrigger>
-            <TabsTrigger value="suggestions">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+          <TabsList className="bg-white/80 backdrop-blur-sm w-full md:w-auto">
+            <TabsTrigger value="document" className="flex-1 md:flex-none text-sm md:text-base">{t('document')}</TabsTrigger>
+            <TabsTrigger value="suggestions" className="flex-1 md:flex-none text-sm md:text-base">
               {t('suggestions')} ({suggestions.filter(s => s.status === 'pending').length})
             </TabsTrigger>
           </TabsList>
