@@ -12,6 +12,8 @@ export default function DocumentCleanView() {
   const { t, isRTL, language } = useLanguage();
   const queryClient = useQueryClient();
   const [translatedSections, setTranslatedSections] = useState({});
+  const [translatedTopics, setTranslatedTopics] = useState({});
+  const [translatedDocTitle, setTranslatedDocTitle] = useState(null);
   const [translatingAll, setTranslatingAll] = useState(false);
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
@@ -65,12 +67,14 @@ export default function DocumentCleanView() {
     window.print();
   };
 
-  const translateSectionMutation = useMutation({
-    mutationFn: async ({ section, targetLanguage }) => {
+  const translateTextMutation = useMutation({
+    mutationFn: async ({ text, targetLanguage, isHtml = false }) => {
       const languageNames = { en: 'English', he: 'Hebrew', ar: 'Arabic' };
       const targetLangName = languageNames[targetLanguage];
 
-      const prompt = `You are a professional translator. Translate the following HTML content to ${targetLangName}.
+      let prompt;
+      if (isHtml) {
+        prompt = `You are a professional translator. Translate the following HTML content to ${targetLangName}.
 
 CRITICAL INSTRUCTIONS:
 - Keep ALL HTML tags exactly as they are (including <p>, <strong>, <em>, <ul>, <li>, etc.)
@@ -81,9 +85,14 @@ CRITICAL INSTRUCTIONS:
 - Maintain exact same structure and formatting
 
 HTML content to translate:
-${section.content}
+${text}
 
 Return ONLY the translated HTML:`;
+      } else {
+        prompt = `Translate the following text to ${targetLangName}. Return ONLY the translated text, nothing else:
+
+${text}`;
+      }
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,
@@ -93,6 +102,18 @@ Return ONLY the translated HTML:`;
       
       // Clean up any markdown code blocks that might be added
       translatedContent = translatedContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+
+      return translatedContent;
+    },
+  });
+
+  const translateSectionMutation = useMutation({
+    mutationFn: async ({ section, targetLanguage }) => {
+      const translatedContent = await translateTextMutation.mutateAsync({ 
+        text: section.content, 
+        targetLanguage, 
+        isHtml: true 
+      });
 
       // Update section with translation
       const updatedTranslations = { ...section.translations, [targetLanguage]: translatedContent };
@@ -113,6 +134,52 @@ Return ONLY the translated HTML:`;
 
   const translateAllSections = async () => {
     setTranslatingAll(true);
+    
+    // Translate document title
+    if (document.originalLanguage && document.originalLanguage !== language) {
+      if (!document.translations?.[language]) {
+        const translatedTitle = await translateTextMutation.mutateAsync({ 
+          text: document.title, 
+          targetLanguage: language, 
+          isHtml: false 
+        });
+        const updatedTranslations = { ...document.translations, [language]: translatedTitle };
+        await base44.entities.Document.update(document.id, {
+          translations: updatedTranslations
+        });
+        setTranslatedDocTitle(translatedTitle);
+      } else {
+        setTranslatedDocTitle(document.translations[language]);
+      }
+    }
+
+    // Translate topics
+    for (const topic of topics) {
+      if (topic.originalLanguage && topic.originalLanguage !== language) {
+        if (!topic.translations?.[language]) {
+          const translatedTitle = await translateTextMutation.mutateAsync({ 
+            text: topic.title, 
+            targetLanguage: language, 
+            isHtml: false 
+          });
+          const updatedTranslations = { ...topic.translations, [language]: translatedTitle };
+          await base44.entities.Topic.update(topic.id, {
+            translations: updatedTranslations
+          });
+          setTranslatedTopics(prev => ({
+            ...prev,
+            [topic.id]: translatedTitle
+          }));
+        } else {
+          setTranslatedTopics(prev => ({
+            ...prev,
+            [topic.id]: topic.translations[language]
+          }));
+        }
+      }
+    }
+
+    // Translate sections
     for (const section of sections) {
       if (section.originalLanguage !== language) {
         if (!section.translations?.[language]) {
@@ -125,13 +192,19 @@ Return ONLY the translated HTML:`;
         }
       }
     }
+    
     setTranslatingAll(false);
   };
 
-  const needsTranslation = sections.some(s => s.originalLanguage !== language);
+  const needsTranslation = sections.some(s => s.originalLanguage !== language) || 
+    topics.some(t => t.originalLanguage && t.originalLanguage !== language) ||
+    (document.originalLanguage && document.originalLanguage !== language);
+    
   const allTranslated = sections.every(s => 
     s.originalLanguage === language || translatedSections[s.id] || s.translations?.[language]
-  );
+  ) && topics.every(t => 
+    !t.originalLanguage || t.originalLanguage === language || translatedTopics[t.id] || t.translations?.[language]
+  ) && (!document.originalLanguage || document.originalLanguage === language || translatedDocTitle || document.translations?.[language]);
 
   return (
     <div className="min-h-screen bg-white">
@@ -178,7 +251,9 @@ Return ONLY the translated HTML:`;
         {/* Document Title */}
         <div className="mb-12 pb-8 border-b-2 border-slate-300">
           <h1 className="text-4xl font-bold text-slate-900 mb-2">
-            {document.title}
+            {document.originalLanguage && document.originalLanguage !== language
+              ? (translatedDocTitle || document.translations?.[language] || document.title)
+              : document.title}
           </h1>
           <p className="text-slate-600">
             {new Date(document.created_date).toLocaleDateString('he-IL', {
@@ -201,7 +276,9 @@ Return ONLY the translated HTML:`;
                 <div key={topic.id} className="space-y-6 break-inside-avoid">
                   {/* Topic Title */}
                   <h2 className="text-2xl font-bold text-slate-800 border-b border-slate-300 pb-2">
-                    {topicIndex + 1}. {topic.title}
+                    {topicIndex + 1}. {topic.originalLanguage && topic.originalLanguage !== language
+                      ? (translatedTopics[topic.id] || topic.translations?.[language] || topic.title)
+                      : topic.title}
                   </h2>
 
                   {/* Sections */}
