@@ -352,11 +352,11 @@ export default function LearnMore() {
           <h2 className="text-3xl font-bold text-slate-900 mb-4">
             {getLocalizedText("Points & Gamification System", "מערכת ניקוד וגיימיפיקציה", "نظام النقاط والتلعيب")}
           </h2>
-          <p className="text-slate-600">
+          <p className="text-slate-600 max-w-3xl mx-auto">
             {getLocalizedText(
-              "Earn and spend points for suggestions and votes",
-              "הרווח והוצאת נקודות עבור הצעות והצבעות",
-              "اكسب وأنفق النقاط للمقترحات والتصويتات"
+              "A reputation and incentive system designed to filter noise, build credibility, and reward positive contributions measured by community consensus",
+              "מערכת מוניטין ותמריצים שנועדה לסנן רעשים, לבנות אמינות ולתגמל תרומות חיוביות הנמדדות בהסכמת הקהילה",
+              "نظام سمعة وحوافز مصمم لتصفية الضوضاء، وبناء المصداقية، ومكافأة المساهمات الإيجابية المقاسة بإجماع المجتمع"
             )}
           </p>
         </div>
