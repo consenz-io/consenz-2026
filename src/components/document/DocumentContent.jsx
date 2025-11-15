@@ -107,11 +107,16 @@ export default function DocumentContent({
 
         // Award +10 points to suggestion creator for each "pro" vote (only if gamification enabled)
         if (vote === 'pro' && document.gamificationEnabled) {
-          const suggestionCreator = await base44.entities.User.filter({ email: suggestion.created_by }).then(u => u[0]);
-          if (suggestionCreator) {
-            await base44.entities.User.update(suggestionCreator.id, {
-              points: (suggestionCreator.points || 1000) + 10
-            });
+          const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+          if (suggestionCreatorList.length > 0) {
+            const suggestionCreator = suggestionCreatorList[0];
+            // Fetch fresh data to avoid race conditions
+            const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
+            if (freshUser) {
+              await base44.entities.User.update(freshUser.id, {
+                points: (freshUser.points || 1000) + 10
+              });
+            }
           }
         }
       }

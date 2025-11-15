@@ -126,11 +126,16 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     // Award 200 points to suggestion creator when accepted (only if gamification enabled)
     const gamificationEnabled = document?.gamificationEnabled || false;
     if (gamificationEnabled) {
-      const suggestionCreator = await base44.entities.User.filter({ email: suggestion.created_by });
-      if (suggestionCreator.length > 0) {
-        await base44.entities.User.update(suggestionCreator[0].id, {
-          points: (suggestionCreator[0].points || 1000) + 200
-        });
+      const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+      if (suggestionCreatorList.length > 0) {
+        const creatorId = suggestionCreatorList[0].id;
+        // Fetch fresh data to avoid race conditions
+        const freshUser = await base44.entities.User.filter({ id: creatorId }).then(u => u[0]);
+        if (freshUser) {
+          await base44.entities.User.update(freshUser.id, {
+            points: (freshUser.points || 1000) + 200
+          });
+        }
       }
     }
     

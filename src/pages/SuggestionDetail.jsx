@@ -137,12 +137,34 @@ export default function SuggestionDetail() {
         updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, {
           [vote === 'pro' ? 'proVotes' : 'conVotes']: (suggestion[vote === 'pro' ? 'proVotes' : 'conVotes'] || 0) + 1
         });
+
+        // Award +10 points to suggestion creator for each "pro" vote (only if gamification enabled)
+        if (vote === 'pro' && document.gamificationEnabled) {
+          const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+          if (suggestionCreatorList.length > 0) {
+            const suggestionCreator = suggestionCreatorList[0];
+            // Fetch fresh data to avoid race conditions
+            const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
+            if (freshUser) {
+              await base44.entities.User.update(freshUser.id, {
+                points: (freshUser.points || 1000) + 10
+              });
+            }
+          }
+        }
       }
 
       // בדיקה והפעלת אישור אוטומטי אם עברנו את הסף
       const { shouldAccept } = checkSuggestionConsensus(updatedSuggestion, document);
       if (shouldAccept) {
-        await autoAcceptSuggestion(updatedSuggestion, user.id);
+        await autoAcceptSuggestion(updatedSuggestion, user.id, document);
+        
+        // Award +50 points to voter if vote influenced acceptance (only if gamification enabled)
+        if (!userVote && vote === 'pro' && document.gamificationEnabled) {
+          await base44.auth.updateMe({
+            points: (user.points || 1000) + 50
+          });
+        }
       }
     },
     onSuccess: () => {
