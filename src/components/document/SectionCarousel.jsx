@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, ThumbsUp, ThumbsDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, ThumbsUp, ThumbsDown, Languages, Loader2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import { base44 } from "@/api/base44Client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import SectionDiff from "./SectionDiff";
 import VotesNeededCounter from "./VotesNeededCounter";
 import CommentsSection from "./CommentsSection";
@@ -26,7 +28,7 @@ export default function SectionCarousel({
   acceptedSuggestions,
   sectionIndex
 }) {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   
   // סדר הצגה: לפי דלתא קרובה ל-0, ואז כרונולוגי
   const sortedSuggestions = [...pendingSuggestions].sort((a, b) => {
@@ -48,6 +50,7 @@ export default function SectionCarousel({
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [showTranslated, setShowTranslated] = useState({});
   const currentView = allViews[currentIndex];
 
   // דפדוף מעגלי
@@ -61,6 +64,72 @@ export default function SectionCarousel({
 
   const isFirstView = currentIndex === 0;
   const isLastView = currentIndex === allViews.length - 1;
+
+  const queryClient = useQueryClient();
+
+  const languageNames = {
+    en: "English",
+    he: "עברית",
+    ar: "العربية"
+  };
+
+  const languagePrompts = {
+    en: "English",
+    he: "Hebrew",
+    ar: "Arabic"
+  };
+
+  const translateSuggestionMutation = useMutation({
+    mutationFn: async (suggestion) => {
+      const originalLanguage = suggestion.originalLanguage || 'he';
+      
+      // תרגום כותרת
+      const titlePrompt = `Translate the following HTML content to ${languagePrompts[language]}. Keep ALL HTML tags. Return ONLY the translated HTML:\n${suggestion.title}`;
+      const titleResult = await base44.integrations.Core.InvokeLLM({
+        prompt: titlePrompt,
+        add_context_from_internet: false,
+      });
+      const translatedTitle = (typeof titleResult === 'string' ? titleResult : titleResult.content || titleResult)
+        .replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+
+      // תרגום הסבר
+      let translatedExplanation = null;
+      if (suggestion.explanation) {
+        const explanationPrompt = `Translate the following HTML content to ${languagePrompts[language]}. Keep ALL HTML tags. Return ONLY the translated HTML:\n${suggestion.explanation}`;
+        const explanationResult = await base44.integrations.Core.InvokeLLM({
+          prompt: explanationPrompt,
+          add_context_from_internet: false,
+        });
+        translatedExplanation = (typeof explanationResult === 'string' ? explanationResult : explanationResult.content || explanationResult)
+          .replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+      }
+
+      // תרגום תוכן מוצע
+      const contentPrompt = `Translate the following HTML content to ${languagePrompts[language]}. Keep ALL HTML tags. Return ONLY the translated HTML:\n${suggestion.newContent}`;
+      const contentResult = await base44.integrations.Core.InvokeLLM({
+        prompt: contentPrompt,
+        add_context_from_internet: false,
+      });
+      const translatedContent = (typeof contentResult === 'string' ? contentResult : contentResult.content || contentResult)
+        .replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+
+      const newTranslations = {
+        ...(suggestion.translations || {}),
+        [language]: {
+          title: translatedTitle,
+          explanation: translatedExplanation,
+          newContent: translatedContent
+        }
+      };
+
+      await base44.entities.Suggestion.update(suggestion.id, {
+        translations: newTranslations
+      });
+
+      queryClient.invalidateQueries();
+      return newTranslations;
+    },
+  });
 
   return (
     <div id={`section-${section.id}`} className="group relative p-6 border-2 border-slate-300 rounded-lg hover:border-blue-400 hover:shadow-md transition-all bg-gradient-to-br from-white to-slate-50/30">
@@ -158,45 +227,79 @@ export default function SectionCarousel({
           // תצוגת הצעה - diff
           <>
             <div className="mb-3">
-              <TranslatableContent
-                content={currentView.data.title}
-                entity={currentView.data}
-                entityType="Suggestion"
-                renderContent={(content) => (
-                  <div className="text-sm font-semibold text-amber-900 mb-2">
-                    <DocumentTextContent content={content} />
-                  </div>
-                )}
-              />
-              {currentView.data.explanation && (
-                <TranslatableContent
-                  content={currentView.data.explanation}
-                  entity={currentView.data}
-                  entityType="Suggestion"
-                  renderContent={(content) => (
-                    <p className="text-sm text-slate-600 mb-3">
-                      <DocumentTextContent content={content} />
-                    </p>
-                  )}
+              <div className="text-sm font-semibold text-amber-900 mb-2">
+                <DocumentTextContent 
+                  content={
+                    showTranslated[currentView.data.id] && currentView.data.translations?.[language]
+                      ? currentView.data.translations[language].title || currentView.data.title
+                      : currentView.data.title
+                  } 
                 />
+              </div>
+              {currentView.data.explanation && (
+                <p className="text-sm text-slate-600 mb-3">
+                  <DocumentTextContent 
+                    content={
+                      showTranslated[currentView.data.id] && currentView.data.translations?.[language]
+                        ? currentView.data.translations[language].explanation || currentView.data.explanation
+                        : currentView.data.explanation
+                    }
+                  />
+                </p>
               )}
             </div>
             
             {currentView.data.originalContent ? (
               <SectionDiff
                 originalContent={currentView.data.originalContent}
-                newContent={currentView.data.newContent}
+                newContent={
+                  showTranslated[currentView.data.id] && currentView.data.translations?.[language]
+                    ? currentView.data.translations[language].newContent || currentView.data.newContent
+                    : currentView.data.newContent
+                }
               />
             ) : (
-              <TranslatableContent
-                content={currentView.data.newContent}
-                entity={currentView.data}
-                entityType="Suggestion"
-                className="prose prose-sm max-w-none p-3 bg-green-50 rounded border border-green-200"
-                renderContent={(content) => (
-                  <DocumentTextContent content={content} />
+              <div className="prose prose-sm max-w-none p-3 bg-green-50 rounded border border-green-200">
+                <DocumentTextContent 
+                  content={
+                    showTranslated[currentView.data.id] && currentView.data.translations?.[language]
+                      ? currentView.data.translations[language].newContent || currentView.data.newContent
+                      : currentView.data.newContent
+                  }
+                />
+              </div>
+            )}
+
+            {/* כפתור תרגום מרכזי */}
+            {currentView.data.originalLanguage !== language && (
+              <div className="mt-3 pt-3 border-t border-slate-200">
+                {translateSuggestionMutation.isPending ? (
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>{t('translating')}</span>
+                  </div>
+                ) : !showTranslated[currentView.data.id] && !currentView.data.translations?.[language] ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => translateSuggestionMutation.mutate(currentView.data)}
+                    className="text-blue-600 hover:text-blue-700"
+                  >
+                    <Languages className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    תרגם ל{languageNames[language]}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowTranslated(prev => ({ ...prev, [currentView.data.id]: !prev[currentView.data.id] }))}
+                    className="text-slate-600 hover:text-slate-700"
+                  >
+                    <Languages className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {showTranslated[currentView.data.id] ? `${languageNames[currentView.data.originalLanguage || 'he']} (מקור)` : `${languageNames[language]} (מתורגם)`}
+                  </Button>
                 )}
-              />
+              </div>
             )}
 
             {/* כפתורי הצבעה והערות */}
