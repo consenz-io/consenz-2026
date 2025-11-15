@@ -1,9 +1,6 @@
 import React from "react";
-import { useLanguage } from "@/components/LanguageContext";
 
 export default function DocumentTextContent({ content, className = "" }) {
-  const { isRTL } = useLanguage();
-  
   return (
     <div 
       className={`document-content ${className}`}
@@ -13,9 +10,7 @@ export default function DocumentTextContent({ content, className = "" }) {
         fontSize: "1.125rem",
         lineHeight: "1.8",
         letterSpacing: "0.01em",
-        fontWeight: "400",
-        direction: isRTL ? "rtl" : "ltr",
-        textAlign: isRTL ? "right" : "left"
+        fontWeight: "400"
       }}
     />
   );
