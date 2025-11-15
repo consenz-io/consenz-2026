@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Settings, ArrowLeft, Save, Trash2, UserPlus, X, AlertCircle, CheckCircle } from "lucide-react";
+import { Settings, ArrowLeft, Save, Trash2, UserPlus, X, AlertCircle, CheckCircle, Users, Search, Ban, Key } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DocumentAdmin() {
@@ -22,6 +22,7 @@ export default function DocumentAdmin() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
@@ -54,6 +55,13 @@ export default function DocumentAdmin() {
       return users.filter(u => userIds.includes(u.id));
     },
     enabled: !!documentId && isAdmin,
+    initialData: [],
+  });
+
+  const { data: allUsers } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list('-created_date'),
+    enabled: user?.role === 'admin',
     initialData: [],
   });
 
@@ -190,6 +198,30 @@ export default function DocumentAdmin() {
     }
     addAdminMutation.mutate(newAdminEmail.trim());
   };
+
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ userId, data }) => {
+      return await base44.entities.User.update(userId, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      setSuccess("User updated successfully!");
+      setTimeout(() => setSuccess(null), 3000);
+    },
+    onError: (err) => {
+      setError(err.message || "Failed to update user");
+      setTimeout(() => setError(null), 5000);
+    },
+  });
+
+  const filteredUsers = allUsers.filter(u => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      u.full_name?.toLowerCase().includes(query) ||
+      u.email?.toLowerCase().includes(query)
+    );
+  });
 
   if (docLoading || adminLoading) {
     return (
@@ -396,6 +428,133 @@ export default function DocumentAdmin() {
             </div>
           </CardContent>
         </Card>
+
+        {user?.role === 'admin' && (
+          <Card className="bg-white border-slate-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                System User Management
+              </CardTitle>
+              <CardDescription>Manage all users in the system</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Search className="w-4 h-4 text-slate-400" />
+                  <Input
+                    placeholder="Search users by name or email..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1"
+                  />
+                </div>
+
+                <div className="border rounded-lg divide-y max-h-[500px] overflow-y-auto">
+                  {filteredUsers.map((targetUser) => (
+                    <div 
+                      key={targetUser.id}
+                      className="p-4 hover:bg-slate-50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3 flex-1">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
+                            {targetUser.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-slate-900">{targetUser.full_name}</p>
+                              <Badge variant="outline" className={
+                                targetUser.role === 'admin' 
+                                  ? 'bg-purple-100 text-purple-800 border-purple-200'
+                                  : 'bg-blue-100 text-blue-800 border-blue-200'
+                              }>
+                                {targetUser.role || 'user'}
+                              </Badge>
+                              {targetUser.blocked && (
+                                <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">
+                                  Blocked
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-slate-600">{targetUser.email}</p>
+                            <p className="text-xs text-slate-400 mt-1">
+                              Points: {targetUser.points || 1000} | Joined: {new Date(targetUser.created_date).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {targetUser.id !== user.id && (
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={targetUser.role || 'user'}
+                              onValueChange={(value) => {
+                                if (confirm(`Change ${targetUser.full_name}'s role to ${value}?`)) {
+                                  updateUserMutation.mutate({
+                                    userId: targetUser.id,
+                                    data: { role: value }
+                                  });
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-28">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="user">User</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
+                              </SelectContent>
+                            </Select>
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const action = targetUser.blocked ? 'unblock' : 'block';
+                                if (confirm(`${action} ${targetUser.full_name}?`)) {
+                                  updateUserMutation.mutate({
+                                    userId: targetUser.id,
+                                    data: { blocked: !targetUser.blocked }
+                                  });
+                                }
+                              }}
+                              className={targetUser.blocked ? 'text-green-600 border-green-300' : 'text-red-600 border-red-300'}
+                            >
+                              <Ban className="w-4 h-4" />
+                            </Button>
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const newPassword = prompt('Enter new password for ' + targetUser.full_name);
+                                if (newPassword && newPassword.length >= 6) {
+                                  updateUserMutation.mutate({
+                                    userId: targetUser.id,
+                                    data: { password: newPassword }
+                                  });
+                                  alert('Password updated successfully!');
+                                } else if (newPassword) {
+                                  alert('Password must be at least 6 characters');
+                                }
+                              }}
+                            >
+                              <Key className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="text-sm text-slate-600 text-center pt-2">
+                  Showing {filteredUsers.length} of {allUsers.length} users
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="bg-red-50 border-red-200">
           <CardHeader>
