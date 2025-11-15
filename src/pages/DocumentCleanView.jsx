@@ -387,11 +387,16 @@ ${text}`;
                 <div key={topic.id} className="space-y-6 break-inside-avoid">
                   {/* Topic Title */}
                   <div className="border-b border-slate-300 pb-2 mb-6">
-                    <h2 className="text-2xl font-bold text-slate-800">
-                      {topicIndex + 1}. {(topic.originalLanguage || 'he') !== language && showTranslatedTopics[topic.id]
-                        ? (translatedTopics[topic.id] || topic.translations?.[language] || topic.title)
-                        : topic.title}
-                    </h2>
+                    <Link 
+                      to={topicSections.length > 0 ? `${createPageUrl("SectionHistory")}?id=${topicSections[0].id}` : '#'}
+                      className={topicSections.length > 0 ? "cursor-pointer hover:opacity-80 transition-opacity" : "cursor-default"}
+                    >
+                      <h2 className="text-2xl font-bold text-slate-800">
+                        {topicIndex + 1}. {(topic.originalLanguage || 'he') !== language && showTranslatedTopics[topic.id]
+                          ? (translatedTopics[topic.id] || topic.translations?.[language] || topic.title)
+                          : topic.title}
+                      </h2>
+                    </Link>
                     {(topic.originalLanguage || 'he') !== language && (
                       <Button
                         variant="ghost"
