@@ -1,15 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Printer, Globe, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 
 export default function DocumentCleanView() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
+  const queryClient = useQueryClient();
+  const [translatedSections, setTranslatedSections] = useState({});
+  const [translatingAll, setTranslatingAll] = useState(false);
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
 
@@ -62,6 +65,63 @@ export default function DocumentCleanView() {
     window.print();
   };
 
+  const translateSectionMutation = useMutation({
+    mutationFn: async ({ section, targetLanguage }) => {
+      const languageNames = { en: 'English', he: 'Hebrew', ar: 'Arabic' };
+      const targetLangName = languageNames[targetLanguage];
+
+      const prompt = `Translate the following HTML content to ${targetLangName}. 
+Keep all HTML tags intact and only translate the text content.
+Maintain the same structure and formatting.
+
+Content to translate:
+${section.content}`;
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: prompt,
+      });
+
+      const translatedContent = typeof result === 'string' ? result : result.content || result;
+
+      // Update section with translation
+      const updatedTranslations = { ...section.translations, [targetLanguage]: translatedContent };
+      await base44.entities.Section.update(section.id, {
+        translations: updatedTranslations
+      });
+
+      return { sectionId: section.id, translatedContent };
+    },
+    onSuccess: (data) => {
+      setTranslatedSections(prev => ({
+        ...prev,
+        [data.sectionId]: data.translatedContent
+      }));
+      queryClient.invalidateQueries({ queryKey: ['sections', documentId] });
+    },
+  });
+
+  const translateAllSections = async () => {
+    setTranslatingAll(true);
+    for (const section of sections) {
+      if (section.originalLanguage !== language) {
+        if (!section.translations?.[language]) {
+          await translateSectionMutation.mutateAsync({ section, targetLanguage: language });
+        } else {
+          setTranslatedSections(prev => ({
+            ...prev,
+            [section.id]: section.translations[language]
+          }));
+        }
+      }
+    }
+    setTranslatingAll(false);
+  };
+
+  const needsTranslation = sections.some(s => s.originalLanguage !== language);
+  const allTranslated = sections.every(s => 
+    s.originalLanguage === language || translatedSections[s.id] || s.translations?.[language]
+  );
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header - Hidden on print */}
@@ -73,10 +133,32 @@ export default function DocumentCleanView() {
               {t('document')}
             </Button>
           </Link>
-          <Button variant="outline" size="sm" onClick={handlePrint}>
-            <Printer className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-            הדפס
-          </Button>
+          <div className="flex items-center gap-2">
+            {needsTranslation && !allTranslated && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={translateAllSections}
+                disabled={translatingAll}
+              >
+                {translatingAll ? (
+                  <>
+                    <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
+                    מתרגם...
+                  </>
+                ) : (
+                  <>
+                    <Globe className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    תרגם הכל
+                  </>
+                )}
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={handlePrint}>
+              <Printer className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              הדפס
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -116,19 +198,55 @@ export default function DocumentCleanView() {
                     <p className="text-slate-500 italic pr-4">{t('noSectionsYet')}</p>
                   ) : (
                     <div className="space-y-6">
-                      {topicSections.map((section, sectionIndex) => (
-                        <div key={section.id} className="break-inside-avoid">
-                          <div className="flex gap-4">
-                            <span className="text-slate-500 font-medium min-w-[2rem]">
-                              {topicIndex + 1}.{sectionIndex + 1}
-                            </span>
-                            <div 
-                              className="flex-1 text-slate-700 leading-relaxed prose prose-slate max-w-none"
-                              dangerouslySetInnerHTML={{ __html: section.content }}
-                            />
+                      {topicSections.map((section, sectionIndex) => {
+                        const needsTranslation = section.originalLanguage !== language;
+                        const hasTranslation = translatedSections[section.id] || section.translations?.[language];
+                        const displayContent = needsTranslation && hasTranslation 
+                          ? (translatedSections[section.id] || section.translations[language])
+                          : section.content;
+
+                        return (
+                          <div key={section.id} className="break-inside-avoid">
+                            <div className="flex gap-4 group">
+                              <span className="text-slate-500 font-medium min-w-[2rem]">
+                                {topicIndex + 1}.{sectionIndex + 1}
+                              </span>
+                              <div className="flex-1">
+                                <div 
+                                  className="text-slate-700 leading-relaxed prose prose-slate max-w-none"
+                                  dangerouslySetInnerHTML={{ __html: displayContent }}
+                                />
+                                {needsTranslation && !hasTranslation && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="mt-2 text-blue-600 hover:text-blue-700 print:hidden opacity-0 group-hover:opacity-100 transition-opacity"
+                                    onClick={() => translateSectionMutation.mutate({ section, targetLanguage: language })}
+                                    disabled={translateSectionMutation.isPending}
+                                  >
+                                    {translateSectionMutation.isPending ? (
+                                      <>
+                                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                        מתרגם...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Globe className="w-3 h-3 mr-1" />
+                                        תרגם סעיף
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                                {needsTranslation && hasTranslation && (
+                                  <div className="mt-2 text-xs text-slate-500 italic print:hidden">
+                                    (תורגם מ-{section.originalLanguage === 'en' ? 'English' : section.originalLanguage === 'he' ? 'עברית' : 'العربية'})
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
