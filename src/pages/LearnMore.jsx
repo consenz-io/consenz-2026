@@ -277,14 +277,14 @@ export default function LearnMore() {
 
         <div className="grid md:grid-cols-5 gap-4">
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-            <CardContent className="p-6 text-center">
+            <CardContent className={`p-6 ${isRTL ? 'text-center' : 'text-center'}`}>
               <div className="w-12 h-12 mx-auto mb-4 bg-blue-600 rounded-full flex items-center justify-center">
                 <FileText className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-bold text-slate-900 mb-2">
+              <h3 className={`font-bold text-slate-900 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {isRTL ? "יצירה" : "Create"}
               </h3>
-              <p className="text-sm text-slate-600">
+              <p className={`text-sm text-slate-600 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {isRTL ? "יצירת מסמך ותוכן ראשוני" : "Create document and initial content"}
               </p>
             </CardContent>
@@ -295,14 +295,14 @@ export default function LearnMore() {
           </div>
 
           <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-            <CardContent className="p-6 text-center">
+            <CardContent className={`p-6 ${isRTL ? 'text-center' : 'text-center'}`}>
               <div className="w-12 h-12 mx-auto mb-4 bg-purple-600 rounded-full flex items-center justify-center">
                 <Edit3 className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-bold text-slate-900 mb-2">
+              <h3 className={`font-bold text-slate-900 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {isRTL ? "הצעה" : "Suggest"}
               </h3>
-              <p className="text-sm text-slate-600">
+              <p className={`text-sm text-slate-600 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {isRTL ? "הצעת שינויים למסמך" : "Propose changes to document"}
               </p>
             </CardContent>
@@ -313,14 +313,14 @@ export default function LearnMore() {
           </div>
 
           <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-            <CardContent className="p-6 text-center">
+            <CardContent className={`p-6 ${isRTL ? 'text-center' : 'text-center'}`}>
               <div className="w-12 h-12 mx-auto mb-4 bg-green-600 rounded-full flex items-center justify-center">
                 <Vote className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-bold text-slate-900 mb-2">
+              <h3 className={`font-bold text-slate-900 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {isRTL ? "הצבעה" : "Vote"}
               </h3>
-              <p className="text-sm text-slate-600">
+              <p className={`text-sm text-slate-600 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {isRTL ? "הצבעה בעד או נגד" : "Vote pro or con"}
               </p>
             </CardContent>
@@ -331,14 +331,14 @@ export default function LearnMore() {
           </div>
 
           <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-            <CardContent className="p-6 text-center">
+            <CardContent className={`p-6 ${isRTL ? 'text-center' : 'text-center'}`}>
               <div className="w-12 h-12 mx-auto mb-4 bg-orange-600 rounded-full flex items-center justify-center">
                 <MessageSquare className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-bold text-slate-900 mb-2">
+              <h3 className={`font-bold text-slate-900 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {isRTL ? "דיון" : "Discuss"}
               </h3>
-              <p className="text-sm text-slate-600">
+              <p className={`text-sm text-slate-600 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {isRTL ? "טיעונים ותגובות" : "Arguments and comments"}
               </p>
             </CardContent>
@@ -349,14 +349,14 @@ export default function LearnMore() {
           </div>
 
           <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200">
-            <CardContent className="p-6 text-center">
+            <CardContent className={`p-6 ${isRTL ? 'text-center' : 'text-center'}`}>
               <div className="w-12 h-12 mx-auto mb-4 bg-indigo-600 rounded-full flex items-center justify-center">
                 <CheckCircle className="w-6 h-6 text-white" />
               </div>
-              <h3 className="font-bold text-slate-900 mb-2">
+              <h3 className={`font-bold text-slate-900 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {isRTL ? "קבלה" : "Accept"}
               </h3>
-              <p className="text-sm text-slate-600">
+              <p className={`text-sm text-slate-600 ${isRTL ? 'text-right' : 'text-left'}`}>
                 {isRTL ? "אישור אוטומטי" : "Auto approval"}
               </p>
             </CardContent>
@@ -475,7 +475,7 @@ export default function LearnMore() {
                 {isRTL ? "דוגמה מספרית" : "Numerical Example"}
               </h4>
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className={`p-4 bg-blue-50 rounded-lg border border-blue-200 ${isRTL ? 'text-right' : 'text-left'}`}>
                   <p className="text-sm font-medium text-blue-900 mb-2">
                     {isRTL ? "הצעה 1 התקבלה" : "Suggestion 1 Accepted"}
                   </p>
@@ -494,7 +494,7 @@ export default function LearnMore() {
                   </div>
                 </div>
 
-                <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                <div className={`p-4 bg-purple-50 rounded-lg border border-purple-200 ${isRTL ? 'text-right' : 'text-left'}`}>
                   <p className="text-sm font-medium text-purple-900 mb-2">
                     {isRTL ? "הצעה 2 התקבלה" : "Suggestion 2 Accepted"}
                   </p>
@@ -514,7 +514,7 @@ export default function LearnMore() {
                 </div>
               </div>
 
-              <div className="mt-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
+              <div className={`mt-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200 ${isRTL ? 'text-right' : 'text-left'}`}>
                 <p className="font-bold text-indigo-900 mb-2">
                   {isRTL ? "הסף החדש" : "New Threshold"}
                 </p>
