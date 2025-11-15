@@ -12,18 +12,31 @@ import {
 import { useLanguage } from "@/components/LanguageContext";
 
 export default function LearnMore() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const [activeStep, setActiveStep] = useState(0);
+
+  const getLocalizedText = (en, he, ar) => {
+    if (language === 'ar') return ar;
+    if (language === 'he') return he;
+    return en;
+  };
 
   const steps = [
     {
-      title: isRTL ? "יצירת מסמך" : "Create a Document",
-      description: isRTL 
-        ? "התחל על ידי יצירת מסמך שיתופי חדש. הגדר את הנושאים העיקריים והסעיפים הראשוניים."
-        : "Start by creating a new collaborative document. Define main topics and initial sections.",
+      title: getLocalizedText("Create a Document", "יצירת מסמך", "إنشاء وثيقة"),
+      description: getLocalizedText(
+        "Start by creating a new collaborative document. Define main topics and initial sections.",
+        "התחל על ידי יצירת מסמך שיתופי חדש. הגדר את הנושאים העיקריים והסעיפים הראשוניים.",
+        "ابدأ بإنشاء وثيقة تعاونية جديدة. حدد المواضيع الرئيسية والأقسام الأولية."
+      ),
       icon: FileText,
       color: "from-blue-500 to-indigo-500",
-      steps: isRTL ? [
+      steps: language === 'ar' ? [
+        "انقر على 'وثيقة جديدة'",
+        "أدخل العنوان واختر إعدادات الخصوصية",
+        "أضف مواضيع وأقسام أولية",
+        "انشر الوثيقة"
+      ] : language === 'he' ? [
         "לחץ על 'מסמך חדש'",
         "הזן כותרת ובחר הגדרות פרטיות",
         "הוסף נושאים וסעיפים ראשוניים",
@@ -36,15 +49,23 @@ export default function LearnMore() {
       ]
     },
     {
-      title: isRTL ? "הצעת שינויים" : "Suggest Changes",
-      description: isRTL
-        ? "כל משתמש יכול להציע שינויים למסמך - עריכת סעיפים קיימים או הוספת סעיפים חדשים."
-        : "Any user can suggest changes to the document - editing existing sections or adding new ones.",
+      title: getLocalizedText("Suggest Changes", "הצעת שינויים", "اقتراح تغييرات"),
+      description: getLocalizedText(
+        "Any user can suggest changes to the document - editing existing sections or adding new ones.",
+        "כל משתמש יכול להציע שינויים למסמך - עריכת סעיפים קיימים או הוספת סעיפים חדשים.",
+        "يمكن لأي مستخدم اقتراح تغييرات على الوثيقة - تحرير الأقسام الموجودة أو إضافة أقسام جديدة."
+      ),
       icon: Edit3,
       color: "from-purple-500 to-pink-500",
-      steps: isRTL ? [
+      steps: language === 'ar' ? [
+        "انقر على 'اقتراح جديد'",
+        "اختر بين تحرير قسم موجود أو إضافة قسم جديد",
+        "اكتب المحتوى المقترح",
+        "أضف شرحًا لسبب الحاجة لهذا التغيير",
+        "أرسل الاقتراح"
+      ] : language === 'he' ? [
         "לחץ על 'הצעה חדשה'",
-        "בחר בין עריכת סעיף קיים להוספת סעיף חדש",
+        "בחר بين עריכת סעיף קיים להוספת סעיף חדש",
         "כתוב את התוכן המוצע",
         "הוסף הסבר מדוע השינוי נדרש",
         "שלח את ההצעה"
@@ -57,13 +78,21 @@ export default function LearnMore() {
       ]
     },
     {
-      title: isRTL ? "הצבעה על הצעות" : "Vote on Suggestions",
-      description: isRTL
-        ? "המשתמשים מצביעים על הצעות - בעד או נגד. ההצעה עוברת כאשר היא עוברת את סף הקונצנזוס."
-        : "Users vote on suggestions - pro or con. The suggestion passes when it reaches the consensus threshold.",
+      title: getLocalizedText("Vote on Suggestions", "הצבעה על הצעות", "التصويت على المقترحات"),
+      description: getLocalizedText(
+        "Users vote on suggestions - pro or con. The suggestion passes when it reaches the consensus threshold.",
+        "המשתמשים מצביעים על הצעות - בעד או נגד. ההצעה עוברת כאשר היא עוברת את סף הקונצנזוס.",
+        "يصوت المستخدمون على المقترحات - مع أو ضد. يتم تمرير المقترح عندما يصل إلى عتبة الإجماع."
+      ),
       icon: Vote,
       color: "from-green-500 to-teal-500",
-      steps: isRTL ? [
+      steps: language === 'ar' ? [
+        "راجع المقترحات المعلقة",
+        "اقرأ المحتوى المقترح والشرح",
+        "صوت 'مع' إذا كنت تدعمه",
+        "صوت 'ضد' إذا كنت تعارضه",
+        "يتم قبول المقترح تلقائيًا إذا تجاوز العتبة"
+      ] : language === 'he' ? [
         "עיין בהצעות הממתינות",
         "קרא את התוכן המוצע וההסבר",
         "הצבע 'בעד' אם אתה תומך",
@@ -78,13 +107,20 @@ export default function LearnMore() {
       ]
     },
     {
-      title: isRTL ? "דיון ותגובות" : "Discussion & Comments",
-      description: isRTL
-        ? "השתתף בדיונים, הוסף טיעונים בעד ונגד, והגב לתגובות של משתמשים אחרים."
-        : "Participate in discussions, add pro and con arguments, and reply to other users' comments.",
+      title: getLocalizedText("Discussion & Comments", "דיון ותגובות", "النقاش والتعليقات"),
+      description: getLocalizedText(
+        "Participate in discussions, add pro and con arguments, and reply to other users' comments.",
+        "השתתף בדיונים, הוסף טיעונים בעד ונגד, והגב לתגובות של משתמשים אחרים.",
+        "شارك في النقاشات، أضف حججًا مع وضد، ورد على تعليقات المستخدمين الآخرين."
+      ),
       icon: MessageSquare,
       color: "from-orange-500 to-red-500",
-      steps: isRTL ? [
+      steps: language === 'ar' ? [
+        "قم بالتمرير لأسفل في صفحة المقترح",
+        "أضف حجة مع أو ضد",
+        "رد على حجج الآخرين",
+        "أضف تعليقات على أقسام الوثيقة"
+      ] : language === 'he' ? [
         "גלול למטה בעמוד ההצעה",
         "הוסף טיעון בעד או נגד",
         "הגב לטיעונים של אחרים",
@@ -97,13 +133,21 @@ export default function LearnMore() {
       ]
     },
     {
-      title: isRTL ? "קונצנזוס דינמי" : "Dynamic Consensus",
-      description: isRTL
-        ? "האלגוריתם מחשב סף קונצנזוס דינמי על בסיס היסטוריית ההצעות שהתקבלו במסמך."
-        : "The algorithm calculates a dynamic consensus threshold based on the history of accepted suggestions.",
+      title: getLocalizedText("Dynamic Consensus", "קונצנזוס דינמי", "الإجماع الديناميكي"),
+      description: getLocalizedText(
+        "The algorithm calculates a dynamic consensus threshold based on the history of accepted suggestions.",
+        "האלגוריתם מחשב סף קונצנזוס דינמי על בסיס היסטוריית ההצעות שהתקבלו במסמך.",
+        "تحسب الخوارزمية عتبة إجماع ديناميكية بناءً على تاريخ المقترحات المقبولة."
+      ),
       icon: TrendingUp,
       color: "from-indigo-500 to-purple-500",
-      steps: isRTL ? [
+      steps: language === 'ar' ? [
+        "تبدأ العتبة بقيمة افتراضية",
+        "كل مقترح مقبول يؤثر على العتبة",
+        "يتم تحديث العتبة تلقائيًا",
+        "المقترحات ذات الإجماع الأعلى تخفض العتبة",
+        "يتكيف النظام مع المجتمع"
+      ] : language === 'he' ? [
         "הסף מתחיל בערך ברירת מחדל",
         "כל הצעה שמתקבלת משפיעה על הסף",
         "הסף מתעדכן באופן אוטומטי",
@@ -122,45 +166,57 @@ export default function LearnMore() {
   const features = [
     {
       icon: Users,
-      title: isRTL ? "שיתוף פעולה דמוקרטי" : "Democratic Collaboration",
-      description: isRTL 
-        ? "כל משתמש יכול להציע שינויים והקהילה מחליטה יחד"
-        : "Every user can suggest changes and the community decides together"
+      title: getLocalizedText("Democratic Collaboration", "שיתוף פעולה דמוקרטי", "التعاون الديمقراطي"),
+      description: getLocalizedText(
+        "Every user can suggest changes and the community decides together",
+        "כל משתמש יכול להציע שינויים והקהילה מחליטה יחד",
+        "يمكن لكل مستخدم اقتراح تغييرات ويقرر المجتمع معًا"
+      )
     },
     {
       icon: TrendingUp,
-      title: isRTL ? "אלגוריתם קונצנזוס חכם" : "Smart Consensus Algorithm",
-      description: isRTL
-        ? "סף דינמי שמתאים את עצמו להיסטוריית ההצבעות"
-        : "Dynamic threshold that adapts to voting history"
+      title: getLocalizedText("Smart Consensus Algorithm", "אלגוריתם קונצנזוס חכם", "خوارزمية إجماع ذكية"),
+      description: getLocalizedText(
+        "Dynamic threshold that adapts to voting history",
+        "סף דינמי שמתאים את עצמו להיסטוריית ההצבעות",
+        "عتبة ديناميكية تتكيف مع تاريخ التصويت"
+      )
     },
     {
       icon: CheckCircle,
-      title: isRTL ? "אישור אוטומטי" : "Automatic Approval",
-      description: isRTL
-        ? "הצעות מאושרות אוטומטית כשהן עוברות את הסף"
-        : "Suggestions are auto-approved when they pass the threshold"
+      title: getLocalizedText("Automatic Approval", "אישור אוטומטי", "الموافقة التلقائية"),
+      description: getLocalizedText(
+        "Suggestions are auto-approved when they pass the threshold",
+        "הצעות מאושרות אוטומטית כשהן עוברות את הסף",
+        "يتم الموافقة على المقترحات تلقائيًا عند تجاوز العتبة"
+      )
     },
     {
       icon: MessageSquare,
-      title: isRTL ? "דיון מובנה" : "Structured Discussion",
-      description: isRTL
-        ? "טיעונים בעד ונגד, תגובות ותשובות למסמך ולהצעות"
-        : "Pro and con arguments, comments and replies on documents and suggestions"
+      title: getLocalizedText("Structured Discussion", "דיון מובנה", "نقاش منظم"),
+      description: getLocalizedText(
+        "Pro and con arguments, comments and replies on documents and suggestions",
+        "טיעונים בעד ונגד, תגובות ותשובות למסמך ולהצעות",
+        "حجج مع وضد، تعليقات وردود على الوثائق والمقترحات"
+      )
     },
     {
       icon: Clock,
-      title: isRTL ? "ניהול זמן הצבעה" : "Voting Time Management",
-      description: isRTL
-        ? "הגדר פרק זמן להצבעה על הצעות"
-        : "Set time period for voting on suggestions"
+      title: getLocalizedText("Voting Time Management", "ניהול זמן הצבעה", "إدارة وقت التصويت"),
+      description: getLocalizedText(
+        "Set time period for voting on suggestions",
+        "הגדר פרק זמן להצבעה על הצעות",
+        "حدد فترة زمنية للتصويت على المقترحات"
+      )
     },
     {
       icon: FileText,
-      title: isRTL ? "היסטוריית גרסאות" : "Version History",
-      description: isRTL
-        ? "מעקב אחר כל השינויים במסמך עם אפשרות שחזור"
-        : "Track all document changes with restore capability"
+      title: getLocalizedText("Version History", "היסטוריית גרסאות", "سجل الإصدارات"),
+      description: getLocalizedText(
+        "Track all document changes with restore capability",
+        "מעקב אחר כל השינויים במסמך עם אפשרות שחזור",
+        "تتبع جميع تغييرات الوثيقة مع إمكانية الاستعادة"
+      )
     }
   ];
 
@@ -173,18 +229,20 @@ export default function LearnMore() {
           <Link to={createPageUrl("Home")}>
             <Button variant="outline" size="sm" className="mb-6">
               <ArrowLeft className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {isRTL ? "חזרה לדף הבית" : "Back to Home"}
+              {getLocalizedText("Back to Home", "חזרה לדף הבית", "العودة إلى الصفحة الرئيسية")}
             </Button>
           </Link>
           
           <div className={`text-center space-y-6 ${isRTL ? 'rtl' : 'ltr'}`}>
             <h1 className="text-5xl md:text-6xl font-bold text-slate-900">
-              {isRTL ? "איך Consenz עובד?" : "How Consenz Works?"}
+              {getLocalizedText("How Consenz Works?", "איך Consenz עובד?", "كيف يعمل Consenz؟")}
             </h1>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-              {isRTL 
-                ? "פלטפורמה לשיתוף פעולה דמוקרטי בניסוח מסמכי מדיניות, חוקות והחלטות באמצעעת אלגוריתמי קונצנזוס דינמיים"
-                : "A platform for democratic collaboration in drafting policy documents, constitutions, and decisions using dynamic consensus algorithms"}
+              {getLocalizedText(
+                "A platform for democratic collaboration in drafting policy documents, constitutions, and decisions using dynamic consensus algorithms",
+                "פלטפורמה לשיתוף פעולה דמוקרטי בניסוח מסמכי מדיניות, חוקות והחלטות באמצעעת אלגוריתמי קונצנזוס דינמיים",
+                "منصة للتعاون الديمقراطي في صياغة وثائق السياسة والدساتير والقرارات باستخدام خوارزميات إجماع ديناميكية"
+              )}
             </p>
           </div>
         </div>
@@ -194,10 +252,14 @@ export default function LearnMore() {
       <section className={`max-w-7xl mx-auto px-6 py-16 ${isRTL ? 'rtl' : 'ltr'}`}>
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-slate-900 mb-4">
-            {isRTL ? "מדריך שלב אחר שלב" : "Step-by-Step Guide"}
+            {getLocalizedText("Step-by-Step Guide", "מדריך שלב אחר שלב", "دليل خطوة بخطوة")}
           </h2>
           <p className="text-slate-600">
-            {isRTL ? "למד איך להשתמש במערכת בחמישה שלבים פשוטים" : "Learn how to use the system in five simple steps"}
+            {getLocalizedText(
+              "Learn how to use the system in five simple steps",
+              "למד איך להשתמש במערכת בחמישה שלבים פשוטים",
+              "تعلم كيفية استخدام النظام في خمس خطوات بسيطة"
+            )}
           </p>
         </div>
 
@@ -251,13 +313,13 @@ export default function LearnMore() {
               >
                 {isRTL ? (
                   <>
-                    <span>הקודם</span>
+                    <span>{getLocalizedText("Previous", "הקודם", "السابق")}</span>
                     <ChevronRight className="w-4 h-4" />
                   </>
                 ) : (
                   <>
                     <ArrowLeft className="w-4 h-4" />
-                    <span>Previous</span>
+                    <span>{getLocalizedText("Previous", "הקודם", "السابق")}</span>
                   </>
                 )}
               </Button>
@@ -269,12 +331,12 @@ export default function LearnMore() {
               >
                 {isRTL ? (
                   <>
-                    <span>הבא</span>
+                    <span>{getLocalizedText("Next", "הבא", "التالي")}</span>
                     <ArrowLeft className="w-4 h-4" />
                   </>
                 ) : (
                   <>
-                    <span>Next</span>
+                    <span>{getLocalizedText("Next", "הבא", "التالي")}</span>
                     <ChevronRight className="w-4 h-4" />
                   </>
                 )}
@@ -288,10 +350,14 @@ export default function LearnMore() {
       <section className={`max-w-7xl mx-auto px-6 py-16 ${isRTL ? 'rtl' : 'ltr'}`}>
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-slate-900 mb-4">
-            {isRTL ? "תהליך העבודה" : "The Workflow"}
+            {getLocalizedText("The Workflow", "תהליך העבודה", "سير العمل")}
           </h2>
           <p className="text-slate-600">
-            {isRTL ? "הבנה ויזואלית של תהליך הקונצנזוס" : "Visual understanding of the consensus process"}
+            {getLocalizedText(
+              "Visual understanding of the consensus process",
+              "הבנה ויזואלית של תהליך הקונצנזוס",
+              "فهم بصري لعملية الإجماع"
+            )}
           </p>
         </div>
 
@@ -302,10 +368,10 @@ export default function LearnMore() {
                 <FileText className="w-6 h-6 text-white" />
               </div>
               <h3 className={`font-bold text-slate-900 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {isRTL ? "יצירה" : "Create"}
+                {getLocalizedText("Create", "יצירה", "إنشاء")}
               </h3>
               <p className={`text-sm text-slate-600 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {isRTL ? "יצירת מסמך ותוכן ראשוני" : "Create document and initial content"}
+                {getLocalizedText("Create document and initial content", "יצירת מסמך ותוכן ראשוני", "إنشاء وثيقة ومحتوى أولي")}
               </p>
             </CardContent>
           </Card>
@@ -320,10 +386,10 @@ export default function LearnMore() {
                 <Edit3 className="w-6 h-6 text-white" />
               </div>
               <h3 className={`font-bold text-slate-900 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {isRTL ? "הצעה" : "Suggest"}
+                {getLocalizedText("Suggest", "הצעה", "اقتراح")}
               </h3>
               <p className={`text-sm text-slate-600 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {isRTL ? "הצעת שינויים למסמך" : "Propose changes to document"}
+                {getLocalizedText("Propose changes to document", "הצעת שינויים למסמך", "اقتراح تغييرات على الوثيقة")}
               </p>
             </CardContent>
           </Card>
@@ -338,10 +404,10 @@ export default function LearnMore() {
                 <Vote className="w-6 h-6 text-white" />
               </div>
               <h3 className={`font-bold text-slate-900 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {isRTL ? "הצבעה" : "Vote"}
+                {getLocalizedText("Vote", "הצבעה", "تصويت")}
               </h3>
               <p className={`text-sm text-slate-600 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {isRTL ? "הצבעה בעד או נגד" : "Vote pro or con"}
+                {getLocalizedText("Vote pro or con", "הצבעה בעד או נגד", "التصويت مع أو ضد")}
               </p>
             </CardContent>
           </Card>
@@ -356,10 +422,10 @@ export default function LearnMore() {
                 <MessageSquare className="w-6 h-6 text-white" />
               </div>
               <h3 className={`font-bold text-slate-900 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {isRTL ? "דיון" : "Discuss"}
+                {getLocalizedText("Discuss", "דיון", "نقاش")}
               </h3>
               <p className={`text-sm text-slate-600 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {isRTL ? "טיעונים ותגובות" : "Arguments and comments"}
+                {getLocalizedText("Arguments and comments", "טיעונים ותגובות", "حجج وتعليقات")}
               </p>
             </CardContent>
           </Card>
@@ -374,10 +440,10 @@ export default function LearnMore() {
                 <CheckCircle className="w-6 h-6 text-white" />
               </div>
               <h3 className={`font-bold text-slate-900 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {isRTL ? "קבלה" : "Accept"}
+                {getLocalizedText("Accept", "קבלה", "قبول")}
               </h3>
               <p className={`text-sm text-slate-600 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {isRTL ? "אישור אוטומטי" : "Auto approval"}
+                {getLocalizedText("Auto approval", "אישור אוטומטי", "الموافقة التلقائية")}
               </p>
             </CardContent>
           </Card>
@@ -388,10 +454,10 @@ export default function LearnMore() {
       <section className={`max-w-7xl mx-auto px-6 py-16 ${isRTL ? 'rtl' : 'ltr'}`}>
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-slate-900 mb-4">
-            {isRTL ? "תכונות מרכזיות" : "Key Features"}
+            {getLocalizedText("Key Features", "תכונות מרכזיות", "الميزات الرئيسية")}
           </h2>
           <p className="text-slate-600">
-            {isRTL ? "מה הופך את Consenz לייחודי" : "What makes Consenz unique"}
+            {getLocalizedText("What makes Consenz unique", "מה הופך את Consenz לייחודי", "ما الذي يجعل Consenz فريدًا")}
           </p>
         </div>
 
@@ -419,7 +485,11 @@ export default function LearnMore() {
         <Card className="bg-gradient-to-br from-slate-50 to-blue-50 border-slate-200">
           <CardHeader>
             <CardTitle className={`text-2xl ${isRTL ? 'text-right' : 'text-left'}`}>
-              {isRTL ? "איך מחושב סף הקונצנזוס?" : "How is the Consensus Threshold Calculated?"}
+              {getLocalizedText(
+                "How is the Consensus Threshold Calculated?",
+                "איך מחושב סף הקונצנזוס?",
+                "كيف يتم حساب عتبة الإجماع؟"
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -429,12 +499,14 @@ export default function LearnMore() {
                   <Badge className="bg-blue-600">1</Badge>
                   <div className={isRTL ? 'text-right' : 'text-left'}>
                     <p className="font-semibold text-slate-900">
-                      {isRTL ? "התחלה עם ערך ברירת מחדל" : "Start with default value"}
+                      {getLocalizedText("Start with default value", "התחלה עם ערך ברירת מחדל", "البدء بقيمة افتراضية")}
                     </p>
                     <p className="text-sm text-slate-600 mt-1">
-                      {isRTL 
-                        ? "כל מסמך מתחיל עם סף קונצנזוס ברירת מחדל (למשל, דלתא של 2 בין הצבעות בעד לנגד)"
-                        : "Each document starts with a default consensus threshold (e.g., delta of 2 between pro and con votes)"}
+                      {getLocalizedText(
+                        "Each document starts with a default consensus threshold (e.g., delta of 2 between pro and con votes)",
+                        "כל מסמך מתחיל עם סף קונצנזוס ברירת מחדל (למשל, דלתא של 2 בין הצבעות בעד לנגד)",
+                        "تبدأ كل وثيقة بعتبة إجماع افتراضية (مثل دلتا 2 بين أصوات مع وضد)"
+                      )}
                     </p>
                   </div>
                 </div>
@@ -445,12 +517,14 @@ export default function LearnMore() {
                   <Badge className="bg-indigo-600">2</Badge>
                   <div className={isRTL ? 'text-right' : 'text-left'}>
                     <p className="font-semibold text-slate-900">
-                      {isRTL ? "איסוף נתונים מהצעות שהתקבלו" : "Collect data from accepted suggestions"}
+                      {getLocalizedText("Collect data from accepted suggestions", "איסוף נתונים מהצעות שהתקבלו", "جمع البيانات من المقترحات المقبولة")}
                     </p>
                     <p className="text-sm text-slate-600 mt-1">
-                      {isRTL
-                        ? "המערכת מנתחת את כל ההצעות שהתקבלו ומחשבת את הדלתא הממוצעת בין הצבעות בעד לנגד"
-                        : "The system analyzes all accepted suggestions and calculates the average delta between pro and con votes"}
+                      {getLocalizedText(
+                        "The system analyzes all accepted suggestions and calculates the average delta between pro and con votes",
+                        "המערכת מנתחת את כל ההצעות שהתקבלו ומחשבת את הדלתא הממוצעת בין הצבעות בעד לנגד",
+                        "يحلل النظام جميع المقترحات المقبولة ويحسب متوسط الدلتا بين أصوات مع وضد"
+                      )}
                     </p>
                   </div>
                 </div>
@@ -461,12 +535,14 @@ export default function LearnMore() {
                   <Badge className="bg-purple-600">3</Badge>
                   <div className={isRTL ? 'text-right' : 'text-left'}>
                     <p className="font-semibold text-slate-900">
-                      {isRTL ? "עדכון דינמי של הסף" : "Dynamic threshold update"}
+                      {getLocalizedText("Dynamic threshold update", "עדכון דינמי של הסף", "تحديث عتبة ديناميكي")}
                     </p>
                     <p className="text-sm text-slate-600 mt-1">
-                      {isRTL
-                        ? "הסף מתעדכן אוטומטית על בסיס התנהגות הקהילה - אם הצעות עם קונצנזוס גבוה מתקבלות, הסף יורד"
-                        : "Threshold updates automatically based on community behavior - if suggestions with high consensus are accepted, the threshold decreases"}
+                      {getLocalizedText(
+                        "Threshold updates automatically based on community behavior - if suggestions with high consensus are accepted, the threshold decreases",
+                        "הסף מתעדכן אוטומטית על בסיס התנהגות הקהילה - אם הצעות עם קונצנזוס גבוה מתקבלות, הסף יורד",
+                        "يتم تحديث العتبة تلقائيًا بناءً على سلوك المجتمع - إذا تم قبول مقترحات بإجماع عالٍ، تنخفض العتبة"
+                      )}
                     </p>
                   </div>
                 </div>
@@ -477,12 +553,14 @@ export default function LearnMore() {
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                   <div className={isRTL ? 'text-right' : 'text-left'}>
                     <p className="font-semibold text-green-900">
-                      {isRTL ? "תוצאה: אלגוריתם מותאם לקהילה" : "Result: Community-adapted algorithm"}
+                      {getLocalizedText("Result: Community-adapted algorithm", "תוצאה: אלגוריתם מותאם לקהילה", "النتيجة: خوارزمية متكيفة مع المجتمع")}
                     </p>
                     <p className="text-sm text-green-700 mt-1">
-                      {isRTL
-                        ? "המערכת לומדת את דפוסי ההצבעה של הקהילה ומתאימה את עצמה לרמת הקונצנזוס הנדרשת"
-                        : "The system learns the voting patterns of the community and adapts to the required consensus level"}
+                      {getLocalizedText(
+                        "The system learns the voting patterns of the community and adapts to the required consensus level",
+                        "המערכת לומדת את דפוסי ההצבעה של הקהילה ומתאימה את עצמה לרמת הקונצנזוס הנדרשת",
+                        "يتعلم النظام أنماط التصويت في المجتمع ويتكيف مع مستوى الإجماع المطلوب"
+                      )}
                     </p>
                   </div>
                 </div>
@@ -492,12 +570,12 @@ export default function LearnMore() {
             {/* Visual Example */}
             <div className={`mt-8 ${isRTL ? 'text-right' : 'text-left'}`}>
               <h4 className="font-bold text-slate-900 mb-4">
-                {isRTL ? "דוגמה מספרית" : "Numerical Example"}
+                {getLocalizedText("Numerical Example", "דוגמה מספרית", "مثال رقمي")}
               </h4>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className={`p-4 bg-blue-50 rounded-lg border border-blue-200 ${isRTL ? 'text-right' : 'text-left'}`}>
                   <p className="text-sm font-medium text-blue-900 mb-2">
-                    {isRTL ? "הצעה 1 התקבלה" : "Suggestion 1 Accepted"}
+                    {getLocalizedText("Suggestion 1 Accepted", "הצעה 1 התקבלה", "المقترح 1 مقبول")}
                   </p>
                   <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -509,14 +587,14 @@ export default function LearnMore() {
                       <span className="font-bold">2</span>
                     </div>
                     <span className="text-sm text-slate-600">
-                      {isRTL ? "דלתא: 6" : "Delta: 6"}
+                      {getLocalizedText("Delta: 6", "דלתא: 6", "دلتا: 6")}
                     </span>
                   </div>
                 </div>
 
                 <div className={`p-4 bg-purple-50 rounded-lg border border-purple-200 ${isRTL ? 'text-right' : 'text-left'}`}>
                   <p className="text-sm font-medium text-purple-900 mb-2">
-                    {isRTL ? "הצעה 2 התקבלה" : "Suggestion 2 Accepted"}
+                    {getLocalizedText("Suggestion 2 Accepted", "הצעה 2 התקבלה", "المقترح 2 مقبول")}
                   </p>
                   <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -528,7 +606,7 @@ export default function LearnMore() {
                       <span className="font-bold">1</span>
                     </div>
                     <span className="text-sm text-slate-600">
-                      {isRTL ? "דלתא: 4" : "Delta: 4"}
+                      {getLocalizedText("Delta: 4", "דלתא: 4", "دلتا: 4")}
                     </span>
                   </div>
                 </div>
@@ -536,17 +614,21 @@ export default function LearnMore() {
 
               <div className={`mt-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200 ${isRTL ? 'text-right' : 'text-left'}`}>
                 <p className="font-bold text-indigo-900 mb-2">
-                  {isRTL ? "הסף החדש" : "New Threshold"}
+                  {getLocalizedText("New Threshold", "הסף החדש", "العتبة الجديدة")}
                 </p>
                 <p className="text-sm text-slate-700">
-                  {isRTL 
-                    ? "ממוצע: (6 + 4) / 2 = 5 → הסף החדש: 5"
-                    : "Average: (6 + 4) / 2 = 5 → New threshold: 5"}
+                  {getLocalizedText(
+                    "Average: (6 + 4) / 2 = 5 → New threshold: 5",
+                    "ממוצע: (6 + 4) / 2 = 5 → הסף החדש: 5",
+                    "متوسط: (6 + 4) / 2 = 5 ← العتبة الجديدة: 5"
+                  )}
                 </p>
                 <p className="text-xs text-slate-600 mt-2">
-                  {isRTL
-                    ? "הצעות חדשות יצטרכו דלתא של לפחות 5 כדי להתקבל אוטומטית"
-                    : "New suggestions will need a delta of at least 5 to be auto-accepted"}
+                  {getLocalizedText(
+                    "New suggestions will need a delta of at least 5 to be auto-accepted",
+                    "הצעות חדשות יצטרכו דלתא של לפחות 5 כדי להתקבל אוטומטית",
+                    "ستحتاج المقترحات الجديدة إلى دلتا لا تقل عن 5 ليتم قبولها تلقائيًا"
+                  )}
                 </p>
               </div>
             </div>
@@ -559,17 +641,19 @@ export default function LearnMore() {
         <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 border-0 text-white">
           <CardContent className="p-12 text-center">
             <h2 className="text-3xl font-bold mb-4">
-              {isRTL ? "מוכן להתחיל?" : "Ready to Get Started?"}
+              {getLocalizedText("Ready to Get Started?", "מוכן להתחיל?", "هل أنت مستعد للبدء؟")}
             </h2>
             <p className="text-blue-100 mb-8 text-lg">
-              {isRTL 
-                ? "הצטרף לקהילה והתחל לבנות קונצנזוס על מסמכים משותפים"
-                : "Join the community and start building consensus on shared documents"}
+              {getLocalizedText(
+                "Join the community and start building consensus on shared documents",
+                "הצטרף לקהילה והתחל לבנות קונצנזוס על מסמכים משותפים",
+                "انضم إلى المجتمع وابدأ ببناء الإجماع على الوثائق المشتركة"
+              )}
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
               <Link to={createPageUrl("Home")}>
                 <Button size="lg" variant="secondary">
-                  {isRTL ? "חזרה לדף הבית" : "Back to Home"}
+                  {getLocalizedText("Back to Home", "חזרה לדף הבית", "العودة إلى الصفحة الرئيسية")}
                 </Button>
               </Link>
             </div>
