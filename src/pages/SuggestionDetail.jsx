@@ -540,8 +540,8 @@ export default function SuggestionDetail() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className={`flex items-center justify-between gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Link to={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}`}>
               <Button variant="outline" size="icon">
                 <ArrowLeft className="w-4 h-4" />
