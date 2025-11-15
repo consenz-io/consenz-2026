@@ -152,6 +152,14 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       suggestionConsensus: consensus 
     });
     
+    // שליחת התראה למחבר ההצעה
+    console.log('[AUTO ACCEPT] Sending notification to suggestion creator');
+    try {
+      await notifySuggestionStatusChange({ suggestion, newStatus: 'accepted' });
+    } catch (notifError) {
+      console.error('[AUTO ACCEPT NOTIFICATION ERROR]', notifError);
+    }
+    
     // Award 200 points to suggestion creator when accepted (only if gamification enabled)
     const gamificationEnabled = document?.gamificationEnabled || false;
     console.log('[POINTS DEBUG] Suggestion accepted - gamification enabled:', gamificationEnabled);
