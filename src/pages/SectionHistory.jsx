@@ -117,7 +117,7 @@ export default function SectionHistory() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
           <Link to={`${createPageUrl("DocumentView")}?id=${document?.id}&scrollTo=${sectionId}`}>
             <Button variant="outline" size="icon">
               {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
@@ -126,7 +126,7 @@ export default function SectionHistory() {
           <div>
             <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
               <History className="w-8 h-8" />
-              היסטוריית סעיף
+              {t('sectionHistory')}
             </h1>
             {document && topic && (
               <p className="text-slate-600 mt-1">
