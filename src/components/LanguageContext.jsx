@@ -168,6 +168,7 @@ const translations = {
     mustBeLoggedIn: "Must be logged in",
     acceptSuggestion: "Accept Suggestion",
     rejectSuggestion: "Reject Suggestion",
+    sectionHistory: "Section History",
   },
   he: {
     // ניווט
@@ -336,6 +337,7 @@ const translations = {
     mustBeLoggedIn: "יש להתחבר",
     acceptSuggestion: "אשר הצעה",
     rejectSuggestion: "דחה הצעה",
+    sectionHistory: "היסטוריית סעיף",
   },
   ar: {
     // التنقل
@@ -503,6 +505,7 @@ const translations = {
     mustBeLoggedIn: "يجب تسجيل الدخول",
     acceptSuggestion: "قبول الاقتراح",
     rejectSuggestion: "رفض الاقتراح",
+    sectionHistory: "تاريخ القسم",
   }
 };
 
