@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, ThumbsUp, ThumbsDown, MessageSquare, ArrowRight } from "lucide-react";
 import VotesNeededCounter from "./VotesNeededCounter";
+import TranslatableContent from "./TranslatableContent";
 import { useLanguage } from "@/components/LanguageContext";
 
 export default function SuggestionsList({ suggestions, document, user, isAdmin }) {
@@ -85,11 +86,14 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
                     <p className="text-sm text-slate-600 line-clamp-2" style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>{suggestion.explanation}</p>
                   )}
                   {suggestion.newContent && (
-                    <div
-                      className="text-sm text-slate-700 line-clamp-3 bg-slate-50 p-3 rounded border border-slate-200"
-                      style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}
-                      dangerouslySetInnerHTML={{ __html: suggestion.newContent }}
-                    />
+                    <div className="bg-slate-50 p-3 rounded border border-slate-200">
+                      <TranslatableContent
+                        content={suggestion.newContent}
+                        entity={suggestion}
+                        entityType="suggestion"
+                        className="text-sm text-slate-700 line-clamp-3"
+                      />
+                    </div>
                   )}
                   
                   <div className="flex flex-wrap gap-4 text-sm items-center">

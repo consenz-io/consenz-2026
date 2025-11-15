@@ -16,6 +16,7 @@ import VotesNeededCounter from "../components/document/VotesNeededCounter";
 import { Skeleton } from "@/components/ui/skeleton";
 import CommentsSection from "../components/document/CommentsSection";
 import SectionDiff from "../components/document/SectionDiff";
+import TranslatableContent from "../components/document/TranslatableContent";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "../components/document/suggestionAutoAccept";
 
 export default function SuggestionDetail() {
@@ -545,18 +546,32 @@ export default function SuggestionDetail() {
             ) : suggestion.type === 'new_section' ? (
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">תוכן מוצע</h3>
-                <div 
-                  className="prose prose-sm max-w-none p-4 bg-green-50 border border-green-200 rounded-lg"
-                  dangerouslySetInnerHTML={{ __html: suggestion.newContent }}
-                />
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <TranslatableContent
+                    content={suggestion.newContent}
+                    entity={suggestion}
+                    entityType="suggestion"
+                    onUpdate={(updated) => {
+                      queryClient.setQueryData(['suggestion', suggestionId], updated);
+                    }}
+                    className="prose prose-sm max-w-none"
+                  />
+                </div>
               </div>
             ) : (
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">תוכן מוצע</h3>
-                <div 
-                  className="prose prose-sm max-w-none p-4 bg-blue-50 border border-blue-200 rounded-lg"
-                  dangerouslySetInnerHTML={{ __html: suggestion.newContent }}
-                />
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <TranslatableContent
+                    content={suggestion.newContent}
+                    entity={suggestion}
+                    entityType="suggestion"
+                    onUpdate={(updated) => {
+                      queryClient.setQueryData(['suggestion', suggestionId], updated);
+                    }}
+                    className="prose prose-sm max-w-none"
+                  />
+                </div>
               </div>
             )}
 
