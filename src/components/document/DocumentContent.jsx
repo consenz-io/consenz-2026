@@ -332,8 +332,8 @@ export default function DocumentContent({
                                 onClick={() => onNewSection(topic.id, index)}
                                 className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
                               >
-                                <Plus className="w-4 h-4 mr-1" />
-                                הוסף סעיף כאן
+                                <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                {t('insertSectionHere')}
                               </Button>
                             </div>
                           </div>
@@ -345,7 +345,7 @@ export default function DocumentContent({
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-2">
                               <div className="text-sm font-medium text-slate-500">
-                                Section {index + 1}
+                                {t('section')} {index + 1}
                               </div>
                               <Link to={`${createPageUrl("SectionHistory")}?id=${section.id}`}>
                                 <Button
@@ -353,8 +353,8 @@ export default function DocumentContent({
                                   size="sm"
                                   className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-blue-600"
                                 >
-                                  <History className="w-4 h-4 mr-1" />
-                                  היסטוריה
+                                  <History className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                  {t('history')}
                                 </Button>
                               </Link>
                             </div>

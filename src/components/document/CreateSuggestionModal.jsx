@@ -278,13 +278,13 @@ Return ONLY the translated HTML:`;
         {document.gamificationEnabled && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-700">עלות יצירת הצעה:</span>
-              <span className="font-bold text-blue-600">{POINTS_COST} נקודות</span>
+              <span className="text-slate-700">{t('costToCreate')}</span>
+              <span className="font-bold text-blue-600">{POINTS_COST} {t('points')}</span>
             </div>
             <div className="flex items-center justify-between text-sm mt-1">
-              <span className="text-slate-700">הנקודות שלך:</span>
+              <span className="text-slate-700">{t('yourPoints')}</span>
               <span className={`font-bold ${(currentUser?.points || 1000) >= POINTS_COST ? 'text-green-600' : 'text-red-600'}`}>
-                {currentUser?.points || 1000} נקודות
+                {currentUser?.points || 1000} {t('points')}
               </span>
             </div>
           </div>
@@ -334,12 +334,12 @@ Return ONLY the translated HTML:`;
 
           {!isNewSection && existingSection && (
             <div>
-              <Label>התוכן המקורי:</Label>
+              <Label>{t('originalContent')}</Label>
               <div className="border border-slate-200 rounded-lg p-4 bg-slate-50 mt-2">
                 <TranslatableContent
                   content={existingSection.content}
                   entity={existingSection}
-                  entityType="section"
+                  entityType="Section"
                   className="prose prose-sm max-w-none"
                 />
               </div>
