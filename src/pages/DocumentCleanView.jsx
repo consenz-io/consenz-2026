@@ -372,13 +372,6 @@ ${text}`;
               {showTranslatedDoc ? 'הצג מקור' : t('translateSection')}
             </Button>
           )}
-          <p className="text-slate-600">
-            {new Date(document.created_date).toLocaleDateString('he-IL', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
-          </p>
         </div>
 
         {/* Topics and Sections */}
