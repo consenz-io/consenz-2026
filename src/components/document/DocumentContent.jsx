@@ -12,6 +12,7 @@ import SectionDiff from "./SectionDiff";
 import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
 import DocumentTextContent from "./DocumentTextContent";
+import SectionCarousel from "./SectionCarousel";
 import { useLanguage } from "@/components/LanguageContext";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAutoAccept";
 
@@ -356,198 +357,21 @@ export default function DocumentContent({
                         </div>
                       )}
                     <div key={section.id} className="space-y-3">
-                      <div id={`section-${section.id}`} className="group relative p-6 border-2 border-slate-300 rounded-lg hover:border-blue-400 hover:shadow-md transition-all bg-gradient-to-br from-white to-slate-50/30">
-                        <div className={`flex justify-between items-start gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="text-sm font-medium text-slate-500">
-                                {t('section')} {index + 1}
-                              </div>
-                              <Link to={`${createPageUrl("SectionHistory")}?id=${section.id}`}>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-blue-600"
-                                >
-                                  <History className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                  {t('history')}
-                                </Button>
-                              </Link>
-                            </div>
-                            <TranslatableContent
-                              content={section.content}
-                              entity={section}
-                              entityType="Section"
-                              className="prose prose-sm max-w-none"
-                              renderContent={(content) => (
-                                <DocumentTextContent content={content} className="text-slate-800" />
-                              )}
-                            />
-                            <div className={`flex items-center justify-between mt-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                              <div className="text-xs text-slate-400">
-                                {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString()}
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleComments(`section-${section.id}`)}
-                                className="text-slate-600 hover:text-blue-600"
-                              >
-                                <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                {t('comments')} ({getCommentsCount('section', section.id)})
-                              </Button>
-                            </div>
-                          </div>
-                          {user && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onEditSection(section)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
-
-                        {showComments[`section-${section.id}`] && (
-                          <div className="mt-4 pt-4 border-t border-slate-200">
-                            <CommentsSection
-                              entityType="section"
-                              entityId={section.id}
-                              user={user}
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      {sectionSuggestions.length > 0 && (
-                        <div className="space-y-3 ml-8">
-                          {sectionSuggestions.map(suggestion => {
-                            return (
-                              <Card key={suggestion.id} className="bg-amber-50/50 border-amber-200">
-                                <CardContent className="p-4">
-                                <div className={`flex items-start justify-between gap-3 mb-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                                  <div className="flex items-center gap-2">
-                                    <AlertCircle className="w-4 h-4 text-amber-600" />
-                                    <span className="text-sm font-semibold text-amber-900">
-                                      {t('pendingEditSuggestion')}
-                                    </span>
-                                  </div>
-                                  <Link to={`${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`}>
-                                    <Button size="sm" variant="outline">
-                                      {t('viewDetails')}
-                                    </Button>
-                                  </Link>
-                                </div>
-                                
-                                <div className="text-sm text-slate-700 mb-3" style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
-                                  <strong>{suggestion.title}</strong>
-                                  {suggestion.explanation && (
-                                    <p className="text-slate-600 mt-1">{suggestion.explanation}</p>
-                                  )}
-                                </div>
-
-                                <div className="space-y-2">
-                                  <div className="text-xs font-semibold text-slate-500 mb-1">{t('proposedChanges')}:</div>
-                                  {suggestion.originalContent ? (
-                                    <SectionDiff
-                                      originalContent={suggestion.originalContent}
-                                      newContent={suggestion.newContent}
-                                    />
-                                  ) : (
-                                    <TranslatableContent
-                                      content={suggestion.newContent}
-                                      entity={suggestion}
-                                      entityType="Suggestion"
-                                      className="prose prose-sm max-w-none p-3 bg-green-50 rounded border border-green-200"
-                                      renderContent={(content) => (
-                                        <DocumentTextContent content={content} />
-                                      )}
-                                    />
-                                  )}
-                                </div>
-
-                                <div className="flex items-center gap-4 mt-3 text-sm flex-wrap">
-                                  {user && document?.votingButtonsEnabled ? (
-                                    <>
-                                      <Button
-                                        variant={getUserVote(suggestion.id)?.vote === 'pro' ? 'default' : 'outline'}
-                                        size="sm"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          voteMutation.mutate({
-                                            suggestionId: suggestion.id,
-                                            vote: 'pro',
-                                            currentVote: getUserVote(suggestion.id)
-                                          });
-                                        }}
-                                        disabled={voteMutation.isPending}
-                                        className={getUserVote(suggestion.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}
-                                      >
-                                        <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                        {suggestion.proVotes || 0}
-                                      </Button>
-                                      <Button
-                                        variant={getUserVote(suggestion.id)?.vote === 'con' ? 'default' : 'outline'}
-                                        size="sm"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          voteMutation.mutate({
-                                            suggestionId: suggestion.id,
-                                            vote: 'con',
-                                            currentVote: getUserVote(suggestion.id)
-                                          });
-                                        }}
-                                        disabled={voteMutation.isPending}
-                                        className={getUserVote(suggestion.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}
-                                      >
-                                        <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                        {suggestion.conVotes || 0}
-                                      </Button>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <div className="flex items-center gap-1 text-green-600">
-                                        <ThumbsUp className="w-4 h-4" />
-                                        <span className="font-medium">{suggestion.proVotes || 0}</span>
-                                      </div>
-                                      <div className="flex items-center gap-1 text-red-600">
-                                        <ThumbsDown className="w-4 h-4" />
-                                        <span className="font-medium">{suggestion.conVotes || 0}</span>
-                                      </div>
-                                    </>
-                                  )}
-                                  <VotesNeededCounter suggestion={suggestion} document={document} acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')} />
-                                  <Badge variant="outline" className="text-xs">
-                                    {t('by')} {getUserName(suggestion.created_by)}
-                                  </Badge>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => toggleComments(`suggestion-${suggestion.id}`)}
-                                    className={isRTL ? 'ml-auto' : 'mr-auto'}
-                                  >
-                                    <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                    {t('comments')} ({getCommentsCount('suggestion', suggestion.id)})
-                                  </Button>
-                                </div>
-
-                                {showComments[`suggestion-${suggestion.id}`] && (
-                                  <div className="mt-4 pt-4 border-t border-amber-300">
-                                    <CommentsSection
-                                      entityType="suggestion"
-                                      entityId={suggestion.id}
-                                      user={user}
-                                    />
-                                  </div>
-                                )}
-                              </CardContent>
-                            </Card>
-                            );
-                          })}
-                        </div>
-                      )}
+                      <SectionCarousel
+                        section={section}
+                        pendingSuggestions={sectionSuggestions}
+                        document={document}
+                        user={user}
+                        onEditSection={onEditSection}
+                        toggleComments={toggleComments}
+                        showComments={showComments}
+                        getCommentsCount={getCommentsCount}
+                        getUserVote={getUserVote}
+                        voteMutation={voteMutation}
+                        getUserName={getUserName}
+                        acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                        sectionIndex={index}
+                      />
                     </div>
                     {index === topicSections.length - 1 && user && (
                       <div className="group relative h-4 flex items-center justify-center mt-2">
