@@ -127,8 +127,11 @@ export default function SectionCarousel({
       });
 
       queryClient.invalidateQueries();
-      return newTranslations;
+      return { suggestionId: suggestion.id, translations: newTranslations };
     },
+    onSuccess: (data) => {
+      setShowTranslated(prev => ({ ...prev, [data.suggestionId]: true }));
+    }
   });
 
   return (
@@ -230,8 +233,8 @@ export default function SectionCarousel({
               <div className="text-sm font-semibold text-amber-900 mb-2">
                 <DocumentTextContent 
                   content={
-                    showTranslated[currentView.data.id] && currentView.data.translations?.[language]
-                      ? currentView.data.translations[language].title || currentView.data.title
+                    showTranslated[currentView.data.id] && currentView.data.translations?.[language]?.title
+                      ? currentView.data.translations[language].title
                       : currentView.data.title
                   } 
                 />
@@ -240,8 +243,8 @@ export default function SectionCarousel({
                 <p className="text-sm text-slate-600 mb-3">
                   <DocumentTextContent 
                     content={
-                      showTranslated[currentView.data.id] && currentView.data.translations?.[language]
-                        ? currentView.data.translations[language].explanation || currentView.data.explanation
+                      showTranslated[currentView.data.id] && currentView.data.translations?.[language]?.explanation
+                        ? currentView.data.translations[language].explanation
                         : currentView.data.explanation
                     }
                   />
@@ -253,8 +256,8 @@ export default function SectionCarousel({
               <SectionDiff
                 originalContent={currentView.data.originalContent}
                 newContent={
-                  showTranslated[currentView.data.id] && currentView.data.translations?.[language]
-                    ? currentView.data.translations[language].newContent || currentView.data.newContent
+                  showTranslated[currentView.data.id] && currentView.data.translations?.[language]?.newContent
+                    ? currentView.data.translations[language].newContent
                     : currentView.data.newContent
                 }
               />
@@ -262,8 +265,8 @@ export default function SectionCarousel({
               <div className="prose prose-sm max-w-none p-3 bg-green-50 rounded border border-green-200">
                 <DocumentTextContent 
                   content={
-                    showTranslated[currentView.data.id] && currentView.data.translations?.[language]
-                      ? currentView.data.translations[language].newContent || currentView.data.newContent
+                    showTranslated[currentView.data.id] && currentView.data.translations?.[language]?.newContent
+                      ? currentView.data.translations[language].newContent
                       : currentView.data.newContent
                   }
                 />
