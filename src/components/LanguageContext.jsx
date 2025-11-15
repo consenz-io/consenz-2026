@@ -135,6 +135,17 @@ const translations = {
     cleanView: "Clean View",
     section: "Section",
     history: "History",
+    personalInformation: "Personal Information",
+    displayName: "Display Name",
+    email: "Email",
+    role: "Role",
+    editProfile: "Edit Profile",
+    saveChanges: "Save Changes",
+    action: "Action",
+    amount: "Amount",
+    description: "Description",
+    date: "Date",
+    saving: "Saving...",
   },
   he: {
     // ניווט
@@ -270,6 +281,17 @@ const translations = {
     cleanView: "תצוגה נקייה",
     section: "סעיף",
     history: "היסטוריה",
+    personalInformation: "מידע אישי",
+    displayName: "שם תצוגה",
+    email: "אימייל",
+    role: "תפקיד",
+    editProfile: "ערוך פרופיל",
+    saveChanges: "שמור שינויים",
+    action: "פעולה",
+    amount: "כמות",
+    description: "תיאור",
+    date: "תאריך",
+    saving: "שומר...",
   },
   ar: {
     // التنقل
@@ -404,6 +426,17 @@ const translations = {
     cleanView: "عرض نظيف",
     section: "القسم",
     history: "التاريخ",
+    personalInformation: "المعلومات الشخصية",
+    displayName: "اسم العرض",
+    email: "البريد الإلكتروني",
+    role: "الدور",
+    editProfile: "تعديل الملف الشخصي",
+    saveChanges: "حفظ التغييرات",
+    action: "الإجراء",
+    amount: "الكمية",
+    description: "الوصف",
+    date: "التاريخ",
+    saving: "جارٍ الحفظ...",
   }
 };
 
