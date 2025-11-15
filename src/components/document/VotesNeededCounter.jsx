@@ -35,19 +35,16 @@ export default function VotesNeededCounter({ suggestion, document, acceptedSugge
     }
 
     // חישוב מתמטי נכון: כמה pro votes נדרשות כדי להגיע ל-threshold
-    // threshold = proVotes / (proVotes + conVotes)
-    // נפתור עבור proVotes החדש:
-    // threshold * (proVotes_new + conVotes) = proVotes_new
-    // threshold * proVotes_new + threshold * conVotes = proVotes_new
-    // threshold * conVotes = proVotes_new - threshold * proVotes_new
-    // threshold * conVotes = proVotes_new * (1 - threshold)
-    // proVotes_new = (threshold * (proVotes + conVotes)) / (1 - threshold)
+    // threshold = (proVotes + x) / (proVotes + x + conVotes)
+    // נפתור עבור x (מספר ההצבעות הנוספות הנדרשות):
+    // threshold * (proVotes + x + conVotes) = proVotes + x
+    // threshold * proVotes + threshold * x + threshold * conVotes = proVotes + x
+    // threshold * x - x = proVotes - threshold * proVotes - threshold * conVotes
+    // x * (threshold - 1) = proVotes - threshold * (proVotes + conVotes)
+    // x = (threshold * (proVotes + conVotes) - proVotes) / (1 - threshold)
     
-    // אם threshold קרוב מאוד ל-1 (>=0.99), נשתמש ב-0.99 כדי לחשב מספר ממשי
-    const effectiveThreshold = threshold >= 0.99 ? 0.99 : threshold;
-    
-    const totalNeeded = (effectiveThreshold * (proVotes + conVotes)) / (1 - effectiveThreshold);
-    const additionalVotesNeeded = Math.ceil(totalNeeded) - proVotes;
+    const votesNeeded = (threshold * (proVotes + conVotes) - proVotes) / (1 - threshold);
+    const additionalVotesNeeded = Math.ceil(votesNeeded);
     
     return Math.max(1, additionalVotesNeeded);
   };
