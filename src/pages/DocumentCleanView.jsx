@@ -387,16 +387,11 @@ ${text}`;
                 <div key={topic.id} className="space-y-6 break-inside-avoid">
                   {/* Topic Title */}
                   <div className="border-b border-slate-300 pb-2 mb-6">
-                    <Link 
-                      to={topicSections.length > 0 ? `${createPageUrl("SectionHistory")}?id=${topicSections[0].id}` : '#'}
-                      className={topicSections.length > 0 ? "cursor-pointer hover:opacity-80 transition-opacity" : "cursor-default"}
-                    >
-                      <h2 className="text-2xl font-bold text-slate-800">
-                        {topicIndex + 1}. {(topic.originalLanguage || 'he') !== language && showTranslatedTopics[topic.id]
-                          ? (translatedTopics[topic.id] || topic.translations?.[language] || topic.title)
-                          : topic.title}
-                      </h2>
-                    </Link>
+                    <h2 className="text-2xl font-bold text-slate-800">
+                      {topicIndex + 1}. {(topic.originalLanguage || 'he') !== language && showTranslatedTopics[topic.id]
+                        ? (translatedTopics[topic.id] || topic.translations?.[language] || topic.title)
+                        : topic.title}
+                    </h2>
                     {(topic.originalLanguage || 'he') !== language && (
                       <Button
                         variant="ghost"
@@ -455,11 +450,12 @@ ${text}`;
 
                         return (
                           <div key={section.id} className="break-inside-avoid">
-                            <div className="flex gap-4 group">
-                              <span className="text-slate-500 font-medium min-w-[2rem]">
-                                {topicIndex + 1}.{sectionIndex + 1}
-                              </span>
-                              <div className="flex-1">
+                            <Link to={`${createPageUrl("SectionHistory")}?id=${section.id}`}>
+                              <div className="flex gap-4 group cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
+                                <span className="text-slate-500 font-medium min-w-[2rem]">
+                                  {topicIndex + 1}.{sectionIndex + 1}
+                                </span>
+                                <div className="flex-1">
                                 {isViewingHistory && previousVersionContent ? (
                                   <InlineDiff
                                     originalContent={previousVersionContent}
@@ -507,8 +503,9 @@ ${text}`;
                                     )}
                                   </>
                                 )}
+                                </div>
                               </div>
-                            </div>
+                            </Link>
                           </div>
                         );
                       })}
