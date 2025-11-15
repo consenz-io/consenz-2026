@@ -6,7 +6,7 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Plus, AlertCircle, ThumbsUp, ThumbsDown, MessageSquare, History } from "lucide-react";
+import { Edit, Plus, AlertCircle, ThumbsUp, ThumbsDown, MessageSquare, History, Languages, Loader2 } from "lucide-react";
 import VotesNeededCounter from "./VotesNeededCounter";
 import SectionDiff from "./SectionDiff";
 import CommentsSection from "./CommentsSection";
@@ -27,8 +27,21 @@ export default function DocumentContent({
   user 
 }) {
   const [showComments, setShowComments] = useState({});
+  const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
   const queryClient = useQueryClient();
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
+
+  const languageNames = {
+    en: "English",
+    he: "עברית",
+    ar: "العربية"
+  };
+
+  const languagePrompts = {
+    en: "English",
+    he: "Hebrew",
+    ar: "Arabic"
+  };
 
   // בדיקה ואישור אוטומטי של הצעות שעברו את רף הקונסנזוס
   React.useEffect(() => {
@@ -294,6 +307,41 @@ export default function DocumentContent({
     }));
   };
 
+  const translateTopicMutation = useMutation({
+    mutationFn: async (topic) => {
+      const titlePrompt = `Translate the following text to ${languagePrompts[language]}. Return ONLY the translated text:\n${topic.title}`;
+      const titleResult = await base44.integrations.Core.InvokeLLM({
+        prompt: titlePrompt,
+        add_context_from_internet: false,
+      });
+      const translatedTitle = (typeof titleResult === 'string' ? titleResult : titleResult.content || titleResult).trim();
+
+      const newTranslations = {
+        ...(topic.translations || {}),
+        [language]: {
+          title: translatedTitle
+        }
+      };
+
+      await base44.entities.Topic.update(topic.id, {
+        translations: newTranslations
+      });
+
+      return { topicId: topic.id, translations: newTranslations };
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['topics', document.id], (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.map(t => 
+          t.id === data.topicId 
+            ? { ...t, translations: data.translations }
+            : t
+        );
+      });
+      setShowTranslatedTopics(prev => ({ ...prev, [data.topicId]: true }));
+    }
+  });
+
   const getSectionsForTopic = (topicId) => {
     return sections.filter(s => s.topicId === topicId).sort((a, b) => a.order - b.order);
   };
@@ -315,7 +363,43 @@ export default function DocumentContent({
           <Card key={topic.id} className="bg-white border-slate-200">
             <CardHeader className="border-b border-slate-100">
               <div className={`flex justify-between items-center ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <CardTitle className="text-2xl">{topic.title}</CardTitle>
+                <div className="flex-1">
+                  <CardTitle className="text-2xl">
+                    {showTranslatedTopics[topic.id] && topic.translations?.[language]?.title
+                      ? topic.translations[language].title
+                      : topic.title}
+                  </CardTitle>
+                  {topic.originalLanguage !== language && (
+                    <div className="mt-2">
+                      {translateTopicMutation.isPending && translateTopicMutation.variables?.id === topic.id ? (
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>{t('translating')}</span>
+                        </div>
+                      ) : !showTranslatedTopics[topic.id] && !topic.translations?.[language] ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => translateTopicMutation.mutate(topic)}
+                          className="text-blue-600 hover:text-blue-700 h-8 text-xs"
+                        >
+                          <Languages className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                          תרגם ל{languageNames[language]}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: !prev[topic.id] }))}
+                          className="text-slate-600 hover:text-slate-700 h-8 text-xs"
+                        >
+                          <Languages className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                          {showTranslatedTopics[topic.id] ? `${languageNames[topic.originalLanguage || 'he']} (מקור)` : `${languageNames[language]} (מתורגם)`}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
                 {user && (
                   <Button
                     variant="outline"
