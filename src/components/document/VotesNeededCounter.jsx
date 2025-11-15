@@ -11,42 +11,30 @@ export default function VotesNeededCounter({ suggestion, document, acceptedSugge
     
     // חישוב threshold דינמי מההצעות שאושרו
     const docAcceptedSuggestions = acceptedSuggestions.filter(s => s.documentId === document?.id && s.status === 'accepted');
-    let threshold = 0.5;
-    if (docAcceptedSuggestions.length > 0) {
-      const avg = docAcceptedSuggestions.reduce((sum, s) => {
-        const total = (s.proVotes || 0) + (s.conVotes || 0);
-        return sum + (total > 0 ? (s.proVotes / total) : 0);
-      }, 0) / docAcceptedSuggestions.length;
-      threshold = avg;
-    }
+    let threshold;
     
-    const totalVotes = proVotes + conVotes;
-
-    if (totalVotes === 0) {
-      // אם אין הצבעות בכלל, צריך לפחות הצבעה אחת
-      return 1;
+    if (docAcceptedSuggestions.length > 0) {
+      // מחשבים את הממוצע של הדלתא (הפרש בין בעד לנגד) מההצעות המאושרות
+      const deltas = docAcceptedSuggestions.map(s => {
+        return (s.proVotes || 0) - (s.conVotes || 0);
+      });
+      const avgDelta = deltas.reduce((sum, delta) => sum + delta, 0) / deltas.length;
+      threshold = Math.max(1, Math.round(avgDelta));
+    } else {
+      // אם אין הצעות מאושרות, משתמשים ב-threshold של המסמך
+      threshold = document?.threshold || 2;
     }
 
-    const currentConsensus = proVotes / totalVotes;
-
-    // אם כבר עברנו את הסף
-    if (currentConsensus >= threshold) {
+    // חישוב הדלתא הנוכחית
+    const currentDelta = proVotes - conVotes;
+    
+    // אם כבר עברנו את הסף, לא צריך הצבעות נוספות
+    if (currentDelta >= threshold) {
       return 0;
     }
 
-    // חישוב מתמטי נכון: כמה pro votes נדרשות כדי להגיע ל-threshold
-    // threshold = (proVotes + x) / (proVotes + x + conVotes)
-    // נפתור עבור x (מספר ההצבעות הנוספות הנדרשות):
-    // threshold * (proVotes + x + conVotes) = proVotes + x
-    // threshold * proVotes + threshold * x + threshold * conVotes = proVotes + x
-    // threshold * x - x = proVotes - threshold * proVotes - threshold * conVotes
-    // x * (threshold - 1) = proVotes - threshold * (proVotes + conVotes)
-    // x = (threshold * (proVotes + conVotes) - proVotes) / (1 - threshold)
-    
-    const votesNeeded = (threshold * (proVotes + conVotes) - proVotes) / (1 - threshold);
-    const additionalVotesNeeded = Math.ceil(votesNeeded);
-    
-    return Math.max(1, additionalVotesNeeded);
+    // כמה הצבעות בעד נוספות נדרשות כדי להגיע לדלתא הנדרשת
+    return threshold - currentDelta;
   };
 
   const votesNeeded = calculateVotesNeeded();

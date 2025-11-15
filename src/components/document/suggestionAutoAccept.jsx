@@ -4,14 +4,8 @@ import { base44 } from "@/api/base44Client";
  * בדיקה אם הצעה עברה את סף הקונסנזוס ויכולה להתקבל אוטומטית
  */
 export async function checkSuggestionConsensus(suggestion, document) {
-  const totalVotes = (suggestion.proVotes || 0) + (suggestion.conVotes || 0);
-  
-  // חייבות להיות לפחות הצבעה אחת
-  if (totalVotes === 0) {
-    return { shouldAccept: false, consensus: 0, threshold: 0.5 };
-  }
-  
-  const consensus = suggestion.proVotes / totalVotes;
+  const proVotes = suggestion.proVotes || 0;
+  const conVotes = suggestion.conVotes || 0;
   
   // חישוב threshold דינמי מההצעות שאושרו במסמך
   const acceptedSuggestions = await base44.entities.Suggestion.filter({ 
@@ -19,28 +13,35 @@ export async function checkSuggestionConsensus(suggestion, document) {
     status: 'accepted' 
   });
   
-  let threshold = 0.5;
+  let threshold;
   if (acceptedSuggestions.length > 0) {
-    const avg = acceptedSuggestions.reduce((sum, s) => {
-      const total = (s.proVotes || 0) + (s.conVotes || 0);
-      return sum + (total > 0 ? (s.proVotes / total) : 0);
-    }, 0) / acceptedSuggestions.length;
-    threshold = avg;
+    // מחשבים את הממוצע של הדלתא (הפרש בין בעד לנגד) מההצעות המאושרות
+    const deltas = acceptedSuggestions.map(s => {
+      return (s.proVotes || 0) - (s.conVotes || 0);
+    });
+    const avgDelta = deltas.reduce((sum, delta) => sum + delta, 0) / deltas.length;
+    threshold = Math.max(1, Math.round(avgDelta));
+  } else {
+    // אם אין הצעות מאושרות, משתמשים ב-threshold של המסמך
+    threshold = document.threshold || 2;
   }
   
+  // חישוב הדלתא הנוכחית
+  const currentDelta = proVotes - conVotes;
+  
   // בדיקה אם עברנו את הסף
-  const shouldAccept = consensus >= threshold && totalVotes > 0;
+  const shouldAccept = currentDelta >= threshold;
   
   console.log('[CONSENSUS CHECK]', {
     suggestionId: suggestion.id,
-    proVotes: suggestion.proVotes,
-    conVotes: suggestion.conVotes,
-    consensus: consensus.toFixed(2),
-    threshold: threshold.toFixed(2),
+    proVotes: proVotes,
+    conVotes: conVotes,
+    currentDelta: currentDelta,
+    threshold: threshold,
     shouldAccept
   });
   
-  return { shouldAccept, consensus, threshold };
+  return { shouldAccept, consensus: currentDelta, threshold };
 }
 
 /**
