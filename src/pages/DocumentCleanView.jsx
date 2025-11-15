@@ -43,8 +43,6 @@ export default function DocumentCleanView() {
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order'),
     initialData: [],
     enabled: !!documentId,
-    staleTime: 0,
-    refetchInterval: 3000,
   });
 
   const { data: allVersions, isLoading: versionsLoading } = useQuery({
@@ -52,8 +50,6 @@ export default function DocumentCleanView() {
     queryFn: () => base44.entities.DocumentVersion.filter({ documentId }, '-version'),
     initialData: [],
     enabled: !!documentId,
-    staleTime: 0,
-    refetchInterval: 3000,
   });
 
   // קבוצת גרסאות לפי גרסה (כך שכל גרסה תכיל את כל הסעיפים שלה)
