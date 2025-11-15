@@ -37,19 +37,34 @@ export default function TranslatableContent({
 
   const translateMutation = useMutation({
     mutationFn: async () => {
-      const plainText = content.replace(/<[^>]*>/g, '');
+      const prompt = `You are a professional translator. Translate the following HTML content to ${languagePrompts[language]}.
+
+CRITICAL INSTRUCTIONS:
+- Keep ALL HTML tags exactly as they are (including <p>, <strong>, <em>, <ul>, <li>, etc.)
+- Only translate the TEXT CONTENT between the tags
+- Return ONLY the translated HTML, nothing else
+- Do not add any explanations or comments
+- Do not escape HTML characters
+- Maintain exact same structure and formatting
+
+HTML content to translate:
+${content}
+
+Return ONLY the translated HTML:`;
       
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Translate the following text to ${languagePrompts[language]}. Return ONLY the translated text, nothing else.
-
-Text to translate:
-${plainText}`,
+        prompt: prompt,
         add_context_from_internet: false,
       });
 
+      let translatedText = typeof result === 'string' ? result : result.content || result;
+      
+      // Clean up any markdown code blocks that might be added
+      translatedText = translatedText.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+
       const newTranslations = {
         ...translations,
-        [language]: result
+        [language]: translatedText
       };
 
       await base44.entities[entityType].update(entity.id, {
@@ -61,7 +76,7 @@ ${plainText}`,
       }
 
       queryClient.invalidateQueries();
-      return result;
+      return translatedText;
     },
   });
 
