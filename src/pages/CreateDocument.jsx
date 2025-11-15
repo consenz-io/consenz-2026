@@ -13,8 +13,11 @@ import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileText, Plus, Trash2, AlertCircle, Upload, Loader2, CheckCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from "@/components/LanguageContext";
+import PageHeader from "../components/PageHeader";
 
 export default function CreateDocument() {
+  const { t, isRTL } = useLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [error, setError] = useState(null);
@@ -363,11 +366,13 @@ Return ONLY valid JSON in this exact format:
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-slate-900">Create New Document</h1>
-          <p className="text-slate-600 mt-2">Start a new collaborative drafting process</p>
-        </div>
+      <div className="max-w-4xl mx-auto space-y-6">
+        <PageHeader 
+          title={t('createNewDocument')}
+          backUrl={createPageUrl("Home")}
+        />
+        
+        <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>{t('fillDetailsBelow')}</p>
 
         {error && (
           <Alert variant="destructive" className="mb-6">

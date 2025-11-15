@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import SectionDiff from "../components/document/SectionDiff";
 import CommentsSection from "../components/document/CommentsSection";
+import PageHeader from "../components/PageHeader";
 
 export default function SectionHistory() {
   const { t, isRTL } = useLanguage();
@@ -117,28 +118,20 @@ export default function SectionHistory() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className={`flex items-center gap-4 w-full ${isRTL ? 'justify-end' : 'justify-start'}`}>
-          <Link to={`${createPageUrl("DocumentView")}?id=${document?.id}&scrollTo=${sectionId}`}>
-            <Button variant="outline" size="icon">
-              {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-            </Button>
-          </Link>
-          <div className={isRTL ? 'text-right' : ''}>
-            <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
-              <History className="w-8 h-8" />
-              {t('sectionHistory')}
-            </h1>
-            {document && topic && (
-              <p className="text-slate-600 mt-1">
-                <Link to={`${createPageUrl("DocumentView")}?id=${document.id}`} className="hover:underline">
-                  {document.title}
-                </Link>
-                {' > '}
-                {topic.title}
-              </p>
-            )}
-          </div>
-        </div>
+        <PageHeader 
+          title={t('sectionHistory')}
+          backUrl={`${createPageUrl("DocumentView")}?id=${document?.id}&scrollTo=${sectionId}`}
+        />
+        
+        {document && topic && (
+          <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>
+            <Link to={`${createPageUrl("DocumentView")}?id=${document.id}`} className="hover:underline">
+              {document.title}
+            </Link>
+            {' > '}
+            {topic.title}
+          </p>
+        )}
 
         {/* Current Version */}
         <Card className="bg-white border-2 border-blue-500">

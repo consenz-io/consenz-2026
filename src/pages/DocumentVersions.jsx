@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import SectionDiff from "../components/document/SectionDiff";
 import DocumentVersionHistory from "../components/document/DocumentVersionHistory";
 import { useLanguage } from "@/components/LanguageContext";
+import PageHeader from "../components/PageHeader";
 
 export default function DocumentVersions() {
   const [searchParams] = useSearchParams();

@@ -13,8 +13,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Settings, ArrowLeft, Save, Trash2, UserPlus, X, AlertCircle, CheckCircle, Users, Search, Ban, Mail, Copy, Link2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLanguage } from "@/components/LanguageContext";
+import PageHeader from "../components/PageHeader";
 
 export default function DocumentAdmin() {
+  const { t, isRTL } = useLanguage();
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
   const navigate = useNavigate();
@@ -381,19 +384,14 @@ ${generatedInviteLink.signupUrl}
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => navigate(`${createPageUrl("DocumentView")}?id=${documentId}`)}
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 text-center flex-1">Document Settings</h1>
-            <p className="text-slate-600 mt-1 text-center">{document.title}</p>
-          </div>
-        </div>
+        <PageHeader 
+          title="Document Settings"
+          backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
+        />
+        
+        {document && (
+          <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>{document.title}</p>
+        )}
 
         {error && (
           <Alert variant="destructive">
