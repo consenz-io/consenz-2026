@@ -173,6 +173,8 @@ const translations = {
     fillDetailsBelow: "Fill in the details below to create a new collaborative document",
     signInToViewPrivate: "Sign in to view private documents",
     signInToParticipate: "Sign in to participate and create suggestions",
+    previousSuggestion: "Previous",
+    nextSuggestion: "Next",
   },
   he: {
     // ניווט
@@ -346,6 +348,8 @@ const translations = {
     fillDetailsBelow: "מלא את הפרטים למטה כדי ליצור מסמך שיתופי חדש",
     signInToViewPrivate: "התחבר כדי לצפות במסמכים פרטיים",
     signInToParticipate: "התחבר כדי להשתתף וליצור הצעות",
+    previousSuggestion: "הצעה קודמת",
+    nextSuggestion: "הצעה הבאה",
   },
   ar: {
     // التنقل
@@ -518,6 +522,8 @@ const translations = {
     fillDetailsBelow: "املأ التفاصيل أدناه لإنشاء مستند تعاوني جديد",
     signInToViewPrivate: "سجل الدخول لعرض المستندات الخاصة",
     signInToParticipate: "سجل الدخول للمشاركة وإنشاء مقترحات",
+    previousSuggestion: "السابق",
+    nextSuggestion: "التالي",
   }
 };
 
