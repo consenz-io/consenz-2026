@@ -20,6 +20,7 @@ import TranslatableContent from "../components/document/TranslatableContent";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "../components/document/suggestionAutoAccept";
 import { useLanguage } from "@/components/LanguageContext";
 import { notifyVoteOnSuggestion, notifySuggestionStatusChange } from "../components/notifications/createNotification";
+import PageHeader from "../components/PageHeader";
 
 export default function SuggestionDetail() {
   const { t, isRTL } = useLanguage();
