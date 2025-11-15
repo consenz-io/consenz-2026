@@ -346,107 +346,182 @@ export default function LearnMore() {
         </Card>
       </section>
 
-      {/* Visual Flow Diagram */}
+      {/* Gamification & Points System */}
       <section className={`max-w-7xl mx-auto px-6 py-16 ${isRTL ? 'rtl' : 'ltr'}`}>
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-slate-900 mb-4">
-            {getLocalizedText("The Workflow", "תהליך העבודה", "سير العمل")}
+            {getLocalizedText("Points & Gamification System", "מערכת ניקוד וגיימיפיקציה", "نظام النقاط والتلعيب")}
           </h2>
           <p className="text-slate-600">
             {getLocalizedText(
-              "Visual understanding of the consensus process",
-              "הבנה ויזואלית של תהליך הקונצנזוס",
-              "فهم بصري لعملية الإجماع"
+              "Earn and spend points for suggestions and votes",
+              "הרווח והוצאת נקודות עבור הצעות והצבעות",
+              "اكسب وأنفق النقاط للمقترحات والتصويتات"
             )}
           </p>
         </div>
 
-        <div className={`grid md:grid-cols-5 gap-4 ${isRTL ? 'rtl' : 'ltr'}`}>
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <div className="grid md:grid-cols-2 gap-8 mb-8">
+          {/* Costs Table */}
+          <Card className="bg-white/80 backdrop-blur-sm border-red-200">
+            <CardHeader className="bg-gradient-to-br from-red-50 to-orange-50">
+              <CardTitle className={`text-xl flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <ThumbsDown className="w-6 h-6 text-red-600" />
+                {getLocalizedText("Costs", "עלויות", "التكاليف")}
+              </CardTitle>
+            </CardHeader>
             <CardContent className="p-6">
-              <div className="w-12 h-12 mx-auto mb-4 bg-blue-600 rounded-full flex items-center justify-center">
-                <FileText className="w-6 h-6 text-white" />
+              <div className="space-y-4">
+                <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                    <p className="font-semibold text-slate-900">
+                      {getLocalizedText("Create Suggestion", "יצירת הצעה", "إنشاء مقترح")}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {getLocalizedText("Cost to submit a new suggestion", "עלות להגשת הצעה חדשה", "تكلفة تقديم مقترح جديد")}
+                    </p>
+                  </div>
+                  <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap">-100</Badge>
+                </div>
               </div>
-              <h3 className={`font-bold text-slate-900 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {getLocalizedText("Create", "יצירה", "إنشاء")}
-              </h3>
-              <p className={`text-sm text-slate-600 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {getLocalizedText("Create document and initial content", "יצירת מסמך ותוכן ראשוני", "إنشاء وثيقة ومحتوى أولي")}
-              </p>
             </CardContent>
           </Card>
 
-          <div className="flex items-center justify-center">
-            {isRTL ? <ArrowLeft className="w-8 h-8 text-slate-400" /> : <ArrowRight className="w-8 h-8 text-slate-400" />}
-          </div>
-
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+          {/* Rewards Table */}
+          <Card className="bg-white/80 backdrop-blur-sm border-green-200">
+            <CardHeader className="bg-gradient-to-br from-green-50 to-emerald-50">
+              <CardTitle className={`text-xl flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <ThumbsUp className="w-6 h-6 text-green-600" />
+                {getLocalizedText("Rewards", "תגמולים", "المكافآت")}
+              </CardTitle>
+            </CardHeader>
             <CardContent className="p-6">
-              <div className="w-12 h-12 mx-auto mb-4 bg-purple-600 rounded-full flex items-center justify-center">
-                <Edit3 className="w-6 h-6 text-white" />
+              <div className="space-y-4">
+                <div className={`flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                    <p className="font-semibold text-slate-900">
+                      {getLocalizedText("Receive Pro Vote", "קבלת הצבעה בעד", "تلقي تصويت مع")}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {getLocalizedText("Each pro vote on your suggestion", "כל הצבעה בעד על ההצעה שלך", "كل تصويت مع على مقترحك")}
+                    </p>
+                  </div>
+                  <Badge className="bg-green-600 text-white text-lg px-4 py-2 whitespace-nowrap">+10</Badge>
+                </div>
+
+                <div className={`flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                    <p className="font-semibold text-slate-900">
+                      {getLocalizedText("Suggestion Accepted", "הצעה התקבלה", "المقترح مقبول")}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {getLocalizedText("Your suggestion passes consensus", "ההצעה שלך עוברת את הקונצנזוס", "مقترحك يتجاوز الإجماع")}
+                    </p>
+                  </div>
+                  <Badge className="bg-blue-600 text-white text-lg px-4 py-2 whitespace-nowrap">+100</Badge>
+                </div>
+
+                <div className={`flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                    <p className="font-semibold text-slate-900">
+                      {getLocalizedText("Decisive Vote", "הצבעה מכרעת", "تصويت حاسم")}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {getLocalizedText("Your vote caused acceptance", "ההצבעה שלך גרמה לאישור", "تصويتك تسبب في القبول")}
+                    </p>
+                  </div>
+                  <Badge className="bg-purple-600 text-white text-lg px-4 py-2 whitespace-nowrap">+50</Badge>
+                </div>
               </div>
-              <h3 className={`font-bold text-slate-900 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {getLocalizedText("Suggest", "הצעה", "اقتراح")}
-              </h3>
-              <p className={`text-sm text-slate-600 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {getLocalizedText("Propose changes to document", "הצעת שינויים למסמך", "اقتراح تغييرات على الوثيقة")}
-              </p>
             </CardContent>
           </Card>
+        </div>
 
-          <div className="flex items-center justify-center">
-            {isRTL ? <ArrowLeft className="w-8 h-8 text-slate-400" /> : <ArrowRight className="w-8 h-8 text-slate-400" />}
-          </div>
-
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-            <CardContent className="p-6">
-              <div className="w-12 h-12 mx-auto mb-4 bg-green-600 rounded-full flex items-center justify-center">
-                <Vote className="w-6 h-6 text-white" />
+        {/* Example Scenario */}
+        <Card className="bg-gradient-to-br from-slate-50 to-blue-50 border-slate-200">
+          <CardHeader>
+            <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
+              {getLocalizedText("Example Scenario", "תרחיש לדוגמה", "سيناريو مثال")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Badge className="bg-slate-700 mt-1">1</Badge>
+                <div className={isRTL ? 'text-right' : 'text-left'}>
+                  <p className="text-slate-900">
+                    {getLocalizedText(
+                      "You start with 1,000 points",
+                      "אתה מתחיל עם 1,000 נקודות",
+                      "تبدأ بـ 1000 نقطة"
+                    )}
+                  </p>
+                </div>
               </div>
-              <h3 className={`font-bold text-slate-900 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {getLocalizedText("Vote", "הצבעה", "تصويت")}
-              </h3>
-              <p className={`text-sm text-slate-600 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {getLocalizedText("Vote pro or con", "הצבעה בעד או נגד", "التصويت مع أو ضد")}
-              </p>
-            </CardContent>
-          </Card>
 
-          <div className="flex items-center justify-center">
-            {isRTL ? <ArrowLeft className="w-8 h-8 text-slate-400" /> : <ArrowRight className="w-8 h-8 text-slate-400" />}
-          </div>
-
-          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
-            <CardContent className="p-6">
-              <div className="w-12 h-12 mx-auto mb-4 bg-orange-600 rounded-full flex items-center justify-center">
-                <MessageSquare className="w-6 h-6 text-white" />
+              <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Badge className="bg-red-600 mt-1">2</Badge>
+                <div className={isRTL ? 'text-right' : 'text-left'}>
+                  <p className="text-slate-900">
+                    {getLocalizedText(
+                      "You create a suggestion: 1,000 - 100 = 900 points",
+                      "אתה יוצר הצעה: 1,000 - 100 = 900 נקודות",
+                      "تنشئ مقترحًا: 1000 - 100 = 900 نقطة"
+                    )}
+                  </p>
+                </div>
               </div>
-              <h3 className={`font-bold text-slate-900 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {getLocalizedText("Discuss", "דיון", "نقاش")}
-              </h3>
-              <p className={`text-sm text-slate-600 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {getLocalizedText("Arguments and comments", "טיעונים ותגובות", "حجج وتعليقات")}
-              </p>
-            </CardContent>
-          </Card>
 
-          <div className="flex items-center justify-center">
-            {isRTL ? <ArrowLeft className="w-8 h-8 text-slate-400" /> : <ArrowRight className="w-8 h-8 text-slate-400" />}
-          </div>
-
-          <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200">
-            <CardContent className="p-6">
-              <div className="w-12 h-12 mx-auto mb-4 bg-indigo-600 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-white" />
+              <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Badge className="bg-green-600 mt-1">3</Badge>
+                <div className={isRTL ? 'text-right' : 'text-left'}>
+                  <p className="text-slate-900">
+                    {getLocalizedText(
+                      "You receive 5 pro votes: 900 + (5 × 10) = 950 points",
+                      "אתה מקבל 5 הצבעות בעד: 900 + (5 × 10) = 950 נקודות",
+                      "تتلقى 5 أصوات مع: 900 + (5 × 10) = 950 نقطة"
+                    )}
+                  </p>
+                </div>
               </div>
-              <h3 className={`font-bold text-slate-900 mb-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {getLocalizedText("Accept", "קבלה", "قبول")}
-              </h3>
-              <p className={`text-sm text-slate-600 ${isRTL ? 'text-right' : 'text-left'}`}>
-                {getLocalizedText("Auto approval", "אישור אוטומטי", "الموافقة التلقائية")}
-              </p>
-            </CardContent>
-          </Card>
+
+              <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Badge className="bg-blue-600 mt-1">4</Badge>
+                <div className={isRTL ? 'text-right' : 'text-left'}>
+                  <p className="text-slate-900">
+                    {getLocalizedText(
+                      "Your suggestion is accepted: 950 + 100 = 1,050 points",
+                      "ההצעה שלך מתקבלת: 950 + 100 = 1,050 נקודות",
+                      "يتم قبول مقترحك: 950 + 100 = 1050 نقطة"
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className={`p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <p className="font-bold text-green-900">
+                  {getLocalizedText(
+                    "Final result: +50 points net gain! 🎉",
+                    "תוצאה סופית: +50 נקודות רווח נטו! 🎉",
+                    "النتيجة النهائية: +50 نقطة ربح صافي! 🎉"
+                  )}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="mt-8 p-6 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className={`text-sm text-amber-900 ${isRTL ? 'text-right' : 'text-left'}`}>
+            <strong>
+              {getLocalizedText("Note:", "שים לב:", "ملاحظة:")}
+            </strong>{" "}
+            {getLocalizedText(
+              "The gamification system is optional and can be enabled or disabled per document by the administrator.",
+              "מערכת הגיימיפיקציה היא אופציונלית וניתן להפעיל או לכבות אותה לכל מסמך על ידי המנהל.",
+              "نظام التلعيب اختياري ويمكن تفعيله أو تعطيله لكل وثيقة من قبل المسؤول."
+            )}
+          </p>
         </div>
       </section>
 
