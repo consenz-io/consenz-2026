@@ -15,6 +15,7 @@ import { FileText, Plus, Trash2, AlertCircle, Upload, Loader2, CheckCircle } fro
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
+import InsufficientPointsDialog from "../components/InsufficientPointsDialog";
 
 export default function CreateDocument() {
   const { t, isRTL } = useLanguage();
@@ -22,6 +23,7 @@ export default function CreateDocument() {
   const queryClient = useQueryClient();
   const [error, setError] = useState(null);
   const [creationMode, setCreationMode] = useState("manual");
+  const [showInsufficientPointsDialog, setShowInsufficientPointsDialog] = useState(false);
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -229,7 +231,7 @@ Return ONLY valid JSON in this exact format:
       // Check if user has enough points (1000 required to create document)
       const currentPoints = user.points || 1000;
       if (currentPoints < 1000) {
-        throw new Error(`אין לך מספיק נקודות ליצירת מסמך. נדרשות 1000 נקודות, יש לך ${currentPoints}`);
+        throw new Error('INSUFFICIENT_POINTS');
       }
 
       // Deduct 1000 points from user
@@ -296,7 +298,11 @@ Return ONLY valid JSON in this exact format:
     },
     onError: (err) => {
       console.error("Document creation error:", err);
-      setError(err.message || "Failed to create document. Please try again.");
+      if (err.message === 'INSUFFICIENT_POINTS') {
+        setShowInsufficientPointsDialog(true);
+      } else {
+        setError(err.message || "Failed to create document. Please try again.");
+      }
     },
   });
 
@@ -386,8 +392,17 @@ Return ONLY valid JSON in this exact format:
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <>
+      <InsufficientPointsDialog
+        isOpen={showInsufficientPointsDialog}
+        onClose={() => setShowInsufficientPointsDialog(false)}
+        requiredPoints={1000}
+        currentPoints={user?.points || 1000}
+        actionType="document"
+      />
+      
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
         <PageHeader 
           title={t('createNewDocument')}
           backUrl={createPageUrl("Home")}
@@ -717,7 +732,8 @@ Return ONLY valid JSON in this exact format:
             </div>
           </form>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

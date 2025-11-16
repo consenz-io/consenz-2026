@@ -18,6 +18,7 @@ import { AlertCircle, Sparkles } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
 import { createPageUrl } from "@/utils";
+import InsufficientPointsDialog from "../InsufficientPointsDialog";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -42,6 +43,7 @@ export default function CreateSuggestionModal({
   const { t, isRTL, language } = useLanguage();
   const [error, setError] = useState(null);
   const [isLoadingTranslation, setIsLoadingTranslation] = useState(false);
+  const [showInsufficientPointsDialog, setShowInsufficientPointsDialog] = useState(false);
   
   const currentUser = user;
   
@@ -130,7 +132,7 @@ Return ONLY the translated HTML:`;
       const gamificationEnabled = document.gamificationEnabled || false;
       
       if (gamificationEnabled && currentPoints < POINTS_COST) {
-        throw new Error(`אין מספיק נקודות ליצירת הצעה (נדרשות ${POINTS_COST} נקודות, יש לך ${currentPoints})`);
+        throw new Error('INSUFFICIENT_POINTS');
       }
 
       const timerEndsAt = new Date();
@@ -255,7 +257,11 @@ Return ONLY the translated HTML:`;
       onClose();
     },
     onError: (err) => {
-      setError(err.message || "Failed to create suggestion");
+      if (err.message === 'INSUFFICIENT_POINTS') {
+        setShowInsufficientPointsDialog(true);
+      } else {
+        setError(err.message || "Failed to create suggestion");
+      }
     },
   });
 
@@ -287,8 +293,20 @@ Return ONLY the translated HTML:`;
   }
 
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <>
+      <InsufficientPointsDialog
+        isOpen={showInsufficientPointsDialog}
+        onClose={() => {
+          setShowInsufficientPointsDialog(false);
+          onClose();
+        }}
+        requiredPoints={POINTS_COST}
+        currentPoints={currentUser?.points || 1000}
+        actionType="suggestion"
+      />
+      
+      <Dialog open onOpenChange={onClose}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isNewSection ? t('suggestNewSection') : t('suggestEditSection')}
@@ -418,5 +436,6 @@ Return ONLY the translated HTML:`;
         </form>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
