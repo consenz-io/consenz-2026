@@ -45,8 +45,8 @@ export default function InsufficientPointsDialog({
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h4 className="font-semibold text-blue-900 mb-2">למה צריך נקודות?</h4>
             <p className="text-sm text-blue-800">
-              מערכת הנקודות נועדה לטפח סביבה איכותית על ידי סינון רעשים – 
-              שכן יצירתם עולה בנקודות – ובניית מוניטין למשתמשים, 
+              מערכת הנקודות נועדה לטפח סביבה איכותית על ידי סינון רעשים 
+              באמצעות קביעת מחיר (בנקודות) להוספת תוכן חדש - ובניית מוניטין למשתמשים, 
               תוך תמרוץ תרומות חיוביות שנמדדות בהסכמת הקהילה.
             </p>
           </div>
