@@ -365,7 +365,7 @@ export default function LearnMore() {
           {/* Costs Table */}
           <Card className="bg-white/80 backdrop-blur-sm border-red-200">
             <CardHeader className="bg-gradient-to-br from-red-50 to-orange-50">
-              <CardTitle className={`text-xl flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <CardTitle className={`text-xl flex items-center gap-2 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                 <ThumbsDown className="w-6 h-6 text-red-600" />
                 {getLocalizedText("Costs", "עלויות", "التكاليف")}
               </CardTitle>
@@ -402,7 +402,7 @@ export default function LearnMore() {
           {/* Rewards Table */}
           <Card className="bg-white/80 backdrop-blur-sm border-green-200">
             <CardHeader className="bg-gradient-to-br from-green-50 to-emerald-50">
-              <CardTitle className={`text-xl flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <CardTitle className={`text-xl flex items-center gap-2 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                 <ThumbsUp className="w-6 h-6 text-green-600" />
                 {getLocalizedText("Rewards", "תגמולים", "المكافآت")}
               </CardTitle>
@@ -451,8 +451,8 @@ export default function LearnMore() {
 
         {/* Example Scenario */}
         <Card className="bg-gradient-to-br from-slate-50 to-blue-50 border-slate-200">
-          <CardHeader>
-            <CardTitle className={isRTL ? 'text-right' : 'text-left'}>
+          <CardHeader className={isRTL ? 'text-right' : ''}>
+            <CardTitle>
               {getLocalizedText("Example Scenario", "תרחיש לדוגמה", "سيناريو مثال")}
             </CardTitle>
           </CardHeader>
