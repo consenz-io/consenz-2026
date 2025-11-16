@@ -470,16 +470,17 @@ ${text}`;
                         const previousVersionContent = previousVersion?.sections.find(v => v.sectionId === section.id)?.content;
                         const isViewingHistory = currentVersionIndex > 0;
                         const currentVersionContent = currentVersion?.sections.find(v => v.sectionId === section.id)?.content || section.content;
+                        const hasChangedFromPrevious = previousVersionContent && currentVersionContent !== previousVersionContent;
 
                         return (
-                          <div key={section.id} className="break-inside-avoid">
+                          <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
                             <Link to={`${createPageUrl("SectionHistory")}?id=${section.id}`}>
                               <div className="flex gap-2 md:gap-4 group cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
                                 <span className="text-slate-500 font-medium min-w-[1.5rem] md:min-w-[2rem] text-sm md:text-base">
                                   {topicIndex + 1}.{sectionIndex + 1}
                                 </span>
                                 <div className="flex-1">
-                                {isViewingHistory && previousVersionContent ? (
+                                {isViewingHistory && hasChangedFromPrevious ? (
                                   <InlineDiff
                                     originalContent={previousVersionContent}
                                     newContent={currentVersionContent}
