@@ -1,10 +1,8 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Target, TrendingUp } from "lucide-react";
-import { useLanguage } from "@/components/LanguageContext";
 
-export default function VotesNeededCounter({ suggestion, document, acceptedSuggestions = [] }) {
-  const { t } = useLanguage();
+export default function VotesNeededCounter({ suggestion, document, acceptedSuggestions = [], t }) {
   const calculateVotesNeeded = () => {
     const proVotes = suggestion.proVotes || 0;
     const conVotes = suggestion.conVotes || 0;

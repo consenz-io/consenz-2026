@@ -19,7 +19,6 @@ export default function SectionCarousel({
   document,
   user,
   onEditSection,
-  onDirectEdit,
   toggleComments,
   showComments,
   getCommentsCount,
@@ -27,8 +26,7 @@ export default function SectionCarousel({
   voteMutation,
   getUserName,
   acceptedSuggestions,
-  sectionIndex,
-  isAdmin
+  sectionIndex
 }) {
   const { t, isRTL, language } = useLanguage();
   
@@ -382,7 +380,8 @@ export default function SectionCarousel({
               <VotesNeededCounter 
                 suggestion={currentView.data} 
                 document={document} 
-                acceptedSuggestions={acceptedSuggestions} 
+                acceptedSuggestions={acceptedSuggestions}
+                t={t}
               />
               <Badge variant="outline" className="text-xs">
                 {t('by')} {getUserName(currentView.data.created_by)}
