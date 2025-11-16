@@ -588,7 +588,7 @@ export default function SuggestionDetail() {
                   {suggestion.status}
                 </Badge>
                 <Badge variant="outline" className="text-xs">
-                  {suggestion.type === 'new_section' ? t('newSection') : t('editSection')}
+                  {suggestion.type === 'new_section' ? t('newSection') : t('suggestionToEditSection')}
                 </Badge>
                 {topic && <Badge variant="outline" className="text-xs truncate max-w-[200px]">{topic.title}</Badge>}
               </div>
