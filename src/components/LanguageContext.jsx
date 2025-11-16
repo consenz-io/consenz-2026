@@ -178,6 +178,7 @@ const translations = {
     suggestionToEditSection: "Suggestion to Edit Section",
     newSectionIn: "New section in {topic}",
     editSectionIn: "Edit section in {topic}",
+    changeDescription: "Change Description",
   },
   he: {
     // ניווט
@@ -356,6 +357,7 @@ const translations = {
     suggestionToEditSection: "הצעת שינוי לסעיף",
     newSectionIn: "סעיף חדש ב-{topic}",
     editSectionIn: "עריכת סעיף ב-{topic}",
+    changeDescription: "תיאור השינוי",
   },
   ar: {
     // التنقل
@@ -533,6 +535,7 @@ const translations = {
     suggestionToEditSection: "اقتراح لتعديل القسم",
     newSectionIn: "قسم جديد في {topic}",
     editSectionIn: "تعديل قسم في {topic}",
+    changeDescription: "وصف التغيير",
   }
 };
 

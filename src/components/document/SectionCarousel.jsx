@@ -19,6 +19,7 @@ export default function SectionCarousel({
   document,
   user,
   onEditSection,
+  onDirectEdit,
   toggleComments,
   showComments,
   getCommentsCount,
@@ -26,7 +27,8 @@ export default function SectionCarousel({
   voteMutation,
   getUserName,
   acceptedSuggestions,
-  sectionIndex
+  sectionIndex,
+  isAdmin
 }) {
   const { t, isRTL, language } = useLanguage();
   
@@ -380,8 +382,7 @@ export default function SectionCarousel({
               <VotesNeededCounter 
                 suggestion={currentView.data} 
                 document={document} 
-                acceptedSuggestions={acceptedSuggestions}
-                t={t}
+                acceptedSuggestions={acceptedSuggestions} 
               />
               <Badge variant="outline" className="text-xs">
                 {t('by')} {getUserName(currentView.data.created_by)}
@@ -426,8 +427,19 @@ export default function SectionCarousel({
             onClick={() => onEditSection(section)}
           >
             <Edit className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-            {t('editSection')}
+            {t('suggestEditSection')}
           </Button>
+          {isAdmin && onDirectEdit && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={onDirectEdit}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              <Edit className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              עריכה ישירה
+            </Button>
+          )}
         </div>
       )}
     </div>
