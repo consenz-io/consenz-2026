@@ -28,14 +28,14 @@ export default function DirectEditModal({ section, onClose }) {
         ? Math.max(...existingVersions.map(v => v.version)) 
         : 0;
 
-      // Create version of current content
+      // Create version with OLD content (before change)
       await base44.entities.DocumentVersion.create({
         documentId: section.documentId,
         sectionId: section.id,
         content: section.content,
         version: maxVersion + 1,
         changeType: "direct_edit",
-        changeDescription: changeDescription || "עריכה ישירה של אדמין"
+        changeDescription: `לפני: ${changeDescription || "עריכה ישירה של אדמין"}`
       });
 
       // Update the section
@@ -43,10 +43,20 @@ export default function DirectEditModal({ section, onClose }) {
         content: content,
         lastEditedBy: user.id
       });
+
+      // Create version with NEW content (after change)
+      await base44.entities.DocumentVersion.create({
+        documentId: section.documentId,
+        sectionId: section.id,
+        content: content,
+        version: maxVersion + 2,
+        changeType: "direct_edit",
+        changeDescription: changeDescription || "עריכה ישירה של אדמין"
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sections'] });
-      queryClient.invalidateQueries({ queryKey: ['documentVersions'] });
+      queryClient.invalidateQueries({ queryKey: ['allVersions'] });
       onClose();
     },
   });

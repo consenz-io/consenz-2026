@@ -445,10 +445,17 @@ ${text}`;
                           : section.content;
 
                         // מציאת גרסה קודמת של הסעיף הזה
-                        const previousVersionContent = previousVersion?.sections.find(v => v.sectionId === section.id)?.content;
                         const isViewingHistory = currentVersionIndex > 0;
-                        const currentVersionContent = currentVersion?.sections.find(v => v.sectionId === section.id)?.content || section.content;
-                        const hasChangedFromPrevious = previousVersionContent && currentVersionContent !== previousVersionContent;
+                        let currentVersionContent, previousVersionContent, hasChangedFromPrevious;
+                        
+                        if (isViewingHistory) {
+                          currentVersionContent = currentVersion?.sections.find(v => v.sectionId === section.id)?.content;
+                          previousVersionContent = previousVersion?.sections.find(v => v.sectionId === section.id)?.content;
+                          hasChangedFromPrevious = previousVersionContent && currentVersionContent && currentVersionContent !== previousVersionContent;
+                        } else {
+                          currentVersionContent = section.content;
+                          hasChangedFromPrevious = false;
+                        }
 
                         return (
                           <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
