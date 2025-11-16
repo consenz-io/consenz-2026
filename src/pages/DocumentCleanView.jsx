@@ -61,7 +61,19 @@ export default function DocumentCleanView() {
       if (!groups[v.version]) {
         groups[v.version] = [];
       }
-      groups[v.version].push(v);
+      // טיפול בכפילויות - שומרים רק את הגרסה האחרונה (לפי תאריך יצירה)
+      const existing = groups[v.version].find(existing => existing.sectionId === v.sectionId);
+      if (!existing) {
+        groups[v.version].push(v);
+      } else {
+        // אם כבר יש גרסה לסעיף הזה, שומרים את החדשה יותר
+        const existingDate = new Date(existing.created_date);
+        const newDate = new Date(v.created_date);
+        if (newDate > existingDate) {
+          const index = groups[v.version].indexOf(existing);
+          groups[v.version][index] = v;
+        }
+      }
     });
     
     // מיון הגרסאות בסדר יורד (החדשה ביותר קודם)
