@@ -191,6 +191,16 @@ export default function SectionCarousel({
             <span className="text-xs">{t('previousSuggestion')}</span>
           </Button>
 
+          <div className="text-center">
+            {isFirstView ? (
+              <p className="text-sm font-medium text-blue-600">חזרה לגרסה הנוכחית</p>
+            ) : (
+              <p className="text-sm text-slate-600">
+                לסעיף זה נוצרו <span className="font-semibold text-amber-600">{sortedSuggestions.length}</span> הצעות לשינוי
+              </p>
+            )}
+          </div>
+
           <Button
             variant="outline"
             size="sm"
