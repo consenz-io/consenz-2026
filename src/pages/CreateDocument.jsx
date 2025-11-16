@@ -231,25 +231,30 @@ Return ONLY valid JSON in this exact format:
         throw new Error("Please add at least one topic with one section");
       }
 
-      // Check if user has enough points (1000 required to create document)
-      const currentPoints = user.points || 1000;
-      if (currentPoints < 1000) {
-        throw new Error('INSUFFICIENT_POINTS');
+      // Check if user is admin - admins don't pay for document creation
+      const isAdmin = user.role === 'admin';
+      
+      if (!isAdmin) {
+        // Check if user has enough points (1000 required to create document)
+        const currentPoints = user.points || 1000;
+        if (currentPoints < 1000) {
+          throw new Error('INSUFFICIENT_POINTS');
+        }
+
+        // Deduct 1000 points from user
+        await base44.auth.updateMe({
+          points: currentPoints - 1000
+        });
+
+        // Create points transaction record
+        await base44.entities.PointsTransaction.create({
+          userId: user.id,
+          amount: -1000,
+          action: 'suggestion_created',
+          description: `יצירת מסמך חדש: ${data.title}`,
+          relatedEntityType: 'document'
+        });
       }
-
-      // Deduct 1000 points from user
-      await base44.auth.updateMe({
-        points: currentPoints - 1000
-      });
-
-      // Create points transaction record
-      await base44.entities.PointsTransaction.create({
-        userId: user.id,
-        amount: -1000,
-        action: 'suggestion_created',
-        description: `יצירת מסמך חדש: ${data.title}`,
-        relatedEntityType: 'document'
-      });
 
       const doc = await base44.entities.Document.create({
         title: data.title.trim(),
@@ -340,11 +345,12 @@ Return ONLY valid JSON in this exact format:
       return;
     }
 
-    // Check if should show points confirmation dialog
+    // Check if should show points confirmation dialog (skip for admins)
+    const isAdmin = user?.role === 'admin';
     const skipConfirm = localStorage.getItem('consenz_skip_points_confirm_document') === 'true';
     const currentPoints = user?.points || 1000;
     
-    if (!skipConfirm && currentPoints >= 1000) {
+    if (!isAdmin && !skipConfirm && currentPoints >= 1000) {
       setPendingDocData({ ...formData, topics: validTopics });
       setShowPointsConfirm(true);
       return;
@@ -442,10 +448,18 @@ Return ONLY valid JSON in this exact format:
         
         <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>{t('fillDetailsBelow')}</p>
 
-        {user && (
+        {user && user.role !== 'admin' && (
           <Alert className="bg-blue-50 border-blue-200">
             <AlertDescription className="text-blue-900">
               <strong>עלות יצירת מסמך:</strong> 1000 נקודות | <strong>הנקודות שלך:</strong> {user.points || 1000}
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {user && user.role === 'admin' && (
+          <Alert className="bg-green-50 border-green-200">
+            <AlertDescription className="text-green-900">
+              <strong>מצב אדמין:</strong> אין עלות ליצירת מסמכים עבור משתמשי Admin
             </AlertDescription>
           </Alert>
         )}
