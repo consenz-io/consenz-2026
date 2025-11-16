@@ -226,6 +226,26 @@ Return ONLY valid JSON in this exact format:
         throw new Error("Please add at least one topic with one section");
       }
 
+      // Check if user has enough points (1000 required to create document)
+      const currentPoints = user.points || 1000;
+      if (currentPoints < 1000) {
+        throw new Error(`אין לך מספיק נקודות ליצירת מסמך. נדרשות 1000 נקודות, יש לך ${currentPoints}`);
+      }
+
+      // Deduct 1000 points from user
+      await base44.auth.updateMe({
+        points: currentPoints - 1000
+      });
+
+      // Create points transaction record
+      await base44.entities.PointsTransaction.create({
+        userId: user.id,
+        amount: -1000,
+        action: 'suggestion_created',
+        description: `יצירת מסמך חדש: ${data.title}`,
+        relatedEntityType: 'document'
+      });
+
       const doc = await base44.entities.Document.create({
         title: data.title.trim(),
         urlName: data.urlName.trim(),
@@ -271,6 +291,7 @@ Return ONLY valid JSON in this exact format:
     onSuccess: (doc) => {
       queryClient.invalidateQueries({ queryKey: ['publicDocuments'] });
       queryClient.invalidateQueries({ queryKey: ['allDocuments'] });
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       navigate(`${createPageUrl("DocumentView")}?id=${doc.id}`);
     },
     onError: (err) => {
@@ -373,6 +394,14 @@ Return ONLY valid JSON in this exact format:
         />
         
         <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>{t('fillDetailsBelow')}</p>
+
+        {user && (
+          <Alert className="bg-blue-50 border-blue-200">
+            <AlertDescription className="text-blue-900">
+              <strong>עלות יצירת מסמך:</strong> 1000 נקודות | <strong>הנקודות שלך:</strong> {user.points || 1000}
+            </AlertDescription>
+          </Alert>
+        )}
 
         {error && (
           <Alert variant="destructive" className="mb-6">
