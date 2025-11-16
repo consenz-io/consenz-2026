@@ -123,7 +123,7 @@ export default function DocumentView() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
       <div className="max-w-6xl mx-auto space-y-4 md:space-y-6 overflow-x-hidden">
         <div className="flex flex-col gap-3 md:gap-4">
-          <div className="flex items-start gap-2 md:gap-3">
+          <div className={`flex items-start gap-2 md:gap-3 ${isRTL ? 'flex-row' : ''}`}>
             <div className="flex-1 min-w-0">
               <h1 className="text-lg md:text-3xl font-bold text-slate-900 break-words leading-tight text-center">{document.title}</h1>
               <div className="flex gap-2 mt-1 md:mt-2 flex-wrap">
