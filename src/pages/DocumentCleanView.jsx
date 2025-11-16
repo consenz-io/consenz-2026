@@ -309,7 +309,13 @@ ${text}`;
     <div className="min-h-screen bg-white">
       {/* Header - Hidden on print */}
       <div className="bg-slate-50 border-b border-slate-200 p-3 md:p-4 print:hidden sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center mb-4">
+            <PageHeader 
+              title={t('cleanView')}
+              backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
+            />
+          </div>
           <div className="flex items-center gap-2 flex-wrap">
             {versionGroups.length > 1 && (
               <div className="flex items-center gap-2 border-l border-slate-300 pl-2">
@@ -362,12 +368,6 @@ ${text}`;
               <Printer className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               {language === 'en' ? 'Print' : language === 'ar' ? 'طباعة' : 'הדפס'}
             </Button>
-          </div>
-          <div className="print:hidden">
-            <PageHeader 
-              title=""
-              backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
-            />
           </div>
         </div>
       </div>
