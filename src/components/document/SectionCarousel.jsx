@@ -195,9 +195,12 @@ export default function SectionCarousel({
             {isFirstView ? (
               <p className="text-sm font-medium text-blue-600">חזרה לגרסה הנוכחית</p>
             ) : (
-              <p className="text-sm text-slate-600">
-                לסעיף זה נוצרו <span className="font-semibold text-amber-600">{sortedSuggestions.length}</span> הצעות לשינוי
-              </p>
+              <button 
+                onClick={() => setCurrentIndex(0)}
+                className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-colors"
+              >
+                חזרה לגרסה הנוכחית
+              </button>
             )}
           </div>
 
