@@ -18,7 +18,7 @@ export default function PageHeader({ title, backUrl }) {
   }
 
   return (
-    <div className={`flex items-center gap-4 mb-6 ${isRTL ? 'flex-row-reverse justify-end' : 'justify-start'}`}>
+    <div className={`flex items-center gap-4 mb-6 ${isRTL ? 'justify-end' : 'justify-start'}`}>
       <Link to={backUrl}>
         <Button variant="outline" size="icon">
           {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
