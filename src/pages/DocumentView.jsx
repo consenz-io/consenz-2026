@@ -130,7 +130,7 @@ export default function DocumentView() {
               </Button>
             </Link>
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg md:text-3xl font-bold text-slate-900 break-words leading-tight">{document.title}</h1>
+              <h1 className="text-lg md:text-3xl font-bold text-slate-900 break-words leading-tight text-center">{document.title}</h1>
               <div className="flex gap-2 mt-1 md:mt-2 flex-wrap">
                 <Badge variant="outline" className={`text-[10px] md:text-xs ${
                   document.privacy === 'public_view_open_participation' 
