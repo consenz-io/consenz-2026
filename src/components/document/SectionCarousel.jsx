@@ -382,7 +382,8 @@ export default function SectionCarousel({
               <VotesNeededCounter 
                 suggestion={currentView.data} 
                 document={document} 
-                acceptedSuggestions={acceptedSuggestions} 
+                acceptedSuggestions={acceptedSuggestions}
+                t={t} 
               />
               <Badge variant="outline" className="text-xs">
                 {t('by')} {getUserName(currentView.data.created_by)}
