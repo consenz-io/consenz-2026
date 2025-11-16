@@ -18,16 +18,15 @@ export default function PageHeader({ title, backUrl }) {
   }
 
   return (
-    <div className="flex items-center gap-4 mb-6">
-      <Link to={backUrl}>
+    <div className="flex items-center mb-6 relative">
+      <h1 className="text-3xl font-bold text-slate-900 text-center flex-1">
+        {title}
+      </h1>
+      <Link to={backUrl} className="absolute right-0">
         <Button variant="outline" size="icon">
           <ArrowRight className="w-4 h-4" />
         </Button>
       </Link>
-      <h1 className="text-3xl font-bold text-slate-900 text-center flex-1">
-        {title}
-      </h1>
-      <div className="w-10"></div>
     </div>
   );
 }
