@@ -310,9 +310,11 @@ ${text}`;
       {/* Header - Hidden on print */}
       <div className="bg-slate-50 border-b border-slate-200 p-3 md:p-4 print:hidden sticky top-0 z-10">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center mb-4">
+          <div className="mb-4">
             <PageHeader 
-              title={t('cleanView')}
+              title={(document.originalLanguage || 'he') !== language && showTranslatedDoc
+                ? (translatedDocTitle || document.translations?.[language] || document.title)
+                : document.title}
               backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
             />
           </div>
