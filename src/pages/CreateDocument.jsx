@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
 import InsufficientPointsDialog from "../components/InsufficientPointsDialog";
+import PointsCostConfirmDialog from "../components/PointsCostConfirmDialog";
 
 export default function CreateDocument() {
   const { t, isRTL } = useLanguage();
@@ -24,6 +25,8 @@ export default function CreateDocument() {
   const [error, setError] = useState(null);
   const [creationMode, setCreationMode] = useState("manual");
   const [showInsufficientPointsDialog, setShowInsufficientPointsDialog] = useState(false);
+  const [showPointsConfirm, setShowPointsConfirm] = useState(false);
+  const [pendingDocData, setPendingDocData] = useState(null);
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -337,7 +340,24 @@ Return ONLY valid JSON in this exact format:
       return;
     }
 
+    // Check if should show points confirmation dialog
+    const skipConfirm = localStorage.getItem('consenz_skip_points_confirm_document') === 'true';
+    const currentPoints = user?.points || 1000;
+    
+    if (!skipConfirm && currentPoints >= 1000) {
+      setPendingDocData({ ...formData, topics: validTopics });
+      setShowPointsConfirm(true);
+      return;
+    }
+
     createDocMutation.mutate({ ...formData, topics: validTopics });
+  };
+
+  const handleConfirmPoints = () => {
+    if (pendingDocData) {
+      createDocMutation.mutate(pendingDocData);
+      setPendingDocData(null);
+    }
   };
 
   const addTopic = () => {
@@ -397,6 +417,18 @@ Return ONLY valid JSON in this exact format:
         isOpen={showInsufficientPointsDialog}
         onClose={() => setShowInsufficientPointsDialog(false)}
         requiredPoints={1000}
+        currentPoints={user?.points || 1000}
+        actionType="document"
+      />
+
+      <PointsCostConfirmDialog
+        isOpen={showPointsConfirm}
+        onClose={() => {
+          setShowPointsConfirm(false);
+          setPendingDocData(null);
+        }}
+        onConfirm={handleConfirmPoints}
+        cost={1000}
         currentPoints={user?.points || 1000}
         actionType="document"
       />

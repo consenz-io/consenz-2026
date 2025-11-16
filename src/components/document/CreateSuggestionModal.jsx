@@ -19,6 +19,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
 import { createPageUrl } from "@/utils";
 import InsufficientPointsDialog from "../InsufficientPointsDialog";
+import PointsCostConfirmDialog from "../PointsCostConfirmDialog";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -44,6 +45,8 @@ export default function CreateSuggestionModal({
   const [error, setError] = useState(null);
   const [isLoadingTranslation, setIsLoadingTranslation] = useState(false);
   const [showInsufficientPointsDialog, setShowInsufficientPointsDialog] = useState(false);
+  const [showPointsConfirm, setShowPointsConfirm] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState(null);
   
   const currentUser = user;
   
@@ -279,7 +282,27 @@ Return ONLY the translated HTML:`;
       return;
     }
 
+    // Check if should show points confirmation dialog
+    const gamificationEnabled = document.gamificationEnabled || false;
+    const skipConfirm = localStorage.getItem('consenz_skip_points_confirm_suggestion') === 'true';
+    
+    if (gamificationEnabled && !skipConfirm) {
+      const currentPoints = currentUser.points || 1000;
+      if (currentPoints >= POINTS_COST) {
+        setPendingFormData(formData);
+        setShowPointsConfirm(true);
+        return;
+      }
+    }
+
     createSuggestionMutation.mutate(formData);
+  };
+
+  const handleConfirmPoints = () => {
+    if (pendingFormData) {
+      createSuggestionMutation.mutate(pendingFormData);
+      setPendingFormData(null);
+    }
   };
 
   if (!currentUser) {
@@ -301,6 +324,18 @@ Return ONLY the translated HTML:`;
           onClose();
         }}
         requiredPoints={POINTS_COST}
+        currentPoints={currentUser?.points || 1000}
+        actionType="suggestion"
+      />
+
+      <PointsCostConfirmDialog
+        isOpen={showPointsConfirm}
+        onClose={() => {
+          setShowPointsConfirm(false);
+          setPendingFormData(null);
+        }}
+        onConfirm={handleConfirmPoints}
+        cost={POINTS_COST}
         currentPoints={currentUser?.points || 1000}
         actionType="suggestion"
       />
