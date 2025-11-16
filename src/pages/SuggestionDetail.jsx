@@ -540,7 +540,7 @@ export default function SuggestionDetail() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
       <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 w-full overflow-x-hidden">
-        <div className={`flex flex-col md:flex-row items-start md:items-center justify-between gap-3 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
           <div className="flex-1 min-w-0 w-full">
             <PageHeader 
               title={suggestion.title}
