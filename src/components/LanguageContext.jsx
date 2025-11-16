@@ -175,6 +175,7 @@ const translations = {
     signInToParticipate: "Sign in to participate and create suggestions",
     previousSuggestion: "Previous",
     nextSuggestion: "Next",
+    suggestionToEditSection: "Suggestion to Edit Section",
   },
   he: {
     // ניווט
@@ -350,6 +351,7 @@ const translations = {
     signInToParticipate: "התחבר כדי להשתתף וליצור הצעות",
     previousSuggestion: "הצעה קודמת",
     nextSuggestion: "הצעה הבאה",
+    suggestionToEditSection: "הצעת שינוי לסעיף",
   },
   ar: {
     // التنقل
@@ -524,6 +526,7 @@ const translations = {
     signInToParticipate: "سجل الدخول للمشاركة وإنشاء مقترحات",
     previousSuggestion: "السابق",
     nextSuggestion: "التالي",
+    suggestionToEditSection: "اقتراح لتعديل القسم",
   }
 };
 
