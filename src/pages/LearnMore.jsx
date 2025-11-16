@@ -464,7 +464,7 @@ export default function LearnMore() {
                   <p className="text-slate-900">
                     {getLocalizedText(
                       "You start with 1,000 points",
-                      "אתה מתחיל עם 1,000 נקודות",
+                      "התחלה עם 1,000 נקודות",
                       "تبدأ بـ 1000 نقطة"
                     )}
                   </p>
@@ -477,7 +477,7 @@ export default function LearnMore() {
                   <p className="text-slate-900">
                     {getLocalizedText(
                       "You create a suggestion: 1,000 - 200 = 800 points",
-                      "אתה יוצר הצעה: 1,000 - 200 = 800 נקודות",
+                      "יצירת הצעה: 1,000 - 200 = 800 נקודות",
                       "تنشئ مقترحًا: 1000 - 200 = 800 نقطة"
                     )}
                   </p>
@@ -490,7 +490,7 @@ export default function LearnMore() {
                   <p className="text-slate-900">
                     {getLocalizedText(
                       "You receive 5 pro votes: 800 + (5 × 10) = 850 points",
-                      "אתה מקבל 5 הצבעות בעד: 800 + (5 × 10) = 850 נקודות",
+                      "קבלת 5 הצבעות בעד: 800 + (5 × 10) = 850 נקודות",
                       "تتلقى 5 أصوات مع: 800 + (5 × 10) = 850 نقطة"
                     )}
                   </p>
@@ -503,7 +503,7 @@ export default function LearnMore() {
                   <p className="text-slate-900">
                     {getLocalizedText(
                       "Your suggestion is accepted: 850 + 100 = 950 points",
-                      "ההצעה שלך מתקבלת: 850 + 100 = 950 נקודות",
+                      "ההצעה מתקבלת: 850 + 100 = 950 נקודות",
                       "يتم قبول مقترحك: 850 + 100 = 950 نقطة"
                     )}
                   </p>
@@ -514,7 +514,7 @@ export default function LearnMore() {
                 <p className="font-bold text-red-900">
                   {getLocalizedText(
                     "Final result: -50 points net loss (but your content was accepted!) 📝",
-                    "תוצאה סופית: -50 נקודות הפסד נטו (אבל התוכן שלך התקבל!) 📝",
+                    "תוצאה סופית: -50 נקודות הפסד נטו (אבל התוכן התקבל!) 📝",
                     "النتيجة النهائية: -50 نقطة خسارة صافية (لكن تم قبول محتواك!) 📝"
                   )}
                 </p>
