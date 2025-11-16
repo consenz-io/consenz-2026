@@ -254,18 +254,9 @@ export default function SectionCarousel({
         ) : (
           // תצוגת הצעה - diff
           <>
-            <div className="mb-3">
-              <div className="text-sm font-semibold text-amber-900 mb-2">
-                <DocumentTextContent 
-                  content={
-                    showTranslated[currentView.data.id] && currentView.data.translations?.[language]?.title
-                      ? currentView.data.translations[language].title
-                      : currentView.data.title
-                  } 
-                />
-              </div>
-              {currentView.data.explanation && (
-                <p className="text-sm text-slate-600 mb-3">
+            {currentView.data.explanation && (
+              <div className="mb-3">
+                <p className="text-sm text-slate-600">
                   <DocumentTextContent 
                     content={
                       showTranslated[currentView.data.id] && currentView.data.translations?.[language]?.explanation
@@ -274,8 +265,8 @@ export default function SectionCarousel({
                     }
                   />
                 </p>
-              )}
-            </div>
+              </div>
+            )}
             
             {currentView.data.originalContent ? (
               <SectionDiff
