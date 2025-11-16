@@ -365,7 +365,7 @@ ${text}`;
           </div>
           <div className="print:hidden">
             <PageHeader 
-              title=""
+              title={t('cleanView')}
               backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
             />
           </div>
