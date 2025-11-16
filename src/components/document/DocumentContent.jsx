@@ -44,22 +44,41 @@ export default function DocumentContent({
   };
 
   // בדיקה ואישור אוטומטי של הצעות שעברו את רף הקונסנזוס
+  const hasCheckedRef = React.useRef(new Set());
+  
   React.useEffect(() => {
     if (!document || !suggestions || !user) return;
 
     const checkAndAutoAccept = async () => {
       let hasChanges = false;
+      
       for (const suggestion of suggestions) {
         if (suggestion.status !== 'pending') continue;
+        
+        // Skip if already checked this suggestion
+        const checkKey = `${suggestion.id}-${suggestion.proVotes}-${suggestion.conVotes}`;
+        if (hasCheckedRef.current.has(checkKey)) continue;
+        hasCheckedRef.current.add(checkKey);
 
-        const { shouldAccept } = await checkSuggestionConsensus(suggestion, document);
-        if (shouldAccept) {
-          console.log('[AUTO-ACCEPT] Auto-accepting suggestion:', suggestion.id);
-          const accepted = await autoAcceptSuggestion(suggestion, user.id, document);
-          if (accepted) {
-            hasChanges = true;
+        try {
+          const { shouldAccept } = await checkSuggestionConsensus(suggestion, document);
+          if (shouldAccept) {
+            console.log('[AUTO-ACCEPT] Auto-accepting suggestion:', suggestion.id);
+            const accepted = await autoAcceptSuggestion(suggestion, user.id, document);
+            if (accepted) {
+              hasChanges = true;
+            }
           }
+        } catch (err) {
+          console.error('[AUTO-ACCEPT] Error checking suggestion:', err);
+          // Remove from checked set on error so it can be retried
+          hasCheckedRef.current.delete(checkKey);
         }
+      }
+      
+      // Cleanup old entries
+      if (hasCheckedRef.current.size > 100) {
+        hasCheckedRef.current.clear();
       }
       
       // Refresh data only if changes occurred
