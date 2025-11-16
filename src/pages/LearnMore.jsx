@@ -228,8 +228,17 @@ export default function LearnMore() {
         <div className="relative max-w-7xl mx-auto px-6 py-20">
           <Link to={createPageUrl("Home")}>
             <Button variant="outline" size="sm" className="mb-6">
-              <ArrowLeft className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {getLocalizedText("Back to Home", "חזרה לדף הבית", "العودة إلى الصفحة الرئيسية")}
+              {isRTL ? (
+                <>
+                  {getLocalizedText("Back to Home", "חזרה לדף הבית", "العودة إلى الصفحة الرئيسية")}
+                  <ArrowRight className="w-4 h-4 mr-2" />
+                </>
+              ) : (
+                <>
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  {getLocalizedText("Back to Home", "חזרה לדף הבית", "العودة إلى الصفحة الرئيسية")}
+                </>
+              )}
             </Button>
           </Link>
           
