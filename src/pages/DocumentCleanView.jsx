@@ -79,6 +79,30 @@ export default function DocumentCleanView() {
   const currentVersion = versionGroups[currentVersionIndex];
   const previousVersion = versionGroups[currentVersionIndex + 1];
 
+  // גלילה אוטומטית לסעיף שהשתנה
+  React.useEffect(() => {
+    if (currentVersionIndex > 0 && currentVersion && previousVersion) {
+      setTimeout(() => {
+        // מציאת הסעיף הראשון שהשתנה
+        const changedSection = currentVersion.sections.find(currSection => {
+          const prevSection = previousVersion.sections.find(ps => ps.sectionId === currSection.sectionId);
+          return prevSection && currSection.content !== prevSection.content;
+        });
+
+        if (changedSection) {
+          const element = document.getElementById(`section-${changedSection.sectionId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
+            setTimeout(() => {
+              element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
+            }, 2000);
+          }
+        }
+      }, 100);
+    }
+  }, [currentVersionIndex, currentVersion, previousVersion]);
+
   if (docLoading || topicsLoading || sectionsLoading || versionsLoading) {
     return (
       <div className="min-h-screen bg-white p-8">
