@@ -420,19 +420,7 @@ export default function SectionCarousel({
         )}
       </div>
 
-      {/* כפתורים מרכזיים - ערוך/תגובה בתצוגה נוכחית */}
-      {isFirstView && user && (
-        <div className="flex justify-center gap-2 mt-4 pt-4 border-t border-slate-200">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onEditSection(section)}
-          >
-            <Edit className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-            {t('editSection')}
-          </Button>
-        </div>
-      )}
+
     </div>
   );
 }
