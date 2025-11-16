@@ -176,6 +176,8 @@ const translations = {
     previousSuggestion: "Previous",
     nextSuggestion: "Next",
     suggestionToEditSection: "Suggestion to Edit Section",
+    newSectionIn: "New section in {topic}",
+    editSectionIn: "Edit section in {topic}",
   },
   he: {
     // ניווט
@@ -352,6 +354,8 @@ const translations = {
     previousSuggestion: "הצעה קודמת",
     nextSuggestion: "הצעה הבאה",
     suggestionToEditSection: "הצעת שינוי לסעיף",
+    newSectionIn: "סעיף חדש ב-{topic}",
+    editSectionIn: "עריכת סעיף ב-{topic}",
   },
   ar: {
     // التنقل
@@ -527,6 +531,8 @@ const translations = {
     previousSuggestion: "السابق",
     nextSuggestion: "التالي",
     suggestionToEditSection: "اقتراح لتعديل القسم",
+    newSectionIn: "قسم جديد في {topic}",
+    editSectionIn: "تعديل قسم في {topic}",
   }
 };
 
@@ -551,8 +557,12 @@ export const LanguageProvider = ({ children }) => {
     document.documentElement.lang = language;
   }, [language]);
 
-  const t = (key) => {
-    return translations[language][key] || key;
+  const t = (key, options = {}) => {
+    let translation = translations[language][key] || key;
+    for (const optionKey in options) {
+      translation = translation.replace(new RegExp(`\\{\\s*${optionKey}\\s*\\}`, 'g'), options[optionKey]);
+    }
+    return translation;
   };
 
   const isRTL = language === 'he' || language === 'ar';

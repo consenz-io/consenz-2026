@@ -164,8 +164,8 @@ Return ONLY the translated HTML:`;
 
       // Generate automatic title
       const autoTitle = isNewSection 
-        ? `New section in ${topicTitle}`
-        : `Edit section in ${topicTitle}`;
+        ? t('newSectionIn', { topic: topicTitle })
+        : t('editSectionIn', { topic: topicTitle });
 
       const detectedLanguage = detectLanguage(data.newContent);
       
