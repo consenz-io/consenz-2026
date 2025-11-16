@@ -111,7 +111,7 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
                         <span>{getTimeRemaining(suggestion.timerEndsAt)} {t('left')}</span>
                       </div>
                     )}
-                    <VotesNeededCounter suggestion={suggestion} document={document} />
+                    <VotesNeededCounter suggestion={suggestion} document={document} t={t} />
                   </div>
 
                   <div className="text-xs text-slate-400">
