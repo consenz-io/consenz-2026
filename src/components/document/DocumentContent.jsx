@@ -13,6 +13,7 @@ import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
 import DocumentTextContent from "./DocumentTextContent";
 import SectionCarousel from "./SectionCarousel";
+import DirectEditModal from "./DirectEditModal";
 import { useLanguage } from "@/components/LanguageContext";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAutoAccept";
 
@@ -28,6 +29,7 @@ export default function DocumentContent({
 }) {
   const [showComments, setShowComments] = useState({});
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
+  const [editingSection, setEditingSection] = useState(null);
   const queryClient = useQueryClient();
   const { t, isRTL, language } = useLanguage();
 
@@ -514,6 +516,13 @@ export default function DocumentContent({
             <p className="text-slate-500 text-sm md:text-base">{t('noTopicsYet')}</p>
           </CardContent>
         </Card>
+      )}
+
+      {editingSection && (
+        <DirectEditModal
+          section={editingSection}
+          onClose={() => setEditingSection(null)}
+        />
       )}
     </div>
   );

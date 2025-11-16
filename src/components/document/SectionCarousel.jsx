@@ -19,6 +19,7 @@ export default function SectionCarousel({
   document,
   user,
   onEditSection,
+  onDirectEdit,
   toggleComments,
   showComments,
   getCommentsCount,
@@ -26,7 +27,8 @@ export default function SectionCarousel({
   voteMutation,
   getUserName,
   acceptedSuggestions,
-  sectionIndex
+  sectionIndex,
+  isAdmin
 }) {
   const { t, isRTL, language } = useLanguage();
   
