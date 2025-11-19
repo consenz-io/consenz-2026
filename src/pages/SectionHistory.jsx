@@ -271,16 +271,7 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
       {suggestion.explanation && (
         <div>
           <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('explanationForSuggestion')}</h3>
-          <TranslatableContent
-            content={suggestion.explanation}
-            entity={suggestion}
-            entityType="suggestion"
-            onUpdate={(updated) => {
-              queryClient.setQueryData(['suggestion', suggestionId], updated);
-            }}
-            className="text-sm text-slate-600"
-            isPlainText={true}
-          />
+          <p className="text-sm text-slate-600">{suggestion.explanation}</p>
         </div>
       )}
 
