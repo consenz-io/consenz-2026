@@ -112,9 +112,6 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
                   <p className="font-medium text-slate-900 truncate">
                     {user.full_name}
                   </p>
-                  <p className="text-sm text-slate-500 truncate">
-                    {user.email}
-                  </p>
                 </div>
                 {user.role === 'admin' && (
                   <Badge variant="outline" className="text-xs">
