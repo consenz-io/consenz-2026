@@ -72,10 +72,10 @@ export default function SectionHistory() {
 
   if (sectionLoading || versionsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="max-w-5xl mx-auto space-y-6">
-          <Skeleton className="h-12 w-64" />
-          <Skeleton className="h-96 w-full" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6">
+        <div className="max-w-5xl mx-auto space-y-4 md:space-y-6">
+          <Skeleton className="h-10 md:h-12 w-48 md:w-64" />
+          <Skeleton className="h-64 md:h-96 w-full" />
         </div>
       </div>
     );
@@ -83,9 +83,9 @@ export default function SectionHistory() {
 
   if (!section) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="max-w-5xl mx-auto text-center py-20">
-          <h1 className="text-2xl font-bold text-slate-900">{t('sectionNotFound')}</h1>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6">
+        <div className="max-w-5xl mx-auto text-center py-12 md:py-20">
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900 px-4">{t('sectionNotFound')}</h1>
           <Link to={createPageUrl("Home")}>
             <Button className="mt-4">{t('goHome')}</Button>
           </Link>
@@ -118,8 +118,8 @@ export default function SectionHistory() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6">
+      <div className="max-w-5xl mx-auto space-y-4 md:space-y-6">
         <PageHeader 
           title={t('sectionHistory')}
           backUrl={`${createPageUrl("DocumentView")}?id=${document?.id}&scrollTo=${sectionId}`}
@@ -136,14 +136,14 @@ export default function SectionHistory() {
         )}
 
         {/* Current Version */}
-        <Card className="bg-white border-2 border-blue-500">
-          <CardHeader className="bg-blue-50">
-            <CardTitle className="flex items-center justify-between">
-              <span>{t('currentVersion')}</span>
-              <Badge className="bg-blue-600">{t('current')}</Badge>
+        <Card className="bg-white border-2 border-blue-500 overflow-hidden">
+          <CardHeader className="bg-blue-50 p-4 md:p-6">
+            <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <span className="text-base md:text-lg">{t('currentVersion')}</span>
+              <Badge className="bg-blue-600 text-xs">{t('current')}</Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-3 md:p-6">
             <TranslatableContent
               content={section.content}
               entity={section}
@@ -161,46 +161,49 @@ export default function SectionHistory() {
 
         {/* Version History */}
         {versionGroups.length > 0 ? (
-          <div className="space-y-6">
-            <h2 className="text-xl font-bold text-slate-900">{t('previousVersions')}</h2>
+          <div className="space-y-4 md:space-y-6">
+            <h2 className="text-lg md:text-xl font-bold text-slate-900 px-2 md:px-0">{t('previousVersions')}</h2>
             {versionGroups.map((group, groupIndex) => {
               const latestVersion = group.versions[0];
               const previousVersion = group.versions[1];
               
               return (
-                <Card key={groupIndex} className="bg-white border-slate-200">
-                  <CardHeader className="border-b border-slate-100">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle className="text-lg">
-                          {t('version')} {latestVersion.version}
-                        </CardTitle>
-                        <p className="text-sm text-slate-600 mt-1">
-                          {latestVersion.changeDescription || t('noDescription')}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">
-                          {latestVersion.changeType === 'suggestion_accepted' ? t('suggestionAccepted') :
-                           latestVersion.changeType === 'section_created' ? t('sectionCreated') :
-                           t('directEdit')}
-                        </Badge>
-                        {group.suggestionId && (
-                          <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.suggestionId}`}>
-                            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                              <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                              {t('viewFullDiscussion')}
-                            </Button>
-                          </Link>
-                        )}
+                <Card key={groupIndex} className="bg-white border-slate-200 overflow-hidden">
+                  <CardHeader className="border-b border-slate-100 p-4 md:p-6">
+                    <div className="flex flex-col gap-3">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <CardTitle className="text-base md:text-lg">
+                            {t('version')} {latestVersion.version}
+                          </CardTitle>
+                          <p className="text-xs md:text-sm text-slate-600 mt-1 break-words">
+                            {latestVersion.changeDescription || t('noDescription')}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {latestVersion.changeType === 'suggestion_accepted' ? t('suggestionAccepted') :
+                             latestVersion.changeType === 'section_created' ? t('sectionCreated') :
+                             t('directEdit')}
+                          </Badge>
+                          {group.suggestionId && (
+                            <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.suggestionId}`}>
+                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8">
+                                <MessageSquare className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                <span className="hidden sm:inline">{t('viewFullDiscussion')}</span>
+                                <span className="sm:hidden">{t('comments')}</span>
+                              </Button>
+                            </Link>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="p-6 space-y-4">
+                  <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4">
                     {/* Show diff between this version and the previous one */}
                     {previousVersion && latestVersion.changeType === 'suggestion_accepted' && (
                       <div>
-                        <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('changesInThisVersion')}</h3>
+                        <h3 className="text-xs md:text-sm font-semibold text-slate-700 mb-2">{t('changesInThisVersion')}</h3>
                         <SectionDiff
                           originalContent={previousVersion.content}
                           newContent={latestVersion.content}
@@ -219,7 +222,7 @@ export default function SectionHistory() {
                       />
                     )}
 
-                    <div className="text-xs text-slate-500 pt-4 border-t">
+                    <div className="text-[10px] md:text-xs text-slate-500 pt-3 md:pt-4 border-t break-words">
                       {t('created')} {new Date(latestVersion.created_date).toLocaleString()}
                       {latestVersion.created_by && ` ${t('by')} ${getUserName(latestVersion.created_by)}`}
                     </div>
@@ -230,10 +233,10 @@ export default function SectionHistory() {
           </div>
         ) : (
           <Card className="bg-white border-slate-200">
-            <CardContent className="p-12 text-center">
-              <History className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500">{t('noPreviousVersions')}</p>
-              <p className="text-sm text-slate-400 mt-2">{t('sectionChangesAutomaticallySaved')}</p>
+            <CardContent className="p-6 md:p-12 text-center">
+              <History className="w-12 h-12 md:w-16 md:h-16 text-slate-300 mx-auto mb-4" />
+              <p className="text-sm md:text-base text-slate-500">{t('noPreviousVersions')}</p>
+              <p className="text-xs md:text-sm text-slate-400 mt-2 px-4">{t('sectionChangesAutomaticallySaved')}</p>
             </CardContent>
           </Card>
         )}
@@ -267,16 +270,16 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
   }
 
   return (
-    <div className="space-y-4 bg-blue-50/50 p-4 rounded-lg border border-blue-200">
+    <div className="space-y-3 md:space-y-4 bg-blue-50/50 p-3 md:p-4 rounded-lg border border-blue-200">
       {suggestion.explanation && (
         <div>
-          <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('explanationForSuggestion')}</h3>
-          <p className="text-sm text-slate-600">{suggestion.explanation}</p>
+          <h3 className="text-xs md:text-sm font-semibold text-slate-700 mb-2">{t('explanationForSuggestion')}</h3>
+          <p className="text-xs md:text-sm text-slate-600 break-words">{suggestion.explanation}</p>
         </div>
       )}
 
-      <div className="flex items-center justify-between text-sm">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs md:text-sm">
+        <div className="flex items-center gap-3 md:gap-4 flex-wrap">
           <div className="flex items-center gap-1">
             <span className="text-green-600 font-semibold">{suggestion.proVotes || 0}</span>
             <span className="text-slate-500">{t('pro')}</span>
@@ -285,7 +288,7 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
             <span className="text-red-600 font-semibold">{suggestion.conVotes || 0}</span>
             <span className="text-slate-500">{t('con')}</span>
           </div>
-          <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
+          <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 text-xs">
             {suggestion.status === 'accepted' ? t('accepted') : suggestion.status}
           </Badge>
         </div>
@@ -293,15 +296,15 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
           variant="ghost"
           size="sm"
           onClick={() => toggleComments(suggestionId)}
-          className="text-slate-600 hover:text-blue-600"
+          className="text-slate-600 hover:text-blue-600 text-xs h-8"
         >
-          <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+          <MessageSquare className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
           {t('comments')} ({comments.length})
         </Button>
       </div>
 
       {showComments[suggestionId] && (
-        <div className="mt-4 pt-4 border-t border-blue-300">
+        <div className="mt-3 md:mt-4 pt-3 md:pt-4 border-t border-blue-300">
           <CommentsSection
             entityType="suggestion"
             entityId={suggestionId}
@@ -311,11 +314,11 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
       )}
 
       <div className="space-y-1">
-        <div className="text-xs text-slate-500">
+        <div className="text-[10px] md:text-xs text-slate-500 break-words">
           {t('publishedBy')} {getUserName(suggestion.created_by)} {t('created')} {new Date(suggestion.created_date).toLocaleString()}
         </div>
         {suggestion.status === 'accepted' && suggestion.updated_date && (
-          <div className="text-xs text-green-600 font-medium">
+          <div className="text-[10px] md:text-xs text-green-600 font-medium">
             {t('acceptedOn')} {new Date(suggestion.updated_date).toLocaleString()}
           </div>
         )}
