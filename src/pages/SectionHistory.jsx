@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,10 +11,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import SectionDiff from "../components/document/SectionDiff";
 import CommentsSection from "../components/document/CommentsSection";
+import TranslatableContent from "../components/document/TranslatableContent";
 import PageHeader from "../components/PageHeader";
 
 export default function SectionHistory() {
   const { t, isRTL } = useLanguage();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const sectionId = searchParams.get('id');
   const [showComments, setShowComments] = useState({});
@@ -142,9 +144,14 @@ export default function SectionHistory() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <div 
+            <TranslatableContent
+              content={section.content}
+              entity={section}
+              entityType="section"
+              onUpdate={(updated) => {
+                queryClient.setQueryData(['section', sectionId], updated);
+              }}
               className="prose prose-sm max-w-none text-slate-700"
-              dangerouslySetInnerHTML={{ __html: section.content }}
             />
             <div className="text-xs text-slate-500 mt-4 pt-4 border-t">
               {t('lastUpdate')}: {new Date(section.updated_date).toLocaleString()}
@@ -238,6 +245,7 @@ export default function SectionHistory() {
 // Component to display suggestion details
 function SuggestionDetails({ suggestionId, user, getUserName, showComments, toggleComments }) {
   const { t, isRTL } = useLanguage();
+  const queryClient = useQueryClient();
   const { data: suggestion } = useQuery({
     queryKey: ['suggestion', suggestionId],
     queryFn: () => base44.entities.Suggestion.filter({ id: suggestionId }).then(s => s[0]),
@@ -263,7 +271,16 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
       {suggestion.explanation && (
         <div>
           <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('explanationForSuggestion')}</h3>
-          <p className="text-sm text-slate-600">{suggestion.explanation}</p>
+          <TranslatableContent
+            content={suggestion.explanation}
+            entity={suggestion}
+            entityType="suggestion"
+            onUpdate={(updated) => {
+              queryClient.setQueryData(['suggestion', suggestionId], updated);
+            }}
+            className="text-sm text-slate-600"
+            isPlainText={true}
+          />
         </div>
       )}
 
