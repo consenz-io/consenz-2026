@@ -179,6 +179,10 @@ const translations = {
     newSectionIn: "New section in {topic}",
     editSectionIn: "Edit section in {topic}",
     changeDescription: "Change Description",
+    translate: "Translate",
+    showOriginal: "Show Original",
+    showTranslation: "Show Translation",
+    on: "on",
   },
   he: {
     // ניווט
@@ -358,6 +362,10 @@ const translations = {
     newSectionIn: "סעיף חדש ב-{topic}",
     editSectionIn: "עריכת סעיף ב-{topic}",
     changeDescription: "תיאור השינוי",
+    translate: "תרגם",
+    showOriginal: "הצג מקור",
+    showTranslation: "הצג תרגום",
+    on: "ב-",
   },
   ar: {
     // التنقل
@@ -536,6 +544,10 @@ const translations = {
     newSectionIn: "قسم جديد في {topic}",
     editSectionIn: "تعديل قسم في {topic}",
     changeDescription: "وصف التغيير",
+    translate: "ترجمة",
+    showOriginal: "إظهار الأصل",
+    showTranslation: "إظهار الترجمة",
+    on: "في",
   }
 };
 
