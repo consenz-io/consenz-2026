@@ -450,7 +450,7 @@ export default function SectionCarousel({
 
       {/* כפתורים מרכזיים - ערוך/תגובה בתצוגה נוכחית */}
       {isFirstView && user && (
-        <div className="flex justify-center gap-2 mt-4 pt-4 border-t border-slate-200">
+        <div className={`flex gap-2 mt-4 pt-4 border-t border-slate-200 opacity-0 group-hover:opacity-100 transition-opacity ${isRTL ? 'justify-end' : 'justify-start'}`}>
           <Button
             variant="ghost"
             size="sm"
@@ -473,12 +473,12 @@ export default function SectionCarousel({
           {isAdmin && (
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={() => setShowDeleteDialog(true)}
               className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              title={t('deleteSection')}
             >
-              <Trash2 className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-              {t('deleteSection')}
+              <Trash2 className="w-4 h-4" />
             </Button>
           )}
         </div>
