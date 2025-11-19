@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, ThumbsUp, ThumbsDown, Languages, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, ThumbsUp, ThumbsDown, Languages, Loader2, Trash2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
+import DeleteSectionDialog from "./DeleteSectionDialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import SectionDiff from "./SectionDiff";
 import VotesNeededCounter from "./VotesNeededCounter";
@@ -53,6 +54,7 @@ export default function SectionCarousel({
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showTranslated, setShowTranslated] = useState({});
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const currentView = allViews[currentIndex];
 
   // דפדוף מעגלי
@@ -468,8 +470,26 @@ export default function SectionCarousel({
               עריכה ישירה
             </Button>
           )}
+          {isAdmin && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowDeleteDialog(true)}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              {t('deleteSection')}
+            </Button>
+          )}
         </div>
       )}
+      
+      <DeleteSectionDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={(saveToHistory) => deleteSectionMutation.mutate(saveToHistory)}
+        isDeleting={deleteSectionMutation.isPending}
+      />
     </div>
   );
 }
