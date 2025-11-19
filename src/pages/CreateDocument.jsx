@@ -19,7 +19,7 @@ import InsufficientPointsDialog from "../components/InsufficientPointsDialog";
 import PointsCostConfirmDialog from "../components/PointsCostConfirmDialog";
 
 export default function CreateDocument() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [error, setError] = useState(null);
@@ -265,6 +265,7 @@ Return ONLY valid JSON in this exact format:
         avgSuggestionConsensus: 0.5,
         totalUsersInteracted: 0,
         threshold: 0,
+        originalLanguage: language,
       });
 
       await base44.entities.DocumentAdmin.create({
