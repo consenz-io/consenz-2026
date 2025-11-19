@@ -5,6 +5,11 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
 const translateTitle = (title, t, language) => {
+  // Ensure title is a string
+  if (typeof title !== 'string') {
+    return title;
+  }
+  
   // Translate suggestion titles dynamically
   const newSectionMatch = title.match(/^New section in (.+)$/i);
   const editSectionMatch = title.match(/^Edit section in (.+)$/i);
