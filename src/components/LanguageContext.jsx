@@ -608,6 +608,7 @@ const translations = {
     saveToHistory: "حفظ في سجل الإصدارات قبل الحذف",
     sectionDeleted: "تم حذف القسم بنجاح",
     deleting: "جارٍ الحذف...",
+    editSuggestions: "مقترحات تعديل",
     }
 };
 
