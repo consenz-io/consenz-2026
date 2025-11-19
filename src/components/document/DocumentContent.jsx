@@ -415,7 +415,7 @@ Return ONLY the translated text:`;
           <Card key={topic.id} className="bg-white border-slate-200 w-full overflow-hidden">
             <CardHeader className="border-b border-slate-100 p-4 md:p-6">
               <div className={`flex flex-col md:flex-row justify-between md:items-center gap-3 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-                <div className="flex-1 min-w-0 flex items-center gap-2">
+                <div className={`flex-1 min-w-0 flex items-center gap-2 ${isRTL ? 'justify-end' : ''}`}>
                   <CardTitle className={`text-lg md:text-2xl break-words ${isRTL ? 'text-right' : 'text-left'}`}>
                     {showTranslatedTopics[topic.id] && topic.translations?.[language]?.title
                       ? topic.translations[language].title
