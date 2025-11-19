@@ -120,8 +120,8 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-2 md:p-6 overflow-x-hidden">
-        <div className="max-w-4xl mx-auto space-y-3 md:space-y-6 w-full px-2 md:px-0">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-2 md:p-6 overflow-x-hidden w-full">
+        <div className="max-w-4xl mx-auto space-y-3 md:space-y-6 w-full overflow-x-hidden px-2 md:px-4 max-w-full">
           <Skeleton className="h-10 md:h-12 w-32 md:w-48" />
           <Skeleton className="h-48 md:h-64 w-full" />
         </div>
@@ -160,9 +160,9 @@ export default function Profile() {
 
 
 
-        <Card className="bg-white overflow-hidden">
-          <CardHeader>
-            <div className="flex flex-col md:flex-row justify-between md:items-center gap-3">
+        <Card className="bg-white overflow-hidden max-w-full">
+          <CardHeader className="p-3 md:p-6">
+            <div className="flex flex-col md:flex-row justify-between md:items-center gap-2 md:gap-3">
               <div className="min-w-0">
                 <CardTitle className="break-words">{t('personalInformation')}</CardTitle>
                 <CardDescription className="break-words">{isOwnProfile ? 'Your account details' : `${user.full_name}'s profile`}</CardDescription>
@@ -191,10 +191,10 @@ export default function Profile() {
               ) : null}
             </div>
           </CardHeader>
-          <CardContent className="space-y-4 md:space-y-6">
+          <CardContent className="space-y-3 md:space-y-6 p-3 md:p-6">
             <div className="space-y-3 md:space-y-4">
-              <div className="flex items-start gap-3 md:gap-4">
-                <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white text-2xl md:text-3xl font-bold shadow-lg flex-shrink-0">
+              <div className="flex items-start gap-2 md:gap-4">
+                <div className="w-12 h-12 md:w-20 md:h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white text-xl md:text-3xl font-bold shadow-lg flex-shrink-0">
                   {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
                 <div className="flex-1 space-y-3 md:space-y-4 min-w-0">
@@ -417,15 +417,14 @@ export default function Profile() {
         </Card>
 
         {isOwnProfile && (
-          <Card className="bg-white border-slate-200 overflow-hidden">
-            <CardHeader>
-              <CardTitle className="break-words">{t('activitySummary')}</CardTitle>
-              <CardDescription className="break-words">{t('contributionDescription')}</CardDescription>
+          <Card className="bg-white border-slate-200 overflow-hidden max-w-full">
+            <CardHeader className="p-3 md:p-6">
+              <CardTitle className="break-words text-base md:text-lg">{t('activitySummary')}</CardTitle>
             </CardHeader>
-          <CardContent>
-            <div className="space-y-3 md:space-y-4">
+          <CardContent className="p-3 md:p-6">
+            <div className="space-y-3 md:space-y-4 max-w-full overflow-x-hidden">
               {/* Stats Summary */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3 pb-3 md:pb-4 border-b border-slate-200">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3 pb-3 md:pb-4 border-b border-slate-200 max-w-full">
                 <div className="flex justify-between items-center p-2 md:p-3 bg-blue-50 rounded-lg border border-blue-200 min-w-0">
                   <span className="text-slate-700 font-medium text-xs md:text-sm truncate">{t('gamificationPoints')}</span>
                   <span className="font-bold text-lg md:text-xl text-blue-600 shrink-0">{user.points || 1000}</span>
