@@ -120,10 +120,10 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <Skeleton className="h-12 w-48" />
-          <Skeleton className="h-64 w-full" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-2 md:p-6 overflow-x-hidden">
+        <div className="max-w-4xl mx-auto space-y-3 md:space-y-6 w-full px-2 md:px-0">
+          <Skeleton className="h-10 md:h-12 w-32 md:w-48" />
+          <Skeleton className="h-48 md:h-64 w-full" />
         </div>
       </div>
     );
@@ -137,8 +137,8 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-2 md:p-6 overflow-x-hidden">
+      <div className="max-w-4xl mx-auto space-y-3 md:space-y-6 w-full px-2 md:px-0">
         <PageHeader 
           title={t('profile')}
           backUrl={createPageUrl("Home")}
@@ -160,64 +160,64 @@ export default function Profile() {
           </Alert>
         )}
 
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-2 border-blue-400">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <Sparkles className="w-6 h-6" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 w-full">
+          <Card className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-2 border-blue-400 overflow-hidden">
+            <CardContent className="p-3 md:p-6">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-5 h-5 md:w-6 md:h-6" />
                 </div>
-                <div>
-                  <div className="text-4xl font-bold">{user.points || 1000}</div>
-                  <div className="text-sm text-blue-100 font-medium">{t('gamificationPoints')}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-indigo-600" />
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-slate-900">{user.suggestionsCreated || 0}</div>
-                  <div className="text-sm text-slate-600">{t('suggestions')}</div>
+                <div className="min-w-0">
+                  <div className="text-2xl md:text-4xl font-bold">{user.points || 1000}</div>
+                  <div className="text-xs md:text-sm text-blue-100 font-medium truncate">{t('gamificationPoints')}</div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                  <Shield className="w-6 h-6 text-purple-600" />
+          <Card className="bg-white overflow-hidden">
+            <CardContent className="p-3 md:p-6">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <FileText className="w-5 h-5 md:w-6 md:h-6 text-indigo-600" />
                 </div>
-                <div>
-                  <div className="text-2xl font-bold text-slate-900 capitalize">{user.role || 'User'}</div>
-                  <div className="text-sm text-slate-600">{t('role')}</div>
+                <div className="min-w-0">
+                  <div className="text-2xl md:text-3xl font-bold text-slate-900">{user.suggestionsCreated || 0}</div>
+                  <div className="text-xs md:text-sm text-slate-600">{t('suggestions')}</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white overflow-hidden">
+            <CardContent className="p-3 md:p-6">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-5 h-5 md:w-6 md:h-6 text-purple-600" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xl md:text-2xl font-bold text-slate-900 capitalize truncate">{user.role || 'User'}</div>
+                  <div className="text-xs md:text-sm text-slate-600">{t('role')}</div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Card className="bg-white">
+        <Card className="bg-white overflow-hidden">
           <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>{t('personalInformation')}</CardTitle>
-                <CardDescription>{isOwnProfile ? 'Your account details' : `${user.full_name}'s profile`}</CardDescription>
+            <div className="flex flex-col md:flex-row justify-between md:items-center gap-3">
+              <div className="min-w-0">
+                <CardTitle className="break-words">{t('personalInformation')}</CardTitle>
+                <CardDescription className="break-words">{isOwnProfile ? 'Your account details' : `${user.full_name}'s profile`}</CardDescription>
               </div>
               {!isEditing && isOwnProfile ? (
-                <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
+                <Button onClick={() => setIsEditing(true)} variant="outline" size="sm" className="shrink-0">
                   <Edit2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {t('editProfile')}
                 </Button>
               ) : isOwnProfile ? (
-                <div className="flex gap-2">
+                <div className="flex gap-2 shrink-0">
                   <Button onClick={handleCancel} variant="outline" size="sm">
                     <X className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                     {t('cancel')}
@@ -235,13 +235,13 @@ export default function Profile() {
               ) : null}
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <div className="flex items-start gap-4">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+          <CardContent className="space-y-4 md:space-y-6">
+            <div className="space-y-3 md:space-y-4">
+              <div className="flex items-start gap-3 md:gap-4">
+                <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white text-2xl md:text-3xl font-bold shadow-lg flex-shrink-0">
                   {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
-                <div className="flex-1 space-y-4">
+                <div className="flex-1 space-y-3 md:space-y-4 min-w-0">
                   <div>
                     <Label htmlFor="full_name" className="flex items-center gap-2">
                       <User className="w-4 h-4" />
@@ -256,7 +256,7 @@ export default function Profile() {
                         className="mt-1"
                       />
                     ) : (
-                      <p className="text-lg font-medium text-slate-900 mt-1">{user.full_name}</p>
+                      <p className="text-base md:text-lg font-medium text-slate-900 mt-1 break-words">{user.full_name}</p>
                     )}
                   </div>
 
@@ -266,7 +266,7 @@ export default function Profile() {
                         <Mail className="w-4 h-4" />
                         {t('email')}
                       </Label>
-                      <p className="text-slate-700 mt-1">{user.email}</p>
+                      <p className="text-slate-700 mt-1 break-all text-sm md:text-base">{user.email}</p>
                       <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
                     </div>
                   )}
@@ -317,128 +317,128 @@ export default function Profile() {
                     <Label className="text-sm font-medium text-slate-700 mb-2 block">
                       רשתות חברתיות וקישורים
                     </Label>
-                    <div className="space-y-3">
+                    <div className="space-y-2 md:space-y-3">
                       {(user.linkedin || isEditing) && (
-                        <div className="flex items-center gap-2">
-                          <Linkedin className="w-5 h-5 text-blue-600 shrink-0" />
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Linkedin className="w-4 h-4 md:w-5 md:h-5 text-blue-600 shrink-0" />
                           {isEditing ? (
                             <Input
                               value={formData.linkedin}
                               onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
                               placeholder="https://linkedin.com/in/username"
-                              className="flex-1"
+                              className="flex-1 min-w-0 text-sm"
                             />
                           ) : user.linkedin ? (
                             <a 
                               href={user.linkedin.startsWith('http') ? user.linkedin : `https://${user.linkedin}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline text-sm flex-1 truncate"
+                              className="text-blue-600 hover:underline text-xs md:text-sm flex-1 truncate min-w-0"
                             >
                               {user.linkedin}
                             </a>
                           ) : (
-                            <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                            <span className="text-slate-400 text-xs md:text-sm italic">לא הוזן</span>
                           )}
                         </div>
                       )}
 
                       {(user.twitter || isEditing) && (
-                        <div className="flex items-center gap-2">
-                          <Twitter className="w-5 h-5 text-sky-500 shrink-0" />
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Twitter className="w-4 h-4 md:w-5 md:h-5 text-sky-500 shrink-0" />
                           {isEditing ? (
                             <Input
                               value={formData.twitter}
                               onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
                               placeholder="https://twitter.com/username"
-                              className="flex-1"
+                              className="flex-1 min-w-0 text-sm"
                             />
                           ) : user.twitter ? (
                             <a 
                               href={user.twitter.startsWith('http') ? user.twitter : `https://${user.twitter}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline text-sm flex-1 truncate"
+                              className="text-blue-600 hover:underline text-xs md:text-sm flex-1 truncate min-w-0"
                             >
                               {user.twitter}
                             </a>
                           ) : (
-                            <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                            <span className="text-slate-400 text-xs md:text-sm italic">לא הוזן</span>
                           )}
                         </div>
                       )}
 
                       {(user.facebook || isEditing) && (
-                        <div className="flex items-center gap-2">
-                          <Facebook className="w-5 h-5 text-blue-700 shrink-0" />
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Facebook className="w-4 h-4 md:w-5 md:h-5 text-blue-700 shrink-0" />
                           {isEditing ? (
                             <Input
                               value={formData.facebook}
                               onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
                               placeholder="https://facebook.com/username"
-                              className="flex-1"
+                              className="flex-1 min-w-0 text-sm"
                             />
                           ) : user.facebook ? (
                             <a 
                               href={user.facebook.startsWith('http') ? user.facebook : `https://${user.facebook}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline text-sm flex-1 truncate"
+                              className="text-blue-600 hover:underline text-xs md:text-sm flex-1 truncate min-w-0"
                             >
                               {user.facebook}
                             </a>
                           ) : (
-                            <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                            <span className="text-slate-400 text-xs md:text-sm italic">לא הוזן</span>
                           )}
                         </div>
                       )}
 
                       {(user.instagram || isEditing) && (
-                        <div className="flex items-center gap-2">
-                          <Instagram className="w-5 h-5 text-pink-600 shrink-0" />
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Instagram className="w-4 h-4 md:w-5 md:h-5 text-pink-600 shrink-0" />
                           {isEditing ? (
                             <Input
                               value={formData.instagram}
                               onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
                               placeholder="https://instagram.com/username"
-                              className="flex-1"
+                              className="flex-1 min-w-0 text-sm"
                             />
                           ) : user.instagram ? (
                             <a 
                               href={user.instagram.startsWith('http') ? user.instagram : `https://${user.instagram}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline text-sm flex-1 truncate"
+                              className="text-blue-600 hover:underline text-xs md:text-sm flex-1 truncate min-w-0"
                             >
                               {user.instagram}
                             </a>
                           ) : (
-                            <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                            <span className="text-slate-400 text-xs md:text-sm italic">לא הוזן</span>
                           )}
                         </div>
                       )}
 
                       {(user.website || isEditing) && (
-                        <div className="flex items-center gap-2">
-                          <Globe className="w-5 h-5 text-slate-600 shrink-0" />
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Globe className="w-4 h-4 md:w-5 md:h-5 text-slate-600 shrink-0" />
                           {isEditing ? (
                             <Input
                               value={formData.website}
                               onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                               placeholder="https://yourwebsite.com"
-                              className="flex-1"
+                              className="flex-1 min-w-0 text-sm"
                             />
                           ) : user.website ? (
                             <a 
                               href={user.website.startsWith('http') ? user.website : `https://${user.website}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline text-sm flex-1 truncate"
+                              className="text-blue-600 hover:underline text-xs md:text-sm flex-1 truncate min-w-0"
                             >
                               {user.website}
                             </a>
                           ) : (
-                            <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                            <span className="text-slate-400 text-xs md:text-sm italic">לא הוזן</span>
                           )}
                         </div>
                       )}
@@ -461,25 +461,25 @@ export default function Profile() {
         </Card>
 
         {isOwnProfile && (
-          <Card className="bg-white border-slate-200">
+          <Card className="bg-white border-slate-200 overflow-hidden">
             <CardHeader>
-              <CardTitle>{t('activitySummary')}</CardTitle>
-              <CardDescription>{t('contributionDescription')}</CardDescription>
+              <CardTitle className="break-words">{t('activitySummary')}</CardTitle>
+              <CardDescription className="break-words">{t('contributionDescription')}</CardDescription>
             </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {/* Stats Summary */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pb-4 border-b border-slate-200">
-                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <span className="text-slate-700 font-medium text-sm">{t('gamificationPoints')}</span>
-                  <span className="font-bold text-xl text-blue-600">{user.points || 1000}</span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3 pb-3 md:pb-4 border-b border-slate-200">
+                <div className="flex justify-between items-center p-2 md:p-3 bg-blue-50 rounded-lg border border-blue-200 min-w-0">
+                  <span className="text-slate-700 font-medium text-xs md:text-sm truncate">{t('gamificationPoints')}</span>
+                  <span className="font-bold text-lg md:text-xl text-blue-600 shrink-0">{user.points || 1000}</span>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <span className="text-slate-700 text-sm">{t('suggestionsCreated')}</span>
-                  <span className="font-bold text-xl text-indigo-600">{user.suggestionsCreated || 0}</span>
+                <div className="flex justify-between items-center p-2 md:p-3 bg-slate-50 rounded-lg border border-slate-200 min-w-0">
+                  <span className="text-slate-700 text-xs md:text-sm truncate">{t('suggestionsCreated')}</span>
+                  <span className="font-bold text-lg md:text-xl text-indigo-600 shrink-0">{user.suggestionsCreated || 0}</span>
                 </div>
-                <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <span className="text-slate-700 text-sm">{t('accountType')}</span>
+                <div className="flex justify-between items-center p-2 md:p-3 bg-slate-50 rounded-lg border border-slate-200 min-w-0">
+                  <span className="text-slate-700 text-xs md:text-sm truncate">{t('accountType')}</span>
                   <Badge className={
                     user.role === 'admin' 
                       ? 'bg-purple-100 text-purple-800'
@@ -492,19 +492,19 @@ export default function Profile() {
 
               {/* Points History */}
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-3">{t('pointsHistory')}</h3>
+                <h3 className="text-xs md:text-sm font-semibold text-slate-700 mb-2 md:mb-3">{t('pointsHistory')}</h3>
                 {pointsTransactions.length === 0 ? (
-                  <p className="text-slate-500 text-center py-8 text-sm">{t('noPointsHistory')}</p>
+                  <p className="text-slate-500 text-center py-6 md:py-8 text-xs md:text-sm">{t('noPointsHistory')}</p>
                 ) : (
                   <div className="space-y-2 max-h-96 overflow-y-auto">
                     {pointsTransactions.map((transaction) => (
                       <div 
                         key={transaction.id}
-                        className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors"
+                        className="flex items-center justify-between gap-2 p-2 md:p-3 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors min-w-0"
                       >
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-slate-900">{transaction.description}</p>
-                          <p className="text-xs text-slate-500 mt-1">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs md:text-sm font-medium text-slate-900 break-words">{transaction.description}</p>
+                          <p className="text-[10px] md:text-xs text-slate-500 mt-1">
                             {new Date(transaction.created_date).toLocaleString(isRTL ? 'he-IL' : 'en-US', {
                               year: 'numeric',
                               month: 'short',
@@ -514,7 +514,7 @@ export default function Profile() {
                             })}
                           </p>
                         </div>
-                        <div className={`text-lg font-bold px-2 py-1 rounded ${
+                        <div className={`text-base md:text-lg font-bold px-2 py-1 rounded shrink-0 ${
                           transaction.amount > 0 
                             ? 'text-green-600 bg-green-50' 
                             : 'text-red-600 bg-red-50'

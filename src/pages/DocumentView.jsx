@@ -241,45 +241,45 @@ export default function DocumentView() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
-          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all" onClick={() => setShowContributorsModal(true)}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 w-full">
+          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all overflow-hidden" onClick={() => setShowContributorsModal(true)}>
             <CardContent className="p-2 md:p-4">
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3">
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3 min-w-0">
                 <Users className="w-5 h-5 md:w-8 md:h-8 text-blue-600 flex-shrink-0" />
-                <div className="text-center md:text-right">
-                  <div className="text-lg md:text-2xl font-bold">{document.totalUsersInteracted || 0}</div>
-                  <div className="text-[9px] md:text-xs text-slate-600 leading-tight">{t('contributors')}</div>
+                <div className="text-center md:text-right min-w-0">
+                  <div className="text-lg md:text-2xl font-bold truncate">{document.totalUsersInteracted || 0}</div>
+                  <div className="text-[9px] md:text-xs text-slate-600 leading-tight truncate">{t('contributors')}</div>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all" onClick={() => setActiveTab("suggestions")}>
+          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all overflow-hidden" onClick={() => setActiveTab("suggestions")}>
             <CardContent className="p-2 md:p-4">
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3">
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3 min-w-0">
                 <MessageSquare className="w-5 h-5 md:w-8 md:h-8 text-indigo-600 flex-shrink-0" />
-                <div className="text-center md:text-right">
-                  <div className="text-lg md:text-2xl font-bold">{suggestions.length}</div>
-                  <div className="text-[9px] md:text-xs text-slate-600 leading-tight">{t('suggestions')}</div>
+                <div className="text-center md:text-right min-w-0">
+                  <div className="text-lg md:text-2xl font-bold truncate">{suggestions.length}</div>
+                  <div className="text-[9px] md:text-xs text-slate-600 leading-tight truncate">{t('suggestions')}</div>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all" onClick={() => setActiveTab("document")}>
+          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all overflow-hidden" onClick={() => setActiveTab("document")}>
             <CardContent className="p-2 md:p-4">
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3">
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3 min-w-0">
                 <TrendingUp className="w-5 h-5 md:w-8 md:h-8 text-purple-600 flex-shrink-0" />
-                <div className="text-center md:text-right">
-                  <div className="text-lg md:text-2xl font-bold">
+                <div className="text-center md:text-right min-w-0">
+                  <div className="text-lg md:text-2xl font-bold truncate">
                     {((document.avgSuggestionConsensus || 0) * 100).toFixed(0)}%
                   </div>
-                  <div className="text-[9px] md:text-xs text-slate-600 leading-tight">{t('consensus')}</div>
+                  <div className="text-[9px] md:text-xs text-slate-600 leading-tight truncate">{t('consensus')}</div>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all" onClick={() => setActiveTab("document")}>
+          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all overflow-hidden" onClick={() => setActiveTab("document")}>
             <CardContent className="p-2 md:p-4">
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3">
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-1 md:gap-3 min-w-0">
                 <div className="w-5 h-5 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-[10px] md:text-sm flex-shrink-0">
                   {(() => {
                     const acceptedDocSuggestions = suggestions.filter(s => s.status === 'accepted');
@@ -291,8 +291,8 @@ export default function DocumentView() {
                     return (avg * 100).toFixed(0);
                   })()}
                 </div>
-                <div className="text-center md:text-right">
-                  <div className="text-lg md:text-2xl font-bold">
+                <div className="text-center md:text-right min-w-0">
+                  <div className="text-lg md:text-2xl font-bold truncate">
                     {(() => {
                       const acceptedDocSuggestions = suggestions.filter(s => s.status === 'accepted');
                       if (acceptedDocSuggestions.length === 0) return '0.0';
@@ -303,7 +303,7 @@ export default function DocumentView() {
                       return avg.toFixed(2);
                     })()}
                   </div>
-                  <div className="text-[9px] md:text-xs text-slate-600 leading-tight">{t('threshold')}</div>
+                  <div className="text-[9px] md:text-xs text-slate-600 leading-tight truncate">{t('threshold')}</div>
                 </div>
               </div>
             </CardContent>
