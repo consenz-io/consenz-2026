@@ -55,7 +55,6 @@ export default function SectionCarousel({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showTranslated, setShowTranslated] = useState({});
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showAdminOnlyDialog, setShowAdminOnlyDialog] = useState(false);
   const currentView = allViews[currentIndex];
 
   // דפדוף מעגלי
@@ -474,17 +473,11 @@ export default function SectionCarousel({
               עריכה ישירה
             </Button>
           )}
-          {user && (
+          {isAdmin && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => {
-                if (isAdmin) {
-                  setShowDeleteDialog(true);
-                } else {
-                  setShowAdminOnlyDialog(true);
-                }
-              }}
+              onClick={() => setShowDeleteDialog(true)}
               className="text-red-600 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
               title={t('deleteSection')}
             >
@@ -500,19 +493,6 @@ export default function SectionCarousel({
         onConfirm={(saveToHistory) => deleteSectionMutation.mutate(saveToHistory)}
         isDeleting={deleteSectionMutation.isPending}
       />
-      
-      {/* Dialog for non-admin users */}
-      {showAdminOnlyDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowAdminOnlyDialog(false)}>
-          <div className="bg-white rounded-lg p-6 max-w-md mx-4" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold mb-2">הרשאות לא מספיקות</h3>
-            <p className="text-slate-600 mb-4">רק מנהלי מסמך יכולים למחוק סעיפים</p>
-            <Button onClick={() => setShowAdminOnlyDialog(false)} className="w-full">
-              הבנתי
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
