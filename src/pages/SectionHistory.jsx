@@ -13,7 +13,6 @@ import SectionDiff from "../components/document/SectionDiff";
 import CommentsSection from "../components/document/CommentsSection";
 import TranslatableContent from "../components/document/TranslatableContent";
 import PageHeader from "../components/PageHeader";
-import { useQueryClient } from "@tanstack/react-query";
 
 export default function SectionHistory() {
   const { t, isRTL } = useLanguage();
