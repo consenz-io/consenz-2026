@@ -20,7 +20,6 @@ export default function SectionCarousel({
   document,
   user,
   onEditSection,
-  onDirectEdit,
   toggleComments,
   showComments,
   getCommentsCount,
@@ -462,11 +461,11 @@ export default function SectionCarousel({
               {t('suggestEditSection')}
             </Button>
           )}
-          {isAdmin && onDirectEdit && (
+          {isAdmin && (
             <Button
               variant="default"
               size="sm"
-              onClick={onDirectEdit}
+              onClick={() => onEditSection(section)}
               className="bg-purple-600 hover:bg-purple-700 opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <Edit className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
