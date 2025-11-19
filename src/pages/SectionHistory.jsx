@@ -200,6 +200,13 @@ export default function SectionHistory() {
                     </div>
                   </CardHeader>
                   <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4">
+                    {/* Show content for direct edits */}
+                    {latestVersion.changeType === 'direct_edit' && (
+                      <div className="prose prose-sm max-w-none text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <div dangerouslySetInnerHTML={{ __html: latestVersion.content }} />
+                      </div>
+                    )}
+                    
                     {/* Show diff between this version and the previous one */}
                     {previousVersion && latestVersion.changeType === 'suggestion_accepted' && (
                       <div>
