@@ -143,8 +143,6 @@ export default function Profile() {
           title={t('profile')}
           backUrl={createPageUrl("Home")}
         />
-        
-        <p className={`text-slate-600 text-center ${isRTL ? 'text-right' : ''}`}>{t('contributionDescription')}</p>
 
         {error && (
           <Alert variant="destructive">
