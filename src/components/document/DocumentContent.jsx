@@ -395,7 +395,7 @@ export default function DocumentContent({
                       ? topic.translations[language].title
                       : topic.title}
                   </CardTitle>
-                  {topic.originalLanguage !== language && (
+                  {topic.originalLanguage && topic.originalLanguage !== language && (
                     <div className="mt-2">
                       {translateTopicMutation.isPending && translateTopicMutation.variables?.id === topic.id ? (
                         <div className="flex items-center gap-2 text-sm text-slate-600">
