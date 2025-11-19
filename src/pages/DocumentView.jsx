@@ -15,6 +15,7 @@ import DocumentContent from "../components/document/DocumentContent";
 import SuggestionsList from "../components/document/SuggestionsList";
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 import PageHeader from "../components/PageHeader";
+import ContributorsModal from "../components/document/ContributorsModal";
 
 
 export default function DocumentView() {
@@ -28,6 +29,7 @@ export default function DocumentView() {
   const [activeTab, setActiveTab] = useState("document");
   const [showTranslated, setShowTranslated] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [showContributorsModal, setShowContributorsModal] = useState(false);
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
@@ -236,7 +238,7 @@ export default function DocumentView() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all" onClick={() => setActiveTab("document")}>
+          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all" onClick={() => setShowContributorsModal(true)}>
             <CardContent className="p-3 md:p-4">
               <div className="flex items-center gap-2 md:gap-3">
                 <Users className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
@@ -351,6 +353,12 @@ export default function DocumentView() {
           }}
         />
       )}
-    </div>
+
+      <ContributorsModal
+        isOpen={showContributorsModal}
+        onClose={() => setShowContributorsModal(false)}
+        documentId={documentId}
+      />
+      </div>
   );
 }

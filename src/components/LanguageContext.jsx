@@ -201,7 +201,11 @@ const translations = {
     sectionDeleted: "Section deleted successfully",
     deleting: "Deleting...",
     editSuggestions: "Edit Suggestions",
-    },
+    noContributors: "No contributors yet",
+    translate: "Translate",
+    showOriginal: "Show Original",
+    showTranslation: "Show Translation",
+  },
   he: {
     // ניווט
     home: "בית",
@@ -402,7 +406,11 @@ const translations = {
     sectionDeleted: "הסעיף נמחק בהצלחה",
     deleting: "מוחק...",
     editSuggestions: "הצעות עריכה",
-    },
+    noContributors: "אין משתתפים עדיין",
+    translate: "תרגם",
+    showOriginal: "הצג מקור",
+    showTranslation: "הצג תרגום",
+  },
   ar: {
     // التنقل
     home: "الرئيسية",
@@ -602,7 +610,11 @@ const translations = {
     sectionDeleted: "تم حذف القسم بنجاح",
     deleting: "جارٍ الحذف...",
     editSuggestions: "مقترحات تعديل",
-    }
+    noContributors: "لا يوجد مساهمون بعد",
+    translate: "ترجمة",
+    showOriginal: "إظهار الأصلي",
+    showTranslation: "إظهار الترجمة",
+  }
 };
 
 const LanguageContext = createContext();
