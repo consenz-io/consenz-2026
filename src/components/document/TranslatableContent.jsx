@@ -26,13 +26,14 @@ export default function TranslatableContent({
   renderContent = null
 }) {
   const { language, isRTL } = useLanguage();
-  const [showTranslated, setShowTranslated] = useState(false);
   const queryClient = useQueryClient();
 
   const originalLanguage = entity.originalLanguage || 'he';
   const translations = entity.translations || {};
   const hasTranslation = translations[language];
   const needsTranslation = language !== originalLanguage;
+  
+  const [showTranslated, setShowTranslated] = useState(needsTranslation && hasTranslation);
   
   const displayLanguage = showTranslated && hasTranslation ? language : originalLanguage;
   const isDisplayRTL = displayLanguage === 'he' || displayLanguage === 'ar';
