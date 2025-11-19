@@ -390,7 +390,7 @@ export default function LearnMore() {
                       {getLocalizedText("Cost to publish a new document", "עלות פרסום מסמך חדש", "تكلفة نشر وثيقة جديدة")}
                     </p>
                   </div>
-                  <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap">-1000</Badge>
+                  <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap">-1001</Badge>
                 </div>
                 
                 <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>

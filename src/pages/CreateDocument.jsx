@@ -235,21 +235,21 @@ Return ONLY valid JSON in this exact format:
       const isAdmin = user.role === 'admin';
       
       if (!isAdmin) {
-        // Check if user has enough points (1000 required to create document)
+        // Check if user has enough points (1001 required to create document)
         const currentPoints = user.points || 1000;
-        if (currentPoints < 1000) {
+        if (currentPoints < 1001) {
           throw new Error('INSUFFICIENT_POINTS');
         }
 
-        // Deduct 1000 points from user
+        // Deduct 1001 points from user
         await base44.auth.updateMe({
-          points: currentPoints - 1000
+          points: currentPoints - 1001
         });
 
         // Create points transaction record
         await base44.entities.PointsTransaction.create({
           userId: user.id,
-          amount: -1000,
+          amount: -1001,
           action: 'suggestion_created',
           description: `יצירת מסמך חדש: ${data.title}`,
           relatedEntityType: 'document'
@@ -351,7 +351,7 @@ Return ONLY valid JSON in this exact format:
     const skipConfirm = localStorage.getItem('consenz_skip_points_confirm_document') === 'true';
     const currentPoints = user?.points || 1000;
     
-    if (!isAdmin && !skipConfirm && currentPoints >= 1000) {
+    if (!isAdmin && !skipConfirm && currentPoints >= 1001) {
       setPendingDocData({ ...formData, topics: validTopics });
       setShowPointsConfirm(true);
       return;
@@ -423,7 +423,7 @@ Return ONLY valid JSON in this exact format:
       <InsufficientPointsDialog
         isOpen={showInsufficientPointsDialog}
         onClose={() => setShowInsufficientPointsDialog(false)}
-        requiredPoints={1000}
+        requiredPoints={1001}
         currentPoints={user?.points || 1000}
         actionType="document"
       />
@@ -435,7 +435,7 @@ Return ONLY valid JSON in this exact format:
           setPendingDocData(null);
         }}
         onConfirm={handleConfirmPoints}
-        cost={1000}
+        cost={1001}
         currentPoints={user?.points || 1000}
         actionType="document"
       />
@@ -452,7 +452,7 @@ Return ONLY valid JSON in this exact format:
         {user && user.role !== 'admin' && (
           <Alert className="bg-blue-50 border-blue-200">
             <AlertDescription className="text-blue-900">
-              <strong>עלות יצירת מסמך:</strong> 1000 נקודות | <strong>הנקודות שלך:</strong> {user.points || 1000}
+              <strong>עלות יצירת מסמך:</strong> 1001 נקודות | <strong>הנקודות שלך:</strong> {user.points || 1000}
             </AlertDescription>
           </Alert>
         )}
