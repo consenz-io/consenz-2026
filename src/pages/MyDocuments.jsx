@@ -162,7 +162,7 @@ export default function MyDocuments() {
                     <div className="flex items-start justify-between gap-2">
                       <Link to={`${createPageUrl("DocumentView")}?id=${doc.id}`} className="flex-1 cursor-pointer">
                         <CardTitle className="text-xl line-clamp-2">
-                          {translatedTitles[doc.id] || doc.title}
+                          {typeof translatedTitles[doc.id] === 'string' ? translatedTitles[doc.id] : doc.title}
                         </CardTitle>
                       </Link>
                       <div className="flex items-center gap-2 flex-shrink-0">
