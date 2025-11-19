@@ -175,9 +175,13 @@ export default function DocumentView() {
         <div className="flex flex-col gap-3 md:gap-4">
           <div className={`flex items-center justify-center ${isRTL ? 'flex-row-reverse' : ''}`}>
             <h1 className="text-2xl md:text-3xl font-bold text-slate-900 text-center flex-1 px-2">
-              {showTranslated && document.translations?.[language]?.title 
-                ? document.translations[language].title 
-                : document.title}
+              {(() => {
+                const translatedTitle = document.translations?.[language]?.title;
+                if (showTranslated && typeof translatedTitle === 'string') {
+                  return translatedTitle;
+                }
+                return document.title;
+              })()}
             </h1>
             {document.originalLanguage && document.originalLanguage !== language && (
               <div className="shrink-0">

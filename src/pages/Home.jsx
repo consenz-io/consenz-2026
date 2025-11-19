@@ -235,9 +235,10 @@ export default function Home() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {documents.map((doc) => {
               const needsTranslation = doc.originalLanguage && doc.originalLanguage !== language;
-              const hasTranslation = doc.translations?.[language]?.title;
+              const translatedTitle = doc.translations?.[language]?.title;
+              const hasTranslation = typeof translatedTitle === 'string' && translatedTitle;
               const displayTitle = showTranslated[doc.id] && hasTranslation 
-                ? doc.translations[language].title 
+                ? translatedTitle 
                 : doc.title;
 
               return (
