@@ -29,7 +29,8 @@ export default function SectionCarousel({
   getUserName,
   acceptedSuggestions,
   sectionIndex,
-  isAdmin
+  isAdmin,
+  users
 }) {
   const { t, isRTL, language } = useLanguage();
   
@@ -384,9 +385,11 @@ export default function SectionCarousel({
                 document={document} 
                 acceptedSuggestions={acceptedSuggestions}
               />
-              <Badge variant="outline" className="text-xs">
-                {t('by')} {getUserName(currentView.data.created_by)}
-              </Badge>
+              <Link to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === currentView.data.created_by)?.id}`}>
+                <Badge variant="outline" className="text-xs hover:bg-slate-50 cursor-pointer">
+                  {t('by')} {getUserName(currentView.data.created_by)}
+                </Badge>
+              </Link>
               <Link to={`${createPageUrl("SuggestionDetail")}?id=${currentView.data.id}`}>
                 <Button size="sm" variant="outline" className="text-xs">
                   {t('viewDetails')}

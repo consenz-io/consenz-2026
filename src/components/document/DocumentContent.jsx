@@ -533,6 +533,7 @@ Return ONLY the translated text:`;
                         acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
                         sectionIndex={index}
                         isAdmin={isAdmin}
+                        users={users}
                       />
                     </div>
                     {/* Show suggestions at the end */}
