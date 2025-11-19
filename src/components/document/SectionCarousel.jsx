@@ -226,7 +226,7 @@ export default function SectionCarousel({
           <div className="text-center">
             {isFirstView ? (
               <p className="text-sm text-slate-600">
-                לסעיף זה נוצרו <span className="font-semibold text-amber-600">{sortedSuggestions.length}</span> הצעות לשינוי
+                <span className="font-semibold text-amber-600">{sortedSuggestions.length}</span> הצעות עריכה
               </p>
             ) : (
               <button 
