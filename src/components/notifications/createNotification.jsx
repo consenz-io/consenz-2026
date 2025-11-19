@@ -143,14 +143,42 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
 /**
  * יצירת התראה על תגובה חדשה
  */
-export async function notifyNewComment({ comment, targetEntity, targetEntityType }) {
+export async function notifyNewComment({ comment, targetEntity, targetEntityType, parentComment = null }) {
   try {
     console.log('[NOTIFICATION] Comment notification triggered:', {
       commentId: comment.id,
       targetEntityType,
       targetEntityId: targetEntity.id,
-      commenter: comment.created_by
+      commenter: comment.created_by,
+      parentComment: parentComment?.id
     });
+    
+    // אם זו תשובה לתגובה - שלח התראה לבעל התגובה המקורית
+    if (parentComment && comment.created_by !== parentComment.created_by) {
+      const parentCommenterList = await base44.entities.User.filter({ email: parentComment.created_by });
+      if (parentCommenterList.length > 0) {
+        const parentCommenterId = parentCommenterList[0].id;
+        
+        const replierList = await base44.entities.User.filter({ email: comment.created_by });
+        const replierName = replierList.length > 0 ? replierList[0].full_name : comment.created_by;
+        
+        console.log('[NOTIFICATION] Creating reply notification for parent comment owner:', parentCommenterId);
+        
+        await createNotification({
+          userId: parentCommenterId,
+          type: 'comment_reply',
+          title: 'תשובה לתגובה שלך',
+          message: `${replierName} השיב לתגובה שלך`,
+          relatedEntityId: targetEntity.id,
+          relatedEntityType: targetEntityType,
+          actionUrl: targetEntityType === 'suggestion' 
+            ? `${createPageUrl("SuggestionDetail")}?id=${targetEntity.id}`
+            : `${createPageUrl("SectionHistory")}?sectionId=${targetEntity.id}`
+        });
+        
+        console.log('[NOTIFICATION] Reply notification created successfully');
+      }
+    }
     
     // מציאת בעל הישות שעליה הגיבו
     let ownerId;

@@ -55,6 +55,15 @@ export default function CommentsSection({ entityType, entityId, user }) {
         originalLanguage: detectedLanguage
       });
       
+      // מציאת התגובה האב אם זו תשובה
+      let parentComment = null;
+      if (data.parentCommentId) {
+        const parentComments = await base44.entities.Comment.filter({ id: data.parentCommentId });
+        if (parentComments.length > 0) {
+          parentComment = parentComments[0];
+        }
+      }
+      
       // שליחת התראה על תגובה חדשה
       let documentId;
       if (entityType === 'suggestion') {
@@ -64,7 +73,8 @@ export default function CommentsSection({ entityType, entityId, user }) {
           await notifyNewComment({ 
             comment, 
             targetEntity: suggestions[0], 
-            targetEntityType: 'suggestion' 
+            targetEntityType: 'suggestion',
+            parentComment
           });
         }
       } else if (entityType === 'section') {
@@ -74,7 +84,8 @@ export default function CommentsSection({ entityType, entityId, user }) {
           await notifyNewComment({ 
             comment, 
             targetEntity: sections[0], 
-            targetEntityType: 'section' 
+            targetEntityType: 'section',
+            parentComment
           });
         }
       }
