@@ -104,20 +104,20 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
               <Link
                 key={user.id}
                 to={`${createPageUrl("Profile")}?userId=${user.id}`}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors"
+                className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg hover:bg-slate-50 transition-colors"
               >
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-medium">
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-medium text-sm md:text-base">
                     {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-slate-900 truncate">
+                  <p className="font-medium text-sm md:text-base text-slate-900 truncate">
                     {user.full_name}
                   </p>
                 </div>
                 {user.role === 'admin' && (
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-[10px] md:text-xs">
                     {t('admin')}
                   </Badge>
                 )}

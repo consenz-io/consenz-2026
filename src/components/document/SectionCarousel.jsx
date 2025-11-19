@@ -183,29 +183,29 @@ export default function SectionCarousel({
   });
 
   return (
-    <div id={`section-${section.id}`} className="group relative p-6 border-2 border-slate-300 rounded-lg hover:border-blue-400 hover:shadow-md transition-all bg-gradient-to-br from-white to-slate-50/30">
+    <div id={`section-${section.id}`} className="group relative p-3 md:p-6 border-2 border-slate-300 rounded-lg hover:border-blue-400 hover:shadow-md transition-all bg-gradient-to-br from-white to-slate-50/30">
       {/* כותרת סעיף עם אינדיקטור */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="text-sm font-medium text-slate-500">
+      <div className="flex items-center justify-between mb-3 md:mb-4">
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="text-xs md:text-sm font-medium text-slate-500">
             {t('section')} {sectionIndex + 1}
           </div>
           {allViews.length > 1 && (
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-[10px] md:text-xs">
               {currentIndex + 1} / {allViews.length}
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 md:gap-2">
           {/* כפתור היסטוריה - תמיד זמין */}
           <Link to={`${createPageUrl("SectionHistory")}?id=${section.id}`}>
             <Button
               variant="ghost"
               size="sm"
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-blue-600"
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-blue-600 h-7 md:h-8 px-2 md:px-3"
             >
-              <History className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-              {t('history')}
+              <History className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              <span className="hidden md:inline">{t('history')}</span>
             </Button>
           </Link>
         </div>
@@ -265,17 +265,17 @@ export default function SectionCarousel({
                 <DocumentTextContent content={content} className="text-slate-800" />
               )}
             />
-            <div className={`flex items-center justify-between mt-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <div className="text-xs text-slate-400">
+            <div className={`flex flex-col md:flex-row items-start md:items-center justify-between mt-3 gap-2 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+              <div className="text-[10px] md:text-xs text-slate-400">
                 {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString()}
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => toggleComments(`section-${section.id}`)}
-                className="text-slate-600 hover:text-blue-600"
+                className="text-slate-600 hover:text-blue-600 h-7 md:h-8 text-xs px-2"
               >
-                <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                 {t('comments')} ({getCommentsCount('section', section.id)})
               </Button>
             </div>
@@ -330,7 +330,7 @@ export default function SectionCarousel({
 
 
             {/* כפתורי הצבעה והערות */}
-            <div className="flex items-center gap-4 mt-4 text-sm flex-wrap">
+            <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap">
               {user && document?.votingButtonsEnabled ? (
                 <>
                   <Button
@@ -345,9 +345,9 @@ export default function SectionCarousel({
                       });
                     }}
                     disabled={voteMutation.isPending}
-                    className={getUserVote(currentView.data.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}
+                    className={`text-xs px-2 md:px-3 ${getUserVote(currentView.data.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
                   >
-                    <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                    <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                     {currentView.data.proVotes || 0}
                   </Button>
                   <Button
@@ -362,36 +362,38 @@ export default function SectionCarousel({
                       });
                     }}
                     disabled={voteMutation.isPending}
-                    className={getUserVote(currentView.data.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}
+                    className={`text-xs px-2 md:px-3 ${getUserVote(currentView.data.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
                   >
-                    <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                    <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                     {currentView.data.conVotes || 0}
                   </Button>
                 </>
               ) : (
                 <>
-                  <div className="flex items-center gap-1 text-green-600">
-                    <ThumbsUp className="w-4 h-4" />
+                  <div className="flex items-center gap-1 text-green-600 text-xs md:text-sm">
+                    <ThumbsUp className="w-3 h-3 md:w-4 md:h-4" />
                     <span className="font-medium">{currentView.data.proVotes || 0}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-red-600">
-                    <ThumbsDown className="w-4 h-4" />
+                  <div className="flex items-center gap-1 text-red-600 text-xs md:text-sm">
+                    <ThumbsDown className="w-3 h-3 md:w-4 md:h-4" />
                     <span className="font-medium">{currentView.data.conVotes || 0}</span>
                   </div>
                 </>
               )}
-              <VotesNeededCounter 
-                suggestion={currentView.data} 
-                document={document} 
-                acceptedSuggestions={acceptedSuggestions}
-              />
-              <Link to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === currentView.data.created_by)?.id}`}>
-                <Badge variant="outline" className="text-xs hover:bg-slate-50 cursor-pointer">
+              <div className="flex-shrink-0">
+                <VotesNeededCounter 
+                  suggestion={currentView.data} 
+                  document={document} 
+                  acceptedSuggestions={acceptedSuggestions}
+                />
+              </div>
+              <Link to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === currentView.data.created_by)?.id}`} className="flex-shrink-0">
+                <Badge variant="outline" className="text-[10px] md:text-xs hover:bg-slate-50 cursor-pointer whitespace-nowrap">
                   {t('by')} {getUserName(currentView.data.created_by)}
                 </Badge>
               </Link>
-              <Link to={`${createPageUrl("SuggestionDetail")}?id=${currentView.data.id}`}>
-                <Button size="sm" variant="outline" className="text-xs">
+              <Link to={`${createPageUrl("SuggestionDetail")}?id=${currentView.data.id}`} className="flex-shrink-0">
+                <Button size="sm" variant="outline" className="text-[10px] md:text-xs h-7 md:h-8 px-2 md:px-3">
                   {t('viewDetails')}
                 </Button>
               </Link>
@@ -403,8 +405,9 @@ export default function SectionCarousel({
                 variant="ghost"
                 size="sm"
                 onClick={() => toggleComments(`suggestion-${currentView.data.id}`)}
+                className="h-7 md:h-8 text-xs px-2"
               >
-                <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                 {t('comments')} ({getCommentsCount('suggestion', currentView.data.id)})
               </Button>
             </div>
