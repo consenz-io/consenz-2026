@@ -10,7 +10,7 @@ import VotesNeededCounter from "./VotesNeededCounter";
 
 export default function NewSectionSuggestionCard({ 
   suggestion, 
-  document,
+  document: doc,
   getUserName,
   acceptedSuggestions 
 }) {
@@ -18,7 +18,7 @@ export default function NewSectionSuggestionCard({
 
   // Truncate content for preview
   const getContentPreview = (html) => {
-    const div = document.createElement('div');
+    const div = window.document.createElement('div');
     div.innerHTML = html;
     const text = div.textContent || div.innerText || '';
     return text.length > 150 ? text.substring(0, 150) + '...' : text;
@@ -66,7 +66,7 @@ export default function NewSectionSuggestionCard({
             </div>
             <VotesNeededCounter 
               suggestion={suggestion}
-              document={document}
+              document={doc}
               acceptedSuggestions={acceptedSuggestions}
             />
           </div>
