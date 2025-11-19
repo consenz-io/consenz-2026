@@ -35,48 +35,38 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       suggestions.forEach(s => contributorEmails.add(s.created_by));
 
       // Get voters
+      const allVotes = await base44.entities.Vote.list();
       const suggestionIds = suggestions.map(s => s.id);
-      if (suggestionIds.length > 0) {
-        const votes = await base44.entities.Vote.filter({ 
-          suggestionId: { $in: suggestionIds } 
-        });
-        const voterIds = [...new Set(votes.map(v => v.userId))];
-        const voters = await base44.entities.User.list();
-        voters.forEach(user => {
-          if (voterIds.includes(user.id)) {
-            contributorEmails.add(user.email);
-          }
-        });
-      }
+      const votes = allVotes.filter(v => suggestionIds.includes(v.suggestionId));
+      const voterIds = [...new Set(votes.map(v => v.userId))];
+      const allUsers = await base44.entities.User.list();
+      allUsers.forEach(user => {
+        if (voterIds.includes(user.id)) {
+          contributorEmails.add(user.email);
+        }
+      });
 
       // Get argument writers
-      if (suggestionIds.length > 0) {
-        const args = await base44.entities.Argument.filter({ 
-          suggestionId: { $in: suggestionIds } 
-        });
-        args.forEach(arg => contributorEmails.add(arg.created_by));
-      }
+      const allArgs = await base44.entities.Argument.list();
+      const args = allArgs.filter(arg => suggestionIds.includes(arg.suggestionId));
+      args.forEach(arg => contributorEmails.add(arg.created_by));
 
       // Get commenters
-      const suggestionComments = await base44.entities.Comment.filter({
-        rootEntityType: 'suggestion',
-        rootEntityId: { $in: suggestionIds }
-      });
+      const allComments = await base44.entities.Comment.list();
+      const suggestionComments = allComments.filter(c => 
+        c.rootEntityType === 'suggestion' && suggestionIds.includes(c.rootEntityId)
+      );
       suggestionComments.forEach(c => contributorEmails.add(c.created_by));
 
       const sections = await base44.entities.Section.filter({ documentId });
       const sectionIds = sections.map(s => s.id);
-      if (sectionIds.length > 0) {
-        const sectionComments = await base44.entities.Comment.filter({
-          rootEntityType: 'section',
-          rootEntityId: { $in: sectionIds }
-        });
-        sectionComments.forEach(c => contributorEmails.add(c.created_by));
-      }
+      const sectionComments = allComments.filter(c =>
+        c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)
+      );
+      sectionComments.forEach(c => contributorEmails.add(c.created_by));
 
-      // Fetch user details
-      const users = await base44.entities.User.list();
-      const contributorsList = users.filter(user => 
+      // Filter users who are contributors
+      const contributorsList = allUsers.filter(user => 
         contributorEmails.has(user.email)
       );
 
