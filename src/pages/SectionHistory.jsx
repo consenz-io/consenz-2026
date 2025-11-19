@@ -83,7 +83,7 @@ export default function SectionHistory() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-5xl mx-auto text-center py-20">
-          <h1 className="text-2xl font-bold text-slate-900">סעיף לא נמצא</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t('sectionNotFound')}</h1>
           <Link to={createPageUrl("Home")}>
             <Button className="mt-4">{t('goHome')}</Button>
           </Link>
@@ -137,8 +137,8 @@ export default function SectionHistory() {
         <Card className="bg-white border-2 border-blue-500">
           <CardHeader className="bg-blue-50">
             <CardTitle className="flex items-center justify-between">
-              <span>גרסה נוכחית</span>
-              <Badge className="bg-blue-600">עדכני</Badge>
+              <span>{t('currentVersion')}</span>
+              <Badge className="bg-blue-600">{t('current')}</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
@@ -147,7 +147,7 @@ export default function SectionHistory() {
               dangerouslySetInnerHTML={{ __html: section.content }}
             />
             <div className="text-xs text-slate-500 mt-4 pt-4 border-t">
-              עדכון אחרון: {new Date(section.updated_date).toLocaleString('he-IL')}
+              {t('lastUpdate')}: {new Date(section.updated_date).toLocaleString()}
             </div>
           </CardContent>
         </Card>
@@ -155,7 +155,7 @@ export default function SectionHistory() {
         {/* Version History */}
         {versionGroups.length > 0 ? (
           <div className="space-y-6">
-            <h2 className="text-xl font-bold text-slate-900">גרסאות קודמות</h2>
+            <h2 className="text-xl font-bold text-slate-900">{t('previousVersions')}</h2>
             {versionGroups.map((group, groupIndex) => {
               const latestVersion = group.versions[0];
               const previousVersion = group.versions[1];
@@ -166,23 +166,23 @@ export default function SectionHistory() {
                     <div className="flex items-center justify-between">
                       <div>
                         <CardTitle className="text-lg">
-                          גרסה {latestVersion.version}
+                          {t('version')} {latestVersion.version}
                         </CardTitle>
                         <p className="text-sm text-slate-600 mt-1">
-                          {latestVersion.changeDescription || 'ללא תיאור'}
+                          {latestVersion.changeDescription || t('noDescription')}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">
-                          {latestVersion.changeType === 'suggestion_accepted' ? 'הצעה התקבלה' :
-                           latestVersion.changeType === 'section_created' ? 'סעיף נוצר' :
-                           'עריכה ישירה'}
+                          {latestVersion.changeType === 'suggestion_accepted' ? t('suggestionAccepted') :
+                           latestVersion.changeType === 'section_created' ? t('sectionCreated') :
+                           t('directEdit')}
                         </Badge>
                         {group.suggestionId && (
                           <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.suggestionId}`}>
                             <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                              <MessageSquare className="w-4 h-4 mr-1" />
-                              צפה בדיון המלא
+                              <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                              {t('viewFullDiscussion')}
                             </Button>
                           </Link>
                         )}
@@ -193,7 +193,7 @@ export default function SectionHistory() {
                     {/* Show diff between this version and the previous one */}
                     {previousVersion && latestVersion.changeType === 'suggestion_accepted' && (
                       <div>
-                        <h3 className="text-sm font-semibold text-slate-700 mb-2">שינויים בגרסה זו:</h3>
+                        <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('changesInThisVersion')}</h3>
                         <SectionDiff
                           originalContent={previousVersion.content}
                           newContent={latestVersion.content}
@@ -213,8 +213,8 @@ export default function SectionHistory() {
                     )}
 
                     <div className="text-xs text-slate-500 pt-4 border-t">
-                      נוצר ב-{new Date(latestVersion.created_date).toLocaleString('he-IL')}
-                      {latestVersion.created_by && ` על ידי ${getUserName(latestVersion.created_by)}`}
+                      {t('created')} {new Date(latestVersion.created_date).toLocaleString()}
+                      {latestVersion.created_by && ` ${t('by')} ${getUserName(latestVersion.created_by)}`}
                     </div>
                   </CardContent>
                 </Card>
@@ -225,8 +225,8 @@ export default function SectionHistory() {
           <Card className="bg-white border-slate-200">
             <CardContent className="p-12 text-center">
               <History className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500">אין גרסאות קודמות</p>
-              <p className="text-sm text-slate-400 mt-2">שינויים בסעיף זה יישמרו כאן אוטומטית</p>
+              <p className="text-slate-500">{t('noPreviousVersions')}</p>
+              <p className="text-sm text-slate-400 mt-2">{t('sectionChangesAutomaticallySaved')}</p>
             </CardContent>
           </Card>
         )}
@@ -237,6 +237,7 @@ export default function SectionHistory() {
 
 // Component to display suggestion details
 function SuggestionDetails({ suggestionId, user, getUserName, showComments, toggleComments }) {
+  const { t, isRTL } = useLanguage();
   const { data: suggestion } = useQuery({
     queryKey: ['suggestion', suggestionId],
     queryFn: () => base44.entities.Suggestion.filter({ id: suggestionId }).then(s => s[0]),
@@ -261,7 +262,7 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
     <div className="space-y-4 bg-blue-50/50 p-4 rounded-lg border border-blue-200">
       {suggestion.explanation && (
         <div>
-          <h3 className="text-sm font-semibold text-slate-700 mb-2">הסבר להצעה:</h3>
+          <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('explanationForSuggestion')}</h3>
           <p className="text-sm text-slate-600">{suggestion.explanation}</p>
         </div>
       )}
@@ -270,14 +271,14 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
             <span className="text-green-600 font-semibold">{suggestion.proVotes || 0}</span>
-            <span className="text-slate-500">בעד</span>
+            <span className="text-slate-500">{t('pro')}</span>
           </div>
           <div className="flex items-center gap-1">
             <span className="text-red-600 font-semibold">{suggestion.conVotes || 0}</span>
-            <span className="text-slate-500">נגד</span>
+            <span className="text-slate-500">{t('con')}</span>
           </div>
           <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
-            {suggestion.status === 'accepted' ? 'התקבלה' : suggestion.status}
+            {suggestion.status === 'accepted' ? t('accepted') : suggestion.status}
           </Badge>
         </div>
         <Button
@@ -286,8 +287,8 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
           onClick={() => toggleComments(suggestionId)}
           className="text-slate-600 hover:text-blue-600"
         >
-          <MessageSquare className="w-4 h-4 mr-1" />
-          תגובות ({comments.length})
+          <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+          {t('comments')} ({comments.length})
         </Button>
       </div>
 
@@ -303,11 +304,11 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
 
       <div className="space-y-1">
         <div className="text-xs text-slate-500">
-          פורסמה על ידי {getUserName(suggestion.created_by)} ב-{new Date(suggestion.created_date).toLocaleString('he-IL')}
+          {t('publishedBy')} {getUserName(suggestion.created_by)} {t('created')} {new Date(suggestion.created_date).toLocaleString()}
         </div>
         {suggestion.status === 'accepted' && suggestion.updated_date && (
           <div className="text-xs text-green-600 font-medium">
-            התקבלה ב-{new Date(suggestion.updated_date).toLocaleString('he-IL')}
+            {t('acceptedOn')} {new Date(suggestion.updated_date).toLocaleString()}
           </div>
         )}
       </div>
