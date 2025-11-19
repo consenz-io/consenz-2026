@@ -11,6 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -479,6 +481,13 @@ Return ONLY the translated HTML:`;
               <div className="border border-slate-200 rounded-lg p-4 bg-slate-50 text-center text-slate-500">
                 {t('translating')}
               </div>
+            ) : isDirectEdit ? (
+              <ReactQuill
+                value={formData.newContent}
+                onChange={(value) => setFormData({ ...formData, newContent: value })}
+                className="bg-white"
+                theme="snow"
+              />
             ) : (
               <Textarea
                 id="content"
