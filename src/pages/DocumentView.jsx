@@ -241,73 +241,61 @@ export default function DocumentView() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-1 md:gap-4 w-full max-w-full box-border">
-          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all overflow-hidden" onClick={() => setShowContributorsModal(true)}>
-            <CardContent className="p-1 md:p-4">
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-0.5 md:gap-3 min-w-0">
-                <Users className="w-4 h-4 md:w-8 md:h-8 text-blue-600 flex-shrink-0" />
-                <div className="text-center md:text-right min-w-0">
-                  <div className="text-base md:text-2xl font-bold truncate">{document.totalUsersInteracted || 0}</div>
-                  <div className="text-[8px] md:text-xs text-slate-600 leading-tight truncate">{t('contributors')}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all overflow-hidden" onClick={() => setActiveTab("suggestions")}>
-            <CardContent className="p-1 md:p-4">
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-0.5 md:gap-3 min-w-0">
-                <MessageSquare className="w-4 h-4 md:w-8 md:h-8 text-indigo-600 flex-shrink-0" />
-                <div className="text-center md:text-right min-w-0">
-                  <div className="text-base md:text-2xl font-bold truncate">{suggestions.length}</div>
-                  <div className="text-[8px] md:text-xs text-slate-600 leading-tight truncate">{t('suggestions')}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all overflow-hidden" onClick={() => setActiveTab("document")}>
-            <CardContent className="p-1 md:p-4">
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-0.5 md:gap-3 min-w-0">
-                <TrendingUp className="w-4 h-4 md:w-8 md:h-8 text-purple-600 flex-shrink-0" />
-                <div className="text-center md:text-right min-w-0">
-                  <div className="text-base md:text-2xl font-bold truncate">
-                    {((document.avgSuggestionConsensus || 0) * 100).toFixed(0)}%
-                  </div>
-                  <div className="text-[8px] md:text-xs text-slate-600 leading-tight truncate">{t('consensus')}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-white/80 backdrop-blur-sm cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all overflow-hidden" onClick={() => setActiveTab("document")}>
-            <CardContent className="p-1 md:p-4">
-              <div className="flex flex-col md:flex-row items-center md:items-start gap-0.5 md:gap-3 min-w-0">
-                <div className="w-4 h-4 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-[8px] md:text-sm flex-shrink-0">
-                  {(() => {
-                    const acceptedDocSuggestions = suggestions.filter(s => s.status === 'accepted');
-                    if (acceptedDocSuggestions.length === 0) return '0';
-                    const avg = acceptedDocSuggestions.reduce((sum, s) => {
-                      const total = (s.proVotes || 0) + (s.conVotes || 0);
-                      return sum + (total > 0 ? (s.proVotes / total) : 0);
-                    }, 0) / acceptedDocSuggestions.length;
-                    return (avg * 100).toFixed(0);
-                  })()}
-                </div>
-                <div className="text-center md:text-right min-w-0">
-                  <div className="text-base md:text-2xl font-bold truncate">
-                    {(() => {
-                      const acceptedDocSuggestions = suggestions.filter(s => s.status === 'accepted');
-                      if (acceptedDocSuggestions.length === 0) return '0.0';
-                      const avg = acceptedDocSuggestions.reduce((sum, s) => {
-                        const total = (s.proVotes || 0) + (s.conVotes || 0);
-                        return sum + (total > 0 ? (s.proVotes / total) : 0);
-                      }, 0) / acceptedDocSuggestions.length;
-                      return avg.toFixed(2);
-                    })()}
-                  </div>
-                  <div className="text-[8px] md:text-xs text-slate-600 leading-tight truncate">{t('threshold')}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-4 gap-1 md:gap-3 w-full max-w-full">
+          <div 
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 cursor-pointer hover:border-blue-400 transition-all flex flex-col items-center justify-center gap-0.5 md:gap-1"
+            onClick={() => setShowContributorsModal(true)}
+          >
+            <Users className="w-3.5 h-3.5 md:w-6 md:h-6 text-blue-600" />
+            <div className="text-sm md:text-xl font-bold text-slate-900">{document.totalUsersInteracted || 0}</div>
+            <div className="text-[7px] md:text-[10px] text-slate-600 text-center leading-tight">{t('contributors')}</div>
+          </div>
+          <div 
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 cursor-pointer hover:border-indigo-400 transition-all flex flex-col items-center justify-center gap-0.5 md:gap-1"
+            onClick={() => setActiveTab("suggestions")}
+          >
+            <MessageSquare className="w-3.5 h-3.5 md:w-6 md:h-6 text-indigo-600" />
+            <div className="text-sm md:text-xl font-bold text-slate-900">{suggestions.length}</div>
+            <div className="text-[7px] md:text-[10px] text-slate-600 text-center leading-tight">{t('suggestions')}</div>
+          </div>
+          <div 
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 cursor-pointer hover:border-purple-400 transition-all flex flex-col items-center justify-center gap-0.5 md:gap-1"
+            onClick={() => setActiveTab("document")}
+          >
+            <TrendingUp className="w-3.5 h-3.5 md:w-6 md:h-6 text-purple-600" />
+            <div className="text-sm md:text-xl font-bold text-slate-900">
+              {((document.avgSuggestionConsensus || 0) * 100).toFixed(0)}%
+            </div>
+            <div className="text-[7px] md:text-[10px] text-slate-600 text-center leading-tight">{t('consensus')}</div>
+          </div>
+          <div 
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 cursor-pointer hover:border-blue-400 transition-all flex flex-col items-center justify-center gap-0.5 md:gap-1"
+            onClick={() => setActiveTab("document")}
+          >
+            <div className="w-3.5 h-3.5 md:w-6 md:h-6 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-[7px] md:text-[11px]">
+              {(() => {
+                const acceptedDocSuggestions = suggestions.filter(s => s.status === 'accepted');
+                if (acceptedDocSuggestions.length === 0) return '0';
+                const avg = acceptedDocSuggestions.reduce((sum, s) => {
+                  const total = (s.proVotes || 0) + (s.conVotes || 0);
+                  return sum + (total > 0 ? (s.proVotes / total) : 0);
+                }, 0) / acceptedDocSuggestions.length;
+                return (avg * 100).toFixed(0);
+              })()}
+            </div>
+            <div className="text-sm md:text-xl font-bold text-slate-900">
+              {(() => {
+                const acceptedDocSuggestions = suggestions.filter(s => s.status === 'accepted');
+                if (acceptedDocSuggestions.length === 0) return '0.0';
+                const avg = acceptedDocSuggestions.reduce((sum, s) => {
+                  const total = (s.proVotes || 0) + (s.conVotes || 0);
+                  return sum + (total > 0 ? (s.proVotes / total) : 0);
+                }, 0) / acceptedDocSuggestions.length;
+                return avg.toFixed(2);
+              })()}
+            </div>
+            <div className="text-[7px] md:text-[10px] text-slate-600 text-center leading-tight">{t('threshold')}</div>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
