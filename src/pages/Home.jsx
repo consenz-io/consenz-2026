@@ -1,17 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, TrendingUp, Users, Clock, ArrowRight, ArrowLeft } from "lucide-react";
+import { FileText, TrendingUp, Users, Clock, ArrowRight, ArrowLeft, Languages, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 
 export default function Home() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
+  const queryClient = useQueryClient();
+  const [translatingDoc, setTranslatingDoc] = useState(null);
+  const [showTranslated, setShowTranslated] = useState({});
   const { data: documents, isLoading } = useQuery({
     queryKey: ['publicDocuments'],
     queryFn: () => base44.entities.Document.list('-created_date', 20),
@@ -41,6 +44,54 @@ export default function Home() {
     const sum = consensusScores.reduce((acc, score) => acc + score, 0);
     return (sum / consensusScores.length * 100).toFixed(0);
   };
+
+  const languagePrompts = {
+    en: "English",
+    he: "Hebrew",
+    ar: "Arabic"
+  };
+
+  const translateDocumentMutation = useMutation({
+    mutationFn: async (doc) => {
+      const titlePrompt = `Translate the following text to ${languagePrompts[language]}. Return ONLY the translated text:\n${doc.title}`;
+      const titleResult = await base44.integrations.Core.InvokeLLM({
+        prompt: titlePrompt,
+        add_context_from_internet: false,
+      });
+      const translatedTitle = (typeof titleResult === 'string' ? titleResult : titleResult.content || titleResult).trim();
+
+      const newTranslations = {
+        ...(doc.translations || {}),
+        [language]: {
+          title: translatedTitle
+        }
+      };
+
+      await base44.entities.Document.update(doc.id, {
+        translations: newTranslations
+      });
+
+      return { docId: doc.id, translations: newTranslations };
+    },
+    onMutate: async (doc) => {
+      setTranslatingDoc(doc.id);
+      setShowTranslated(prev => ({ ...prev, [doc.id]: true }));
+    },
+    onSuccess: (data) => {
+      setTranslatingDoc(null);
+      queryClient.setQueryData(['publicDocuments'], (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.map(d => 
+          d.id === data.docId 
+            ? { ...d, translations: data.translations }
+            : d
+        );
+      });
+    },
+    onError: () => {
+      setTranslatingDoc(null);
+    }
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -182,50 +233,91 @@ export default function Home() {
           </Card>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {documents.map((doc) => (
-              <Link key={doc.id} to={`${createPageUrl("DocumentView")}?id=${doc.id}`}>
-                <Card className="bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-200 cursor-pointer h-full">
+            {documents.map((doc) => {
+              const needsTranslation = doc.originalLanguage && doc.originalLanguage !== language;
+              const hasTranslation = doc.translations?.[language]?.title;
+              const displayTitle = showTranslated[doc.id] && hasTranslation 
+                ? doc.translations[language].title 
+                : doc.title;
+
+              return (
+                <Card key={doc.id} className="bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-200 h-full">
                   <CardHeader>
-                    <div className={`flex items-start justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <CardTitle className="text-lg">{doc.title}</CardTitle>
-                      <Badge variant="outline" className={
-                        doc.privacy === 'public_view_open_participation' 
-                          ? 'bg-green-50 text-green-700 border-green-200'
-                          : 'bg-amber-50 text-amber-700 border-amber-200'
-                      }>
-                        {doc.privacy === 'public_view_open_participation' ? 'Open' : 'Closed'}
-                      </Badge>
+                    <div className={`flex items-start justify-between gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <Link to={`${createPageUrl("DocumentView")}?id=${doc.id}`} className="flex-1 min-w-0">
+                        <CardTitle className="text-lg break-words">{displayTitle}</CardTitle>
+                      </Link>
+                      <div className={`flex items-center gap-2 shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        {needsTranslation && (
+                          translatingDoc === doc.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                          ) : !hasTranslation ? (
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                translateDocumentMutation.mutate(doc);
+                              }}
+                              className="p-1 hover:bg-blue-50 rounded transition-colors"
+                              title={t('translate')}
+                            >
+                              <Languages className="w-4 h-4 text-blue-600" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setShowTranslated(prev => ({ ...prev, [doc.id]: !prev[doc.id] }));
+                              }}
+                              className="p-1 hover:bg-slate-100 rounded transition-colors"
+                              title={showTranslated[doc.id] ? t('showOriginal') : t('showTranslation')}
+                            >
+                              <Languages className={`w-4 h-4 ${showTranslated[doc.id] ? 'text-slate-600' : 'text-blue-600'}`} />
+                            </button>
+                          )
+                        )}
+                        <Badge variant="outline" className={
+                          doc.privacy === 'public_view_open_participation' 
+                            ? 'bg-green-50 text-green-700 border-green-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                        }>
+                          {doc.privacy === 'public_view_open_participation' ? 'Open' : 'Closed'}
+                        </Badge>
+                      </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Users className="w-4 h-4" />
-                        <span>{doc.totalUsersInteracted || 0} {t('contributors')}</span>
+                  <Link to={`${createPageUrl("DocumentView")}?id=${doc.id}`}>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <Users className="w-4 h-4" />
+                          <span>{doc.totalUsersInteracted || 0} {t('contributors')}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <TrendingUp className="w-4 h-4" />
+                          <span>
+                            {(() => {
+                              const docSuggestions = acceptedSuggestions.filter(s => s.documentId === doc.id);
+                              if (docSuggestions.length === 0) return '0';
+                              const avg = docSuggestions.reduce((sum, s) => {
+                                const total = (s.proVotes || 0) + (s.conVotes || 0);
+                                return sum + (total > 0 ? (s.proVotes / total) : 0);
+                              }, 0) / docSuggestions.length;
+                              return (avg * 100).toFixed(0);
+                            })()}% {t('consensus')}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <Clock className="w-4 h-4" />
+                          <span>{new Date(doc.created_date).toLocaleDateString()}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <TrendingUp className="w-4 h-4" />
-                        <span>
-                          {(() => {
-                            const docSuggestions = acceptedSuggestions.filter(s => s.documentId === doc.id);
-                            if (docSuggestions.length === 0) return '0';
-                            const avg = docSuggestions.reduce((sum, s) => {
-                              const total = (s.proVotes || 0) + (s.conVotes || 0);
-                              return sum + (total > 0 ? (s.proVotes / total) : 0);
-                            }, 0) / docSuggestions.length;
-                            return (avg * 100).toFixed(0);
-                          })()}% {t('consensus')}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Clock className="w-4 h-4" />
-                        <span>{new Date(doc.created_date).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  </CardContent>
+                    </CardContent>
+                  </Link>
                 </Card>
-              </Link>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
