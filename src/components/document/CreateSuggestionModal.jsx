@@ -145,28 +145,18 @@ Return ONLY the translated HTML:`;
           ? Math.max(...existingVersions.map(v => v.version)) 
           : 0;
 
-        // Create version with OLD content (before change)
-        await base44.entities.DocumentVersion.create({
-          documentId: existingSection.documentId,
-          sectionId: existingSection.id,
-          content: existingSection.content,
-          version: maxVersion + 1,
-          changeType: "direct_edit",
-          changeDescription: `לפני: ${data.explanation || "עריכה ישירה של אדמין"}`
-        });
-
         // Update the section
         await base44.entities.Section.update(existingSection.id, {
           content: data.newContent,
           lastEditedBy: user.id
         });
 
-        // Create version with NEW content (after change)
+        // Create version with NEW content
         await base44.entities.DocumentVersion.create({
           documentId: existingSection.documentId,
           sectionId: existingSection.id,
           content: data.newContent,
-          version: maxVersion + 2,
+          version: maxVersion + 1,
           changeType: "direct_edit",
           changeDescription: data.explanation || "עריכה ישירה של אדמין"
         });
