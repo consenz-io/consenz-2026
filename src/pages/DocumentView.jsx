@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText } from "lucide-react";
+import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 
@@ -18,13 +18,16 @@ import PageHeader from "../components/PageHeader";
 
 
 export default function DocumentView() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
+  const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
   const scrollToSectionId = searchParams.get('scrollTo');
   const [showCreateSuggestion, setShowCreateSuggestion] = useState(false);
   const [editingSection, setEditingSection] = useState(null);
   const [activeTab, setActiveTab] = useState("document");
+  const [showTranslated, setShowTranslated] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
@@ -95,6 +98,50 @@ export default function DocumentView() {
     setShowCreateSuggestion(true);
   };
 
+  const languagePrompts = {
+    en: "English",
+    he: "Hebrew",
+    ar: "Arabic"
+  };
+
+  const translateDocumentMutation = useMutation({
+    mutationFn: async () => {
+      const titlePrompt = `Translate the following text to ${languagePrompts[language]}. Return ONLY the translated text:\n${document.title}`;
+      const titleResult = await base44.integrations.Core.InvokeLLM({
+        prompt: titlePrompt,
+        add_context_from_internet: false,
+      });
+      const translatedTitle = (typeof titleResult === 'string' ? titleResult : titleResult.content || titleResult).trim();
+
+      const newTranslations = {
+        ...(document.translations || {}),
+        [language]: {
+          title: translatedTitle
+        }
+      };
+
+      await base44.entities.Document.update(document.id, {
+        translations: newTranslations
+      });
+
+      return newTranslations;
+    },
+    onMutate: () => {
+      setIsTranslating(true);
+      setShowTranslated(true);
+    },
+    onSuccess: (newTranslations) => {
+      setIsTranslating(false);
+      queryClient.setQueryData(['document', documentId], (oldData) => {
+        if (!oldData) return oldData;
+        return { ...oldData, translations: newTranslations };
+      });
+    },
+    onError: () => {
+      setIsTranslating(false);
+    }
+  });
+
   if (docLoading || topicsLoading || sectionsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
@@ -124,10 +171,35 @@ export default function DocumentView() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
       <div className="max-w-6xl mx-auto space-y-4 md:space-y-6 overflow-x-hidden">
         <div className="flex flex-col gap-3 md:gap-4">
-          <PageHeader 
-            title={document.title}
-            backUrl={createPageUrl("Home")}
-          />
+          <div className="flex items-center justify-center gap-2">
+            <PageHeader 
+              title={showTranslated && document.translations?.[language]?.title 
+                ? document.translations[language].title 
+                : document.title}
+              backUrl={createPageUrl("Home")}
+            />
+            {document.originalLanguage && document.originalLanguage !== language && (
+              isTranslating ? (
+                <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+              ) : !document.translations?.[language]?.title ? (
+                <button
+                  onClick={() => translateDocumentMutation.mutate()}
+                  className="p-1.5 hover:bg-blue-50 rounded transition-colors"
+                  title={t('translate')}
+                >
+                  <Languages className="w-5 h-5 text-blue-600" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowTranslated(!showTranslated)}
+                  className="p-1.5 hover:bg-slate-100 rounded transition-colors"
+                  title={showTranslated ? t('showOriginal') : t('showTranslation')}
+                >
+                  <Languages className={`w-5 h-5 ${showTranslated ? 'text-slate-600' : 'text-blue-600'}`} />
+                </button>
+              )
+            )}
+          </div>
           <div className="flex gap-2 flex-wrap justify-center">
             <Badge variant="outline" className={`text-[10px] md:text-xs ${
               document.privacy === 'public_view_open_participation' 
