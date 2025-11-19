@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ThumbsUp, ThumbsDown, Plus, ExternalLink } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import VotesNeededCounter from "./VotesNeededCounter";
+import TranslatableContent from "./TranslatableContent";
 
 export default function NewSectionSuggestionCard({ 
   suggestion, 
@@ -44,12 +45,22 @@ export default function NewSectionSuggestionCard({
               {suggestion.title}
             </h3>
             {suggestion.explanation && (
-              <p className="text-xs md:text-sm text-slate-600 mb-2 break-words">
-                {suggestion.explanation}
-              </p>
+              <div className="text-xs md:text-sm mb-2">
+                <TranslatableContent
+                  content={suggestion.explanation}
+                  entity={suggestion}
+                  entityType="Suggestion"
+                  className="text-slate-600 break-words"
+                />
+              </div>
             )}
-            <div className="text-sm text-slate-700 bg-white/60 p-3 rounded border border-amber-200 mb-3">
-              {getContentPreview(suggestion.newContent)}
+            <div className="text-sm bg-white/60 p-3 rounded border border-amber-200 mb-3">
+              <TranslatableContent
+                content={getContentPreview(suggestion.newContent)}
+                entity={suggestion}
+                entityType="Suggestion"
+                className="text-slate-700"
+              />
             </div>
           </div>
         </div>
