@@ -9,7 +9,7 @@ import DocumentCleanView from './pages/DocumentCleanView';
 import MyDocuments from './pages/MyDocuments';
 import SectionHistory from './pages/SectionHistory';
 import LearnMore from './pages/LearnMore';
-import Layout from './Layout.jsx';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
@@ -29,5 +29,5 @@ export const PAGES = {
 export const pagesConfig = {
     mainPage: "Home",
     Pages: PAGES,
-    Layout: Layout,
+    Layout: __Layout,
 };
