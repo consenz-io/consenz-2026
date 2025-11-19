@@ -396,13 +396,25 @@ export default function LearnMore() {
                 <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className={isRTL ? 'text-right' : 'text-left'}>
                     <p className="font-semibold text-slate-900">
-                      {getLocalizedText("Create Suggestion", "יצירת הצעה", "إنشاء مقترح")}
+                      {getLocalizedText("Edit Section Suggestion", "הצעה לעריכת סעיף", "اقتراح تعديل قسم")}
                     </p>
                     <p className="text-sm text-slate-600">
-                      {getLocalizedText("Cost to submit a new suggestion", "עלות להגשת הצעה חדשה", "تكلفة تقديم مقترح جديد")}
+                      {getLocalizedText("Cost to suggest editing existing section", "עלות להצעת עריכה לסעיף קיים", "تكلفة اقتراح تعديل قسم موجود")}
                     </p>
                   </div>
                   <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap">-200</Badge>
+                </div>
+                
+                <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                    <p className="font-semibold text-slate-900">
+                      {getLocalizedText("New Section Suggestion", "הצעה לסעיף חדש", "اقتراح قسم جديد")}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {getLocalizedText("Cost to suggest adding new section", "עלות להצעת הוספת סעיף חדש", "تكلفة اقتراح إضافة قسم جديد")}
+                    </p>
+                  </div>
+                  <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap">-350</Badge>
                 </div>
               </div>
             </CardContent>
@@ -485,9 +497,9 @@ export default function LearnMore() {
                 <div className={isRTL ? 'text-right' : 'text-left'}>
                   <p className="text-slate-900">
                     {getLocalizedText(
-                      "You create a suggestion: 1,000 - 200 = 800 points",
-                      "יצירת הצעה: 1,000 - 200 = 800 נקודות",
-                      "تنشئ مقترحًا: 1000 - 200 = 800 نقطة"
+                      "You create an edit suggestion: 1,000 - 200 = 800 points",
+                      "יצירת הצעה לעריכת סעיף: 1,000 - 200 = 800 נקודות",
+                      "تنشئ مقترح تعديل: 1000 - 200 = 800 نقطة"
                     )}
                   </p>
                 </div>
@@ -520,11 +532,18 @@ export default function LearnMore() {
               </div>
 
               <div className={`p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-lg border border-red-200 ${isRTL ? 'text-right' : 'text-left'}`}>
-                <p className="font-bold text-red-900">
+                <p className="font-bold text-red-900 mb-2">
                   {getLocalizedText(
                     "Final result: -50 points net loss (but your content was accepted!) 📝",
                     "תוצאה סופית: -50 נקודות הפסד נטו (אבל התוכן התקבל!) 📝",
                     "النتيجة النهائية: -50 نقطة خسارة صافية (لكن تم قبول محتواك!) 📝"
+                  )}
+                </p>
+                <p className="text-sm text-slate-700">
+                  {getLocalizedText(
+                    "Note: Creating a new section costs 350 points (instead of 200 for edits)",
+                    "שים לב: יצירת סעיף חדש עולה 350 נקודות (במקום 200 לעריכות)",
+                    "ملاحظة: إنشاء قسم جديد يكلف 350 نقطة (بدلاً من 200 للتعديلات)"
                   )}
                 </p>
               </div>

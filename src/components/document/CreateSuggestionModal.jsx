@@ -32,7 +32,8 @@ const detectLanguage = (text) => {
   return 'en';
 };
 
-const POINTS_COST = 200;
+const POINTS_COST_EDIT = 200;
+const POINTS_COST_NEW = 350;
 
 export default function CreateSuggestionModal({ 
   document, 
@@ -169,8 +170,9 @@ Return ONLY the translated HTML:`;
       // Check if user has enough points (only if gamification is enabled)
       const currentPoints = currentUser.points || 1000;
       const gamificationEnabled = document.gamificationEnabled || false;
+      const pointsCost = isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
       
-      if (gamificationEnabled && currentPoints < POINTS_COST) {
+      if (gamificationEnabled && currentPoints < pointsCost) {
         throw new Error('INSUFFICIENT_POINTS');
       }
 
@@ -248,18 +250,18 @@ Return ONLY the translated HTML:`;
         console.error('Error sending notifications:', err);
       }
 
-      // Deduct 200 points for creating suggestion (only if gamification enabled)
+      // Deduct points for creating suggestion (only if gamification enabled)
       const updateData = {
         suggestionsCreated: (currentUser.suggestionsCreated || 0) + 1
       };
       
       if (gamificationEnabled) {
-        updateData.points = currentPoints - POINTS_COST;
+        updateData.points = currentPoints - pointsCost;
         
         // Create points transaction record
         await base44.entities.PointsTransaction.create({
           userId: currentUser.id,
-          amount: -POINTS_COST,
+          amount: -pointsCost,
           action: 'suggestion_created',
           description: `יצירת הצעה: ${autoTitle}`,
           relatedEntityId: suggestion.id,
@@ -332,10 +334,11 @@ Return ONLY the translated HTML:`;
     // Check if should show points confirmation dialog
     const gamificationEnabled = document.gamificationEnabled || false;
     const skipConfirm = localStorage.getItem('consenz_skip_points_confirm_suggestion') === 'true';
+    const pointsCost = isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
     
     if (gamificationEnabled && !skipConfirm) {
       const currentPoints = currentUser.points || 1000;
-      if (currentPoints >= POINTS_COST) {
+      if (currentPoints >= pointsCost) {
         setPendingFormData(formData);
         setShowPointsConfirm(true);
         return;
@@ -362,6 +365,8 @@ Return ONLY the translated HTML:`;
     );
   }
 
+  const pointsCost = isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
+
   return (
     <>
       <InsufficientPointsDialog
@@ -370,7 +375,7 @@ Return ONLY the translated HTML:`;
           setShowInsufficientPointsDialog(false);
           onClose();
         }}
-        requiredPoints={POINTS_COST}
+        requiredPoints={pointsCost}
         currentPoints={currentUser?.points || 1000}
         actionType="suggestion"
       />
@@ -382,7 +387,7 @@ Return ONLY the translated HTML:`;
           setPendingFormData(null);
         }}
         onConfirm={handleConfirmPoints}
-        cost={POINTS_COST}
+        cost={pointsCost}
         currentPoints={currentUser?.points || 1000}
         actionType="suggestion"
       />
@@ -406,11 +411,11 @@ Return ONLY the translated HTML:`;
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-700">{t('costToCreate')}</span>
-              <span className="font-bold text-blue-600">{POINTS_COST} {t('points')}</span>
+              <span className="font-bold text-blue-600">{pointsCost} {t('points')}</span>
             </div>
             <div className="flex items-center justify-between text-sm mt-1">
               <span className="text-slate-700">{t('yourPoints')}</span>
-              <span className={`font-bold ${(currentUser?.points || 1000) >= POINTS_COST ? 'text-green-600' : 'text-red-600'}`}>
+              <span className={`font-bold ${(currentUser?.points || 1000) >= pointsCost ? 'text-green-600' : 'text-red-600'}`}>
                 {currentUser?.points || 1000} {t('points')}
               </span>
             </div>
