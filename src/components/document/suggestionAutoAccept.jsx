@@ -3,27 +3,24 @@ import { notifySuggestionStatusChange } from "../notifications/createNotificatio
 
 /**
  * בדיקה אם הצעה עברה את סף הקונסנזוס ויכולה להתקבל אוטומטית
+ * מיושם לפי אפיון Consensus Meter Logic
  */
 export async function checkSuggestionConsensus(suggestion, document) {
   const proVotes = suggestion.proVotes || 0;
   const conVotes = suggestion.conVotes || 0;
+  const totalUsers = document.totalUsersInteracted || 1; // מונע חלוקה באפס
   
-  // חישוב threshold דינמי מההצעות שאושרו במסמך
-  const acceptedSuggestions = await base44.entities.Suggestion.filter({ 
-    documentId: document.id, 
-    status: 'accepted' 
-  });
-  
+  // חישוב threshold דינמי על בסיס consensuses של המסמך
   let threshold;
-  if (acceptedSuggestions.length > 0) {
-    // מחשבים את הממוצע של הדלתא (הפרש בין בעד לנגד) מההצעות המאושרות
-    const deltas = acceptedSuggestions.map(s => {
-      return (s.proVotes || 0) - (s.conVotes || 0);
-    });
-    const avgDelta = deltas.reduce((sum, delta) => sum + delta, 0) / deltas.length;
-    threshold = Math.max(1, Math.round(avgDelta));
+  const consensuses = document.consensuses || [];
+  
+  if (consensuses.length > 0) {
+    // document_consensus_meter = ממוצע כל ה-section_consensus_meter
+    const consensusMeterAverage = consensuses.reduce((sum, val) => sum + val, 0) / consensuses.length;
+    // document_threshold = document_consensus_meter * totalUsers
+    threshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
   } else {
-    // אם אין הצעות מאושרות, משתמשים ב-threshold של המסמך
+    // אם אין consensuses, משתמשים ב-threshold של המסמך
     threshold = document.threshold || 2;
   }
   
@@ -38,6 +35,8 @@ export async function checkSuggestionConsensus(suggestion, document) {
     proVotes: proVotes,
     conVotes: conVotes,
     currentDelta: currentDelta,
+    totalUsers: totalUsers,
+    consensuses: consensuses,
     threshold: threshold,
     shouldAccept
   });
@@ -69,6 +68,34 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     console.log('[AUTO-ACCEPT] Suggestion does not meet threshold:', suggestion.id);
     return false;
   }
+  
+  // חישוב section_consensus_meter לפי האפיון
+  const totalUsers = document.totalUsersInteracted || 1;
+  const sectionConsensus = consensus / totalUsers;
+  
+  // עדכון המסמך: הוספת sectionConsensus למערך consensuses ועדכון threshold
+  const currentConsensuses = document.consensuses || [];
+  const updatedConsensuses = [...currentConsensuses, sectionConsensus];
+  
+  // חישוב document_consensus_meter חדש
+  const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + val, 0) / updatedConsensuses.length;
+  
+  // חישוב document_threshold חדש
+  const newThreshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
+  
+  console.log('[CONSENSUS METER UPDATE]', {
+    sectionConsensus,
+    updatedConsensuses,
+    consensusMeterAverage,
+    newThreshold,
+    totalUsers
+  });
+  
+  // עדכון המסמך עם הערכים החדשים
+  await base44.entities.Document.update(document.id, {
+    consensuses: updatedConsensuses,
+    threshold: newThreshold
+  });
   
   // עדכון סטטוס ההצעה מיד כדי למנוע אישור כפול
   console.log('[AUTO-ACCEPT] Updating suggestion status to accepted immediately');
