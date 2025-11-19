@@ -271,22 +271,12 @@ Return ONLY the translated HTML:`;
       
       await base44.auth.updateMe(updateData);
 
-      const interactions = await base44.entities.UserInteraction.filter({ 
-        documentId: document.id, 
-        userId: currentUser.id 
+      // עדכון מספר התורמים למסמך
+      const { calculateDocumentContributors } = await import('./calculateContributors');
+      const contributorsCount = await calculateDocumentContributors(document.id);
+      await base44.entities.Document.update(document.id, {
+        totalUsersInteracted: contributorsCount,
       });
-      
-      if (interactions.length === 0) {
-        await base44.entities.UserInteraction.create({
-          documentId: document.id,
-          userId: currentUser.id,
-          firstInteractionAt: new Date().toISOString(),
-        });
-
-        await base44.entities.Document.update(document.id, {
-          totalUsersInteracted: (document.totalUsersInteracted || 0) + 1,
-        });
-      }
 
       return suggestion;
     },

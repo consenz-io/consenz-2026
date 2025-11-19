@@ -266,6 +266,13 @@ export default function SuggestionDetail() {
         console.error('[VOTE NOTIFICATION ERROR]', notifError);
       }
 
+      // עדכון מספר התורמים למסמך
+      const { calculateDocumentContributors } = await import('../components/document/calculateContributors');
+      const contributorsCount = await calculateDocumentContributors(suggestion.documentId);
+      await base44.entities.Document.update(suggestion.documentId, {
+        totalUsersInteracted: contributorsCount,
+      });
+
       // בדיקה והפעלת אישור אוטומטי אם עברנו את הסף
       const { shouldAccept } = checkSuggestionConsensus(updatedSuggestion, document);
       console.log('[POINTS DEBUG] Should accept suggestion:', shouldAccept);
@@ -325,6 +332,19 @@ export default function SuggestionDetail() {
         content: content.trim(),
         convincedCount: 0
       });
+      
+      // עדכון מספר התורמים למסמך
+      if (suggestion?.documentId) {
+        try {
+          const { calculateDocumentContributors } = await import('../components/document/calculateContributors');
+          const contributorsCount = await calculateDocumentContributors(suggestion.documentId);
+          await base44.entities.Document.update(suggestion.documentId, {
+            totalUsersInteracted: contributorsCount,
+          });
+        } catch (err) {
+          console.error('[UPDATE CONTRIBUTORS ERROR]', err);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['arguments', suggestionId] });
