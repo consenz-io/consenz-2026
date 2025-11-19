@@ -54,9 +54,11 @@ export default function CommentsSection({ entityType, entityId, user }) {
       });
       
       // שליחת התראה על תגובה חדשה
+      let documentId;
       if (entityType === 'suggestion') {
         const suggestions = await base44.entities.Suggestion.filter({ id: entityId });
         if (suggestions.length > 0) {
+          documentId = suggestions[0].documentId;
           await notifyNewComment({ 
             comment, 
             targetEntity: suggestions[0], 
@@ -66,11 +68,25 @@ export default function CommentsSection({ entityType, entityId, user }) {
       } else if (entityType === 'section') {
         const sections = await base44.entities.Section.filter({ id: entityId });
         if (sections.length > 0) {
+          documentId = sections[0].documentId;
           await notifyNewComment({ 
             comment, 
             targetEntity: sections[0], 
             targetEntityType: 'section' 
           });
+        }
+      }
+      
+      // עדכון מספר התורמים למסמך
+      if (documentId) {
+        try {
+          const { calculateDocumentContributors } = await import('./document/calculateContributors');
+          const contributorsCount = await calculateDocumentContributors(documentId);
+          await base44.entities.Document.update(documentId, {
+            totalUsersInteracted: contributorsCount,
+          });
+        } catch (err) {
+          console.error('[UPDATE CONTRIBUTORS ERROR]', err);
         }
       }
       
