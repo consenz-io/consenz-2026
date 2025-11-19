@@ -203,6 +203,7 @@ const translations = {
     saveToHistory: "Save to version history before deleting",
     sectionDeleted: "Section deleted successfully",
     deleting: "Deleting...",
+    editSuggestions: "Edit Suggestions",
     },
   he: {
     // ניווט
@@ -406,6 +407,7 @@ const translations = {
     saveToHistory: "שמור בהיסטוריית הגרסאות לפני המחיקה",
     sectionDeleted: "הסעיף נמחק בהצלחה",
     deleting: "מוחק...",
+    editSuggestions: "הצעות עריכה",
     },
   ar: {
     // التنقل
