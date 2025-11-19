@@ -474,6 +474,7 @@ export default function DocumentContent({
                         document={document}
                         user={user}
                         onEditSection={onEditSection}
+                        onDirectEdit={() => setEditingSection(section)}
                         toggleComments={toggleComments}
                         showComments={showComments}
                         getCommentsCount={getCommentsCount}
@@ -482,6 +483,7 @@ export default function DocumentContent({
                         getUserName={getUserName}
                         acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
                         sectionIndex={index}
+                        isAdmin={isAdmin}
                       />
                     </div>
                     {index === topicSections.length - 1 && user && (
