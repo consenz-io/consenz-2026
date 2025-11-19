@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { FileText, Home, User, Settings, LogOut, Plus, Globe } from "lucide-react";
+import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages } from "lucide-react";
 import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
 import {
   Sidebar,
@@ -206,15 +206,18 @@ function LayoutContent({ children, currentPageName }) {
                 <h1 className="text-xl font-bold text-slate-900 md:hidden">Consenz</h1>
               </div>
               <div className="flex items-center gap-3">
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="px-3 py-2 border border-slate-300 rounded-lg text-sm font-medium bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
-                >
-                  <option value="en">🇬🇧 English</option>
-                  <option value="he">🇮🇱 עברית</option>
-                  <option value="ar">🇵🇸 العربية</option>
-                </select>
+                <div className="relative">
+                  <Languages className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm font-medium bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer appearance-none"
+                  >
+                    <option value="en">English</option>
+                    <option value="he">עברית</option>
+                    <option value="ar">العربية</option>
+                  </select>
+                </div>
                 {user && (
                   <div data-notification-bell className="hidden md:block">
                     <NotificationBell user={user} />
