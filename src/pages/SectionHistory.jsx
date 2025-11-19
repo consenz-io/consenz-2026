@@ -12,9 +12,10 @@ import { useLanguage } from "@/components/LanguageContext";
 import SectionDiff from "../components/document/SectionDiff";
 import CommentsSection from "../components/document/CommentsSection";
 import PageHeader from "../components/PageHeader";
+import TranslatableContent from "../components/document/TranslatableContent";
 
 export default function SectionHistory() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const sectionId = searchParams.get('id');
   const [showComments, setShowComments] = useState({});
@@ -142,9 +143,14 @@ export default function SectionHistory() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <div 
+            <TranslatableContent
+              content={section.content}
+              entity={section}
+              entityType="section"
+              onUpdate={(updated) => {
+                // Update query cache
+              }}
               className="prose prose-sm max-w-none text-slate-700"
-              dangerouslySetInnerHTML={{ __html: section.content }}
             />
             <div className="text-xs text-slate-500 mt-4 pt-4 border-t">
               {t('lastUpdate')}: {new Date(section.updated_date).toLocaleString()}
@@ -197,6 +203,22 @@ export default function SectionHistory() {
                         <SectionDiff
                           originalContent={previousVersion.content}
                           newContent={latestVersion.content}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Show version content if not showing diff */}
+                    {(!previousVersion || latestVersion.changeType !== 'suggestion_accepted') && (
+                      <div>
+                        <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('content')}</h3>
+                        <TranslatableContent
+                          content={latestVersion.content}
+                          entity={latestVersion}
+                          entityType="version"
+                          onUpdate={(updated) => {
+                            // Update query cache
+                          }}
+                          className="prose prose-sm max-w-none text-slate-700"
                         />
                       </div>
                     )}
@@ -263,7 +285,16 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
       {suggestion.explanation && (
         <div>
           <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('explanationForSuggestion')}</h3>
-          <p className="text-sm text-slate-600">{suggestion.explanation}</p>
+          <TranslatableContent
+            content={suggestion.explanation}
+            entity={suggestion}
+            entityType="suggestion"
+            onUpdate={(updated) => {
+              // Update query cache
+            }}
+            className="text-sm text-slate-600"
+            fieldName="explanation"
+          />
         </div>
       )}
 
