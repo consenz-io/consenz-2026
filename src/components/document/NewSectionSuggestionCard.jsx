@@ -42,7 +42,7 @@ export default function NewSectionSuggestionCard({
               </span>
             </div>
             <h3 className="font-semibold text-slate-900 text-sm md:text-base mb-2 break-words">
-              {suggestion.title}
+              {typeof suggestion.title === 'string' ? suggestion.title : String(suggestion.title || '')}
             </h3>
             {suggestion.explanation && (
               <div className="text-xs md:text-sm mb-2">
