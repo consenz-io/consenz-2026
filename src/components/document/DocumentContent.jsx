@@ -340,14 +340,23 @@ export default function DocumentContent({
 
   const translateTopicMutation = useMutation({
     mutationFn: async (topic) => {
-      const titlePrompt = `Translate the following text to ${languagePrompts[language]}. Return ONLY the translated text:\n${topic.title}`;
+      const titlePrompt = `You are a professional translator. Translate the following text to ${languagePrompts[language]}.
+
+CRITICAL INSTRUCTIONS:
+- Return ONLY the translated text, nothing else
+- Do not add any explanations or comments
+- Maintain exact same formatting
+
+Text to translate:
+${topic.title}
+
+Return ONLY the translated text:`;
+      
       const titleResult = await base44.integrations.Core.InvokeLLM({
         prompt: titlePrompt,
         add_context_from_internet: false,
       });
       const translatedTitle = (typeof titleResult === 'string' ? titleResult : titleResult.content || titleResult).trim();
-
-      console.log('[TRANSLATE DEBUG] Translated title:', translatedTitle);
 
       const newTranslations = {
         ...(topic.translations || {}),
@@ -363,7 +372,6 @@ export default function DocumentContent({
       return { topicId: topic.id, translations: newTranslations };
     },
     onMutate: async (topic) => {
-      // מגדיר מראש שאנחנו מציגים תרגום
       setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: true }));
     },
     onSuccess: (data) => {
@@ -407,41 +415,34 @@ export default function DocumentContent({
           <Card key={topic.id} className="bg-white border-slate-200 w-full overflow-hidden">
             <CardHeader className="border-b border-slate-100 p-4 md:p-6">
               <div className={`flex flex-col md:flex-row justify-between md:items-center gap-3 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 flex items-center gap-2">
                   <CardTitle className={`text-lg md:text-2xl break-words ${isRTL ? 'text-right' : 'text-left'}`}>
                     {showTranslatedTopics[topic.id] && topic.translations?.[language]?.title
                       ? topic.translations[language].title
                       : topic.title}
                   </CardTitle>
                   {topic.originalLanguage && topic.originalLanguage !== language && (
-                    <div className="mt-2">
-                      {translateTopicMutation.isPending && translateTopicMutation.variables?.id === topic.id ? (
-                        <div className="flex items-center gap-2 text-sm text-slate-600">
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                          <span>{t('translating')}</span>
-                        </div>
-                      ) : !topic.translations?.[language] ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => translateTopicMutation.mutate(topic)}
-                          className="text-blue-600 hover:text-blue-700 h-8 text-xs px-2"
-                        >
-                          <Languages className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                          <span className="truncate">תרגם ל{languageNames[language]}</span>
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: !prev[topic.id] }))}
-                          className="text-slate-600 hover:text-slate-700 h-8 text-xs px-2"
-                        >
-                          <Languages className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                          <span className="truncate">{showTranslatedTopics[topic.id] ? `${languageNames[topic.originalLanguage || 'he']} (מקור)` : `${languageNames[language]} (מתורגם)`}</span>
-                        </Button>
-                      )}
-                    </div>
+                    translateTopicMutation.isPending && translateTopicMutation.variables?.id === topic.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          if (showTranslatedTopics[topic.id] && topic.translations?.[language]) {
+                            setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: false }));
+                          } else if (topic.translations?.[language]) {
+                            setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: true }));
+                          } else {
+                            translateTopicMutation.mutate(topic);
+                          }
+                        }}
+                        className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 flex-shrink-0"
+                        title={showTranslatedTopics[topic.id] && topic.translations?.[language] ? `${languageNames[topic.originalLanguage || 'he']} (מקור)` : `תרגם ל${languageNames[language]}`}
+                      >
+                        <Languages className="w-4 h-4" />
+                      </Button>
+                    )
                   )}
                 </div>
                 {user && (

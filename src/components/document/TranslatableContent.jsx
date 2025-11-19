@@ -109,36 +109,24 @@ Return ONLY the translated HTML:`;
           )}
           
           {needsTranslation && (
-            <div className="flex items-center gap-2 pt-2">
-              {!showTranslated && !translateMutation.isPending && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    if (hasTranslation) {
-                      setShowTranslated(true);
-                    } else {
-                      translateMutation.mutate();
-                    }
-                  }}
-                  className="text-xs text-blue-600 hover:text-blue-700"
-                >
-                  <Languages className="w-3 h-3 mr-1" />
-                  תרגם ל{languageNames[language]}
-                </Button>
-              )}
-              
-              {(showTranslated || translateMutation.isSuccess) && hasTranslation && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowTranslated(!showTranslated)}
-                  className="text-xs text-slate-600 hover:text-slate-700"
-                >
-                  <Languages className="w-3 h-3 mr-1" />
-                  {showTranslated ? `${languageNames[originalLanguage]} (מקור)` : `${languageNames[language]} (מתורגם)`}
-                </Button>
-              )}
+            <div className="flex items-center gap-2 pt-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (showTranslated && hasTranslation) {
+                    setShowTranslated(false);
+                  } else if (hasTranslation) {
+                    setShowTranslated(true);
+                  } else {
+                    translateMutation.mutate();
+                  }
+                }}
+                className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                title={showTranslated && hasTranslation ? `${languageNames[originalLanguage]} (מקור)` : `תרגם ל${languageNames[language]}`}
+              >
+                <Languages className="w-4 h-4" />
+              </Button>
             </div>
           )}
         </>

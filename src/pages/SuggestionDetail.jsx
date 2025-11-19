@@ -604,7 +604,15 @@ export default function SuggestionDetail() {
             {suggestion.explanation && (
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('explanation')}</h3>
-                <p className="text-slate-600">{suggestion.explanation}</p>
+                <TranslatableContent
+                  content={suggestion.explanation}
+                  entity={suggestion}
+                  entityType="Suggestion"
+                  onUpdate={(updated) => {
+                    queryClient.setQueryData(['suggestion', suggestionId], updated);
+                  }}
+                  className="text-slate-600"
+                />
               </div>
             )}
 

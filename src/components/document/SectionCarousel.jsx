@@ -292,71 +292,41 @@ export default function SectionCarousel({
           // תצוגת הצעה - diff
           <>
             {currentView.data.explanation && (
-              <div className="mb-3">
-                <p className="text-sm text-slate-600">
-                  <DocumentTextContent 
-                    content={
-                      showTranslated[currentView.data.id] && currentView.data.translations?.[language]?.explanation
-                        ? currentView.data.translations[language].explanation
-                        : currentView.data.explanation
-                    }
-                  />
-                </p>
+              <div className="mb-3 text-sm">
+                <TranslatableContent
+                  content={currentView.data.explanation}
+                  entity={currentView.data}
+                  entityType="Suggestion"
+                  className="text-slate-600"
+                />
               </div>
             )}
             
             {currentView.data.originalContent ? (
-              <SectionDiff
-                originalContent={currentView.data.originalContent}
-                newContent={
-                  showTranslated[currentView.data.id] && currentView.data.translations?.[language]?.newContent
-                    ? currentView.data.translations[language].newContent
-                    : currentView.data.newContent
-                }
-              />
+              <div>
+                <SectionDiff
+                  originalContent={currentView.data.originalContent}
+                  newContent={currentView.data.newContent}
+                />
+                <TranslatableContent
+                  content={currentView.data.newContent}
+                  entity={currentView.data}
+                  entityType="Suggestion"
+                  className="hidden"
+                />
+              </div>
             ) : (
-              <div className="prose prose-sm max-w-none p-3 bg-green-50 rounded border border-green-200">
-                <DocumentTextContent 
-                  content={
-                    showTranslated[currentView.data.id] && currentView.data.translations?.[language]?.newContent
-                      ? currentView.data.translations[language].newContent
-                      : currentView.data.newContent
-                  }
+              <div className="p-3 bg-green-50 rounded border border-green-200">
+                <TranslatableContent
+                  content={currentView.data.newContent}
+                  entity={currentView.data}
+                  entityType="Suggestion"
+                  className="prose prose-sm max-w-none"
                 />
               </div>
             )}
 
-            {/* כפתור תרגום מרכזי */}
-            {currentView.data.originalLanguage !== language && (
-              <div className="mt-3 pt-3 border-t border-slate-200">
-                {translateSuggestionMutation.isPending ? (
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>{t('translating')}</span>
-                  </div>
-                ) : !currentView.data.translations?.[language] ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => translateSuggestionMutation.mutate(currentView.data)}
-                    className="text-blue-600 hover:text-blue-700"
-                  >
-                    <Languages className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    תרגם ל{languageNames[language]}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowTranslated(prev => ({ ...prev, [currentView.data.id]: !prev[currentView.data.id] }))}
-                    className="text-slate-600 hover:text-slate-700"
-                  >
-                    <Languages className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {showTranslated[currentView.data.id] ? `${languageNames[currentView.data.originalLanguage || 'he']} (מקור)` : `${languageNames[language]} (מתורגם)`}
-                  </Button>
-                )}
-              </div>
-            )}
+
 
             {/* כפתורי הצבעה והערות */}
             <div className="flex items-center gap-4 mt-4 text-sm flex-wrap">

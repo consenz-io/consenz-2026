@@ -13,6 +13,7 @@ import SectionDiff from "../components/document/SectionDiff";
 import CommentsSection from "../components/document/CommentsSection";
 import TranslatableContent from "../components/document/TranslatableContent";
 import PageHeader from "../components/PageHeader";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function SectionHistory() {
   const { t, isRTL } = useLanguage();
@@ -281,7 +282,12 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
       {suggestion.explanation && (
         <div>
           <h3 className="text-xs md:text-sm font-semibold text-slate-700 mb-2">{t('explanationForSuggestion')}</h3>
-          <p className="text-xs md:text-sm text-slate-600 break-words">{suggestion.explanation}</p>
+          <TranslatableContent
+            content={suggestion.explanation}
+            entity={suggestion}
+            entityType="Suggestion"
+            className="text-xs md:text-sm text-slate-600 break-words"
+          />
         </div>
       )}
 
