@@ -13,66 +13,11 @@ export default function SectionDiff({ originalContent, newContent }) {
   
   const originalLanguage = 'he';
   const needsTranslation = language !== originalLanguage;
+  
   const getTextContent = (html) => {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = html;
     return tempDiv.textContent || '';
-  };
-
-  const originalText = getTextContent(originalContent);
-  const newText = getTextContent(newContent);
-
-  const computeDiff = () => {
-    const originalWords = originalText.split(/(\s+)/);
-    const newWords = newText.split(/(\s+)/);
-    
-    const result = [];
-    let i = 0, j = 0;
-
-    while (i < originalWords.length || j < newWords.length) {
-      if (i >= originalWords.length) {
-        result.push({ type: 'added', text: newWords.slice(j).join('') });
-        break;
-      }
-      if (j >= newWords.length) {
-        result.push({ type: 'removed', text: originalWords.slice(i).join('') });
-        break;
-      }
-
-      if (originalWords[i] === newWords[j]) {
-        result.push({ type: 'unchanged', text: originalWords[i] });
-        i++;
-        j++;
-      } else {
-        let foundMatch = false;
-        for (let k = j + 1; k < Math.min(j + 10, newWords.length); k++) {
-          if (originalWords[i] === newWords[k]) {
-            result.push({ type: 'added', text: newWords.slice(j, k).join('') });
-            j = k;
-            foundMatch = true;
-            break;
-          }
-        }
-        if (!foundMatch) {
-          for (let k = i + 1; k < Math.min(i + 10, originalWords.length); k++) {
-            if (newWords[j] === originalWords[k]) {
-              result.push({ type: 'removed', text: originalWords.slice(i, k).join('') });
-              i = k;
-              foundMatch = true;
-              break;
-            }
-          }
-        }
-        if (!foundMatch) {
-          result.push({ type: 'removed', text: originalWords[i] });
-          result.push({ type: 'added', text: newWords[j] });
-          i++;
-          j++;
-        }
-      }
-    }
-
-    return result;
   };
 
   const handleTranslate = async () => {
@@ -178,6 +123,7 @@ Return ONLY the translated HTML:`;
   };
 
   const diff = computeDiffForDisplay();
+  
   return (
     <Card className="p-4 bg-slate-50 border-slate-200">
       <div className="flex items-center justify-between mb-3">
