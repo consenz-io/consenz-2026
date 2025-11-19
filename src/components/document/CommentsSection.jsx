@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -140,16 +142,22 @@ export default function CommentsSection({ entityType, entityId, user }) {
       <div className={`${isReply ? 'ml-8 mt-2' : ''}`}>
         <Card className={`p-3 ${isReply ? 'bg-slate-50' : 'bg-white'}`}>
           <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
+            <Link 
+              to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === comment.created_by)?.id}`}
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0 hover:opacity-80 transition-opacity"
+            >
               <span className="text-white font-medium text-sm">
                 {getUserName(comment.created_by)?.charAt(0)?.toUpperCase() || 'U'}
               </span>
-            </div>
+            </Link>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="font-medium text-sm text-slate-900">
+                <Link 
+                  to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === comment.created_by)?.id}`}
+                  className="font-medium text-sm text-slate-900 hover:underline"
+                >
                   {getUserName(comment.created_by)}
-                </span>
+                </Link>
                 <span className="text-xs text-slate-500">
                   {new Date(comment.created_date).toLocaleDateString('he-IL', {
                     day: 'numeric',
