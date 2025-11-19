@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { User, Mail, Shield, Sparkles, FileText, CheckCircle, AlertCircle, Edit2, Save, X } from "lucide-react";
+import { User, Mail, Shield, Sparkles, FileText, CheckCircle, AlertCircle, Edit2, Save, X, Linkedin, Twitter, Facebook, Instagram, Globe } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
@@ -37,11 +37,25 @@ export default function Profile() {
 
   const [formData, setFormData] = useState({
     full_name: user?.full_name || "",
+    bio: user?.bio || "",
+    linkedin: user?.linkedin || "",
+    twitter: user?.twitter || "",
+    facebook: user?.facebook || "",
+    instagram: user?.instagram || "",
+    website: user?.website || "",
   });
 
   React.useEffect(() => {
     if (user) {
-      setFormData({ full_name: user.full_name || "" });
+      setFormData({ 
+        full_name: user.full_name || "",
+        bio: user.bio || "",
+        linkedin: user.linkedin || "",
+        twitter: user.twitter || "",
+        facebook: user.facebook || "",
+        instagram: user.instagram || "",
+        website: user.website || "",
+      });
     }
   }, [user]);
 
@@ -50,7 +64,15 @@ export default function Profile() {
       if (!data.full_name || data.full_name.trim().length < 2) {
         throw new Error("Display name must be at least 2 characters");
       }
-      return await base44.auth.updateMe({ full_name: data.full_name.trim() });
+      return await base44.auth.updateMe({ 
+        full_name: data.full_name.trim(),
+        bio: data.bio?.trim() || "",
+        linkedin: data.linkedin?.trim() || "",
+        twitter: data.twitter?.trim() || "",
+        facebook: data.facebook?.trim() || "",
+        instagram: data.instagram?.trim() || "",
+        website: data.website?.trim() || "",
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
@@ -71,7 +93,15 @@ export default function Profile() {
   };
 
   const handleCancel = () => {
-    setFormData({ full_name: user?.full_name || "" });
+    setFormData({ 
+      full_name: user?.full_name || "",
+      bio: user?.bio || "",
+      linkedin: user?.linkedin || "",
+      twitter: user?.twitter || "",
+      facebook: user?.facebook || "",
+      instagram: user?.instagram || "",
+      website: user?.website || "",
+    });
     setIsEditing(false);
     setError(null);
   };
@@ -238,6 +268,150 @@ export default function Profile() {
                       }>
                         {user.role || 'user'}
                       </Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4 space-y-4">
+                <div>
+                  <Label htmlFor="bio" className="text-sm font-medium text-slate-700">
+                    ביו
+                  </Label>
+                  {isEditing ? (
+                    <textarea
+                      id="bio"
+                      value={formData.bio}
+                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                      placeholder="ספר/י קצת על עצמך..."
+                      className="w-full mt-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px] resize-y"
+                      dir={isRTL ? 'rtl' : 'ltr'}
+                    />
+                  ) : (
+                    <p className="text-slate-700 mt-1 whitespace-pre-wrap" dir={isRTL ? 'rtl' : 'ltr'}>
+                      {user.bio || <span className="text-slate-400 italic">לא הוזן ביו</span>}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                    רשתות חברתיות וקישורים
+                  </Label>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Linkedin className="w-5 h-5 text-blue-600 shrink-0" />
+                      {isEditing ? (
+                        <Input
+                          value={formData.linkedin}
+                          onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+                          placeholder="https://linkedin.com/in/username"
+                          className="flex-1"
+                        />
+                      ) : user.linkedin ? (
+                        <a 
+                          href={user.linkedin.startsWith('http') ? user.linkedin : `https://${user.linkedin}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-sm flex-1 truncate"
+                        >
+                          {user.linkedin}
+                        </a>
+                      ) : (
+                        <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Twitter className="w-5 h-5 text-sky-500 shrink-0" />
+                      {isEditing ? (
+                        <Input
+                          value={formData.twitter}
+                          onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
+                          placeholder="https://twitter.com/username"
+                          className="flex-1"
+                        />
+                      ) : user.twitter ? (
+                        <a 
+                          href={user.twitter.startsWith('http') ? user.twitter : `https://${user.twitter}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-sm flex-1 truncate"
+                        >
+                          {user.twitter}
+                        </a>
+                      ) : (
+                        <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Facebook className="w-5 h-5 text-blue-700 shrink-0" />
+                      {isEditing ? (
+                        <Input
+                          value={formData.facebook}
+                          onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
+                          placeholder="https://facebook.com/username"
+                          className="flex-1"
+                        />
+                      ) : user.facebook ? (
+                        <a 
+                          href={user.facebook.startsWith('http') ? user.facebook : `https://${user.facebook}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-sm flex-1 truncate"
+                        >
+                          {user.facebook}
+                        </a>
+                      ) : (
+                        <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Instagram className="w-5 h-5 text-pink-600 shrink-0" />
+                      {isEditing ? (
+                        <Input
+                          value={formData.instagram}
+                          onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
+                          placeholder="https://instagram.com/username"
+                          className="flex-1"
+                        />
+                      ) : user.instagram ? (
+                        <a 
+                          href={user.instagram.startsWith('http') ? user.instagram : `https://${user.instagram}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-sm flex-1 truncate"
+                        >
+                          {user.instagram}
+                        </a>
+                      ) : (
+                        <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Globe className="w-5 h-5 text-slate-600 shrink-0" />
+                      {isEditing ? (
+                        <Input
+                          value={formData.website}
+                          onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                          placeholder="https://yourwebsite.com"
+                          className="flex-1"
+                        />
+                      ) : user.website ? (
+                        <a 
+                          href={user.website.startsWith('http') ? user.website : `https://${user.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-sm flex-1 truncate"
+                        >
+                          {user.website}
+                        </a>
+                      ) : (
+                        <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                      )}
                     </div>
                   </div>
                 </div>
