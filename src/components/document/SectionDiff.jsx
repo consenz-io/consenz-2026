@@ -157,23 +157,27 @@ Return ONLY the translated HTML:`;
           fontWeight: "400"
         }}
       >
-        {diff.map((part, idx) => {
-          if (part.type === 'removed') {
-            return (
-              <span key={idx} className="bg-red-100 text-red-800 line-through px-1 rounded">
-                {part.text}
-              </span>
-            );
-          } else if (part.type === 'added') {
-            return (
-              <span key={idx} className="bg-green-100 text-green-800 px-1 rounded font-medium">
-                {part.text}
-              </span>
-            );
-          } else {
-            return <span key={idx}>{part.text}</span>;
-          }
-        })}
+        {showTranslated && translatedContent ? (
+          <div dangerouslySetInnerHTML={{ __html: translatedContent }} />
+        ) : (
+          diff.map((part, idx) => {
+            if (part.type === 'removed') {
+              return (
+                <span key={idx} className="bg-red-100 text-red-800 line-through px-1 rounded">
+                  {part.text}
+                </span>
+              );
+            } else if (part.type === 'added') {
+              return (
+                <span key={idx} className="bg-green-100 text-green-800 px-1 rounded font-medium">
+                  {part.text}
+                </span>
+              );
+            } else {
+              return <span key={idx}>{part.text}</span>;
+            }
+          })
+        )}
       </div>
     </Card>
   );
