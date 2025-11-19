@@ -213,7 +213,7 @@ function LayoutContent({ children, currentPageName }) {
                 >
                   <option value="en">🇬🇧 English</option>
                   <option value="he">🇮🇱 עברית</option>
-                  <option value="ar">🇸🇦 العربية</option>
+                  <option value="ar">🇵🇸 العربية</option>
                 </select>
                 {user && (
                   <div data-notification-bell className="hidden md:block">
