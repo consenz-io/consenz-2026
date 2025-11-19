@@ -198,6 +198,11 @@ const translations = {
     acceptedOn: "Accepted on",
     noPreviousVersions: "No Previous Versions",
     sectionChangesAutomaticallySaved: "Changes to this section will be saved here automatically",
+    deleteSection: "Delete Section",
+    confirmDeleteSection: "Are you sure you want to delete this section?",
+    saveToHistory: "Save to version history before deleting",
+    sectionDeleted: "Section deleted successfully",
+    deleting: "Deleting...",
     },
   he: {
     // ניווט
@@ -396,6 +401,11 @@ const translations = {
     acceptedOn: "התקבלה ב",
     noPreviousVersions: "אין גרסאות קודמות",
     sectionChangesAutomaticallySaved: "שינויים בסעיף זה יישמרו כאן אוטומטית",
+    deleteSection: "מחק סעיף",
+    confirmDeleteSection: "האם אתה בטוח שברצונך למחוק סעיף זה?",
+    saveToHistory: "שמור בהיסטוריית הגרסאות לפני המחיקה",
+    sectionDeleted: "הסעיף נמחק בהצלחה",
+    deleting: "מוחק...",
     },
   ar: {
     // التنقل
@@ -593,6 +603,11 @@ const translations = {
     acceptedOn: "تم القبول في",
     noPreviousVersions: "لا توجد نسخ سابقة",
     sectionChangesAutomaticallySaved: "سيتم حفظ التغييرات على هذا القسم هنا تلقائيًا",
+    deleteSection: "حذف القسم",
+    confirmDeleteSection: "هل أنت متأكد أنك تريد حذف هذا القسم؟",
+    saveToHistory: "حفظ في سجل الإصدارات قبل الحذف",
+    sectionDeleted: "تم حذف القسم بنجاح",
+    deleting: "جارٍ الحذف...",
     }
 };
 

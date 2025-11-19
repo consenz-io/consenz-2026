@@ -81,6 +81,34 @@ export default function SectionCarousel({
     ar: "Arabic"
   };
 
+  const deleteSectionMutation = useMutation({
+    mutationFn: async (saveToHistory) => {
+      if (saveToHistory) {
+        // Get existing versions to calculate next version number
+        const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
+        const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
+        
+        // Save current content to version history before deletion
+        await base44.entities.DocumentVersion.create({
+          documentId: section.documentId,
+          sectionId: section.id,
+          content: section.content,
+          changeDescription: t('deleteSection'),
+          version: nextVersion,
+          changeType: 'direct_edit',
+        });
+      }
+      
+      // Delete the section
+      await base44.entities.Section.delete(section.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
+      queryClient.invalidateQueries({ queryKey: ['versions'] });
+      setShowDeleteDialog(false);
+    },
+  });
+
   const translateSuggestionMutation = useMutation({
     mutationFn: async (suggestion) => {
       const originalLanguage = suggestion.originalLanguage || 'he';
