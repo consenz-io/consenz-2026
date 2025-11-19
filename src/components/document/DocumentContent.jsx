@@ -13,6 +13,7 @@ import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
 import DocumentTextContent from "./DocumentTextContent";
 import SectionCarousel from "./SectionCarousel";
+import NewSectionSuggestionCard from "./NewSectionSuggestionCard";
 
 import { useLanguage } from "@/components/LanguageContext";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAutoAccept";
@@ -380,6 +381,14 @@ export default function DocumentContent({
     );
   };
 
+  const getNewSectionSuggestionsForTopic = (topicId) => {
+    return suggestions.filter(s => 
+      s.topicId === topicId && 
+      s.type === 'new_section' && 
+      s.status === 'pending'
+    ).sort((a, b) => (a.insertPosition || 999) - (b.insertPosition || 999));
+  };
+
   return (
     <div className="space-y-4 md:space-y-6 w-full overflow-x-hidden">
       {topics.map((topic) => {
@@ -441,15 +450,41 @@ export default function DocumentContent({
             </CardHeader>
             <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
               {topicSections.length === 0 ? (
-                <div className="text-center py-6 md:py-8 text-slate-500 text-sm md:text-base">
-                  {t('noSectionsYet')}
-                </div>
+                <>
+                  <div className="text-center py-6 md:py-8 text-slate-500 text-sm md:text-base">
+                    {t('noSectionsYet')}
+                  </div>
+                  {/* Show new section suggestions when there are no sections */}
+                  {getNewSectionSuggestionsForTopic(topic.id).map((suggestion) => (
+                    <NewSectionSuggestionCard
+                      key={suggestion.id}
+                      suggestion={suggestion}
+                      document={document}
+                      getUserName={getUserName}
+                      acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                    />
+                  ))}
+                </>
               ) : (
                 topicSections.map((section, index) => {
+                  const newSectionSuggestions = getNewSectionSuggestionsForTopic(topic.id);
                   const sectionSuggestions = getSuggestionsForSection(section.id);
                   
                   return (
                     <React.Fragment key={section.id}>
+                      {/* Show new section suggestions before this position */}
+                      {newSectionSuggestions
+                        .filter(s => (s.insertPosition || 999) === index)
+                        .map((suggestion) => (
+                          <NewSectionSuggestionCard
+                            key={suggestion.id}
+                            suggestion={suggestion}
+                            document={document}
+                            getUserName={getUserName}
+                            acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                          />
+                        ))}
+
                       {index > 0 && user && (
                         <div className="group relative h-4 flex items-center justify-center -my-2">
                           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -486,6 +521,23 @@ export default function DocumentContent({
                         isAdmin={isAdmin}
                       />
                     </div>
+                    {/* Show suggestions at the end */}
+                    {index === topicSections.length - 1 && (
+                      <>
+                        {newSectionSuggestions
+                          .filter(s => (s.insertPosition || 999) > index)
+                          .map((suggestion) => (
+                            <NewSectionSuggestionCard
+                              key={suggestion.id}
+                              suggestion={suggestion}
+                              document={document}
+                              getUserName={getUserName}
+                              acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                            />
+                          ))}
+                      </>
+                    )}
+
                     {index === topicSections.length - 1 && user && (
                       <div className="group relative h-4 flex items-center justify-center mt-2">
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -504,9 +556,9 @@ export default function DocumentContent({
                       </div>
                     )}
                     </React.Fragment>
-                  );
-                })
-              )}
+                    );
+                    })
+                    )}
             </CardContent>
           </Card>
         );
