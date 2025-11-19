@@ -153,24 +153,7 @@ function LayoutContent({ children, currentPageName }) {
               </SidebarGroup>
             )}
 
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
-                {t('language')}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <div className="px-3 py-2 space-y-2">
-                  <select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="w-full p-2 border border-slate-200 rounded-lg text-sm"
-                  >
-                    <option value="en">English</option>
-                    <option value="he">עברית</option>
-                    <option value="ar">العربية</option>
-                  </select>
-                </div>
-              </SidebarGroupContent>
-            </SidebarGroup>
+
           </SidebarContent>
 
           <SidebarFooter className="border-t border-slate-200 p-4">
@@ -190,7 +173,7 @@ function LayoutContent({ children, currentPageName }) {
                       </div>
                     </div>
                   </Link>
-                  <div data-notification-bell>
+                  <div data-notification-bell className="md:hidden">
                     <NotificationBell user={user} />
                   </div>
                 </div>
@@ -216,10 +199,28 @@ function LayoutContent({ children, currentPageName }) {
         </Sidebar>
 
         <main className="flex-1 flex flex-col">
-          <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 px-6 py-4 md:hidden sticky top-0 z-10">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger className="hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200" />
-              <h1 className="text-xl font-bold text-slate-900">Consenz</h1>
+          <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 px-6 py-4 sticky top-0 z-10">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <SidebarTrigger className="md:hidden hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200" />
+                <h1 className="text-xl font-bold text-slate-900 md:hidden">Consenz</h1>
+              </div>
+              <div className="flex items-center gap-3">
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="px-3 py-2 border border-slate-300 rounded-lg text-sm font-medium bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+                >
+                  <option value="en">🇬🇧 English</option>
+                  <option value="he">🇮🇱 עברית</option>
+                  <option value="ar">🇸🇦 العربية</option>
+                </select>
+                {user && (
+                  <div data-notification-bell className="hidden md:block">
+                    <NotificationBell user={user} />
+                  </div>
+                )}
+              </div>
             </div>
           </header>
 
