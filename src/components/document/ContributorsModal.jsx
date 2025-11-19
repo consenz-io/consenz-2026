@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import {
   Dialog,
   DialogContent,
@@ -99,8 +101,9 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
         ) : (
           <div className="space-y-2">
             {contributors.map((user) => (
-              <div
+              <Link
                 key={user.id}
+                to={`${createPageUrl("Profile")}?userId=${user.id}`}
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
@@ -118,7 +121,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
                     {t('admin')}
                   </Badge>
                 )}
-              </div>
+              </Link>
             ))}
           </div>
         )}

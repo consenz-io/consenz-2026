@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,15 +18,27 @@ export default function Profile() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t, isRTL } = useLanguage();
+  const [searchParams] = useSearchParams();
+  const viewUserId = searchParams.get('userId');
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  const { data: user, isLoading } = useQuery({
+  const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     retry: false,
   });
+
+  const { data: viewUser, isLoading: viewUserLoading } = useQuery({
+    queryKey: ['viewUser', viewUserId],
+    queryFn: () => base44.entities.User.filter({ id: viewUserId }).then(users => users[0]),
+    enabled: !!viewUserId,
+  });
+
+  const user = viewUserId ? viewUser : currentUser;
+  const isOwnProfile = !viewUserId || (currentUser && viewUserId === currentUser.id);
+  const isLoading = viewUserId ? viewUserLoading : false;
 
   const { data: pointsTransactions } = useQuery({
     queryKey: ['pointsTransactions', user?.id],
@@ -118,7 +130,9 @@ export default function Profile() {
   }
 
   if (!user) {
-    base44.auth.redirectToLogin(window.location.pathname);
+    if (!viewUserId) {
+      base44.auth.redirectToLogin(window.location.pathname);
+    }
     return null;
   }
 
@@ -195,9 +209,9 @@ export default function Profile() {
             <div className="flex justify-between items-center">
               <div>
                 <CardTitle>{t('personalInformation')}</CardTitle>
-                <CardDescription>Your account details</CardDescription>
+                <CardDescription>{isOwnProfile ? 'Your account details' : `${user.full_name}'s profile`}</CardDescription>
               </div>
-              {!isEditing ? (
+              {!isEditing && isOwnProfile ? (
                 <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
                   <Edit2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {t('editProfile')}
@@ -246,14 +260,16 @@ export default function Profile() {
                     )}
                   </div>
 
-                  <div>
-                    <Label className="flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      {t('email')}
-                    </Label>
-                    <p className="text-slate-700 mt-1">{user.email}</p>
-                    <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
-                  </div>
+                  {isOwnProfile && (
+                    <div>
+                      <Label className="flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        {t('email')}
+                      </Label>
+                      <p className="text-slate-700 mt-1">{user.email}</p>
+                      <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
+                    </div>
+                  )}
 
                   <div>
                     <Label className="flex items-center gap-2">
@@ -274,11 +290,12 @@ export default function Profile() {
               </div>
 
               <div className="border-t pt-4 space-y-4">
-                <div>
-                  <Label htmlFor="bio" className="text-sm font-medium text-slate-700">
-                    ביו
-                  </Label>
-                  {isEditing ? (
+                {(user.bio || isOwnProfile) && (
+                  <div>
+                    <Label htmlFor="bio" className="text-sm font-medium text-slate-700">
+                      ביו
+                    </Label>
+                    {isEditing ? (
                     <textarea
                       id="bio"
                       value={formData.bio}
@@ -291,130 +308,143 @@ export default function Profile() {
                     <p className="text-slate-700 mt-1 whitespace-pre-wrap" dir={isRTL ? 'rtl' : 'ltr'}>
                       {user.bio || <span className="text-slate-400 italic">לא הוזן ביו</span>}
                     </p>
-                  )}
-                </div>
-
-                <div>
-                  <Label className="text-sm font-medium text-slate-700 mb-2 block">
-                    רשתות חברתיות וקישורים
-                  </Label>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Linkedin className="w-5 h-5 text-blue-600 shrink-0" />
-                      {isEditing ? (
-                        <Input
-                          value={formData.linkedin}
-                          onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                          placeholder="https://linkedin.com/in/username"
-                          className="flex-1"
-                        />
-                      ) : user.linkedin ? (
-                        <a 
-                          href={user.linkedin.startsWith('http') ? user.linkedin : `https://${user.linkedin}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline text-sm flex-1 truncate"
-                        >
-                          {user.linkedin}
-                        </a>
-                      ) : (
-                        <span className="text-slate-400 text-sm italic">לא הוזן</span>
-                      )}
+                    )}
                     </div>
+                    )}
 
-                    <div className="flex items-center gap-2">
-                      <Twitter className="w-5 h-5 text-sky-500 shrink-0" />
-                      {isEditing ? (
-                        <Input
-                          value={formData.twitter}
-                          onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
-                          placeholder="https://twitter.com/username"
-                          className="flex-1"
-                        />
-                      ) : user.twitter ? (
-                        <a 
-                          href={user.twitter.startsWith('http') ? user.twitter : `https://${user.twitter}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline text-sm flex-1 truncate"
-                        >
-                          {user.twitter}
-                        </a>
-                      ) : (
-                        <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                {(user.linkedin || user.twitter || user.facebook || user.instagram || user.website || isOwnProfile) && (
+                  <div>
+                    <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                      רשתות חברתיות וקישורים
+                    </Label>
+                    <div className="space-y-3">
+                      {(user.linkedin || isEditing) && (
+                        <div className="flex items-center gap-2">
+                          <Linkedin className="w-5 h-5 text-blue-600 shrink-0" />
+                          {isEditing ? (
+                            <Input
+                              value={formData.linkedin}
+                              onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+                              placeholder="https://linkedin.com/in/username"
+                              className="flex-1"
+                            />
+                          ) : user.linkedin ? (
+                            <a 
+                              href={user.linkedin.startsWith('http') ? user.linkedin : `https://${user.linkedin}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline text-sm flex-1 truncate"
+                            >
+                              {user.linkedin}
+                            </a>
+                          ) : (
+                            <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                          )}
+                        </div>
                       )}
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                      <Facebook className="w-5 h-5 text-blue-700 shrink-0" />
-                      {isEditing ? (
-                        <Input
-                          value={formData.facebook}
-                          onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
-                          placeholder="https://facebook.com/username"
-                          className="flex-1"
-                        />
-                      ) : user.facebook ? (
-                        <a 
-                          href={user.facebook.startsWith('http') ? user.facebook : `https://${user.facebook}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline text-sm flex-1 truncate"
-                        >
-                          {user.facebook}
-                        </a>
-                      ) : (
-                        <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                      {(user.twitter || isEditing) && (
+                        <div className="flex items-center gap-2">
+                          <Twitter className="w-5 h-5 text-sky-500 shrink-0" />
+                          {isEditing ? (
+                            <Input
+                              value={formData.twitter}
+                              onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
+                              placeholder="https://twitter.com/username"
+                              className="flex-1"
+                            />
+                          ) : user.twitter ? (
+                            <a 
+                              href={user.twitter.startsWith('http') ? user.twitter : `https://${user.twitter}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline text-sm flex-1 truncate"
+                            >
+                              {user.twitter}
+                            </a>
+                          ) : (
+                            <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                          )}
+                        </div>
                       )}
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                      <Instagram className="w-5 h-5 text-pink-600 shrink-0" />
-                      {isEditing ? (
-                        <Input
-                          value={formData.instagram}
-                          onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
-                          placeholder="https://instagram.com/username"
-                          className="flex-1"
-                        />
-                      ) : user.instagram ? (
-                        <a 
-                          href={user.instagram.startsWith('http') ? user.instagram : `https://${user.instagram}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline text-sm flex-1 truncate"
-                        >
-                          {user.instagram}
-                        </a>
-                      ) : (
-                        <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                      {(user.facebook || isEditing) && (
+                        <div className="flex items-center gap-2">
+                          <Facebook className="w-5 h-5 text-blue-700 shrink-0" />
+                          {isEditing ? (
+                            <Input
+                              value={formData.facebook}
+                              onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
+                              placeholder="https://facebook.com/username"
+                              className="flex-1"
+                            />
+                          ) : user.facebook ? (
+                            <a 
+                              href={user.facebook.startsWith('http') ? user.facebook : `https://${user.facebook}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline text-sm flex-1 truncate"
+                            >
+                              {user.facebook}
+                            </a>
+                          ) : (
+                            <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                          )}
+                        </div>
                       )}
-                    </div>
 
-                    <div className="flex items-center gap-2">
-                      <Globe className="w-5 h-5 text-slate-600 shrink-0" />
-                      {isEditing ? (
-                        <Input
-                          value={formData.website}
-                          onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                          placeholder="https://yourwebsite.com"
-                          className="flex-1"
-                        />
-                      ) : user.website ? (
-                        <a 
-                          href={user.website.startsWith('http') ? user.website : `https://${user.website}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline text-sm flex-1 truncate"
-                        >
-                          {user.website}
-                        </a>
-                      ) : (
-                        <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                      {(user.instagram || isEditing) && (
+                        <div className="flex items-center gap-2">
+                          <Instagram className="w-5 h-5 text-pink-600 shrink-0" />
+                          {isEditing ? (
+                            <Input
+                              value={formData.instagram}
+                              onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
+                              placeholder="https://instagram.com/username"
+                              className="flex-1"
+                            />
+                          ) : user.instagram ? (
+                            <a 
+                              href={user.instagram.startsWith('http') ? user.instagram : `https://${user.instagram}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline text-sm flex-1 truncate"
+                            >
+                              {user.instagram}
+                            </a>
+                          ) : (
+                            <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                          )}
+                        </div>
+                      )}
+
+                      {(user.website || isEditing) && (
+                        <div className="flex items-center gap-2">
+                          <Globe className="w-5 h-5 text-slate-600 shrink-0" />
+                          {isEditing ? (
+                            <Input
+                              value={formData.website}
+                              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                              placeholder="https://yourwebsite.com"
+                              className="flex-1"
+                            />
+                          ) : user.website ? (
+                            <a 
+                              href={user.website.startsWith('http') ? user.website : `https://${user.website}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline text-sm flex-1 truncate"
+                            >
+                              {user.website}
+                            </a>
+                          ) : (
+                            <span className="text-slate-400 text-sm italic">לא הוזן</span>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -430,11 +460,12 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-slate-200">
-          <CardHeader>
-            <CardTitle>{t('activitySummary')}</CardTitle>
-            <CardDescription>{t('contributionDescription')}</CardDescription>
-          </CardHeader>
+        {isOwnProfile && (
+          <Card className="bg-white border-slate-200">
+            <CardHeader>
+              <CardTitle>{t('activitySummary')}</CardTitle>
+              <CardDescription>{t('contributionDescription')}</CardDescription>
+            </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {/* Stats Summary */}
@@ -498,6 +529,7 @@ export default function Profile() {
             </div>
           </CardContent>
         </Card>
+        )}
       </div>
     </div>
   );
