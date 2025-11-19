@@ -216,7 +216,7 @@ export default function Profile() {
                   <Edit2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {t('editProfile')}
                 </Button>
-              ) : (
+              ) : isOwnProfile ? (
                 <div className="flex gap-2">
                   <Button onClick={handleCancel} variant="outline" size="sm">
                     <X className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
@@ -232,7 +232,7 @@ export default function Profile() {
                     {t('saveChanges')}
                   </Button>
                 </div>
-              )}
+              ) : null}
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
