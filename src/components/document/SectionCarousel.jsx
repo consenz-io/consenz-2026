@@ -449,22 +449,25 @@ export default function SectionCarousel({
       </div>
 
       {/* כפתורים מרכזיים - ערוך/תגובה בתצוגה נוכחית */}
-      {isFirstView && user && (
-        <div className={`flex gap-2 mt-4 pt-4 border-t border-slate-200 opacity-0 group-hover:opacity-100 transition-opacity ${isRTL ? 'justify-end' : 'justify-start'}`}>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onEditSection(section)}
-          >
-            <Edit className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-            {t('suggestEditSection')}
-          </Button>
+      {isFirstView && (
+        <div className={`flex gap-2 mt-4 pt-4 border-t border-slate-200 ${isRTL ? 'justify-end' : 'justify-start'}`}>
+          {user && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onEditSection(section)}
+              className="opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Edit className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              {t('suggestEditSection')}
+            </Button>
+          )}
           {isAdmin && onDirectEdit && (
             <Button
               variant="default"
               size="sm"
               onClick={onDirectEdit}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="bg-purple-600 hover:bg-purple-700 opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <Edit className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
               עריכה ישירה
@@ -473,9 +476,9 @@ export default function SectionCarousel({
           {isAdmin && (
             <Button
               variant="ghost"
-              size="icon"
+              size="sm"
               onClick={() => setShowDeleteDialog(true)}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
               title={t('deleteSection')}
             >
               <Trash2 className="w-4 h-4" />
