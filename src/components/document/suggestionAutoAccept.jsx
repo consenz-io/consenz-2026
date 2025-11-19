@@ -49,22 +49,37 @@ export async function checkSuggestionConsensus(suggestion, document) {
  * מקבל הצעה אוטומטית - מיישם את השינוי במסמך
  */
 export async function autoAcceptSuggestion(suggestion, userId, document) {
-  // בדיקה נוספת שההצעה אכן ממתינה
-  if (suggestion.status !== 'pending') {
-    console.log('[AUTO-ACCEPT] Suggestion already processed:', suggestion.id, suggestion.status);
+  // בדיקה נוספת שההצעה אכן ממתינה - קוראים אותה מחדש מה-DB
+  const freshSuggestions = await base44.entities.Suggestion.filter({ id: suggestion.id });
+  const freshSuggestion = freshSuggestions[0];
+  
+  if (!freshSuggestion) {
+    console.log('[AUTO-ACCEPT] Suggestion not found:', suggestion.id);
     return false;
   }
   
-  const { shouldAccept, consensus } = await checkSuggestionConsensus(suggestion, document);
+  if (freshSuggestion.status !== 'pending') {
+    console.log('[AUTO-ACCEPT] Suggestion already processed:', suggestion.id, freshSuggestion.status);
+    return false;
+  }
+  
+  const { shouldAccept, consensus } = await checkSuggestionConsensus(freshSuggestion, document);
   
   if (!shouldAccept) {
     console.log('[AUTO-ACCEPT] Suggestion does not meet threshold:', suggestion.id);
     return false;
   }
+  
+  // עדכון סטטוס ההצעה מיד כדי למנוע אישור כפול
+  console.log('[AUTO-ACCEPT] Updating suggestion status to accepted immediately');
+  await base44.entities.Suggestion.update(suggestion.id, { 
+    status: 'accepted',
+    suggestionConsensus: consensus 
+  });
 
   try {
     // טיפול בהצעת עריכה לסעיף קיים
-    if (suggestion.type === 'edit_section' && suggestion.sectionId) {
+    if (freshSuggestion.type === 'edit_section' && freshSuggestion.sectionId) {
       const sections = await base44.entities.Section.filter({ id: suggestion.sectionId });
       const section = sections[0];
       
@@ -105,7 +120,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       });
     } 
     // טיפול בהצעה לסעיף חדש
-    else if (suggestion.type === 'new_section' && suggestion.topicId) {
+    else if (freshSuggestion.type === 'new_section' && freshSuggestion.topicId) {
       const allSections = await base44.entities.Section.filter({ 
         documentId: suggestion.documentId,
         topicId: suggestion.topicId 
@@ -145,12 +160,6 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
         suggestionId: suggestion.id
       });
     }
-
-    // עדכון סטטוס ההצעה
-    await base44.entities.Suggestion.update(suggestion.id, { 
-      status: 'accepted',
-      suggestionConsensus: consensus 
-    });
     
     // שליחת התראה למחבר ההצעה
     console.log('[AUTO ACCEPT] Sending notification to suggestion creator');

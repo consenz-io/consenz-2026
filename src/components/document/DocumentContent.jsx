@@ -70,6 +70,15 @@ export default function DocumentContent({
             const accepted = await autoAcceptSuggestion(suggestion, user.id, document);
             if (accepted) {
               hasChanges = true;
+              // Immediate invalidation for this specific suggestion
+              queryClient.setQueryData(['suggestions', document.id], (oldData) => {
+                if (!oldData) return oldData;
+                return oldData.map(s => 
+                  s.id === suggestion.id 
+                    ? { ...s, status: 'accepted' }
+                    : s
+                );
+              });
             }
           }
         } catch (err) {
