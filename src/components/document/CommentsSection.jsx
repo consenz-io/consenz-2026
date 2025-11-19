@@ -80,7 +80,7 @@ export default function CommentsSection({ entityType, entityId, user }) {
       // עדכון מספר התורמים למסמך
       if (documentId) {
         try {
-          const { calculateDocumentContributors } = await import('./document/calculateContributors');
+          const { calculateDocumentContributors } = await import('./calculateContributors');
           const contributorsCount = await calculateDocumentContributors(documentId);
           await base44.entities.Document.update(documentId, {
             totalUsersInteracted: contributorsCount,
