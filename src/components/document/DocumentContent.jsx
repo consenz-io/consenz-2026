@@ -25,7 +25,8 @@ export default function DocumentContent({
   onEditSection, 
   onNewSection,
   isAdmin,
-  user 
+  user,
+  onDirectEdit
 }) {
   const [showComments, setShowComments] = useState({});
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
@@ -473,6 +474,7 @@ export default function DocumentContent({
                         document={document}
                         user={user}
                         onEditSection={onEditSection}
+                        onDirectEdit={onDirectEdit}
                         toggleComments={toggleComments}
                         showComments={showComments}
                         getCommentsCount={getCommentsCount}

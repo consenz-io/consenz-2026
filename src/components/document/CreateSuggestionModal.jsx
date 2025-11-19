@@ -38,7 +38,8 @@ export default function CreateSuggestionModal({
   sections, 
   editingSection, 
   user, 
-  onClose 
+  onClose,
+  isAdmin
 }) {
   const queryClient = useQueryClient();
   const { t, isRTL, language } = useLanguage();
@@ -54,6 +55,7 @@ export default function CreateSuggestionModal({
   console.log('CreateSuggestionModal - currentUser.points:', currentUser?.points);
   
   const isNewSection = editingSection?.isNew;
+  const isDirectEdit = editingSection?.isDirectEdit || false;
   const existingSection = !isNewSection ? sections.find(s => s.id === editingSection?.id) : null;
 
   const [formData, setFormData] = useState({
@@ -130,6 +132,48 @@ Return ONLY the translated HTML:`;
 
   const createSuggestionMutation = useMutation({
     mutationFn: async (data) => {
+      // If direct edit, save immediately without creating suggestion
+      if (isDirectEdit && existingSection) {
+        const user = await base44.auth.me();
+        
+        // Get the max version number for this section
+        const existingVersions = await base44.entities.DocumentVersion.filter({
+          documentId: existingSection.documentId,
+          sectionId: existingSection.id
+        });
+        const maxVersion = existingVersions.length > 0 
+          ? Math.max(...existingVersions.map(v => v.version)) 
+          : 0;
+
+        // Create version with OLD content (before change)
+        await base44.entities.DocumentVersion.create({
+          documentId: existingSection.documentId,
+          sectionId: existingSection.id,
+          content: existingSection.content,
+          version: maxVersion + 1,
+          changeType: "direct_edit",
+          changeDescription: `לפני: ${data.explanation || "עריכה ישירה של אדמין"}`
+        });
+
+        // Update the section
+        await base44.entities.Section.update(existingSection.id, {
+          content: data.newContent,
+          lastEditedBy: user.id
+        });
+
+        // Create version with NEW content (after change)
+        await base44.entities.DocumentVersion.create({
+          documentId: existingSection.documentId,
+          sectionId: existingSection.id,
+          content: data.newContent,
+          version: maxVersion + 2,
+          changeType: "direct_edit",
+          changeDescription: data.explanation || "עריכה ישירה של אדמין"
+        });
+        
+        return { isDirectEdit: true };
+      }
+      
       // Check if user has enough points (only if gamification is enabled)
       const currentPoints = currentUser.points || 1000;
       const gamificationEnabled = document.gamificationEnabled || false;
@@ -252,11 +296,16 @@ Return ONLY the translated HTML:`;
 
       return suggestion;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
-      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-      queryClient.invalidateQueries({ queryKey: ['document', document.id] });
-      queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
+    onSuccess: (result) => {
+      if (result?.isDirectEdit) {
+        queryClient.invalidateQueries({ queryKey: ['sections'] });
+        queryClient.invalidateQueries({ queryKey: ['allVersions'] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
+        queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+        queryClient.invalidateQueries({ queryKey: ['document', document.id] });
+        queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
+      }
       onClose();
     },
     onError: (err) => {
@@ -282,6 +331,12 @@ Return ONLY the translated HTML:`;
       return;
     }
 
+    // Skip points check if direct edit
+    if (isDirectEdit) {
+      createSuggestionMutation.mutate(formData);
+      return;
+    }
+    
     // Check if should show points confirmation dialog
     const gamificationEnabled = document.gamificationEnabled || false;
     const skipConfirm = localStorage.getItem('consenz_skip_points_confirm_suggestion') === 'true';
@@ -344,7 +399,7 @@ Return ONLY the translated HTML:`;
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isNewSection ? t('suggestNewSection') : t('suggestEditSection')}
+            {isDirectEdit ? 'עריכה ישירה' : (isNewSection ? t('suggestNewSection') : t('suggestEditSection'))}
           </DialogTitle>
         </DialogHeader>
 
@@ -355,7 +410,7 @@ Return ONLY the translated HTML:`;
           </Alert>
         )}
 
-        {document.gamificationEnabled && (
+        {document.gamificationEnabled && !isDirectEdit && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-700">{t('costToCreate')}</span>
@@ -463,9 +518,11 @@ Return ONLY the translated HTML:`;
             <Button 
               type="submit" 
               disabled={createSuggestionMutation.isPending}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600"
+              className={isDirectEdit ? "bg-purple-600 hover:bg-purple-700" : "bg-gradient-to-r from-blue-600 to-indigo-600"}
             >
-              {createSuggestionMutation.isPending ? t('creating') : t('createSuggestion')}
+              {createSuggestionMutation.isPending 
+                ? t('saving') 
+                : (isDirectEdit ? t('saveChanges') : t('createSuggestion'))}
             </Button>
           </DialogFooter>
         </form>
