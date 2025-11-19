@@ -171,15 +171,20 @@ export default function DocumentView() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
       <div className="max-w-6xl mx-auto space-y-4 md:space-y-6 overflow-x-hidden">
         <div className="flex flex-col gap-3 md:gap-4">
-          <div className={`flex items-center justify-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <Link to={createPageUrl("Home")} className="shrink-0">
+              <Button variant="ghost" size="sm">
+                {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+              </Button>
+            </Link>
             <h1 className="text-2xl md:text-3xl font-bold text-slate-900 text-center flex-1 px-2">
               {showTranslated && document.translations?.[language]?.title 
                 ? document.translations[language].title 
                 : document.title}
             </h1>
-            {document.originalLanguage && document.originalLanguage !== language && (
-              <div className="shrink-0">
-                {isTranslating ? (
+            <div className="shrink-0">
+              {document.originalLanguage && document.originalLanguage !== language ? (
+                isTranslating ? (
                   <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
                 ) : !document.translations?.[language]?.title ? (
                   <button
@@ -197,9 +202,11 @@ export default function DocumentView() {
                   >
                     <Languages className={`w-5 h-5 ${showTranslated ? 'text-slate-600' : 'text-blue-600'}`} />
                   </button>
-                )}
-              </div>
-            )}
+                )
+              ) : (
+                <div className="w-8 h-8"></div>
+              )}
+            </div>
           </div>
           <div className="flex gap-2 flex-wrap justify-center">
             <Badge variant="outline" className={`text-[10px] md:text-xs ${
