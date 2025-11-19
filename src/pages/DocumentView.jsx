@@ -187,7 +187,7 @@ export default function DocumentView() {
               <div className="shrink-0">
                 {isTranslating ? (
                   <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                ) : !document.translations?.[language]?.title ? (
+                ) : !(typeof document.translations?.[language]?.title === 'string') ? (
                   <button
                     onClick={() => translateDocumentMutation.mutate()}
                     className="p-1.5 hover:bg-blue-50 rounded transition-colors"
