@@ -202,8 +202,13 @@ export default function SectionHistory() {
                   <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4">
                     {/* Show content for direct edits */}
                     {latestVersion.changeType === 'direct_edit' && (
-                      <div className="prose prose-sm max-w-none text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <div dangerouslySetInnerHTML={{ __html: latestVersion.content }} />
+                      <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                        <TranslatableContent
+                          content={latestVersion.content}
+                          entity={latestVersion}
+                          entityType="DocumentVersion"
+                          className="prose prose-sm max-w-none text-slate-700"
+                        />
                       </div>
                     )}
                     
@@ -215,6 +220,15 @@ export default function SectionHistory() {
                           originalContent={previousVersion.content}
                           newContent={latestVersion.content}
                         />
+                        <div className="mt-3 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                          <h4 className="text-xs font-semibold text-slate-700 mb-2">{t('proposedContent')}</h4>
+                          <TranslatableContent
+                            content={latestVersion.content}
+                            entity={latestVersion}
+                            entityType="DocumentVersion"
+                            className="prose prose-sm max-w-none text-slate-700"
+                          />
+                        </div>
                       </div>
                     )}
 
