@@ -160,49 +160,7 @@ export default function Profile() {
           </Alert>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 w-full">
-          <Card className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-2 border-blue-400 overflow-hidden">
-            <CardContent className="p-3 md:p-6">
-              <div className="flex items-center gap-2 md:gap-3">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Sparkles className="w-5 h-5 md:w-6 md:h-6" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-2xl md:text-4xl font-bold">{user.points || 1000}</div>
-                  <div className="text-xs md:text-sm text-blue-100 font-medium truncate">{t('gamificationPoints')}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card className="bg-white overflow-hidden">
-            <CardContent className="p-3 md:p-6">
-              <div className="flex items-center gap-2 md:gap-3">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <FileText className="w-5 h-5 md:w-6 md:h-6 text-indigo-600" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-2xl md:text-3xl font-bold text-slate-900">{user.suggestionsCreated || 0}</div>
-                  <div className="text-xs md:text-sm text-slate-600">{t('suggestions')}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white overflow-hidden">
-            <CardContent className="p-3 md:p-6">
-              <div className="flex items-center gap-2 md:gap-3">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-5 h-5 md:w-6 md:h-6 text-purple-600" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xl md:text-2xl font-bold text-slate-900 capitalize truncate">{user.role || 'User'}</div>
-                  <div className="text-xs md:text-sm text-slate-600">{t('role')}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         <Card className="bg-white overflow-hidden">
           <CardHeader>
