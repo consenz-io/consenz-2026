@@ -120,8 +120,8 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-2 md:p-6 overflow-x-hidden w-full">
-        <div className="max-w-4xl mx-auto space-y-3 md:space-y-6 w-full overflow-x-hidden px-2 md:px-4 max-w-full">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-2 md:p-6">
+        <div className="max-w-4xl mx-auto space-y-3 md:space-y-6 px-2 md:px-4">
           <Skeleton className="h-10 md:h-12 w-32 md:w-48" />
           <Skeleton className="h-48 md:h-64 w-full" />
         </div>
@@ -137,8 +137,8 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-2 md:p-6 overflow-x-hidden">
-      <div className="max-w-4xl mx-auto space-y-3 md:space-y-6 w-full px-2 md:px-0">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-2 md:p-6">
+      <div className="max-w-4xl mx-auto space-y-3 md:space-y-6 px-2 md:px-0">
         <PageHeader 
           title={t('profile')}
           backUrl={createPageUrl("Home")}
@@ -416,75 +416,7 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        {isOwnProfile && (
-          <Card className="bg-white border-slate-200 overflow-hidden max-w-full">
-            <CardHeader className="p-3 md:p-6">
-              <CardTitle className="break-words text-base md:text-lg">{t('activitySummary')}</CardTitle>
-            </CardHeader>
-          <CardContent className="p-3 md:p-6">
-            <div className="space-y-3 md:space-y-4 max-w-full overflow-x-hidden">
-              {/* Stats Summary */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3 pb-3 md:pb-4 border-b border-slate-200 max-w-full">
-                <div className="flex justify-between items-center p-2 md:p-3 bg-blue-50 rounded-lg border border-blue-200 min-w-0">
-                  <span className="text-slate-700 font-medium text-xs md:text-sm truncate">{t('gamificationPoints')}</span>
-                  <span className="font-bold text-lg md:text-xl text-blue-600 shrink-0">{user.points || 1000}</span>
-                </div>
-                <div className="flex justify-between items-center p-2 md:p-3 bg-slate-50 rounded-lg border border-slate-200 min-w-0">
-                  <span className="text-slate-700 text-xs md:text-sm truncate">{t('suggestionsCreated')}</span>
-                  <span className="font-bold text-lg md:text-xl text-indigo-600 shrink-0">{user.suggestionsCreated || 0}</span>
-                </div>
-                <div className="flex justify-between items-center p-2 md:p-3 bg-slate-50 rounded-lg border border-slate-200 min-w-0">
-                  <span className="text-slate-700 text-xs md:text-sm truncate">{t('accountType')}</span>
-                  <Badge className={
-                    user.role === 'admin' 
-                      ? 'bg-purple-100 text-purple-800'
-                      : 'bg-blue-100 text-blue-800'
-                  }>
-                    {user.role || 'user'}
-                  </Badge>
-                </div>
-              </div>
 
-              {/* Points History */}
-              <div>
-                <h3 className="text-xs md:text-sm font-semibold text-slate-700 mb-2 md:mb-3">{t('pointsHistory')}</h3>
-                {pointsTransactions.length === 0 ? (
-                  <p className="text-slate-500 text-center py-6 md:py-8 text-xs md:text-sm">{t('noPointsHistory')}</p>
-                ) : (
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
-                    {pointsTransactions.map((transaction) => (
-                      <div 
-                        key={transaction.id}
-                        className="flex items-center justify-between gap-2 p-2 md:p-3 bg-slate-50 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors min-w-0"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs md:text-sm font-medium text-slate-900 break-words">{transaction.description}</p>
-                          <p className="text-[10px] md:text-xs text-slate-500 mt-1">
-                            {new Date(transaction.created_date).toLocaleString(isRTL ? 'he-IL' : 'en-US', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </p>
-                        </div>
-                        <div className={`text-base md:text-lg font-bold px-2 py-1 rounded shrink-0 ${
-                          transaction.amount > 0 
-                            ? 'text-green-600 bg-green-50' 
-                            : 'text-red-600 bg-red-50'
-                        }`}>
-                          {transaction.amount > 0 ? '+' : ''}{transaction.amount}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        )}
       </div>
     </div>
   );

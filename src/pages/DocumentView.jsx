@@ -170,10 +170,10 @@ export default function DocumentView() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-1 md:p-6 w-full">
-      <div className="max-w-6xl mx-auto space-y-2 md:space-y-6 w-full px-1 md:px-4">
-        <div className="flex flex-col gap-1.5 md:gap-4 w-full">
-          <div className={`flex items-center justify-between gap-1 w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-1 md:p-6">
+      <div className="max-w-6xl mx-auto space-y-2 md:space-y-6 px-1 md:px-4">
+        <div className="flex flex-col gap-1.5 md:gap-4">
+          <div className={`flex items-center justify-between gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <h1 className="text-xs md:text-3xl font-bold text-slate-900 flex-1 min-w-0 break-words leading-tight">
               {(() => {
                 const translatedTitle = document.translations?.[language]?.title;
@@ -241,7 +241,7 @@ export default function DocumentView() {
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-1 md:gap-3 w-full max-w-full">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-1 md:gap-3">
           <div 
             className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 cursor-pointer hover:border-blue-400 transition-all flex flex-col items-center justify-center gap-0.5 md:gap-1"
             onClick={() => setShowContributorsModal(true)}
