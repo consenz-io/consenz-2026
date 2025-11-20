@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -416,6 +416,97 @@ export default function Profile() {
           </CardContent>
         </Card>
 
+        {isOwnProfile && (
+          <Card className="bg-white overflow-hidden w-full max-w-full">
+            <CardHeader className="p-3 md:p-6">
+              <CardTitle className="break-words">{t('activitySummary')}</CardTitle>
+              <CardDescription className="break-words">{t('contributionDescription')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 p-3 md:p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
+                  <Sparkles className="w-6 h-6 text-blue-600" />
+                  <div>
+                    <p className="text-sm text-slate-500">{t('gamificationPoints')}</p>
+                    <p className="text-xl font-bold text-slate-900">{user.points || 1000}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
+                  <FileText className="w-6 h-6 text-green-600" />
+                  <div>
+                    <p className="text-sm text-slate-500">{t('suggestionsCreated')}</p>
+                    <p className="text-xl font-bold text-slate-900">{user.suggestionsCreated || 0}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-lg">
+                  <Shield className="w-6 h-6 text-purple-600" />
+                  <div>
+                    <p className="text-sm text-slate-500">{t('accountType')}</p>
+                    <p className="text-xl font-bold text-slate-900 capitalize">{user.role || 'user'}</p>
+                  </div>
+                </div>
+              </div>
+
+              <h3 className="text-lg font-bold text-slate-900 mt-6 mb-4">{t('pointsHistory')}</h3>
+              {pointsTransactions.length === 0 ? (
+                <p className="text-slate-500 text-sm">{t('noPointsHistory')}</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left text-slate-500">
+                    <thead className="text-xs text-slate-700 uppercase bg-slate-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3">
+                          {t('action')}
+                        </th>
+                        <th scope="col" className="px-6 py-3">
+                          {t('description')}
+                        </th>
+                        <th scope="col" className="px-6 py-3">
+                          {t('amount')}
+                        </th>
+                        <th scope="col" className="px-6 py-3">
+                          {t('date')}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pointsTransactions.map((transaction) => {
+                        const transactionUrl = transaction.relatedEntityType === 'suggestion' && transaction.relatedEntityId
+                          ? `${createPageUrl("SuggestionDetail")}?id=${transaction.relatedEntityId}`
+                          : null;
+
+                        return (
+                          <tr key={transaction.id} className="bg-white border-b hover:bg-slate-50">
+                            <td className="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">
+                              {transaction.action.replace(/_/g, ' ')}
+                            </td>
+                            <td className="px-6 py-4">
+                              {transactionUrl ? (
+                                <Link to={transactionUrl} className="text-blue-600 hover:underline">
+                                  {transaction.description}
+                                </Link>
+                              ) : (
+                                transaction.description
+                              )}
+                            </td>
+                            <td className="px-6 py-4">
+                              <Badge variant="outline" className={`text-xs ${transaction.amount > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                {transaction.amount > 0 ? '+' : ''}{transaction.amount}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4">
+                              {new Date(transaction.created_date).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
       </div>
     </div>
