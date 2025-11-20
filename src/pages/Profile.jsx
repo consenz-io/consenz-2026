@@ -451,57 +451,60 @@ export default function Profile() {
               {pointsTransactions.length === 0 ? (
                 <p className="text-slate-500 text-sm">{t('noPointsHistory')}</p>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left text-slate-500">
-                    <thead className="text-xs text-slate-700 uppercase bg-slate-50">
-                      <tr>
-                        <th scope="col" className="px-6 py-3">
-                          {t('action')}
-                        </th>
-                        <th scope="col" className="px-6 py-3">
-                          {t('description')}
-                        </th>
-                        <th scope="col" className="px-6 py-3">
-                          {t('amount')}
-                        </th>
-                        <th scope="col" className="px-6 py-3">
-                          {t('date')}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pointsTransactions.map((transaction) => {
-                        const transactionUrl = transaction.relatedEntityType === 'suggestion' && transaction.relatedEntityId
-                          ? `${createPageUrl("SuggestionDetail")}?id=${transaction.relatedEntityId}`
-                          : null;
+                <div className="space-y-3">
+                  {pointsTransactions.map((transaction) => {
+                    const transactionUrl = transaction.relatedEntityType === 'suggestion' && transaction.relatedEntityId
+                      ? `${createPageUrl("SuggestionDetail")}?id=${transaction.relatedEntityId}`
+                      : null;
 
-                        return (
-                          <tr key={transaction.id} className="bg-white border-b hover:bg-slate-50">
-                            <td className="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">
+                    return (
+                      <div 
+                        key={transaction.id} 
+                        className={`p-4 rounded-lg border-2 transition-all hover:shadow-md ${
+                          transaction.amount > 0 
+                            ? 'bg-green-50 border-green-200 hover:border-green-300' 
+                            : 'bg-red-50 border-red-200 hover:border-red-300'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge 
+                                variant="outline" 
+                                className={`text-xs font-semibold ${
+                                  transaction.amount > 0 
+                                    ? 'bg-green-100 text-green-800 border-green-300' 
+                                    : 'bg-red-100 text-red-800 border-red-300'
+                                }`}
+                              >
+                                {transaction.amount > 0 ? '+' : ''}{transaction.amount} {t('points')}
+                              </Badge>
+                              <span className="text-xs text-slate-500">
+                                {new Date(transaction.created_date).toLocaleDateString('he-IL', { 
+                                  year: 'numeric', 
+                                  month: 'short', 
+                                  day: 'numeric' 
+                                })}
+                              </span>
+                            </div>
+                            <p className="text-sm font-medium text-slate-900 mb-1">
                               {transaction.action.replace(/_/g, ' ')}
-                            </td>
-                            <td className="px-6 py-4">
+                            </p>
+                            <p className="text-sm text-slate-700">
                               {transactionUrl ? (
-                                <Link to={transactionUrl} className="text-blue-600 hover:underline">
+                                <Link to={transactionUrl} className="text-blue-600 hover:underline inline-flex items-center gap-1">
                                   {transaction.description}
+                                  <ArrowRight className="w-3 h-3" />
                                 </Link>
                               ) : (
                                 transaction.description
                               )}
-                            </td>
-                            <td className="px-6 py-4">
-                              <Badge variant="outline" className={`text-xs ${transaction.amount > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                {transaction.amount > 0 ? '+' : ''}{transaction.amount}
-                              </Badge>
-                            </td>
-                            <td className="px-6 py-4">
-                              {new Date(transaction.created_date).toLocaleDateString()}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
