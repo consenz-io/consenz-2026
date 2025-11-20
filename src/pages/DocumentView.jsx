@@ -241,7 +241,7 @@ export default function DocumentView() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-1 md:gap-3 w-full max-w-full">
+        <div className="grid grid-cols-4 gap-1 md:gap-3 w-full max-w-full">
           <div 
             className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 cursor-pointer hover:border-blue-400 transition-all flex flex-col items-center justify-center gap-0.5 md:gap-1"
             onClick={() => setShowContributorsModal(true)}
@@ -267,6 +267,34 @@ export default function DocumentView() {
               {((document.avgSuggestionConsensus || 0) * 100).toFixed(0)}%
             </div>
             <div className="text-[7px] md:text-[10px] text-slate-600 text-center leading-tight">{t('consensus')}</div>
+          </div>
+          <div 
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 cursor-pointer hover:border-blue-400 transition-all flex flex-col items-center justify-center gap-0.5 md:gap-1"
+            onClick={() => setActiveTab("document")}
+          >
+            <div className="w-3.5 h-3.5 md:w-6 md:h-6 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-[7px] md:text-[11px]">
+              {(() => {
+                const acceptedDocSuggestions = suggestions.filter(s => s.status === 'accepted');
+                if (acceptedDocSuggestions.length === 0) return '0';
+                const avg = acceptedDocSuggestions.reduce((sum, s) => {
+                  const total = (s.proVotes || 0) + (s.conVotes || 0);
+                  return sum + (total > 0 ? (s.proVotes / total) : 0);
+                }, 0) / acceptedDocSuggestions.length;
+                return (avg * 100).toFixed(0);
+              })()}
+            </div>
+            <div className="text-sm md:text-xl font-bold text-slate-900">
+              {(() => {
+                const acceptedDocSuggestions = suggestions.filter(s => s.status === 'accepted');
+                if (acceptedDocSuggestions.length === 0) return '0.0';
+                const avg = acceptedDocSuggestions.reduce((sum, s) => {
+                  const total = (s.proVotes || 0) + (s.conVotes || 0);
+                  return sum + (total > 0 ? (s.proVotes / total) : 0);
+                }, 0) / acceptedDocSuggestions.length;
+                return avg.toFixed(2);
+              })()}
+            </div>
+            <div className="text-[7px] md:text-[10px] text-slate-600 text-center leading-tight">{t('threshold')}</div>
           </div>
         </div>
 
