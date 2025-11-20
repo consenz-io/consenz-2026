@@ -146,7 +146,7 @@ export default function DocumentView() {
 
   if (docLoading || topicsLoading || sectionsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6">
         <div className="max-w-6xl mx-auto space-y-4 md:space-y-6">
           <Skeleton className="h-10 md:h-12 w-48 md:w-64" />
           <Skeleton className="h-24 md:h-32 w-full" />
@@ -158,7 +158,7 @@ export default function DocumentView() {
 
   if (!document) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6">
         <div className="max-w-6xl mx-auto text-center py-12 md:py-20">
           <h1 className="text-xl md:text-2xl font-bold text-slate-900 px-4">{t('documentNotFound')}</h1>
           <Link to={createPageUrl("Home")}>
@@ -216,7 +216,7 @@ export default function DocumentView() {
               {document.privacy.replace(/_/g, ' ')}
             </Badge>
           </div>
-          <div className="flex gap-0.5 md:gap-2 flex-wrap justify-center w-full">
+          <div className="flex gap-0.5 md:gap-2 flex-wrap justify-center">
             <Link to={`${createPageUrl("DocumentVersions")}?id=${documentId}`} className="flex-shrink-0">
               <Button variant="outline" size="sm" className="text-[8px] md:text-sm px-0.5 md:px-4 h-5 md:h-9">
                 <History className="w-3 h-3 md:w-4 md:h-4" />
