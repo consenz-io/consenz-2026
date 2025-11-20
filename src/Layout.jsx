@@ -75,7 +75,7 @@ function LayoutContent({ children, currentPageName }) {
 
   return (
     <SidebarProvider>
-      <div className={`min-h-screen flex w-full bg-gradient-to-br from-slate-50 to-blue-50 ${isRTL ? 'flex-row-reverse' : ''}`}>
+      <div className={`min-h-screen flex w-full max-w-full bg-gradient-to-br from-slate-50 to-blue-50 overflow-x-hidden ${isRTL ? 'flex-row-reverse' : ''}`} style={{ maxWidth: '100vw' }}>
         <Sidebar className={isRTL ? "border-l border-slate-200" : "border-r border-slate-200"}>
           <SidebarHeader className="border-b border-slate-200 p-4">
             <div className="flex items-center gap-2">
@@ -198,9 +198,9 @@ function LayoutContent({ children, currentPageName }) {
           </SidebarFooter>
         </Sidebar>
 
-        <main className="flex-1 flex flex-col">
+        <main className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden">
           <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-10">
-            <div className="flex items-center justify-between gap-2 px-2 py-2 md:px-6 md:py-4 max-w-full">
+            <div className="flex items-center justify-between gap-2 px-2 py-2 md:px-6 md:py-4 max-w-full min-w-0">
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="md:hidden hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200" />
                 <h1 className="text-xl font-bold text-slate-900 md:hidden">Consenz</h1>
@@ -227,7 +227,7 @@ function LayoutContent({ children, currentPageName }) {
             </div>
           </header>
 
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto max-w-full min-w-0">
             {children}
           </div>
         </main>

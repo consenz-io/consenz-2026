@@ -137,8 +137,8 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-2 md:p-6">
-      <div className="max-w-4xl mx-auto space-y-3 md:space-y-6 px-2 md:px-0">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-2 md:p-6 w-full max-w-full overflow-x-hidden">
+      <div className="max-w-4xl mx-auto space-y-3 md:space-y-6 px-2 md:px-0 w-full max-w-full">
         <PageHeader 
           title={t('profile')}
           backUrl={createPageUrl("Home")}
@@ -160,7 +160,7 @@ export default function Profile() {
 
 
 
-        <Card className="bg-white overflow-hidden max-w-full">
+        <Card className="bg-white overflow-hidden w-full max-w-full">
           <CardHeader className="p-3 md:p-6">
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-2 md:gap-3">
               <div className="min-w-0">
@@ -191,13 +191,13 @@ export default function Profile() {
               ) : null}
             </div>
           </CardHeader>
-          <CardContent className="space-y-3 md:space-y-6 p-3 md:p-6">
-            <div className="space-y-3 md:space-y-4">
+          <CardContent className="space-y-3 md:space-y-6 p-3 md:p-6 w-full max-w-full">
+            <div className="space-y-3 md:space-y-4 w-full max-w-full">
               <div className="flex items-start gap-2 md:gap-4">
                 <div className="w-12 h-12 md:w-20 md:h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white text-xl md:text-3xl font-bold shadow-lg flex-shrink-0">
                   {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
-                <div className="flex-1 space-y-3 md:space-y-4 min-w-0">
+                <div className="flex-1 space-y-3 md:space-y-4 min-w-0 max-w-full overflow-hidden">
                   <div>
                     <Label htmlFor="full_name" className="flex items-center gap-2">
                       <User className="w-4 h-4" />
