@@ -199,19 +199,19 @@ function LayoutContent({ children, currentPageName }) {
         </Sidebar>
 
         <main className="flex-1 flex flex-col">
-          <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 px-6 py-4 sticky top-0 z-10">
-            <div className="flex items-center justify-between gap-4">
+          <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-10">
+            <div className="flex items-center justify-between gap-2 px-2 py-2 md:px-6 md:py-4">
               <div className="flex items-center gap-4">
                 <SidebarTrigger className="md:hidden hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200" />
                 <h1 className="text-xl font-bold text-slate-900 md:hidden">Consenz</h1>
               </div>
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <Languages className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                  <Languages className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 md:w-4 md:h-4 text-slate-500 pointer-events-none" />
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                    className="pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm font-medium bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer appearance-none"
+                    className="pl-7 pr-2 py-1.5 md:py-2 border border-slate-300 rounded-lg text-xs md:text-sm font-medium bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer appearance-none"
                   >
                     <option value="en">English</option>
                     <option value="he">עברית</option>
