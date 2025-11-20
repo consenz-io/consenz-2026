@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { User, Mail, Shield, Sparkles, FileText, CheckCircle, AlertCircle, Edit2, Save, X, Linkedin, Twitter, Facebook, Instagram, Globe, ArrowRight } from "lucide-react";
+import { User, Mail, Shield, Sparkles, FileText, CheckCircle, AlertCircle, Edit2, Save, X, Linkedin, Twitter, Facebook, Instagram, Globe, ArrowRight, MessageSquare } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
@@ -44,6 +44,13 @@ export default function Profile() {
     queryKey: ['pointsTransactions', user?.id],
     queryFn: () => base44.entities.PointsTransaction.filter({ userId: user.id }, '-created_date'),
     enabled: !!user?.id,
+    initialData: [],
+  });
+
+  const { data: userComments } = useQuery({
+    queryKey: ['userComments', user?.email],
+    queryFn: () => base44.entities.Comment.filter({ created_by: user.email }, '-created_date'),
+    enabled: !!user?.email,
     initialData: [],
   });
 
@@ -448,63 +455,112 @@ export default function Profile() {
               </div>
 
               <h3 className="text-lg font-bold text-slate-900 mt-6 mb-4">{t('pointsHistory')}</h3>
-              {pointsTransactions.length === 0 ? (
+              {pointsTransactions.length === 0 && userComments.length === 0 ? (
                 <p className="text-slate-500 text-sm">{t('noPointsHistory')}</p>
               ) : (
                 <div className="space-y-3">
-                  {pointsTransactions.map((transaction) => {
-                    const transactionUrl = transaction.relatedEntityType === 'suggestion' && transaction.relatedEntityId
-                      ? `${createPageUrl("SuggestionDetail")}?id=${transaction.relatedEntityId}`
-                      : null;
+                  {[...pointsTransactions.map(t => ({ ...t, type: 'transaction' })), ...userComments.map(c => ({ ...c, type: 'comment' }))]
+                    .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+                    .map((item) => {
+                      if (item.type === 'transaction') {
+                        const transactionUrl = item.relatedEntityType === 'suggestion' && item.relatedEntityId
+                          ? `${createPageUrl("SuggestionDetail")}?id=${item.relatedEntityId}`
+                          : null;
 
-                    return (
-                      <div 
-                        key={transaction.id} 
-                        className={`p-4 rounded-lg border-2 transition-all hover:shadow-md ${
-                          transaction.amount > 0 
-                            ? 'bg-green-50 border-green-200 hover:border-green-300' 
-                            : 'bg-red-50 border-red-200 hover:border-red-300'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge 
-                                variant="outline" 
-                                className={`text-xs font-semibold ${
-                                  transaction.amount > 0 
-                                    ? 'bg-green-100 text-green-800 border-green-300' 
-                                    : 'bg-red-100 text-red-800 border-red-300'
-                                }`}
-                              >
-                                {transaction.amount > 0 ? '+' : ''}{transaction.amount} {t('points')}
-                              </Badge>
-                              <span className="text-xs text-slate-500">
-                                {new Date(transaction.created_date).toLocaleDateString('he-IL', { 
-                                  year: 'numeric', 
-                                  month: 'short', 
-                                  day: 'numeric' 
-                                })}
-                              </span>
+                        return (
+                          <div 
+                            key={`transaction-${item.id}`}
+                            className={`p-4 rounded-lg border-2 transition-all hover:shadow-md ${
+                              item.amount > 0 
+                                ? 'bg-green-50 border-green-200 hover:border-green-300' 
+                                : 'bg-red-50 border-red-200 hover:border-red-300'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Badge 
+                                    variant="outline" 
+                                    className={`text-xs font-semibold ${
+                                      item.amount > 0 
+                                        ? 'bg-green-100 text-green-800 border-green-300' 
+                                        : 'bg-red-100 text-red-800 border-red-300'
+                                    }`}
+                                  >
+                                    {item.amount > 0 ? '+' : ''}{item.amount} {t('points')}
+                                  </Badge>
+                                  <span className="text-xs text-slate-500">
+                                    {new Date(item.created_date).toLocaleDateString('he-IL', { 
+                                      year: 'numeric', 
+                                      month: 'short', 
+                                      day: 'numeric' 
+                                    })}
+                                  </span>
+                                </div>
+                                <p className="text-sm font-medium text-slate-900 mb-1">
+                                  {item.action.replace(/_/g, ' ')}
+                                </p>
+                                <p className="text-sm text-slate-700">
+                                  {transactionUrl ? (
+                                    <Link to={transactionUrl} className="text-blue-600 hover:underline inline-flex items-center gap-1">
+                                      {item.description}
+                                      <ArrowRight className="w-3 h-3" />
+                                    </Link>
+                                  ) : (
+                                    item.description
+                                  )}
+                                </p>
+                              </div>
                             </div>
-                            <p className="text-sm font-medium text-slate-900 mb-1">
-                              {transaction.action.replace(/_/g, ' ')}
-                            </p>
-                            <p className="text-sm text-slate-700">
-                              {transactionUrl ? (
-                                <Link to={transactionUrl} className="text-blue-600 hover:underline inline-flex items-center gap-1">
-                                  {transaction.description}
-                                  <ArrowRight className="w-3 h-3" />
-                                </Link>
-                              ) : (
-                                transaction.description
-                              )}
-                            </p>
                           </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                        );
+                      } else {
+                        // Comment
+                        let commentUrl = null;
+                        if (item.rootEntityType === 'suggestion') {
+                          commentUrl = `${createPageUrl("SuggestionDetail")}?id=${item.rootEntityId}`;
+                        } else if (item.rootEntityType === 'section') {
+                          commentUrl = `${createPageUrl("SectionHistory")}?id=${item.rootEntityId}`;
+                        }
+
+                        return (
+                          <div 
+                            key={`comment-${item.id}`}
+                            className="p-4 rounded-lg border-2 bg-blue-50 border-blue-200 hover:border-blue-300 transition-all hover:shadow-md"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Badge variant="outline" className="text-xs font-semibold bg-blue-100 text-blue-800 border-blue-300">
+                                    <MessageSquare className="w-3 h-3 mr-1" />
+                                    {t('comment')}
+                                  </Badge>
+                                  <span className="text-xs text-slate-500">
+                                    {new Date(item.created_date).toLocaleDateString('he-IL', { 
+                                      year: 'numeric', 
+                                      month: 'short', 
+                                      day: 'numeric' 
+                                    })}
+                                  </span>
+                                </div>
+                                <p className="text-sm font-medium text-slate-900 mb-1">
+                                  תגובה על {item.rootEntityType === 'suggestion' ? 'הצעה' : 'סעיף'}
+                                </p>
+                                <p className="text-sm text-slate-700 line-clamp-2 mb-2">
+                                  {item.content}
+                                </p>
+                                {commentUrl && (
+                                  <Link to={commentUrl} className="text-blue-600 hover:underline inline-flex items-center gap-1 text-xs">
+                                    צפה בתגובה המלאה
+                                    <ArrowRight className="w-3 h-3" />
+                                  </Link>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+                    })}
                 </div>
               )}
             </CardContent>
