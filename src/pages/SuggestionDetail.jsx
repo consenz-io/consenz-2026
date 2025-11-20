@@ -603,7 +603,7 @@ export default function SuggestionDetail() {
         <Card className="bg-white border-slate-200 w-full overflow-hidden">
           <CardHeader className="p-4 md:p-6">
             <div className="flex flex-col md:flex-row items-start md:justify-between gap-3">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
                 <Badge variant="outline" className={`${getStatusColor(suggestion.status)} text-xs`}>
                   {suggestion.status}
                 </Badge>
@@ -611,6 +611,9 @@ export default function SuggestionDetail() {
                   {suggestion.type === 'new_section' ? t('newSection') : t('suggestionToEditSection')}
                 </Badge>
                 {topic && <Badge variant="outline" className="text-xs truncate max-w-[200px]">{topic.title}</Badge>}
+                <span className="text-xs text-slate-500">
+                  {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
+                </span>
               </div>
               {suggestion.status === 'pending' && suggestion.timerEndsAt && (
                 <Badge variant="outline" className="flex items-center gap-1 text-xs shrink-0">

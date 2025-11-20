@@ -256,6 +256,13 @@ export default function SectionHistory() {
 function SuggestionDetails({ suggestionId, user, getUserName, showComments, toggleComments }) {
   const { t, isRTL } = useLanguage();
   const queryClient = useQueryClient();
+  
+  const { data: users } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => base44.entities.User.list(),
+    initialData: [],
+  });
+  
   const { data: suggestion } = useQuery({
     queryKey: ['suggestion', suggestionId],
     queryFn: () => base44.entities.Suggestion.filter({ id: suggestionId }).then(s => s[0]),
@@ -327,7 +334,7 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
 
       <div className="space-y-1">
         <div className="text-[10px] md:text-xs text-slate-500 break-words">
-          {t('publishedBy')} {getUserName(suggestion.created_by)} {t('created')} {new Date(suggestion.created_date).toLocaleString()}
+          {t('publishedBy')} <Link to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link> • {t('created')} {new Date(suggestion.created_date).toLocaleString()}
         </div>
         {suggestion.status === 'accepted' && suggestion.updated_date && (
           <div className="text-[10px] md:text-xs text-green-600 font-medium">
