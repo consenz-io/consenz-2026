@@ -97,6 +97,21 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     threshold: newThreshold
   });
   
+  // עדכון threshold לכל ההצעות הממתינות
+  console.log('[THRESHOLD UPDATE] Updating threshold for all pending suggestions to:', newThreshold);
+  const pendingSuggestions = await base44.entities.Suggestion.filter({
+    documentId: document.id,
+    status: 'pending'
+  });
+  
+  for (const pendingSugg of pendingSuggestions) {
+    if (pendingSugg.id !== suggestion.id) { // דלג על ההצעה הנוכחית - נעדכן אותה אחרי
+      await base44.entities.Suggestion.update(pendingSugg.id, {
+        threshold: newThreshold
+      });
+    }
+  }
+  
   // עדכון סטטוס ההצעה מיד כדי למנוע אישור כפול
   console.log('[AUTO-ACCEPT] Updating suggestion status to accepted immediately');
   await base44.entities.Suggestion.update(suggestion.id, { 
