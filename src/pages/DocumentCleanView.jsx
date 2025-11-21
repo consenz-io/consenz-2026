@@ -54,10 +54,48 @@ export default function DocumentCleanView() {
 
   const { data: topicEditSuggestions } = useQuery({
     queryKey: ['topicEditSuggestions', documentId],
-    queryFn: () => base44.entities.TopicEditSuggestion.filter({ documentId, status: 'accepted' }, '-created_date'),
+    queryFn: () => base44.entities.TopicEditSuggestion.filter({ documentId, status: 'accepted' }, 'created_date'),
     initialData: [],
     enabled: !!documentId,
   });
+
+  // Create a map of topic titles by version
+  const getTopicTitleAtVersion = (topicId, versionIndex) => {
+    const topic = topics.find(t => t.id === topicId);
+    if (!topic) return '';
+    
+    if (versionIndex === 0) {
+      // Current version
+      return topic.title;
+    }
+    
+    // Get all accepted suggestions for this topic, sorted by date
+    const topicSuggestions = topicEditSuggestions
+      .filter(s => s.topicId === topicId)
+      .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+    
+    if (topicSuggestions.length === 0) {
+      return topic.title;
+    }
+    
+    // Work backwards through versions
+    let currentTitle = topic.title;
+    let suggestionsToApply = topicSuggestions.length;
+    
+    // For each version step back, undo one suggestion
+    for (let i = 0; i < versionIndex && suggestionsToApply > 0; i++) {
+      suggestionsToApply--;
+    }
+    
+    // Apply only the suggestions up to this version
+    if (suggestionsToApply === 0) {
+      return topicSuggestions[0].originalTitle;
+    } else if (suggestionsToApply < topicSuggestions.length) {
+      return topicSuggestions[suggestionsToApply - 1].newTitle;
+    }
+    
+    return currentTitle;
+  };
 
   // קבוצת גרסאות לפי גרסה (כך שכל גרסה תכיל את כל הסעיפים שלה)
   const versionGroups = React.useMemo(() => {
@@ -383,25 +421,6 @@ ${text}`;
 
       {/* Document Content */}
       <div className="max-w-4xl mx-auto p-4 md:p-8 print:p-12">
-        {/* Topic Changes History */}
-        {topicEditSuggestions.length > 0 && currentVersionIndex === 0 && (
-          <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg print:hidden">
-            <h3 className="font-bold text-blue-900 mb-3 text-sm">שינויים אחרונים בכותרות נושאים:</h3>
-            <div className="space-y-2">
-              {topicEditSuggestions.slice(0, 3).map((suggestion) => (
-                <div key={suggestion.id} className="text-sm text-blue-800">
-                  <span className="line-through">{suggestion.originalTitle}</span>
-                  {' → '}
-                  <span className="font-semibold">{suggestion.newTitle}</span>
-                  <span className="text-xs text-blue-600 ml-2">
-                    ({new Date(suggestion.created_date).toLocaleDateString()})
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Topics and Sections */}
         <div className="space-y-8 md:space-y-12">
           {topics.length === 0 ? (
@@ -416,8 +435,8 @@ ${text}`;
                   <div className="border-b border-slate-300 pb-2 mb-4 md:mb-6">
                     <h2 className="text-xl md:text-2xl font-bold text-slate-800 leading-tight">
                       {topicIndex + 1}. {(topic.originalLanguage || 'he') !== language && showTranslatedTopics[topic.id]
-                        ? (translatedTopics[topic.id] || topic.translations?.[language] || topic.title)
-                        : topic.title}
+                        ? (translatedTopics[topic.id] || topic.translations?.[language] || getTopicTitleAtVersion(topic.id, currentVersionIndex))
+                        : getTopicTitleAtVersion(topic.id, currentVersionIndex)}
                     </h2>
                     {(topic.originalLanguage || 'he') !== language && (
                       <Button
@@ -470,13 +489,22 @@ ${text}`;
                           ? (translatedSections[section.id] || section.translations[language])
                           : section.content;
 
-                        // מציאת גרסה קודמת של הסעיף הזה
+                        // מציאת גרסה נוכחית וקודמת של הסעיף הזה
                         const isViewingHistory = currentVersionIndex > 0;
                         let currentVersionContent, previousVersionContent, hasChangedFromPrevious;
                         
                         if (isViewingHistory) {
-                          currentVersionContent = currentVersion?.sections.find(v => v.sectionId === section.id)?.content;
-                          previousVersionContent = previousVersion?.sections.find(v => v.sectionId === section.id)?.content;
+                          // Get content at current version index
+                          const currentVersionSection = currentVersion?.sections.find(v => v.sectionId === section.id);
+                          currentVersionContent = currentVersionSection?.content || section.content;
+                          
+                          // Get content at next version index (older version to compare against)
+                          const nextVersionGroup = versionGroups[currentVersionIndex - 1];
+                          if (nextVersionGroup) {
+                            const nextVersionSection = nextVersionGroup.sections.find(v => v.sectionId === section.id);
+                            previousVersionContent = nextVersionSection?.content;
+                          }
+                          
                           hasChangedFromPrevious = previousVersionContent && currentVersionContent && currentVersionContent !== previousVersionContent;
                         } else {
                           currentVersionContent = section.content;
@@ -492,10 +520,10 @@ ${text}`;
                                 </span>
                                 <div className="flex-1">
                                 {isViewingHistory && hasChangedFromPrevious ? (
-                                  <InlineDiff
-                                    originalContent={previousVersionContent}
-                                    newContent={currentVersionContent}
-                                  />
+                                 <InlineDiff
+                                   originalContent={currentVersionContent}
+                                   newContent={previousVersionContent}
+                                 />
                                 ) : (
                                   <>
                                     <div 
