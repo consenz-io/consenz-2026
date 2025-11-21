@@ -21,69 +21,41 @@ const InlineDiff = ({ originalContent, newContent }) => {
     return tokens;
   };
 
-  // Simple word-based diff algorithm with improved matching
+  // LCS-based diff algorithm - מזהה רצפים משותפים ארוכים
   const diffWords = (oldText, newText) => {
     const oldTokens = tokenize(oldText);
     const newTokens = tokenize(newText);
-    const result = [];
     
-    let i = 0, j = 0;
+    // Build LCS table
+    const m = oldTokens.length;
+    const n = newTokens.length;
+    const lcs = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
     
-    while (i < oldTokens.length || j < newTokens.length) {
-      if (i >= oldTokens.length) {
-        // Remaining new tokens are additions
-        while (j < newTokens.length) {
-          result.push({ type: 'added', value: newTokens[j] });
-          j++;
-        }
-      } else if (j >= newTokens.length) {
-        // Remaining old tokens are deletions
-        while (i < oldTokens.length) {
-          result.push({ type: 'removed', value: oldTokens[i] });
-          i++;
-        }
-      } else if (oldTokens[i] === newTokens[j]) {
-        // Tokens match
-        result.push({ type: 'unchanged', value: oldTokens[i] });
-        i++;
-        j++;
-      } else {
-        // Look ahead to find matches within a reasonable window
-        const lookAheadWindow = 10;
-        let oldFoundAt = -1;
-        let newFoundAt = -1;
-        
-        // Check if old token exists in upcoming new tokens
-        for (let k = j + 1; k < Math.min(j + lookAheadWindow, newTokens.length); k++) {
-          if (oldTokens[i] === newTokens[k]) {
-            oldFoundAt = k;
-            break;
-          }
-        }
-        
-        // Check if new token exists in upcoming old tokens
-        for (let k = i + 1; k < Math.min(i + lookAheadWindow, oldTokens.length); k++) {
-          if (newTokens[j] === oldTokens[k]) {
-            newFoundAt = k;
-            break;
-          }
-        }
-        
-        if (oldFoundAt !== -1 && (newFoundAt === -1 || (oldFoundAt - j) < (newFoundAt - i))) {
-          // Old token found soon in new - mark intermediate new tokens as added
-          result.push({ type: 'added', value: newTokens[j] });
-          j++;
-        } else if (newFoundAt !== -1) {
-          // New token found soon in old - mark current old token as removed
-          result.push({ type: 'removed', value: oldTokens[i] });
-          i++;
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        if (oldTokens[i - 1] === newTokens[j - 1]) {
+          lcs[i][j] = lcs[i - 1][j - 1] + 1;
         } else {
-          // No match found - both changed
-          result.push({ type: 'removed', value: oldTokens[i] });
-          result.push({ type: 'added', value: newTokens[j] });
-          i++;
-          j++;
+          lcs[i][j] = Math.max(lcs[i - 1][j], lcs[i][j - 1]);
         }
+      }
+    }
+    
+    // Backtrack to find the diff
+    const result = [];
+    let i = m, j = n;
+    
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0 && oldTokens[i - 1] === newTokens[j - 1]) {
+        result.unshift({ type: 'unchanged', value: oldTokens[i - 1] });
+        i--;
+        j--;
+      } else if (j > 0 && (i === 0 || lcs[i][j - 1] >= lcs[i - 1][j])) {
+        result.unshift({ type: 'added', value: newTokens[j - 1] });
+        j--;
+      } else if (i > 0) {
+        result.unshift({ type: 'removed', value: oldTokens[i - 1] });
+        i--;
       }
     }
     
