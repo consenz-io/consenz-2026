@@ -141,6 +141,49 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
 }
 
 /**
+ * יצירת התראה על הצעה חדשה במסמך
+ */
+export async function notifyNewSuggestion({ suggestion, document, currentUser }) {
+  try {
+    console.log('[NOTIFICATION] New suggestion notification triggered:', {
+      suggestionId: suggestion.id,
+      documentId: document.id,
+      creator: currentUser.email
+    });
+    
+    // מציאת כל המשתמשים שאינטראקציה עם המסמך
+    const interactions = await base44.entities.UserInteraction.filter({ documentId: document.id });
+    const interactedUserIds = interactions.map(i => i.userId).filter(id => id !== currentUser.id);
+    
+    if (interactedUserIds.length === 0) {
+      console.log('[NOTIFICATION] No users to notify');
+      return;
+    }
+    
+    const uniqueUserIds = [...new Set(interactedUserIds)];
+    const suggestionUrl = `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`;
+    
+    console.log('[NOTIFICATION] Creating notifications for', uniqueUserIds.length, 'users');
+    
+    for (const userId of uniqueUserIds) {
+      await createNotification({
+        userId: userId,
+        type: 'new_suggestion',
+        title: 'הצעה חדשה במסמך',
+        message: `${currentUser.full_name} הוסיף הצעה חדשה במסמך "${document.title}"`,
+        relatedEntityId: suggestion.id,
+        relatedEntityType: 'suggestion',
+        actionUrl: suggestionUrl
+      });
+    }
+    
+    console.log('[NOTIFICATION] New suggestion notifications created successfully');
+  } catch (error) {
+    console.error('[NOTIFICATION ERROR]', error);
+  }
+}
+
+/**
  * יצירת התראה על תגובה חדשה
  */
 export async function notifyNewComment({ comment, targetEntity, targetEntityType, parentComment = null }) {

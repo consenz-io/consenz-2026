@@ -224,28 +224,14 @@ Return ONLY the translated HTML:`;
         originalLanguage: detectedLanguage,
       });
 
-      // שליחת התראות לכל המשתמשים שהגיבו או הצביעו במסמך
+      // שליחת התראות לכל המשתמשים שאינטראקציה עם המסמך
       try {
-        const interactions = await base44.entities.UserInteraction.filter({ documentId: document.id });
-        const interactedUserIds = interactions.map(i => i.userId).filter(id => id !== currentUser.id);
-        
-        if (interactedUserIds.length > 0) {
-          const uniqueUserIds = [...new Set(interactedUserIds)];
-          const suggestionUrl = `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`;
-          
-          for (const userId of uniqueUserIds) {
-            await base44.entities.Notification.create({
-              userId: userId,
-              type: 'vote_on_suggestion',
-              title: 'הצעה חדשה במסמך שעקבת אחריו',
-              message: `${currentUser.full_name} הוסיף הצעה חדשה במסמך "${document.title}"`,
-              relatedEntityId: suggestion.id,
-              relatedEntityType: 'suggestion',
-              actionUrl: suggestionUrl,
-              read: false
-            });
-          }
-        }
+        const { notifyNewSuggestion } = await import('@/components/notifications/createNotification');
+        await notifyNewSuggestion({
+          suggestion,
+          document,
+          currentUser
+        });
       } catch (err) {
         console.error('Error sending notifications:', err);
       }
