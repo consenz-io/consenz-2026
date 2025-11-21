@@ -13,10 +13,11 @@ const InlineDiff = ({ originalContent, newContent }) => {
   const originalText = extractText(originalContent);
   const newText = extractText(newContent);
 
-  // Tokenize text - מקבץ מילים עם סימני פיסוק צמודים כיחידה אחת
+  // Tokenize text - מפריד מילים, סימני פיסוק ורווחים כטוקנים נפרדים
   const tokenize = (text) => {
-    // מפריד לפי רווחים בלבד, שומר מילים + סימני פיסוק ביחד
-    const tokens = text.match(/\S+|\s+/gu) || [];
+    // מפריד לפי: מילים (אותיות/מספרים) | סימני פיסוק | רווחים
+    // כל אחד מהם הוא טוקן נפרד כדי ש-LCS יזהה במדויק מה השתנה
+    const tokens = text.match(/[\p{L}\p{N}]+|[^\p{L}\p{N}\s]+|\s+/gu) || [];
     return tokens;
   };
 
