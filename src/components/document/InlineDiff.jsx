@@ -13,11 +13,10 @@ const InlineDiff = ({ originalContent, newContent }) => {
   const originalText = extractText(originalContent);
   const newText = extractText(newContent);
 
-  // Tokenize text - split by words and punctuation, supporting Unicode (Hebrew, Arabic, etc.)
+  // Tokenize text - מקבץ מילים עם סימני פיסוק צמודים כיחידה אחת
   const tokenize = (text) => {
-    // Split by whitespace and punctuation while preserving them
-    // \p{L} matches any Unicode letter, \p{N} matches any Unicode number
-    const tokens = text.match(/[\p{L}\p{N}]+|[^\p{L}\p{N}\s]+|\s+/gu) || [];
+    // מפריד לפי רווחים בלבד, שומר מילים + סימני פיסוק ביחד
+    const tokens = text.match(/\S+|\s+/gu) || [];
     return tokens;
   };
 
@@ -62,30 +61,43 @@ const InlineDiff = ({ originalContent, newContent }) => {
     return result;
   };
 
-  // Group consecutive changes - שומר על סדר הופעה טבעי
+  // Group consecutive changes - מאחד בלוקים של שינויים
   const groupChanges = (diffs) => {
+    if (diffs.length === 0) return [];
+    
     const grouped = [];
     let i = 0;
     
     while (i < diffs.length) {
       const current = diffs[i];
       
-      // אסוף כל ה-tokens הרצופים מאותו סוג
-      const sameTypeGroup = [current];
-      let j = i + 1;
-      
-      while (j < diffs.length && diffs[j].type === current.type) {
-        sameTypeGroup.push(diffs[j]);
-        j++;
+      if (current.type === 'unchanged') {
+        // עבור unchanged - פשוט מקבץ tokens רצופים
+        const sameTypeGroup = [current];
+        let j = i + 1;
+        while (j < diffs.length && diffs[j].type === 'unchanged') {
+          sameTypeGroup.push(diffs[j]);
+          j++;
+        }
+        grouped.push({
+          type: 'unchanged',
+          value: sameTypeGroup.map(t => t.value).join('')
+        });
+        i = j;
+      } else {
+        // עבור removed/added - מקבץ את כל השינויים הרצופים מאותו סוג
+        const changeGroup = [current];
+        let j = i + 1;
+        while (j < diffs.length && diffs[j].type === current.type) {
+          changeGroup.push(diffs[j]);
+          j++;
+        }
+        grouped.push({
+          type: current.type,
+          value: changeGroup.map(t => t.value).join('')
+        });
+        i = j;
       }
-      
-      // צרף את כל ה-tokens לטקסט אחד
-      grouped.push({
-        type: current.type,
-        value: sameTypeGroup.map(t => t.value).join('')
-      });
-      
-      i = j;
     }
     
     return grouped;
