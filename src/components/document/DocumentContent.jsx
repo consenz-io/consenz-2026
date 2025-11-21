@@ -6,7 +6,8 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Plus, AlertCircle, ThumbsUp, ThumbsDown, MessageSquare, History, Languages, Loader2 } from "lucide-react";
+import { Edit, Plus, AlertCircle, ThumbsUp, ThumbsDown, MessageSquare, History, Languages, Loader2, GripVertical } from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import VotesNeededCounter from "./VotesNeededCounter";
 import SectionDiff from "./SectionDiff";
 import CommentsSection from "./CommentsSection";
@@ -406,6 +407,34 @@ Return ONLY the translated text:`;
     ).sort((a, b) => (a.insertPosition || 999) - (b.insertPosition || 999));
   };
 
+  const reorderSectionsMutation = useMutation({
+    mutationFn: async ({ topicId, reorderedSections }) => {
+      // Update the order of all sections in this topic
+      await Promise.all(
+        reorderedSections.map((section, index) => 
+          base44.entities.Section.update(section.id, { order: index })
+        )
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
+    },
+  });
+
+  const handleDragEnd = (result, topicId) => {
+    if (!result.destination || !isAdmin) return;
+
+    const topicSections = getSectionsForTopic(topicId);
+    const items = Array.from(topicSections);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    reorderSectionsMutation.mutate({
+      topicId,
+      reorderedSections: items
+    });
+  };
+
   return (
     <div className="space-y-4 md:space-y-6 w-full overflow-x-hidden">
       {topics.map((topic) => {
@@ -480,99 +509,126 @@ Return ONLY the translated text:`;
                   ))}
                 </>
               ) : (
-                topicSections.map((section, index) => {
+                <DragDropContext onDragEnd={(result) => handleDragEnd(result, topic.id)}>
+                  <Droppable droppableId={`topic-${topic.id}`} isDropDisabled={!isAdmin}>
+                    {(provided) => (
+                      <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3 md:space-y-4">
+                        {topicSections.map((section, index) => {
                   const newSectionSuggestions = getNewSectionSuggestionsForTopic(topic.id);
                   const sectionSuggestions = getSuggestionsForSection(section.id);
                   
                   return (
-                    <React.Fragment key={section.id}>
-                      {/* Show new section suggestions before this position */}
-                      {newSectionSuggestions
-                        .filter(s => (s.insertPosition || 999) === index)
-                        .map((suggestion) => (
-                          <NewSectionSuggestionCard
-                            key={suggestion.id}
-                            suggestion={suggestion}
-                            document={document}
-                            getUserName={getUserName}
-                            acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
-                          />
-                        ))}
+                    <Draggable key={section.id} draggableId={section.id} index={index} isDragDisabled={!isAdmin}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className={snapshot.isDragging ? 'opacity-70' : ''}
+                        >
+                          <React.Fragment>
+                            {/* Show new section suggestions before this position */}
+                            {newSectionSuggestions
+                              .filter(s => (s.insertPosition || 999) === index)
+                              .map((suggestion) => (
+                                <NewSectionSuggestionCard
+                                  key={suggestion.id}
+                                  suggestion={suggestion}
+                                  document={document}
+                                  getUserName={getUserName}
+                                  acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                                />
+                              ))}
 
-                      {index > 0 && user && (
-                        <div className="group relative h-4 flex items-center justify-center -my-2">
-                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="h-full flex items-center justify-center">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => onNewSection(topic.id, index)}
-                                className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
+                            {index > 0 && user && (
+                              <div className="group relative h-4 flex items-center justify-center -my-2">
+                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <div className="h-full flex items-center justify-center">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => onNewSection(topic.id, index)}
+                                      className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
+                                    >
+                                      <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                      {t('insertSectionHere')}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          <div className="space-y-3 relative">
+                            {isAdmin && (
+                              <div 
+                                {...provided.dragHandleProps}
+                                className="absolute top-2 left-2 z-10 p-1 bg-white rounded border border-slate-300 cursor-move hover:bg-slate-50 transition-colors"
                               >
-                                <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                {t('insertSectionHere')}
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    <div key={section.id} className="space-y-3">
-                      <SectionCarousel
-                        section={section}
-                        pendingSuggestions={sectionSuggestions}
-                        document={document}
-                        user={user}
-                        onEditSection={onEditSection}
-                        onDirectEdit={onDirectEdit}
-                        toggleComments={toggleComments}
-                        showComments={showComments}
-                        getCommentsCount={getCommentsCount}
-                        getUserVote={getUserVote}
-                        voteMutation={voteMutation}
-                        getUserName={getUserName}
-                        acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
-                        sectionIndex={index}
-                        isAdmin={isAdmin}
-                        users={users}
-                      />
-                    </div>
-                    {/* Show suggestions at the end */}
-                    {index === topicSections.length - 1 && (
-                      <>
-                        {newSectionSuggestions
-                          .filter(s => (s.insertPosition || 999) > index)
-                          .map((suggestion) => (
-                            <NewSectionSuggestionCard
-                              key={suggestion.id}
-                              suggestion={suggestion}
+                                <GripVertical className="w-4 h-4 text-slate-400" />
+                              </div>
+                            )}
+                            <SectionCarousel
+                              section={section}
+                              pendingSuggestions={sectionSuggestions}
                               document={document}
+                              user={user}
+                              onEditSection={onEditSection}
+                              onDirectEdit={onDirectEdit}
+                              toggleComments={toggleComments}
+                              showComments={showComments}
+                              getCommentsCount={getCommentsCount}
+                              getUserVote={getUserVote}
+                              voteMutation={voteMutation}
                               getUserName={getUserName}
                               acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                              sectionIndex={index}
+                              isAdmin={isAdmin}
+                              users={users}
                             />
-                          ))}
-                      </>
-                    )}
-
-                    {index === topicSections.length - 1 && user && (
-                      <div className="group relative h-4 flex items-center justify-center mt-2">
-                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="h-full flex items-center justify-center">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => onNewSection(topic.id, index + 1)}
-                              className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
-                            >
-                              <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                              {t('insertSectionHere')}
-                            </Button>
                           </div>
+                            {/* Show suggestions at the end */}
+                            {index === topicSections.length - 1 && (
+                              <>
+                                {newSectionSuggestions
+                                  .filter(s => (s.insertPosition || 999) > index)
+                                  .map((suggestion) => (
+                                    <NewSectionSuggestionCard
+                                      key={suggestion.id}
+                                      suggestion={suggestion}
+                                      document={document}
+                                      getUserName={getUserName}
+                                      acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                                    />
+                                  ))}
+                              </>
+                            )}
+
+                            {index === topicSections.length - 1 && user && (
+                              <div className="group relative h-4 flex items-center justify-center mt-2">
+                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <div className="h-full flex items-center justify-center">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => onNewSection(topic.id, index + 1)}
+                                      className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
+                                    >
+                                      <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                      {t('insertSectionHere')}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </React.Fragment>
                         </div>
+                      )}
+                    </Draggable>
+                    );
+                    })}
+                    {provided.placeholder}
                       </div>
                     )}
-                    </React.Fragment>
-                    );
-                    })
+                  </Droppable>
+                </DragDropContext>
                     )}
             </CardContent>
           </Card>
