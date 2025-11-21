@@ -15,6 +15,7 @@ import TranslatableContent from "./TranslatableContent";
 import DocumentTextContent from "./DocumentTextContent";
 import SectionCarousel from "./SectionCarousel";
 import NewSectionSuggestionCard from "./NewSectionSuggestionCard";
+import EditTopicModal from "./EditTopicModal";
 
 import { useLanguage } from "@/components/LanguageContext";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAutoAccept";
@@ -32,6 +33,7 @@ export default function DocumentContent({
 }) {
   const [showComments, setShowComments] = useState({});
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
+  const [editingTopic, setEditingTopic] = useState(null);
   const queryClient = useQueryClient();
   const { t, isRTL, language } = useLanguage();
 
@@ -109,6 +111,23 @@ export default function DocumentContent({
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: () => base44.entities.User.list(),
+    initialData: [],
+  });
+
+  const { data: topicEditSuggestions } = useQuery({
+    queryKey: ['topicEditSuggestions', document?.id],
+    queryFn: () => base44.entities.TopicEditSuggestion.filter({ documentId: document.id }),
+    enabled: !!document?.id,
+    initialData: [],
+  });
+
+  const { data: topicEditVotes } = useQuery({
+    queryKey: ['topicEditVotes', document?.id, user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      return await base44.entities.TopicEditVote.filter({ userId: user.id });
+    },
+    enabled: !!user?.id && !!document?.id,
     initialData: [],
   });
 
@@ -483,11 +502,126 @@ Return ONLY the translated text:`;
     }
   };
 
+  const getTopicEditSuggestions = (topicId) => {
+    return topicEditSuggestions.filter(s => s.topicId === topicId && s.status === 'pending');
+  };
+
+  const getUserTopicVote = (suggestionId) => {
+    return topicEditVotes?.find(v => v.suggestionId === suggestionId);
+  };
+
+  const voteTopicEditMutation = useMutation({
+    mutationFn: async ({ suggestionId, vote, currentVote }) => {
+      if (!user) throw new Error("יש להתחבר כדי להצביע");
+
+      const suggestion = topicEditSuggestions.find(s => s.id === suggestionId);
+      let updatedSuggestion;
+
+      if (currentVote) {
+        if (currentVote.vote === vote) {
+          // Canceling vote
+          await base44.entities.TopicEditVote.delete(currentVote.id);
+          updatedSuggestion = await base44.entities.TopicEditSuggestion.update(suggestionId, {
+            [vote === 'pro' ? 'proVotes' : 'conVotes']: Math.max(0, (suggestion[vote === 'pro' ? 'proVotes' : 'conVotes'] || 0) - 1)
+          });
+        } else {
+          // Changing vote
+          await base44.entities.TopicEditVote.update(currentVote.id, { vote });
+          updatedSuggestion = await base44.entities.TopicEditSuggestion.update(suggestionId, {
+            proVotes: suggestion.proVotes + (vote === 'pro' ? 1 : -1),
+            conVotes: suggestion.conVotes + (vote === 'con' ? 1 : -1)
+          });
+        }
+      } else {
+        // New vote
+        await base44.entities.TopicEditVote.create({
+          suggestionId,
+          userId: user.id,
+          vote
+        });
+        updatedSuggestion = await base44.entities.TopicEditSuggestion.update(suggestionId, {
+          [vote === 'pro' ? 'proVotes' : 'conVotes']: (suggestion[vote === 'pro' ? 'proVotes' : 'conVotes'] || 0) + 1
+        });
+
+        // Award points for pro vote
+        if (vote === 'pro' && document.gamificationEnabled) {
+          const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+          if (suggestionCreatorList.length > 0) {
+            const suggestionCreator = suggestionCreatorList[0];
+            const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
+            if (freshUser) {
+              const newPoints = (freshUser.points || 1000) + 10;
+              await base44.entities.User.update(freshUser.id, { points: newPoints });
+              
+              await base44.entities.PointsTransaction.create({
+                userId: suggestionCreator.id,
+                amount: 10,
+                action: 'vote_received',
+                description: `קיבל הצבעה בעד על הצעת עריכת כותרת`,
+                relatedEntityType: 'topic'
+              });
+            }
+          }
+        }
+      }
+
+      // Check consensus and auto-accept
+      const delta = updatedSuggestion.proVotes - updatedSuggestion.conVotes;
+      if (delta >= document.threshold) {
+        // Accept suggestion - update topic title
+        await base44.entities.Topic.update(suggestion.topicId, {
+          title: suggestion.newTitle
+        });
+        
+        await base44.entities.TopicEditSuggestion.update(suggestionId, {
+          status: 'accepted'
+        });
+
+        // Award points to creator
+        if (document.gamificationEnabled) {
+          const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+          if (suggestionCreatorList.length > 0) {
+            const suggestionCreator = suggestionCreatorList[0];
+            const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
+            if (freshUser) {
+              const newPoints = (freshUser.points || 1000) + 100;
+              await base44.entities.User.update(freshUser.id, { points: newPoints });
+              
+              await base44.entities.PointsTransaction.create({
+                userId: suggestionCreator.id,
+                amount: 100,
+                action: 'suggestion_accepted',
+                description: `ההצעה שלך לעריכת כותרת נושא התקבלה`,
+                relatedEntityType: 'topic'
+              });
+            }
+          }
+        }
+
+        queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions'] });
+      queryClient.invalidateQueries({ queryKey: ['topicEditVotes'] });
+    },
+  });
+
   return (
-    <DragDropContext onDragEnd={handleTopicDragEnd}>
-      <Droppable droppableId="topics" isDropDisabled={!isAdmin}>
-        {(provided) => (
-          <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4 md:space-y-6 w-full overflow-x-hidden">
+    <>
+      <EditTopicModal
+        isOpen={!!editingTopic}
+        onClose={() => setEditingTopic(null)}
+        topic={editingTopic}
+        document={document}
+        user={user}
+        isAdmin={isAdmin}
+      />
+      
+      <DragDropContext onDragEnd={handleTopicDragEnd}>
+        <Droppable droppableId="topics" isDropDisabled={!isAdmin}>
+          {(provided) => (
+            <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4 md:space-y-6 w-full overflow-x-hidden">
             {topics.map((topic, topicIndex) => {
               const topicSections = getSectionsForTopic(topic.id);
               
@@ -555,19 +689,109 @@ Return ONLY the translated text:`;
                     )
                   )}
                 </div>
-                {user && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onNewSection(topic.id)}
-                    className="w-full md:w-auto"
-                  >
-                    <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {t('addSection')}
-                  </Button>
-                )}
+                <div className="flex gap-2">
+                  {user && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditingTopic(topic)}
+                      className="text-slate-600 hover:text-blue-600 hover:bg-blue-50"
+                      title="הצע עריכה לכותרת"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {user && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onNewSection(topic.id)}
+                      className="w-full md:w-auto"
+                    >
+                      <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {t('addSection')}
+                    </Button>
+                  )}
+                </div>
               </div>
             </CardHeader>
+            <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
+              {/* Topic Edit Suggestions */}
+              {getTopicEditSuggestions(topic.id).map((suggestion) => {
+                const userVote = getUserTopicVote(suggestion.id);
+                const delta = suggestion.proVotes - suggestion.conVotes;
+                const votesNeeded = Math.max(0, document.threshold - delta);
+
+                return (
+                  <div key={suggestion.id} className="bg-amber-50 border-2 border-amber-300 rounded-lg p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <Badge className="bg-amber-500 text-white mb-2">
+                          הצעת עריכה לכותרת
+                        </Badge>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-sm text-slate-600">כותרת מוצעת:</span>
+                            <p className="font-semibold text-slate-900">{suggestion.newTitle}</p>
+                          </div>
+                          {suggestion.explanation && (
+                            <div>
+                              <span className="text-sm text-slate-600">הסבר:</span>
+                              <p className="text-sm text-slate-700">{suggestion.explanation}</p>
+                            </div>
+                          )}
+                          <div className="text-xs text-slate-500">
+                            {t('by')} {getUserName(suggestion.created_by)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Voting */}
+                    {document.votingButtonsEnabled && user && (
+                      <div className="flex items-center gap-3 pt-3 border-t border-amber-200">
+                        <Button
+                          size="sm"
+                          variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
+                          onClick={() => voteTopicEditMutation.mutate({ 
+                            suggestionId: suggestion.id, 
+                            vote: 'pro',
+                            currentVote: userVote
+                          })}
+                          disabled={voteTopicEditMutation.isPending}
+                          className={userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}
+                        >
+                          <ThumbsUp className="w-4 h-4 mr-1" />
+                          {suggestion.proVotes || 0}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={userVote?.vote === 'con' ? 'default' : 'outline'}
+                          onClick={() => voteTopicEditMutation.mutate({ 
+                            suggestionId: suggestion.id, 
+                            vote: 'con',
+                            currentVote: userVote
+                          })}
+                          disabled={voteTopicEditMutation.isPending}
+                          className={userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}
+                        >
+                          <ThumbsDown className="w-4 h-4 mr-1" />
+                          {suggestion.conVotes || 0}
+                        </Button>
+                        <div className="text-sm text-slate-600">
+                          {votesNeeded > 0 ? (
+                            <span>נדרשים עוד {votesNeeded} תומכים</span>
+                          ) : (
+                            <span className="text-green-600 font-semibold">✓ עבר את סף הקונסנזוס</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </CardContent>
+            <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
             <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
               {topicSections.length === 0 ? (
                 <>
@@ -727,5 +951,6 @@ Return ONLY the translated text:`;
         )}
       </Droppable>
     </DragDropContext>
+    </>
   );
 }
