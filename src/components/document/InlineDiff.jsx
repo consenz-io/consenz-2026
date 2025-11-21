@@ -86,17 +86,38 @@ const InlineDiff = ({ originalContent, newContent }) => {
         });
         i = j;
       } else {
-        // עבור removed/added - מקבץ את כל השינויים הרצופים מאותו סוג
-        const changeGroup = [current];
-        let j = i + 1;
-        while (j < diffs.length && diffs[j].type === current.type) {
-          changeGroup.push(diffs[j]);
+        // עבור removed/added - מקבץ את כל השינויים הרצופים
+        // אוסף את כל ה-removed ואחר כך את כל ה-added
+        const removedTokens = [];
+        const addedTokens = [];
+        let j = i;
+        
+        // אוסף את כל השינויים הרצופים (removed ו-added מעורבבים)
+        while (j < diffs.length && diffs[j].type !== 'unchanged') {
+          if (diffs[j].type === 'removed') {
+            removedTokens.push(diffs[j].value);
+          } else if (diffs[j].type === 'added') {
+            addedTokens.push(diffs[j].value);
+          }
           j++;
         }
-        grouped.push({
-          type: current.type,
-          value: changeGroup.map(t => t.value).join('')
-        });
+        
+        // מוסיף את ה-removed כבלוק אחד
+        if (removedTokens.length > 0) {
+          grouped.push({
+            type: 'removed',
+            value: removedTokens.join('')
+          });
+        }
+        
+        // מוסיף את ה-added כבלוק אחד
+        if (addedTokens.length > 0) {
+          grouped.push({
+            type: 'added',
+            value: addedTokens.join('')
+          });
+        }
+        
         i = j;
       }
     }
