@@ -104,10 +104,10 @@ export default function Home() {
               {t('democraticCollaboration')}
             </Badge>
             <h1 className="text-4xl md:text-6xl font-bold text-slate-900 leading-tight">
-              {t('buildConsensus').split(',')[0]},
+              בנו קונסנזוס,
               <br />
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                {t('buildConsensus').split(',')[1]?.trim()}
+                נסחו ביחד
               </span>
             </h1>
             <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
