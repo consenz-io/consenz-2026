@@ -59,42 +59,41 @@ export default function DocumentCleanView() {
     enabled: !!documentId,
   });
 
-  // Create a map of topic titles by version
+  // Get topic title as it was at a specific version
   const getTopicTitleAtVersion = (topicId, versionIndex) => {
     const topic = topics.find(t => t.id === topicId);
     if (!topic) return '';
     
     if (versionIndex === 0) {
-      // Current version
+      // Current version - return current title
       return topic.title;
     }
     
-    // Get all accepted suggestions for this topic, sorted by date
-    const topicSuggestions = topicEditSuggestions
-      .filter(s => s.topicId === topicId)
+    // Get timestamp of the displayed version
+    const displayedVersion = versionGroups[versionIndex];
+    if (!displayedVersion || !displayedVersion.sections || displayedVersion.sections.length === 0) {
+      return topic.title;
+    }
+    
+    const versionTimestamp = new Date(displayedVersion.sections[0].created_date).getTime();
+    
+    // Get all accepted suggestions for this topic that occurred before or at this timestamp
+    const relevantSuggestions = topicEditSuggestions
+      .filter(s => s.topicId === topicId && new Date(s.created_date).getTime() <= versionTimestamp)
       .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
     
-    if (topicSuggestions.length === 0) {
+    // Return the newTitle of the latest relevant suggestion, or the first originalTitle if no suggestions yet
+    if (relevantSuggestions.length === 0) {
+      // Check if there are any suggestions at all for this topic
+      const allSuggestionsForTopic = topicEditSuggestions.filter(s => s.topicId === topicId);
+      if (allSuggestionsForTopic.length > 0) {
+        // Return the originalTitle from the first suggestion (the very first title)
+        return allSuggestionsForTopic[0].originalTitle;
+      }
       return topic.title;
     }
     
-    // Work backwards through versions
-    let currentTitle = topic.title;
-    let suggestionsToApply = topicSuggestions.length;
-    
-    // For each version step back, undo one suggestion
-    for (let i = 0; i < versionIndex && suggestionsToApply > 0; i++) {
-      suggestionsToApply--;
-    }
-    
-    // Apply only the suggestions up to this version
-    if (suggestionsToApply === 0) {
-      return topicSuggestions[0].originalTitle;
-    } else if (suggestionsToApply < topicSuggestions.length) {
-      return topicSuggestions[suggestionsToApply - 1].newTitle;
-    }
-    
-    return currentTitle;
+    return relevantSuggestions[relevantSuggestions.length - 1].newTitle;
   };
 
   // קבוצת גרסאות לפי גרסה (כך שכל גרסה תכיל את כל הסעיפים שלה)
@@ -519,17 +518,17 @@ ${text}`;
                                   {topicIndex + 1}.{sectionIndex + 1}
                                 </span>
                                 <div className="flex-1">
-                                {isViewingHistory && hasChangedFromPrevious ? (
+                                {isViewingHistory && hasChanged ? (
                                  <InlineDiff
-                                   originalContent={previousVersionContent}
-                                   newContent={currentVersionContent}
+                                   originalContent={displayedContent}
+                                   newContent={newerContent}
                                  />
                                 ) : (
-                                  <>
-                                    <div 
-                                      className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none"
-                                      dangerouslySetInnerHTML={{ __html: displayContent }}
-                                    />
+                                 <>
+                                   <div 
+                                     className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none"
+                                     dangerouslySetInnerHTML={{ __html: displayedContent }}
+                                   />
                                     {needsTranslation && (
                                       <Button
                                         variant="ghost"

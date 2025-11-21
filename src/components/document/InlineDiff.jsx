@@ -1,6 +1,8 @@
 import React from "react";
+import { useLanguage } from "@/components/LanguageContext";
 
 const InlineDiff = ({ originalContent, newContent }) => {
+  const { isRTL } = useLanguage();
   // Extract text from HTML
   const extractText = (html) => {
     const div = document.createElement('div');
@@ -67,7 +69,7 @@ const InlineDiff = ({ originalContent, newContent }) => {
   const differences = diffWords(originalText, newText);
 
   return (
-    <div className="text-slate-700 leading-relaxed prose prose-slate max-w-none">
+    <div className="text-slate-700 leading-relaxed prose prose-slate max-w-none" dir={isRTL ? 'rtl' : 'ltr'}>
       {differences.map((part, index) => {
         if (part.type === 'added') {
           return (
