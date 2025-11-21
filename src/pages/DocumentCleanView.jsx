@@ -482,32 +482,28 @@ ${text}`;
                   ) : (
                     <div className="space-y-4 md:space-y-6">
                       {topicSections.map((section, sectionIndex) => {
-                        const needsTranslation = (section.originalLanguage || 'he') !== language;
-                        const hasTranslation = translatedSections[section.id] || section.translations?.[language];
-                        const displayContent = needsTranslation && hasTranslation && showTranslatedSections[section.id]
-                          ? (translatedSections[section.id] || section.translations[language])
-                          : section.content;
 
-                        // מציאת גרסה נוכחית וקודמת של הסעיף הזה
+
+                        // מציאת תוכן הסעיף בגרסה המוצגת ובגרסה החדשה יותר
                         const isViewingHistory = currentVersionIndex > 0;
-                        let currentVersionContent, previousVersionContent, hasChangedFromPrevious;
+                        let displayedContent, newerContent, hasChanged;
                         
                         if (isViewingHistory) {
-                          // Get content at current version index
-                          const currentVersionSection = currentVersion?.sections.find(v => v.sectionId === section.id);
-                          currentVersionContent = currentVersionSection?.content || section.content;
+                          // תוכן בגרסה המוצגת כעת (הישנה יותר)
+                          const displayedVersionSection = currentVersion?.sections.find(v => v.sectionId === section.id);
+                          displayedContent = displayedVersionSection?.content || section.content;
                           
-                          // Get content at next version index (older version to compare against)
-                          const nextVersionGroup = versionGroups[currentVersionIndex - 1];
-                          if (nextVersionGroup) {
-                            const nextVersionSection = nextVersionGroup.sections.find(v => v.sectionId === section.id);
-                            previousVersionContent = nextVersionSection?.content;
+                          // תוכן בגרסה החדשה יותר (אחת קדימה)
+                          const newerVersionGroup = versionGroups[currentVersionIndex - 1];
+                          if (newerVersionGroup) {
+                            const newerVersionSection = newerVersionGroup.sections.find(v => v.sectionId === section.id);
+                            newerContent = newerVersionSection?.content;
                           }
                           
-                          hasChangedFromPrevious = previousVersionContent && currentVersionContent && currentVersionContent !== previousVersionContent;
+                          hasChanged = newerContent && displayedContent && displayedContent !== newerContent;
                         } else {
-                          currentVersionContent = section.content;
-                          hasChangedFromPrevious = false;
+                          displayedContent = section.content;
+                          hasChanged = false;
                         }
 
                         return (
@@ -529,13 +525,15 @@ ${text}`;
                                      className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none"
                                      dangerouslySetInnerHTML={{ __html: displayedContent }}
                                    />
-                                    {needsTranslation && (
+                                    {(section.originalLanguage || 'he') !== language && (
                                       <Button
                                         variant="ghost"
                                         size="sm"
                                         className="mt-2 text-blue-600 hover:text-blue-700 print:hidden opacity-0 group-hover:opacity-100 transition-opacity"
-                                        onClick={async () => {
-                                          if (!hasTranslation) {
+                                        onClick={async (e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          if (!translatedSections[section.id] && !section.translations?.[language]) {
                                             await translateSectionMutation.mutateAsync({ section, targetLanguage: language });
                                             setShowTranslatedSections(prev => ({
                                               ...prev,
