@@ -3,6 +3,7 @@ import { useLanguage } from "@/components/LanguageContext";
 
 const InlineDiff = ({ originalContent, newContent }) => {
   const { isRTL } = useLanguage();
+  
   // Extract text from HTML
   const extractText = (html) => {
     const div = document.createElement('div');
@@ -15,8 +16,6 @@ const InlineDiff = ({ originalContent, newContent }) => {
 
   // Tokenize text - מפריד מילים, סימני פיסוק ורווחים כטוקנים נפרדים
   const tokenize = (text) => {
-    // מפריד לפי: מילים (אותיות/מספרים) | סימני פיסוק | רווחים
-    // כל אחד מהם הוא טוקן נפרד כדי ש-LCS יזהה במדויק מה השתנה
     const tokens = text.match(/[\p{L}\p{N}]+|[^\p{L}\p{N}\s]+|\s+/gu) || [];
     return tokens;
   };
@@ -62,7 +61,7 @@ const InlineDiff = ({ originalContent, newContent }) => {
     return result;
   };
 
-  // Group consecutive changes - מאחד בלוקים של שינויים
+  // Group consecutive changes - קיבוץ מתוקן
   const groupChanges = (diffs) => {
     if (diffs.length === 0) return [];
     
@@ -72,8 +71,8 @@ const InlineDiff = ({ originalContent, newContent }) => {
     while (i < diffs.length) {
       const current = diffs[i];
       
+      // אם unchanged - הוסף ישירות
       if (current.type === 'unchanged') {
-        // עבור unchanged - פשוט מקבץ tokens רצופים
         const sameTypeGroup = [current];
         let j = i + 1;
         while (j < diffs.length && diffs[j].type === 'unchanged') {
@@ -86,40 +85,40 @@ const InlineDiff = ({ originalContent, newContent }) => {
         });
         i = j;
       } else {
-        // עבור removed/added - אוסף את כל הרצף כבלוק replaced אחד
-        const removedTokens = [];
-        const addedTokens = [];
+        // אם removed או added - אסוף את כל הרצף
+        let removedParts = [];
+        let addedParts = [];
         let j = i;
         
-        // אוסף את כל השינויים הרצופים (removed ו-added מעורבבים)
+        // אסוף כל removed ו-added עד שמגיע unchanged
         while (j < diffs.length && diffs[j].type !== 'unchanged') {
           if (diffs[j].type === 'removed') {
-            removedTokens.push(diffs[j].value);
+            removedParts.push(diffs[j].value);
           } else if (diffs[j].type === 'added') {
-            addedTokens.push(diffs[j].value);
+            addedParts.push(diffs[j].value);
           }
           j++;
         }
         
-        // יוצר בלוק לפי מה שנאסף
-        if (removedTokens.length > 0 && addedTokens.length > 0) {
-          // יש גם removed וגם added = החלפה (replaced)
+        // צור בלוק לפי מה שנאסף
+        if (removedParts.length > 0 && addedParts.length > 0) {
+          // יש גם removed וגם added = החלפה
           grouped.push({
             type: 'replaced',
-            deleted: removedTokens.join(''),
-            added: addedTokens.join('')
+            deleted: removedParts.join(''),
+            added: addedParts.join('')
           });
-        } else if (removedTokens.length > 0) {
+        } else if (removedParts.length > 0) {
           // רק removed
           grouped.push({
             type: 'removed',
-            value: removedTokens.join('')
+            value: removedParts.join('')
           });
-        } else if (addedTokens.length > 0) {
+        } else if (addedParts.length > 0) {
           // רק added
           grouped.push({
             type: 'added',
-            value: addedTokens.join('')
+            value: addedParts.join('')
           });
         }
         
