@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2 } from "lucide-react";
+import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
+import ReactQuill from "react-quill";
 
 import DocumentContent from "../components/document/DocumentContent";
 import SuggestionsList from "../components/document/SuggestionsList";
@@ -30,6 +31,8 @@ export default function DocumentView() {
   const [showTranslated, setShowTranslated] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [showContributorsModal, setShowContributorsModal] = useState(false);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [description, setDescription] = useState(document?.description || "");
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
@@ -74,6 +77,12 @@ export default function DocumentView() {
     },
     enabled: !!user?.id && !!documentId,
   });
+
+  React.useEffect(() => {
+    if (document) {
+      setDescription(document.description || "");
+    }
+  }, [document]);
 
   useEffect(() => {
     if (scrollToSectionId && sections.length > 0) {
@@ -142,6 +151,18 @@ export default function DocumentView() {
     onError: () => {
       setIsTranslating(false);
     }
+  });
+
+  const updateDescriptionMutation = useMutation({
+    mutationFn: async (newDescription) => {
+      await base44.entities.Document.update(documentId, {
+        description: newDescription
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['document', documentId] });
+      setIsEditingDescription(false);
+    },
   });
 
   if (docLoading || topicsLoading || sectionsLoading) {
@@ -216,6 +237,74 @@ export default function DocumentView() {
               {document.privacy.replace(/_/g, ' ')}
             </Badge>
           </div>
+
+          {/* Document Description */}
+          {(document.description || isAdmin) && (
+            <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-4">
+              {isEditingDescription ? (
+                <div className="space-y-3">
+                  <ReactQuill
+                    value={description}
+                    onChange={setDescription}
+                    className="bg-white"
+                    modules={{
+                      toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        ['link'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['clean']
+                      ]
+                    }}
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setDescription(document.description || "");
+                        setIsEditingDescription(false);
+                      }}
+                    >
+                      <X className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {t('cancel')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => updateDescriptionMutation.mutate(description)}
+                      disabled={updateDescriptionMutation.isPending}
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600"
+                    >
+                      <Save className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {t('saveChanges')}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="relative group">
+                  {document.description ? (
+                    <div 
+                      className="prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: document.description }}
+                      dir={isRTL ? 'rtl' : 'ltr'}
+                    />
+                  ) : (
+                    <p className="text-slate-400 text-sm italic">{t('noDescription')}</p>
+                  )}
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsEditingDescription(true)}
+                      className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="flex gap-0.5 md:gap-2 flex-wrap justify-center">
             <Link to={`${createPageUrl("DocumentVersions")}?id=${documentId}`} className="flex-shrink-0">
               <Button variant="outline" size="sm" className="text-[8px] md:text-sm px-0.5 md:px-4 h-5 md:h-9">

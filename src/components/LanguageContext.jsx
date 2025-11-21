@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const translations = {
@@ -262,7 +263,7 @@ const translations = {
     
     // דף הבית
     democraticCollaboration: "פלטפורמת שיתוף פעולה דמוקרטי",
-    buildConsensus: "בנו קונצנזוס, נסחו ביחד",
+    buildConsensus: "בנו קונצננזוס, נסחו ביחד",
     platformDescription: "פלטפורמה לשיתוף פעולה לניסוח מסמכי מדיניות, חוקות והחלטות באמצעות הצבעה שקופה ואלגוריתמי קונצנזוס דינמיים.",
     getStarted: "התחל",
     learnMore: "למד עוד",
@@ -388,7 +389,7 @@ const translations = {
     current: "עדכני",
     lastUpdate: "עדכון אחרון",
     previousVersions: "גרסאות קודמות",
-    noDescription: "ללא תיאור",
+    noDescription: "אין תיאור",
     suggestionAccepted: "הצעה התקבלה",
     sectionCreated: "סעיף נוצר",
     directEdit: "עריכה ישירה",
@@ -592,7 +593,7 @@ const translations = {
     current: "حالي",
     lastUpdate: "آخر تحديث",
     previousVersions: "النسخ السابقة",
-    noDescription: "بدون وصف",
+    noDescription: "لا يوجد وصف",
     suggestionAccepted: "تم قبول الاقتراح",
     sectionCreated: "تم إنشاء القسم",
     directEdit: "تحرير مباشر",
