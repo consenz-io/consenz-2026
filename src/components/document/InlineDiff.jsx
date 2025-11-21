@@ -62,7 +62,7 @@ const InlineDiff = ({ originalContent, newContent }) => {
     return result;
   };
 
-  // Group consecutive changes together for better readability - כולל משפטים שלמים
+  // Group consecutive changes - שומר על סדר הופעה טבעי
   const groupChanges = (diffs) => {
     const grouped = [];
     let i = 0;
@@ -70,39 +70,22 @@ const InlineDiff = ({ originalContent, newContent }) => {
     while (i < diffs.length) {
       const current = diffs[i];
       
-      if (current.type === 'unchanged') {
-        grouped.push(current);
-        i++;
-      } else {
-        // אסוף את כל השינויים הרצופים (מחיקות והוספות ביחד)
-        const changeBlock = [];
-        let j = i;
-        
-        while (j < diffs.length && diffs[j].type !== 'unchanged') {
-          changeBlock.push(diffs[j]);
-          j++;
-        }
-        
-        // קבץ לפי סוג - קודם כל המחיקות, אחר כך כל ההוספות
-        const removed = changeBlock.filter(c => c.type === 'removed');
-        const added = changeBlock.filter(c => c.type === 'added');
-        
-        if (removed.length > 0) {
-          grouped.push({
-            type: 'removed',
-            value: removed.map(r => r.value).join('')
-          });
-        }
-        
-        if (added.length > 0) {
-          grouped.push({
-            type: 'added',
-            value: added.map(a => a.value).join('')
-          });
-        }
-        
-        i = j;
+      // אסוף כל ה-tokens הרצופים מאותו סוג
+      const sameTypeGroup = [current];
+      let j = i + 1;
+      
+      while (j < diffs.length && diffs[j].type === current.type) {
+        sameTypeGroup.push(diffs[j]);
+        j++;
       }
+      
+      // צרף את כל ה-tokens לטקסט אחד
+      grouped.push({
+        type: current.type,
+        value: sameTypeGroup.map(t => t.value).join('')
+      });
+      
+      i = j;
     }
     
     return grouped;
