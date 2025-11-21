@@ -421,7 +421,7 @@ Return ONLY the translated text:`;
     },
   });
 
-  const handleDragEnd = (result, topicId) => {
+  const handleSectionDragEnd = (result, topicId) => {
     if (!result.destination || !isAdmin) return;
 
     const topicSections = getSectionsForTopic(topicId);
@@ -435,16 +435,59 @@ Return ONLY the translated text:`;
     });
   };
 
+  const reorderTopicsMutation = useMutation({
+    mutationFn: async ({ reorderedTopics }) => {
+      await Promise.all(
+        reorderedTopics.map((topic, index) => 
+          base44.entities.Topic.update(topic.id, { order: index })
+        )
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['topics', document?.id] });
+    },
+  });
+
+  const handleTopicDragEnd = (result) => {
+    if (!result.destination || !isAdmin) return;
+
+    const items = Array.from(topics);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    reorderTopicsMutation.mutate({
+      reorderedTopics: items
+    });
+  };
+
   return (
-    <div className="space-y-4 md:space-y-6 w-full overflow-x-hidden">
-      {topics.map((topic) => {
-        const topicSections = getSectionsForTopic(topic.id);
-        
-        return (
-          <Card key={topic.id} className="bg-white border-slate-200 w-full overflow-hidden">
-            <CardHeader className="border-b border-slate-100 p-4 md:p-6">
-              <div className={`flex flex-col md:flex-row justify-between md:items-center gap-3 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-                <div className={`flex-1 min-w-0 flex items-center gap-2 ${isRTL ? 'justify-end' : ''}`}>
+    <DragDropContext onDragEnd={handleTopicDragEnd}>
+      <Droppable droppableId="topics" isDropDisabled={!isAdmin}>
+        {(provided) => (
+          <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4 md:space-y-6 w-full overflow-x-hidden">
+            {topics.map((topic, topicIndex) => {
+              const topicSections = getSectionsForTopic(topic.id);
+              
+              return (
+                <Draggable key={topic.id} draggableId={`topic-${topic.id}`} index={topicIndex} isDragDisabled={!isAdmin}>
+                  {(topicProvided, topicSnapshot) => (
+                    <div
+                      ref={topicProvided.innerRef}
+                      {...topicProvided.draggableProps}
+                      className={topicSnapshot.isDragging ? 'opacity-70' : ''}
+                    >
+                      <Card className="bg-white border-slate-200 w-full overflow-hidden">
+                        <CardHeader className="border-b border-slate-100 p-4 md:p-6 relative">
+                          {isAdmin && (
+                            <div 
+                              {...topicProvided.dragHandleProps}
+                              className="absolute top-2 right-2 z-10 p-1 bg-white rounded border border-slate-300 cursor-move hover:bg-slate-50 transition-colors"
+                            >
+                              <GripVertical className="w-5 h-5 text-slate-400" />
+                            </div>
+                          )}
+                          <div className={`flex flex-col md:flex-row justify-between md:items-center gap-3 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+                            <div className={`flex-1 min-w-0 flex items-center gap-2 ${isRTL ? 'justify-end' : ''}`}>
                   <CardTitle className={`text-lg md:text-2xl break-words ${isRTL ? 'text-right' : 'text-left'}`}>
                     {(() => {
                       const translatedTitle = topic.translations?.[language]?.title;
@@ -509,8 +552,8 @@ Return ONLY the translated text:`;
                   ))}
                 </>
               ) : (
-                <DragDropContext onDragEnd={(result) => handleDragEnd(result, topic.id)}>
-                  <Droppable droppableId={`topic-${topic.id}`} isDropDisabled={!isAdmin}>
+                <DragDropContext onDragEnd={(result) => handleSectionDragEnd(result, topic.id)}>
+                  <Droppable droppableId={`sections-${topic.id}`} isDropDisabled={!isAdmin}>
                     {(provided) => (
                       <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3 md:space-y-4">
                         {topicSections.map((section, index) => {
@@ -630,19 +673,25 @@ Return ONLY the translated text:`;
                   </Droppable>
                 </DragDropContext>
                     )}
-            </CardContent>
-          </Card>
-        );
-      })}
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+                </Draggable>
+              );
+            })}
+            {provided.placeholder}
 
-      {topics.length === 0 && (
-        <Card className="bg-white border-slate-200 w-full overflow-hidden">
-          <CardContent className="p-6 md:p-12 text-center">
-            <p className="text-slate-500 text-sm md:text-base">{t('noTopicsYet')}</p>
-          </CardContent>
-        </Card>
-      )}
-
-    </div>
+            {topics.length === 0 && (
+              <Card className="bg-white border-slate-200 w-full overflow-hidden">
+                <CardContent className="p-6 md:p-12 text-center">
+                  <p className="text-slate-500 text-sm md:text-base">{t('noTopicsYet')}</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+      </Droppable>
+    </DragDropContext>
   );
 }
