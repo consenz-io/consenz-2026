@@ -43,6 +43,20 @@ export default function DocumentVersions() {
     enabled: !!documentId,
   });
 
+  const { data: topics } = useQuery({
+    queryKey: ['topics', documentId],
+    queryFn: () => base44.entities.Topic.filter({ documentId }),
+    initialData: [],
+    enabled: !!documentId,
+  });
+
+  const { data: topicEditSuggestions } = useQuery({
+    queryKey: ['topicEditSuggestions', documentId],
+    queryFn: () => base44.entities.TopicEditSuggestion.filter({ documentId, status: 'accepted' }, '-created_date'),
+    initialData: [],
+    enabled: !!documentId,
+  });
+
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
@@ -163,8 +177,14 @@ export default function DocumentVersions() {
       case 'suggestion_accepted': return 'הצעה התקבלה';
       case 'direct_edit': return 'עריכה ישירה';
       case 'section_created': return 'סעיף חדש נוצר';
+      case 'topic_title_changed': return 'כותרת נושא שונתה';
       default: return type;
     }
+  };
+
+  const getTopicName = (topicId) => {
+    const topic = topics.find(t => t.id === topicId);
+    return topic?.title || 'Unknown Topic';
   };
 
   return (
@@ -217,7 +237,65 @@ export default function DocumentVersions() {
         )}
 
         <div className="space-y-6 md:space-y-8">
-          {versions.length === 0 ? (
+          {/* Topic Changes */}
+          {topicEditSuggestions.length > 0 && (
+            <Card className="bg-white border-slate-200 w-full overflow-hidden">
+              <CardHeader className="p-4 md:p-6">
+                <CardTitle className="text-base md:text-lg">שינויים בכותרות נושאים</CardTitle>
+              </CardHeader>
+              <CardContent className="p-3 md:p-6">
+                <div className="space-y-4">
+                  {topicEditSuggestions.map((suggestion) => (
+                    <div key={suggestion.id} className="border-b border-slate-200 pb-4 last:border-0">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex-1">
+                          <Badge className="mb-2 text-xs">כותרת נושא שונתה</Badge>
+                          <div className="space-y-2">
+                            <div>
+                              <span className="text-sm text-slate-600">נושא: </span>
+                              <span className="font-semibold text-slate-900">{getTopicName(suggestion.topicId)}</span>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg">
+                              <div>
+                                <span className="text-xs text-slate-600">כותרת מקורית:</span>
+                                <p className="text-sm text-slate-700 line-through">{suggestion.originalTitle}</p>
+                              </div>
+                              <div>
+                                <span className="text-xs text-slate-600">כותרת חדשה:</span>
+                                <p className="text-sm font-semibold text-green-700">{suggestion.newTitle}</p>
+                              </div>
+                            </div>
+                            {suggestion.explanation && (
+                              <div className="text-sm text-slate-600 bg-blue-50 p-2 rounded">
+                                <span className="font-medium">הסבר: </span>
+                                {suggestion.explanation}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-slate-500">
+                        <Clock className="w-3 h-3" />
+                        <span>
+                          {new Date(suggestion.created_date).toLocaleDateString(isRTL ? 'he-IL' : 'en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                        <span>•</span>
+                        <span>{t('by')} {getUserName(suggestion.created_by)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {versions.length === 0 && topicEditSuggestions.length === 0 ? (
             <Card className="bg-white border-slate-200 w-full overflow-hidden">
               <CardContent className="p-6 md:p-12 text-center">
                 <History className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-4 text-slate-300" />

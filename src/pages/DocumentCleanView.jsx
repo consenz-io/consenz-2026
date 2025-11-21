@@ -52,6 +52,13 @@ export default function DocumentCleanView() {
     enabled: !!documentId,
   });
 
+  const { data: topicEditSuggestions } = useQuery({
+    queryKey: ['topicEditSuggestions', documentId],
+    queryFn: () => base44.entities.TopicEditSuggestion.filter({ documentId, status: 'accepted' }, '-created_date'),
+    initialData: [],
+    enabled: !!documentId,
+  });
+
   // קבוצת גרסאות לפי גרסה (כך שכל גרסה תכיל את כל הסעיפים שלה)
   const versionGroups = React.useMemo(() => {
     if (!allVersions.length) return [];
@@ -376,6 +383,25 @@ ${text}`;
 
       {/* Document Content */}
       <div className="max-w-4xl mx-auto p-4 md:p-8 print:p-12">
+        {/* Topic Changes History */}
+        {topicEditSuggestions.length > 0 && currentVersionIndex === 0 && (
+          <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg print:hidden">
+            <h3 className="font-bold text-blue-900 mb-3 text-sm">שינויים אחרונים בכותרות נושאים:</h3>
+            <div className="space-y-2">
+              {topicEditSuggestions.slice(0, 3).map((suggestion) => (
+                <div key={suggestion.id} className="text-sm text-blue-800">
+                  <span className="line-through">{suggestion.originalTitle}</span>
+                  {' → '}
+                  <span className="font-semibold">{suggestion.newTitle}</span>
+                  <span className="text-xs text-blue-600 ml-2">
+                    ({new Date(suggestion.created_date).toLocaleDateString()})
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Topics and Sections */}
         <div className="space-y-8 md:space-y-12">
           {topics.length === 0 ? (
