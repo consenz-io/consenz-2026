@@ -94,26 +94,26 @@ const InlineDiff = ({ originalContent, newContent }) => {
   const differences = groupChanges(diffWords(originalText, newText));
 
   return (
-    <div className="text-slate-700 leading-relaxed prose prose-slate max-w-none space-y-1" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="text-slate-700 leading-relaxed prose prose-slate max-w-none" dir={isRTL ? 'rtl' : 'ltr'}>
       {differences.map((part, index) => {
         if (part.type === 'added') {
           return (
-            <div
+            <span
               key={index}
-              className="bg-green-50 border-r-4 border-green-500 px-3 py-2 rounded"
+              className="bg-green-100 text-green-800 font-medium px-1 rounded"
             >
-              <span className="text-green-800 font-medium">{part.value}</span>
-            </div>
+              {part.value}
+            </span>
           );
         }
         if (part.type === 'removed') {
           return (
-            <div
+            <span
               key={index}
-              className="bg-red-50 border-r-4 border-red-500 px-3 py-2 rounded"
+              className="bg-red-100 text-red-800 line-through px-1 rounded"
             >
-              <span className="text-red-800 line-through">{part.value}</span>
-            </div>
+              {part.value}
+            </span>
           );
         }
         return <span key={index}>{part.value}</span>;
