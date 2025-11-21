@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Languages, Loader2 } from "lucide-react";
+import { Languages, Loader2, Eye, FileText } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 
@@ -10,6 +10,7 @@ export default function SectionDiff({ originalContent, newContent }) {
   const [translatedContent, setTranslatedContent] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [showTranslated, setShowTranslated] = useState(false);
+  const [showDiff, setShowDiff] = useState(true);
   
   const originalLanguage = 'he';
   const needsTranslation = language !== originalLanguage;
@@ -128,22 +129,33 @@ Return ONLY the translated HTML:`;
     <Card className="p-4 bg-slate-50 border-slate-200">
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</div>
-        {needsTranslation && (
+        <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleTranslate}
-            disabled={isTranslating}
-            className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-            title={showTranslated ? t('showOriginal') : t('translate')}
+            onClick={() => setShowDiff(!showDiff)}
+            className="h-7 px-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            title={showDiff ? t('cleanView') : t('showDiff')}
           >
-            {isTranslating ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Languages className="w-4 h-4" />
-            )}
+            {showDiff ? <Eye className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
           </Button>
-        )}
+          {needsTranslation && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleTranslate}
+              disabled={isTranslating}
+              className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              title={showTranslated ? t('showOriginal') : t('translate')}
+            >
+              {isTranslating ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Languages className="w-4 h-4" />
+              )}
+            </Button>
+          )}
+        </div>
       </div>
       <div 
         className="prose prose-sm max-w-none" 
@@ -157,7 +169,9 @@ Return ONLY the translated HTML:`;
           fontWeight: "400"
         }}
       >
-        {showTranslated && translatedContent ? (
+        {!showDiff ? (
+          <div dangerouslySetInnerHTML={{ __html: contentToDisplay }} />
+        ) : showTranslated && translatedContent ? (
           <div dangerouslySetInnerHTML={{ __html: translatedContent }} />
         ) : (
           diff.map((part, idx) => {

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const translations = {
@@ -206,6 +205,7 @@ const translations = {
     translate: "Translate",
     showOriginal: "Show Original",
     showTranslation: "Show Translation",
+    showDiff: "Show Changes",
   },
   he: {
     // ניווט
@@ -411,6 +411,7 @@ const translations = {
     translate: "תרגם",
     showOriginal: "הצג מקור",
     showTranslation: "הצג תרגום",
+    showDiff: "הצג שינויים",
   },
   ar: {
     // التنقل
@@ -615,6 +616,7 @@ const translations = {
     translate: "ترجمة",
     showOriginal: "إظهار الأصلي",
     showTranslation: "إظهار الترجمة",
+    showDiff: "إظهار التغييرات",
   }
 };
 
