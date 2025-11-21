@@ -568,6 +568,9 @@ Return ONLY the translated text:`;
       // Check consensus and auto-accept
       const delta = updatedSuggestion.proVotes - updatedSuggestion.conVotes;
       if (delta >= document.threshold) {
+        // Get current topic for version tracking
+        const currentTopic = topics.find(t => t.id === suggestion.topicId);
+        
         // Accept suggestion - update topic title
         await base44.entities.Topic.update(suggestion.topicId, {
           title: suggestion.newTitle

@@ -521,8 +521,8 @@ ${text}`;
                                 <div className="flex-1">
                                 {isViewingHistory && hasChangedFromPrevious ? (
                                  <InlineDiff
-                                   originalContent={currentVersionContent}
-                                   newContent={previousVersionContent}
+                                   originalContent={previousVersionContent}
+                                   newContent={currentVersionContent}
                                  />
                                 ) : (
                                   <>
