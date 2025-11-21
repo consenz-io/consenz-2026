@@ -32,7 +32,7 @@ export default function DocumentView() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [showContributorsModal, setShowContributorsModal] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [description, setDescription] = useState(document?.description || "");
+  const [description, setDescription] = useState("");
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
