@@ -90,7 +90,7 @@ const InlineDiff = ({ originalContent, newContent }) => {
     return result;
   };
 
-  // Group consecutive changes together for better readability
+  // Group consecutive changes together for better readability - כולל משפטים שלמים
   const groupChanges = (diffs) => {
     const grouped = [];
     let i = 0;
@@ -102,20 +102,32 @@ const InlineDiff = ({ originalContent, newContent }) => {
         grouped.push(current);
         i++;
       } else {
-        // Collect consecutive changes of the same type
-        const changeGroup = [current];
-        let j = i + 1;
+        // אסוף את כל השינויים הרצופים (מחיקות והוספות ביחד)
+        const changeBlock = [];
+        let j = i;
         
-        while (j < diffs.length && diffs[j].type === current.type) {
-          changeGroup.push(diffs[j]);
+        while (j < diffs.length && diffs[j].type !== 'unchanged') {
+          changeBlock.push(diffs[j]);
           j++;
         }
         
-        // Combine the group into a single entry
-        grouped.push({
-          type: current.type,
-          value: changeGroup.map(g => g.value).join('')
-        });
+        // קבץ לפי סוג - קודם כל המחיקות, אחר כך כל ההוספות
+        const removed = changeBlock.filter(c => c.type === 'removed');
+        const added = changeBlock.filter(c => c.type === 'added');
+        
+        if (removed.length > 0) {
+          grouped.push({
+            type: 'removed',
+            value: removed.map(r => r.value).join('')
+          });
+        }
+        
+        if (added.length > 0) {
+          grouped.push({
+            type: 'added',
+            value: added.map(a => a.value).join('')
+          });
+        }
         
         i = j;
       }
@@ -127,26 +139,26 @@ const InlineDiff = ({ originalContent, newContent }) => {
   const differences = groupChanges(diffWords(originalText, newText));
 
   return (
-    <div className="text-slate-700 leading-relaxed prose prose-slate max-w-none" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="text-slate-700 leading-relaxed prose prose-slate max-w-none space-y-1" dir={isRTL ? 'rtl' : 'ltr'}>
       {differences.map((part, index) => {
         if (part.type === 'added') {
           return (
-            <span
+            <div
               key={index}
-              className="bg-green-100 text-green-800 font-medium"
+              className="bg-green-50 border-r-4 border-green-500 px-3 py-2 rounded"
             >
-              {part.value}
-            </span>
+              <span className="text-green-800 font-medium">{part.value}</span>
+            </div>
           );
         }
         if (part.type === 'removed') {
           return (
-            <span
+            <div
               key={index}
-              className="bg-red-100 text-red-800 line-through"
+              className="bg-red-50 border-r-4 border-red-500 px-3 py-2 rounded"
             >
-              {part.value}
-            </span>
+              <span className="text-red-800 line-through">{part.value}</span>
+            </div>
           );
         }
         return <span key={index}>{part.value}</span>;
