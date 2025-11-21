@@ -33,6 +33,8 @@ export default function DocumentView() {
   const [showContributorsModal, setShowContributorsModal] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [description, setDescription] = useState("");
+  const [showTranslatedDescription, setShowTranslatedDescription] = useState(false);
+  const [isTranslatingDescription, setIsTranslatingDescription] = useState(false);
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
@@ -165,6 +167,45 @@ export default function DocumentView() {
     },
   });
 
+  const translateDescriptionMutation = useMutation({
+    mutationFn: async () => {
+      const descPrompt = `Translate the following HTML text to ${languagePrompts[language]}. Return ONLY the translated HTML, preserving all HTML tags:\n${document.description}`;
+      const descResult = await base44.integrations.Core.InvokeLLM({
+        prompt: descPrompt,
+        add_context_from_internet: false,
+      });
+      const translatedDescription = (typeof descResult === 'string' ? descResult : descResult.content || descResult).trim();
+
+      const newTranslations = {
+        ...(document.translations || {}),
+        [language]: {
+          ...(document.translations?.[language] || {}),
+          description: translatedDescription
+        }
+      };
+
+      await base44.entities.Document.update(document.id, {
+        translations: newTranslations
+      });
+
+      return newTranslations;
+    },
+    onMutate: () => {
+      setIsTranslatingDescription(true);
+      setShowTranslatedDescription(true);
+    },
+    onSuccess: (newTranslations) => {
+      setIsTranslatingDescription(false);
+      queryClient.setQueryData(['document', documentId], (oldData) => {
+        if (!oldData) return oldData;
+        return { ...oldData, translations: newTranslations };
+      });
+    },
+    onError: () => {
+      setIsTranslatingDescription(false);
+    }
+  });
+
   if (docLoading || topicsLoading || sectionsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6">
@@ -240,7 +281,30 @@ export default function DocumentView() {
 
           {/* Document Description */}
           {(document.description || isAdmin) && (
-            <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-4">
+            <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-4 relative">
+              {document.originalLanguage && document.originalLanguage !== language && !isEditingDescription && (
+                <div className="absolute top-2 left-2 z-10">
+                  {isTranslatingDescription ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                  ) : !(typeof document.translations?.[language]?.description === 'string') ? (
+                    <button
+                      onClick={() => translateDescriptionMutation.mutate()}
+                      className="p-1.5 hover:bg-blue-50 rounded transition-colors"
+                      title={t('translate')}
+                    >
+                      <Languages className="w-4 h-4 text-blue-600" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowTranslatedDescription(!showTranslatedDescription)}
+                      className="p-1.5 hover:bg-slate-100 rounded transition-colors"
+                      title={showTranslatedDescription ? t('showOriginal') : t('showTranslation')}
+                    >
+                      <Languages className={`w-4 h-4 ${showTranslatedDescription ? 'text-slate-600' : 'text-blue-600'}`} />
+                    </button>
+                  )}
+                </div>
+              )}
               {isEditingDescription ? (
                 <div className="space-y-3">
                   <ReactQuill
@@ -284,7 +348,11 @@ export default function DocumentView() {
                   {document.description ? (
                     <div 
                       className="prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: document.description }}
+                      dangerouslySetInnerHTML={{ 
+                        __html: showTranslatedDescription && typeof document.translations?.[language]?.description === 'string'
+                          ? document.translations[language].description
+                          : document.description
+                      }}
                       dir={isRTL ? 'rtl' : 'ltr'}
                     />
                   ) : (
