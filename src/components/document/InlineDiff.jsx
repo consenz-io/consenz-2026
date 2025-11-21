@@ -86,8 +86,7 @@ const InlineDiff = ({ originalContent, newContent }) => {
         });
         i = j;
       } else {
-        // עבור removed/added - מקבץ את כל השינויים הרצופים
-        // אוסף את כל ה-removed ואחר כך את כל ה-added
+        // עבור removed/added - אוסף את כל הרצף כבלוק replaced אחד
         const removedTokens = [];
         const addedTokens = [];
         let j = i;
@@ -102,16 +101,22 @@ const InlineDiff = ({ originalContent, newContent }) => {
           j++;
         }
         
-        // מוסיף את ה-removed כבלוק אחד
-        if (removedTokens.length > 0) {
+        // יוצר בלוק לפי מה שנאסף
+        if (removedTokens.length > 0 && addedTokens.length > 0) {
+          // יש גם removed וגם added = החלפה (replaced)
+          grouped.push({
+            type: 'replaced',
+            deleted: removedTokens.join(''),
+            added: addedTokens.join('')
+          });
+        } else if (removedTokens.length > 0) {
+          // רק removed
           grouped.push({
             type: 'removed',
             value: removedTokens.join('')
           });
-        }
-        
-        // מוסיף את ה-added כבלוק אחד
-        if (addedTokens.length > 0) {
+        } else if (addedTokens.length > 0) {
+          // רק added
           grouped.push({
             type: 'added',
             value: addedTokens.join('')
@@ -147,6 +152,18 @@ const InlineDiff = ({ originalContent, newContent }) => {
               className="bg-red-100 text-red-800 line-through px-1 rounded"
             >
               {part.value}
+            </span>
+          );
+        }
+        if (part.type === 'replaced') {
+          return (
+            <span key={index}>
+              <span className="bg-red-100 text-red-800 line-through px-1 rounded">
+                {part.deleted}
+              </span>
+              <span className="bg-green-100 text-green-800 font-medium px-1 rounded">
+                {part.added}
+              </span>
             </span>
           );
         }
