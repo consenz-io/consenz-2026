@@ -6,7 +6,7 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Plus, AlertCircle, ThumbsUp, ThumbsDown, MessageSquare, History, Languages, Loader2, GripVertical } from "lucide-react";
+import { Edit, Plus, AlertCircle, ThumbsUp, ThumbsDown, MessageSquare, History, Languages, Loader2, GripVertical, Trash2 } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import VotesNeededCounter from "./VotesNeededCounter";
 import SectionDiff from "./SectionDiff";
@@ -460,6 +460,29 @@ Return ONLY the translated text:`;
     });
   };
 
+  const deleteTopicMutation = useMutation({
+    mutationFn: async (topicId) => {
+      // Delete all sections in this topic
+      const topicSections = sections.filter(s => s.topicId === topicId);
+      await Promise.all(
+        topicSections.map(section => base44.entities.Section.delete(section.id))
+      );
+      
+      // Delete the topic
+      await base44.entities.Topic.delete(topicId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['topics', document?.id] });
+      queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
+    },
+  });
+
+  const handleDeleteTopic = (topicId, topicTitle) => {
+    if (window.confirm(`האם אתה בטוח שברצונך למחוק את הנושא "${topicTitle}" וכל הסעיפים שבו?`)) {
+      deleteTopicMutation.mutate(topicId);
+    }
+  };
+
   return (
     <DragDropContext onDragEnd={handleTopicDragEnd}>
       <Droppable droppableId="topics" isDropDisabled={!isAdmin}>
@@ -479,12 +502,23 @@ Return ONLY the translated text:`;
                       <Card className="bg-white border-slate-200 w-full overflow-hidden">
                         <CardHeader className="border-b border-slate-100 p-4 md:p-6 relative">
                           {isAdmin && (
-                            <div 
-                              {...topicProvided.dragHandleProps}
-                              className="absolute top-2 right-2 z-10 p-1 bg-white rounded border border-slate-300 cursor-move hover:bg-slate-50 transition-colors"
-                            >
-                              <GripVertical className="w-5 h-5 text-slate-400" />
-                            </div>
+                            <>
+                              <div 
+                                {...topicProvided.dragHandleProps}
+                                className="absolute top-2 right-2 z-10 p-1 bg-white rounded border border-slate-300 cursor-move hover:bg-slate-50 transition-colors"
+                              >
+                                <GripVertical className="w-5 h-5 text-slate-400" />
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteTopic(topic.id, topic.title)}
+                                className="absolute top-2 left-2 z-10 text-red-600 hover:text-red-700 hover:bg-red-50 p-1 h-8 w-8"
+                                title="מחק נושא"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </>
                           )}
                           <div className={`flex flex-col md:flex-row justify-between md:items-center gap-3 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
                             <div className={`flex-1 min-w-0 flex items-center gap-2 ${isRTL ? 'justify-end' : ''}`}>
