@@ -306,7 +306,7 @@ ${text}`;
           } else {
             setTranslatedTopics(prev => ({
               ...prev,
-              [topic.id]: topic.translations[language]
+              [topic.id]: typeof topic.translations[language] === 'string' ? topic.translations[language] : topic.translations[language]?.title
             }));
           }
           newShowTranslatedTopics[topic.id] = true;
@@ -357,7 +357,7 @@ ${text}`;
           <div className="mb-4">
             <PageHeader 
               title={(document.originalLanguage || 'he') !== language && showTranslatedDoc
-                ? (translatedDocTitle || document.translations?.[language] || document.title)
+                ? (translatedDocTitle || (typeof document.translations?.[language] === 'string' ? document.translations[language] : document.translations?.[language]?.title) || document.title)
                 : document.title}
               backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
             />
