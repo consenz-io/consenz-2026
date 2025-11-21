@@ -434,7 +434,7 @@ ${text}`;
                   <div className="border-b border-slate-300 pb-2 mb-4 md:mb-6">
                     <h2 className="text-xl md:text-2xl font-bold text-slate-800 leading-tight">
                       {topicIndex + 1}. {(topic.originalLanguage || 'he') !== language && showTranslatedTopics[topic.id]
-                        ? (translatedTopics[topic.id] || topic.translations?.[language] || getTopicTitleAtVersion(topic.id, currentVersionIndex))
+                        ? (translatedTopics[topic.id] || (typeof topic.translations?.[language] === 'string' ? topic.translations[language] : topic.translations?.[language]?.title) || getTopicTitleAtVersion(topic.id, currentVersionIndex))
                         : getTopicTitleAtVersion(topic.id, currentVersionIndex)}
                     </h2>
                     {(topic.originalLanguage || 'he') !== language && (
