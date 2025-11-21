@@ -1,10 +1,8 @@
 import React from "react";
-import { diffWords } from 'diff';
 import { useLanguage } from "@/components/LanguageContext";
 
 const InlineDiff = ({ originalContent, newContent }) => {
   const { isRTL } = useLanguage();
-  
   // Extract text from HTML
   const extractText = (html) => {
     const div = document.createElement('div');
@@ -15,67 +13,124 @@ const InlineDiff = ({ originalContent, newContent }) => {
   const originalText = extractText(originalContent);
   const newText = extractText(newContent);
 
-  // 1. Diff בסיסי באמצעות ספריית diff
-  const rawChanges = diffWords(originalText, newText);
-  
-  // 2. המרה לפורמט אחיד
-  const changes = rawChanges.map(change => ({
-    type: change.added ? 'added' : 
-          change.removed ? 'removed' : 
-          'unchanged',
-    value: change.value
-  }));
-  
-  // 3. קיבוץ - אוסף כל רצף של removed/added לבלוק אחד
-  const differences = [];
-  let i = 0;
-  
-  while (i < changes.length) {
-    const current = changes[i];
+  // Tokenize text - מפריד מילים, סימני פיסוק ורווחים כטוקנים נפרדים
+  const tokenize = (text) => {
+    // מפריד לפי: מילים (אותיות/מספרים) | סימני פיסוק | רווחים
+    // כל אחד מהם הוא טוקן נפרד כדי ש-LCS יזהה במדויק מה השתנה
+    const tokens = text.match(/[\p{L}\p{N}]+|[^\p{L}\p{N}\s]+|\s+/gu) || [];
+    return tokens;
+  };
+
+  // LCS-based diff algorithm - מזהה רצפים משותפים ארוכים
+  const diffWords = (oldText, newText) => {
+    const oldTokens = tokenize(oldText);
+    const newTokens = tokenize(newText);
     
-    // אם unchanged - הוסף ישירות
-    if (current.type === 'unchanged') {
-      differences.push(current);
-      i++;
-      continue;
-    }
+    // Build LCS table
+    const m = oldTokens.length;
+    const n = newTokens.length;
+    const lcs = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
     
-    // אם removed או added - אסוף את כל הרצף
-    let removedParts = [];
-    let addedParts = [];
-    
-    // אסוף כל removed ו-added עד שמגיע unchanged
-    while (i < changes.length && changes[i].type !== 'unchanged') {
-      if (changes[i].type === 'removed') {
-        removedParts.push(changes[i].value);
-      } else if (changes[i].type === 'added') {
-        addedParts.push(changes[i].value);
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        if (oldTokens[i - 1] === newTokens[j - 1]) {
+          lcs[i][j] = lcs[i - 1][j - 1] + 1;
+        } else {
+          lcs[i][j] = Math.max(lcs[i - 1][j], lcs[i][j - 1]);
+        }
       }
-      i++;
     }
     
-    // צור בלוק לפי מה שנאסף
-    if (removedParts.length > 0 && addedParts.length > 0) {
-      // יש גם removed וגם added = החלפה
-      differences.push({
-        type: 'replaced',
-        deleted: removedParts.join(''),
-        added: addedParts.join('')
-      });
-    } else if (removedParts.length > 0) {
-      // רק removed
-      differences.push({
-        type: 'removed',
-        value: removedParts.join('')
-      });
-    } else if (addedParts.length > 0) {
-      // רק added
-      differences.push({
-        type: 'added',
-        value: addedParts.join('')
-      });
+    // Backtrack to find the diff
+    const result = [];
+    let i = m, j = n;
+    
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0 && oldTokens[i - 1] === newTokens[j - 1]) {
+        result.unshift({ type: 'unchanged', value: oldTokens[i - 1] });
+        i--;
+        j--;
+      } else if (j > 0 && (i === 0 || lcs[i][j - 1] >= lcs[i - 1][j])) {
+        result.unshift({ type: 'added', value: newTokens[j - 1] });
+        j--;
+      } else if (i > 0) {
+        result.unshift({ type: 'removed', value: oldTokens[i - 1] });
+        i--;
+      }
     }
-  }
+    
+    return result;
+  };
+
+  // Group consecutive changes - מאחד בלוקים של שינויים
+  const groupChanges = (diffs) => {
+    if (diffs.length === 0) return [];
+    
+    const grouped = [];
+    let i = 0;
+    
+    while (i < diffs.length) {
+      const current = diffs[i];
+      
+      if (current.type === 'unchanged') {
+        // עבור unchanged - פשוט מקבץ tokens רצופים
+        const sameTypeGroup = [current];
+        let j = i + 1;
+        while (j < diffs.length && diffs[j].type === 'unchanged') {
+          sameTypeGroup.push(diffs[j]);
+          j++;
+        }
+        grouped.push({
+          type: 'unchanged',
+          value: sameTypeGroup.map(t => t.value).join('')
+        });
+        i = j;
+      } else {
+        // עבור removed/added - אוסף את כל הרצף כבלוק replaced אחד
+        const removedTokens = [];
+        const addedTokens = [];
+        let j = i;
+        
+        // אוסף את כל השינויים הרצופים (removed ו-added מעורבבים)
+        while (j < diffs.length && diffs[j].type !== 'unchanged') {
+          if (diffs[j].type === 'removed') {
+            removedTokens.push(diffs[j].value);
+          } else if (diffs[j].type === 'added') {
+            addedTokens.push(diffs[j].value);
+          }
+          j++;
+        }
+        
+        // יוצר בלוק לפי מה שנאסף
+        if (removedTokens.length > 0 && addedTokens.length > 0) {
+          // יש גם removed וגם added = החלפה (replaced)
+          grouped.push({
+            type: 'replaced',
+            deleted: removedTokens.join(''),
+            added: addedTokens.join('')
+          });
+        } else if (removedTokens.length > 0) {
+          // רק removed
+          grouped.push({
+            type: 'removed',
+            value: removedTokens.join('')
+          });
+        } else if (addedTokens.length > 0) {
+          // רק added
+          grouped.push({
+            type: 'added',
+            value: addedTokens.join('')
+          });
+        }
+        
+        i = j;
+      }
+    }
+    
+    return grouped;
+  };
+
+  const differences = groupChanges(diffWords(originalText, newText));
 
   return (
     <div className="text-slate-700 leading-relaxed prose prose-slate max-w-none" dir={isRTL ? 'rtl' : 'ltr'}>
