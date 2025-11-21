@@ -790,9 +790,7 @@ Return ONLY the translated text:`;
                   </div>
                 );
               })}
-            </CardContent>
-            <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
-            <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
+
               {topicSections.length === 0 ? (
                 <>
                   <div className="text-center py-6 md:py-8 text-slate-500 text-sm md:text-base">
