@@ -236,7 +236,7 @@ export default function DocumentView() {
       <div className="max-w-6xl mx-auto space-y-2 md:space-y-6 px-1 md:px-4 w-full max-w-full">
         <div className="flex flex-col gap-1.5 md:gap-4 w-full max-w-full">
           <div className={`flex items-center justify-between gap-1 w-full max-w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <h1 className="text-xs md:text-3xl font-bold text-slate-900 flex-1 min-w-0 break-words leading-tight max-w-full">
+            <h1 className="text-lg md:text-3xl font-bold text-slate-900 flex-1 min-w-0 break-words leading-tight max-w-full">
               {(() => {
                 const translatedTitle = document.translations?.[language]?.title;
                 if (showTranslated && typeof translatedTitle === 'string') {
