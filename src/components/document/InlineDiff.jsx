@@ -61,7 +61,7 @@ const InlineDiff = ({ originalContent, newContent }) => {
     return result;
   };
 
-  // Group consecutive changes - קיבוץ מתוקן
+  // Group consecutive changes - קיבוץ מתוקן עם התעלמות מ-unchanged קצרים
   const groupChanges = (diffs) => {
     if (diffs.length === 0) return [];
     
@@ -71,51 +71,86 @@ const InlineDiff = ({ originalContent, newContent }) => {
     while (i < diffs.length) {
       const current = diffs[i];
       
-      // אם unchanged - הוסף ישירות
+      // בדוק אם זה unchanged ארוך (5+ מילים)
       if (current.type === 'unchanged') {
-        const sameTypeGroup = [current];
+        // אסוף את כל ה-unchanged הרצופים
+        let unchangedTokens = [current];
         let j = i + 1;
         while (j < diffs.length && diffs[j].type === 'unchanged') {
-          sameTypeGroup.push(diffs[j]);
+          unchangedTokens.push(diffs[j]);
           j++;
         }
-        grouped.push({
-          type: 'unchanged',
-          value: sameTypeGroup.map(t => t.value).join('')
-        });
-        i = j;
+        
+        // אם זה רצף ארוך של unchanged - זה באמת לא השתנה
+        const unchangedText = unchangedTokens.map(t => t.value).join('');
+        const wordCount = unchangedText.trim().split(/\s+/).length;
+        
+        if (wordCount >= 5) {
+          // רצף ארוך - הצג כ-unchanged
+          grouped.push({
+            type: 'unchanged',
+            value: unchangedText
+          });
+          i = j;
+        } else {
+          // רצף קצר - כלול אותו בבלוק השינויים הבא
+          // פשוט נמשיך הלאה ונאסף אותו עם השינויים
+          i = j;
+        }
       } else {
-        // אם removed או added - אסוף את כל הרצף
+        // אם removed או added - אסוף את כל הרצף (כולל unchanged קצרים!)
         let removedParts = [];
         let addedParts = [];
         let j = i;
         
-        // אסוף כל removed ו-added עד שמגיע unchanged
-        while (j < diffs.length && diffs[j].type !== 'unchanged') {
-          if (diffs[j].type === 'removed') {
+        while (j < diffs.length) {
+          // בדוק אם הגענו לרצף ארוך של unchanged
+          if (diffs[j].type === 'unchanged') {
+            // אסוף את ה-unchanged עד שמסתיים
+            let unchangedCount = 0;
+            let k = j;
+            let unchangedText = '';
+            while (k < diffs.length && diffs[k].type === 'unchanged') {
+              unchangedText += diffs[k].value;
+              k++;
+            }
+            
+            const wordCount = unchangedText.trim().split(/\s+/).length;
+            
+            if (wordCount >= 5) {
+              // רצף ארוך - עצור כאן
+              break;
+            } else {
+              // רצף קצר - כלול אותו בשינוי
+              while (j < k) {
+                // הוסף ל-removed וגם ל-added (זה לא השתנה אבל בתוך בלוק שינוי)
+                removedParts.push(diffs[j].value);
+                addedParts.push(diffs[j].value);
+                j++;
+              }
+            }
+          } else if (diffs[j].type === 'removed') {
             removedParts.push(diffs[j].value);
+            j++;
           } else if (diffs[j].type === 'added') {
             addedParts.push(diffs[j].value);
+            j++;
           }
-          j++;
         }
         
         // צור בלוק לפי מה שנאסף
         if (removedParts.length > 0 && addedParts.length > 0) {
-          // יש גם removed וגם added = החלפה
           grouped.push({
             type: 'replaced',
             deleted: removedParts.join(''),
             added: addedParts.join('')
           });
         } else if (removedParts.length > 0) {
-          // רק removed
           grouped.push({
             type: 'removed',
             value: removedParts.join('')
           });
         } else if (addedParts.length > 0) {
-          // רק added
           grouped.push({
             type: 'added',
             value: addedParts.join('')
