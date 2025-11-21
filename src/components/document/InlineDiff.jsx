@@ -13,50 +13,74 @@ const InlineDiff = ({ originalContent, newContent }) => {
   const originalText = extractText(originalContent);
   const newText = extractText(newContent);
 
-  // Simple word-based diff algorithm
+  // Tokenize text - split by words and punctuation, supporting Unicode (Hebrew, Arabic, etc.)
+  const tokenize = (text) => {
+    // Split by whitespace and punctuation while preserving them
+    // \p{L} matches any Unicode letter, \p{N} matches any Unicode number
+    const tokens = text.match(/[\p{L}\p{N}]+|[^\p{L}\p{N}\s]+|\s+/gu) || [];
+    return tokens;
+  };
+
+  // Simple word-based diff algorithm with improved matching
   const diffWords = (oldText, newText) => {
-    const oldWords = oldText.split(/(\s+)/);
-    const newWords = newText.split(/(\s+)/);
+    const oldTokens = tokenize(oldText);
+    const newTokens = tokenize(newText);
     const result = [];
     
     let i = 0, j = 0;
     
-    while (i < oldWords.length || j < newWords.length) {
-      if (i >= oldWords.length) {
-        // Remaining new words are additions
-        while (j < newWords.length) {
-          result.push({ type: 'added', value: newWords[j] });
+    while (i < oldTokens.length || j < newTokens.length) {
+      if (i >= oldTokens.length) {
+        // Remaining new tokens are additions
+        while (j < newTokens.length) {
+          result.push({ type: 'added', value: newTokens[j] });
           j++;
         }
-      } else if (j >= newWords.length) {
-        // Remaining old words are deletions
-        while (i < oldWords.length) {
-          result.push({ type: 'removed', value: oldWords[i] });
+      } else if (j >= newTokens.length) {
+        // Remaining old tokens are deletions
+        while (i < oldTokens.length) {
+          result.push({ type: 'removed', value: oldTokens[i] });
           i++;
         }
-      } else if (oldWords[i] === newWords[j]) {
-        // Words match
-        result.push({ type: 'unchanged', value: oldWords[i] });
+      } else if (oldTokens[i] === newTokens[j]) {
+        // Tokens match
+        result.push({ type: 'unchanged', value: oldTokens[i] });
         i++;
         j++;
       } else {
-        // Check if old word exists later in new
-        const oldInNew = newWords.indexOf(oldWords[i], j);
-        // Check if new word exists later in old
-        const newInOld = oldWords.indexOf(newWords[j], i);
+        // Look ahead to find matches within a reasonable window
+        const lookAheadWindow = 10;
+        let oldFoundAt = -1;
+        let newFoundAt = -1;
         
-        if (oldInNew !== -1 && (newInOld === -1 || oldInNew < newInOld)) {
-          // Old word found later in new - treat current new words as additions
-          result.push({ type: 'added', value: newWords[j] });
+        // Check if old token exists in upcoming new tokens
+        for (let k = j + 1; k < Math.min(j + lookAheadWindow, newTokens.length); k++) {
+          if (oldTokens[i] === newTokens[k]) {
+            oldFoundAt = k;
+            break;
+          }
+        }
+        
+        // Check if new token exists in upcoming old tokens
+        for (let k = i + 1; k < Math.min(i + lookAheadWindow, oldTokens.length); k++) {
+          if (newTokens[j] === oldTokens[k]) {
+            newFoundAt = k;
+            break;
+          }
+        }
+        
+        if (oldFoundAt !== -1 && (newFoundAt === -1 || (oldFoundAt - j) < (newFoundAt - i))) {
+          // Old token found soon in new - mark intermediate new tokens as added
+          result.push({ type: 'added', value: newTokens[j] });
           j++;
-        } else if (newInOld !== -1) {
-          // New word found later in old - treat current old word as deletion
-          result.push({ type: 'removed', value: oldWords[i] });
+        } else if (newFoundAt !== -1) {
+          // New token found soon in old - mark current old token as removed
+          result.push({ type: 'removed', value: oldTokens[i] });
           i++;
         } else {
-          // Neither found - treat old as removed and new as added
-          result.push({ type: 'removed', value: oldWords[i] });
-          result.push({ type: 'added', value: newWords[j] });
+          // No match found - both changed
+          result.push({ type: 'removed', value: oldTokens[i] });
+          result.push({ type: 'added', value: newTokens[j] });
           i++;
           j++;
         }
@@ -66,7 +90,41 @@ const InlineDiff = ({ originalContent, newContent }) => {
     return result;
   };
 
-  const differences = diffWords(originalText, newText);
+  // Group consecutive changes together for better readability
+  const groupChanges = (diffs) => {
+    const grouped = [];
+    let i = 0;
+    
+    while (i < diffs.length) {
+      const current = diffs[i];
+      
+      if (current.type === 'unchanged') {
+        grouped.push(current);
+        i++;
+      } else {
+        // Collect consecutive changes of the same type
+        const changeGroup = [current];
+        let j = i + 1;
+        
+        while (j < diffs.length && diffs[j].type === current.type) {
+          changeGroup.push(diffs[j]);
+          j++;
+        }
+        
+        // Combine the group into a single entry
+        grouped.push({
+          type: current.type,
+          value: changeGroup.map(g => g.value).join('')
+        });
+        
+        i = j;
+      }
+    }
+    
+    return grouped;
+  };
+
+  const differences = groupChanges(diffWords(originalText, newText));
 
   return (
     <div className="text-slate-700 leading-relaxed prose prose-slate max-w-none" dir={isRTL ? 'rtl' : 'ltr'}>
