@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,7 @@ export default function SectionCarousel({
   users
 }) {
   const { t, isRTL, language } = useLanguage();
+  const navigate = useNavigate();
   
   // סדר הצגה: לפי דלתא קרובה ל-0, ואז כרונולוגי
   const sortedSuggestions = [...pendingSuggestions].sort((a, b) => {
@@ -321,7 +322,13 @@ export default function SectionCarousel({
                 className="p-3 bg-green-50 rounded border border-green-200 cursor-pointer hover:bg-green-100 hover:shadow-md transition-all"
                 onClick={() => {
                   if (document?.id && section?.id) {
-                    window.location.href = `${createPageUrl("DocumentView")}?id=${document.id}#section-${section.id}`;
+                    navigate(`${createPageUrl("DocumentView")}?id=${document.id}#section-${section.id}`);
+                    setTimeout(() => {
+                      const element = document.getElementById(`section-${section.id}`);
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }
+                    }, 300);
                   }
                 }}
               >
