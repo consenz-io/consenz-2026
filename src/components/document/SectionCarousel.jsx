@@ -306,6 +306,8 @@ export default function SectionCarousel({
                 <SectionDiff
                   originalContent={currentView.data.originalContent}
                   newContent={currentView.data.newContent}
+                  documentId={document?.id}
+                  sectionId={section?.id}
                 />
                 <TranslatableContent
                   content={currentView.data.newContent}

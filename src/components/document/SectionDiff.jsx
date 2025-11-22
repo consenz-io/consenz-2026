@@ -1,11 +1,13 @@
 import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Languages, Loader2, Eye, FileText } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 
-export default function SectionDiff({ originalContent, newContent }) {
+export default function SectionDiff({ originalContent, newContent, documentId, sectionId }) {
   const { t, language, isRTL } = useLanguage();
   const [translatedContent, setTranslatedContent] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -125,8 +127,26 @@ Return ONLY the translated HTML:`;
 
   const diff = computeDiffForDisplay();
   
+  const navigate = useNavigate();
+  
+  const handleCardClick = () => {
+    if (documentId && sectionId) {
+      navigate(`${createPageUrl("DocumentView")}?id=${documentId}#section-${sectionId}`);
+      // Scroll to section after navigation
+      setTimeout(() => {
+        const element = document.getElementById(`section-${sectionId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+    }
+  };
+  
   return (
-    <Card className="p-4 bg-slate-50 border-slate-200">
+    <Card 
+      className="p-4 bg-slate-50 border-slate-200 cursor-pointer hover:bg-slate-100 hover:shadow-md transition-all"
+      onClick={handleCardClick}
+    >
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</div>
         <div className="flex items-center gap-2">
