@@ -317,7 +317,14 @@ export default function SectionCarousel({
                 />
               </div>
             ) : (
-              <div className="p-3 bg-green-50 rounded border border-green-200">
+              <div 
+                className="p-3 bg-green-50 rounded border border-green-200 cursor-pointer hover:bg-green-100 hover:shadow-md transition-all"
+                onClick={() => {
+                  if (document?.id && section?.id) {
+                    window.location.href = `${createPageUrl("DocumentView")}?id=${document.id}#section-${section.id}`;
+                  }
+                }}
+              >
                 <TranslatableContent
                   content={currentView.data.newContent}
                   entity={currentView.data}
