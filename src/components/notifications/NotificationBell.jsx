@@ -26,8 +26,11 @@ export default function NotificationBell({ user }) {
       return notifs;
     },
     enabled: !!user?.id,
-    staleTime: 30000, // נשאר רלוונטי ל-30 שניות
-    refetchOnWindowFocus: true, // רענון רק כשחוזרים לחלון
+    staleTime: 0,
+    refetchInterval: 30000,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 
   const markAsReadMutation = useMutation({
