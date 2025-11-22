@@ -17,7 +17,7 @@ import PageHeader from "../components/PageHeader";
 export default function Profile() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const viewUserId = searchParams.get('userId');
   const [isEditing, setIsEditing] = useState(false);
@@ -427,7 +427,7 @@ export default function Profile() {
           <CardHeader className="p-3 md:p-6">
             <CardTitle className="break-words">{t('activitySummary')}</CardTitle>
             <CardDescription className="break-words">
-              {isOwnProfile ? t('contributionDescription') : `פעילות של ${user.full_name}`}
+              {isOwnProfile ? t('contributionDescription') : t('activityOf', { name: user.full_name })}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 p-3 md:p-6">
@@ -443,7 +443,7 @@ export default function Profile() {
                 <FileText className="w-6 h-6 text-green-600" />
                 <div>
                   <p className="text-sm text-slate-500">
-                    {isOwnProfile ? 'הצעות עריכה שפרסמתי' : `הצעות עריכה שפורסמו על ידי ${user.full_name}`}
+                    {isOwnProfile ? t('suggestionsPublishedByMe') : t('suggestionsPublishedBy', { name: user.full_name })}
                   </p>
                   <p className="text-xl font-bold text-slate-900">{user.suggestionsCreated || 0}</p>
                 </div>
@@ -452,7 +452,7 @@ export default function Profile() {
                 <MessageSquare className="w-6 h-6 text-orange-600" />
                 <div>
                   <p className="text-sm text-slate-500">
-                    {isOwnProfile ? 'תגובות שפרסמתי' : `תגובות שפורסמו על ידי ${user.full_name}`}
+                    {isOwnProfile ? t('commentsPublishedByMe') : t('commentsPublishedBy', { name: user.full_name })}
                   </p>
                   <p className="text-xl font-bold text-slate-900">{userComments.length || 0}</p>
                 </div>
@@ -460,11 +460,11 @@ export default function Profile() {
             </div>
 
               <h3 className="text-lg font-bold text-slate-900 mt-6 mb-4">
-                {isOwnProfile ? t('pointsHistory') : `היסטוריית פעילות של ${user.full_name}`}
+                {isOwnProfile ? t('pointsHistory') : t('activityHistoryOf', { name: user.full_name })}
               </h3>
               {pointsTransactions.length === 0 && userComments.length === 0 ? (
                 <p className="text-slate-500 text-sm">
-                  {isOwnProfile ? t('noPointsHistory') : 'אין עדיין היסטוריית פעילות'}
+                  {isOwnProfile ? t('noPointsHistory') : t('noActivityHistory')}
                 </p>
               ) : (
                 <div className="space-y-3">
@@ -499,26 +499,29 @@ export default function Profile() {
                                     {item.amount > 0 ? '+' : ''}{item.amount} {t('points')}
                                   </Badge>
                                   <span className="text-xs text-slate-500">
-                                    {new Date(item.created_date).toLocaleDateString('he-IL', { 
-                                      year: 'numeric', 
-                                      month: 'short', 
-                                      day: 'numeric' 
-                                    })}
+                                    {new Date(item.created_date).toLocaleDateString(
+                                      language === 'en' ? 'en-US' : language === 'ar' ? 'ar-EG' : 'he-IL', 
+                                      { 
+                                        year: 'numeric', 
+                                        month: 'short', 
+                                        day: 'numeric' 
+                                      }
+                                    )}
                                   </span>
-                                </div>
-                                <p className="text-sm font-medium text-slate-900 mb-1">
+                                  </div>
+                                  <p className="text-sm font-medium text-slate-900 mb-1">
                                   {item.action.replace(/_/g, ' ')}
-                                </p>
-                                <p className="text-sm text-slate-700">
+                                  </p>
+                                  <p className="text-sm text-slate-700">
                                   {transactionUrl ? (
                                     <Link to={transactionUrl} className="text-blue-600 hover:underline inline-flex items-center gap-1">
                                       {item.description}
-                                      <ArrowRight className="w-3 h-3" />
+                                      <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
                                     </Link>
                                   ) : (
                                     item.description
                                   )}
-                                </p>
+                                  </p>
                               </div>
                             </div>
                           </div>
@@ -541,8 +544,8 @@ export default function Profile() {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                   <Badge variant="outline" className="text-xs font-semibold bg-blue-100 text-blue-800 border-blue-300">
-                                    <MessageSquare className="w-3 h-3 mr-1" />
-                                    {t('comment')}
+                                    <MessageSquare className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                    {t('comments')}
                                   </Badge>
                                   <span className="text-xs text-slate-500">
                                     {new Date(item.created_date).toLocaleDateString('he-IL', { 
@@ -551,19 +554,19 @@ export default function Profile() {
                                       day: 'numeric' 
                                     })}
                                   </span>
-                                </div>
-                                <p className="text-sm font-medium text-slate-900 mb-1">
-                                  תגובה על {item.rootEntityType === 'suggestion' ? 'הצעה' : 'סעיף'}
-                                </p>
-                                <p className="text-sm text-slate-700 line-clamp-2 mb-2">
+                                  </div>
+                                  <p className="text-sm font-medium text-slate-900 mb-1">
+                                  {t('commentOn')} {item.rootEntityType === 'suggestion' ? t('suggestion') : t('section')}
+                                  </p>
+                                  <p className="text-sm text-slate-700 line-clamp-2 mb-2">
                                   {item.content}
-                                </p>
-                                {commentUrl && (
+                                  </p>
+                                  {commentUrl && (
                                   <Link to={commentUrl} className="text-blue-600 hover:underline inline-flex items-center gap-1 text-xs">
-                                    צפה בתגובה המלאה
-                                    <ArrowRight className="w-3 h-3" />
+                                    {t('viewFullComment')}
+                                    <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
                                   </Link>
-                                )}
+                                  )}
                               </div>
                             </div>
                           </div>

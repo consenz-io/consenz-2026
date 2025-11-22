@@ -206,7 +206,18 @@ const translations = {
     showOriginal: "Show Original",
     showTranslation: "Show Translation",
     showDiff: "Show Changes",
-  },
+    activityOf: "Activity of {name}",
+    suggestionsPublishedByMe: "Edit suggestions I published",
+    suggestionsPublishedBy: "Edit suggestions published by {name}",
+    commentsPublishedByMe: "Comments I published",
+    commentsPublishedBy: "Comments published by {name}",
+    activityHistoryOf: "Activity history of {name}",
+    noActivityHistory: "No activity history yet",
+    commentOn: "Comment on",
+    viewFullComment: "View full comment",
+    suggestion: "suggestion",
+    section: "section",
+    },
   he: {
     // ניווט
     home: "בית",
@@ -412,7 +423,18 @@ const translations = {
     showOriginal: "הצג מקור",
     showTranslation: "הצג תרגום",
     showDiff: "הצג שינויים",
-  },
+    activityOf: "פעילות של {name}",
+    suggestionsPublishedByMe: "הצעות עריכה שפרסמתי",
+    suggestionsPublishedBy: "הצעות עריכה שפורסמו על ידי {name}",
+    commentsPublishedByMe: "תגובות שפרסמתי",
+    commentsPublishedBy: "תגובות שפורסמו על ידי {name}",
+    activityHistoryOf: "היסטוריית פעילות של {name}",
+    noActivityHistory: "אין עדיין היסטוריית פעילות",
+    commentOn: "תגובה על",
+    viewFullComment: "צפה בתגובה המלאה",
+    suggestion: "הצעה",
+    section: "סעיף",
+    },
   ar: {
     // التنقل
     home: "الرئيسية",
@@ -617,7 +639,18 @@ const translations = {
     showOriginal: "إظهار الأصلي",
     showTranslation: "إظهار الترجمة",
     showDiff: "إظهار التغييرات",
-  }
+    activityOf: "نشاط {name}",
+    suggestionsPublishedByMe: "اقتراحات التحرير التي نشرتها",
+    suggestionsPublishedBy: "اقتراحات التحرير التي نشرها {name}",
+    commentsPublishedByMe: "التعليقات التي نشرتها",
+    commentsPublishedBy: "التعليقات التي نشرها {name}",
+    activityHistoryOf: "تاريخ نشاط {name}",
+    noActivityHistory: "لا يوجد تاريخ نشاط حتى الآن",
+    commentOn: "تعليق على",
+    viewFullComment: "عرض التعليق الكامل",
+    suggestion: "اقتراح",
+    section: "قسم",
+    }
 };
 
 const LanguageContext = createContext();
