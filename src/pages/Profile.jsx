@@ -423,40 +423,49 @@ export default function Profile() {
           </CardContent>
         </Card>
 
-        {isOwnProfile && (
-          <Card className="bg-white overflow-hidden w-full max-w-full">
-            <CardHeader className="p-3 md:p-6">
-              <CardTitle className="break-words">{t('activitySummary')}</CardTitle>
-              <CardDescription className="break-words">{t('contributionDescription')}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 p-3 md:p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                  <Sparkles className="w-6 h-6 text-blue-600" />
-                  <div>
-                    <p className="text-sm text-slate-500">{t('gamificationPoints')}</p>
-                    <p className="text-xl font-bold text-slate-900">{user.points || 1000}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-                  <FileText className="w-6 h-6 text-green-600" />
-                  <div>
-                    <p className="text-sm text-slate-500">{t('suggestionsCreated')}</p>
-                    <p className="text-xl font-bold text-slate-900">{user.suggestionsCreated || 0}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-lg">
-                  <Shield className="w-6 h-6 text-purple-600" />
-                  <div>
-                    <p className="text-sm text-slate-500">{t('accountType')}</p>
-                    <p className="text-xl font-bold text-slate-900 capitalize">{user.role || 'user'}</p>
-                  </div>
+        <Card className="bg-white overflow-hidden w-full max-w-full">
+          <CardHeader className="p-3 md:p-6">
+            <CardTitle className="break-words">{t('activitySummary')}</CardTitle>
+            <CardDescription className="break-words">
+              {isOwnProfile ? t('contributionDescription') : `פעילות של ${user.full_name}`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 p-3 md:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
+                <Sparkles className="w-6 h-6 text-blue-600" />
+                <div>
+                  <p className="text-sm text-slate-500">{t('points')}</p>
+                  <p className="text-xl font-bold text-slate-900">{user.points || 1000}</p>
                 </div>
               </div>
+              <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
+                <FileText className="w-6 h-6 text-green-600" />
+                <div>
+                  <p className="text-sm text-slate-500">
+                    {isOwnProfile ? 'הצעות עריכה שפרסמתי' : `הצעות עריכה שפורסמו על ידי ${user.full_name}`}
+                  </p>
+                  <p className="text-xl font-bold text-slate-900">{user.suggestionsCreated || 0}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-lg">
+                <MessageSquare className="w-6 h-6 text-orange-600" />
+                <div>
+                  <p className="text-sm text-slate-500">
+                    {isOwnProfile ? 'תגובות שפרסמתי' : `תגובות שפורסמו על ידי ${user.full_name}`}
+                  </p>
+                  <p className="text-xl font-bold text-slate-900">{userComments.length || 0}</p>
+                </div>
+              </div>
+            </div>
 
-              <h3 className="text-lg font-bold text-slate-900 mt-6 mb-4">{t('pointsHistory')}</h3>
+              <h3 className="text-lg font-bold text-slate-900 mt-6 mb-4">
+                {isOwnProfile ? t('pointsHistory') : `היסטוריית פעילות של ${user.full_name}`}
+              </h3>
               {pointsTransactions.length === 0 && userComments.length === 0 ? (
-                <p className="text-slate-500 text-sm">{t('noPointsHistory')}</p>
+                <p className="text-slate-500 text-sm">
+                  {isOwnProfile ? t('noPointsHistory') : 'אין עדיין היסטוריית פעילות'}
+                </p>
               ) : (
                 <div className="space-y-3">
                   {[...pointsTransactions.map(t => ({ ...t, type: 'transaction' })), ...userComments.map(c => ({ ...c, type: 'comment' }))]
@@ -565,7 +574,6 @@ export default function Profile() {
               )}
             </CardContent>
           </Card>
-        )}
 
       </div>
     </div>
