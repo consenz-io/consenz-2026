@@ -132,12 +132,17 @@ export default function DocumentVersionHistory({
                   key={`${version.id}-${previousVersion.id}`}
                   originalContent={previousVersion.content}
                   newContent={version.content}
+                  documentId={documentId}
+                  sectionId={sectionId}
                 />
               ) : (
                 <div
-                  className="prose prose-sm max-w-none text-slate-700 p-4 bg-slate-50 rounded-lg"
+                  className="prose prose-sm max-w-none text-slate-700 p-4 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100 hover:shadow-md transition-all"
                   style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}
                   dangerouslySetInnerHTML={{ __html: version.content }}
+                  onClick={() => {
+                    window.location.href = `${createPageUrl("DocumentView")}?id=${documentId}#section-${sectionId}`;
+                  }}
                 />
               )}
             </CardContent>
