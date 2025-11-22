@@ -53,7 +53,7 @@ export default function DocumentContent({
   const hasCheckedRef = React.useRef(new Set());
   
   React.useEffect(() => {
-    if (!document || !suggestions || !user) return;
+    if (!document || !suggestions) return;
 
     const checkAndAutoAccept = async () => {
       let hasChanges = false;
@@ -61,27 +61,23 @@ export default function DocumentContent({
       for (const suggestion of suggestions) {
         if (suggestion.status !== 'pending') continue;
         
-        // Skip if already checked this suggestion
+        // Skip if already checked this suggestion with current vote counts
         const checkKey = `${suggestion.id}-${suggestion.proVotes}-${suggestion.conVotes}`;
         if (hasCheckedRef.current.has(checkKey)) continue;
         hasCheckedRef.current.add(checkKey);
 
         try {
           const { shouldAccept } = await checkSuggestionConsensus(suggestion, document);
+          console.log('[AUTO-ACCEPT CHECK]', { suggestionId: suggestion.id, shouldAccept, status: suggestion.status });
+          
           if (shouldAccept) {
             console.log('[AUTO-ACCEPT] Auto-accepting suggestion:', suggestion.id);
-            const accepted = await autoAcceptSuggestion(suggestion, user.id, document);
+            // Use suggestion creator as user if no user is logged in
+            const acceptingUserId = user?.id || suggestion.created_by;
+            const accepted = await autoAcceptSuggestion(suggestion, acceptingUserId, document);
             if (accepted) {
+              console.log('[AUTO-ACCEPT] Successfully accepted, invalidating queries');
               hasChanges = true;
-              // Immediate invalidation for this specific suggestion
-              queryClient.setQueryData(['suggestions', document.id], (oldData) => {
-                if (!oldData) return oldData;
-                return oldData.map(s => 
-                  s.id === suggestion.id 
-                    ? { ...s, status: 'accepted' }
-                    : s
-                );
-              });
             }
           }
         } catch (err) {
@@ -91,17 +87,18 @@ export default function DocumentContent({
         }
       }
       
-      // Cleanup old entries
+      // Cleanup old entries periodically
       if (hasCheckedRef.current.size > 100) {
         hasCheckedRef.current.clear();
       }
       
-      // Refresh data only if changes occurred
+      // Refresh data if any changes occurred
       if (hasChanges) {
-        queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
-        queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
-        queryClient.invalidateQueries({ queryKey: ['allVersions'] });
-        queryClient.invalidateQueries({ queryKey: ['document', document.id] });
+        console.log('[AUTO-ACCEPT] Refreshing all queries after acceptance');
+        await queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
+        await queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
+        await queryClient.invalidateQueries({ queryKey: ['allVersions'] });
+        await queryClient.invalidateQueries({ queryKey: ['document', document.id] });
       }
     };
 
