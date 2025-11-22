@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Toaster } from "sonner";
 
 const translations = {
   en: {
@@ -686,6 +687,7 @@ export const LanguageProvider = ({ children }) => {
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t, isRTL }}>
+      <Toaster position="top-center" richColors closeButton dir={isRTL ? 'rtl' : 'ltr'} />
       {children}
     </LanguageContext.Provider>
   );
