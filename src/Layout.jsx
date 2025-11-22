@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages } from "lucide-react";
 import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
+import { Toaster } from "sonner";
 import {
   Sidebar,
   SidebarContent,

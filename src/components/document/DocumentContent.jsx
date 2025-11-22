@@ -19,6 +19,7 @@ import EditTopicModal from "./EditTopicModal";
 
 import { useLanguage } from "@/components/LanguageContext";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAutoAccept";
+import { toast } from "sonner";
 
 export default function DocumentContent({ 
   document, 
@@ -329,6 +330,17 @@ export default function DocumentContent({
             description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${suggestion.title}`,
             relatedEntityId: suggestion.id,
             relatedEntityType: 'suggestion'
+          });
+          
+          // Show success toast notification
+          toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', {
+            description: `קיבלת 50 נקודות על הצבעתך המשפיעה`,
+            duration: 5000,
+          });
+        } else if (accepted) {
+          // Show success toast even without points
+          toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', {
+            duration: 4000,
           });
         }
       } else if (suggestion.status === 'accepted') {
