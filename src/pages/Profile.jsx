@@ -548,11 +548,14 @@ export default function Profile() {
                                     {t('comments')}
                                   </Badge>
                                   <span className="text-xs text-slate-500">
-                                    {new Date(item.created_date).toLocaleDateString('he-IL', { 
-                                      year: 'numeric', 
-                                      month: 'short', 
-                                      day: 'numeric' 
-                                    })}
+                                    {new Date(item.created_date).toLocaleDateString(
+                                      language === 'en' ? 'en-US' : language === 'ar' ? 'ar-EG' : 'he-IL', 
+                                      { 
+                                        year: 'numeric', 
+                                        month: 'short', 
+                                        day: 'numeric' 
+                                      }
+                                    )}
                                   </span>
                                   </div>
                                   <p className="text-sm font-medium text-slate-900 mb-1">
