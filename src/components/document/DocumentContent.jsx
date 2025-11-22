@@ -816,6 +816,9 @@ Return ONLY the translated text:`;
                       document={document}
                       getUserName={getUserName}
                       acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                      user={user}
+                      getUserVote={getUserVote}
+                      voteMutation={voteMutation}
                     />
                   ))}
                 </>
@@ -847,6 +850,9 @@ Return ONLY the translated text:`;
                                   document={document}
                                   getUserName={getUserName}
                                   acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                                  user={user}
+                                  getUserVote={getUserVote}
+                                  voteMutation={voteMutation}
                                 />
                               ))}
 
@@ -899,16 +905,19 @@ Return ONLY the translated text:`;
                             {index === topicSections.length - 1 && (
                               <>
                                 {newSectionSuggestions
-                                  .filter(s => (s.insertPosition || 999) > index)
-                                  .map((suggestion) => (
-                                    <NewSectionSuggestionCard
-                                      key={suggestion.id}
-                                      suggestion={suggestion}
-                                      document={document}
-                                      getUserName={getUserName}
-                                      acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
-                                    />
-                                  ))}
+                                    .filter(s => (s.insertPosition || 999) > index)
+                                    .map((suggestion) => (
+                                      <NewSectionSuggestionCard
+                                        key={suggestion.id}
+                                        suggestion={suggestion}
+                                        document={document}
+                                        getUserName={getUserName}
+                                        acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                                        user={user}
+                                        getUserVote={getUserVote}
+                                        voteMutation={voteMutation}
+                                      />
+                                    ))}
                               </>
                             )}
 

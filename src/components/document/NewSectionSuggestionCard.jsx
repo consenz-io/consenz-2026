@@ -13,7 +13,10 @@ export default function NewSectionSuggestionCard({
   suggestion, 
   document: doc,
   getUserName,
-  acceptedSuggestions 
+  acceptedSuggestions,
+  user,
+  getUserVote,
+  voteMutation
 }) {
   const { t, isRTL } = useLanguage();
 
@@ -66,15 +69,56 @@ export default function NewSectionSuggestionCard({
         </div>
 
         <div className={`flex items-center justify-between gap-3 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <div className="flex items-center gap-3 text-sm">
-            <div className="flex items-center gap-1 text-green-600">
-              <ThumbsUp className="w-4 h-4" />
-              <span className="font-medium">{suggestion.proVotes || 0}</span>
-            </div>
-            <div className="flex items-center gap-1 text-red-600">
-              <ThumbsDown className="w-4 h-4" />
-              <span className="font-medium">{suggestion.conVotes || 0}</span>
-            </div>
+          <div className="flex items-center gap-3 text-sm flex-wrap">
+            {user && doc?.votingButtonsEnabled ? (
+              <>
+                <Button
+                  variant={getUserVote(suggestion.id)?.vote === 'pro' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    voteMutation.mutate({
+                      suggestionId: suggestion.id,
+                      vote: 'pro',
+                      currentVote: getUserVote(suggestion.id)
+                    });
+                  }}
+                  disabled={voteMutation.isPending}
+                  className={`text-xs ${getUserVote(suggestion.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                >
+                  <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                  {suggestion.proVotes || 0}
+                </Button>
+                <Button
+                  variant={getUserVote(suggestion.id)?.vote === 'con' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    voteMutation.mutate({
+                      suggestionId: suggestion.id,
+                      vote: 'con',
+                      currentVote: getUserVote(suggestion.id)
+                    });
+                  }}
+                  disabled={voteMutation.isPending}
+                  className={`text-xs ${getUserVote(suggestion.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
+                >
+                  <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                  {suggestion.conVotes || 0}
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-1 text-green-600">
+                  <ThumbsUp className="w-4 h-4" />
+                  <span className="font-medium">{suggestion.proVotes || 0}</span>
+                </div>
+                <div className="flex items-center gap-1 text-red-600">
+                  <ThumbsDown className="w-4 h-4" />
+                  <span className="font-medium">{suggestion.conVotes || 0}</span>
+                </div>
+              </>
+            )}
             <VotesNeededCounter 
               suggestion={suggestion}
               document={doc}
@@ -83,8 +127,8 @@ export default function NewSectionSuggestionCard({
           </div>
           
           <Link to={`${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`}>
-            <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white">
-              <ExternalLink className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+            <Button size="sm" variant="outline" className="text-xs">
+              <ExternalLink className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
               {t('viewDetails')}
             </Button>
           </Link>
