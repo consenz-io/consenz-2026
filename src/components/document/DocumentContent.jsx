@@ -873,20 +873,7 @@ Return ONLY the translated text:`;
                                 </div>
                               </div>
                             )}
-                          <div className="group/section space-y-3 relative">
-                            {index > 0 && user && (
-                              <div className="absolute -top-6 left-1/2 -translate-x-1/2 z-20 opacity-0 group-hover/section:opacity-100 transition-opacity pointer-events-none group-hover/section:pointer-events-auto">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => onNewSection(topic.id, index)}
-                                  className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
-                                >
-                                  <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                  {t('insertSectionHere')}
-                                </Button>
-                              </div>
-                            )}
+                          <div className="space-y-3 relative">
                             {isAdmin && (
                               <div 
                                 {...provided.dragHandleProps}
@@ -935,34 +922,21 @@ Return ONLY the translated text:`;
                             )}
 
                             {index === topicSections.length - 1 && user && (
-                              <>
-                                <div className="group relative h-4 flex items-center justify-center mt-2">
-                                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <div className="h-full flex items-center justify-center">
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => onNewSection(topic.id, index + 1)}
-                                        className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
-                                      >
-                                        <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                        {t('insertSectionHere')}
-                                      </Button>
-                                    </div>
+                              <div className="group relative h-4 flex items-center justify-center mt-2">
+                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <div className="h-full flex items-center justify-center">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => onNewSection(topic.id, index + 1)}
+                                      className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
+                                    >
+                                      <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                      {t('insertSectionHere')}
+                                    </Button>
                                   </div>
                                 </div>
-                                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 z-20 opacity-0 group-hover/section:opacity-100 transition-opacity pointer-events-none group-hover/section:pointer-events-auto">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => onNewSection(topic.id, index + 1)}
-                                    className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
-                                  >
-                                    <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                    {t('insertSectionHere')}
-                                  </Button>
-                                </div>
-                              </>
+                              </div>
                             )}
                           </React.Fragment>
                         </div>
