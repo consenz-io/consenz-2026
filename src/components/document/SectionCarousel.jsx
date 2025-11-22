@@ -213,7 +213,7 @@ export default function SectionCarousel({
 
       {/* כפתורי דפדוף */}
       {allViews.length > 1 && (
-        <div className={`flex items-center justify-between mb-4 pb-4 border-b border-slate-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex items-center justify-between mb-4 pb-4 border-b-2 border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 p-3 rounded-lg shadow-sm ${isRTL ? 'flex-row-reverse' : ''}`}>
           <Button
             variant="outline"
             size="sm"
@@ -225,13 +225,13 @@ export default function SectionCarousel({
 
           <div className="text-center">
             {isFirstView ? (
-              <p className="text-sm text-slate-600">
-                <span className="font-semibold text-amber-600">{sortedSuggestions.length}</span> {t('editSuggestions')}
+              <p className="text-sm">
+                <span className="font-bold text-amber-700 text-lg">{sortedSuggestions.length}</span> <span className="font-bold text-slate-800">{t('editSuggestions')}</span>
               </p>
             ) : (
               <button 
                 onClick={() => setCurrentIndex(0)}
-                className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-colors"
+                className="text-sm font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer transition-colors"
               >
                 חזרה לגרסה הנוכחית
               </button>
