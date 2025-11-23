@@ -31,7 +31,7 @@ export default function TranslatableContent({
   const originalLanguage = entity.originalLanguage || 'he';
   const translations = entity.translations || {};
   const hasTranslation = translations[language];
-  const needsTranslation = originalLanguage && language !== originalLanguage;
+  const needsTranslation = language !== originalLanguage;
   
   const [showTranslated, setShowTranslated] = useState(needsTranslation && hasTranslation);
   
