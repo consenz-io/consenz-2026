@@ -33,7 +33,7 @@ export default function TranslatableContent({
   const hasTranslation = translations[language];
   
   // בדיקה אם צריך תרגום - בודק גם אם השפות שונות וגם אם השפה אינה שפת המקור
-  const needsTranslation = originalLanguage && language !== originalLanguage;
+  const needsTranslation = originalLanguage && language && originalLanguage !== language;
   
   const [showTranslated, setShowTranslated] = useState(needsTranslation && hasTranslation);
   
