@@ -218,6 +218,24 @@ const translations = {
     viewFullComment: "View full comment",
     suggestion: "suggestion",
     showChangesView: "Show Changes",
+
+    // Gamification and Points
+    pointsTransactionCreated: "Created suggestion:",
+
+    // Notifications
+    notifVoteTitle: "New vote on your suggestion",
+    notifVoteMessage: "{name} voted on the suggestion \"{title}\"",
+    notifAcceptedTitle: "🎉 Your suggestion was accepted!",
+    notifAcceptedMessage: "The suggestion \"{title}\" was accepted and added to the document",
+    notifRejectedTitle: "Your suggestion was rejected",
+    notifRejectedMessage: "The suggestion \"{title}\" was rejected by the document admin",
+    notifNewSuggestionTitle: "New suggestion in document",
+    notifNewSuggestionMessage: "{name} added a new suggestion in the document \"{title}\"",
+    notifReplyTitle: "Reply to your comment",
+    notifReplyMessage: "{name} replied to your comment",
+    notifCommentTitle: "New comment",
+    notifCommentMessageSuggestion: "{name} commented on your suggestion",
+    notifCommentMessageSection: "{name} commented on your section",
     },
   he: {
     // ניווט
@@ -435,6 +453,24 @@ const translations = {
     viewFullComment: "צפה בתגובה המלאה",
     suggestion: "הצעה",
     showChangesView: "תצוגת שינויים",
+
+    // גימיפיקציה ונקודות
+    pointsTransactionCreated: "יצירת הצעה:",
+
+    // התראות
+    notifVoteTitle: "הצבעה חדשה על ההצעה שלך",
+    notifVoteMessage: "{name} הצביע על ההצעה \"{title}\"",
+    notifAcceptedTitle: "🎉 ההצעה שלך התקבלה!",
+    notifAcceptedMessage: "ההצעה \"{title}\" התקבלה ונוספה למסמך",
+    notifRejectedTitle: "ההצעה שלך נדחתה",
+    notifRejectedMessage: "ההצעה \"{title}\" נדחתה על ידי מנהל המסמך",
+    notifNewSuggestionTitle: "הצעה חדשה במסמך",
+    notifNewSuggestionMessage: "{name} הוסיף הצעה חדשה במסמך \"{title}\"",
+    notifReplyTitle: "תשובה לתגובה שלך",
+    notifReplyMessage: "{name} השיב לתגובה שלך",
+    notifCommentTitle: "תגובה חדשה",
+    notifCommentMessageSuggestion: "{name} הגיב על ההצעה שלך",
+    notifCommentMessageSection: "{name} הגיב על הסעיף שלך",
     },
   ar: {
     // التنقل
@@ -651,6 +687,24 @@ const translations = {
     viewFullComment: "عرض التعليق الكامل",
     suggestion: "اقتراح",
     showChangesView: "عرض التغييرات",
+
+    // التلعيب والنقاط
+    pointsTransactionCreated: "إنشاء اقتراح:",
+
+    // الإشعارات
+    notifVoteTitle: "تصويت جديد على اقتراحك",
+    notifVoteMessage: "{name} صوت على الاقتراح \"{title}\"",
+    notifAcceptedTitle: "🎉 تم قبول اقتراحك!",
+    notifAcceptedMessage: "تم قبول الاقتراح \"{title}\" وإضافته إلى المستند",
+    notifRejectedTitle: "تم رفض اقتراحك",
+    notifRejectedMessage: "تم رفض الاقتراح \"{title}\" من قبل مدير المستند",
+    notifNewSuggestionTitle: "اقتراح جديد في المستند",
+    notifNewSuggestionMessage: "{name} أضاف اقتراحًا جديدًا في المستند \"{title}\"",
+    notifReplyTitle: "رد على تعليقك",
+    notifReplyMessage: "{name} رد على تعليقك",
+    notifCommentTitle: "تعليق جديد",
+    notifCommentMessageSuggestion: "{name} علق على اقتراحك",
+    notifCommentMessageSection: "{name} علق على قسمك",
     }
 };
 

@@ -315,7 +315,7 @@ Return ONLY the translated HTML:`;
           userId: currentUser.id,
           amount: -pointsCost,
           action: 'suggestion_created',
-          description: `יצירת הצעה: ${autoTitle}`,
+          description: `${t('pointsTransactionCreated')} ${autoTitle}`,
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion'
         });
