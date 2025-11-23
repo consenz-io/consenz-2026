@@ -259,10 +259,13 @@ Return ONLY the translated HTML:`;
         const existingTopics = await base44.entities.Topic.filter({ documentId: document.id }, 'order');
         const maxOrder = existingTopics.length > 0 ? Math.max(...existingTopics.map(t => t.order)) : -1;
         
+        const topicLanguage = detectLanguage(newTopicName.trim());
+        
         const newTopic = await base44.entities.Topic.create({
           documentId: document.id,
           title: newTopicName.trim(),
-          order: maxOrder + 1
+          order: maxOrder + 1,
+          originalLanguage: topicLanguage,
         });
         
         targetTopicId = newTopic.id;

@@ -276,16 +276,21 @@ Return ONLY valid JSON in this exact format:
       for (let i = 0; i < validTopics.length; i++) {
         const topicData = validTopics[i];
 
+        const topicTitle = topicData.title.trim();
+        const topicLanguage = detectLanguage(topicTitle);
+        
         const topic = await base44.entities.Topic.create({
           documentId: doc.id,
-          title: topicData.title.trim(),
+          title: topicTitle,
           order: i,
+          originalLanguage: topicLanguage,
         });
 
         const validSections = topicData.sections.filter(s => s.content && s.content.trim());
 
         for (let j = 0; j < validSections.length; j++) {
           const sectionContent = validSections[j].content.trim();
+          const sectionLanguage = detectLanguage(sectionContent);
 
           await base44.entities.Section.create({
             documentId: doc.id,
@@ -293,6 +298,7 @@ Return ONLY valid JSON in this exact format:
             content: sectionContent,
             order: j,
             lastEditedBy: user.id,
+            originalLanguage: sectionLanguage,
           });
         }
       }
