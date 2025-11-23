@@ -43,8 +43,18 @@ export default function TranslatableContent({
   const detectedLanguage = entity.originalLanguage || detectLanguage(content || '');
   const originalLanguage = detectedLanguage;
   const translations = entity.translations || {};
-  const fieldTranslations = field ? translations[language]?.[field] : translations[language];
-  const hasTranslation = !!fieldTranslations;
+  
+  // Extract the correct translation based on field
+  let fieldTranslations;
+  if (field) {
+    fieldTranslations = translations[language]?.[field];
+  } else {
+    const langTranslations = translations[language];
+    // If langTranslations is a string, use it directly, otherwise it's undefined
+    fieldTranslations = typeof langTranslations === 'string' ? langTranslations : undefined;
+  }
+  
+  const hasTranslation = typeof fieldTranslations === 'string' && fieldTranslations.length > 0;
   
   // בדיקה אם צריך תרגום - בודק גם אם השפות שונות וגם אם השפה אינה שפת המקור
   const needsTranslation = originalLanguage && language && originalLanguage !== language;
