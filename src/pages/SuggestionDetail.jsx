@@ -656,7 +656,7 @@ export default function SuggestionDetail() {
                   <TranslatableContent
                     content={suggestion.newContent}
                     entity={suggestion}
-                    entityType="suggestion"
+                    entityType="Suggestion"
                     onUpdate={(updated) => {
                       queryClient.setQueryData(['suggestion', suggestionId], updated);
                     }}
@@ -671,7 +671,7 @@ export default function SuggestionDetail() {
                   <TranslatableContent
                     content={suggestion.newContent}
                     entity={suggestion}
-                    entityType="suggestion"
+                    entityType="Suggestion"
                     onUpdate={(updated) => {
                       queryClient.setQueryData(['suggestion', suggestionId], updated);
                     }}
