@@ -217,7 +217,6 @@ const translations = {
     commentOn: "Comment on",
     viewFullComment: "View full comment",
     suggestion: "suggestion",
-    section: "section",
     showChangesView: "Show Changes",
     },
   he: {
@@ -435,7 +434,6 @@ const translations = {
     commentOn: "תגובה על",
     viewFullComment: "צפה בתגובה המלאה",
     suggestion: "הצעה",
-    section: "סעיף",
     showChangesView: "תצוגת שינויים",
     },
   ar: {
@@ -652,7 +650,6 @@ const translations = {
     commentOn: "تعليق على",
     viewFullComment: "عرض التعليق الكامل",
     suggestion: "اقتراح",
-    section: "قسم",
     showChangesView: "عرض التغييرات",
     }
 };
