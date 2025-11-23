@@ -17,7 +17,6 @@ import CreateSuggestionModal from "../components/document/CreateSuggestionModal"
 import PageHeader from "../components/PageHeader";
 import ContributorsModal from "../components/document/ContributorsModal";
 import CommentsSection from "../components/document/CommentsSection";
-import TranslatableContent from "../components/document/TranslatableContent";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -36,9 +35,13 @@ export default function DocumentView() {
   const scrollToSectionId = searchParams.get('scrollTo');
   const [showCreateSuggestion, setShowCreateSuggestion] = useState(false);
   const [editingSection, setEditingSection] = useState(null);
+  const [showTranslated, setShowTranslated] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [showContributorsModal, setShowContributorsModal] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [description, setDescription] = useState("");
+  const [showTranslatedDescription, setShowTranslatedDescription] = useState(false);
+  const [isTranslatingDescription, setIsTranslatingDescription] = useState(false);
   const [showDescriptionComments, setShowDescriptionComments] = useState(false);
 
   const { data: document, isLoading: docLoading } = useQuery({
@@ -126,6 +129,50 @@ export default function DocumentView() {
     setShowCreateSuggestion(true);
   };
 
+  const languagePrompts = {
+    en: "English",
+    he: "Hebrew",
+    ar: "Arabic"
+  };
+
+  const translateDocumentMutation = useMutation({
+    mutationFn: async () => {
+      const titlePrompt = `Translate the following text to ${languagePrompts[language]}. Return ONLY the translated text:\n${document.title}`;
+      const titleResult = await base44.integrations.Core.InvokeLLM({
+        prompt: titlePrompt,
+        add_context_from_internet: false,
+      });
+      const translatedTitle = (typeof titleResult === 'string' ? titleResult : titleResult.content || titleResult).trim();
+
+      const newTranslations = {
+        ...(document.translations || {}),
+        [language]: {
+          title: translatedTitle
+        }
+      };
+
+      await base44.entities.Document.update(document.id, {
+        translations: newTranslations
+      });
+
+      return newTranslations;
+    },
+    onMutate: () => {
+      setIsTranslating(true);
+      setShowTranslated(true);
+    },
+    onSuccess: (newTranslations) => {
+      setIsTranslating(false);
+      queryClient.setQueryData(['document', documentId], (oldData) => {
+        if (!oldData) return oldData;
+        return { ...oldData, translations: newTranslations };
+      });
+    },
+    onError: () => {
+      setIsTranslating(false);
+    }
+  });
+
   const updateDescriptionMutation = useMutation({
     mutationFn: async (newDescription) => {
       await base44.entities.Document.update(documentId, {
@@ -136,6 +183,45 @@ export default function DocumentView() {
       queryClient.invalidateQueries({ queryKey: ['document', documentId] });
       setIsEditingDescription(false);
     },
+  });
+
+  const translateDescriptionMutation = useMutation({
+    mutationFn: async () => {
+      const descPrompt = `Translate the following HTML text to ${languagePrompts[language]}. Return ONLY the translated HTML, preserving all HTML tags:\n${document.description}`;
+      const descResult = await base44.integrations.Core.InvokeLLM({
+        prompt: descPrompt,
+        add_context_from_internet: false,
+      });
+      const translatedDescription = (typeof descResult === 'string' ? descResult : descResult.content || descResult).trim();
+
+      const newTranslations = {
+        ...(document.translations || {}),
+        [language]: {
+          ...(document.translations?.[language] || {}),
+          description: translatedDescription
+        }
+      };
+
+      await base44.entities.Document.update(document.id, {
+        translations: newTranslations
+      });
+
+      return newTranslations;
+    },
+    onMutate: () => {
+      setIsTranslatingDescription(true);
+      setShowTranslatedDescription(true);
+    },
+    onSuccess: (newTranslations) => {
+      setIsTranslatingDescription(false);
+      queryClient.setQueryData(['document', documentId], (oldData) => {
+        if (!oldData) return oldData;
+        return { ...oldData, translations: newTranslations };
+      });
+    },
+    onError: () => {
+      setIsTranslatingDescription(false);
+    }
   });
 
   if (docLoading || topicsLoading || sectionsLoading) {
@@ -167,19 +253,43 @@ export default function DocumentView() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-1 md:p-6 w-full max-w-full overflow-x-hidden">
       <div className="max-w-6xl mx-auto space-y-2 md:space-y-6 px-1 md:px-4 w-full max-w-full">
         <div className="flex flex-col gap-1.5 md:gap-4 w-full max-w-full">
-          <div className={`flex items-center gap-2 w-full max-w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <TranslatableContent
-              content={document.title}
-              entity={document}
-              entityType="Document"
-              isPlainText={true}
-              field="title"
-              renderContent={(content) => (
-                <h1 className="text-lg md:text-3xl font-bold text-slate-900 break-words leading-tight">
-                  {content}
-                </h1>
-              )}
-            />
+          <div className={`flex items-center justify-between gap-1 w-full max-w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <h1 className="text-lg md:text-3xl font-bold text-slate-900 flex-1 min-w-0 break-words leading-tight max-w-full">
+              {(() => {
+                const translatedTitle = document.translations?.[language]?.title;
+                if (showTranslated && typeof translatedTitle === 'string') {
+                  return translatedTitle;
+                }
+                return document.title;
+              })()}
+            </h1>
+            {(() => {
+              const detectedLanguage = document.originalLanguage || detectLanguage(document.title);
+              const needsTranslation = detectedLanguage && detectedLanguage !== language;
+              return needsTranslation && (
+                <div className="flex-shrink-0">
+                  {isTranslating ? (
+                    <Loader2 className="w-3.5 h-3.5 md:w-5 md:h-5 animate-spin text-blue-600" />
+                  ) : !(typeof document.translations?.[language]?.title === 'string') ? (
+                    <button
+                      onClick={() => translateDocumentMutation.mutate()}
+                      className="p-0.5 md:p-1.5 hover:bg-blue-50 rounded transition-colors"
+                      title={t('translate')}
+                    >
+                      <Languages className="w-3.5 h-3.5 md:w-5 md:h-5 text-blue-600" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowTranslated(!showTranslated)}
+                      className="p-0.5 md:p-1.5 hover:bg-slate-100 rounded transition-colors"
+                      title={showTranslated ? t('showOriginal') : t('showTranslation')}
+                    >
+                      <Languages className={`w-3.5 h-3.5 md:w-5 md:h-5 ${showTranslated ? 'text-slate-600' : 'text-blue-600'}`} />
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
           </div>
           <div className="flex gap-0.5 md:gap-2 flex-wrap justify-center w-full">
             <Badge variant="outline" className={`text-[7px] md:text-xs px-0.5 py-0.5 ${
@@ -194,6 +304,29 @@ export default function DocumentView() {
           {/* Document Description */}
           {(document.description || isAdmin) && (
             <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-4 relative">
+              {document.originalLanguage && document.originalLanguage !== language && !isEditingDescription && (
+                <div className="absolute top-2 left-2 z-10">
+                  {isTranslatingDescription ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                  ) : !(typeof document.translations?.[language]?.description === 'string') ? (
+                    <button
+                      onClick={() => translateDescriptionMutation.mutate()}
+                      className="p-1.5 hover:bg-blue-50 rounded transition-colors"
+                      title={t('translate')}
+                    >
+                      <Languages className="w-4 h-4 text-blue-600" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowTranslatedDescription(!showTranslatedDescription)}
+                      className="p-1.5 hover:bg-slate-100 rounded transition-colors"
+                      title={showTranslatedDescription ? t('showOriginal') : t('showTranslation')}
+                    >
+                      <Languages className={`w-4 h-4 ${showTranslatedDescription ? 'text-slate-600' : 'text-blue-600'}`} />
+                    </button>
+                  )}
+                </div>
+              )}
               {isEditingDescription ? (
                 <div className="space-y-3">
                   <ReactQuill
@@ -235,12 +368,14 @@ export default function DocumentView() {
               ) : (
                 <div className="relative group">
                   {document.description ? (
-                    <TranslatableContent
-                      content={document.description}
-                      entity={document}
-                      entityType="Document"
-                      field="description"
+                    <div 
                       className="prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ 
+                        __html: showTranslatedDescription && typeof document.translations?.[language]?.description === 'string'
+                          ? document.translations[language].description
+                          : document.description
+                      }}
+                      dir={isRTL ? 'rtl' : 'ltr'}
                     />
                   ) : (
                     <p className="text-slate-400 text-sm italic">{t('noDescription')}</p>
