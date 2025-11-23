@@ -83,14 +83,21 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
               <CardContent>
                 <div className="space-y-3">
                   {suggestion.explanation && (
-                    <p className="text-sm text-slate-600 line-clamp-2" style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>{suggestion.explanation}</p>
+                    <div className="text-sm text-slate-600 line-clamp-2">
+                      <TranslatableContent
+                        content={suggestion.explanation}
+                        entity={suggestion}
+                        entityType="Suggestion"
+                        className="text-sm"
+                      />
+                    </div>
                   )}
                   {suggestion.newContent && (
                     <div className="bg-slate-50 p-3 rounded border border-slate-200">
                       <TranslatableContent
                         content={suggestion.newContent}
                         entity={suggestion}
-                        entityType="suggestion"
+                        entityType="Suggestion"
                         className="text-sm text-slate-700 line-clamp-3"
                       />
                     </div>
@@ -111,7 +118,7 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
                         <span>{getTimeRemaining(suggestion.timerEndsAt)} {t('left')}</span>
                       </div>
                     )}
-                    <VotesNeededCounter suggestion={suggestion} document={document} t={t} />
+                    <VotesNeededCounter suggestion={suggestion} document={document} />
                   </div>
 
                   <div className="text-xs text-slate-400">
