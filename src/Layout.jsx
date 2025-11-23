@@ -199,21 +199,20 @@ function LayoutContent({ children, currentPageName }) {
           </SidebarFooter>
         </Sidebar>
 
-        <main className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden">
-          <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-50 relative">
-            <div className="flex items-center justify-between gap-2 px-2 py-2 md:px-6 md:py-4 max-w-full min-w-0 relative z-10">
-              <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
-                <SidebarTrigger className="md:hidden hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200 flex-shrink-0 cursor-pointer relative z-20" />
-                <h1 className="text-base md:text-xl font-bold text-slate-900 md:hidden truncate pointer-events-none">Consenz</h1>
+        <main className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden touch-auto">
+          <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-[100]">
+            <div className="flex items-center justify-between gap-2 px-2 py-2 md:px-6 md:py-4">
+              <div className="flex items-center gap-2 md:gap-4">
+                <SidebarTrigger className="md:hidden hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200 touch-manipulation" />
+                <h1 className="text-base md:text-xl font-bold text-slate-900 md:hidden truncate">Consenz</h1>
               </div>
-              <div className="flex items-center gap-2 md:gap-3 flex-shrink-0 relative z-20">
-                <div className="relative">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="relative touch-manipulation">
                   <Languages className="absolute left-1.5 md:left-2 top-1/2 -translate-y-1/2 w-3 h-3 md:w-4 md:h-4 text-slate-500 pointer-events-none" />
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                    className="pl-6 md:pl-7 pr-1.5 md:pr-2 py-1 md:py-1.5 border border-slate-300 rounded-lg text-xs md:text-sm font-medium bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer min-w-[70px] md:min-w-[90px] relative z-30"
-                    style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}
+                    className="pl-6 md:pl-7 pr-1.5 md:pr-2 py-1.5 md:py-2 border border-slate-300 rounded-lg text-xs md:text-sm font-medium bg-white cursor-pointer min-w-[70px] md:min-w-[90px] touch-manipulation"
                   >
                     <option value="en">EN</option>
                     <option value="he">עב</option>
