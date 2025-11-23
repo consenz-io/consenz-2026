@@ -840,9 +840,9 @@ Return ONLY the translated text:`;
                           className={snapshot.isDragging ? 'opacity-70' : ''}
                         >
                           <React.Fragment>
-                            {/* Show new section suggestions before this position */}
-                            {newSectionSuggestions
-                              .filter(s => (s.insertPosition || 999) === index)
+                            {/* Show new section suggestions that should appear at this position */}
+                            {index === 0 && newSectionSuggestions
+                              .filter(s => (s.insertPosition === undefined || s.insertPosition === null || s.insertPosition === 0))
                               .map((suggestion) => (
                                 <NewSectionSuggestionCard
                                   key={suggestion.id}
@@ -874,12 +874,12 @@ Return ONLY the translated text:`;
                               </div>
                             )}
                           <div className="space-y-3 relative group/section">
-                            {user && (
+                            {user && index === 0 && (
                               <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 opacity-0 group-hover/section:opacity-100 transition-opacity">
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => onNewSection(topic.id, index)}
+                                  onClick={() => onNewSection(topic.id, 0)}
                                   className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
                                 >
                                   <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
