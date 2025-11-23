@@ -442,30 +442,30 @@ export default function DocumentView() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 w-full max-w-full">
+        <div className="grid grid-cols-3 gap-3 md:gap-4 w-full max-w-full">
           <div 
-            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 cursor-pointer hover:border-blue-400 transition-all flex flex-col items-center justify-center gap-0.5 md:gap-1"
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 cursor-pointer hover:border-blue-400 transition-all flex flex-col items-center justify-center gap-1"
             onClick={() => setShowContributorsModal(true)}
           >
-            <Users className="w-3.5 h-3.5 md:w-6 md:h-6 text-blue-600" />
-            <div className="text-sm md:text-xl font-bold text-slate-900">{document.totalUsersInteracted || 0}</div>
-            <div className="text-[7px] md:text-[10px] text-slate-600 text-center leading-tight">{t('contributors')}</div>
+            <Users className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
+            <div className="text-base md:text-xl font-bold text-slate-900">{document.totalUsersInteracted || 0}</div>
+            <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('contributors')}</div>
           </div>
           <div 
-            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 flex flex-col items-center justify-center gap-0.5 md:gap-1"
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1"
           >
-            <MessageSquare className="w-3.5 h-3.5 md:w-6 md:h-6 text-indigo-600" />
-            <div className="text-sm md:text-xl font-bold text-slate-900">{suggestions.length}</div>
-            <div className="text-[7px] md:text-[10px] text-slate-600 text-center leading-tight">{t('suggestions')}</div>
+            <MessageSquare className="w-4 h-4 md:w-6 md:h-6 text-indigo-600" />
+            <div className="text-base md:text-xl font-bold text-slate-900">{suggestions.length}</div>
+            <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('suggestions')}</div>
           </div>
           <div 
-            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 flex flex-col items-center justify-center gap-0.5 md:gap-1"
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1"
           >
-            <TrendingUp className="w-3.5 h-3.5 md:w-6 md:h-6 text-purple-600" />
-            <div className="text-sm md:text-xl font-bold text-slate-900">
+            <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-purple-600" />
+            <div className="text-base md:text-xl font-bold text-slate-900">
               {((document.avgSuggestionConsensus || 0) * 100).toFixed(0)}%
             </div>
-            <div className="text-[7px] md:text-[10px] text-slate-600 text-center leading-tight">{t('consensus')}</div>
+            <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('consensus')}</div>
           </div>
         </div>
 
