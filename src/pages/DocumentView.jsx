@@ -17,6 +17,7 @@ import SuggestionsList from "../components/document/SuggestionsList";
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 import PageHeader from "../components/PageHeader";
 import ContributorsModal from "../components/document/ContributorsModal";
+import CommentsSection from "../components/document/CommentsSection";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -68,6 +69,16 @@ export default function DocumentView() {
   const { data: suggestions, isLoading: suggestionsLoading } = useQuery({
     queryKey: ['suggestions', documentId],
     queryFn: () => base44.entities.Suggestion.filter({ documentId }, '-created_date'),
+    initialData: [],
+    enabled: !!documentId,
+  });
+
+  const { data: documentComments } = useQuery({
+    queryKey: ['documentComments', documentId],
+    queryFn: () => base44.entities.Comment.filter({ 
+      rootEntityType: 'document',
+      rootEntityId: documentId 
+    }),
     initialData: [],
     enabled: !!documentId,
   });
@@ -381,6 +392,28 @@ export default function DocumentView() {
                       <Edit2 className="w-4 h-4" />
                     </Button>
                   )}
+                </div>
+              )}
+              {!isEditingDescription && (
+                <div className="mt-3 pt-3 border-t border-slate-200">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowDescriptionComments(!showDescriptionComments)}
+                    className="text-slate-600 hover:text-blue-600 h-7 md:h-8 text-xs px-2"
+                  >
+                    <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                    {t('comments')} ({documentComments.length})
+                  </Button>
+                </div>
+              )}
+              {showDescriptionComments && (
+                <div className="mt-4 pt-4 border-t border-slate-200">
+                  <CommentsSection
+                    entityType="document"
+                    entityId={documentId}
+                    user={user}
+                  />
                 </div>
               )}
             </div>
