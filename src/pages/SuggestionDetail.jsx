@@ -274,7 +274,7 @@ export default function SuggestionDetail() {
       });
 
       // בדיקה והפעלת אישור אוטומטי אם עברנו את הסף
-      const { shouldAccept } = checkSuggestionConsensus(updatedSuggestion, document);
+      const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
       console.log('[POINTS DEBUG] Should accept suggestion:', shouldAccept);
       if (shouldAccept) {
         console.log('[POINTS DEBUG] Auto-accepting suggestion...');
