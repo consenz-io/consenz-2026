@@ -667,8 +667,8 @@ Return ONLY the translated text:`;
                             </>
                           )}
                           <div className={`flex flex-col md:flex-row justify-between md:items-center gap-3 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-                            <div className={`flex-1 min-w-0 flex items-center gap-2 ${isRTL ? 'justify-end' : ''}`}>
-                  <CardTitle className={`text-lg md:text-2xl break-words ${isRTL ? 'text-right' : 'text-left'}`}>
+                            <div className={`flex-1 min-w-0 flex items-center gap-2 ${isRTL ? 'justify-end flex-row-reverse' : ''}`}>
+                  <CardTitle className={`text-lg md:text-2xl break-words ${isRTL ? 'text-right w-full' : 'text-left'}`}>
                     {(() => {
                       const translatedTitle = topic.translations?.[language]?.title;
                       if (showTranslatedTopics[topic.id] && typeof translatedTitle === 'string') {
