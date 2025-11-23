@@ -32,16 +32,19 @@ export default function TranslatableContent({
   entityType,
   onUpdate,
   className = "",
-  renderContent = null
+  renderContent = null,
+  isPlainText = false,
+  field = null
 }) {
-  const { language, isRTL } = useLanguage();
+  const { language, isRTL, t } = useLanguage();
   const queryClient = useQueryClient();
 
   // זיהוי אוטומטי של שפה אם לא מוגדרת
   const detectedLanguage = entity.originalLanguage || detectLanguage(content || '');
   const originalLanguage = detectedLanguage;
   const translations = entity.translations || {};
-  const hasTranslation = translations[language];
+  const fieldTranslations = field ? translations[language]?.[field] : translations[language];
+  const hasTranslation = !!fieldTranslations;
   
   // בדיקה אם צריך תרגום - בודק גם אם השפות שונות וגם אם השפה אינה שפת המקור
   const needsTranslation = originalLanguage && language && originalLanguage !== language;
@@ -53,7 +56,22 @@ export default function TranslatableContent({
 
   const translateMutation = useMutation({
     mutationFn: async () => {
-      const prompt = `You are a professional translator. Translate the following HTML content to ${languagePrompts[language]}.
+      const contentType = isPlainText ? 'text' : 'HTML content';
+      const prompt = isPlainText 
+        ? `You are a professional translator. Translate the following text to ${languagePrompts[language]}.
+
+CRITICAL INSTRUCTIONS:
+- Return ONLY the translated text, nothing else
+- Do not add any explanations, quotes, or comments
+- Do not add "Translation:", "Here is", or any prefix
+- Keep the same tone and style
+- For titles/headers, maintain capitalization style
+
+Text to translate:
+${content}
+
+Return ONLY the translated text:`
+        : `You are a professional translator. Translate the following HTML content to ${languagePrompts[language]}.
 
 CRITICAL INSTRUCTIONS:
 - Keep ALL HTML tags exactly as they are (including <p>, <strong>, <em>, <ul>, <li>, etc.)
@@ -75,13 +93,26 @@ Return ONLY the translated HTML:`;
 
       let translatedText = typeof result === 'string' ? result : result.content || result;
       
-      // Clean up any markdown code blocks that might be added
-      translatedText = translatedText.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+      // Advanced cleaning
+      translatedText = translatedText
+        .replace(/```html\n?/g, '')
+        .replace(/```\n?/g, '')
+        .replace(/^(Translation|Here is.*?|Translated.*?):\s*/i, '')
+        .replace(/^["']|["']$/g, '')
+        .trim();
 
-      const newTranslations = {
-        ...translations,
-        [language]: translatedText
-      };
+      const newTranslations = field 
+        ? {
+            ...translations,
+            [language]: {
+              ...(translations[language] || {}),
+              [field]: translatedText
+            }
+          }
+        : {
+            ...translations,
+            [language]: translatedText
+          };
 
       await base44.entities[entityType].update(entity.id, {
         translations: newTranslations
@@ -91,14 +122,18 @@ Return ONLY the translated HTML:`;
         onUpdate({ ...entity, translations: newTranslations });
       }
 
-      queryClient.invalidateQueries();
+      queryClient.invalidateQueries({ queryKey: [entityType, entity.id] });
+      queryClient.invalidateQueries({ queryKey: [entityType + 's'] });
       setShowTranslated(true);
       return translatedText;
     },
+    onError: (error) => {
+      console.error('Translation error:', error);
+    }
   });
 
-  const displayContent = showTranslated && (translations[language] || translateMutation.isSuccess)
-    ? (translations[language] || translateMutation.data)
+  const displayContent = showTranslated && (fieldTranslations || translateMutation.isSuccess)
+    ? (fieldTranslations || translateMutation.data)
     : content;
 
   return (
@@ -106,13 +141,24 @@ Return ONLY the translated HTML:`;
       {translateMutation.isPending ? (
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-          <span className="mr-2 text-sm text-slate-600">מתרגם...</span>
+          <span className={`text-sm text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>{t('translating')}</span>
+        </div>
+      ) : translateMutation.isError ? (
+        <div className="text-red-600 text-sm p-2 bg-red-50 rounded">
+          {t('translationError') || 'שגיאה בתרגום. נסה שוב.'}
         </div>
       ) : (
         <>
           {renderContent ? (
             <div style={{ direction: isDisplayRTL ? 'rtl' : 'ltr', textAlign: isDisplayRTL ? 'right' : 'left' }}>
               {renderContent(displayContent)}
+            </div>
+          ) : isPlainText ? (
+            <div 
+              className={className}
+              style={{ direction: isDisplayRTL ? 'rtl' : 'ltr', textAlign: isDisplayRTL ? 'right' : 'left' }}
+            >
+              {displayContent}
             </div>
           ) : (
             <div 
