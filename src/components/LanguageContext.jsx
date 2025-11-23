@@ -59,6 +59,8 @@ const translations = {
     // Home
     democraticCollaboration: "Democratic Collaboration Platform",
     buildConsensus: "Build Consensus, Draft Together",
+    buildConsensusTitle: "Build Consensus",
+    draftTogetherTitle: "Draft Together",
     platformDescription: "Collaborative platform for drafting policy documents, constitutions, and decisions through transparent voting and dynamic consensus algorithms.",
     getStarted: "Get Started",
     learnMore: "Learn More",
@@ -294,6 +296,8 @@ const translations = {
     // דף הבית
     democraticCollaboration: "פלטפורמת שיתוף פעולה דמוקרטי",
     buildConsensus: "בנו קונצננזוס, נסחו ביחד",
+    buildConsensusTitle: "בנו קונסנזוס",
+    draftTogetherTitle: "נסחו ביחד",
     platformDescription: "פלטפורמה לשיתוף פעולה לניסוח מסמכי מדיניות, חוקות והחלטות באמצעות הצבעה שקופה ואלגוריתמי קונצנזוס דינמיים.",
     getStarted: "התחל",
     learnMore: "למד עוד",
@@ -529,6 +533,8 @@ const translations = {
     // الصفحة الرئيسية
     democraticCollaboration: "منصة التعاون الديمقراطي",
     buildConsensus: "بناء الإجماع، صياغة معًا",
+    buildConsensusTitle: "بناء الإجماع",
+    draftTogetherTitle: "صياغة معًا",
     platformDescription: "منصة تعاونية لصياغة وثائق السياسة والدساتير والقرارات من خلال التصويت الشفاف وخوارزميات الإجماع الديناميكية.",
     getStarted: "ابدأ",
     learnMore: "تعلم المزيد",
