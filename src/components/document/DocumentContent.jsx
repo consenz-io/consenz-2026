@@ -677,7 +677,7 @@ Return ONLY the translated text:`;
                       return topic.title;
                     })()}
                   </CardTitle>
-                  {topic.originalLanguage && language && topic.originalLanguage !== language && (
+                  {topic.originalLanguage && topic.originalLanguage !== language && (
                     translateTopicMutation.isPending && translateTopicMutation.variables?.id === topic.id ? (
                       <Loader2 className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />
                     ) : (
