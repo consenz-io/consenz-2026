@@ -610,7 +610,19 @@ Return ONLY the translated text:`;
           }
         }
 
-        queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
+        // Refresh all relevant queries
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
+          queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
+          queryClient.invalidateQueries({ queryKey: ['document', document.id] }),
+          queryClient.invalidateQueries({ queryKey: ['allVersions'] })
+        ]);
+
+        // Show success notification
+        toast.success('🎉 ההצעה לעריכת כותרת התקבלה!', {
+          description: 'הכותרת עודכנה במסמך',
+          duration: 4000,
+        });
       }
     },
     onSuccess: () => {
