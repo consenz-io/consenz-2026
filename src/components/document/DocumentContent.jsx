@@ -18,7 +18,7 @@ import NewSectionSuggestionCard from "./NewSectionSuggestionCard";
 import EditTopicModal from "./EditTopicModal";
 
 import { useLanguage } from "@/components/LanguageContext";
-import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAutoAccept";
+import { checkSuggestionConsensus, autoAcceptSuggestion, autoAcceptTopicEditSuggestion } from "./suggestionAutoAccept";
 import { toast } from "sonner";
 
 export default function DocumentContent({ 
@@ -52,16 +52,17 @@ export default function DocumentContent({
 
   // בדיקה ואישור אוטומטי של הצעות שעברו את רף הקונסנזוס
   const hasCheckedRef = React.useRef(new Set());
-  
+
   React.useEffect(() => {
     if (!document || !suggestions) return;
 
     const checkAndAutoAccept = async () => {
       let hasChanges = false;
-      
+
+      // בדיקת הצעות עריכת סעיפים
       for (const suggestion of suggestions) {
         if (suggestion.status !== 'pending') continue;
-        
+
         // Skip if already checked this suggestion with current vote counts
         const checkKey = `${suggestion.id}-${suggestion.proVotes}-${suggestion.conVotes}`;
         if (hasCheckedRef.current.has(checkKey)) continue;
@@ -70,7 +71,7 @@ export default function DocumentContent({
         try {
           const { shouldAccept } = await checkSuggestionConsensus(suggestion, document);
           console.log('[AUTO-ACCEPT CHECK]', { suggestionId: suggestion.id, shouldAccept, status: suggestion.status });
-          
+
           if (shouldAccept) {
             console.log('[AUTO-ACCEPT] Auto-accepting suggestion:', suggestion.id);
             // Use suggestion creator as user if no user is logged in
@@ -87,24 +88,63 @@ export default function DocumentContent({
           hasCheckedRef.current.delete(checkKey);
         }
       }
-      
+
+      // בדיקת הצעות עריכת כותרות נושאים
+      if (topicEditSuggestions && topicEditSuggestions.length > 0) {
+        for (const topicSuggestion of topicEditSuggestions) {
+          if (topicSuggestion.status !== 'pending') continue;
+
+          const checkKey = `topic-${topicSuggestion.id}-${topicSuggestion.proVotes}-${topicSuggestion.conVotes}`;
+          if (hasCheckedRef.current.has(checkKey)) continue;
+          hasCheckedRef.current.add(checkKey);
+
+          try {
+            const delta = (topicSuggestion.proVotes || 0) - (topicSuggestion.conVotes || 0);
+            const shouldAccept = delta >= document.threshold;
+
+            console.log('[AUTO-ACCEPT TOPIC CHECK]', { 
+              suggestionId: topicSuggestion.id, 
+              shouldAccept, 
+              delta,
+              threshold: document.threshold 
+            });
+
+            if (shouldAccept) {
+              console.log('[AUTO-ACCEPT TOPIC] Auto-accepting topic suggestion:', topicSuggestion.id);
+              const acceptingUserId = user?.id || topicSuggestion.created_by;
+              const accepted = await autoAcceptTopicEditSuggestion(topicSuggestion, acceptingUserId, document);
+              if (accepted) {
+                console.log('[AUTO-ACCEPT TOPIC] Successfully accepted, invalidating queries');
+                hasChanges = true;
+              }
+            }
+          } catch (err) {
+            console.error('[AUTO-ACCEPT TOPIC] Error checking topic suggestion:', err);
+            hasCheckedRef.current.delete(checkKey);
+          }
+        }
+      }
+
       // Cleanup old entries periodically
       if (hasCheckedRef.current.size > 100) {
         hasCheckedRef.current.clear();
       }
-      
+
       // Refresh data if any changes occurred
       if (hasChanges) {
         console.log('[AUTO-ACCEPT] Refreshing all queries after acceptance');
         await queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
         await queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
+        await queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
+        await queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] });
         await queryClient.invalidateQueries({ queryKey: ['allVersions'] });
         await queryClient.invalidateQueries({ queryKey: ['document', document.id] });
+        await queryClient.invalidateQueries({ queryKey: ['publicDocuments'] });
       }
     };
 
     checkAndAutoAccept();
-  }, [suggestions, document, user, queryClient]);
+  }, [suggestions, topicEditSuggestions, document, user, queryClient]);
   
   const { data: users } = useQuery({
     queryKey: ['users'],
