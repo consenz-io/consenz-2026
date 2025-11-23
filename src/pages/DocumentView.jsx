@@ -18,6 +18,14 @@ import CreateSuggestionModal from "../components/document/CreateSuggestionModal"
 import PageHeader from "../components/PageHeader";
 import ContributorsModal from "../components/document/ContributorsModal";
 
+const detectLanguage = (text) => {
+  const hebrewPattern = /[\u0590-\u05FF]/;
+  const arabicPattern = /[\u0600-\u06FF]/;
+  
+  if (hebrewPattern.test(text)) return 'he';
+  if (arabicPattern.test(text)) return 'ar';
+  return 'en';
+};
 
 export default function DocumentView() {
   const { t, isRTL, language } = useLanguage();
@@ -245,29 +253,33 @@ export default function DocumentView() {
                 return document.title;
               })()}
             </h1>
-            {document.originalLanguage && document.originalLanguage !== language && (
-              <div className="flex-shrink-0">
-                {isTranslating ? (
-                  <Loader2 className="w-3.5 h-3.5 md:w-5 md:h-5 animate-spin text-blue-600" />
-                ) : !(typeof document.translations?.[language]?.title === 'string') ? (
-                  <button
-                    onClick={() => translateDocumentMutation.mutate()}
-                    className="p-0.5 md:p-1.5 hover:bg-blue-50 rounded transition-colors"
-                    title={t('translate')}
-                  >
-                    <Languages className="w-3.5 h-3.5 md:w-5 md:h-5 text-blue-600" />
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => setShowTranslated(!showTranslated)}
-                    className="p-0.5 md:p-1.5 hover:bg-slate-100 rounded transition-colors"
-                    title={showTranslated ? t('showOriginal') : t('showTranslation')}
-                  >
-                    <Languages className={`w-3.5 h-3.5 md:w-5 md:h-5 ${showTranslated ? 'text-slate-600' : 'text-blue-600'}`} />
-                  </button>
-                )}
-              </div>
-            )}
+            {(() => {
+              const detectedLanguage = document.originalLanguage || detectLanguage(document.title);
+              const needsTranslation = detectedLanguage && detectedLanguage !== language;
+              return needsTranslation && (
+                <div className="flex-shrink-0">
+                  {isTranslating ? (
+                    <Loader2 className="w-3.5 h-3.5 md:w-5 md:h-5 animate-spin text-blue-600" />
+                  ) : !(typeof document.translations?.[language]?.title === 'string') ? (
+                    <button
+                      onClick={() => translateDocumentMutation.mutate()}
+                      className="p-0.5 md:p-1.5 hover:bg-blue-50 rounded transition-colors"
+                      title={t('translate')}
+                    >
+                      <Languages className="w-3.5 h-3.5 md:w-5 md:h-5 text-blue-600" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowTranslated(!showTranslated)}
+                      className="p-0.5 md:p-1.5 hover:bg-slate-100 rounded transition-colors"
+                      title={showTranslated ? t('showOriginal') : t('showTranslation')}
+                    >
+                      <Languages className={`w-3.5 h-3.5 md:w-5 md:h-5 ${showTranslated ? 'text-slate-600' : 'text-blue-600'}`} />
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
           </div>
           <div className="flex gap-0.5 md:gap-2 flex-wrap justify-center w-full">
             <Badge variant="outline" className={`text-[7px] md:text-xs px-0.5 py-0.5 ${

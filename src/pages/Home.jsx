@@ -10,6 +10,15 @@ import { FileText, TrendingUp, Users, Clock, ArrowRight, ArrowLeft, Languages, L
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 
+const detectLanguage = (text) => {
+  const hebrewPattern = /[\u0590-\u05FF]/;
+  const arabicPattern = /[\u0600-\u06FF]/;
+  
+  if (hebrewPattern.test(text)) return 'he';
+  if (arabicPattern.test(text)) return 'ar';
+  return 'en';
+};
+
 export default function Home() {
   const { t, isRTL, language } = useLanguage();
   const queryClient = useQueryClient();
@@ -234,7 +243,9 @@ export default function Home() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {documents.map((doc) => {
-              const needsTranslation = doc.originalLanguage && doc.originalLanguage !== language;
+              // זיהוי אוטומטי של שפה אם לא מוגדרת
+              const detectedLanguage = doc.originalLanguage || detectLanguage(doc.title);
+              const needsTranslation = detectedLanguage && detectedLanguage !== language;
               const translatedTitle = doc.translations?.[language]?.title;
               const hasTranslation = typeof translatedTitle === 'string' && translatedTitle;
               const displayTitle = showTranslated[doc.id] && hasTranslation 

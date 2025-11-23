@@ -17,6 +17,15 @@ const languagePrompts = {
   ar: "Arabic"
 };
 
+const detectLanguage = (text) => {
+  const hebrewPattern = /[\u0590-\u05FF]/;
+  const arabicPattern = /[\u0600-\u06FF]/;
+  
+  if (hebrewPattern.test(text)) return 'he';
+  if (arabicPattern.test(text)) return 'ar';
+  return 'en';
+};
+
 export default function TranslatableContent({ 
   content, 
   entity, 
@@ -28,7 +37,9 @@ export default function TranslatableContent({
   const { language, isRTL } = useLanguage();
   const queryClient = useQueryClient();
 
-  const originalLanguage = entity.originalLanguage || 'he';
+  // זיהוי אוטומטי של שפה אם לא מוגדרת
+  const detectedLanguage = entity.originalLanguage || detectLanguage(content || '');
+  const originalLanguage = detectedLanguage;
   const translations = entity.translations || {};
   const hasTranslation = translations[language];
   
