@@ -6,14 +6,13 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import ReactQuill from "react-quill";
 
 import DocumentContent from "../components/document/DocumentContent";
-import SuggestionsList from "../components/document/SuggestionsList";
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 import PageHeader from "../components/PageHeader";
 import ContributorsModal from "../components/document/ContributorsModal";
@@ -36,7 +35,6 @@ export default function DocumentView() {
   const scrollToSectionId = searchParams.get('scrollTo');
   const [showCreateSuggestion, setShowCreateSuggestion] = useState(false);
   const [editingSection, setEditingSection] = useState(null);
-  const [activeTab, setActiveTab] = useState("document");
   const [showTranslated, setShowTranslated] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [showContributorsModal, setShowContributorsModal] = useState(false);
@@ -454,16 +452,14 @@ export default function DocumentView() {
             <div className="text-[7px] md:text-[10px] text-slate-600 text-center leading-tight">{t('contributors')}</div>
           </div>
           <div 
-            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 cursor-pointer hover:border-indigo-400 transition-all flex flex-col items-center justify-center gap-0.5 md:gap-1"
-            onClick={() => setActiveTab("suggestions")}
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 flex flex-col items-center justify-center gap-0.5 md:gap-1"
           >
             <MessageSquare className="w-3.5 h-3.5 md:w-6 md:h-6 text-indigo-600" />
             <div className="text-sm md:text-xl font-bold text-slate-900">{suggestions.length}</div>
             <div className="text-[7px] md:text-[10px] text-slate-600 text-center leading-tight">{t('suggestions')}</div>
           </div>
           <div 
-            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 cursor-pointer hover:border-purple-400 transition-all flex flex-col items-center justify-center gap-0.5 md:gap-1"
-            onClick={() => setActiveTab("document")}
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 flex flex-col items-center justify-center gap-0.5 md:gap-1"
           >
             <TrendingUp className="w-3.5 h-3.5 md:w-6 md:h-6 text-purple-600" />
             <div className="text-sm md:text-xl font-bold text-slate-900">
@@ -472,8 +468,7 @@ export default function DocumentView() {
             <div className="text-[7px] md:text-[10px] text-slate-600 text-center leading-tight">{t('consensus')}</div>
           </div>
           <div 
-            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 cursor-pointer hover:border-blue-400 transition-all flex flex-col items-center justify-center gap-0.5 md:gap-1"
-            onClick={() => setActiveTab("document")}
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 flex flex-col items-center justify-center gap-0.5 md:gap-1"
           >
             <div className="w-3.5 h-3.5 md:w-6 md:h-6 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-[7px] md:text-[11px]">
               {(() => {
@@ -501,37 +496,17 @@ export default function DocumentView() {
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-          <TabsList className="bg-white/80 backdrop-blur-sm w-full md:w-auto grid grid-cols-2 md:flex">
-            <TabsTrigger value="document" className="text-xs md:text-base px-2 md:px-4">{t('document')}</TabsTrigger>
-            <TabsTrigger value="suggestions" className="text-xs md:text-base px-2 md:px-4">
-              {t('suggestions')} ({suggestions.filter(s => s.status === 'pending').length})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="document">
-            <DocumentContent
-              document={document}
-              topics={topics}
-              sections={sections}
-              suggestions={suggestions}
-              onEditSection={handleEditSection}
-              onNewSection={handleNewSection}
-              isAdmin={isAdmin}
-              user={user}
-              onDirectEdit={(section) => handleEditSection(section, true)}
-            />
-          </TabsContent>
-
-          <TabsContent value="suggestions">
-            <SuggestionsList
-              suggestions={suggestions}
-              document={document}
-              user={user}
-              isAdmin={isAdmin}
-            />
-          </TabsContent>
-        </Tabs>
+        <DocumentContent
+          document={document}
+          topics={topics}
+          sections={sections}
+          suggestions={suggestions}
+          onEditSection={handleEditSection}
+          onNewSection={handleNewSection}
+          isAdmin={isAdmin}
+          user={user}
+          onDirectEdit={(section) => handleEditSection(section, true)}
+        />
       </div>
 
       {showCreateSuggestion && (
