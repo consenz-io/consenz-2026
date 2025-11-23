@@ -1,6 +1,15 @@
 import { base44 } from "@/api/base44Client";
 import { notifySuggestionStatusChange } from "../notifications/createNotification";
 
+const detectLanguage = (text) => {
+  const hebrewPattern = /[\u0590-\u05FF]/;
+  const arabicPattern = /[\u0600-\u06FF]/;
+  
+  if (hebrewPattern.test(text)) return 'he';
+  if (arabicPattern.test(text)) return 'ar';
+  return 'en';
+};
+
 /**
  * בדיקה אם הצעה עברה את סף הקונסנזוס ויכולה להתקבל אוטומטית
  * מיושם לפי אפיון Consensus Meter Logic
@@ -145,9 +154,11 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       });
       
       // עדכון הסעיף עם התוכן החדש
+      const newContentLanguage = detectLanguage(suggestion.newContent);
       await base44.entities.Section.update(section.id, {
         content: suggestion.newContent,
-        lastEditedBy: userId
+        lastEditedBy: userId,
+        originalLanguage: newContentLanguage,
       });
       
       // שמירת גרסה עם התוכן החדש
@@ -183,12 +194,14 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       }
       
       // יצירת הסעיף החדש
+      const newContentLanguage = detectLanguage(suggestion.newContent);
       const newSection = await base44.entities.Section.create({
         documentId: suggestion.documentId,
         topicId: suggestion.topicId,
         content: suggestion.newContent,
         order: newOrder,
-        lastEditedBy: userId
+        lastEditedBy: userId,
+        originalLanguage: newContentLanguage,
       });
       
       // שמירת גרסה ראשונה
