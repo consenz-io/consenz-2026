@@ -121,7 +121,7 @@ export default function CommentsSection({ entityType, entityId, user }) {
       return await base44.entities.Comment.delete(commentId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['comments', entityType, entityId] });
+      queryClient.invalidateQueries({ queryKey: ['comments'] });
       setError(null);
     },
     onError: (err) => {
