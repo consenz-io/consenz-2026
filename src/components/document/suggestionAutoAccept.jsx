@@ -262,3 +262,70 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     return false;
   }
 }
+
+/**
+ * אישור אוטומטי של הצעת עריכת כותרת נושא
+ */
+export async function autoAcceptTopicEditSuggestion(suggestion, userId, document) {
+  const freshSuggestions = await base44.entities.TopicEditSuggestion.filter({ id: suggestion.id });
+  const freshSuggestion = freshSuggestions[0];
+
+  if (!freshSuggestion || freshSuggestion.status !== 'pending') {
+    console.log('[AUTO-ACCEPT TOPIC] Suggestion not found or already processed:', suggestion.id, freshSuggestion?.status);
+    return false;
+  }
+
+  const proVotes = freshSuggestion.proVotes || 0;
+  const conVotes = freshSuggestion.conVotes || 0;
+  const delta = proVotes - conVotes;
+
+  if (delta < document.threshold) {
+    console.log('[AUTO-ACCEPT TOPIC] Topic suggestion does not meet threshold:', suggestion.id);
+    return false;
+  }
+
+  console.log('[AUTO-ACCEPT TOPIC] Auto-accepting topic edit suggestion:', suggestion.id);
+
+  // Accept suggestion - update topic title
+  await base44.entities.Topic.update(freshSuggestion.topicId, {
+    title: freshSuggestion.newTitle
+  });
+  
+  await base44.entities.TopicEditSuggestion.update(freshSuggestion.id, {
+    status: 'accepted'
+  });
+
+  // Create document version for topic title change
+  const versions = await base44.entities.DocumentVersion.filter({ documentId: document.id });
+  const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
+  
+  await base44.entities.DocumentVersion.create({
+    documentId: document.id,
+    changeDescription: `כותרת נושא עודכנה: ${freshSuggestion.originalTitle} ← ${freshSuggestion.newTitle}`,
+    version: nextVersion,
+    changeType: 'suggestion_accepted',
+  });
+
+  // Award points to creator
+  if (document.gamificationEnabled) {
+    const suggestionCreatorList = await base44.entities.User.filter({ email: freshSuggestion.created_by });
+    if (suggestionCreatorList.length > 0) {
+      const suggestionCreator = suggestionCreatorList[0];
+      const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
+      if (freshUser) {
+        const newPoints = (freshUser.points || 1000) + 100;
+        await base44.entities.User.update(freshUser.id, { points: newPoints });
+        
+        await base44.entities.PointsTransaction.create({
+          userId: suggestionCreator.id,
+          amount: 100,
+          action: 'suggestion_accepted',
+          description: `הצעתך לעריכת כותרת נושא התקבלה: ${freshSuggestion.newTitle}`,
+          relatedEntityType: 'topic'
+        });
+      }
+    }
+  }
+
+  return true;
+}
