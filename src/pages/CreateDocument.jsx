@@ -18,6 +18,15 @@ import PageHeader from "../components/PageHeader";
 import InsufficientPointsDialog from "../components/InsufficientPointsDialog";
 import PointsCostConfirmDialog from "../components/PointsCostConfirmDialog";
 
+const detectLanguage = (text) => {
+  const hebrewPattern = /[\u0590-\u05FF]/;
+  const arabicPattern = /[\u0600-\u06FF]/;
+  
+  if (hebrewPattern.test(text)) return 'he';
+  if (arabicPattern.test(text)) return 'ar';
+  return 'en';
+};
+
 export default function CreateDocument() {
   const { t, isRTL, language } = useLanguage();
   const navigate = useNavigate();
