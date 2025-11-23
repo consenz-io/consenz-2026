@@ -417,25 +417,24 @@ export default function DocumentView() {
             </div>
           )}
 
-          <div className="flex gap-0.5 md:gap-2 flex-wrap justify-center">
+          <div className="flex gap-2 md:gap-3 flex-wrap justify-center">
             <Link to={`${createPageUrl("DocumentVersions")}?id=${documentId}`} className="flex-shrink-0">
-              <Button variant="outline" size="sm" className="text-[8px] md:text-sm px-0.5 md:px-4 h-5 md:h-9">
-                <History className="w-3 h-3 md:w-4 md:h-4" />
-                <span className="hidden md:inline md:mr-2">{t('versions')}</span>
+              <Button variant="outline" size="sm" className="text-xs md:text-sm px-3 md:px-4 h-8 md:h-9">
+                <History className={`w-4 h-4 ${isRTL ? 'ml-1.5 md:ml-2' : 'mr-1.5 md:mr-2'}`} />
+                <span>{t('versions')}</span>
               </Button>
             </Link>
             <Link to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`} className="flex-shrink-0">
-              <Button variant="outline" size="sm" className="text-[8px] md:text-sm px-0.5 md:px-4 h-5 md:h-9">
-                <FileText className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-0.5 md:ml-2' : 'mr-0.5 md:mr-2'}`} />
-                <span className="hidden sm:inline">{t('viewCurrentVersion')}</span>
-                <span className="sm:hidden">תצוגה</span>
+              <Button variant="outline" size="sm" className="text-xs md:text-sm px-3 md:px-4 h-8 md:h-9">
+                <FileText className={`w-4 h-4 ${isRTL ? 'ml-1.5 md:ml-2' : 'mr-1.5 md:mr-2'}`} />
+                <span>{t('cleanView')}</span>
               </Button>
             </Link>
             {isAdmin && (
               <Link to={`${createPageUrl("DocumentAdmin")}?id=${documentId}`} className="flex-shrink-0">
-                <Button variant="outline" size="sm" className="text-[8px] md:text-sm px-0.5 md:px-4 h-5 md:h-9">
-                  <Settings className="w-3 h-3 md:w-4 md:h-4" />
-                  <span className="hidden md:inline md:mr-2">{t('admin')}</span>
+                <Button variant="outline" size="sm" className="text-xs md:text-sm px-3 md:px-4 h-8 md:h-9">
+                  <Settings className={`w-4 h-4 ${isRTL ? 'ml-1.5 md:ml-2' : 'mr-1.5 md:mr-2'}`} />
+                  <span>{t('admin')}</span>
                 </Button>
               </Link>
             )}
