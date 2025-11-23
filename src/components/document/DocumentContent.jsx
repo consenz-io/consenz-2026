@@ -49,6 +49,29 @@ export default function DocumentContent({
     he: "Hebrew",
     ar: "Arabic"
   };
+  
+  const { data: users } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => base44.entities.User.list(),
+    initialData: [],
+  });
+
+  const { data: topicEditSuggestions } = useQuery({
+    queryKey: ['topicEditSuggestions', document?.id],
+    queryFn: () => base44.entities.TopicEditSuggestion.filter({ documentId: document.id }),
+    enabled: !!document?.id,
+    initialData: [],
+  });
+
+  const { data: topicEditVotes } = useQuery({
+    queryKey: ['topicEditVotes', document?.id, user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      return await base44.entities.TopicEditVote.filter({ userId: user.id });
+    },
+    enabled: !!user?.id && !!document?.id,
+    initialData: [],
+  });
 
   // בדיקה ואישור אוטומטי של הצעות שעברו את רף הקונסנזוס
   const hasCheckedRef = React.useRef(new Set());
@@ -145,29 +168,6 @@ export default function DocumentContent({
 
     checkAndAutoAccept();
   }, [suggestions, topicEditSuggestions, document, user, queryClient]);
-  
-  const { data: users } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => base44.entities.User.list(),
-    initialData: [],
-  });
-
-  const { data: topicEditSuggestions } = useQuery({
-    queryKey: ['topicEditSuggestions', document?.id],
-    queryFn: () => base44.entities.TopicEditSuggestion.filter({ documentId: document.id }),
-    enabled: !!document?.id,
-    initialData: [],
-  });
-
-  const { data: topicEditVotes } = useQuery({
-    queryKey: ['topicEditVotes', document?.id, user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      return await base44.entities.TopicEditVote.filter({ userId: user.id });
-    },
-    enabled: !!user?.id && !!document?.id,
-    initialData: [],
-  });
 
   const { data: sectionComments } = useQuery({
     queryKey: ['sectionComments', document?.id],
