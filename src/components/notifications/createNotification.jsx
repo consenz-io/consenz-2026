@@ -97,8 +97,8 @@ export async function createNotification({
     const notification = await base44.entities.Notification.create({
       userId,
       type,
-      title: String(title),
-      message: String(message),
+      title,
+      message,
       relatedEntityId,
       relatedEntityType,
       actionUrl,
