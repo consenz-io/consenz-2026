@@ -127,7 +127,9 @@ Return ONLY the translated HTML:`;
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   if (showTranslated && hasTranslation) {
                     setShowTranslated(false);
                   } else if (hasTranslation) {
