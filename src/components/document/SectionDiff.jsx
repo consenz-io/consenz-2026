@@ -12,7 +12,7 @@ export default function SectionDiff({ originalContent, newContent, documentId, s
   const [translatedContent, setTranslatedContent] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [showTranslated, setShowTranslated] = useState(false);
-  const [showDiff, setShowDiff] = useState(true);
+  const [showDiff, setShowDiff] = useState(false);
   
   const originalLanguage = 'he';
   const needsTranslation = language !== originalLanguage;
@@ -153,17 +153,24 @@ Return ONLY the translated HTML:`;
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setShowDiff(!showDiff)}
-            className="h-7 px-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-            title={showDiff ? t('cleanView') : t('showDiff')}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDiff(!showDiff);
+            }}
+            className={`h-7 px-2 gap-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 ${isRTL ? 'flex-row-reverse' : ''}`}
+            title={showDiff ? t('cleanView') : t('showChangesView')}
           >
             {showDiff ? <Eye className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+            <span className="text-xs">{showDiff ? t('cleanView') : t('showChangesView')}</span>
           </Button>
           {needsTranslation && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleTranslate}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleTranslate();
+              }}
               disabled={isTranslating}
               className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
               title={showTranslated ? t('showOriginal') : t('translate')}

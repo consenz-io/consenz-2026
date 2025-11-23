@@ -218,6 +218,7 @@ const translations = {
     viewFullComment: "View full comment",
     suggestion: "suggestion",
     section: "section",
+    showChangesView: "Show Changes",
     },
   he: {
     // ניווט
@@ -435,6 +436,7 @@ const translations = {
     viewFullComment: "צפה בתגובה המלאה",
     suggestion: "הצעה",
     section: "סעיף",
+    showChangesView: "תצוגת שינויים",
     },
   ar: {
     // التنقل
@@ -651,6 +653,7 @@ const translations = {
     viewFullComment: "عرض التعليق الكامل",
     suggestion: "اقتراح",
     section: "قسم",
+    showChangesView: "عرض التغييرات",
     }
 };
 
