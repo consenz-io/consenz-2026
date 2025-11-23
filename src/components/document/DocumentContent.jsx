@@ -840,9 +840,13 @@ Return ONLY the translated text:`;
                           className={snapshot.isDragging ? 'opacity-70' : ''}
                         >
                           <React.Fragment>
-                            {/* Show new section suggestions that should appear at this position */}
-                            {index === 0 && newSectionSuggestions
-                              .filter(s => (s.insertPosition === undefined || s.insertPosition === null || s.insertPosition === 0))
+                            {/* Show new section suggestions that should appear before this section */}
+                            {newSectionSuggestions
+                              .filter(s => {
+                                const pos = s.insertPosition;
+                                // Show suggestions with insertPosition matching this index
+                                return pos !== undefined && pos !== null && pos === index;
+                              })
                               .map((suggestion) => (
                                 <NewSectionSuggestionCard
                                   key={suggestion.id}
@@ -914,11 +918,15 @@ Return ONLY the translated text:`;
                               users={users}
                             />
                           </div>
-                            {/* Show suggestions at the end */}
+                            {/* Show suggestions after the last section */}
                             {index === topicSections.length - 1 && (
                               <>
                                 {newSectionSuggestions
-                                    .filter(s => (s.insertPosition || 999) > index)
+                                    .filter(s => {
+                                      const pos = s.insertPosition;
+                                      // Show suggestions with insertPosition > last section index, or undefined/null (default to end)
+                                      return (pos !== undefined && pos !== null && pos > index) || (pos === undefined || pos === null);
+                                    })
                                     .map((suggestion) => (
                                       <NewSectionSuggestionCard
                                         key={suggestion.id}
