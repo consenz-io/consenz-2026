@@ -31,7 +31,9 @@ export default function TranslatableContent({
   const originalLanguage = entity.originalLanguage || 'he';
   const translations = entity.translations || {};
   const hasTranslation = translations[language];
-  const needsTranslation = language !== originalLanguage;
+  
+  // בדיקה אם צריך תרגום - בודק גם אם השפות שונות וגם אם השפה אינה שפת המקור
+  const needsTranslation = originalLanguage && language !== originalLanguage;
   
   const [showTranslated, setShowTranslated] = useState(needsTranslation && hasTranslation);
   
