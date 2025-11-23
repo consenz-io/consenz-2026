@@ -151,7 +151,7 @@ export default function NotificationBell({ user }) {
                     <span className="text-2xl">{getNotificationIcon(notification.type)}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="font-medium text-sm">{notification.title}</p>
+                        <p className="font-medium text-sm">{String(notification.title || '')}</p>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -164,7 +164,7 @@ export default function NotificationBell({ user }) {
                           <X className="w-4 h-4" />
                         </Button>
                       </div>
-                      <p className="text-sm text-slate-600 mt-1">{notification.message}</p>
+                      <p className="text-sm text-slate-600 mt-1">{String(notification.message || '')}</p>
                       <p className="text-xs text-slate-400 mt-2">
                         {formatTimeAgo(notification.created_date)}
                       </p>
