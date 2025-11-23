@@ -442,7 +442,7 @@ export default function DocumentView() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-1 md:gap-3 w-full max-w-full">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 w-full max-w-full">
           <div 
             className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-3 cursor-pointer hover:border-blue-400 transition-all flex flex-col items-center justify-center gap-0.5 md:gap-1"
             onClick={() => setShowContributorsModal(true)}
