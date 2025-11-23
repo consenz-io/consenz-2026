@@ -701,30 +701,17 @@ Return ONLY the translated text:`;
                     )
                   )}
                 </div>
-                <div className="flex gap-2">
-                  {user && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setEditingTopic(topic)}
-                      className="text-slate-600 hover:text-blue-600 hover:bg-blue-50"
-                      title="הצע עריכה לכותרת"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                  )}
-                  {user && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onNewSection(topic.id)}
-                      className="w-full md:w-auto"
-                    >
-                      <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                      {t('addSection')}
-                    </Button>
-                  )}
-                </div>
+                {user && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingTopic(topic)}
+                    className="absolute top-2 left-12 z-10 text-slate-600 hover:text-blue-600 hover:bg-blue-50 p-1 h-8 w-8"
+                    title="הצע עריכה לכותרת"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
