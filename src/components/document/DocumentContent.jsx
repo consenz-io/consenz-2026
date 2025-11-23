@@ -615,7 +615,9 @@ Return ONLY the translated text:`;
           queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
           queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
           queryClient.invalidateQueries({ queryKey: ['document', document.id] }),
-          queryClient.invalidateQueries({ queryKey: ['allVersions'] })
+          queryClient.invalidateQueries({ queryKey: ['publicDocuments'] }),
+          queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
+          queryClient.invalidateQueries({ queryKey: ['versions', document.id] })
         ]);
 
         // Show success notification
