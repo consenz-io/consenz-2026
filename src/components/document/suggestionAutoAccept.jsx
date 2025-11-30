@@ -172,32 +172,32 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
       
       await base44.entities.DocumentVersion.create({
-        documentId: suggestion.documentId,
+        documentId: freshSuggestion.documentId,
         sectionId: section.id,
         content: section.content,
-        changeDescription: `לפני: ${suggestion.title}`,
+        changeDescription: `לפני: ${freshSuggestion.title || 'הצעת עריכה'}`,
         version: nextVersion,
         changeType: 'suggestion_accepted',
-        suggestionId: suggestion.id
+        suggestionId: freshSuggestion.id
       });
       
       // עדכון הסעיף עם התוכן החדש
-      const newContentLanguage = detectLanguage(suggestion.newContent);
+      const newContentLanguage = detectLanguage(freshSuggestion.newContent || '');
       await base44.entities.Section.update(section.id, {
-        content: suggestion.newContent,
+        content: freshSuggestion.newContent,
         lastEditedBy: userId,
         originalLanguage: newContentLanguage,
       });
       
       // שמירת גרסה עם התוכן החדש
       await base44.entities.DocumentVersion.create({
-        documentId: suggestion.documentId,
+        documentId: freshSuggestion.documentId,
         sectionId: section.id,
-        content: suggestion.newContent,
-        changeDescription: suggestion.title,
+        content: freshSuggestion.newContent,
+        changeDescription: freshSuggestion.title || 'הצעת עריכה',
         version: nextVersion + 1,
         changeType: 'suggestion_accepted',
-        suggestionId: suggestion.id
+        suggestionId: freshSuggestion.id
       });
     } 
     // טיפול בהצעה לסעיף חדש
