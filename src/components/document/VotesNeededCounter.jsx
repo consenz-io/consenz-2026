@@ -1,16 +1,12 @@
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Target, TrendingUp } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
-import { useQueryClient } from "@tanstack/react-query";
-import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAutoAccept";
 
-export default function VotesNeededCounter({ suggestion, document, acceptedSuggestions = [] }) {
+export default function VotesNeededCounter({ suggestion, document }) {
   const { t } = useLanguage();
-  const queryClient = useQueryClient();
-  const hasTriggeredAutoAccept = useRef(new Set());
 
-  // שימוש באותה לוגיקת threshold כמו ב-checkSuggestionConsensus
+  // חישוב כמה הצבעות נדרשות
   const calculateVotesNeeded = () => {
     if (!document) return 1;
     
@@ -18,7 +14,7 @@ export default function VotesNeededCounter({ suggestion, document, acceptedSugge
     const conVotes = suggestion.conVotes || 0;
     const totalUsers = document.totalUsersInteracted || 1;
     
-    // חישוב threshold דינמי על בסיס consensuses של המסמך - זהה ל-checkSuggestionConsensus
+    // חישוב threshold דינמי על בסיס consensuses של המסמך
     let threshold;
     const consensuses = document.consensuses || [];
     
@@ -37,44 +33,11 @@ export default function VotesNeededCounter({ suggestion, document, acceptedSugge
       return 0;
     }
 
-    // כמה הצבעות בעד נוספות נדרשות כדי להגיע לדלתא הנדרשת
+    // כמה הצבעות בעד נוספות נדרשות
     return threshold - currentDelta;
   };
 
   const votesNeeded = calculateVotesNeeded();
-
-  // Auto-accept logic when threshold is met
-  useEffect(() => {
-    const triggerAutoAccept = async () => {
-      if (suggestion.status !== 'pending' || !document) return;
-      
-      const checkKey = `${suggestion.id}-${suggestion.proVotes}-${suggestion.conVotes}`;
-      if (hasTriggeredAutoAccept.current.has(checkKey)) return;
-      
-      const { shouldAccept } = await checkSuggestionConsensus(suggestion, document);
-      
-      if (shouldAccept) {
-        hasTriggeredAutoAccept.current.add(checkKey);
-        console.log('[VotesNeededCounter] Auto-accepting suggestion:', suggestion.id);
-        
-        const accepted = await autoAcceptSuggestion(suggestion, suggestion.created_by, document);
-        
-        if (accepted) {
-          console.log('[VotesNeededCounter] Suggestion accepted, refreshing queries');
-          queryClient.invalidateQueries({ queryKey: ['suggestions'] });
-          queryClient.invalidateQueries({ queryKey: ['sections'] });
-          queryClient.invalidateQueries({ queryKey: ['document'] });
-          queryClient.invalidateQueries({ queryKey: ['allVersions'] });
-          queryClient.invalidateQueries({ queryKey: ['versions'] });
-          queryClient.invalidateQueries({ queryKey: ['suggestion', suggestion.id] });
-        }
-      }
-    };
-    
-    if (votesNeeded === 0 && suggestion.status === 'pending') {
-      triggerAutoAccept();
-    }
-  }, [suggestion.id, suggestion.status, suggestion.proVotes, suggestion.conVotes, document?.id, votesNeeded, queryClient]);
 
   if (suggestion.status !== 'pending') {
     return null;
