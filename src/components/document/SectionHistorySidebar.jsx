@@ -101,7 +101,7 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
       />
       
       {/* Sidebar */}
-      <div className={`fixed top-0 ${isRTL ? 'left-0' : 'right-0'} h-full w-full max-w-2xl bg-white shadow-2xl z-50 overflow-y-auto`}>
+      <div className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-full max-w-2xl bg-white shadow-2xl z-50 overflow-y-auto`}>
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-slate-200 p-4 flex items-center justify-between z-10">
           <div className="flex items-center gap-3">
