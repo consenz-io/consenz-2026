@@ -1,10 +1,15 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Target, TrendingUp } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import { useQueryClient } from "@tanstack/react-query";
+import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAutoAccept";
 
 export default function VotesNeededCounter({ suggestion, document, acceptedSuggestions = [] }) {
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
+  const hasTriggeredAutoAccept = useRef(new Set());
+
   const calculateVotesNeeded = () => {
     const proVotes = suggestion.proVotes || 0;
     const conVotes = suggestion.conVotes || 0;
@@ -38,6 +43,38 @@ export default function VotesNeededCounter({ suggestion, document, acceptedSugge
   };
 
   const votesNeeded = calculateVotesNeeded();
+
+  // Auto-accept logic when threshold is met
+  useEffect(() => {
+    const triggerAutoAccept = async () => {
+      if (suggestion.status !== 'pending' || !document) return;
+      
+      const checkKey = `${suggestion.id}-${suggestion.proVotes}-${suggestion.conVotes}`;
+      if (hasTriggeredAutoAccept.current.has(checkKey)) return;
+      
+      const { shouldAccept } = await checkSuggestionConsensus(suggestion, document);
+      
+      if (shouldAccept) {
+        hasTriggeredAutoAccept.current.add(checkKey);
+        console.log('[VotesNeededCounter] Auto-accepting suggestion:', suggestion.id);
+        
+        const accepted = await autoAcceptSuggestion(suggestion, suggestion.created_by, document);
+        
+        if (accepted) {
+          console.log('[VotesNeededCounter] Suggestion accepted, refreshing queries');
+          await queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+          await queryClient.invalidateQueries({ queryKey: ['sections'] });
+          await queryClient.invalidateQueries({ queryKey: ['document'] });
+          await queryClient.invalidateQueries({ queryKey: ['allVersions'] });
+          await queryClient.invalidateQueries({ queryKey: ['versions'] });
+        }
+      }
+    };
+    
+    if (votesNeeded === 0 && suggestion.status === 'pending') {
+      triggerAutoAccept();
+    }
+  }, [suggestion, document, votesNeeded, queryClient]);
 
   if (suggestion.status !== 'pending') {
     return null;
