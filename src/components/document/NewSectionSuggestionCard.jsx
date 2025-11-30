@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, Plus, ExternalLink } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Plus } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import VotesNeededCounter from "./VotesNeededCounter";
 import TranslatableContent from "./TranslatableContent";
