@@ -478,6 +478,12 @@ export default function SectionCarousel({
         onConfirm={(saveToHistory) => deleteSectionMutation.mutate(saveToHistory)}
         isDeleting={deleteSectionMutation.isPending}
       />
+      
+      <SectionHistorySidebar
+        sectionId={section.id}
+        isOpen={showHistorySidebar}
+        onClose={() => setShowHistorySidebar(false)}
+      />
     </div>
   );
 }
