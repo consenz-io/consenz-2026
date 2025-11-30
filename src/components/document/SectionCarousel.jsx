@@ -334,6 +334,8 @@ export default function SectionCarousel({
 
 
 
+          </div>
+
             {/* כפתורי הצבעה והערות */}
             <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap">
               {user && document?.votingButtonsEnabled ? (
@@ -397,11 +399,14 @@ export default function SectionCarousel({
                   {t('by')} {getUserName(currentView.data.created_by)}
                 </Badge>
               </Link>
-              <Link to={`${createPageUrl("SuggestionDetail")}?id=${currentView.data.id}`} className="flex-shrink-0">
-                <Button size="sm" variant="outline" className="text-[10px] md:text-xs h-7 md:h-8 px-2 md:px-3">
-                  {t('viewDetails')}
-                </Button>
-              </Link>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="text-[10px] md:text-xs h-7 md:h-8 px-2 md:px-3 flex-shrink-0"
+                onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
+              >
+                {t('viewDetails')}
+              </Button>
             </div>
 
             {/* תגובות להצעה */}
