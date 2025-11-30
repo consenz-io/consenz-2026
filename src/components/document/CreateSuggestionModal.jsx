@@ -340,6 +340,11 @@ Return ONLY the translated HTML:`;
         queryClient.invalidateQueries({ queryKey: ['currentUser'] });
         queryClient.invalidateQueries({ queryKey: ['document', document.id] });
         queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
+        
+        // Notify parent to scroll to the new suggestion
+        if (result?.id && onSuggestionCreated) {
+          onSuggestionCreated(result.id, result.sectionId, result.topicId);
+        }
       }
     },
     onError: (err, variables, context) => {
