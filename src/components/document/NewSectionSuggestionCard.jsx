@@ -126,21 +126,8 @@ export default function NewSectionSuggestionCard({
               document={doc}
               acceptedSuggestions={acceptedSuggestions}
             />
-          </div>
-          
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="text-xs"
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenSidebar && onOpenSidebar(suggestion.id);
-            }}
-          >
-            <ExternalLink className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-            {t('viewDetails')}
-          </Button>
-        </div>
+            </div>
+            </div>
       </CardContent>
     </Card>
   );
