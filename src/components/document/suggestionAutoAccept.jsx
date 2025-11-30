@@ -148,11 +148,17 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
   try {
     // טיפול בהצעת עריכה לסעיף קיים
     if (freshSuggestion.type === 'edit_section' && freshSuggestion.sectionId) {
-      const sections = await base44.entities.Section.filter({ id: suggestion.sectionId });
-      const section = sections[0];
+      let section;
+      try {
+        const sections = await base44.entities.Section.filter({ id: freshSuggestion.sectionId });
+        section = sections[0];
+      } catch (err) {
+        console.error('[AUTO-ACCEPT] Error fetching section:', err);
+        return false;
+      }
       
       if (!section) {
-        console.error('Section not found:', suggestion.sectionId);
+        console.error('[AUTO-ACCEPT] Section not found:', freshSuggestion.sectionId);
         return false;
       }
 
