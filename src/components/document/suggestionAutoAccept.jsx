@@ -57,9 +57,26 @@ export async function checkSuggestionConsensus(suggestion, document) {
  * מקבל הצעה אוטומטית - מיישם את השינוי במסמך
  */
 export async function autoAcceptSuggestion(suggestion, userId, document) {
+  // Validate inputs
+  if (!suggestion || !suggestion.id) {
+    console.error('[AUTO-ACCEPT] Invalid suggestion:', suggestion);
+    return false;
+  }
+  
+  if (!document || !document.id) {
+    console.error('[AUTO-ACCEPT] Invalid document:', document);
+    return false;
+  }
+  
   // בדיקה נוספת שההצעה אכן ממתינה - קוראים אותה מחדש מה-DB
-  const freshSuggestions = await base44.entities.Suggestion.filter({ id: suggestion.id });
-  const freshSuggestion = freshSuggestions[0];
+  let freshSuggestion;
+  try {
+    const freshSuggestions = await base44.entities.Suggestion.filter({ id: suggestion.id });
+    freshSuggestion = freshSuggestions[0];
+  } catch (err) {
+    console.error('[AUTO-ACCEPT] Error fetching suggestion:', err);
+    return false;
+  }
   
   if (!freshSuggestion) {
     console.log('[AUTO-ACCEPT] Suggestion not found:', suggestion.id);
