@@ -173,6 +173,7 @@ export default function SuggestionSidebar({
       
       const previousSuggestion = queryClient.getQueryData(['suggestion', suggestionId]);
       const previousVote = queryClient.getQueryData(['userVote', suggestionId, user?.id]);
+      const doc = document || parentDocument;
       
       // עדכון אופטימיסטי של ההצעה
       queryClient.setQueryData(['suggestion', suggestionId], (old) => {
@@ -199,7 +200,17 @@ export default function SuggestionSidebar({
           else newConVotes += 1;
         }
         
-        return { ...old, proVotes: newProVotes, conVotes: newConVotes };
+        // בדיקה אופטימיסטית אם ההצעה תתקבל
+        const threshold = doc?.threshold || 2;
+        const delta = newProVotes - newConVotes;
+        const willBeAccepted = delta >= threshold && old.status === 'pending';
+        
+        return { 
+          ...old, 
+          proVotes: newProVotes, 
+          conVotes: newConVotes,
+          status: willBeAccepted ? 'accepted' : old.status
+        };
       });
       
       // עדכון אופטימיסטי של ההצבעה
