@@ -462,6 +462,9 @@ const translations = {
     suggestion: "הצעה",
     showChangesView: "תצוגת שינויים",
     generalDocumentDiscussion: "דיון כללי במסמך",
+    publicViewOpenParticipation: "ציבורי - השתתפות פתוחה",
+    publicViewClosedParticipation: "ציבורי - השתתפות סגורה",
+    privateInviteOnly: "פרטי - הזמנה בלבד",
 
     // גימיפיקציה ונקודות
     pointsTransactionCreated: "יצירת הצעה:",
