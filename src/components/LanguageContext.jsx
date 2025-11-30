@@ -702,6 +702,9 @@ const translations = {
     suggestion: "اقتراح",
     showChangesView: "عرض التغييرات",
     generalDocumentDiscussion: "نقاش عام حول المستند",
+    publicViewOpenParticipation: "عام - مشاركة مفتوحة",
+    publicViewClosedParticipation: "عام - مشاركة مغلقة",
+    privateInviteOnly: "خاص - بدعوة فقط",
 
     // التلعيب والنقاط
     pointsTransactionCreated: "إنشاء اقتراح:",
