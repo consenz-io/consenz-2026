@@ -1000,6 +1000,8 @@ Return ONLY the translated text:`;
                               isAdmin={isAdmin}
                               users={users}
                               onOpenSuggestionSidebar={onOpenSuggestionSidebar}
+                              newlyCreatedSuggestionId={newlyCreatedSuggestion?.sectionId === section.id ? newlyCreatedSuggestion?.suggestionId : null}
+                              onClearNewlyCreated={onClearNewlyCreated}
                             />
                           </div>
                             {/* Show suggestions after the last section */}
