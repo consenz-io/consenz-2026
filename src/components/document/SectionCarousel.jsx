@@ -257,7 +257,7 @@ export default function SectionCarousel({
 
       {/* תוכן */}
       <div className="min-h-[200px]">
-        {currentView.type === 'current' ? (
+        {!currentView ? null : currentView.type === 'current' ? (
           // תצוגת תוכן נוכחי
           <>
             <TranslatableContent
