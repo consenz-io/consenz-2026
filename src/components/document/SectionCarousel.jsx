@@ -60,7 +60,10 @@ export default function SectionCarousel({
   const [showTranslated, setShowTranslated] = useState({});
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showHistorySidebar, setShowHistorySidebar] = useState(false);
-  const currentView = allViews[currentIndex];
+  
+  // Reset currentIndex if it's out of bounds
+  const safeIndex = currentIndex >= allViews.length ? 0 : currentIndex;
+  const currentView = allViews[safeIndex] || allViews[0];
 
   // דפדוף מעגלי
   const handleNext = () => {
