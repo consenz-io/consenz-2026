@@ -30,7 +30,8 @@ export default function DocumentContent({
   onNewSection,
   isAdmin,
   user,
-  onDirectEdit
+  onDirectEdit,
+  onOpenSuggestionSidebar
 }) {
   const [showComments, setShowComments] = useState({});
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
