@@ -225,10 +225,13 @@ export default function SuggestionSidebar({
       setTimeout(() => setError(null), 5000);
     },
     onSuccess: (data) => {
+      const doc = document || parentDocument;
       if (data?.accepted) {
-        queryClient.invalidateQueries({ queryKey: ['sections'] });
-        queryClient.invalidateQueries({ queryKey: ['suggestions'] });
-        queryClient.invalidateQueries({ queryKey: ['document'] });
+        queryClient.invalidateQueries({ queryKey: ['sections', doc?.id] });
+        queryClient.invalidateQueries({ queryKey: ['suggestions', doc?.id] });
+        queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
+        queryClient.invalidateQueries({ queryKey: ['allVersions'] });
+        queryClient.invalidateQueries({ queryKey: ['document', doc?.id] });
       }
       queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
     },
