@@ -471,16 +471,17 @@ export default function DocumentView() {
         </div>
 
         <DocumentContent
-          document={document}
-          topics={topics}
-          sections={sections}
-          suggestions={suggestions}
-          onEditSection={handleEditSection}
-          onNewSection={handleNewSection}
-          isAdmin={isAdmin}
-          user={user}
-          onDirectEdit={(section) => handleEditSection(section, true)}
-        />
+            document={document}
+            topics={topics}
+            sections={sections}
+            suggestions={suggestions}
+            onEditSection={handleEditSection}
+            onNewSection={handleNewSection}
+            isAdmin={isAdmin}
+            user={user}
+            onDirectEdit={(section) => handleEditSection(section, true)}
+            onOpenSuggestionSidebar={(suggestionId) => setOpenSuggestionId(suggestionId)}
+          />
       </div>
 
       {showCreateSuggestion && (
