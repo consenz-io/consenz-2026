@@ -220,6 +220,7 @@ const translations = {
     viewFullComment: "View full comment",
     suggestion: "suggestion",
     showChangesView: "Show Changes",
+    generalDocumentDiscussion: "General Document Discussion",
 
     // Gamification and Points
     pointsTransactionCreated: "Created suggestion:",
