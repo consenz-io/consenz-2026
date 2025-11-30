@@ -426,6 +426,7 @@ export default function DocumentContent({
         queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
         queryClient.invalidateQueries({ queryKey: ['allVersions'] });
         queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
+        queryClient.invalidateQueries({ queryKey: ['publicDocuments'] });
       }
       // רענון ההצבעות לקבלת ה-ID האמיתי
       queryClient.invalidateQueries({ queryKey: ['userVotes', document?.id, user?.id] });
