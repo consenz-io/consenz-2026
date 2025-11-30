@@ -32,7 +32,9 @@ export default function SectionCarousel({
   sectionIndex,
   isAdmin,
   users,
-  onOpenSuggestionSidebar
+  onOpenSuggestionSidebar,
+  newlyCreatedSuggestionId,
+  onClearNewlyCreated
 }) {
   const { t, isRTL, language } = useLanguage();
   const navigate = useNavigate();
