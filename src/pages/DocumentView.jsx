@@ -486,6 +486,8 @@ export default function DocumentView() {
             user={user}
             onDirectEdit={(section) => handleEditSection(section, true)}
             onOpenSuggestionSidebar={(suggestionId) => setOpenSuggestionId(suggestionId)}
+            newlyCreatedSuggestion={newlyCreatedSuggestion}
+            onClearNewlyCreated={() => setNewlyCreatedSuggestion(null)}
           />
       </div>
 
