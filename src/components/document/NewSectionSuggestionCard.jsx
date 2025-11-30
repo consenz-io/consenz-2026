@@ -30,7 +30,10 @@ export default function NewSectionSuggestionCard({
   };
 
   return (
-    <Card className="bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-dashed border-amber-300 hover:border-amber-400 transition-all hover:shadow-lg">
+    <Card 
+      className="bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-dashed border-amber-300 hover:border-amber-400 transition-all hover:shadow-lg cursor-pointer"
+      onClick={() => onOpenSidebar && onOpenSidebar(suggestion.id)}
+    >
       <CardContent className="p-4 md:p-6">
         <div className="flex items-start gap-3 mb-3">
           <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
