@@ -163,8 +163,13 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       }
 
       // שמירת גרסה עם התוכן הישן
-      const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
-      const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
+      let versions = [];
+      try {
+        versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
+      } catch (err) {
+        console.error('[AUTO-ACCEPT] Error fetching versions:', err);
+      }
+      const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
       
       await base44.entities.DocumentVersion.create({
         documentId: suggestion.documentId,
