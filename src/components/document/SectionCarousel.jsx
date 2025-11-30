@@ -291,7 +291,10 @@ export default function SectionCarousel({
           </>
         ) : (
           // תצוגת הצעה - diff
-          <>
+          <div 
+            className="cursor-pointer hover:opacity-90 transition-opacity"
+            onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
+          >
             {currentView.data.explanation && (
               <div className="mb-3 text-sm">
                 <TranslatableContent
@@ -319,20 +322,7 @@ export default function SectionCarousel({
                 />
               </div>
             ) : (
-              <div 
-                className="p-3 bg-green-50 rounded border border-green-200 cursor-pointer hover:bg-green-100 hover:shadow-md transition-all"
-                onClick={() => {
-                  if (document?.id && section?.id) {
-                    navigate(`${createPageUrl("DocumentView")}?id=${document.id}#section-${section.id}`);
-                    setTimeout(() => {
-                      const element = document.getElementById(`section-${section.id}`);
-                      if (element) {
-                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      }
-                    }, 300);
-                  }
-                }}
-              >
+              <div className="p-3 bg-green-50 rounded border border-green-200 hover:bg-green-100 hover:shadow-md transition-all">
                 <TranslatableContent
                   content={currentView.data.newContent}
                   entity={currentView.data}
