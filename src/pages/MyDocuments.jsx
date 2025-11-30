@@ -188,20 +188,6 @@ export default function MyDocuments() {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-4 space-y-4">
-                      <div className="flex gap-2 flex-wrap">
-                        <Badge variant="outline" className={
-                          doc.privacy === 'public_view_open_participation' 
-                            ? 'bg-green-50 text-green-700 border-green-200'
-                            : 'bg-amber-50 text-amber-700 border-amber-200'
-                        }>
-                          {doc.privacy === 'public_view_open_participation' 
-                            ? t('publicViewOpenParticipation')
-                            : doc.privacy === 'public_view_closed_participation'
-                            ? t('publicViewClosedParticipation')
-                            : t('privateInviteOnly')}
-                        </Badge>
-                      </div>
-
                       <div className="grid grid-cols-2 gap-3">
                         <div className="flex items-center gap-2">
                           <Users className="w-4 h-4 text-slate-400" />
