@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, ThumbsUp, Thum
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import DeleteSectionDialog from "./DeleteSectionDialog";
+import SectionHistorySidebar from "./SectionHistorySidebar";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import SectionDiff from "./SectionDiff";
 import VotesNeededCounter from "./VotesNeededCounter";
