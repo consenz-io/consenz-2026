@@ -8,7 +8,7 @@ export default function VotesNeededCounter({ suggestion, document }) {
 
   // חישוב כמה הצבעות נדרשות
   const calculateVotesNeeded = () => {
-    if (!document) return 1;
+    if (!document || !suggestion) return 1;
     
     const proVotes = suggestion.proVotes || 0;
     const conVotes = suggestion.conVotes || 0;
@@ -39,7 +39,7 @@ export default function VotesNeededCounter({ suggestion, document }) {
 
   const votesNeeded = calculateVotesNeeded();
 
-  if (suggestion.status !== 'pending') {
+  if (!suggestion || suggestion.status !== 'pending') {
     return null;
   }
 
