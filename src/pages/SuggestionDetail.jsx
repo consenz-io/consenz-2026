@@ -292,7 +292,17 @@ export default function SuggestionDetail() {
           else newConVotes += 1;
         }
         
-        return { ...old, proVotes: newProVotes, conVotes: newConVotes };
+        // בדיקה אופטימיסטית אם ההצעה תתקבל
+        const threshold = document?.threshold || 2;
+        const delta = newProVotes - newConVotes;
+        const willBeAccepted = delta >= threshold && old.status === 'pending';
+        
+        return { 
+          ...old, 
+          proVotes: newProVotes, 
+          conVotes: newConVotes,
+          status: willBeAccepted ? 'accepted' : old.status
+        };
       });
       
       // עדכון אופטימיסטי של ההצבעה
