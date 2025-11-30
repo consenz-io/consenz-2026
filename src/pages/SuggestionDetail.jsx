@@ -131,194 +131,205 @@ export default function SuggestionDetail() {
     return user?.full_name || email;
   };
 
-  const voteMutation = useMutation({
-    mutationFn: async (vote) => {
-      if (!user) throw new Error(t('mustBeLoggedInToVote'));
-
-      console.log('[POINTS DEBUG] Vote by:', user.email, 'on suggestion by:', suggestion.created_by);
-
-      let updatedSuggestion;
-      if (userVote) {
-        if (userVote.vote === vote) {
-          // Canceling existing vote
-          console.log('[POINTS DEBUG] Canceling vote:', userVote.vote);
-          await base44.entities.Vote.delete(userVote.id);
-          updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, {
-            [vote === 'pro' ? 'proVotes' : 'conVotes']: Math.max(0, (suggestion[vote === 'pro' ? 'proVotes' : 'conVotes'] || 0) - 1)
-          });
-          
-          // Remove 10 points from suggestion creator if it was a "pro" vote (only if gamification enabled)
-          if (vote === 'pro' && document.gamificationEnabled) {
-            console.log('[POINTS DEBUG] Removing -10 points from suggestion creator for canceled pro vote');
-            const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
-            if (suggestionCreatorList.length > 0) {
-              const suggestionCreator = suggestionCreatorList[0];
-              const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
-              if (freshUser) {
-                const newPoints = Math.max(0, (freshUser.points || 1000) - 10);
-                await base44.entities.User.update(freshUser.id, { points: newPoints });
-                console.log('[POINTS DEBUG] Updated user points to:', newPoints);
-                
-                // Create points transaction record
-                await base44.entities.PointsTransaction.create({
-                  userId: suggestionCreator.id,
-                  amount: -10,
-                  action: 'vote_canceled',
-                  description: `ביטול הצבעה בעד על ההצעה: ${suggestion.title}`,
-                  relatedEntityId: suggestion.id,
-                  relatedEntityType: 'suggestion'
-                });
-              }
-            }
-          }
-        } else {
-          // Changing vote direction
-          console.log('[POINTS DEBUG] Changing vote from', userVote.vote, 'to', vote);
-          await base44.entities.Vote.update(userVote.id, { vote });
-          updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, {
-            proVotes: suggestion.proVotes + (vote === 'pro' ? 1 : -1),
-            conVotes: suggestion.conVotes + (vote === 'con' ? 1 : -1)
-          });
-          
-          // Handle points for vote direction change (only if gamification enabled)
-          if (document.gamificationEnabled) {
-            const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
-            if (suggestionCreatorList.length > 0) {
-              const suggestionCreator = suggestionCreatorList[0];
-              const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
-              if (freshUser) {
-                let pointsChange = 0;
-                if (userVote.vote === 'con' && vote === 'pro') {
-                  pointsChange = 10;
-                  console.log('[POINTS DEBUG] Changing con to pro: +10 points');
-                } else if (userVote.vote === 'pro' && vote === 'con') {
-                  pointsChange = -10;
-                  console.log('[POINTS DEBUG] Changing pro to con: -10 points');
-                }
-                
-                if (pointsChange !== 0) {
-                  const newPoints = Math.max(0, (freshUser.points || 1000) + pointsChange);
-                  await base44.entities.User.update(freshUser.id, { points: newPoints });
-                  console.log('[POINTS DEBUG] Updated user points to:', newPoints);
-                  
-                  // Create points transaction record
-                  await base44.entities.PointsTransaction.create({
-                    userId: suggestionCreator.id,
-                    amount: pointsChange,
-                    action: 'vote_received',
-                    description: pointsChange > 0 
-                      ? `קיבל הצבעה בעד על ההצעה: ${suggestion.title}`
-                      : `הצבעה השתנתה מבעד לנגד על ההצעה: ${suggestion.title}`,
-                    relatedEntityId: suggestion.id,
-                    relatedEntityType: 'suggestion'
-                  });
-                }
-              }
-            }
-          }
+  // פונקציית עזר לטיפול בנקודות ברקע
+  const handlePointsInBackground = async (action, vote, currentUserVote) => {
+    if (!document?.gamificationEnabled) return;
+    
+    try {
+      let pointsChange = 0;
+      let description = '';
+      
+      if (action === 'cancel' && vote === 'pro') {
+        pointsChange = -10;
+        description = `ביטול הצבעה בעד על ההצעה: ${suggestion.title}`;
+      } else if (action === 'change') {
+        if (currentUserVote?.vote === 'con' && vote === 'pro') {
+          pointsChange = 10;
+          description = `קיבל הצבעה בעד על ההצעה: ${suggestion.title}`;
+        } else if (currentUserVote?.vote === 'pro' && vote === 'con') {
+          pointsChange = -10;
+          description = `הצבעה השתנתה מבעד לנגד על ההצעה: ${suggestion.title}`;
         }
-      } else {
-        // New vote
-        console.log('[POINTS DEBUG] New vote:', vote);
-        await base44.entities.Vote.create({
-          suggestionId,
-          userId: user.id,
-          vote
-        });
-        updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, {
-          [vote === 'pro' ? 'proVotes' : 'conVotes']: (suggestion[vote === 'pro' ? 'proVotes' : 'conVotes'] || 0) + 1
-        });
-
-        // Award +10 points to suggestion creator for each "pro" vote (only if gamification enabled)
-        if (vote === 'pro' && document.gamificationEnabled) {
-          console.log('[POINTS DEBUG] Vote PRO - awarding +10 points to suggestion creator:', suggestion.created_by);
-          const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
-          console.log('[POINTS DEBUG] Found creators:', suggestionCreatorList.length);
-          if (suggestionCreatorList.length > 0) {
-            const suggestionCreator = suggestionCreatorList[0];
-            const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
-            console.log('[POINTS DEBUG] Fresh user points before:', freshUser?.points);
-            if (freshUser) {
-              const newPoints = (freshUser.points || 1000) + 10;
-              await base44.entities.User.update(freshUser.id, {
-                points: newPoints
-              });
-              console.log('[POINTS DEBUG] Updated user points to:', newPoints);
-              
-              // Create points transaction record
-              await base44.entities.PointsTransaction.create({
-                userId: suggestionCreator.id,
-                amount: 10,
-                action: 'vote_received',
-                description: `קיבל הצבעה בעד על ההצעה: ${suggestion.title}`,
-                relatedEntityId: suggestion.id,
-                relatedEntityType: 'suggestion'
-              });
-            }
-          }
-        }
+      } else if (action === 'new' && vote === 'pro') {
+        pointsChange = 10;
+        description = `קיבל הצבעה בעד על ההצעה: ${suggestion.title}`;
       }
-
-      // יצירת התראה למחבר ההצעה על הצבעה חדשה
-      try {
-        await notifyVoteOnSuggestion({ suggestion, voterEmail: user.email });
-      } catch (notifError) {
-        console.error('[VOTE NOTIFICATION ERROR]', notifError);
-      }
-
-      // עדכון מספר התורמים למסמך
-      const { calculateDocumentContributors } = await import('../components/document/calculateContributors');
-      const contributorsCount = await calculateDocumentContributors(suggestion.documentId);
-      await base44.entities.Document.update(suggestion.documentId, {
-        totalUsersInteracted: contributorsCount,
-      });
-
-      // בדיקה והפעלת אישור אוטומטי אם עברנו את הסף
-      const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
-      console.log('[POINTS DEBUG] Should accept suggestion:', shouldAccept);
-      if (shouldAccept) {
-        console.log('[POINTS DEBUG] Auto-accepting suggestion...');
-        const accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
-        
-        if (accepted) {
-          // רענון כל הקווריות הרלוונטיות
-          queryClient.invalidateQueries({ queryKey: ['sections'] });
-          queryClient.invalidateQueries({ queryKey: ['allVersions'] });
-          queryClient.invalidateQueries({ queryKey: ['suggestions'] });
-        }
-        
-        // Award +50 points to voter if vote influenced acceptance (only if gamification enabled)
-        if (!userVote && vote === 'pro' && document.gamificationEnabled) {
-          console.log('[POINTS DEBUG] Awarding +50 points to voter who influenced acceptance');
-          const currentPoints = user.points || 1000;
-          const newPoints = currentPoints + 50;
-          await base44.auth.updateMe({
-            points: newPoints
-          });
-          console.log('[POINTS DEBUG] Voter points updated from', currentPoints, 'to', newPoints);
-          
-          // Create points transaction record
+      
+      if (pointsChange !== 0) {
+        const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+        if (suggestionCreatorList.length > 0) {
+          const suggestionCreator = suggestionCreatorList[0];
+          const newPoints = Math.max(0, (suggestionCreator.points || 1000) + pointsChange);
+          await base44.entities.User.update(suggestionCreator.id, { points: newPoints });
           await base44.entities.PointsTransaction.create({
-            userId: user.id,
-            amount: 50,
-            action: 'vote_influenced_acceptance',
-            description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${suggestion.title}`,
+            userId: suggestionCreator.id,
+            amount: pointsChange,
+            action: pointsChange > 0 ? 'vote_received' : 'vote_canceled',
+            description,
             relatedEntityId: suggestion.id,
             relatedEntityType: 'suggestion'
           });
         }
       }
+    } catch (err) {
+      console.error('[POINTS] Error handling points:', err);
+    }
+  };
+
+  const voteMutation = useMutation({
+    mutationFn: async (vote) => {
+      if (!user) throw new Error(t('mustBeLoggedInToVote'));
+
+      let newProVotes = suggestion.proVotes || 0;
+      let newConVotes = suggestion.conVotes || 0;
+      let pointsAction = null;
+      
+      if (userVote) {
+        if (userVote.vote === vote) {
+          // ביטול הצבעה
+          await base44.entities.Vote.delete(userVote.id);
+          if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
+          else newConVotes = Math.max(0, newConVotes - 1);
+          pointsAction = 'cancel';
+        } else {
+          // שינוי כיוון הצבעה
+          await base44.entities.Vote.update(userVote.id, { vote });
+          if (vote === 'pro') {
+            newProVotes += 1;
+            newConVotes = Math.max(0, newConVotes - 1);
+          } else {
+            newConVotes += 1;
+            newProVotes = Math.max(0, newProVotes - 1);
+          }
+          pointsAction = 'change';
+        }
+      } else {
+        // הצבעה חדשה
+        await base44.entities.Vote.create({
+          suggestionId,
+          userId: user.id,
+          vote
+        });
+        if (vote === 'pro') newProVotes += 1;
+        else newConVotes += 1;
+        pointsAction = 'new';
+      }
+      
+      // עדכון ההצעה
+      const updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, {
+        proVotes: newProVotes,
+        conVotes: newConVotes
+      });
+      
+      // טיפול בנקודות ברקע - לא חוסם
+      handlePointsInBackground(pointsAction, vote, userVote);
+      
+      // התראות ועדכון תורמים ברקע
+      notifyVoteOnSuggestion({ suggestion, voterEmail: user.email }).catch(() => {});
+      import('../components/document/calculateContributors').then(({ calculateDocumentContributors }) => {
+        calculateDocumentContributors(suggestion.documentId).then(count => {
+          base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count });
+        });
+      }).catch(() => {});
+
+      // בדיקת קונסנזוס
+      const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
+      
+      if (shouldAccept && suggestion.status === 'pending') {
+        const accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
+        
+        if (accepted) {
+          if (!userVote && vote === 'pro' && document?.gamificationEnabled) {
+            base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
+            base44.entities.PointsTransaction.create({
+              userId: user.id,
+              amount: 50,
+              action: 'vote_influenced_acceptance',
+              description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${suggestion.title}`,
+              relatedEntityId: suggestion.id,
+              relatedEntityType: 'suggestion'
+            }).catch(() => {});
+          }
+          return { accepted: true };
+        }
+      }
+      
+      return { accepted: false };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
-      queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId] });
-      queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
-      queryClient.invalidateQueries({ queryKey: ['versions'] });
+    // Optimistic update
+    onMutate: async (vote) => {
+      await queryClient.cancelQueries({ queryKey: ['suggestion', suggestionId] });
+      await queryClient.cancelQueries({ queryKey: ['userVote', suggestionId, user?.id] });
+      
+      const previousSuggestion = queryClient.getQueryData(['suggestion', suggestionId]);
+      const previousVote = queryClient.getQueryData(['userVote', suggestionId, user?.id]);
+      
+      // עדכון אופטימיסטי של ההצעה
+      queryClient.setQueryData(['suggestion', suggestionId], (old) => {
+        if (!old) return old;
+        
+        let newProVotes = old.proVotes || 0;
+        let newConVotes = old.conVotes || 0;
+        
+        if (userVote) {
+          if (userVote.vote === vote) {
+            // ביטול
+            if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
+            else newConVotes = Math.max(0, newConVotes - 1);
+          } else {
+            // שינוי
+            if (vote === 'pro') {
+              newProVotes += 1;
+              newConVotes = Math.max(0, newConVotes - 1);
+            } else {
+              newConVotes += 1;
+              newProVotes = Math.max(0, newProVotes - 1);
+            }
+          }
+        } else {
+          // חדש
+          if (vote === 'pro') newProVotes += 1;
+          else newConVotes += 1;
+        }
+        
+        return { ...old, proVotes: newProVotes, conVotes: newConVotes };
+      });
+      
+      // עדכון אופטימיסטי של ההצבעה
+      queryClient.setQueryData(['userVote', suggestionId, user?.id], (old) => {
+        if (userVote) {
+          if (userVote.vote === vote) {
+            // ביטול
+            return null;
+          } else {
+            // שינוי
+            return { ...old, vote };
+          }
+        } else {
+          // הצבעה חדשה
+          return { id: 'temp-' + Date.now(), suggestionId, userId: user.id, vote };
+        }
+      });
+      
+      return { previousSuggestion, previousVote };
     },
-    onError: (err) => {
+    onError: (err, variables, context) => {
+      if (context?.previousSuggestion) {
+        queryClient.setQueryData(['suggestion', suggestionId], context.previousSuggestion);
+      }
+      if (context?.previousVote !== undefined) {
+        queryClient.setQueryData(['userVote', suggestionId, user?.id], context.previousVote);
+      }
       setError(err.message);
       setTimeout(() => setError(null), 5000);
-    }
+    },
+    onSuccess: (data) => {
+      if (data?.accepted) {
+        queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
+        queryClient.invalidateQueries({ queryKey: ['allVersions'] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
+    },
   });
 
   const addArgumentMutation = useMutation({
