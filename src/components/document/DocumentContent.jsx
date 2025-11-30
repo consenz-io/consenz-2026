@@ -958,6 +958,7 @@ Return ONLY the translated text:`;
                               sectionIndex={index}
                               isAdmin={isAdmin}
                               users={users}
+                              onOpenSuggestionSidebar={onOpenSuggestionSidebar}
                             />
                           </div>
                             {/* Show suggestions after the last section */}
