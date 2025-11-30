@@ -326,7 +326,10 @@ export default function SuggestionDetail() {
     onSuccess: (data) => {
       if (data?.accepted) {
         queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
+        queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
+        queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
         queryClient.invalidateQueries({ queryKey: ['allVersions'] });
+        queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
       }
       queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
     },
