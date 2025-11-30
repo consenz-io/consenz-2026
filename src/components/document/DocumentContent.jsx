@@ -387,14 +387,23 @@ export default function DocumentContent({
         
         if (currentVote) {
           if (currentVote.vote === vote) {
-            // ביטול - הסרה מהרשימה
-            return old.filter(v => v.id !== currentVote.id);
+            // ביטול - הסרה מהרשימה (בודקים גם לפי suggestionId במקרה של temp id)
+            return old.filter(v => v.id !== currentVote.id && v.suggestionId !== suggestionId);
           } else {
             // שינוי - עדכון הכיוון
-            return old.map(v => v.id === currentVote.id ? { ...v, vote } : v);
+            return old.map(v => {
+              if (v.id === currentVote.id || v.suggestionId === suggestionId) {
+                return { ...v, vote };
+              }
+              return v;
+            });
           }
         } else {
-          // הצבעה חדשה - הוספה לרשימה
+          // הצבעה חדשה - הוספה לרשימה (בודקים שלא קיים כבר)
+          const exists = old.some(v => v.suggestionId === suggestionId);
+          if (exists) {
+            return old.map(v => v.suggestionId === suggestionId ? { ...v, vote } : v);
+          }
           return [...old, { id: 'temp-' + Date.now(), suggestionId, userId: user.id, vote }];
         }
       });
