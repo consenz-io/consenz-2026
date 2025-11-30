@@ -200,6 +200,7 @@ export default function DocumentContent({
     },
     enabled: !!user?.id && suggestions.length > 0,
     initialData: [],
+    staleTime: 0, // תמיד רענן כשיש שינוי
   });
 
   const getUserVote = React.useCallback((suggestionId) => {
