@@ -17,6 +17,7 @@ import CreateSuggestionModal from "../components/document/CreateSuggestionModal"
 import PageHeader from "../components/PageHeader";
 import ContributorsModal from "../components/document/ContributorsModal";
 import CommentsSection from "../components/document/CommentsSection";
+import SuggestionSidebar from "../components/document/SuggestionSidebar";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
