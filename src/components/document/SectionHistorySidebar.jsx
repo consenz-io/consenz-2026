@@ -69,27 +69,18 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  // Group versions by suggestion
-  const versionGroups = [];
-  versions.forEach(version => {
-    if (version.changeType === 'suggestion_accepted' && version.suggestionId) {
-      const existingGroup = versionGroups.find(g => g.suggestionId === version.suggestionId);
-      if (existingGroup) {
-        existingGroup.versions.push(version);
-      } else {
-        versionGroups.push({
-          suggestionId: version.suggestionId,
-          versions: [version],
-          changeDescription: version.changeDescription
-        });
-      }
-    } else {
-      versionGroups.push({
-        suggestionId: null,
-        versions: [version],
-        changeDescription: version.changeDescription
-      });
-    }
+  // Sort versions by version number descending and pair each with its previous version
+  const sortedVersions = [...versions].sort((a, b) => b.version - a.version);
+  
+  // Create version groups - each version paired with the one before it for diff display
+  const versionGroups = sortedVersions.map((version, index) => {
+    const previousVersion = sortedVersions[index + 1]; // The older version
+    return {
+      version,
+      previousVersion,
+      suggestionId: version.suggestionId,
+      changeDescription: version.changeDescription
+    };
   });
 
   return (
@@ -165,8 +156,8 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                 <div className="space-y-4">
                   <h3 className="text-base font-bold text-slate-900">{t('previousVersions')}</h3>
                   {versionGroups.map((group, groupIndex) => {
-                    const latestVersion = group.versions[0];
-                    const previousVersion = group.versions[1];
+                    const currentVer = group.version;
+                    const prevVer = group.previousVersion;
                     
                     return (
                       <Card key={groupIndex} className="border-slate-200">
@@ -174,16 +165,16 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
                               <CardTitle className="text-sm">
-                                {t('version')} {latestVersion.version}
+                                {t('version')} {currentVer.version}
                               </CardTitle>
                               <p className="text-xs text-slate-600 mt-1">
-                                {latestVersion.changeDescription || t('noDescription')}
+                                {currentVer.changeDescription || t('noDescription')}
                               </p>
                             </div>
                             <div className="flex items-center gap-2">
                               <Badge variant="outline" className="text-xs">
-                                {latestVersion.changeType === 'suggestion_accepted' ? t('suggestionAccepted') :
-                                 latestVersion.changeType === 'section_created' ? t('sectionCreated') :
+                                {currentVer.changeType === 'suggestion_accepted' ? t('suggestionAccepted') :
+                                 currentVer.changeType === 'section_created' ? t('sectionCreated') :
                                  t('directEdit')}
                               </Badge>
                               {group.suggestionId && (
@@ -199,19 +190,19 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                         </CardHeader>
                         <CardContent className="p-4 space-y-3">
                           {/* Show content for direct edits */}
-                          {latestVersion.changeType === 'direct_edit' && (
+                          {currentVer.changeType === 'direct_edit' && (
                             <div className="prose prose-sm max-w-none text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                              <div dangerouslySetInnerHTML={{ __html: latestVersion.content }} />
+                              <div dangerouslySetInnerHTML={{ __html: currentVer.content }} />
                             </div>
                           )}
                           
                           {/* Show diff between this version and the previous one */}
-                          {previousVersion && latestVersion.changeType === 'suggestion_accepted' && (
+                          {prevVer && currentVer.changeType === 'suggestion_accepted' && (
                             <div>
                               <h4 className="text-xs font-semibold text-slate-700 mb-2">{t('changesInThisVersion')}</h4>
                               <SectionDiff
-                                originalContent={previousVersion.content}
-                                newContent={latestVersion.content}
+                                originalContent={prevVer.content}
+                                newContent={currentVer.content}
                               />
                             </div>
                           )}
@@ -229,8 +220,8 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                           )}
 
                           <div className="text-xs text-slate-500 pt-3 border-t">
-                            {t('created')} {new Date(latestVersion.created_date).toLocaleString()}
-                            {latestVersion.created_by && ` ${t('by')} ${getUserName(latestVersion.created_by)}`}
+                            {t('created')} {new Date(currentVer.created_date).toLocaleString()}
+                            {currentVer.created_by && ` ${t('by')} ${getUserName(currentVer.created_by)}`}
                           </div>
                         </CardContent>
                       </Card>
