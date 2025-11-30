@@ -501,6 +501,9 @@ export default function DocumentView() {
             setShowCreateSuggestion(false);
             setEditingSection(null);
           }}
+          onSuggestionCreated={(suggestionId, sectionId, topicId) => {
+            setNewlyCreatedSuggestion({ suggestionId, sectionId, topicId });
+          }}
         />
       )}
 
