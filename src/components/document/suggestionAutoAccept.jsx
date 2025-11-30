@@ -202,31 +202,40 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     } 
     // טיפול בהצעה לסעיף חדש
     else if (freshSuggestion.type === 'new_section' && freshSuggestion.topicId) {
-      const allSections = await base44.entities.Section.filter({ 
-        documentId: suggestion.documentId,
-        topicId: suggestion.topicId 
-      }, 'order');
+      let allSections = [];
+      try {
+        allSections = await base44.entities.Section.filter({ 
+          documentId: freshSuggestion.documentId,
+          topicId: freshSuggestion.topicId 
+        }, 'order');
+      } catch (err) {
+        console.error('[AUTO-ACCEPT] Error fetching sections:', err);
+      }
       
       let newOrder;
-      if (suggestion.insertPosition !== undefined && suggestion.insertPosition !== null) {
+      if (freshSuggestion.insertPosition !== undefined && freshSuggestion.insertPosition !== null) {
         // הזחת סעיפים קיימים
-        const sectionsToUpdate = allSections.filter(s => s.order >= suggestion.insertPosition);
+        const sectionsToUpdate = allSections.filter(s => (s.order || 0) >= freshSuggestion.insertPosition);
         for (const sec of sectionsToUpdate) {
-          await base44.entities.Section.update(sec.id, { order: sec.order + 1 });
+          try {
+            await base44.entities.Section.update(sec.id, { order: (sec.order || 0) + 1 });
+          } catch (err) {
+            console.error('[AUTO-ACCEPT] Error updating section order:', err);
+          }
         }
-        newOrder = suggestion.insertPosition;
+        newOrder = freshSuggestion.insertPosition;
       } else {
         // הוספה בסוף
-        const maxOrder = allSections.length > 0 ? Math.max(...allSections.map(s => s.order)) : -1;
+        const maxOrder = allSections.length > 0 ? Math.max(...allSections.map(s => s.order || 0)) : -1;
         newOrder = maxOrder + 1;
       }
       
       // יצירת הסעיף החדש
-      const newContentLanguage = detectLanguage(suggestion.newContent);
+      const newContentLanguage = detectLanguage(freshSuggestion.newContent || '');
       const newSection = await base44.entities.Section.create({
-        documentId: suggestion.documentId,
-        topicId: suggestion.topicId,
-        content: suggestion.newContent,
+        documentId: freshSuggestion.documentId,
+        topicId: freshSuggestion.topicId,
+        content: freshSuggestion.newContent,
         order: newOrder,
         lastEditedBy: userId,
         originalLanguage: newContentLanguage,
@@ -234,13 +243,13 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       
       // שמירת גרסה ראשונה
       await base44.entities.DocumentVersion.create({
-        documentId: suggestion.documentId,
+        documentId: freshSuggestion.documentId,
         sectionId: newSection.id,
-        content: suggestion.newContent,
-        changeDescription: suggestion.title,
+        content: freshSuggestion.newContent,
+        changeDescription: freshSuggestion.title || 'סעיף חדש',
         version: 1,
         changeType: 'section_created',
-        suggestionId: suggestion.id
+        suggestionId: freshSuggestion.id
       });
     }
     
