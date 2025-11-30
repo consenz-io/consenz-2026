@@ -297,7 +297,7 @@ export default function SuggestionSidebar({
 
   if (suggestionLoading || !suggestion) {
     return (
-      <div className="fixed inset-y-0 right-0 w-full md:w-[500px] bg-white shadow-2xl z-50 flex items-center justify-center">
+      <div className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-full md:w-[500px] bg-white shadow-2xl z-50 flex items-center justify-center`}>
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
