@@ -619,7 +619,7 @@ export default function SuggestionDetail() {
             <div className="flex flex-col md:flex-row items-start md:justify-between gap-3">
               <div className="flex flex-wrap gap-2 items-center">
                 <Badge variant="outline" className={`${getStatusColor(suggestion.status)} text-xs`}>
-                  {suggestion.status}
+                  {t(suggestion.status)}
                 </Badge>
                 <Badge variant="outline" className="text-xs">
                   {suggestion.type === 'new_section' ? t('newSection') : t('suggestionToEditSection')}
