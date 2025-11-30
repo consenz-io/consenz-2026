@@ -289,13 +289,6 @@ export default function Home() {
                             </button>
                           )
                         )}
-                        <Badge variant="outline" className={
-                          doc.privacy === 'public_view_open_participation' 
-                            ? 'bg-green-50 text-green-700 border-green-200'
-                            : 'bg-amber-50 text-amber-700 border-amber-200'
-                        }>
-                          {doc.privacy === 'public_view_open_participation' ? 'Open' : 'Closed'}
-                        </Badge>
                       </div>
                     </div>
                   </CardHeader>
