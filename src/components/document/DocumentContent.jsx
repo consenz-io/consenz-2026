@@ -202,9 +202,9 @@ export default function DocumentContent({
     initialData: [],
   });
 
-  const getUserVote = (suggestionId) => {
+  const getUserVote = React.useCallback((suggestionId) => {
     return userVotes?.find(v => v.suggestionId === suggestionId);
-  };
+  }, [userVotes]);
 
   // פונקציית עזר לעדכון נקודות ברקע (לא חוסמת את ה-UI)
   const handlePointsInBackground = async (action, suggestion, vote, currentVote) => {
