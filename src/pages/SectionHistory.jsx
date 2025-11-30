@@ -154,7 +154,7 @@ export default function SectionHistory() {
         {versionGroups.length > 0 ? (
           <div className="space-y-4 md:space-y-6">
             <h2 className="text-lg md:text-xl font-bold text-slate-900 px-2 md:px-0">{t('previousVersions')}</h2>
-            {versionGroups.filter(g => g.version).map((group, groupIndex) => {
+            {versionGroups.filter(g => g.version && g.version.changeType).map((group, groupIndex) => {
               const currentVer = group.version;
               const prevVer = group.previousVersion;
               

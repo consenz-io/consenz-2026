@@ -155,7 +155,7 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
               {versionGroups.length > 0 ? (
                 <div className="space-y-4">
                   <h3 className="text-base font-bold text-slate-900">{t('previousVersions')}</h3>
-                  {versionGroups.filter(g => g.version).map((group, groupIndex) => {
+                  {versionGroups.filter(g => g.version && g.version.changeType).map((group, groupIndex) => {
                     const currentVer = group.version;
                     const prevVer = group.previousVersion;
                     
