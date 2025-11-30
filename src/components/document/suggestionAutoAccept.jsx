@@ -256,7 +256,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     // שליחת התראה למחבר ההצעה
     console.log('[AUTO ACCEPT] Sending notification to suggestion creator');
     try {
-      await notifySuggestionStatusChange({ suggestion, newStatus: 'accepted' });
+      await notifySuggestionStatusChange({ suggestion: freshSuggestion, newStatus: 'accepted' });
     } catch (notifError) {
       console.error('[AUTO ACCEPT NOTIFICATION ERROR]', notifError);
     }
@@ -264,32 +264,36 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     // Award 200 points to suggestion creator when accepted (only if gamification enabled)
     const gamificationEnabled = document?.gamificationEnabled || false;
     console.log('[POINTS DEBUG] Suggestion accepted - gamification enabled:', gamificationEnabled);
-    if (gamificationEnabled) {
-      console.log('[POINTS DEBUG] Awarding +200 points to suggestion creator:', suggestion.created_by);
-      const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
-      console.log('[POINTS DEBUG] Found creators:', suggestionCreatorList.length);
-      if (suggestionCreatorList.length > 0) {
-        const creatorId = suggestionCreatorList[0].id;
-        // Fetch fresh data to avoid race conditions
-        const freshUser = await base44.entities.User.filter({ id: creatorId }).then(u => u[0]);
-        console.log('[POINTS DEBUG] Fresh user points before:', freshUser?.points);
-        if (freshUser) {
-          const newPoints = (freshUser.points || 1000) + 200;
-          await base44.entities.User.update(freshUser.id, {
-            points: newPoints
-          });
-          console.log('[POINTS DEBUG] Updated user points to:', newPoints);
-          
-          // Create points transaction record
-          await base44.entities.PointsTransaction.create({
-            userId: creatorId,
-            amount: 200,
-            action: 'suggestion_accepted',
-            description: `ההצעה שלך התקבלה: ${suggestion.title}`,
-            relatedEntityId: suggestion.id,
-            relatedEntityType: 'suggestion'
-          });
+    if (gamificationEnabled && freshSuggestion.created_by) {
+      console.log('[POINTS DEBUG] Awarding +200 points to suggestion creator:', freshSuggestion.created_by);
+      try {
+        const suggestionCreatorList = await base44.entities.User.filter({ email: freshSuggestion.created_by });
+        console.log('[POINTS DEBUG] Found creators:', suggestionCreatorList.length);
+        if (suggestionCreatorList.length > 0) {
+          const creatorId = suggestionCreatorList[0].id;
+          // Fetch fresh data to avoid race conditions
+          const freshUser = await base44.entities.User.filter({ id: creatorId }).then(u => u[0]);
+          console.log('[POINTS DEBUG] Fresh user points before:', freshUser?.points);
+          if (freshUser) {
+            const newPoints = (freshUser.points || 1000) + 200;
+            await base44.entities.User.update(freshUser.id, {
+              points: newPoints
+            });
+            console.log('[POINTS DEBUG] Updated user points to:', newPoints);
+            
+            // Create points transaction record
+            await base44.entities.PointsTransaction.create({
+              userId: creatorId,
+              amount: 200,
+              action: 'suggestion_accepted',
+              description: `ההצעה שלך התקבלה: ${freshSuggestion.title || 'הצעה'}`,
+              relatedEntityId: freshSuggestion.id,
+              relatedEntityType: 'suggestion'
+            });
+          }
         }
+      } catch (pointsError) {
+        console.error('[POINTS DEBUG] Error awarding points:', pointsError);
       }
     }
     
