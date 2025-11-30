@@ -861,6 +861,7 @@ Return ONLY the translated text:`;
                       user={user}
                       getUserVote={getUserVote}
                       voteMutation={voteMutation}
+                      onOpenSidebar={onOpenSuggestionSidebar}
                     />
                   ))}
                 </>
