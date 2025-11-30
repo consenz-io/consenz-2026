@@ -235,7 +235,7 @@ export default function SectionCarousel({
                 onClick={() => setCurrentIndex(0)}
                 className="text-sm font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer transition-colors"
               >
-                חזרה לגרסה הנוכחית
+                {t('viewCurrentVersion')}
               </button>
             )}
           </div>
