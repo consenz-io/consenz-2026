@@ -63,6 +63,21 @@ export default function SectionCarousel({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showHistorySidebar, setShowHistorySidebar] = useState(false);
   
+  // Effect to scroll to newly created suggestion
+  React.useEffect(() => {
+    if (newlyCreatedSuggestionId && sortedSuggestions.length > 0) {
+      const suggestionIndex = sortedSuggestions.findIndex(s => s.id === newlyCreatedSuggestionId);
+      if (suggestionIndex !== -1) {
+        // Index in allViews is suggestionIndex + 1 (because index 0 is 'current')
+        setCurrentIndex(suggestionIndex + 1);
+        // Clear the flag after navigating
+        if (onClearNewlyCreated) {
+          setTimeout(() => onClearNewlyCreated(), 100);
+        }
+      }
+    }
+  }, [newlyCreatedSuggestionId, sortedSuggestions, onClearNewlyCreated]);
+  
   // Reset currentIndex if it's out of bounds
   const safeIndex = currentIndex >= allViews.length ? 0 : currentIndex;
   const currentView = allViews[safeIndex] || allViews[0];
