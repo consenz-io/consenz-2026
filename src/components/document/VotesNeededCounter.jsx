@@ -10,24 +10,23 @@ export default function VotesNeededCounter({ suggestion, document, acceptedSugge
   const queryClient = useQueryClient();
   const hasTriggeredAutoAccept = useRef(new Set());
 
+  // שימוש באותה לוגיקת threshold כמו ב-checkSuggestionConsensus
   const calculateVotesNeeded = () => {
+    if (!document) return 1;
+    
     const proVotes = suggestion.proVotes || 0;
     const conVotes = suggestion.conVotes || 0;
+    const totalUsers = document.totalUsersInteracted || 1;
     
-    // חישוב threshold דינמי מההצעות שאושרו
-    const docAcceptedSuggestions = acceptedSuggestions.filter(s => s.documentId === document?.id && s.status === 'accepted');
+    // חישוב threshold דינמי על בסיס consensuses של המסמך - זהה ל-checkSuggestionConsensus
     let threshold;
+    const consensuses = document.consensuses || [];
     
-    if (docAcceptedSuggestions.length > 0) {
-      // מחשבים את הממוצע של הדלתא (הפרש בין בעד לנגד) מההצעות המאושרות
-      const deltas = docAcceptedSuggestions.map(s => {
-        return (s.proVotes || 0) - (s.conVotes || 0);
-      });
-      const avgDelta = deltas.reduce((sum, delta) => sum + delta, 0) / deltas.length;
-      threshold = Math.max(1, Math.round(avgDelta));
+    if (consensuses.length > 0) {
+      const consensusMeterAverage = consensuses.reduce((sum, val) => sum + val, 0) / consensuses.length;
+      threshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
     } else {
-      // אם אין הצעות מאושרות, משתמשים ב-threshold של המסמך
-      threshold = document?.threshold || 2;
+      threshold = document.threshold || 2;
     }
 
     // חישוב הדלתא הנוכחית
@@ -62,11 +61,12 @@ export default function VotesNeededCounter({ suggestion, document, acceptedSugge
         
         if (accepted) {
           console.log('[VotesNeededCounter] Suggestion accepted, refreshing queries');
-          await queryClient.invalidateQueries({ queryKey: ['suggestions'] });
-          await queryClient.invalidateQueries({ queryKey: ['sections'] });
-          await queryClient.invalidateQueries({ queryKey: ['document'] });
-          await queryClient.invalidateQueries({ queryKey: ['allVersions'] });
-          await queryClient.invalidateQueries({ queryKey: ['versions'] });
+          queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+          queryClient.invalidateQueries({ queryKey: ['sections'] });
+          queryClient.invalidateQueries({ queryKey: ['document'] });
+          queryClient.invalidateQueries({ queryKey: ['allVersions'] });
+          queryClient.invalidateQueries({ queryKey: ['versions'] });
+          queryClient.invalidateQueries({ queryKey: ['suggestion', suggestion.id] });
         }
       }
     };
@@ -74,7 +74,7 @@ export default function VotesNeededCounter({ suggestion, document, acceptedSugge
     if (votesNeeded === 0 && suggestion.status === 'pending') {
       triggerAutoAccept();
     }
-  }, [suggestion, document, votesNeeded, queryClient]);
+  }, [suggestion.id, suggestion.status, suggestion.proVotes, suggestion.conVotes, document?.id, votesNeeded, queryClient]);
 
   if (suggestion.status !== 'pending') {
     return null;
