@@ -413,6 +413,7 @@ export default function DocumentContent({
       // רענון רק אם ההצעה התקבלה
       if (data?.accepted) {
         queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
+        queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
         queryClient.invalidateQueries({ queryKey: ['allVersions'] });
         queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
       }
