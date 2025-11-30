@@ -44,6 +44,7 @@ export default function DocumentView() {
   const [showTranslatedDescription, setShowTranslatedDescription] = useState(false);
   const [isTranslatingDescription, setIsTranslatingDescription] = useState(false);
   const [showDescriptionComments, setShowDescriptionComments] = useState(false);
+  const [openSuggestionId, setOpenSuggestionId] = useState(null);
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
