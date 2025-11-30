@@ -69,7 +69,8 @@ export default function CreateSuggestionModal({
   editingSection, 
   user, 
   onClose,
-  isAdmin
+  isAdmin,
+  onSuggestionCreated
 }) {
   const queryClient = useQueryClient();
   const { t, isRTL, language } = useLanguage();
