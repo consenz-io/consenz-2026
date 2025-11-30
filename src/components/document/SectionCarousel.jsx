@@ -201,17 +201,16 @@ export default function SectionCarousel({
           )}
         </div>
         <div className="flex items-center gap-1 md:gap-2">
-          {/* כפתור היסטוריה - תמיד זמין */}
-          <Link to={`${createPageUrl("SectionHistory")}?id=${section.id}`}>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-blue-600 h-7 md:h-8 px-2 md:px-3"
-            >
-              <History className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-              <span className="hidden md:inline">{t('history')}</span>
-            </Button>
-          </Link>
+          {/* כפתור היסטוריה - פותח sidebar */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowHistorySidebar(true)}
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-blue-600 h-7 md:h-8 px-2 md:px-3"
+          >
+            <History className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+            <span className="hidden md:inline">{t('history')}</span>
+          </Button>
         </div>
       </div>
 
