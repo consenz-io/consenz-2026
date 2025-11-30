@@ -504,6 +504,16 @@ export default function DocumentView() {
         onClose={() => setShowContributorsModal(false)}
         documentId={documentId}
       />
+
+      {openSuggestionId && (
+        <SuggestionSidebar
+          suggestionId={openSuggestionId}
+          onClose={() => setOpenSuggestionId(null)}
+          document={document}
+          user={user}
+          isAdmin={isAdmin}
+        />
+      )}
       </div>
   );
 }
