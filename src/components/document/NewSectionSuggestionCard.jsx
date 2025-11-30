@@ -130,12 +130,18 @@ export default function NewSectionSuggestionCard({
             />
           </div>
           
-          <Link to={`${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`}>
-            <Button size="sm" variant="outline" className="text-xs">
-              <ExternalLink className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-              {t('viewDetails')}
-            </Button>
-          </Link>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="text-xs"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenSidebar && onOpenSidebar(suggestion.id);
+            }}
+          >
+            <ExternalLink className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+            {t('viewDetails')}
+          </Button>
         </div>
       </CardContent>
     </Card>
