@@ -112,59 +112,126 @@ export default function SuggestionSidebar({
     mutationFn: async (vote) => {
       if (!user) throw new Error(t('mustBeLoggedInToVote'));
 
-      let updatedSuggestion;
+      const doc = document || parentDocument;
+      let newProVotes = suggestion.proVotes || 0;
+      let newConVotes = suggestion.conVotes || 0;
+      
       if (userVote) {
         if (userVote.vote === vote) {
+          // ביטול הצבעה
           await base44.entities.Vote.delete(userVote.id);
-          updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, {
-            [vote === 'pro' ? 'proVotes' : 'conVotes']: Math.max(0, (suggestion[vote === 'pro' ? 'proVotes' : 'conVotes'] || 0) - 1)
-          });
+          if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
+          else newConVotes = Math.max(0, newConVotes - 1);
         } else {
+          // שינוי כיוון הצבעה
           await base44.entities.Vote.update(userVote.id, { vote });
-          updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, {
-            proVotes: suggestion.proVotes + (vote === 'pro' ? 1 : -1),
-            conVotes: suggestion.conVotes + (vote === 'con' ? 1 : -1)
-          });
+          if (vote === 'pro') {
+            newProVotes += 1;
+            newConVotes = Math.max(0, newConVotes - 1);
+          } else {
+            newConVotes += 1;
+            newProVotes = Math.max(0, newProVotes - 1);
+          }
         }
       } else {
+        // הצבעה חדשה
         await base44.entities.Vote.create({
           suggestionId,
           userId: user.id,
           vote
         });
-        updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, {
-          [vote === 'pro' ? 'proVotes' : 'conVotes']: (suggestion[vote === 'pro' ? 'proVotes' : 'conVotes'] || 0) + 1
-        });
+        if (vote === 'pro') newProVotes += 1;
+        else newConVotes += 1;
       }
 
-      try {
-        await notifyVoteOnSuggestion({ suggestion, voterEmail: user.email });
-      } catch (notifError) {
-        console.error('[VOTE NOTIFICATION ERROR]', notifError);
-      }
-
-      const { calculateDocumentContributors } = await import('./calculateContributors');
-      const contributorsCount = await calculateDocumentContributors(suggestion.documentId);
-      await base44.entities.Document.update(suggestion.documentId, {
-        totalUsersInteracted: contributorsCount,
+      const updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, {
+        proVotes: newProVotes,
+        conVotes: newConVotes
       });
 
-      const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
-      if (shouldAccept) {
-        await autoAcceptSuggestion(updatedSuggestion, user.id, document);
-        queryClient.invalidateQueries({ queryKey: ['sections'] });
-        queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+      // פעולות ברקע - לא חוסמות
+      notifyVoteOnSuggestion({ suggestion, voterEmail: user.email }).catch(() => {});
+      import('./calculateContributors').then(({ calculateDocumentContributors }) => {
+        calculateDocumentContributors(suggestion.documentId).then(count => {
+          base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count });
+        });
+      }).catch(() => {});
+
+      const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, doc);
+      if (shouldAccept && suggestion.status === 'pending') {
+        const accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, doc);
+        if (accepted) {
+          return { accepted: true };
+        }
       }
+      return { accepted: false };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
-      queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId] });
-      queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
+    // Optimistic update
+    onMutate: async (vote) => {
+      await queryClient.cancelQueries({ queryKey: ['suggestion', suggestionId] });
+      await queryClient.cancelQueries({ queryKey: ['userVote', suggestionId, user?.id] });
+      
+      const previousSuggestion = queryClient.getQueryData(['suggestion', suggestionId]);
+      const previousVote = queryClient.getQueryData(['userVote', suggestionId, user?.id]);
+      
+      // עדכון אופטימיסטי של ההצעה
+      queryClient.setQueryData(['suggestion', suggestionId], (old) => {
+        if (!old) return old;
+        
+        let newProVotes = old.proVotes || 0;
+        let newConVotes = old.conVotes || 0;
+        
+        if (userVote) {
+          if (userVote.vote === vote) {
+            if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
+            else newConVotes = Math.max(0, newConVotes - 1);
+          } else {
+            if (vote === 'pro') {
+              newProVotes += 1;
+              newConVotes = Math.max(0, newConVotes - 1);
+            } else {
+              newConVotes += 1;
+              newProVotes = Math.max(0, newProVotes - 1);
+            }
+          }
+        } else {
+          if (vote === 'pro') newProVotes += 1;
+          else newConVotes += 1;
+        }
+        
+        return { ...old, proVotes: newProVotes, conVotes: newConVotes };
+      });
+      
+      // עדכון אופטימיסטי של ההצבעה
+      queryClient.setQueryData(['userVote', suggestionId, user?.id], (old) => {
+        if (userVote) {
+          if (userVote.vote === vote) return null;
+          else return { ...old, vote };
+        } else {
+          return { id: 'temp-' + Date.now(), suggestionId, userId: user.id, vote };
+        }
+      });
+      
+      return { previousSuggestion, previousVote };
     },
-    onError: (err) => {
+    onError: (err, variables, context) => {
+      if (context?.previousSuggestion) {
+        queryClient.setQueryData(['suggestion', suggestionId], context.previousSuggestion);
+      }
+      if (context?.previousVote !== undefined) {
+        queryClient.setQueryData(['userVote', suggestionId, user?.id], context.previousVote);
+      }
       setError(err.message);
       setTimeout(() => setError(null), 5000);
-    }
+    },
+    onSuccess: (data) => {
+      if (data?.accepted) {
+        queryClient.invalidateQueries({ queryKey: ['sections'] });
+        queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+        queryClient.invalidateQueries({ queryKey: ['document'] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
+    },
   });
 
   const addArgumentMutation = useMutation({
