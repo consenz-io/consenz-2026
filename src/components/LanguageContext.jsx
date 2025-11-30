@@ -458,6 +458,7 @@ const translations = {
     viewFullComment: "צפה בתגובה המלאה",
     suggestion: "הצעה",
     showChangesView: "תצוגת שינויים",
+    generalDocumentDiscussion: "דיון כללי במסמך",
 
     // גימיפיקציה ונקודות
     pointsTransactionCreated: "יצירת הצעה:",
