@@ -291,50 +291,48 @@ export default function SectionCarousel({
           </>
         ) : (
           // תצוגת הצעה - diff
-          <div 
-            className="cursor-pointer hover:opacity-90 transition-opacity"
-            onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
-          >
-            {currentView.data.explanation && (
-              <div className="mb-3 text-sm">
-                <TranslatableContent
-                  content={currentView.data.explanation}
-                  entity={currentView.data}
-                  entityType="Suggestion"
-                  className="text-slate-600"
-                />
-              </div>
-            )}
-            
-            {currentView.data.originalContent ? (
-              <div>
-                <SectionDiff
-                  originalContent={currentView.data.originalContent}
-                  newContent={currentView.data.newContent}
-                  documentId={document?.id}
-                  sectionId={section?.id}
-                />
-                <TranslatableContent
-                  content={currentView.data.newContent}
-                  entity={currentView.data}
-                  entityType="Suggestion"
-                  className="hidden"
-                />
-              </div>
-            ) : (
-              <div className="p-3 bg-green-50 rounded border border-green-200 hover:bg-green-100 hover:shadow-md transition-all">
-                <TranslatableContent
-                  content={currentView.data.newContent}
-                  entity={currentView.data}
-                  entityType="Suggestion"
-                  className="prose prose-sm max-w-none"
-                />
-              </div>
-            )}
-
-
-
-          </div>
+          <>
+            <div 
+              className="cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
+            >
+              {currentView.data.explanation && (
+                <div className="mb-3 text-sm">
+                  <TranslatableContent
+                    content={currentView.data.explanation}
+                    entity={currentView.data}
+                    entityType="Suggestion"
+                    className="text-slate-600"
+                  />
+                </div>
+              )}
+              
+              {currentView.data.originalContent ? (
+                <div>
+                  <SectionDiff
+                    originalContent={currentView.data.originalContent}
+                    newContent={currentView.data.newContent}
+                    documentId={document?.id}
+                    sectionId={section?.id}
+                  />
+                  <TranslatableContent
+                    content={currentView.data.newContent}
+                    entity={currentView.data}
+                    entityType="Suggestion"
+                    className="hidden"
+                  />
+                </div>
+              ) : (
+                <div className="p-3 bg-green-50 rounded border border-green-200 hover:bg-green-100 hover:shadow-md transition-all">
+                  <TranslatableContent
+                    content={currentView.data.newContent}
+                    entity={currentView.data}
+                    entityType="Suggestion"
+                    className="prose prose-sm max-w-none"
+                  />
+                </div>
+              )}
+            </div>
 
             {/* כפתורי הצבעה והערות */}
             <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap">
