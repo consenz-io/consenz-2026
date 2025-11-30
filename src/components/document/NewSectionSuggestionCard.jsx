@@ -16,7 +16,8 @@ export default function NewSectionSuggestionCard({
   acceptedSuggestions,
   user,
   getUserVote,
-  voteMutation
+  voteMutation,
+  onOpenSidebar
 }) {
   const { t, isRTL } = useLanguage();
 
