@@ -299,7 +299,11 @@ export default function DocumentView() {
                 ? 'bg-green-50 text-green-700 border-green-200'
                 : 'bg-amber-50 text-amber-700 border-amber-200'
             }`}>
-              {document.privacy.replace(/_/g, ' ')}
+              {document.privacy === 'public_view_open_participation' 
+                ? t('publicViewOpenParticipation')
+                : document.privacy === 'public_view_closed_participation'
+                ? t('publicViewClosedParticipation')
+                : t('privateInviteOnly')}
             </Badge>
           </div>
 
