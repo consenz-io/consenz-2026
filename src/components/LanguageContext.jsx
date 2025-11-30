@@ -695,6 +695,7 @@ const translations = {
     viewFullComment: "عرض التعليق الكامل",
     suggestion: "اقتراح",
     showChangesView: "عرض التغييرات",
+    generalDocumentDiscussion: "نقاش عام حول المستند",
 
     // التلعيب والنقاط
     pointsTransactionCreated: "إنشاء اقتراح:",
