@@ -301,13 +301,23 @@ Return ONLY valid JSON in this exact format:
           const sectionContent = validSections[j].content.trim();
           const sectionLanguage = detectLanguage(sectionContent);
 
-          await base44.entities.Section.create({
+          const newSection = await base44.entities.Section.create({
             documentId: doc.id,
             topicId: topic.id,
             content: sectionContent,
             order: j,
             lastEditedBy: user.id,
             originalLanguage: sectionLanguage,
+          });
+
+          // שמירת גרסה ראשונית של הסעיף
+          await base44.entities.DocumentVersion.create({
+            documentId: doc.id,
+            sectionId: newSection.id,
+            content: sectionContent,
+            changeDescription: 'גרסה ראשונית',
+            version: 0,
+            changeType: 'section_created',
           });
         }
       }
