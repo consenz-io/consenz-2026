@@ -221,6 +221,9 @@ const translations = {
     suggestion: "suggestion",
     showChangesView: "Show Changes",
     generalDocumentDiscussion: "General Document Discussion",
+    publicViewOpenParticipation: "Public - Open Participation",
+    publicViewClosedParticipation: "Public - Closed Participation",
+    privateInviteOnly: "Private - Invite Only",
 
     // Gamification and Points
     pointsTransactionCreated: "Created suggestion:",
