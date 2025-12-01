@@ -97,7 +97,9 @@ export default function DocumentVersionHistory({
                     )}
                   </div>
                   <CardTitle className={`text-lg ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {version.changeDescription || t('changeWithoutDescription')}
+                    {typeof version.changeDescription === 'string' 
+                      ? version.changeDescription 
+                      : (version.changeDescription?.title || t('changeWithoutDescription'))}
                   </CardTitle>
                   <div className={`flex items-center gap-4 mt-2 text-sm text-slate-500 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
