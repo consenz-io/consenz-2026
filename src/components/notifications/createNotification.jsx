@@ -315,25 +315,21 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
       creator: currentUser.email
     });
     
-    // מציאת כל המשתמשים שאינטראקציה עם המסמך
-    const interactions = await base44.entities.UserInteraction.filter({ documentId: document.id });
-    const interactedUserIds = interactions.map(i => i.userId).filter(id => id !== currentUser.id);
+    const notifiedUsers = new Set();
+    notifiedUsers.add(currentUser.id); // לא לשלוח ליוצר ההצעה עצמו
     
-    if (interactedUserIds.length === 0) {
-      console.log('[NOTIFICATION] No users to notify');
-      return;
-    }
+    // בנה URL שמכוון לסעיף הספציפי
+    const actionUrl = suggestion.sectionId 
+      ? `${createPageUrl("DocumentView")}?id=${document.id}&scrollTo=${suggestion.sectionId}`
+      : `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`;
     
-    const uniqueUserIds = [...new Set(interactedUserIds)];
-    const suggestionUrl = `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`;
-    
-    console.log('[NOTIFICATION] Creating notifications for', uniqueUserIds.length, 'users');
-    
-    for (const userId of uniqueUserIds) {
-      const userLang = await getUserLanguage(userId);
-      
+    // 1. שלח ליוצר המסמך
+    const docCreator = await getDocumentCreator(document.id);
+    if (docCreator && !notifiedUsers.has(docCreator.id)) {
+      notifiedUsers.add(docCreator.id);
+      const userLang = await getUserLanguage(docCreator.id);
       await createNotification({
-        userId: userId,
+        userId: docCreator.id,
         type: 'new_suggestion',
         title: translate('notifNewSuggestionTitle', userLang),
         message: translate('notifNewSuggestionMessage', userLang, { 
@@ -342,11 +338,32 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
         }),
         relatedEntityId: suggestion.id,
         relatedEntityType: 'suggestion',
-        actionUrl: suggestionUrl
+        actionUrl
       });
     }
     
-    console.log('[NOTIFICATION] New suggestion notifications created successfully');
+    // 2. שלח למנהלי המסמך
+    const adminIds = await getDocumentAdmins(document.id);
+    for (const adminId of adminIds) {
+      if (notifiedUsers.has(adminId)) continue;
+      notifiedUsers.add(adminId);
+      
+      const userLang = await getUserLanguage(adminId);
+      await createNotification({
+        userId: adminId,
+        type: 'new_suggestion',
+        title: translate('notifNewSuggestionTitle', userLang),
+        message: translate('notifNewSuggestionMessage', userLang, { 
+          name: currentUser.full_name, 
+          title: document.title 
+        }),
+        relatedEntityId: suggestion.id,
+        relatedEntityType: 'suggestion',
+        actionUrl
+      });
+    }
+    
+    console.log('[NOTIFICATION] New suggestion notifications created for', notifiedUsers.size - 1, 'users');
   } catch (error) {
     console.error('[NOTIFICATION ERROR]', error);
   }
