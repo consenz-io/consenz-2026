@@ -85,9 +85,32 @@ export default function DocumentContent({
 
   // בדיקה ואישור אוטומטי של הצעות שעברו את רף הקונסנזוס
   const hasCheckedRef = React.useRef(new Set());
+  // מעקב אחרי הצעות שכבר ראינו כ-accepted כדי להציג toast רק פעם אחת
+  const shownAcceptedToastsRef = React.useRef(new Set());
 
   React.useEffect(() => {
     if (!document || !suggestions) return;
+
+    // בדיקה אם יש הצעות שהתקבלו שעדיין לא הצגנו עליהן toast
+    suggestions.forEach(suggestion => {
+      if (suggestion.status === 'accepted' && !shownAcceptedToastsRef.current.has(suggestion.id)) {
+        // בודקים אם ההצעה התקבלה לאחרונה (תוך 30 שניות אחרונות)
+        const updatedDate = new Date(suggestion.updated_date);
+        const now = new Date();
+        const diffSeconds = (now - updatedDate) / 1000;
+        
+        if (diffSeconds < 30) {
+          shownAcceptedToastsRef.current.add(suggestion.id);
+          toast.success(`🎉 הצעה התקבלה: "${suggestion.title}"`, {
+            description: 'המסמך עודכן בהתאם',
+            duration: 5000,
+          });
+        } else {
+          // הצעות ישנות יותר - רק מסמנים אותן כדי לא להציג toast
+          shownAcceptedToastsRef.current.add(suggestion.id);
+        }
+      }
+    });
 
     const checkAndAutoAccept = async () => {
       let hasChanges = false;
