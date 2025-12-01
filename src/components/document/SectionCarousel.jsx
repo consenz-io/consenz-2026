@@ -411,6 +411,7 @@ export default function SectionCarousel({
                   suggestion={currentView.data} 
                   document={document} 
                   acceptedSuggestions={acceptedSuggestions}
+                  sectionId={section.id}
                 />
               </div>
               <Link to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === currentView.data.created_by)?.id}`} className="flex-shrink-0">
