@@ -865,7 +865,7 @@ Return ONLY the translated text:`;
                           onClick={() => voteTopicEditMutation.mutate({ 
                             suggestionId: suggestion.id, 
                             vote: 'pro',
-                            currentVote: userVote
+                            currentVote: userVote,
                           })}
                           disabled={voteTopicEditMutation.isPending}
                           className={userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}
