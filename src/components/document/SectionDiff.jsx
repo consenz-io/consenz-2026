@@ -77,6 +77,22 @@ Return ONLY the translated HTML:`;
       
       setTranslatedContent(translated);
       setShowTranslated(true);
+      
+      // שמירת התרגום ב-suggestion אם קיים
+      if (suggestion?.id) {
+        try {
+          const newTranslations = {
+            ...(suggestion.translations || {}),
+            [language]: {
+              ...(suggestion.translations?.[language] || {}),
+              newContent: translated
+            }
+          };
+          await base44.entities.Suggestion.update(suggestion.id, { translations: newTranslations });
+        } catch (e) {
+          console.error('Error saving translation to suggestion:', e);
+        }
+      }
     } catch (error) {
       console.error('Translation error:', error);
     } finally {
