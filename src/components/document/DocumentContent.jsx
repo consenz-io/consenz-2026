@@ -376,6 +376,8 @@ export default function DocumentContent({
       }
       
       return { accepted: false, newProVotes, newConVotes };
+      } catch (err) {
+        throw err;
       } finally {
         // מסירים מהרשימה אחרי שהפעולה הסתיימה
         votingInProgressRef.current.delete(suggestionId);
@@ -866,6 +868,8 @@ Return ONLY the translated text:`;
           queryClient.invalidateQueries({ queryKey: ['versions', document.id] })
         ]);
       }
+      } catch (err) {
+        throw err;
       } finally {
         // מסירים מהרשימה אחרי שהפעולה הסתיימה
         topicVotingInProgressRef.current.delete(suggestionId);
