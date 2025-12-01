@@ -44,14 +44,19 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
   // מיזוג התגובות - אם זו הצעה עם sectionId, הצג גם תגובות סעיף
   const comments = React.useMemo(() => {
     if (entityType === 'suggestion' && sectionId && sectionComments.length > 0) {
-      // מיזוג וסידור לפי תאריך
-      const allComments = [...suggestionComments, ...sectionComments];
+      // מיזוג וסידור לפי תאריך, עם סימון מקור
+      const suggestionCommentsWithSource = suggestionComments.map(c => ({ ...c, _source: 'suggestion' }));
+      const sectionCommentsWithSource = sectionComments.map(c => ({ ...c, _source: 'section' }));
+      const allComments = [...suggestionCommentsWithSource, ...sectionCommentsWithSource];
       return allComments.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     }
-    return suggestionComments;
+    return suggestionComments.map(c => ({ ...c, _source: entityType }));
   }, [suggestionComments, sectionComments, entityType, sectionId]);
 
   const isLoading = suggestionCommentsLoading || (entityType === 'suggestion' && sectionId && sectionCommentsLoading);
+  
+  // בדיקה אם יש תגובות משני המקורות
+  const hasMixedSources = entityType === 'suggestion' && sectionId && sectionComments.length > 0 && suggestionComments.length > 0;
 
   const { data: users } = useQuery({
     queryKey: ['users'],
