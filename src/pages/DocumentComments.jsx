@@ -211,7 +211,7 @@ export default function DocumentComments() {
                             <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
                             <Badge variant="outline" className="text-xs">{group.topicName}</Badge>
                           </div>
-                          <p className="text-sm text-slate-700 mt-1 line-clamp-2" dir={isRTL ? 'rtl' : 'ltr'}>
+                          <p className={`text-sm text-slate-700 mt-1 line-clamp-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                             {getSectionPreview(group.entityId)}
                           </p>
                         </>
@@ -249,7 +249,7 @@ export default function DocumentComments() {
                             <span className="text-sm font-medium text-slate-900">{getUserName(comment.created_by)}</span>
                             <span className="text-xs text-slate-500">{new Date(comment.created_date).toLocaleDateString()}</span>
                           </div>
-                          <p className="text-sm text-slate-700 mt-0.5" dir={isRTL ? 'rtl' : 'ltr'}>{comment.content}</p>
+                          <p className={`text-sm text-slate-700 mt-0.5 ${isRTL ? 'text-right' : 'text-left'}`}>{comment.content}</p>
                         </div>
                       </div>
                     ))}
