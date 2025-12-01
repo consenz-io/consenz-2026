@@ -22,6 +22,8 @@ function translate(key, lang, replacements = {}) {
       notifVoteMessage: "{name} voted on the suggestion \"{title}\"",
       notifAcceptedTitle: "🎉 Your suggestion was accepted!",
       notifAcceptedMessage: "The suggestion \"{title}\" was accepted and added to the document",
+      notifAcceptedVoterTitle: "A suggestion you supported was accepted!",
+      notifAcceptedVoterMessage: "The suggestion \"{title}\" you voted for was accepted",
       notifRejectedTitle: "Your suggestion was rejected",
       notifRejectedMessage: "The suggestion \"{title}\" was rejected by the document admin",
       notifNewSuggestionTitle: "New suggestion in document",
@@ -40,6 +42,8 @@ function translate(key, lang, replacements = {}) {
       notifVoteMessage: "{name} הצביע על ההצעה \"{title}\"",
       notifAcceptedTitle: "🎉 ההצעה שלך התקבלה!",
       notifAcceptedMessage: "ההצעה \"{title}\" התקבלה ונוספה למסמך",
+      notifAcceptedVoterTitle: "הצעה שתמכת בה התקבלה!",
+      notifAcceptedVoterMessage: "ההצעה \"{title}\" שהצבעת בעדה התקבלה",
       notifRejectedTitle: "ההצעה שלך נדחתה",
       notifRejectedMessage: "ההצעה \"{title}\" נדחתה על ידי מנהל המסמך",
       notifNewSuggestionTitle: "הצעה חדשה במסמך",
@@ -58,6 +62,8 @@ function translate(key, lang, replacements = {}) {
       notifVoteMessage: "{name} صوت على الاقتراح \"{title}\"",
       notifAcceptedTitle: "🎉 تم قبول اقتراحك!",
       notifAcceptedMessage: "تم قبول الاقتراح \"{title}\" وإضافته إلى المستند",
+      notifAcceptedVoterTitle: "تم قبول اقتراح دعمته!",
+      notifAcceptedVoterMessage: "تم قبول الاقتراح \"{title}\" الذي صوتت له",
       notifRejectedTitle: "تم رفض اقتراحك",
       notifRejectedMessage: "تم رفض الاقتراح \"{title}\" من قبل مدير المستند",
       notifNewSuggestionTitle: "اقتراح جديد في المستند",
@@ -81,6 +87,32 @@ function translate(key, lang, replacements = {}) {
   }
   
   return text;
+}
+
+// Helper to get document admins
+async function getDocumentAdmins(documentId) {
+  try {
+    const admins = await base44.entities.DocumentAdmin.filter({ documentId });
+    return admins.map(a => a.userId);
+  } catch (error) {
+    console.error('Error getting document admins:', error);
+    return [];
+  }
+}
+
+// Helper to get document creator
+async function getDocumentCreator(documentId) {
+  try {
+    const documents = await base44.entities.Document.filter({ id: documentId });
+    if (documents.length > 0 && documents[0].created_by) {
+      const users = await base44.entities.User.filter({ email: documents[0].created_by });
+      return users.length > 0 ? users[0] : null;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error getting document creator:', error);
+    return null;
+  }
 }
 
 /**
