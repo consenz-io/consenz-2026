@@ -245,7 +245,7 @@ export default function DocumentComments() {
                           </span>
                         </div>
                         <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
-                          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+                          <div className={`flex items-center gap-2 ${isRTL ? 'justify-start' : ''}`}>
                             <span className="text-sm font-medium text-slate-900">{getUserName(comment.created_by)}</span>
                             <span className="text-xs text-slate-500">{new Date(comment.created_date).toLocaleDateString()}</span>
                           </div>
