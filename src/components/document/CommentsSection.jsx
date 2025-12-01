@@ -44,19 +44,14 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
   // מיזוג התגובות - אם זו הצעה עם sectionId, הצג גם תגובות סעיף
   const comments = React.useMemo(() => {
     if (entityType === 'suggestion' && sectionId && sectionComments.length > 0) {
-      // מיזוג וסידור לפי תאריך, עם סימון מקור
-      const suggestionCommentsWithSource = suggestionComments.map(c => ({ ...c, _source: 'suggestion' }));
-      const sectionCommentsWithSource = sectionComments.map(c => ({ ...c, _source: 'section' }));
-      const allComments = [...suggestionCommentsWithSource, ...sectionCommentsWithSource];
+      // מיזוג וסידור לפי תאריך
+      const allComments = [...suggestionComments, ...sectionComments];
       return allComments.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     }
-    return suggestionComments.map(c => ({ ...c, _source: entityType }));
+    return suggestionComments;
   }, [suggestionComments, sectionComments, entityType, sectionId]);
 
   const isLoading = suggestionCommentsLoading || (entityType === 'suggestion' && sectionId && sectionCommentsLoading);
-  
-  // בדיקה אם יש תגובות משני המקורות
-  const hasMixedSources = entityType === 'suggestion' && sectionId && sectionComments.length > 0 && suggestionComments.length > 0;
 
   const { data: users } = useQuery({
     queryKey: ['users'],
@@ -222,15 +217,6 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
                 entityType="Comment"
                 className="text-sm text-slate-700 whitespace-pre-wrap break-words"
               />
-              {comment._source && entityType === 'suggestion' && sectionId && (
-                <span className={`inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded ${
-                  comment._source === 'section' 
-                    ? 'bg-blue-100 text-blue-700' 
-                    : 'bg-amber-100 text-amber-700'
-                }`}>
-                  {comment._source === 'section' ? t('section') : t('suggestion')}
-                </span>
-              )}
               <div className="flex gap-2 mt-2">
                 {user && !isReply && (
                   <Button
