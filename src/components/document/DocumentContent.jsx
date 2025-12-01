@@ -674,60 +674,114 @@ Return ONLY the translated text:`;
     return topicEditVotes?.find(v => v.suggestionId === suggestionId);
   };
 
+  // מעקב אחרי הצבעות על כותרות נושאים למניעת race conditions
+  const topicVotingInProgressRef = React.useRef(new Set());
+  
   const voteTopicEditMutation = useMutation({
     mutationFn: async ({ suggestionId, vote, currentVote }) => {
       if (!user) throw new Error("יש להתחבר כדי להצביע");
 
-      const suggestion = topicEditSuggestions.find(s => s.id === suggestionId);
-      let updatedSuggestion;
+      // מניעת הצבעות כפולות על אותה הצעה
+      if (topicVotingInProgressRef.current.has(suggestionId)) {
+        console.log('[TOPIC VOTE] Already voting on this suggestion, ignoring');
+        throw new Error("ההצבעה בתהליך, אנא המתן");
+      }
+      topicVotingInProgressRef.current.add(suggestionId);
 
-      if (currentVote) {
-        if (currentVote.vote === vote) {
-          // Canceling vote
-          await base44.entities.TopicEditVote.delete(currentVote.id);
-          updatedSuggestion = await base44.entities.TopicEditSuggestion.update(suggestionId, {
-            [vote === 'pro' ? 'proVotes' : 'conVotes']: Math.max(0, (suggestion[vote === 'pro' ? 'proVotes' : 'conVotes'] || 0) - 1)
-          });
-        } else {
-          // Changing vote
-          await base44.entities.TopicEditVote.update(currentVote.id, { vote });
-          updatedSuggestion = await base44.entities.TopicEditSuggestion.update(suggestionId, {
-            proVotes: suggestion.proVotes + (vote === 'pro' ? 1 : -1),
-            conVotes: suggestion.conVotes + (vote === 'con' ? 1 : -1)
-          });
+      try {
+        const suggestion = topicEditSuggestions.find(s => s.id === suggestionId);
+        
+        // שלב 1: קריאת המצב העדכני מהשרת (source of truth)
+        const [freshVotes, freshSuggestions] = await Promise.all([
+          base44.entities.TopicEditVote.filter({ suggestionId, userId: user.id }),
+          base44.entities.TopicEditSuggestion.filter({ id: suggestionId })
+        ]);
+        
+        const serverVote = freshVotes[0];
+        const freshSuggestion = freshSuggestions[0];
+        
+        if (!freshSuggestion) {
+          throw new Error("ההצעה לא נמצאה");
         }
-      } else {
-        // New vote
-        await base44.entities.TopicEditVote.create({
-          suggestionId,
-          userId: user.id,
-          vote
-        });
-        updatedSuggestion = await base44.entities.TopicEditSuggestion.update(suggestionId, {
-          [vote === 'pro' ? 'proVotes' : 'conVotes']: (suggestion[vote === 'pro' ? 'proVotes' : 'conVotes'] || 0) + 1
-        });
+        
+        let newProVotes = freshSuggestion.proVotes || 0;
+        let newConVotes = freshSuggestion.conVotes || 0;
+        let updatedSuggestion;
 
-        // Award points for pro vote
-        if (vote === 'pro' && document.gamificationEnabled) {
-          const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
-          if (suggestionCreatorList.length > 0) {
-            const suggestionCreator = suggestionCreatorList[0];
-            const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
-            if (freshUser) {
-              const newPoints = (freshUser.points || 1000) + 10;
-              await base44.entities.User.update(freshUser.id, { points: newPoints });
-              
-              await base44.entities.PointsTransaction.create({
-                userId: suggestionCreator.id,
-                amount: 10,
-                action: 'vote_received',
-                description: `קיבל הצבעה בעד על הצעת עריכת כותרת`,
-                relatedEntityType: 'topic'
-              });
+        if (serverVote) {
+          if (serverVote.vote === vote) {
+            // Canceling vote
+            await base44.entities.TopicEditVote.delete(serverVote.id);
+            if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
+            else newConVotes = Math.max(0, newConVotes - 1);
+          } else {
+            // Changing vote
+            await base44.entities.TopicEditVote.update(serverVote.id, { vote });
+            if (vote === 'pro') {
+              newProVotes += 1;
+              newConVotes = Math.max(0, newConVotes - 1);
+            } else {
+              newConVotes += 1;
+              newProVotes = Math.max(0, newProVotes - 1);
+            }
+          }
+        } else {
+          // בדיקה כפולה לפני יצירת הצבעה חדשה
+          const doubleCheck = await base44.entities.TopicEditVote.filter({ suggestionId, userId: user.id });
+          if (doubleCheck.length > 0) {
+            const existingVote = doubleCheck[0];
+            if (existingVote.vote !== vote) {
+              await base44.entities.TopicEditVote.update(existingVote.id, { vote });
+              if (vote === 'pro') {
+                newProVotes += 1;
+                newConVotes = Math.max(0, newConVotes - 1);
+              } else {
+                newConVotes += 1;
+                newProVotes = Math.max(0, newProVotes - 1);
+              }
+            } else {
+              await base44.entities.TopicEditVote.delete(existingVote.id);
+              if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
+              else newConVotes = Math.max(0, newConVotes - 1);
+            }
+          } else {
+            // באמת הצבעה חדשה
+            await base44.entities.TopicEditVote.create({
+              suggestionId,
+              userId: user.id,
+              vote
+            });
+            if (vote === 'pro') newProVotes += 1;
+            else newConVotes += 1;
+
+            // Award points for pro vote
+            if (vote === 'pro' && document.gamificationEnabled) {
+              const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+              if (suggestionCreatorList.length > 0) {
+                const suggestionCreator = suggestionCreatorList[0];
+                const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
+                if (freshUser) {
+                  const newPoints = (freshUser.points || 1000) + 10;
+                  await base44.entities.User.update(freshUser.id, { points: newPoints });
+                  
+                  await base44.entities.PointsTransaction.create({
+                    userId: suggestionCreator.id,
+                    amount: 10,
+                    action: 'vote_received',
+                    description: `קיבל הצבעה בעד על הצעת עריכת כותרת`,
+                    relatedEntityType: 'topic'
+                  });
+                }
+              }
             }
           }
         }
-      }
+        
+        // עדכון ההצעה עם הערכים החדשים
+        updatedSuggestion = await base44.entities.TopicEditSuggestion.update(suggestionId, {
+          proVotes: newProVotes,
+          conVotes: newConVotes
+        });
 
       // Check consensus and auto-accept - שימוש בחישוב דינמי של הסף
       const delta = updatedSuggestion.proVotes - updatedSuggestion.conVotes;
