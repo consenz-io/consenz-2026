@@ -470,7 +470,12 @@ export default function DocumentView() {
           >
             <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-purple-600" />
             <div className="text-base md:text-xl font-bold text-slate-900">
-              {((document.avgSuggestionConsensus || 0) * 100).toFixed(0)}%
+              {(() => {
+                const consensuses = document.consensuses || [];
+                if (consensuses.length === 0) return '0';
+                const avg = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
+                return (Math.min(100, avg * 100)).toFixed(0);
+              })()}%
             </div>
             <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('consensus')}</div>
           </Link>
