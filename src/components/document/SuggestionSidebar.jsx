@@ -484,7 +484,7 @@ export default function SuggestionSidebar({
           </div>
 
           {/* Explanation */}
-          {suggestion.explanation && (
+          {suggestion.explanation && typeof suggestion.explanation === 'string' && (
             <div className="bg-slate-50 rounded-lg p-3">
               <h3 className="text-xs font-semibold text-slate-700 mb-1">{t('explanation')}</h3>
               <TranslatableContent
