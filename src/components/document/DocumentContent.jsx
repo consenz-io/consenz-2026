@@ -923,29 +923,44 @@ Return ONLY the translated text:`;
                       return topic.title;
                     })()}
                   </CardTitle>
-                  {topic.originalLanguage && language && topic.originalLanguage !== language && (
-                    translateTopicMutation.isPending && translateTopicMutation.variables?.id === topic.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />
-                    ) : (
+                  {(() => {
+                    // זיהוי אוטומטי של שפת הנושא
+                    const detectLanguage = (text) => {
+                      const hebrewPattern = /[\u0590-\u05FF]/;
+                      const arabicPattern = /[\u0600-\u06FF]/;
+                      if (hebrewPattern.test(text)) return 'he';
+                      if (arabicPattern.test(text)) return 'ar';
+                      return 'en';
+                    };
+                    const topicOriginalLang = topic.originalLanguage || detectLanguage(topic.title);
+                    const needsTranslation = topicOriginalLang !== language;
+                    
+                    if (!needsTranslation) return null;
+                    
+                    if (translateTopicMutation.isPending && translateTopicMutation.variables?.id === topic.id) {
+                      return <Loader2 className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />;
+                    }
+                    
+                    return (
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          if (showTranslatedTopics[topic.id] && topic.translations?.[language]) {
+                          if (showTranslatedTopics[topic.id] && topic.translations?.[language]?.title) {
                             setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: false }));
-                          } else if (topic.translations?.[language]) {
+                          } else if (topic.translations?.[language]?.title) {
                             setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: true }));
                           } else {
                             translateTopicMutation.mutate(topic);
                           }
                         }}
                         className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 flex-shrink-0"
-                        title={showTranslatedTopics[topic.id] && topic.translations?.[language] ? `${languageNames[topic.originalLanguage || 'he']} (מקור)` : `תרגם ל${languageNames[language]}`}
+                        title={showTranslatedTopics[topic.id] && topic.translations?.[language]?.title ? `${languageNames[topicOriginalLang]} (מקור)` : `תרגם ל${languageNames[language]}`}
                       >
                         <Languages className="w-4 h-4" />
                       </Button>
-                    )
-                  )}
+                    );
+                  })()}
                 </div>
                 {user && (
                   <Button
