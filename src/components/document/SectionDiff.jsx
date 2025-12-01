@@ -7,15 +7,25 @@ import { Languages, Loader2, Eye, FileText } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 
-export default function SectionDiff({ originalContent, newContent, documentId, sectionId }) {
+const detectLanguage = (text) => {
+  const hebrewPattern = /[\u0590-\u05FF]/;
+  const arabicPattern = /[\u0600-\u06FF]/;
+  
+  if (hebrewPattern.test(text)) return 'he';
+  if (arabicPattern.test(text)) return 'ar';
+  return 'en';
+};
+
+export default function SectionDiff({ originalContent, newContent, documentId, sectionId, suggestion }) {
   const { t, language, isRTL } = useLanguage();
   const [translatedContent, setTranslatedContent] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [showTranslated, setShowTranslated] = useState(false);
   const [showDiff, setShowDiff] = useState(false);
   
-  const originalLanguage = 'he';
-  const needsTranslation = language !== originalLanguage;
+  // זיהוי אוטומטי של שפת התוכן המוצע - בודק את ה-suggestion או מזהה אוטומטית
+  const contentLanguage = suggestion?.originalLanguage || detectLanguage(newContent || '');
+  const needsTranslation = language !== contentLanguage;
   
   const getTextContent = (html) => {
     const tempDiv = document.createElement('div');
