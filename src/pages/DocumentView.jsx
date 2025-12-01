@@ -370,9 +370,8 @@ export default function DocumentView() {
             </Badge>
           </div>
 
-          {/* Document Description */}
-          {(document.description || isAdmin) && (
-            <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-4 relative">
+          {/* Document Discussion and Comments */}
+          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-4 relative">
               {document.originalLanguage && document.originalLanguage !== language && !isEditingDescription && (
                 <div className="absolute top-2 left-2 z-10">
                   {isTranslatingDescription ? (
@@ -462,7 +461,7 @@ export default function DocumentView() {
                 </div>
               )}
               {!isEditingDescription && (
-                <div className="mt-3 pt-3 border-t border-slate-200">
+                <div className="flex gap-2 flex-wrap mt-3 pt-3 border-t border-slate-200">
                   <Button
                     variant="outline"
                     size="sm"
@@ -472,6 +471,16 @@ export default function DocumentView() {
                     <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                     {t('generalDocumentDiscussion')} ({documentComments.length})
                   </Button>
+                  <Link to={`${createPageUrl("DocumentComments")}?id=${documentId}`}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-indigo-700 border-indigo-300 bg-indigo-50 hover:bg-indigo-100 hover:text-indigo-800 h-8 md:h-9 text-sm px-4 font-medium shadow-sm"
+                    >
+                      <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {t('allSectionComments')}
+                    </Button>
+                  </Link>
                 </div>
               )}
               {showDescriptionComments && (
@@ -484,7 +493,6 @@ export default function DocumentView() {
                 </div>
               )}
             </div>
-          )}
 
           <div className="flex gap-2 md:gap-3 flex-wrap justify-center">
             <Link to={`${createPageUrl("DocumentVersions")}?id=${documentId}`} className="flex-shrink-0">

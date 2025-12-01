@@ -10,6 +10,7 @@ import MyDocuments from './pages/MyDocuments';
 import SectionHistory from './pages/SectionHistory';
 import LearnMore from './pages/LearnMore';
 import UnderstandingConsensus from './pages/UnderstandingConsensus';
+import DocumentComments from './pages/DocumentComments';
 import __Layout from './Layout.jsx';
 
 
@@ -26,6 +27,7 @@ export const PAGES = {
     "SectionHistory": SectionHistory,
     "LearnMore": LearnMore,
     "UnderstandingConsensus": UnderstandingConsensus,
+    "DocumentComments": DocumentComments,
 }
 
 export const pagesConfig = {
