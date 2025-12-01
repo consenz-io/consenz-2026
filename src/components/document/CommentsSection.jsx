@@ -120,33 +120,34 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
         const suggestions = await base44.entities.Suggestion.filter({ id: entityId });
         if (suggestions.length > 0) {
           documentId = suggestions[0].documentId;
-          await notifyNewComment({ 
+          notifyNewComment({ 
             comment, 
             targetEntity: suggestions[0], 
             targetEntityType: 'suggestion',
             parentComment
-          });
+          }).catch(err => console.error('[NOTIFY ERROR]', err));
         }
       } else if (entityType === 'section') {
         const sections = await base44.entities.Section.filter({ id: entityId });
         if (sections.length > 0) {
           documentId = sections[0].documentId;
-          await notifyNewComment({ 
+          notifyNewComment({ 
             comment, 
             targetEntity: sections[0], 
             targetEntityType: 'section',
             parentComment
-          });
+          }).catch(err => console.error('[NOTIFY ERROR]', err));
         }
       } else if (entityType === 'document') {
         // תגובה בדיון כללי של מסמך
         const documents = await base44.entities.Document.filter({ id: entityId });
         if (documents.length > 0) {
           documentId = entityId;
-          await notifyNewDocumentComment({ 
+          notifyNewDocumentComment({ 
             comment, 
-            document: documents[0]
-          });
+            document: documents[0],
+            parentComment
+          }).catch(err => console.error('[NOTIFY ERROR]', err));
         }
       }
       
