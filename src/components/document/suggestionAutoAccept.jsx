@@ -362,14 +362,15 @@ export async function autoAcceptTopicEditSuggestion(suggestion, userId, document
 
   console.log('[AUTO-ACCEPT TOPIC] Auto-accepting topic edit suggestion:', suggestion.id);
 
-  // חישוב section_consensus_meter והוספה למערך consensuses של המסמך
+  // חישוב section_consensus_meter והוספה למערך consensuses של המסמך - מוגבל לערך בין 0 ל-1
   const totalUsers = document.totalUsersInteracted || 1;
-  const sectionConsensus = consensus / totalUsers;
+  const sectionConsensus = Math.min(1, Math.max(0, consensus / totalUsers));
   
   const currentConsensuses = document.consensuses || [];
   const updatedConsensuses = [...currentConsensuses, sectionConsensus];
   
-  const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + val, 0) / updatedConsensuses.length;
+  // חישוב ממוצע עם הגבלה לכל ערך
+  const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / updatedConsensuses.length;
   const newThreshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
   
   console.log('[TOPIC CONSENSUS METER UPDATE]', {
