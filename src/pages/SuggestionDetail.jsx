@@ -661,7 +661,7 @@ export default function SuggestionDetail() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4 md:space-y-6 p-3 md:p-6 overflow-x-hidden">
-            {suggestion.explanation && (
+            {suggestion.explanation && typeof suggestion.explanation === 'string' && (
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('explanation')}</h3>
                 <TranslatableContent
