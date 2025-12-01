@@ -158,6 +158,7 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                   {versionGroups.filter(g => g.version && g.version.changeType).map((group, groupIndex) => {
                     const currentVer = group.version;
                     const prevVer = group.previousVersion;
+                    const isOldestVersion = groupIndex === versionGroups.length - 1;
                     
                     return (
                       <Card key={groupIndex} className="border-slate-200">
@@ -186,15 +187,15 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                           </div>
                         </CardHeader>
                         <CardContent className="p-4 space-y-3">
-                          {/* Show content for direct edits */}
-                          {currentVer.changeType === 'direct_edit' && (
+                          {/* Show content for direct edits or oldest version */}
+                          {(currentVer.changeType === 'direct_edit' || currentVer.changeType === 'section_created' || isOldestVersion) && (
                             <div className="prose prose-sm max-w-none text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-200">
                               <div dangerouslySetInnerHTML={{ __html: currentVer.content }} />
                             </div>
                           )}
                           
                           {/* Show diff between this version and the previous one */}
-                          {prevVer && currentVer.changeType === 'suggestion_accepted' && (
+                          {prevVer && currentVer.changeType === 'suggestion_accepted' && !isOldestVersion && (
                             <div>
                               <h4 className="text-xs font-semibold text-slate-700 mb-2">{t('changesInThisVersion')}</h4>
                               <SectionDiff
