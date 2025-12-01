@@ -326,13 +326,24 @@ export default function DocumentContent({
         // טיפול בנקודות ברקע - לא חוסם את ה-UI
         handlePointsInBackground(pointsAction, suggestion, vote, serverVote);
 
-      // אם ידוע מראש שההצעה תתקבל - מפעילים את האישור מיידית וברקע
-      if (willBeAccepted && suggestion.status === 'pending') {
+      // חישוב מחדש האם ההצעה תתקבל על בסיס הערכים העדכניים
+      const consensuses = document.consensuses || [];
+      let threshold;
+      if (consensuses.length > 0) {
+        const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
+        threshold = Math.max(1, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
+      } else {
+        threshold = document.threshold || 2;
+      }
+      const shouldAccept = freshSuggestion.status === 'pending' && (newProVotes - newConVotes) >= threshold;
+      
+      // אם ההצעה צריכה להתקבל - מפעילים את האישור מיידית
+      if (shouldAccept) {
         // מסמנים בקאש שההצעה התקבלה למנוע כפילויות
         hasCheckedRef.current.add(`${suggestionId}-accepted`);
         
         // מפעילים את האישור מיד - לא מחכים אבל מעדכנים UI מהר
-        autoAcceptSuggestion({ ...suggestion, proVotes: newProVotes, conVotes: newConVotes }, user.id, document)
+        autoAcceptSuggestion({ ...freshSuggestion, proVotes: newProVotes, conVotes: newConVotes }, user.id, document)
           .then(accepted => {
             if (accepted) {
               // רענון מיידי במקביל - לא רציף
@@ -346,7 +357,7 @@ export default function DocumentContent({
               ]);
               
               // טיפול בנקודות ברקע - לא חוסם
-              if (!currentVote && vote === 'pro' && document.gamificationEnabled) {
+              if (!serverVote && vote === 'pro' && document.gamificationEnabled) {
                 base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
                 base44.entities.PointsTransaction.create({
                   userId: user.id,
@@ -361,10 +372,14 @@ export default function DocumentContent({
           })
           .catch(err => console.error('[AUTO-ACCEPT ERROR]', err));
         
-        return { accepted: true };
+        return { accepted: true, newProVotes, newConVotes };
       }
       
-      return { accepted: false };
+      return { accepted: false, newProVotes, newConVotes };
+      } finally {
+        // מסירים מהרשימה אחרי שהפעולה הסתיימה
+        votingInProgressRef.current.delete(suggestionId);
+      }
     },
     // Optimistic update - עדכון ה-UI מיידית לפני שהשרת מגיב
     onMutate: async ({ suggestionId, vote, currentVote }) => {
