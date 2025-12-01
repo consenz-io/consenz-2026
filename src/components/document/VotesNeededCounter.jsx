@@ -5,7 +5,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
-export default function VotesNeededCounter({ suggestion, document }) {
+export default function VotesNeededCounter({ suggestion, document, sectionId }) {
   const { t } = useLanguage();
 
   // חישוב כמה הצבעות נדרשות
@@ -55,8 +55,15 @@ export default function VotesNeededCounter({ suggestion, document }) {
     );
   }
 
+  // Build return URL with scroll position
+  const returnParams = new URLSearchParams();
+  returnParams.set('id', document?.id);
+  if (sectionId) returnParams.set('scrollTo', sectionId);
+  if (suggestion?.id) returnParams.set('openSuggestion', suggestion.id);
+  const returnUrl = `${createPageUrl("DocumentView")}?${returnParams.toString()}`;
+
   return (
-    <Link to={`${createPageUrl("UnderstandingConsensus")}?id=${document?.id}`}>
+    <Link to={`${createPageUrl("UnderstandingConsensus")}?id=${document?.id}&returnUrl=${encodeURIComponent(returnUrl)}`}>
       <Badge variant="outline" className="flex items-center gap-1 cursor-pointer hover:bg-slate-100 transition-colors">
         <Target className="w-3 h-3" />
         {t('votesNeededToPass').replace('{count}', votesNeeded)}

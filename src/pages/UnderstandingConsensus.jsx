@@ -15,6 +15,7 @@ export default function UnderstandingConsensus() {
   const { t, isRTL, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
+  const returnUrl = searchParams.get('returnUrl');
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
@@ -73,7 +74,7 @@ export default function UnderstandingConsensus() {
       <div className="max-w-4xl mx-auto space-y-6">
         <PageHeader 
           title={t('understandingConsensusTitle')}
-          backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
+          backUrl={returnUrl || `${createPageUrl("DocumentView")}?id=${documentId}`}
         />
 
         {/* Hero Section - שני המושגים המרכזיים */}
