@@ -503,6 +503,7 @@ export default function SuggestionSidebar({
               <SectionDiff
                 originalContent={suggestion.originalContent}
                 newContent={suggestion.newContent}
+                suggestion={suggestion}
               />
             </div>
           ) : (
