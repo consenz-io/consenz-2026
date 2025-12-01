@@ -177,8 +177,8 @@ export default function DocumentComments() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
+        <div className="flex items-center gap-3">
+          <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`} className={isRTL ? 'order-first' : ''}>
             <Button variant="ghost" size="icon">
               <BackArrow className="w-5 h-5" />
             </Button>
