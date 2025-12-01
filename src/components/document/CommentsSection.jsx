@@ -222,6 +222,15 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
                 entityType="Comment"
                 className="text-sm text-slate-700 whitespace-pre-wrap break-words"
               />
+              {comment._source && entityType === 'suggestion' && sectionId && (
+                <span className={`inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded ${
+                  comment._source === 'section' 
+                    ? 'bg-blue-100 text-blue-700' 
+                    : 'bg-amber-100 text-amber-700'
+                }`}>
+                  {comment._source === 'section' ? t('section') : t('suggestion')}
+                </span>
+              )}
               <div className="flex gap-2 mt-2">
                 {user && !isReply && (
                   <Button
