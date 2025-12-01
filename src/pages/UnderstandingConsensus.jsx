@@ -33,9 +33,9 @@ export default function UnderstandingConsensus() {
   const totalUsers = document?.totalUsersInteracted || 1;
   const consensuses = document?.consensuses || [];
   
-  // מד הקונצנזוס הממוצע - ערך בין 0 ל-1
+  // מד הקונצנזוס הממוצע - ערך בין 0 ל-1 (מוגבל למקסימום 1)
   const documentConsensusMeter = consensuses.length > 0 
-    ? consensuses.reduce((sum, val) => sum + val, 0) / consensuses.length 
+    ? Math.min(1, consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length)
     : 0;
   
   // רף התמיכה הדרוש = מד הקונצנזוס × מספר המשתתפים

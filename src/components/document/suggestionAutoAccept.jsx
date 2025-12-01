@@ -95,9 +95,9 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     return false;
   }
   
-  // חישוב section_consensus_meter לפי האפיון
+  // חישוב section_consensus_meter לפי האפיון - מוגבל לערך בין 0 ל-1
   const totalUsers = document.totalUsersInteracted || 1;
-  const sectionConsensus = consensus / totalUsers;
+  const sectionConsensus = Math.min(1, Math.max(0, consensus / totalUsers));
   
   // עדכון המסמך: הוספת sectionConsensus למערך consensuses ועדכון threshold
   const currentConsensuses = document.consensuses || [];
