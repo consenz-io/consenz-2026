@@ -314,8 +314,8 @@ export default function DocumentComments() {
                             const isExpanded = expandedSections[group.entityId];
                             const { text, needsExpand } = getSectionPreview(group.entityId, isExpanded);
                             return (
-                              <div>
-                                <p className={`text-sm text-slate-700 mt-1 ${isExpanded ? '' : 'line-clamp-2'} ${isRTL ? 'text-right' : 'text-left'}`}>
+                              <div className="w-full">
+                                <p className={`text-sm text-slate-700 mt-1 ${isExpanded ? '' : 'line-clamp-2'}`}>
                                   {text}
                                 </p>
                                 {needsExpand && (
