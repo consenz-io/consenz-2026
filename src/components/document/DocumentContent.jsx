@@ -866,6 +866,10 @@ Return ONLY the translated text:`;
           queryClient.invalidateQueries({ queryKey: ['versions', document.id] })
         ]);
       }
+      } finally {
+        // מסירים מהרשימה אחרי שהפעולה הסתיימה
+        topicVotingInProgressRef.current.delete(suggestionId);
+      }
     },
     onSuccess: () => {
       // רענון מיידי במקביל
