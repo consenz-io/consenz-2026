@@ -251,7 +251,12 @@ export default function MyDocuments() {
                           <TrendingUp className="w-4 h-4 text-slate-400" />
                           <div className="text-sm">
                             <div className="font-semibold text-slate-700">
-                              {((doc.avgSuggestionConsensus || 0) * 100).toFixed(0)}%
+                              {(() => {
+                                const consensuses = doc.consensuses || [];
+                                if (consensuses.length === 0) return '0';
+                                const avg = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
+                                return (Math.min(100, avg * 100)).toFixed(0);
+                              })()}%
                             </div>
                             <div className="text-xs text-slate-500">{t('consensus')}</div>
                           </div>
