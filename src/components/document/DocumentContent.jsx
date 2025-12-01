@@ -861,8 +861,19 @@ Return ONLY the translated text:`;
               {/* Topic Edit Suggestions */}
               {getTopicEditSuggestions(topic.id).map((suggestion) => {
                 const userVote = getUserTopicVote(suggestion.id);
-                const delta = suggestion.proVotes - suggestion.conVotes;
-                const votesNeeded = Math.max(0, document.threshold - delta);
+                const delta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
+                
+                // חישוב threshold דינמי - זהה לחישוב של הצעות סעיפים
+                const consensuses = document.consensuses || [];
+                const totalUsers = document.totalUsersInteracted || 1;
+                let threshold;
+                if (consensuses.length > 0) {
+                  const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
+                  threshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
+                } else {
+                  threshold = document.threshold || 2;
+                }
+                const votesNeeded = Math.max(0, threshold - delta);
 
                 return (
                   <div key={suggestion.id} className="bg-amber-50 border-2 border-amber-300 rounded-lg p-4 space-y-3">
