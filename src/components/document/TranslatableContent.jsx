@@ -73,19 +73,48 @@ Return ONLY the translated HTML:`;
         add_context_from_internet: false,
       });
 
+      console.log('[TRANSLATE DEBUG] Raw result:', result);
+      console.log('[TRANSLATE DEBUG] Result type:', typeof result);
+      console.log('[TRANSLATE DEBUG] Result keys:', result && typeof result === 'object' ? Object.keys(result) : 'N/A');
+
       let translatedText;
       if (typeof result === 'string') {
         translatedText = result;
       } else if (result && typeof result === 'object') {
-        translatedText = result.content || result.text || result.translation || JSON.stringify(result);
-        // If it's still an object after extraction, try to get the first string value
-        if (typeof translatedText !== 'string') {
-          const values = Object.values(result);
-          translatedText = values.find(v => typeof v === 'string') || String(result);
+        // Try common response structures
+        if (typeof result.content === 'string') {
+          translatedText = result.content;
+        } else if (typeof result.text === 'string') {
+          translatedText = result.text;
+        } else if (typeof result.translation === 'string') {
+          translatedText = result.translation;
+        } else if (typeof result.output === 'string') {
+          translatedText = result.output;
+        } else if (typeof result.result === 'string') {
+          translatedText = result.result;
+        } else if (typeof result.message === 'string') {
+          translatedText = result.message;
+        } else {
+          // Last resort - find any string value
+          const findString = (obj) => {
+            for (const key of Object.keys(obj)) {
+              if (typeof obj[key] === 'string' && obj[key].length > 0) {
+                return obj[key];
+              }
+              if (obj[key] && typeof obj[key] === 'object') {
+                const nested = findString(obj[key]);
+                if (nested) return nested;
+              }
+            }
+            return null;
+          };
+          translatedText = findString(result) || content; // fallback to original content
         }
       } else {
-        translatedText = String(result || '');
+        translatedText = content; // fallback to original content
       }
+      
+      console.log('[TRANSLATE DEBUG] Final translatedText:', translatedText);
       
       // Clean up any markdown code blocks that might be added
       translatedText = translatedText.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
