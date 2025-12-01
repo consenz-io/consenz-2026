@@ -446,6 +446,7 @@ export default function SectionCarousel({
                   entityType="suggestion"
                   entityId={currentView.data.id}
                   user={user}
+                  sectionId={section?.id}
                 />
               </div>
             )}

@@ -13,14 +13,14 @@ import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
 import { notifyNewComment, notifyNewDocumentComment } from "../notifications/createNotification";
 
-export default function CommentsSection({ entityType, entityId, user }) {
+export default function CommentsSection({ entityType, entityId, user, sectionId }) {
   const { t } = useLanguage();
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [error, setError] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: comments, isLoading } = useQuery({
+  const { data: suggestionComments, isLoading: suggestionCommentsLoading } = useQuery({
     queryKey: ['comments', entityType, entityId],
     queryFn: () => base44.entities.Comment.filter({ 
       rootEntityType: entityType, 
@@ -29,6 +29,29 @@ export default function CommentsSection({ entityType, entityId, user }) {
     initialData: [],
     enabled: !!entityType && !!entityId,
   });
+
+  // אם יש sectionId, טען גם את התגובות של הסעיף
+  const { data: sectionComments, isLoading: sectionCommentsLoading } = useQuery({
+    queryKey: ['comments', 'section', sectionId],
+    queryFn: () => base44.entities.Comment.filter({ 
+      rootEntityType: 'section', 
+      rootEntityId: sectionId 
+    }, '-created_date'),
+    initialData: [],
+    enabled: !!sectionId && entityType === 'suggestion',
+  });
+
+  // מיזוג התגובות - אם זו הצעה עם sectionId, הצג גם תגובות סעיף
+  const comments = React.useMemo(() => {
+    if (entityType === 'suggestion' && sectionId && sectionComments.length > 0) {
+      // מיזוג וסידור לפי תאריך
+      const allComments = [...suggestionComments, ...sectionComments];
+      return allComments.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+    }
+    return suggestionComments;
+  }, [suggestionComments, sectionComments, entityType, sectionId]);
+
+  const isLoading = suggestionCommentsLoading || (entityType === 'suggestion' && sectionId && sectionCommentsLoading);
 
   const { data: users } = useQuery({
     queryKey: ['users'],

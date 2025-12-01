@@ -918,6 +918,7 @@ export default function SuggestionDetail() {
               entityType="suggestion"
               entityId={suggestionId}
               user={user}
+              sectionId={suggestion?.sectionId}
             />
           </CardContent>
         </Card>
