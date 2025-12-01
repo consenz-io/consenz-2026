@@ -42,6 +42,39 @@ export default function Home() {
     initialData: [],
   });
 
+  // Fetch all suggestions and votes for accurate contributor count
+  const { data: allSuggestions } = useQuery({
+    queryKey: ['allSuggestionsForContributors'],
+    queryFn: () => base44.entities.Suggestion.list(),
+    initialData: [],
+  });
+
+  const { data: allVotes } = useQuery({
+    queryKey: ['allVotesForContributors'],
+    queryFn: () => base44.entities.Vote.list(),
+    initialData: [],
+  });
+
+  // Calculate real contributors per document
+  const getDocumentContributors = (docId, docCreatedBy) => {
+    const contributors = new Set();
+    if (docCreatedBy) contributors.add(docCreatedBy);
+    
+    const docSuggestions = allSuggestions.filter(s => s.documentId === docId);
+    docSuggestions.forEach(s => {
+      if (s.created_by) contributors.add(s.created_by);
+    });
+    
+    const suggestionIds = new Set(docSuggestions.map(s => s.id));
+    allVotes.forEach(v => {
+      if (suggestionIds.has(v.suggestionId) && v.userId) {
+        contributors.add(v.userId);
+      }
+    });
+    
+    return Math.max(1, contributors.size);
+  };
+
   const calculateAverageConsensus = () => {
     if (acceptedSuggestions.length === 0) return 0;
     
@@ -177,7 +210,7 @@ export default function Home() {
               <CardContent className="p-6 text-center">
                 <Users className="w-8 h-8 mx-auto mb-3 text-indigo-600" />
                 <div className="text-3xl font-bold text-slate-900">
-                  {documents.reduce((sum, d) => sum + Math.max(1, d.totalUsersInteracted || 0), 0)}
+                  {documents.reduce((sum, d) => sum + getDocumentContributors(d.id, d.created_by), 0)}
                 </div>
                 <div className="text-sm text-slate-600">{t('collaborators')}</div>
               </CardContent>
@@ -297,7 +330,7 @@ export default function Home() {
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <Users className="w-4 h-4" />
-                          <span>{Math.max(1, doc.totalUsersInteracted || 0)} {t('contributors')}</span>
+                          <span>{getDocumentContributors(doc.id, doc.created_by)} {t('contributors')}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <TrendingUp className="w-4 h-4" />
