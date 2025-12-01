@@ -315,12 +315,9 @@ export default function DocumentComments() {
                             const { text, needsExpand } = getSectionPreview(group.entityId, isExpanded);
                             return (
                               <div>
-                                <Link 
-                                  to={`${createPageUrl("DocumentView")}?id=${documentId}&scrollTo=${group.entityId}`}
-                                  className={`text-sm text-slate-700 mt-1 hover:text-blue-600 cursor-pointer block ${isExpanded ? '' : 'line-clamp-2'} ${isRTL ? 'text-right' : 'text-left'}`}
-                                >
+                                <p className={`text-sm text-slate-700 mt-1 ${isExpanded ? '' : 'line-clamp-2'} ${isRTL ? 'text-right' : 'text-left'}`}>
                                   {text}
-                                </Link>
+                                </p>
                                 {needsExpand && (
                                   <button
                                     onClick={() => setExpandedSections(prev => ({ ...prev, [group.entityId]: !prev[group.entityId] }))}
