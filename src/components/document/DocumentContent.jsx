@@ -426,8 +426,11 @@ export default function DocumentContent({
       toast.error('שגיאה בהצבעה, נסה שוב');
     },
     onSuccess: (data, variables, context) => {
-      // רענון ההצבעות לקבלת ה-ID האמיתי
-      queryClient.invalidateQueries({ queryKey: ['userVotes', document?.id, user?.id] });
+      // רענון מיידי במקביל - לא מחכים
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['userVotes', document?.id, user?.id] }),
+        queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] })
+      ]);
     },
   });
 
