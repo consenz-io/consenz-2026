@@ -167,9 +167,6 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                               <CardTitle className="text-sm">
                                 {t('version')} {currentVer.version}
                               </CardTitle>
-                              <p className="text-xs text-slate-600 mt-1">
-                                {currentVer.changeDescription || t('noDescription')}
-                              </p>
                             </div>
                             <div className="flex items-center gap-2">
                               <Badge variant="outline" className="text-xs">
