@@ -105,6 +105,17 @@ export async function calculateDocumentContributors(documentId) {
       });
     }
     
+    // 7. הוסף את כל כותבי התגובות בדיון הכללי של המסמך
+    const documentComments = await base44.entities.Comment.filter({ 
+      rootEntityType: 'document',
+      rootEntityId: documentId 
+    });
+    documentComments.forEach(c => {
+      if (c.created_by) {
+        uniqueEmails.add(c.created_by);
+      }
+    });
+    
     return uniqueEmails.size;
   } catch (error) {
     console.error('[CALCULATE CONTRIBUTORS ERROR]', error);
