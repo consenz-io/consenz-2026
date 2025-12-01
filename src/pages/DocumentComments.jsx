@@ -284,9 +284,25 @@ export default function DocumentComments() {
                             <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
                             <Badge variant="outline" className="text-xs">{group.topicName}</Badge>
                           </div>
-                          <p className={`text-sm text-slate-700 mt-1 line-clamp-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                            {getSectionPreview(group.entityId)}
-                          </p>
+                          {(() => {
+                            const isExpanded = expandedSections[group.entityId];
+                            const { text, needsExpand } = getSectionPreview(group.entityId, isExpanded);
+                            return (
+                              <div>
+                                <p className={`text-sm text-slate-700 mt-1 ${isExpanded ? '' : 'line-clamp-2'} ${isRTL ? 'text-right' : 'text-left'}`}>
+                                  {text}
+                                </p>
+                                {needsExpand && (
+                                  <button
+                                    onClick={() => setExpandedSections(prev => ({ ...prev, [group.entityId]: !prev[group.entityId] }))}
+                                    className="text-xs text-blue-600 hover:text-blue-700 mt-1 font-medium"
+                                  >
+                                    {isExpanded ? t('showLess') || 'הצג פחות' : t('showMore') || 'הצג עוד'}
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </>
                       ) : (
                         <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.entityId}`} className={`block w-full ${isRTL ? 'text-right' : 'text-left'}`}>
