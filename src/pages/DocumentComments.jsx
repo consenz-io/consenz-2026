@@ -303,8 +303,37 @@ export default function DocumentComments() {
                           <div className={`flex items-center gap-2 ${isRTL ? 'justify-start' : ''}`}>
                             <span className="text-sm font-medium text-slate-900">{getUserName(comment.created_by)}</span>
                             <span className="text-xs text-slate-500">{new Date(comment.created_date).toLocaleDateString()}</span>
+                            {needsCommentTranslation(comment) && (
+                              translatingComment === comment.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin text-blue-600" />
+                              ) : !comment.translations?.[language] ? (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    translateCommentMutation.mutate(comment);
+                                  }}
+                                  className="p-0.5 hover:bg-blue-50 rounded transition-colors"
+                                  title={t('translate')}
+                                >
+                                  <Languages className="w-3 h-3 text-blue-600" />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setShowTranslatedComments(prev => ({ ...prev, [comment.id]: !prev[comment.id] }));
+                                  }}
+                                  className="p-0.5 hover:bg-slate-100 rounded transition-colors"
+                                  title={showTranslatedComments[comment.id] ? t('showOriginal') : t('showTranslation')}
+                                >
+                                  <Languages className={`w-3 h-3 ${showTranslatedComments[comment.id] ? 'text-slate-600' : 'text-blue-600'}`} />
+                                </button>
+                              )
+                            )}
                           </div>
-                          <p className={`text-sm text-slate-700 mt-0.5 ${isRTL ? 'text-right' : 'text-left'}`}>{comment.content}</p>
+                          <p className={`text-sm text-slate-700 mt-0.5 ${isRTL ? 'text-right' : 'text-left'}`}>{getCommentDisplayContent(comment)}</p>
                         </div>
                       </div>
                     ))}
