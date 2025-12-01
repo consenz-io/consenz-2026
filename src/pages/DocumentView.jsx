@@ -85,6 +85,14 @@ export default function DocumentView() {
     refetchIntervalInBackground: false,
   });
 
+  const { data: allVotes } = useQuery({
+    queryKey: ['allVotes'],
+    queryFn: () => base44.entities.Vote.list(),
+    initialData: [],
+    enabled: !!documentId,
+    staleTime: 30000,
+  });
+
   const { data: documentComments } = useQuery({
     queryKey: ['documentComments', documentId],
     queryFn: () => base44.entities.Comment.filter({ 
@@ -94,6 +102,25 @@ export default function DocumentView() {
     initialData: [],
     enabled: !!documentId,
   });
+
+  // Calculate real contributors count
+  const contributorsCount = React.useMemo(() => {
+    const contributors = new Set();
+    if (document?.created_by) contributors.add(document.created_by);
+    
+    suggestions.forEach(s => {
+      if (s.created_by) contributors.add(s.created_by);
+    });
+    
+    const suggestionIds = new Set(suggestions.map(s => s.id));
+    allVotes.forEach(v => {
+      if (suggestionIds.has(v.suggestionId) && v.userId) {
+        contributors.add(v.userId);
+      }
+    });
+    
+    return Math.max(1, contributors.size);
+  }, [document, suggestions, allVotes]);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -465,7 +492,7 @@ export default function DocumentView() {
             onClick={() => setShowContributorsModal(true)}
           >
             <Users className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
-            <div className="text-base md:text-xl font-bold text-slate-900">{Math.max(1, document.totalUsersInteracted || 0)}</div>
+            <div className="text-base md:text-xl font-bold text-slate-900">{contributorsCount}</div>
             <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('contributors')}</div>
           </div>
           <div 
