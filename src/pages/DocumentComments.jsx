@@ -33,6 +33,7 @@ export default function DocumentComments() {
   const queryClient = useQueryClient();
   const [translatingComment, setTranslatingComment] = React.useState(null);
   const [showTranslatedComments, setShowTranslatedComments] = React.useState({});
+  const [expandedSections, setExpandedSections] = React.useState({});
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
