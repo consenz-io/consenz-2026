@@ -18,7 +18,7 @@ import NewSectionSuggestionCard from "./NewSectionSuggestionCard";
 import EditTopicModal from "./EditTopicModal";
 
 import { useLanguage } from "@/components/LanguageContext";
-import { checkSuggestionConsensus, autoAcceptSuggestion, autoAcceptTopicEditSuggestion } from "./suggestionAutoAccept";
+import { checkSuggestionConsensus, autoAcceptSuggestion, autoAcceptTopicEditSuggestion, checkTopicEditConsensus } from "./suggestionAutoAccept";
 import { toast } from "sonner";
 
 export default function DocumentContent({ 
@@ -155,14 +155,14 @@ export default function DocumentContent({
           hasCheckedRef.current.add(checkKey);
 
           try {
-            const delta = (topicSuggestion.proVotes || 0) - (topicSuggestion.conVotes || 0);
-            const shouldAccept = delta >= document.threshold;
+            // שימוש בפונקציה הדינמית לבדיקת קונסנזוס - זהה להצעות סעיפים
+            const { shouldAccept, threshold } = checkTopicEditConsensus(topicSuggestion, document);
 
             console.log('[AUTO-ACCEPT TOPIC CHECK]', { 
               suggestionId: topicSuggestion.id, 
               shouldAccept, 
-              delta,
-              threshold: document.threshold 
+              delta: (topicSuggestion.proVotes || 0) - (topicSuggestion.conVotes || 0),
+              threshold
             });
 
             if (shouldAccept) {
