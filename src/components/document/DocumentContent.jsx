@@ -990,7 +990,7 @@ Return ONLY the translated text:`;
                             <span className="text-sm text-slate-600">כותרת מוצעת:</span>
                             <p className="font-semibold text-slate-900">{suggestion.newTitle}</p>
                           </div>
-                          {suggestion.explanation && (
+                          {suggestion.explanation && typeof suggestion.explanation === 'string' && (
                             <div>
                               <span className="text-sm text-slate-600">הסבר:</span>
                               <p className="text-sm text-slate-700">{suggestion.explanation}</p>
