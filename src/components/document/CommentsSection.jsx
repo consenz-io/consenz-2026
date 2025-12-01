@@ -11,7 +11,7 @@ import { MessageSquare, Send, Reply, Trash2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
-import { notifyNewComment } from "../notifications/createNotification";
+import { notifyNewComment, notifyNewDocumentComment } from "../notifications/createNotification";
 
 export default function CommentsSection({ entityType, entityId, user }) {
   const { t } = useLanguage();
@@ -86,6 +86,16 @@ export default function CommentsSection({ entityType, entityId, user }) {
             targetEntity: sections[0], 
             targetEntityType: 'section',
             parentComment
+          });
+        }
+      } else if (entityType === 'document') {
+        // תגובה בדיון כללי של מסמך
+        const documents = await base44.entities.Document.filter({ id: entityId });
+        if (documents.length > 0) {
+          documentId = entityId;
+          await notifyNewDocumentComment({ 
+            comment, 
+            document: documents[0]
           });
         }
       }
