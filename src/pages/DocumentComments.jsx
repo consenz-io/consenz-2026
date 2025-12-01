@@ -310,13 +310,7 @@ export default function DocumentComments() {
                         </Link>
                       )}
                     </div>
-                    {group.type === 'section' && (
-                      <Link to={`${createPageUrl("DocumentView")}?id=${documentId}&scrollTo=${group.entityId}`}>
-                        <Button size="sm" variant="outline" className="text-xs">
-                          {t('viewDetails')}
-                        </Button>
-                      </Link>
-                    )}
+
                   </div>
 
                   {/* Comments */}
