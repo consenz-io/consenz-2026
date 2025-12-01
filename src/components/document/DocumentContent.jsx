@@ -718,26 +718,28 @@ Return ONLY the translated text:`;
           }
         }
 
-        // Refresh all relevant queries
-        await Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
-          queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
-          queryClient.invalidateQueries({ queryKey: ['document', document.id] }),
-          queryClient.invalidateQueries({ queryKey: ['publicDocuments'] }),
-          queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
-          queryClient.invalidateQueries({ queryKey: ['versions', document.id] })
-        ]);
-
-        // Show success notification
+        // Show success notification immediately
         toast.success('🎉 ההצעה לעריכת כותרת התקבלה!', {
           description: 'הכותרת עודכנה במסמך',
           duration: 4000,
         });
+        
+        // Refresh all relevant queries in parallel - don't await
+        Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
+          queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
+          queryClient.invalidateQueries({ queryKey: ['document', document.id] }),
+          queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
+          queryClient.invalidateQueries({ queryKey: ['versions', document.id] })
+        ]);
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions'] });
-      queryClient.invalidateQueries({ queryKey: ['topicEditVotes'] });
+      // רענון מיידי במקביל
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions'] }),
+        queryClient.invalidateQueries({ queryKey: ['topicEditVotes'] })
+      ]);
     },
   });
 
