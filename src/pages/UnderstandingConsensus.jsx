@@ -236,7 +236,7 @@ export default function UnderstandingConsensus() {
                       
                       <div className="p-4">
                         {/* Votes visualization - horizontal */}
-                        <div className={`flex items-center justify-center gap-3 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}
+                        <div className={`flex items-center justify-center gap-3 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
                           {/* Pro votes */}
                           <div className="flex items-center gap-2 bg-green-50 rounded-lg px-3 py-2">
                             <ThumbsUp className="w-4 h-4 text-green-600" />
