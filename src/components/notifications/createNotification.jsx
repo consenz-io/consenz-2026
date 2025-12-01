@@ -545,12 +545,13 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
 /**
  * יצירת התראה על תגובה חדשה בדיון כללי של מסמך
  */
-export async function notifyNewDocumentComment({ comment, document }) {
+export async function notifyNewDocumentComment({ comment, document, parentComment = null }) {
   try {
     console.log('[NOTIFICATION] Document comment notification triggered:', {
       commentId: comment.id,
       documentId: document.id,
-      commenter: comment.created_by
+      commenter: comment.created_by,
+      parentComment: parentComment?.id
     });
     
     const commenterList = await base44.entities.User.filter({ email: comment.created_by });
@@ -559,6 +560,29 @@ export async function notifyNewDocumentComment({ comment, document }) {
     // Set to track users we've already notified
     const notifiedUsers = new Set();
     notifiedUsers.add(comment.created_by); // Don't notify the commenter themselves
+    
+    const actionUrl = `${createPageUrl("DocumentView")}?id=${document.id}`;
+    
+    // אם זו תשובה לתגובה - שלח התראה לבעל התגובה המקורית
+    if (parentComment && comment.created_by !== parentComment.created_by) {
+      const parentCommenterList = await base44.entities.User.filter({ email: parentComment.created_by });
+      if (parentCommenterList.length > 0) {
+        const parentCommenterId = parentCommenterList[0].id;
+        notifiedUsers.add(parentComment.created_by);
+        
+        const userLang = await getUserLanguage(parentCommenterId);
+        
+        await createNotification({
+          userId: parentCommenterId,
+          type: 'comment_reply',
+          title: translate('notifReplyTitle', userLang),
+          message: translate('notifReplyMessage', userLang, { name: commenterName }),
+          relatedEntityId: document.id,
+          relatedEntityType: 'document',
+          actionUrl
+        });
+      }
+    }
     
     // שלח התראה ליוצר המסמך
     if (document.created_by && !notifiedUsers.has(document.created_by)) {
@@ -569,8 +593,6 @@ export async function notifyNewDocumentComment({ comment, document }) {
         
         const userLang = await getUserLanguage(creatorId);
         
-        console.log('[NOTIFICATION] Creating document comment notification for creator:', creatorId);
-        
         await createNotification({
           userId: creatorId,
           type: 'document_comment',
@@ -578,9 +600,32 @@ export async function notifyNewDocumentComment({ comment, document }) {
           message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: document.title }),
           relatedEntityId: document.id,
           relatedEntityType: 'document',
-          actionUrl: `${createPageUrl("DocumentView")}?id=${document.id}`
+          actionUrl
         });
       }
+    }
+    
+    // שלח למנהלי המסמך
+    const adminIds = await getDocumentAdmins(document.id);
+    for (const adminId of adminIds) {
+      const adminUsers = await base44.entities.User.filter({ id: adminId });
+      if (adminUsers.length === 0) continue;
+      const adminEmail = adminUsers[0].email;
+      
+      if (notifiedUsers.has(adminEmail)) continue;
+      notifiedUsers.add(adminEmail);
+      
+      const userLang = await getUserLanguage(adminId);
+      
+      await createNotification({
+        userId: adminId,
+        type: 'document_comment',
+        title: translate('notifDocumentCommentTitle', userLang),
+        message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: document.title }),
+        relatedEntityId: document.id,
+        relatedEntityType: 'document',
+        actionUrl
+      });
     }
     
     // שלח התראות לכל מי שהשתתף בדיון הכללי של המסמך
@@ -601,8 +646,6 @@ export async function notifyNewDocumentComment({ comment, document }) {
       const userId = userList[0].id;
       const userLang = await getUserLanguage(userId);
       
-      console.log('[NOTIFICATION] Creating document discussion participant notification for:', userId);
-      
       await createNotification({
         userId: userId,
         type: 'document_comment',
@@ -610,7 +653,7 @@ export async function notifyNewDocumentComment({ comment, document }) {
         message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: document.title }),
         relatedEntityId: document.id,
         relatedEntityType: 'document',
-        actionUrl: `${createPageUrl("DocumentView")}?id=${document.id}`
+        actionUrl
       });
     }
     
