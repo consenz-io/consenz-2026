@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, TrendingUp, Users, Clock, ArrowRight, ArrowLeft, Languages, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
+import { calculateContributorsFromData } from "@/components/document/calculateContributors";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -42,38 +43,89 @@ export default function Home() {
     initialData: [],
   });
 
-  // Fetch all suggestions and votes for accurate contributor count
+  // Fetch all data needed for accurate contributor count
   const { data: allSuggestions } = useQuery({
-    queryKey: ['allSuggestionsForContributors'],
+    queryKey: ['allSuggestions'],
     queryFn: () => base44.entities.Suggestion.list(),
     initialData: [],
   });
 
   const { data: allVotes } = useQuery({
-    queryKey: ['allVotesForContributors'],
+    queryKey: ['allVotes'],
     queryFn: () => base44.entities.Vote.list(),
     initialData: [],
   });
 
-  // Calculate real contributors per document
-  const getDocumentContributors = (docId, docCreatedBy) => {
-    const contributors = new Set();
-    if (docCreatedBy) contributors.add(docCreatedBy);
-    
-    const docSuggestions = allSuggestions.filter(s => s.documentId === docId);
-    docSuggestions.forEach(s => {
-      if (s.created_by) contributors.add(s.created_by);
+  const { data: allUsers } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list(),
+    initialData: [],
+  });
+
+  const { data: allArguments } = useQuery({
+    queryKey: ['allArguments'],
+    queryFn: () => base44.entities.Argument.list(),
+    initialData: [],
+  });
+
+  const { data: allComments } = useQuery({
+    queryKey: ['allComments'],
+    queryFn: () => base44.entities.Comment.list(),
+    initialData: [],
+  });
+
+  const { data: allSections } = useQuery({
+    queryKey: ['allSections'],
+    queryFn: () => base44.entities.Section.list(),
+    initialData: [],
+  });
+
+  // Calculate real contributors per document using shared logic
+  const getDocumentContributors = (doc) => {
+    return calculateContributorsFromData({
+      document: doc,
+      suggestions: allSuggestions.filter(s => s.documentId === doc.id),
+      allVotes,
+      allUsers,
+      allArguments,
+      allComments,
+      sections: allSections.filter(s => s.documentId === doc.id)
     });
-    
-    const suggestionIds = new Set(docSuggestions.map(s => s.id));
-    allVotes.forEach(v => {
-      if (suggestionIds.has(v.suggestionId) && v.userId) {
-        contributors.add(v.userId);
-      }
-    });
-    
-    return Math.max(1, contributors.size);
   };
+
+  // Calculate unique contributors across all documents
+  const totalUniqueContributors = useMemo(() => {
+    const uniqueEmails = new Set();
+    
+    // Document creators
+    documents.forEach(d => {
+      if (d.created_by) uniqueEmails.add(d.created_by);
+    });
+    
+    // Suggestion creators
+    allSuggestions.forEach(s => {
+      if (s.created_by) uniqueEmails.add(s.created_by);
+    });
+    
+    // Voters
+    const userIdToEmail = {};
+    allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
+    allVotes.forEach(v => {
+      if (userIdToEmail[v.userId]) uniqueEmails.add(userIdToEmail[v.userId]);
+    });
+    
+    // Argument writers
+    allArguments.forEach(arg => {
+      if (arg.created_by) uniqueEmails.add(arg.created_by);
+    });
+    
+    // Commenters
+    allComments.forEach(c => {
+      if (c.created_by) uniqueEmails.add(c.created_by);
+    });
+    
+    return Math.max(1, uniqueEmails.size);
+  }, [documents, allSuggestions, allVotes, allUsers, allArguments, allComments]);
 
   const calculateAverageConsensus = () => {
     if (acceptedSuggestions.length === 0) return 0;
@@ -210,7 +262,7 @@ export default function Home() {
               <CardContent className="p-6 text-center">
                 <Users className="w-8 h-8 mx-auto mb-3 text-indigo-600" />
                 <div className="text-3xl font-bold text-slate-900">
-                  {documents.reduce((sum, d) => sum + getDocumentContributors(d.id, d.created_by), 0)}
+                  {totalUniqueContributors}
                 </div>
                 <div className="text-sm text-slate-600">{t('collaborators')}</div>
               </CardContent>
@@ -330,7 +382,7 @@ export default function Home() {
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <Users className="w-4 h-4" />
-                          <span>{getDocumentContributors(doc.id, doc.created_by)} {t('contributors')}</span>
+                          <span>{getDocumentContributors(doc)} {t('contributors')}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <TrendingUp className="w-4 h-4" />
