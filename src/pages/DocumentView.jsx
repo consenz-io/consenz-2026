@@ -18,6 +18,7 @@ import PageHeader from "../components/PageHeader";
 import ContributorsModal from "../components/document/ContributorsModal";
 import CommentsSection from "../components/document/CommentsSection";
 import SuggestionSidebar from "../components/document/SuggestionSidebar";
+import { calculateContributorsFromData } from "../components/document/calculateContributors";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -93,6 +94,27 @@ export default function DocumentView() {
     staleTime: 30000,
   });
 
+  const { data: allUsers } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list(),
+    initialData: [],
+    staleTime: 60000,
+  });
+
+  const { data: allArguments } = useQuery({
+    queryKey: ['allArguments'],
+    queryFn: () => base44.entities.Argument.list(),
+    initialData: [],
+    staleTime: 30000,
+  });
+
+  const { data: allComments } = useQuery({
+    queryKey: ['allComments'],
+    queryFn: () => base44.entities.Comment.list(),
+    initialData: [],
+    staleTime: 30000,
+  });
+
   const { data: documentComments } = useQuery({
     queryKey: ['documentComments', documentId],
     queryFn: () => base44.entities.Comment.filter({ 
@@ -103,24 +125,18 @@ export default function DocumentView() {
     enabled: !!documentId,
   });
 
-  // Calculate real contributors count
+  // Calculate real contributors count using shared logic
   const contributorsCount = React.useMemo(() => {
-    const contributors = new Set();
-    if (document?.created_by) contributors.add(document.created_by);
-    
-    suggestions.forEach(s => {
-      if (s.created_by) contributors.add(s.created_by);
+    return calculateContributorsFromData({
+      document,
+      suggestions,
+      allVotes,
+      allUsers,
+      allArguments,
+      allComments,
+      sections
     });
-    
-    const suggestionIds = new Set(suggestions.map(s => s.id));
-    allVotes.forEach(v => {
-      if (suggestionIds.has(v.suggestionId) && v.userId) {
-        contributors.add(v.userId);
-      }
-    });
-    
-    return Math.max(1, contributors.size);
-  }, [document, suggestions, allVotes]);
+  }, [document, suggestions, allVotes, allUsers, allArguments, allComments, sections]);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
