@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -6,12 +6,47 @@ import { createPageUrl } from "@/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar } from "@/components/ui/avatar";
 import { MessageSquare, Send, Reply, Trash2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
-import { notifyNewComment, notifyNewDocumentComment } from "../notifications/createNotification";
+
+// Background tasks - fire and forget
+const runBackgroundTasks = async (comment, entityType, entityId, parentComment) => {
+  try {
+    const { notifyNewComment, notifyNewDocumentComment } = await import("../notifications/createNotification");
+    const { calculateDocumentContributors } = await import('./calculateContributors');
+    
+    let documentId;
+    
+    if (entityType === 'suggestion') {
+      const suggestions = await base44.entities.Suggestion.filter({ id: entityId });
+      if (suggestions.length > 0) {
+        documentId = suggestions[0].documentId;
+        notifyNewComment({ comment, targetEntity: suggestions[0], targetEntityType: 'suggestion', parentComment });
+      }
+    } else if (entityType === 'section') {
+      const sections = await base44.entities.Section.filter({ id: entityId });
+      if (sections.length > 0) {
+        documentId = sections[0].documentId;
+        notifyNewComment({ comment, targetEntity: sections[0], targetEntityType: 'section', parentComment });
+      }
+    } else if (entityType === 'document') {
+      const documents = await base44.entities.Document.filter({ id: entityId });
+      if (documents.length > 0) {
+        documentId = entityId;
+        notifyNewDocumentComment({ comment, document: documents[0], parentComment });
+      }
+    }
+    
+    if (documentId) {
+      const count = await calculateDocumentContributors(documentId);
+      await base44.entities.Document.update(documentId, { totalUsersInteracted: count });
+    }
+  } catch (err) {
+    console.error('[BACKGROUND TASKS ERROR]', err);
+  }
+};
 
 export default function CommentsSection({ entityType, entityId, user, sectionId }) {
   const { t } = useLanguage();
@@ -100,79 +135,58 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
       if (hebrewPattern.test(data.content)) detectedLanguage = 'he';
       else if (arabicPattern.test(data.content)) detectedLanguage = 'ar';
       
+      // Create comment - this is the only blocking call
       const comment = await base44.entities.Comment.create({
         ...data,
         originalLanguage: detectedLanguage
       });
       
-      // מציאת התגובה האב אם זו תשובה
-      let parentComment = null;
-      if (data.parentCommentId) {
-        const parentComments = await base44.entities.Comment.filter({ id: data.parentCommentId });
-        if (parentComments.length > 0) {
-          parentComment = parentComments[0];
-        }
-      }
+      // Find parent comment for reply context (needed for background tasks)
+      const parentComment = data.parentCommentId 
+        ? comments.find(c => c.id === data.parentCommentId) 
+        : null;
       
-      // שליחת התראה על תגובה חדשה
-      let documentId;
-      if (entityType === 'suggestion') {
-        const suggestions = await base44.entities.Suggestion.filter({ id: entityId });
-        if (suggestions.length > 0) {
-          documentId = suggestions[0].documentId;
-          notifyNewComment({ 
-            comment, 
-            targetEntity: suggestions[0], 
-            targetEntityType: 'suggestion',
-            parentComment
-          }).catch(err => console.error('[NOTIFY ERROR]', err));
-        }
-      } else if (entityType === 'section') {
-        const sections = await base44.entities.Section.filter({ id: entityId });
-        if (sections.length > 0) {
-          documentId = sections[0].documentId;
-          notifyNewComment({ 
-            comment, 
-            targetEntity: sections[0], 
-            targetEntityType: 'section',
-            parentComment
-          }).catch(err => console.error('[NOTIFY ERROR]', err));
-        }
-      } else if (entityType === 'document') {
-        // תגובה בדיון כללי של מסמך
-        const documents = await base44.entities.Document.filter({ id: entityId });
-        if (documents.length > 0) {
-          documentId = entityId;
-          notifyNewDocumentComment({ 
-            comment, 
-            document: documents[0],
-            parentComment
-          }).catch(err => console.error('[NOTIFY ERROR]', err));
-        }
-      }
-      
-      // עדכון מספר התורמים למסמך
-      if (documentId) {
-        try {
-          const { calculateDocumentContributors } = await import('./calculateContributors');
-          const contributorsCount = await calculateDocumentContributors(documentId);
-          await base44.entities.Document.update(documentId, {
-            totalUsersInteracted: contributorsCount,
-          });
-        } catch (err) {
-          console.error('[UPDATE CONTRIBUTORS ERROR]', err);
-        }
-      }
+      // Run all other tasks in background - don't await
+      runBackgroundTasks(comment, entityType, entityId, parentComment);
       
       return comment;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['comments', entityType, entityId] });
+    // Optimistic update for instant feedback
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: ['comments', entityType, entityId] });
+      
+      const previousComments = queryClient.getQueryData(['comments', entityType, entityId]);
+      
+      const tempComment = {
+        id: `temp-${Date.now()}`,
+        rootEntityType: entityType,
+        rootEntityId: entityId,
+        parentCommentId: data.parentCommentId || null,
+        content: data.content,
+        created_date: new Date().toISOString(),
+        created_by: user?.email,
+        _isOptimistic: true
+      };
+      
+      queryClient.setQueryData(['comments', entityType, entityId], (old = []) => {
+        return [tempComment, ...old];
+      });
+      
+      // Clear form immediately for instant feedback
       setNewComment("");
       setReplyTo(null);
+      
+      return { previousComments };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', entityType, entityId] });
       setError(null);
     },
-    onError: (err) => {
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousComments) {
+        queryClient.setQueryData(['comments', entityType, entityId], context.previousComments);
+      }
       setError(err.message || "Failed to post comment");
     },
   });
