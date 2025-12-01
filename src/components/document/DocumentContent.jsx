@@ -53,8 +53,8 @@ export default function DocumentContent({
     ar: "Arabic"
   };
 
-  // Polling interval for live sync (30 seconds)
-  const SYNC_INTERVAL = 30000;
+  // Polling interval for live sync (10 seconds for better responsiveness)
+  const SYNC_INTERVAL = 10000;
   
   const { data: users } = useQuery({
     queryKey: ['users'],

@@ -47,8 +47,8 @@ export default function DocumentView() {
   const [openSuggestionId, setOpenSuggestionId] = useState(null);
   const [newlyCreatedSuggestion, setNewlyCreatedSuggestion] = useState(null);
 
-  // Polling interval for live sync (30 seconds)
-  const SYNC_INTERVAL = 30000;
+  // Polling interval for live sync (10 seconds for better responsiveness)
+  const SYNC_INTERVAL = 10000;
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],

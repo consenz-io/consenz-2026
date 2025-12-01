@@ -31,8 +31,8 @@ export default function SuggestionDetail() {
   const [newArgument, setNewArgument] = useState({ type: null, content: "" });
   const [error, setError] = useState(null);
 
-  // Polling interval for live sync (30 seconds)
-  const SYNC_INTERVAL = 30000;
+  // Polling interval for live sync (10 seconds for better responsiveness)
+  const SYNC_INTERVAL = 10000;
 
   const { data: suggestion, isLoading: suggestionLoading } = useQuery({
     queryKey: ['suggestion', suggestionId],
