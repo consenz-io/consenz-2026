@@ -11,10 +11,28 @@ import { ArrowRight, ArrowLeft, MessageSquare, FileText, Edit, Languages, Loader
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 
+const detectLanguage = (text) => {
+  const hebrewPattern = /[\u0590-\u05FF]/;
+  const arabicPattern = /[\u0600-\u06FF]/;
+  
+  if (hebrewPattern.test(text)) return 'he';
+  if (arabicPattern.test(text)) return 'ar';
+  return 'en';
+};
+
+const languagePrompts = {
+  en: "English",
+  he: "Hebrew",
+  ar: "Arabic"
+};
+
 export default function DocumentComments() {
   const { t, isRTL, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
+  const queryClient = useQueryClient();
+  const [translatingComment, setTranslatingComment] = React.useState(null);
+  const [showTranslatedComments, setShowTranslatedComments] = React.useState({});
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
