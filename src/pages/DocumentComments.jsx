@@ -216,11 +216,8 @@ export default function DocumentComments() {
                           </p>
                         </>
                       ) : (
-                        <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.entityId}`} className="block w-full">
-                          <div className={`flex items-center gap-2 hover:text-blue-600 transition-colors ${isRTL ? 'justify-end' : 'justify-start'}`}>
-                            <Edit className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                            <span className="text-sm font-medium text-slate-900 hover:text-blue-600">{t('suggestion')}: {getSuggestionTitle(group.entityId)}</span>
-                          </div>
+                        <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.entityId}`} className={`block w-full ${isRTL ? 'text-right' : 'text-left'}`}>
+                          <span className="text-sm font-medium text-slate-900 hover:text-blue-600 transition-colors">{t('suggestion')}: {getSuggestionTitle(group.entityId)}</span>
                         </Link>
                       )}
                     </div>
