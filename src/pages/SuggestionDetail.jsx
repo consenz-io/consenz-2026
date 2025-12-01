@@ -647,7 +647,7 @@ export default function SuggestionDetail() {
                 <Badge variant="outline" className="text-xs">
                   {suggestion.type === 'new_section' ? t('newSection') : t('suggestionToEditSection')}
                 </Badge>
-                {topic && <Badge variant="outline" className="text-xs truncate max-w-[200px]">{topic.title}</Badge>}
+
                 <span className="text-xs text-slate-500">
                   {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
                 </span>
