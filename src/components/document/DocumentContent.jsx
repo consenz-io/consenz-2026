@@ -91,61 +91,16 @@ export default function DocumentContent({
   React.useEffect(() => {
     if (!document || !suggestions) return;
 
-    // בדיקה אם יש הצעות שהתקבלו שעדיין לא הצגנו עליהן toast
+    // בדיקה אם יש הצעות שהתקבלו שעדיין לא הצגנו עליהן toast (רק אם לא הצגנו כבר מה-optimistic update)
     suggestions.forEach(suggestion => {
       if (suggestion.status === 'accepted' && !shownAcceptedToastsRef.current.has(suggestion.id)) {
-        // בודקים אם ההצעה התקבלה לאחרונה (תוך 30 שניות אחרונות)
-        const updatedDate = new Date(suggestion.updated_date);
-        const now = new Date();
-        const diffSeconds = (now - updatedDate) / 1000;
-        
-        if (diffSeconds < 30) {
-          shownAcceptedToastsRef.current.add(suggestion.id);
-          toast.success(`🎉 הצעה התקבלה: "${suggestion.title}"`, {
-            description: 'המסמך עודכן בהתאם',
-            duration: 5000,
-          });
-        } else {
-          // הצעות ישנות יותר - רק מסמנים אותן כדי לא להציג toast
-          shownAcceptedToastsRef.current.add(suggestion.id);
-        }
+        shownAcceptedToastsRef.current.add(suggestion.id);
+        // לא מציגים toast כאן - זה יגיע מה-optimistic update
       }
     });
 
     const checkAndAutoAccept = async () => {
-      let hasChanges = false;
-
-      // בדיקת הצעות עריכת סעיפים
-      for (const suggestion of suggestions) {
-        if (suggestion.status !== 'pending') continue;
-
-        // Skip if already checked this suggestion with current vote counts
-        const checkKey = `${suggestion.id}-${suggestion.proVotes}-${suggestion.conVotes}`;
-        if (hasCheckedRef.current.has(checkKey)) continue;
-        hasCheckedRef.current.add(checkKey);
-
-        try {
-          const { shouldAccept } = await checkSuggestionConsensus(suggestion, document);
-          console.log('[AUTO-ACCEPT CHECK]', { suggestionId: suggestion.id, shouldAccept, status: suggestion.status });
-
-          if (shouldAccept) {
-            console.log('[AUTO-ACCEPT] Auto-accepting suggestion:', suggestion.id);
-            // Use suggestion creator as user if no user is logged in
-            const acceptingUserId = user?.id || suggestion.created_by;
-            const accepted = await autoAcceptSuggestion(suggestion, acceptingUserId, document);
-            if (accepted) {
-              console.log('[AUTO-ACCEPT] Successfully accepted, invalidating queries');
-              hasChanges = true;
-            }
-          }
-        } catch (err) {
-          console.error('[AUTO-ACCEPT] Error checking suggestion:', err);
-          // Remove from checked set on error so it can be retried
-          hasCheckedRef.current.delete(checkKey);
-        }
-      }
-
-      // בדיקת הצעות עריכת כותרות נושאים
+      // בדיקת הצעות עריכת כותרות נושאים בלבד - הצעות סעיפים מטופלות ב-voteMutation
       if (topicEditSuggestions && topicEditSuggestions.length > 0) {
         for (const topicSuggestion of topicEditSuggestions) {
           if (topicSuggestion.status !== 'pending') continue;
@@ -155,52 +110,36 @@ export default function DocumentContent({
           hasCheckedRef.current.add(checkKey);
 
           try {
-            // שימוש בפונקציה הדינמית לבדיקת קונסנזוס - זהה להצעות סעיפים
             const { shouldAccept, threshold } = checkTopicEditConsensus(topicSuggestion, document);
-
-            console.log('[AUTO-ACCEPT TOPIC CHECK]', { 
-              suggestionId: topicSuggestion.id, 
-              shouldAccept, 
-              delta: (topicSuggestion.proVotes || 0) - (topicSuggestion.conVotes || 0),
-              threshold
-            });
 
             if (shouldAccept) {
               console.log('[AUTO-ACCEPT TOPIC] Auto-accepting topic suggestion:', topicSuggestion.id);
               const acceptingUserId = user?.id || topicSuggestion.created_by;
               const accepted = await autoAcceptTopicEditSuggestion(topicSuggestion, acceptingUserId, document);
               if (accepted) {
-                console.log('[AUTO-ACCEPT TOPIC] Successfully accepted, invalidating queries');
-                hasChanges = true;
+                // רענון מיידי במקביל
+                Promise.all([
+                  queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
+                  queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
+                  queryClient.invalidateQueries({ queryKey: ['document', document.id] })
+                ]);
               }
             }
           } catch (err) {
-            console.error('[AUTO-ACCEPT TOPIC] Error checking topic suggestion:', err);
+            console.error('[AUTO-ACCEPT TOPIC] Error:', err);
             hasCheckedRef.current.delete(checkKey);
           }
         }
       }
 
-      // Cleanup old entries periodically
+      // ניקוי תקופתי
       if (hasCheckedRef.current.size > 100) {
         hasCheckedRef.current.clear();
-      }
-
-      // Refresh data if any changes occurred
-      if (hasChanges) {
-        console.log('[AUTO-ACCEPT] Refreshing all queries after acceptance');
-        await queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
-        await queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
-        await queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
-        await queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] });
-        await queryClient.invalidateQueries({ queryKey: ['allVersions'] });
-        await queryClient.invalidateQueries({ queryKey: ['document', document.id] });
-        await queryClient.invalidateQueries({ queryKey: ['publicDocuments'] });
       }
     };
 
     checkAndAutoAccept();
-  }, [suggestions, topicEditSuggestions, document, user, queryClient]);
+  }, [topicEditSuggestions, document, user, queryClient]);
 
   const { data: sectionComments } = useQuery({
     queryKey: ['sectionComments', document?.id],
@@ -342,13 +281,26 @@ export default function DocumentContent({
       // טיפול בנקודות ברקע - לא חוסם את ה-UI
       handlePointsInBackground(pointsAction, suggestion, vote, currentVote);
 
-      // אם ידוע מראש שההצעה תתקבל (מה-optimistic update), מפעילים את האישור ברקע
+      // אם ידוע מראש שההצעה תתקבל - מפעילים את האישור מיידית וברקע
       if (willBeAccepted && suggestion.status === 'pending') {
-        // מפעילים את האישור ברקע - לא מחכים לו
+        // מסמנים בקאש שההצעה התקבלה למנוע כפילויות
+        hasCheckedRef.current.add(`${suggestionId}-accepted`);
+        
+        // מפעילים את האישור מיד - לא מחכים אבל מעדכנים UI מהר
         autoAcceptSuggestion({ ...suggestion, proVotes: newProVotes, conVotes: newConVotes }, user.id, document)
           .then(accepted => {
             if (accepted) {
-              // טיפול בנקודות המצביע ברקע
+              // רענון מיידי במקביל - לא רציף
+              Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
+                queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] }),
+                queryClient.invalidateQueries({ queryKey: ['document', document?.id] }),
+                queryClient.invalidateQueries({ queryKey: ['topics', document?.id] }),
+                queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
+                queryClient.invalidateQueries({ queryKey: ['versions', document?.id] })
+              ]);
+              
+              // טיפול בנקודות ברקע - לא חוסם
               if (!currentVote && vote === 'pro' && document.gamificationEnabled) {
                 base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
                 base44.entities.PointsTransaction.create({
@@ -360,11 +312,6 @@ export default function DocumentContent({
                   relatedEntityType: 'suggestion'
                 }).catch(() => {});
               }
-              
-              // רענון הנתונים אחרי האישור
-              queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
-              queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
-              queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
             }
           })
           .catch(err => console.error('[AUTO-ACCEPT ERROR]', err));
