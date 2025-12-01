@@ -6,8 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, ArrowLeft, MessageSquare, FileText, Edit, Languages, Loader2, Eye } from "lucide-react";
-import SectionHistorySidebar from "../components/document/SectionHistorySidebar";
+import { ArrowRight, ArrowLeft, MessageSquare, FileText, Languages, Loader2, Eye } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
