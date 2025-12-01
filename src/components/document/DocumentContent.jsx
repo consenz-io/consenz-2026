@@ -806,27 +806,8 @@ Return ONLY the translated text:`;
           title: suggestion.newTitle
         });
         
-        // חישוב section_consensus_meter והוספה למערך consensuses של המסמך
-        const sectionConsensus = Math.min(1, Math.max(0, delta / totalUsers));
-        const currentConsensuses = document.consensuses || [];
-        const updatedConsensuses = [...currentConsensuses, sectionConsensus];
-        
-        // חישוב ממוצע חדש
-        const newConsensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / updatedConsensuses.length;
-        const newThreshold = Math.max(1, Math.round(newConsensusMeterAverage * totalUsers));
-        
-        console.log('[TOPIC VOTE ACCEPTANCE] Updating document consensuses:', {
-          sectionConsensus,
-          updatedConsensuses,
-          newConsensusMeterAverage,
-          newThreshold
-        });
-        
-        // עדכון המסמך עם הערכים החדשים
-        await base44.entities.Document.update(document.id, {
-          consensuses: updatedConsensuses,
-          threshold: newThreshold
-        });
+        // שינויי כותרות נושאים לא נספרים במד הקונצנזוס - רק עריכות תוכן סעיפים
+        console.log('[TOPIC VOTE ACCEPTANCE] Skipping consensus meter update for topic title changes');
         
         await base44.entities.TopicEditSuggestion.update(suggestionId, {
           status: 'accepted'
