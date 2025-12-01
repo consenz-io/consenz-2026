@@ -317,7 +317,7 @@ export default function SectionCarousel({
               className="cursor-pointer hover:opacity-90 transition-opacity"
               onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
             >
-              {currentView.data.explanation && (
+              {currentView.data.explanation && typeof currentView.data.explanation === 'string' && (
                 <div className="mb-3 text-sm">
                   <TranslatableContent
                     content={currentView.data.explanation}
