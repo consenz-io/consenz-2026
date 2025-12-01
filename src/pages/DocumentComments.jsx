@@ -216,22 +216,12 @@ export default function DocumentComments() {
                           </p>
                         </>
                       ) : (
-                        <div className="flex items-center justify-between w-full">
-                          <div className={`flex items-center gap-2 ${isRTL ? 'order-last' : 'order-first'}`}>
+                        <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.entityId}`} className="block w-full">
+                          <div className={`flex items-center gap-2 hover:text-blue-600 transition-colors ${isRTL ? 'justify-end' : 'justify-start'}`}>
                             <Edit className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                            <span className="text-sm font-medium text-slate-900">{t('suggestion')}: {getSuggestionTitle(group.entityId)}</span>
+                            <span className="text-sm font-medium text-slate-900 hover:text-blue-600">{t('suggestion')}: {getSuggestionTitle(group.entityId)}</span>
                           </div>
-                          <div className={`flex items-center gap-2 ${isRTL ? 'order-first' : 'order-last'}`}>
-                            <Badge className={group.suggestion?.status === 'accepted' ? 'bg-green-100 text-green-800' : group.suggestion?.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}>
-                              {t(group.suggestion?.status || 'pending')}
-                            </Badge>
-                            <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.entityId}`}>
-                              <Button size="sm" variant="outline" className="text-xs">
-                                {t('viewDetails')}
-                              </Button>
-                            </Link>
-                          </div>
-                        </div>
+                        </Link>
                       )}
                     </div>
                     {group.type === 'section' && (
