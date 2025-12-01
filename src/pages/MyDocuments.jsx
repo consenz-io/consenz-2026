@@ -56,6 +56,33 @@ export default function MyDocuments() {
     initialData: [],
   });
 
+  const { data: allVotes } = useQuery({
+    queryKey: ['allVotesForContributors'],
+    queryFn: () => base44.entities.Vote.list(),
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
+  // Calculate real contributors per document
+  const getDocumentContributors = (docId, docCreatedBy) => {
+    const contributors = new Set();
+    if (docCreatedBy) contributors.add(docCreatedBy);
+    
+    const docSuggestions = allSuggestions.filter(s => s.documentId === docId);
+    docSuggestions.forEach(s => {
+      if (s.created_by) contributors.add(s.created_by);
+    });
+    
+    const suggestionIds = new Set(docSuggestions.map(s => s.id));
+    allVotes.forEach(v => {
+      if (suggestionIds.has(v.suggestionId) && v.userId) {
+        contributors.add(v.userId);
+      }
+    });
+    
+    return Math.max(1, contributors.size);
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
@@ -193,7 +220,7 @@ export default function MyDocuments() {
                           <Users className="w-4 h-4 text-slate-400" />
                           <div className="text-sm">
                             <div className="font-semibold text-slate-700">
-                              {Math.max(1, doc.totalUsersInteracted || 0)}
+                              {getDocumentContributors(doc.id, doc.created_by)}
                             </div>
                             <div className="text-xs text-slate-500">{t('contributors')}</div>
                           </div>
