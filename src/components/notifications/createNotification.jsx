@@ -213,45 +213,92 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
       suggestionCreator: suggestion.created_by
     });
     
+    const notifiedUsers = new Set();
+    const actionUrl = `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`;
+    
+    // 1. שלח התראה ליוצר ההצעה
     const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
-    if (suggestionCreatorList.length === 0) {
-      console.log('[NOTIFICATION] Suggestion creator not found');
-      return;
-    }
-    
-    const suggestionCreator = suggestionCreatorList[0];
-    const userLang = await getUserLanguage(suggestionCreator.id);
-    
-    const statusKeys = {
-      accepted: {
-        titleKey: 'notifAcceptedTitle',
-        messageKey: 'notifAcceptedMessage'
-      },
-      rejected: {
-        titleKey: 'notifRejectedTitle',
-        messageKey: 'notifRejectedMessage'
+    if (suggestionCreatorList.length > 0) {
+      const suggestionCreator = suggestionCreatorList[0];
+      notifiedUsers.add(suggestionCreator.id);
+      
+      const userLang = await getUserLanguage(suggestionCreator.id);
+      
+      const statusKeys = {
+        accepted: { titleKey: 'notifAcceptedTitle', messageKey: 'notifAcceptedMessage' },
+        rejected: { titleKey: 'notifRejectedTitle', messageKey: 'notifRejectedMessage' }
+      };
+      
+      const statusKey = statusKeys[newStatus];
+      if (statusKey) {
+        await createNotification({
+          userId: suggestionCreator.id,
+          type: newStatus === 'accepted' ? 'suggestion_accepted' : 'suggestion_rejected',
+          title: translate(statusKey.titleKey, userLang),
+          message: translate(statusKey.messageKey, userLang, { title: suggestion.title }),
+          relatedEntityId: suggestion.id,
+          relatedEntityType: 'suggestion',
+          actionUrl
+        });
       }
-    };
-    
-    const statusKey = statusKeys[newStatus];
-    if (!statusKey) {
-      console.log('[NOTIFICATION] No status message for:', newStatus);
-      return;
     }
     
-    console.log('[NOTIFICATION] Creating status change notification for user:', suggestionCreator.id);
+    // 2. אם התקבלה - שלח גם ליוצר המסמך, מנהלי המסמך, ומצביעי pro
+    if (newStatus === 'accepted') {
+      // שלח ליוצר המסמך
+      const docCreator = await getDocumentCreator(suggestion.documentId);
+      if (docCreator && !notifiedUsers.has(docCreator.id)) {
+        notifiedUsers.add(docCreator.id);
+        const userLang = await getUserLanguage(docCreator.id);
+        await createNotification({
+          userId: docCreator.id,
+          type: 'suggestion_accepted',
+          title: translate('notifAcceptedTitle', userLang),
+          message: translate('notifAcceptedMessage', userLang, { title: suggestion.title }),
+          relatedEntityId: suggestion.id,
+          relatedEntityType: 'suggestion',
+          actionUrl
+        });
+      }
+      
+      // שלח למנהלי המסמך
+      const adminIds = await getDocumentAdmins(suggestion.documentId);
+      for (const adminId of adminIds) {
+        if (notifiedUsers.has(adminId)) continue;
+        notifiedUsers.add(adminId);
+        
+        const userLang = await getUserLanguage(adminId);
+        await createNotification({
+          userId: adminId,
+          type: 'suggestion_accepted',
+          title: translate('notifAcceptedTitle', userLang),
+          message: translate('notifAcceptedMessage', userLang, { title: suggestion.title }),
+          relatedEntityId: suggestion.id,
+          relatedEntityType: 'suggestion',
+          actionUrl
+        });
+      }
+      
+      // שלח למצביעי pro
+      const proVotes = await base44.entities.Vote.filter({ suggestionId: suggestion.id, vote: 'pro' });
+      for (const vote of proVotes) {
+        if (notifiedUsers.has(vote.userId)) continue;
+        notifiedUsers.add(vote.userId);
+        
+        const userLang = await getUserLanguage(vote.userId);
+        await createNotification({
+          userId: vote.userId,
+          type: 'suggestion_accepted',
+          title: translate('notifAcceptedVoterTitle', userLang),
+          message: translate('notifAcceptedVoterMessage', userLang, { title: suggestion.title }),
+          relatedEntityId: suggestion.id,
+          relatedEntityType: 'suggestion',
+          actionUrl
+        });
+      }
+    }
     
-    await createNotification({
-      userId: suggestionCreator.id,
-      type: newStatus === 'accepted' ? 'suggestion_accepted' : 'suggestion_rejected',
-      title: translate(statusKey.titleKey, userLang),
-      message: translate(statusKey.messageKey, userLang, { title: suggestion.title }),
-      relatedEntityId: suggestion.id,
-      relatedEntityType: 'suggestion',
-      actionUrl: `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`
-    });
-    
-    console.log('[NOTIFICATION] Status change notification created successfully');
+    console.log('[NOTIFICATION] Status change notifications created successfully');
   } catch (error) {
     console.error('[NOTIFICATION ERROR]', error);
   }
