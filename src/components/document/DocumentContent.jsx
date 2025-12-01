@@ -486,6 +486,22 @@ export default function DocumentContent({
       toast.error('שגיאה בהצבעה, נסה שוב');
     },
     onSuccess: (data, variables, context) => {
+      // עדכון הקאש עם הערכים האמיתיים מהשרת
+      if (data?.newProVotes !== undefined) {
+        queryClient.setQueryData(['suggestions', document?.id], (old) => {
+          if (!old) return old;
+          return old.map(s => {
+            if (s.id !== variables.suggestionId) return s;
+            return { 
+              ...s, 
+              proVotes: data.newProVotes, 
+              conVotes: data.newConVotes,
+              status: data.accepted ? 'accepted' : s.status
+            };
+          });
+        });
+      }
+      
       // רענון מיידי במקביל - לא מחכים
       Promise.all([
         queryClient.invalidateQueries({ queryKey: ['userVotes', document?.id, user?.id] }),
