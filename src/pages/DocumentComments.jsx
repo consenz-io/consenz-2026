@@ -297,7 +297,7 @@ export default function DocumentComments() {
                                     onClick={() => setExpandedSections(prev => ({ ...prev, [group.entityId]: !prev[group.entityId] }))}
                                     className="text-xs text-blue-600 hover:text-blue-700 mt-1 font-medium"
                                   >
-                                    {isExpanded ? t('showLess') || 'הצג פחות' : t('showMore') || 'הצג עוד'}
+                                    {isExpanded ? t('showLess') : t('showMore')}
                                   </button>
                                 )}
                               </div>
