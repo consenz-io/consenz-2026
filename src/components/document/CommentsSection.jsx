@@ -41,17 +41,44 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     enabled: !!sectionId && entityType === 'suggestion',
   });
 
-  // מיזוג התגובות - אם זו הצעה עם sectionId, הצג גם תגובות סעיף
-  const comments = React.useMemo(() => {
-    if (entityType === 'suggestion' && sectionId && sectionComments.length > 0) {
-      // מיזוג וסידור לפי תאריך
-      const allComments = [...suggestionComments, ...sectionComments];
-      return allComments.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+  // טען את כל ה-replies לתגובות שטענו (כי replies יכולות להיות ב-rootEntityType שונה)
+  const allParentIds = React.useMemo(() => {
+    const ids = [...suggestionComments.map(c => c.id)];
+    if (entityType === 'suggestion' && sectionId) {
+      ids.push(...sectionComments.map(c => c.id));
     }
-    return suggestionComments;
+    return ids;
   }, [suggestionComments, sectionComments, entityType, sectionId]);
 
-  const isLoading = suggestionCommentsLoading || (entityType === 'suggestion' && sectionId && sectionCommentsLoading);
+  const { data: repliesComments, isLoading: repliesLoading } = useQuery({
+    queryKey: ['replies', allParentIds],
+    queryFn: async () => {
+      if (allParentIds.length === 0) return [];
+      // טען תגובות שה-parentCommentId שלהן הוא אחד מהתגובות שטענו
+      const allComments = await base44.entities.Comment.list('-created_date', 500);
+      return allComments.filter(c => c.parentCommentId && allParentIds.includes(c.parentCommentId));
+    },
+    initialData: [],
+    enabled: allParentIds.length > 0,
+  });
+
+  // מיזוג התגובות - אם זו הצעה עם sectionId, הצג גם תגובות סעיף
+  const comments = React.useMemo(() => {
+    let baseComments = [...suggestionComments];
+    
+    if (entityType === 'suggestion' && sectionId && sectionComments.length > 0) {
+      baseComments = [...baseComments, ...sectionComments];
+    }
+    
+    // הוסף replies שלא נכללות כבר
+    const existingIds = new Set(baseComments.map(c => c.id));
+    const newReplies = repliesComments.filter(r => !existingIds.has(r.id));
+    baseComments = [...baseComments, ...newReplies];
+    
+    return baseComments.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+  }, [suggestionComments, sectionComments, repliesComments, entityType, sectionId]);
+
+  const isLoading = suggestionCommentsLoading || (entityType === 'suggestion' && sectionId && sectionCommentsLoading) || repliesLoading;
 
   const { data: users } = useQuery({
     queryKey: ['users'],
