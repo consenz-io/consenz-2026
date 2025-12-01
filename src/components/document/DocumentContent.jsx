@@ -255,7 +255,7 @@ export default function DocumentContent({
   };
 
   const voteMutation = useMutation({
-    mutationFn: async ({ suggestionId, vote, currentVote }) => {
+    mutationFn: async ({ suggestionId, vote, currentVote, willBeAccepted }) => {
       if (!user) throw new Error("יש להתחבר כדי להצביע");
 
       const suggestion = suggestions.find(s => s.id === suggestionId);
@@ -264,16 +264,19 @@ export default function DocumentContent({
       let newConVotes = suggestion.conVotes || 0;
       let pointsAction = null;
       
+      // הפעלת פעולות ה-DB במקביל
+      const dbOperations = [];
+      
       if (currentVote) {
         if (currentVote.vote === vote) {
           // ביטול הצבעה
-          await base44.entities.Vote.delete(currentVote.id);
+          dbOperations.push(base44.entities.Vote.delete(currentVote.id));
           if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
           else newConVotes = Math.max(0, newConVotes - 1);
           pointsAction = 'cancel';
         } else {
           // שינוי כיוון הצבעה
-          await base44.entities.Vote.update(currentVote.id, { vote });
+          dbOperations.push(base44.entities.Vote.update(currentVote.id, { vote }));
           if (vote === 'pro') {
             newProVotes += 1;
             newConVotes = Math.max(0, newConVotes - 1);
@@ -285,56 +288,56 @@ export default function DocumentContent({
         }
       } else {
         // הצבעה חדשה
-        await base44.entities.Vote.create({
+        dbOperations.push(base44.entities.Vote.create({
           suggestionId,
           userId: user.id,
           vote
-        });
+        }));
         if (vote === 'pro') newProVotes += 1;
         else newConVotes += 1;
         pointsAction = 'new';
       }
       
       // עדכון ההצעה
-      const updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, {
+      dbOperations.push(base44.entities.Suggestion.update(suggestionId, {
         proVotes: newProVotes,
         conVotes: newConVotes
-      });
+      }));
+      
+      // הפעלת כל פעולות ה-DB במקביל
+      await Promise.all(dbOperations);
       
       // טיפול בנקודות ברקע - לא חוסם את ה-UI
       handlePointsInBackground(pointsAction, suggestion, vote, currentVote);
 
-      // בדיקת קונסנזוס
-      const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
-      
-      if (shouldAccept && suggestion.status === 'pending') {
-        const accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
+      // אם ידוע מראש שההצעה תתקבל (מה-optimistic update), מפעילים את האישור ברקע
+      if (willBeAccepted && suggestion.status === 'pending') {
+        // מפעילים את האישור ברקע - לא מחכים לו
+        autoAcceptSuggestion({ ...suggestion, proVotes: newProVotes, conVotes: newConVotes }, user.id, document)
+          .then(accepted => {
+            if (accepted) {
+              // טיפול בנקודות המצביע ברקע
+              if (!currentVote && vote === 'pro' && document.gamificationEnabled) {
+                base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
+                base44.entities.PointsTransaction.create({
+                  userId: user.id,
+                  amount: 50,
+                  action: 'vote_influenced_acceptance',
+                  description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${suggestion.title}`,
+                  relatedEntityId: suggestion.id,
+                  relatedEntityType: 'suggestion'
+                }).catch(() => {});
+              }
+              
+              // רענון הנתונים אחרי האישור
+              queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
+              queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
+              queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
+            }
+          })
+          .catch(err => console.error('[AUTO-ACCEPT ERROR]', err));
         
-        if (accepted) {
-          // טיפול בנקודות המצביע ברקע
-          if (!currentVote && vote === 'pro' && document.gamificationEnabled) {
-            base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
-            base44.entities.PointsTransaction.create({
-              userId: user.id,
-              amount: 50,
-              action: 'vote_influenced_acceptance',
-              description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${suggestion.title}`,
-              relatedEntityId: suggestion.id,
-              relatedEntityType: 'suggestion'
-            }).catch(() => {});
-            
-            toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', {
-              description: `קיבלת 50 נקודות על הצבעתך המשפיעה`,
-              duration: 5000,
-            });
-          } else {
-            toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', {
-              duration: 4000,
-            });
-          }
-          
-          return { accepted: true };
-        }
+        return { accepted: true };
       }
       
       return { accepted: false };
@@ -349,39 +352,62 @@ export default function DocumentContent({
       const previousSuggestions = queryClient.getQueryData(['suggestions', document?.id]);
       const previousVotes = queryClient.getQueryData(['userVotes', document?.id, user?.id]);
       
+      // חישוב הקולות החדשים
+      const suggestion = suggestions.find(s => s.id === suggestionId);
+      let newProVotes = suggestion?.proVotes || 0;
+      let newConVotes = suggestion?.conVotes || 0;
+      
+      if (currentVote) {
+        if (currentVote.vote === vote) {
+          if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
+          else newConVotes = Math.max(0, newConVotes - 1);
+        } else {
+          if (vote === 'pro') {
+            newProVotes += 1;
+            newConVotes = Math.max(0, newConVotes - 1);
+          } else {
+            newConVotes += 1;
+            newProVotes = Math.max(0, newProVotes - 1);
+          }
+        }
+      } else {
+        if (vote === 'pro') newProVotes += 1;
+        else newConVotes += 1;
+      }
+      
+      // חישוב האם ההצעה תתקבל
+      const consensuses = document.consensuses || [];
+      let threshold;
+      if (consensuses.length > 0) {
+        const consensusMeterAverage = consensuses.reduce((sum, val) => sum + val, 0) / consensuses.length;
+        threshold = Math.max(1, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
+      } else {
+        threshold = document.threshold || 2;
+      }
+      const willBeAccepted = suggestion?.status === 'pending' && (newProVotes - newConVotes) >= threshold;
+      
       // עדכון אופטימיסטי של ההצעות
       queryClient.setQueryData(['suggestions', document?.id], (old) => {
         if (!old) return old;
         return old.map(s => {
           if (s.id !== suggestionId) return s;
           
-          let newProVotes = s.proVotes || 0;
-          let newConVotes = s.conVotes || 0;
-          
-          if (currentVote) {
-            if (currentVote.vote === vote) {
-              // ביטול
-              if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
-              else newConVotes = Math.max(0, newConVotes - 1);
-            } else {
-              // שינוי
-              if (vote === 'pro') {
-                newProVotes += 1;
-                newConVotes = Math.max(0, newConVotes - 1);
-              } else {
-                newConVotes += 1;
-                newProVotes = Math.max(0, newProVotes - 1);
-              }
-            }
-          } else {
-            // חדש
-            if (vote === 'pro') newProVotes += 1;
-            else newConVotes += 1;
-          }
-          
-          return { ...s, proVotes: newProVotes, conVotes: newConVotes };
+          return { 
+            ...s, 
+            proVotes: newProVotes, 
+            conVotes: newConVotes,
+            // אם ההצעה תתקבל, מעדכנים את הסטטוס מיידית
+            status: willBeAccepted ? 'accepted' : s.status
+          };
         });
       });
+      
+      // אם ההצעה תתקבל, מציגים הודעה מיידית
+      if (willBeAccepted) {
+        toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', {
+          duration: 4000,
+        });
+      }
       
       // עדכון אופטימיסטי של ההצבעות
       queryClient.setQueryData(['userVotes', document?.id, user?.id], (old) => {
@@ -389,10 +415,8 @@ export default function DocumentContent({
         
         if (currentVote) {
           if (currentVote.vote === vote) {
-            // ביטול - הסרה מהרשימה (בודקים גם לפי suggestionId במקרה של temp id)
             return old.filter(v => v.id !== currentVote.id && v.suggestionId !== suggestionId);
           } else {
-            // שינוי - עדכון הכיוון
             return old.map(v => {
               if (v.id === currentVote.id || v.suggestionId === suggestionId) {
                 return { ...v, vote };
@@ -401,7 +425,6 @@ export default function DocumentContent({
             });
           }
         } else {
-          // הצבעה חדשה - הוספה לרשימה (בודקים שלא קיים כבר)
           const exists = old.some(v => v.suggestionId === suggestionId);
           if (exists) {
             return old.map(v => v.suggestionId === suggestionId ? { ...v, vote } : v);
@@ -410,7 +433,7 @@ export default function DocumentContent({
         }
       });
       
-      return { previousSuggestions, previousVotes };
+      return { previousSuggestions, previousVotes, willBeAccepted };
     },
     onError: (err, variables, context) => {
       // שחזור המצב הקודם במקרה של שגיאה
@@ -420,16 +443,9 @@ export default function DocumentContent({
       if (context?.previousVotes) {
         queryClient.setQueryData(['userVotes', document?.id, user?.id], context.previousVotes);
       }
+      toast.error('שגיאה בהצבעה, נסה שוב');
     },
-    onSuccess: (data) => {
-      // רענון רק אם ההצעה התקבלה
-      if (data?.accepted) {
-        queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
-        queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
-        queryClient.invalidateQueries({ queryKey: ['allVersions'] });
-        queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
-        queryClient.invalidateQueries({ queryKey: ['publicDocuments'] });
-      }
+    onSuccess: (data, variables, context) => {
       // רענון ההצבעות לקבלת ה-ID האמיתי
       queryClient.invalidateQueries({ queryKey: ['userVotes', document?.id, user?.id] });
     },
