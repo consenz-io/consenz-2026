@@ -6,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, TrendingUp, ThumbsUp, ThumbsDown, ArrowLeft, ArrowRight, Info, CheckCircle2, Target, Calculator } from "lucide-react";
+import { Users, TrendingUp, ThumbsUp, ThumbsDown, Info, CheckCircle2, Target, Scale, Gauge } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
@@ -33,14 +33,14 @@ export default function UnderstandingConsensus() {
   const totalUsers = document?.totalUsersInteracted || 1;
   const consensuses = document?.consensuses || [];
   
-  // Calculate average consensus
-  const avgConsensus = consensuses.length > 0 
+  // מד הקונצנזוס הממוצע - ערך בין 0 ל-1
+  const documentConsensusMeter = consensuses.length > 0 
     ? consensuses.reduce((sum, val) => sum + val, 0) / consensuses.length 
     : 0;
   
-  // Calculate threshold
+  // רף התמיכה הדרוש = מד הקונצנזוס × מספר המשתתפים
   const threshold = consensuses.length > 0 
-    ? Math.max(1, Math.round(avgConsensus * totalUsers))
+    ? Math.max(1, Math.round(documentConsensusMeter * totalUsers))
     : (document?.threshold || 2);
 
   if (docLoading || suggestionsLoading) {
@@ -76,79 +76,116 @@ export default function UnderstandingConsensus() {
           backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
         />
 
-        {/* Hero Section - Current Threshold */}
-        <Card className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white border-0 shadow-xl overflow-hidden">
-          <CardContent className="p-6 md:p-8">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="text-center md:text-right flex-1">
-                <p className="text-blue-100 text-sm md:text-base mb-2">{t('currentThresholdExplain')}</p>
-                <h2 className="text-lg md:text-xl font-medium text-blue-50">{document.title}</h2>
-              </div>
-              <div className="flex flex-col items-center">
-                <div className="w-28 h-28 md:w-36 md:h-36 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-4 border-white/30">
-                  <div className="text-center">
-                    <div className="text-4xl md:text-5xl font-bold">{threshold}</div>
-                    <div className="text-xs md:text-sm text-blue-100">{t('votesNeeded')}</div>
-                  </div>
+        {/* Hero Section - שני המושגים המרכזיים */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* מד הקונצנזוס */}
+          <Card className="bg-gradient-to-br from-indigo-600 to-purple-700 text-white border-0 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <Gauge className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">{t('consensusMeterLabel')}</h3>
+                  <p className="text-indigo-200 text-sm">{t('consensusMeterRange')}</p>
                 </div>
               </div>
-              <div className="text-center md:text-left flex-1">
-                <div className="inline-flex items-center gap-2 bg-white/20 rounded-full px-4 py-2">
-                  <Users className="w-5 h-5" />
-                  <span className="font-semibold">{totalUsers}</span>
-                  <span className="text-blue-100 text-sm">{t('participants')}</span>
+              <div className="text-center py-4">
+                <div className="text-5xl font-bold">{(documentConsensusMeter * 100).toFixed(0)}%</div>
+                <p className="text-indigo-200 text-sm mt-2">{t('consensusMeterDescription')}</p>
+              </div>
+              {/* Progress bar */}
+              <div className="mt-4">
+                <div className="h-3 bg-white/20 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-white rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, documentConsensusMeter * 100)}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-indigo-200 mt-1">
+                  <span>0%</span>
+                  <span>100%</span>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Explanation Card */}
+          {/* רף התמיכה הדרוש */}
+          <Card className="bg-gradient-to-br from-blue-600 to-cyan-600 text-white border-0 shadow-xl">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <Scale className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">{t('supportThresholdLabel')}</h3>
+                  <p className="text-blue-200 text-sm">{t('supportThresholdSubtitle')}</p>
+                </div>
+              </div>
+              <div className="text-center py-4">
+                <div className="text-5xl font-bold">{threshold}</div>
+                <p className="text-blue-200 text-sm mt-2">{t('supportThresholdDescription')}</p>
+              </div>
+              {/* משתתפים */}
+              <div className="mt-4 bg-white/10 rounded-lg p-3 flex items-center justify-center gap-2">
+                <Users className="w-5 h-5" />
+                <span className="font-semibold">{totalUsers}</span>
+                <span className="text-blue-200">{t('totalParticipantsInDoc')}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* הסבר על המנגנון */}
         <Card className="bg-amber-50 border-amber-200">
-          <CardContent className="p-4 md:p-6">
-            <div className={`flex gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
-              <Info className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="font-semibold text-amber-900 mb-1">{t('howThresholdWorks')}</h3>
-                <p className="text-amber-800 text-sm leading-relaxed">
-                  {t('thresholdExplanation')}
-                </p>
+          <CardContent className="p-5">
+            <div className={`flex gap-4 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
+              <Info className="w-8 h-8 text-amber-600 flex-shrink-0" />
+              <div className="space-y-3">
+                <h3 className="font-bold text-amber-900 text-lg">{t('howItWorksTitle')}</h3>
+                <div className="space-y-2 text-amber-800 text-sm leading-relaxed">
+                  <p><strong>{t('consensusMeterExplain1')}</strong> {t('consensusMeterExplain2')}</p>
+                  <p><strong>{t('thresholdExplain1')}</strong> {t('thresholdExplain2')}</p>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Calculation Breakdown */}
+        {/* נוסחת החישוב */}
         <Card>
           <CardHeader>
-            <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Calculator className="w-5 h-5 text-blue-600" />
-              {t('calculationBreakdown')}
+            <CardTitle className={`flex items-center gap-2 text-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Target className="w-5 h-5 text-blue-600" />
+              {t('calculationFormula')}
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-slate-50 rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-slate-900">{(avgConsensus * 100).toFixed(0)}%</div>
-                <div className="text-sm text-slate-600 mt-1">{t('avgConsensusMeter')}</div>
+          <CardContent>
+            <div className="bg-slate-50 rounded-xl p-6">
+              <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
+                <div className="bg-white rounded-xl p-4 shadow-sm border-2 border-indigo-200 min-w-[140px]">
+                  <div className="text-2xl font-bold text-indigo-700">{(documentConsensusMeter * 100).toFixed(0)}%</div>
+                  <div className="text-xs text-slate-500 mt-1">{t('consensusMeterLabel')}</div>
+                </div>
+                <div className="text-3xl text-slate-400 font-light">×</div>
+                <div className="bg-white rounded-xl p-4 shadow-sm border-2 border-blue-200 min-w-[140px]">
+                  <div className="text-2xl font-bold text-blue-700">{totalUsers}</div>
+                  <div className="text-xs text-slate-500 mt-1">{t('participants')}</div>
+                </div>
+                <div className="text-3xl text-slate-400 font-light">=</div>
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 shadow-sm border-2 border-green-300 min-w-[140px]">
+                  <div className="text-2xl font-bold text-green-700">{threshold}</div>
+                  <div className="text-xs text-slate-500 mt-1">{t('supportThresholdLabel')}</div>
+                </div>
               </div>
-              <div className="flex items-center justify-center text-2xl text-slate-400">×</div>
-              <div className="bg-slate-50 rounded-xl p-4 text-center">
-                <div className="text-3xl font-bold text-slate-900">{totalUsers}</div>
-                <div className="text-sm text-slate-600 mt-1">{t('totalParticipants')}</div>
-              </div>
-            </div>
-            <div className="flex items-center justify-center">
-              <div className="text-2xl text-slate-400">=</div>
-            </div>
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 text-center border-2 border-blue-200">
-              <div className="text-4xl font-bold text-blue-700">{threshold}</div>
-              <div className="text-sm text-blue-600 mt-1">{t('currentThreshold')}</div>
+              <p className="text-center text-sm text-slate-500 mt-4">
+                {documentConsensusMeter.toFixed(2)} × {totalUsers} = {(documentConsensusMeter * totalUsers).toFixed(1)} ≈ {threshold}
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        {/* Accepted Suggestions Timeline */}
+        {/* היסטוריית ההצעות שאושרו */}
         <Card>
           <CardHeader>
             <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -161,7 +198,7 @@ export default function UnderstandingConsensus() {
             {acceptedSuggestions.length === 0 ? (
               <div className="text-center py-8 text-slate-500">
                 <Target className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                <p>{t('noAcceptedSuggestionsYet')}</p>
+                <p className="font-medium">{t('noAcceptedSuggestionsYet')}</p>
                 <p className="text-sm mt-1">{t('defaultThresholdUsed')}</p>
               </div>
             ) : (
@@ -170,83 +207,77 @@ export default function UnderstandingConsensus() {
                   const proVotes = suggestion.proVotes || 0;
                   const conVotes = suggestion.conVotes || 0;
                   const delta = proVotes - conVotes;
-                  const sectionConsensus = consensuses[index] || (delta / totalUsers);
-                  const consensusPercent = (sectionConsensus * 100).toFixed(0);
+                  // מד קונצנזוס של ההצעה = הפרש קולות / מספר משתתפים (ערך בין 0 ל-1)
+                  const suggestionConsensusMeter = consensuses[index] !== undefined 
+                    ? consensuses[index] 
+                    : Math.min(1, Math.max(0, delta / totalUsers));
                   
                   return (
                     <div 
                       key={suggestion.id}
-                      className="relative bg-white rounded-xl border-2 border-slate-100 hover:border-blue-200 transition-all p-4 md:p-5"
+                      className="relative bg-white rounded-xl border-2 border-slate-100 hover:border-green-200 transition-all overflow-hidden"
                     >
-                      {/* Order badge */}
-                      <div className={`absolute -top-3 ${isRTL ? '-right-2' : '-left-2'} w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-lg`}>
-                        {index + 1}
+                      {/* Header with number */}
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 border-b border-green-100">
+                        <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow">
+                            {index + 1}
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-slate-900">{suggestion.title}</h4>
+                            <p className="text-xs text-slate-500">
+                              {new Date(suggestion.created_date).toLocaleDateString(
+                                language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-EG' : 'en-US'
+                              )}
+                            </p>
+                          </div>
+                        </div>
                       </div>
                       
-                      <div className="space-y-4">
-                        {/* Title */}
-                        <div className={`${isRTL ? 'pr-6' : 'pl-6'}`}>
-                          <h4 className="font-semibold text-slate-900">{suggestion.title}</h4>
-                          <p className="text-xs text-slate-500 mt-1">
-                            {new Date(suggestion.created_date).toLocaleDateString(
-                              language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-EG' : 'en-US'
-                            )}
-                          </p>
-                        </div>
-
-                        {/* Votes visualization */}
-                        <div className="flex items-center gap-4">
+                      <div className="p-4">
+                        {/* Votes visualization - horizontal */}
+                        <div className="flex items-center justify-center gap-3 flex-wrap">
                           {/* Pro votes */}
-                          <div className="flex items-center gap-2">
-                            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                              <ThumbsUp className="w-5 h-5 text-green-600" />
-                            </div>
-                            <div>
-                              <div className="text-lg font-bold text-green-700">{proVotes}</div>
-                              <div className="text-xs text-slate-500">{t('pro')}</div>
-                            </div>
+                          <div className="flex items-center gap-2 bg-green-50 rounded-lg px-3 py-2">
+                            <ThumbsUp className="w-4 h-4 text-green-600" />
+                            <span className="font-bold text-green-700">{proVotes}</span>
+                            <span className="text-xs text-green-600">{t('pro')}</span>
                           </div>
 
-                          {/* Minus sign */}
-                          <div className="text-2xl text-slate-300 font-light">−</div>
+                          <span className="text-xl text-slate-300">−</span>
 
                           {/* Con votes */}
-                          <div className="flex items-center gap-2">
-                            <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                              <ThumbsDown className="w-5 h-5 text-red-600" />
-                            </div>
-                            <div>
-                              <div className="text-lg font-bold text-red-700">{conVotes}</div>
-                              <div className="text-xs text-slate-500">{t('con')}</div>
-                            </div>
+                          <div className="flex items-center gap-2 bg-red-50 rounded-lg px-3 py-2">
+                            <ThumbsDown className="w-4 h-4 text-red-600" />
+                            <span className="font-bold text-red-700">{conVotes}</span>
+                            <span className="text-xs text-red-600">{t('con')}</span>
                           </div>
 
-                          {/* Equals sign */}
-                          <div className="text-2xl text-slate-300 font-light">=</div>
+                          <span className="text-xl text-slate-300">=</span>
 
                           {/* Delta */}
-                          <div className="flex items-center gap-2">
-                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                              <span className="text-lg font-bold text-blue-700">{delta}</span>
-                            </div>
-                            <div className="text-xs text-slate-500">{t('votesDelta')}</div>
+                          <div className="flex items-center gap-2 bg-blue-50 rounded-lg px-3 py-2">
+                            <span className="font-bold text-blue-700">{delta}</span>
+                            <span className="text-xs text-blue-600">{t('votesDelta')}</span>
                           </div>
                         </div>
 
                         {/* Consensus meter for this suggestion */}
-                        <div className="bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg p-3">
+                        <div className="mt-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4">
                           <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <span className="text-sm text-slate-600">{t('suggestionConsensusMeter')}</span>
-                            <span className="font-bold text-blue-700">{consensusPercent}%</span>
+                            <span className="text-sm font-medium text-indigo-800">{t('suggestionConsensusMeter')}</span>
+                            <Badge className="bg-indigo-600 text-white">
+                              {(suggestionConsensusMeter * 100).toFixed(0)}%
+                            </Badge>
                           </div>
-                          <div className="h-3 bg-slate-200 rounded-full overflow-hidden">
+                          <div className="h-2 bg-indigo-200 rounded-full overflow-hidden">
                             <div 
-                              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-500"
-                              style={{ width: `${Math.min(100, Math.max(0, consensusPercent))}%` }}
+                              className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
+                              style={{ width: `${Math.min(100, suggestionConsensusMeter * 100)}%` }}
                             />
                           </div>
-                          <p className="text-xs text-slate-500 mt-2">
-                            {t('calculatedAs')}: {delta} ÷ {totalUsers} = {sectionConsensus.toFixed(2)}
+                          <p className="text-xs text-indigo-600 mt-2 text-center">
+                            {delta} ÷ {totalUsers} = {suggestionConsensusMeter.toFixed(2)} ({(suggestionConsensusMeter * 100).toFixed(0)}%)
                           </p>
                         </div>
                       </div>
@@ -254,18 +285,24 @@ export default function UnderstandingConsensus() {
                   );
                 })}
 
-                {/* Summary */}
-                <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
-                  <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <TrendingUp className="w-6 h-6 text-green-600" />
+                {/* Average calculation summary */}
+                <div className="mt-6 p-5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border-2 border-indigo-200">
+                  <div className={`flex items-start gap-4 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
+                    <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <TrendingUp className="w-6 h-6 text-white" />
+                    </div>
                     <div>
-                      <h4 className="font-semibold text-green-900">{t('averageOfAllSuggestions')}</h4>
-                      <p className="text-sm text-green-700">
-                        {t('avgConsensusCalculation', { 
+                      <h4 className="font-bold text-indigo-900 text-lg">{t('averageCalculation')}</h4>
+                      <p className="text-sm text-indigo-700 mt-1">
+                        {t('avgConsensusResult', { 
                           count: acceptedSuggestions.length,
-                          avg: (avgConsensus * 100).toFixed(0)
+                          values: consensuses.map(c => (c * 100).toFixed(0) + '%').join(' + '),
+                          avg: (documentConsensusMeter * 100).toFixed(0)
                         })}
                       </p>
+                      <div className="mt-3 text-sm text-indigo-600">
+                        ({consensuses.map(c => c.toFixed(2)).join(' + ')}) ÷ {consensuses.length} = {documentConsensusMeter.toFixed(2)}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -274,16 +311,21 @@ export default function UnderstandingConsensus() {
           </CardContent>
         </Card>
 
-        {/* What this means */}
+        {/* What this means - practical explanation */}
         <Card className="bg-gradient-to-br from-slate-800 to-slate-900 text-white border-0">
           <CardContent className="p-6 md:p-8">
             <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <Target className="w-6 h-6" />
-              {t('whatThisMeans')}
+              <Scale className="w-6 h-6" />
+              {t('whatThisMeansTitle')}
             </h3>
-            <p className="text-slate-300 leading-relaxed">
-              {t('thresholdMeaning', { threshold })}
+            <p className="text-slate-300 leading-relaxed text-lg">
+              {t('thresholdMeaningDetailed', { threshold })}
             </p>
+            <div className="mt-6 bg-white/10 rounded-lg p-4">
+              <p className="text-slate-200 text-sm">
+                <strong>{t('example')}:</strong> {t('thresholdExample', { threshold })}
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
