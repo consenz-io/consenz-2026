@@ -189,8 +189,18 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                         <CardContent className="p-4 space-y-3">
                           {/* Show content for direct edits or oldest version */}
                           {(currentVer.changeType === 'direct_edit' || currentVer.changeType === 'section_created' || isOldestVersion) && (
-                            <div className="prose prose-sm max-w-none text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                              <div dangerouslySetInnerHTML={{ __html: currentVer.content }} />
+                            <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                              <TranslatableContent
+                                content={currentVer.content}
+                                entity={currentVer}
+                                entityType="DocumentVersion"
+                                onUpdate={(updated) => {
+                                  queryClient.setQueryData(['versions', sectionId], (old) => 
+                                    old?.map(v => v.id === currentVer.id ? updated : v)
+                                  );
+                                }}
+                                className="prose prose-sm max-w-none text-slate-700"
+                              />
                             </div>
                           )}
                           
