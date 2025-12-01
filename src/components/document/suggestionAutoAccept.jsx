@@ -96,35 +96,43 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     return false;
   }
   
-  // חישוב section_consensus_meter לפי האפיון - מוגבל לערך בין 0 ל-1
-  // consensus = delta (proVotes - conVotes), ו-sectionConsensus צריך להיות יחס בין 0 ל-1
+  // עדכון מד הקונצנזוס רק עבור עריכות סעיפים קיימים (לא סעיפים חדשים)
+  // סעיפים חדשים, עריכות ישירות ושינויי כותרות לא נספרים במד הקונצנזוס
+  const shouldUpdateConsensusMeter = freshSuggestion.type === 'edit_section';
+  
   const totalUsers = document.totalUsersInteracted || 1;
-  // חישוב נכון: delta / totalUsers, כאשר delta יכול להיות עד totalUsers (כולם הצביעו בעד)
-  const sectionConsensus = Math.min(1, Math.max(0, consensus / Math.max(1, totalUsers)));
+  let updatedConsensuses = document.consensuses || [];
+  let newThreshold = document.threshold || 2;
   
-  // עדכון המסמך: הוספת sectionConsensus למערך consensuses ועדכון threshold
-  const currentConsensuses = document.consensuses || [];
-  const updatedConsensuses = [...currentConsensuses, sectionConsensus];
-  
-  // חישוב document_consensus_meter חדש - מגבילים כל ערך ל-1 מקסימום
-  const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / updatedConsensuses.length;
-  
-  // חישוב document_threshold חדש
-  const newThreshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
-  
-  console.log('[CONSENSUS METER UPDATE]', {
-    sectionConsensus,
-    updatedConsensuses,
-    consensusMeterAverage,
-    newThreshold,
-    totalUsers
-  });
-  
-  // עדכון המסמך עם הערכים החדשים
-  await base44.entities.Document.update(document.id, {
-    consensuses: updatedConsensuses,
-    threshold: newThreshold
-  });
+  if (shouldUpdateConsensusMeter) {
+    // חישוב section_consensus_meter לפי האפיון - מוגבל לערך בין 0 ל-1
+    const sectionConsensus = Math.min(1, Math.max(0, consensus / Math.max(1, totalUsers)));
+    
+    // עדכון המסמך: הוספת sectionConsensus למערך consensuses ועדכון threshold
+    updatedConsensuses = [...updatedConsensuses, sectionConsensus];
+    
+    // חישוב document_consensus_meter חדש - מגבילים כל ערך ל-1 מקסימום
+    const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / updatedConsensuses.length;
+    
+    // חישוב document_threshold חדש
+    newThreshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
+    
+    console.log('[CONSENSUS METER UPDATE]', {
+      sectionConsensus,
+      updatedConsensuses,
+      consensusMeterAverage,
+      newThreshold,
+      totalUsers
+    });
+    
+    // עדכון המסמך עם הערכים החדשים
+    await base44.entities.Document.update(document.id, {
+      consensuses: updatedConsensuses,
+      threshold: newThreshold
+    });
+  } else {
+    console.log('[CONSENSUS METER SKIP] Not updating consensus meter for new_section type');
+  }
   
   // עדכון threshold לכל ההצעות הממתינות - במקביל
   console.log('[THRESHOLD UPDATE] Updating threshold for all pending suggestions to:', newThreshold);
@@ -365,30 +373,8 @@ export async function autoAcceptTopicEditSuggestion(suggestion, userId, document
 
   console.log('[AUTO-ACCEPT TOPIC] Auto-accepting topic edit suggestion:', suggestion.id);
 
-  // חישוב section_consensus_meter והוספה למערך consensuses של המסמך - מוגבל לערך בין 0 ל-1
-  const totalUsers = document.totalUsersInteracted || 1;
-  const sectionConsensus = Math.min(1, Math.max(0, consensus / totalUsers));
-  
-  const currentConsensuses = document.consensuses || [];
-  const updatedConsensuses = [...currentConsensuses, sectionConsensus];
-  
-  // חישוב ממוצע עם הגבלה לכל ערך
-  const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / updatedConsensuses.length;
-  const newThreshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
-  
-  console.log('[TOPIC CONSENSUS METER UPDATE]', {
-    sectionConsensus,
-    updatedConsensuses,
-    consensusMeterAverage,
-    newThreshold,
-    totalUsers
-  });
-
-  // עדכון המסמך עם הערכים החדשים
-  await base44.entities.Document.update(document.id, {
-    consensuses: updatedConsensuses,
-    threshold: newThreshold
-  });
+  // שינויי כותרות נושאים לא נספרים במד הקונצנזוס - רק עריכות תוכן סעיפים
+  console.log('[TOPIC CONSENSUS METER SKIP] Not updating consensus meter for topic title changes');
 
   // Accept suggestion - update topic title
   await base44.entities.Topic.update(freshSuggestion.topicId, {
