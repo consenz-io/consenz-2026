@@ -73,7 +73,19 @@ Return ONLY the translated HTML:`;
         add_context_from_internet: false,
       });
 
-      let translatedText = typeof result === 'string' ? result : result.content || result;
+      let translatedText;
+      if (typeof result === 'string') {
+        translatedText = result;
+      } else if (result && typeof result === 'object') {
+        translatedText = result.content || result.text || result.translation || JSON.stringify(result);
+        // If it's still an object after extraction, try to get the first string value
+        if (typeof translatedText !== 'string') {
+          const values = Object.values(result);
+          translatedText = values.find(v => typeof v === 'string') || String(result);
+        }
+      } else {
+        translatedText = String(result || '');
+      }
       
       // Clean up any markdown code blocks that might be added
       translatedText = translatedText.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
