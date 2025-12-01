@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { FileText, Users, TrendingUp, Languages, Loader2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import { calculateContributorsFromData } from "@/components/document/calculateContributors";
 
 export default function MyDocuments() {
   const { t, isRTL, language } = useLanguage();
@@ -57,30 +58,51 @@ export default function MyDocuments() {
   });
 
   const { data: allVotes } = useQuery({
-    queryKey: ['allVotesForContributors'],
+    queryKey: ['allVotes'],
     queryFn: () => base44.entities.Vote.list(),
     enabled: !!user?.id,
     initialData: [],
   });
 
-  // Calculate real contributors per document
-  const getDocumentContributors = (docId, docCreatedBy) => {
-    const contributors = new Set();
-    if (docCreatedBy) contributors.add(docCreatedBy);
-    
-    const docSuggestions = allSuggestions.filter(s => s.documentId === docId);
-    docSuggestions.forEach(s => {
-      if (s.created_by) contributors.add(s.created_by);
+  const { data: allUsers } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list(),
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
+  const { data: allArguments } = useQuery({
+    queryKey: ['allArguments'],
+    queryFn: () => base44.entities.Argument.list(),
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
+  const { data: allComments } = useQuery({
+    queryKey: ['allComments'],
+    queryFn: () => base44.entities.Comment.list(),
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
+  const { data: allSections } = useQuery({
+    queryKey: ['allSections'],
+    queryFn: () => base44.entities.Section.list(),
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
+  // Calculate real contributors per document using shared logic
+  const getDocumentContributors = (doc) => {
+    return calculateContributorsFromData({
+      document: doc,
+      suggestions: allSuggestions.filter(s => s.documentId === doc.id),
+      allVotes,
+      allUsers,
+      allArguments,
+      allComments,
+      sections: allSections.filter(s => s.documentId === doc.id)
     });
-    
-    const suggestionIds = new Set(docSuggestions.map(s => s.id));
-    allVotes.forEach(v => {
-      if (suggestionIds.has(v.suggestionId) && v.userId) {
-        contributors.add(v.userId);
-      }
-    });
-    
-    return Math.max(1, contributors.size);
   };
 
   if (!user) {
@@ -220,7 +242,7 @@ export default function MyDocuments() {
                           <Users className="w-4 h-4 text-slate-400" />
                           <div className="text-sm">
                             <div className="font-semibold text-slate-700">
-                              {getDocumentContributors(doc.id, doc.created_by)}
+                              {getDocumentContributors(doc)}
                             </div>
                             <div className="text-xs text-slate-500">{t('contributors')}</div>
                           </div>
