@@ -265,7 +265,7 @@ export default function DocumentVersions() {
                                 <p className="text-sm font-semibold text-green-700">{suggestion.newTitle}</p>
                               </div>
                             </div>
-                            {suggestion.explanation && (
+                            {suggestion.explanation && typeof suggestion.explanation === 'string' && (
                               <div className="text-sm text-slate-600 bg-blue-50 p-2 rounded">
                                 <span className="font-medium">הסבר: </span>
                                 {suggestion.explanation}
