@@ -703,9 +703,19 @@ Return ONLY the translated text:`;
         }
       }
 
-      // Check consensus and auto-accept
+      // Check consensus and auto-accept - שימוש בחישוב דינמי של הסף
       const delta = updatedSuggestion.proVotes - updatedSuggestion.conVotes;
-      if (delta >= document.threshold) {
+      const consensuses = document.consensuses || [];
+      const totalUsers = document.totalUsersInteracted || 1;
+      let dynamicThreshold;
+      if (consensuses.length > 0) {
+        const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
+        dynamicThreshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
+      } else {
+        dynamicThreshold = document.threshold || 2;
+      }
+      
+      if (delta >= dynamicThreshold) {
         // Get current topic for version tracking
         const currentTopic = topics.find(t => t.id === suggestion.topicId);
         
