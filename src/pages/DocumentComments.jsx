@@ -96,6 +96,52 @@ export default function DocumentComments() {
     return user?.full_name || email;
   };
 
+  // Translate comment mutation
+  const translateCommentMutation = useMutation({
+    mutationFn: async (comment) => {
+      const prompt = `Translate the following text to ${languagePrompts[language]}. Return ONLY the translated text:\n${comment.content}`;
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt,
+        add_context_from_internet: false,
+      });
+      const translatedContent = (typeof result === 'string' ? result : result.content || result).trim();
+
+      const newTranslations = {
+        ...(comment.translations || {}),
+        [language]: translatedContent
+      };
+
+      await base44.entities.Comment.update(comment.id, { translations: newTranslations });
+      return { commentId: comment.id, translations: newTranslations };
+    },
+    onMutate: (comment) => {
+      setTranslatingComment(comment.id);
+      setShowTranslatedComments(prev => ({ ...prev, [comment.id]: true }));
+    },
+    onSuccess: (data) => {
+      setTranslatingComment(null);
+      // Update the comment in the local state
+      queryClient.invalidateQueries({ queryKey: ['allSectionComments', documentId] });
+      queryClient.invalidateQueries({ queryKey: ['allSuggestionComments', documentId] });
+    },
+    onError: () => {
+      setTranslatingComment(null);
+    }
+  });
+
+  const getCommentDisplayContent = (comment) => {
+    const translatedContent = comment.translations?.[language];
+    if (showTranslatedComments[comment.id] && typeof translatedContent === 'string') {
+      return translatedContent;
+    }
+    return comment.content;
+  };
+
+  const needsCommentTranslation = (comment) => {
+    const detectedLang = comment.originalLanguage || detectLanguage(comment.content || '');
+    return detectedLang && detectedLang !== language;
+  };
+
   const getTopicName = (topicId) => {
     const topic = topics.find(t => t.id === topicId);
     return topic?.title || '';
