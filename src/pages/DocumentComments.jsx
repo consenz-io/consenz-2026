@@ -338,7 +338,7 @@ export default function DocumentComments() {
                     </div>
                     {group.type === 'section' && (
                       <Link to={`${createPageUrl("DocumentView")}?id=${documentId}&scrollTo=${group.entityId}`}>
-                        <Button variant="outline" size="sm" className="text-xs h-7 shrink-0">
+                        <Button variant="outline" size="sm" className="text-xs h-6 px-2 shrink-0">
                           <Eye className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                           {t('viewInDocument')}
                         </Button>
