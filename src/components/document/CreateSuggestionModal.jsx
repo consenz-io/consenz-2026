@@ -523,11 +523,12 @@ Return ONLY the translated HTML:`;
                 {t('translating')}
               </div>
             ) : (
-              <ReactQuill
-                value={formData.newContent}
-                onChange={(value) => setFormData({ ...formData, newContent: value })}
-                className="bg-white"
-                theme="snow"
+              <Textarea
+                id="content"
+                value={formData.newContent.replace(/<[^>]*>/g, '')}
+                onChange={(e) => setFormData({ ...formData, newContent: e.target.value })}
+                placeholder={t('enterContent')}
+                rows={8}
               />
             )}
           </div>
