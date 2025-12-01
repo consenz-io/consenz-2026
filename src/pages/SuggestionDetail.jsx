@@ -684,6 +684,7 @@ export default function SuggestionDetail() {
                 <SectionDiff
                   originalContent={suggestion.originalContent}
                   newContent={suggestion.newContent}
+                  suggestion={suggestion}
                 />
               </div>
             ) : suggestion.type === 'new_section' ? (
