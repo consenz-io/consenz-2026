@@ -35,6 +35,7 @@ export default function DocumentComments() {
   const [translatingComment, setTranslatingComment] = React.useState(null);
   const [showTranslatedComments, setShowTranslatedComments] = React.useState({});
   const [expandedSections, setExpandedSections] = React.useState({});
+  const [openSectionSidebar, setOpenSectionSidebar] = React.useState(null);
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
