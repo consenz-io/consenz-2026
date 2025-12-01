@@ -31,6 +31,9 @@ function translate(key, lang, replacements = {}) {
       notifCommentTitle: "New comment",
       notifCommentMessageSuggestion: "{name} commented on your suggestion",
       notifCommentMessageSection: "{name} commented on your section",
+      notifCommentOnDiscussion: "{name} commented on a suggestion you participated in",
+      notifDocumentCommentTitle: "New comment in document discussion",
+      notifDocumentCommentMessage: "{name} commented in the document \"{title}\"",
     },
     he: {
       notifVoteTitle: "הצבעה חדשה על ההצעה שלך",
@@ -46,6 +49,9 @@ function translate(key, lang, replacements = {}) {
       notifCommentTitle: "תגובה חדשה",
       notifCommentMessageSuggestion: "{name} הגיב על ההצעה שלך",
       notifCommentMessageSection: "{name} הגיב על הסעיף שלך",
+      notifCommentOnDiscussion: "{name} הגיב על הצעה שהשתתפת בה",
+      notifDocumentCommentTitle: "תגובה חדשה בדיון המסמך",
+      notifDocumentCommentMessage: "{name} הגיב בדיון על המסמך \"{title}\"",
     },
     ar: {
       notifVoteTitle: "تصويت جديد على اقتراحك",
@@ -61,6 +67,9 @@ function translate(key, lang, replacements = {}) {
       notifCommentTitle: "تعليق جديد",
       notifCommentMessageSuggestion: "{name} علق على اقتراحك",
       notifCommentMessageSection: "{name} علق على قسمك",
+      notifCommentOnDiscussion: "{name} علق على اقتراح شاركت فيه",
+      notifDocumentCommentTitle: "تعليق جديد في نقاش المستند",
+      notifDocumentCommentMessage: "{name} علق في نقاش المستند \"{title}\"",
     }
   };
   
@@ -277,14 +286,19 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
       parentComment: parentComment?.id
     });
     
+    const commenterList = await base44.entities.User.filter({ email: comment.created_by });
+    const commenterName = commenterList.length > 0 ? commenterList[0].full_name : comment.created_by;
+    
+    // Set to track users we've already notified (to avoid duplicate notifications)
+    const notifiedUsers = new Set();
+    notifiedUsers.add(comment.created_by); // Don't notify the commenter themselves
+    
     // אם זו תשובה לתגובה - שלח התראה לבעל התגובה המקורית
     if (parentComment && comment.created_by !== parentComment.created_by) {
       const parentCommenterList = await base44.entities.User.filter({ email: parentComment.created_by });
       if (parentCommenterList.length > 0) {
         const parentCommenterId = parentCommenterList[0].id;
-        
-        const replierList = await base44.entities.User.filter({ email: comment.created_by });
-        const replierName = replierList.length > 0 ? replierList[0].full_name : comment.created_by;
+        notifiedUsers.add(parentComment.created_by);
         
         console.log('[NOTIFICATION] Creating reply notification for parent comment owner:', parentCommenterId);
         
@@ -294,7 +308,7 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
           userId: parentCommenterId,
           type: 'comment_reply',
           title: translate('notifReplyTitle', userLang),
-          message: translate('notifReplyMessage', userLang, { name: replierName }),
+          message: translate('notifReplyMessage', userLang, { name: commenterName }),
           relatedEntityId: targetEntity.id,
           relatedEntityType: targetEntityType,
           actionUrl: targetEntityType === 'suggestion' 
@@ -308,50 +322,163 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
     
     // מציאת בעל הישות שעליה הגיבו
     let ownerId;
+    let ownerEmail;
     
     if (targetEntityType === 'suggestion') {
-      const ownerList = await base44.entities.User.filter({ email: targetEntity.created_by });
-      if (ownerList.length === 0) {
-        console.log('[NOTIFICATION] Target entity owner not found');
-        return;
+      ownerEmail = targetEntity.created_by;
+      const ownerList = await base44.entities.User.filter({ email: ownerEmail });
+      if (ownerList.length > 0) {
+        ownerId = ownerList[0].id;
       }
-      ownerId = ownerList[0].id;
     } else if (targetEntityType === 'section') {
       const ownerList = await base44.entities.User.filter({ id: targetEntity.lastEditedBy });
-      if (ownerList.length === 0) {
-        console.log('[NOTIFICATION] Target entity owner not found');
-        return;
+      if (ownerList.length > 0) {
+        ownerId = ownerList[0].id;
+        ownerEmail = ownerList[0].email;
       }
-      ownerId = ownerList[0].id;
     }
     
-    // לא לשלוח התראה אם המגיב הוא בעל הישות עצמו
-    if (comment.created_by === (targetEntity.created_by || targetEntity.lastEditedBy)) {
-      console.log('[NOTIFICATION] Commenter is entity owner, skipping notification');
-      return;
+    // שלח התראה לבעל הישות אם עדיין לא קיבל התראה
+    if (ownerId && ownerEmail && !notifiedUsers.has(ownerEmail)) {
+      notifiedUsers.add(ownerEmail);
+      
+      console.log('[NOTIFICATION] Creating comment notification for entity owner:', ownerId);
+      
+      const userLang = await getUserLanguage(ownerId);
+      const messageKey = targetEntityType === 'suggestion' ? 'notifCommentMessageSuggestion' : 'notifCommentMessageSection';
+      
+      await createNotification({
+        userId: ownerId,
+        type: targetEntityType === 'suggestion' ? 'suggestion_comment' : 'section_comment',
+        title: translate('notifCommentTitle', userLang),
+        message: translate(messageKey, userLang, { name: commenterName }),
+        relatedEntityId: targetEntity.id,
+        relatedEntityType: targetEntityType,
+        actionUrl: targetEntityType === 'suggestion' 
+          ? `${createPageUrl("SuggestionDetail")}?id=${targetEntity.id}`
+          : `${createPageUrl("SectionHistory")}?sectionId=${targetEntity.id}`
+      });
+      
+      console.log('[NOTIFICATION] Entity owner notification created successfully');
     }
+    
+    // שלח התראות לכל מי שהגיב על ההצעה/סעיף (מלבד מי שכבר קיבל התראה)
+    if (targetEntityType === 'suggestion' || targetEntityType === 'section') {
+      const allComments = await base44.entities.Comment.filter({
+        rootEntityType: targetEntityType,
+        rootEntityId: targetEntity.id
+      });
+      
+      // מציאת כל המשתמשים הייחודיים שהגיבו
+      const commentersEmails = [...new Set(allComments.map(c => c.created_by))];
+      
+      for (const commenterEmail of commentersEmails) {
+        if (notifiedUsers.has(commenterEmail)) continue;
+        notifiedUsers.add(commenterEmail);
+        
+        const userList = await base44.entities.User.filter({ email: commenterEmail });
+        if (userList.length === 0) continue;
+        
+        const userId = userList[0].id;
+        const userLang = await getUserLanguage(userId);
+        
+        console.log('[NOTIFICATION] Creating discussion participant notification for:', userId);
+        
+        await createNotification({
+          userId: userId,
+          type: targetEntityType === 'suggestion' ? 'suggestion_comment' : 'section_comment',
+          title: translate('notifCommentTitle', userLang),
+          message: translate('notifCommentOnDiscussion', userLang, { name: commenterName }),
+          relatedEntityId: targetEntity.id,
+          relatedEntityType: targetEntityType,
+          actionUrl: targetEntityType === 'suggestion' 
+            ? `${createPageUrl("SuggestionDetail")}?id=${targetEntity.id}`
+            : `${createPageUrl("SectionHistory")}?sectionId=${targetEntity.id}`
+        });
+      }
+      
+      console.log('[NOTIFICATION] All discussion participant notifications created');
+    }
+    
+    console.log('[NOTIFICATION] Comment notification process completed');
+  } catch (error) {
+    console.error('[NOTIFICATION ERROR]', error);
+  }
+}
+
+/**
+ * יצירת התראה על תגובה חדשה בדיון כללי של מסמך
+ */
+export async function notifyNewDocumentComment({ comment, document }) {
+  try {
+    console.log('[NOTIFICATION] Document comment notification triggered:', {
+      commentId: comment.id,
+      documentId: document.id,
+      commenter: comment.created_by
+    });
     
     const commenterList = await base44.entities.User.filter({ email: comment.created_by });
     const commenterName = commenterList.length > 0 ? commenterList[0].full_name : comment.created_by;
     
-    console.log('[NOTIFICATION] Creating comment notification for user:', ownerId);
+    // Set to track users we've already notified
+    const notifiedUsers = new Set();
+    notifiedUsers.add(comment.created_by); // Don't notify the commenter themselves
     
-    const userLang = await getUserLanguage(ownerId);
-    const messageKey = targetEntityType === 'suggestion' ? 'notifCommentMessageSuggestion' : 'notifCommentMessageSection';
+    // שלח התראה ליוצר המסמך
+    if (document.created_by && !notifiedUsers.has(document.created_by)) {
+      const creatorList = await base44.entities.User.filter({ email: document.created_by });
+      if (creatorList.length > 0) {
+        const creatorId = creatorList[0].id;
+        notifiedUsers.add(document.created_by);
+        
+        const userLang = await getUserLanguage(creatorId);
+        
+        console.log('[NOTIFICATION] Creating document comment notification for creator:', creatorId);
+        
+        await createNotification({
+          userId: creatorId,
+          type: 'document_comment',
+          title: translate('notifDocumentCommentTitle', userLang),
+          message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: document.title }),
+          relatedEntityId: document.id,
+          relatedEntityType: 'document',
+          actionUrl: `${createPageUrl("DocumentView")}?id=${document.id}`
+        });
+      }
+    }
     
-    await createNotification({
-      userId: ownerId,
-      type: targetEntityType === 'suggestion' ? 'suggestion_comment' : 'section_comment',
-      title: translate('notifCommentTitle', userLang),
-      message: translate(messageKey, userLang, { name: commenterName }),
-      relatedEntityId: targetEntity.id,
-      relatedEntityType: targetEntityType,
-      actionUrl: targetEntityType === 'suggestion' 
-        ? `${createPageUrl("SuggestionDetail")}?id=${targetEntity.id}`
-        : `${createPageUrl("SectionHistory")}?sectionId=${targetEntity.id}`
+    // שלח התראות לכל מי שהשתתף בדיון הכללי של המסמך
+    const allDocumentComments = await base44.entities.Comment.filter({
+      rootEntityType: 'document',
+      rootEntityId: document.id
     });
     
-    console.log('[NOTIFICATION] Comment notification created successfully');
+    const commentersEmails = [...new Set(allDocumentComments.map(c => c.created_by))];
+    
+    for (const commenterEmail of commentersEmails) {
+      if (notifiedUsers.has(commenterEmail)) continue;
+      notifiedUsers.add(commenterEmail);
+      
+      const userList = await base44.entities.User.filter({ email: commenterEmail });
+      if (userList.length === 0) continue;
+      
+      const userId = userList[0].id;
+      const userLang = await getUserLanguage(userId);
+      
+      console.log('[NOTIFICATION] Creating document discussion participant notification for:', userId);
+      
+      await createNotification({
+        userId: userId,
+        type: 'document_comment',
+        title: translate('notifDocumentCommentTitle', userLang),
+        message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: document.title }),
+        relatedEntityId: document.id,
+        relatedEntityType: 'document',
+        actionUrl: `${createPageUrl("DocumentView")}?id=${document.id}`
+      });
+    }
+    
+    console.log('[NOTIFICATION] Document comment notifications completed');
   } catch (error) {
     console.error('[NOTIFICATION ERROR]', error);
   }
