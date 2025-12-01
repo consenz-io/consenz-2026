@@ -388,7 +388,8 @@ export default function DocumentContent({
       const consensuses = document.consensuses || [];
       let threshold;
       if (consensuses.length > 0) {
-        const consensusMeterAverage = consensuses.reduce((sum, val) => sum + val, 0) / consensuses.length;
+        // מגבילים כל ערך ל-1 מקסימום (כי consensuses אמורים להיות בין 0 ל-1)
+        const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
         threshold = Math.max(1, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
       } else {
         threshold = document.threshold || 2;

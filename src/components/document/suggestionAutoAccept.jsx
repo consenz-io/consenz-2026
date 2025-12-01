@@ -25,7 +25,8 @@ export async function checkSuggestionConsensus(suggestion, document) {
   
   if (consensuses.length > 0) {
     // document_consensus_meter = ממוצע כל ה-section_consensus_meter
-    const consensusMeterAverage = consensuses.reduce((sum, val) => sum + val, 0) / consensuses.length;
+    // מגבילים כל ערך ל-1 מקסימום (כי consensuses אמורים להיות בין 0 ל-1)
+    const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
     // document_threshold = document_consensus_meter * totalUsers
     threshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
   } else {
@@ -96,15 +97,17 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
   }
   
   // חישוב section_consensus_meter לפי האפיון - מוגבל לערך בין 0 ל-1
+  // consensus = delta (proVotes - conVotes), ו-sectionConsensus צריך להיות יחס בין 0 ל-1
   const totalUsers = document.totalUsersInteracted || 1;
-  const sectionConsensus = Math.min(1, Math.max(0, consensus / totalUsers));
+  // חישוב נכון: delta / totalUsers, כאשר delta יכול להיות עד totalUsers (כולם הצביעו בעד)
+  const sectionConsensus = Math.min(1, Math.max(0, consensus / Math.max(1, totalUsers)));
   
   // עדכון המסמך: הוספת sectionConsensus למערך consensuses ועדכון threshold
   const currentConsensuses = document.consensuses || [];
   const updatedConsensuses = [...currentConsensuses, sectionConsensus];
   
-  // חישוב document_consensus_meter חדש
-  const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + val, 0) / updatedConsensuses.length;
+  // חישוב document_consensus_meter חדש - מגבילים כל ערך ל-1 מקסימום
+  const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / updatedConsensuses.length;
   
   // חישוב document_threshold חדש
   const newThreshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
@@ -317,7 +320,8 @@ export function checkTopicEditConsensus(suggestion, document) {
   const consensuses = document.consensuses || [];
   
   if (consensuses.length > 0) {
-    const consensusMeterAverage = consensuses.reduce((sum, val) => sum + val, 0) / consensuses.length;
+    // מגבילים כל ערך ל-1 מקסימום (כי consensuses אמורים להיות בין 0 ל-1)
+    const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
     threshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
   } else {
     threshold = document.threshold || 2;
