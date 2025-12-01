@@ -479,33 +479,28 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
  */
 export async function notifyNewDocumentComment({ comment, document, parentComment = null }) {
   try {
-    console.log('[NOTIFICATION] Document comment notification triggered:', {
-      commentId: comment.id,
-      documentId: document.id,
-      commenter: comment.created_by,
-      parentComment: parentComment?.id
-    });
+    const [users, adminIds, allDocumentComments] = await Promise.all([
+      getCachedUsers(),
+      getDocumentAdmins(document.id),
+      base44.entities.Comment.filter({ rootEntityType: 'document', rootEntityId: document.id })
+    ]);
     
-    const commenterList = await base44.entities.User.filter({ email: comment.created_by });
-    const commenterName = commenterList.length > 0 ? commenterList[0].full_name : comment.created_by;
+    const commenter = getUserFromCache(users, { email: comment.created_by });
+    const commenterName = commenter?.full_name || comment.created_by;
     
-    // Set to track users we've already notified
-    const notifiedUsers = new Set();
-    notifiedUsers.add(comment.created_by); // Don't notify the commenter themselves
-    
+    const notifiedEmails = new Set();
+    notifiedEmails.add(comment.created_by);
+    const notifications = [];
     const actionUrl = `${createPageUrl("DocumentView")}?id=${document.id}`;
     
-    // אם זו תשובה לתגובה - שלח התראה לבעל התגובה המקורית
+    // תשובה לתגובה
     if (parentComment && comment.created_by !== parentComment.created_by) {
-      const parentCommenterList = await base44.entities.User.filter({ email: parentComment.created_by });
-      if (parentCommenterList.length > 0) {
-        const parentCommenterId = parentCommenterList[0].id;
-        notifiedUsers.add(parentComment.created_by);
-        
-        const userLang = await getUserLanguage(parentCommenterId);
-        
-        await createNotification({
-          userId: parentCommenterId,
+      const parentCommenter = getUserFromCache(users, { email: parentComment.created_by });
+      if (parentCommenter) {
+        notifiedEmails.add(parentComment.created_by);
+        const userLang = parentCommenter.preferredLanguage || 'he';
+        notifications.push({
+          userId: parentCommenter.id,
           type: 'comment_reply',
           title: translate('notifReplyTitle', userLang),
           message: translate('notifReplyMessage', userLang, { name: commenterName }),
@@ -516,17 +511,14 @@ export async function notifyNewDocumentComment({ comment, document, parentCommen
       }
     }
     
-    // שלח התראה ליוצר המסמך
-    if (document.created_by && !notifiedUsers.has(document.created_by)) {
-      const creatorList = await base44.entities.User.filter({ email: document.created_by });
-      if (creatorList.length > 0) {
-        const creatorId = creatorList[0].id;
-        notifiedUsers.add(document.created_by);
-        
-        const userLang = await getUserLanguage(creatorId);
-        
-        await createNotification({
-          userId: creatorId,
+    // יוצר המסמך
+    if (document.created_by && !notifiedEmails.has(document.created_by)) {
+      const creator = getUserFromCache(users, { email: document.created_by });
+      if (creator) {
+        notifiedEmails.add(document.created_by);
+        const userLang = creator.preferredLanguage || 'he';
+        notifications.push({
+          userId: creator.id,
           type: 'document_comment',
           title: translate('notifDocumentCommentTitle', userLang),
           message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: document.title }),
@@ -537,19 +529,13 @@ export async function notifyNewDocumentComment({ comment, document, parentCommen
       }
     }
     
-    // שלח למנהלי המסמך
-    const adminIds = await getDocumentAdmins(document.id);
+    // מנהלים
     for (const adminId of adminIds) {
-      const adminUsers = await base44.entities.User.filter({ id: adminId });
-      if (adminUsers.length === 0) continue;
-      const adminEmail = adminUsers[0].email;
-      
-      if (notifiedUsers.has(adminEmail)) continue;
-      notifiedUsers.add(adminEmail);
-      
-      const userLang = await getUserLanguage(adminId);
-      
-      await createNotification({
+      const admin = getUserFromCache(users, { id: adminId });
+      if (!admin || notifiedEmails.has(admin.email)) continue;
+      notifiedEmails.add(admin.email);
+      const userLang = admin.preferredLanguage || 'he';
+      notifications.push({
         userId: adminId,
         type: 'document_comment',
         title: translate('notifDocumentCommentTitle', userLang),
@@ -560,26 +546,16 @@ export async function notifyNewDocumentComment({ comment, document, parentCommen
       });
     }
     
-    // שלח התראות לכל מי שהשתתף בדיון הכללי של המסמך
-    const allDocumentComments = await base44.entities.Comment.filter({
-      rootEntityType: 'document',
-      rootEntityId: document.id
-    });
-    
+    // משתתפי הדיון
     const commentersEmails = [...new Set(allDocumentComments.map(c => c.created_by))];
-    
-    for (const commenterEmail of commentersEmails) {
-      if (notifiedUsers.has(commenterEmail)) continue;
-      notifiedUsers.add(commenterEmail);
-      
-      const userList = await base44.entities.User.filter({ email: commenterEmail });
-      if (userList.length === 0) continue;
-      
-      const userId = userList[0].id;
-      const userLang = await getUserLanguage(userId);
-      
-      await createNotification({
-        userId: userId,
+    for (const email of commentersEmails) {
+      if (notifiedEmails.has(email)) continue;
+      notifiedEmails.add(email);
+      const user = getUserFromCache(users, { email });
+      if (!user) continue;
+      const userLang = user.preferredLanguage || 'he';
+      notifications.push({
+        userId: user.id,
         type: 'document_comment',
         title: translate('notifDocumentCommentTitle', userLang),
         message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: document.title }),
@@ -589,7 +565,7 @@ export async function notifyNewDocumentComment({ comment, document, parentCommen
       });
     }
     
-    console.log('[NOTIFICATION] Document comment notifications completed');
+    await batchCreateNotifications(notifications);
   } catch (error) {
     console.error('[NOTIFICATION ERROR]', error);
   }
