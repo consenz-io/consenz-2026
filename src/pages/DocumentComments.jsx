@@ -238,12 +238,7 @@ export default function DocumentComments() {
                   {/* Comments */}
                   <div className="space-y-3">
                     {group.comments.slice(0, 3).map((comment) => (
-                      <div key={comment.id} className={`flex gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-white text-xs font-medium">
-                            {getUserName(comment.created_by)?.charAt(0) || '?'}
-                          </span>
-                        </div>
+                      <div key={comment.id} className={`${isRTL ? 'text-right' : 'text-left'}`}>
                         <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
                           <div className={`flex items-center gap-2 ${isRTL ? 'justify-start' : ''}`}>
                             <span className="text-sm font-medium text-slate-900">{getUserName(comment.created_by)}</span>
