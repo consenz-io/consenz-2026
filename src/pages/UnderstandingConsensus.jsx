@@ -209,8 +209,8 @@ export default function UnderstandingConsensus() {
                   const conVotes = suggestion.conVotes || 0;
                   const delta = proVotes - conVotes;
                   // מד קונצנזוס של ההצעה = הפרש קולות / מספר משתתפים (ערך בין 0 ל-1)
-                  const suggestionConsensusMeter = consensuses[index] !== undefined 
-                    ? consensuses[index] 
+                  const suggestionConsensusMeter = consensuses[originalIndex] !== undefined 
+                    ? consensuses[originalIndex] 
                     : Math.min(1, Math.max(0, delta / totalUsers));
                   
                   return (
@@ -223,7 +223,7 @@ export default function UnderstandingConsensus() {
                       <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 border-b border-green-100">
                         <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                           <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow">
-                            {index + 1}
+                            {originalIndex + 1}
                           </div>
                           <div className={`flex-1 ${isRTL ? 'text-right' : ''}`}>
                             <h4 className="font-semibold text-slate-900">{suggestion.title}</h4>
