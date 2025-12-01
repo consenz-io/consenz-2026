@@ -35,6 +35,7 @@ export default function DocumentView() {
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
   const scrollToSectionId = searchParams.get('scrollTo');
+  const openSuggestionFromUrl = searchParams.get('openSuggestion');
   const [showCreateSuggestion, setShowCreateSuggestion] = useState(false);
   const [editingSection, setEditingSection] = useState(null);
   const [showTranslated, setShowTranslated] = useState(false);
@@ -175,6 +176,13 @@ export default function DocumentView() {
       }, 300);
     }
   }, [scrollToSectionId, sections]);
+
+  // Open suggestion sidebar from URL param
+  useEffect(() => {
+    if (openSuggestionFromUrl && !openSuggestionId) {
+      setOpenSuggestionId(openSuggestionFromUrl);
+    }
+  }, [openSuggestionFromUrl]);
 
   const handleEditSection = (section, isDirectEdit = false) => {
     setEditingSection(isDirectEdit ? { ...section, isDirectEdit: true } : section);
