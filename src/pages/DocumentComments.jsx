@@ -317,7 +317,7 @@ export default function DocumentComments() {
                             return (
                               <div>
                                 <Link 
-                                  to={`${createPageUrl("DocumentView")}?id=${documentId}&sectionId=${group.entityId}`}
+                                  to={`${createPageUrl("DocumentView")}?id=${documentId}&scrollTo=${group.entityId}`}
                                   className={`text-sm text-slate-700 mt-1 hover:text-blue-600 cursor-pointer block ${isExpanded ? '' : 'line-clamp-2'} ${isRTL ? 'text-right' : 'text-left'}`}
                                 >
                                   {text}
@@ -341,7 +341,7 @@ export default function DocumentComments() {
                       )}
                     </div>
                     {group.type === 'section' && (
-                      <Link to={`${createPageUrl("DocumentView")}?id=${documentId}&sectionId=${group.entityId}`}>
+                      <Link to={`${createPageUrl("DocumentView")}?id=${documentId}&scrollTo=${group.entityId}`}>
                         <Button variant="outline" size="sm" className="text-xs h-7 shrink-0">
                           <Eye className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                           {t('viewInDocument')}
