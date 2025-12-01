@@ -150,6 +150,30 @@ export default function DocumentComments() {
     return topic?.title || '';
   };
 
+  // Get section number based on its position in the document
+  const getSectionNumber = (sectionId) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return '';
+    
+    // Sort topics by order
+    const sortedTopics = [...topics].sort((a, b) => a.order - b.order);
+    
+    // Find topic index
+    const topicIndex = sortedTopics.findIndex(t => t.id === section.topicId);
+    if (topicIndex === -1) return '';
+    
+    // Get sections for this topic sorted by order
+    const topicSections = sections
+      .filter(s => s.topicId === section.topicId)
+      .sort((a, b) => a.order - b.order);
+    
+    // Find section index within topic
+    const sectionIndex = topicSections.findIndex(s => s.id === sectionId);
+    if (sectionIndex === -1) return '';
+    
+    return `${topicIndex + 1}.${sectionIndex + 1}`;
+  };
+
   const getSectionPreview = (sectionId, expanded = false) => {
     const section = sections.find(s => s.id === sectionId);
     if (!section) return { text: '', needsExpand: false };
