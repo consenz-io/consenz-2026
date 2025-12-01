@@ -486,7 +486,7 @@ export default function DocumentView() {
                       className="text-indigo-700 border-indigo-300 bg-indigo-50 hover:bg-indigo-100 hover:text-indigo-800 h-8 md:h-9 text-sm px-4 font-medium shadow-sm"
                     >
                       <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                      {t('allSectionComments')}
+                      {t('allSectionComments')} ({sectionCommentsCount})
                     </Button>
                   </Link>
                 </div>
