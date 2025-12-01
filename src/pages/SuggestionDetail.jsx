@@ -31,10 +31,15 @@ export default function SuggestionDetail() {
   const [newArgument, setNewArgument] = useState({ type: null, content: "" });
   const [error, setError] = useState(null);
 
+  // Polling interval for live sync (30 seconds)
+  const SYNC_INTERVAL = 30000;
+
   const { data: suggestion, isLoading: suggestionLoading } = useQuery({
     queryKey: ['suggestion', suggestionId],
     queryFn: () => base44.entities.Suggestion.filter({ id: suggestionId }).then(s => s[0]),
     enabled: !!suggestionId,
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: allDocumentSuggestions } = useQuery({
@@ -42,18 +47,24 @@ export default function SuggestionDetail() {
     queryFn: () => base44.entities.Suggestion.filter({ documentId: suggestion.documentId }),
     enabled: !!suggestion?.documentId,
     initialData: [],
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: document } = useQuery({
     queryKey: ['document', suggestion?.documentId],
     queryFn: () => base44.entities.Document.filter({ id: suggestion.documentId }).then(d => d[0]),
     enabled: !!suggestion?.documentId,
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: section } = useQuery({
     queryKey: ['section', suggestion?.sectionId],
     queryFn: () => base44.entities.Section.filter({ id: suggestion.sectionId }).then(s => s[0]),
     enabled: !!suggestion?.sectionId,
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: topic } = useQuery({
@@ -92,6 +103,8 @@ export default function SuggestionDetail() {
       return votes.length > 0 ? votes[0] : null;
     },
     enabled: !!suggestionId && !!user?.id,
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: args, isLoading: argsLoading } = useQuery({

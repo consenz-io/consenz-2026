@@ -31,10 +31,15 @@ export default function SuggestionSidebar({
   const [newArgument, setNewArgument] = useState({ type: null, content: "" });
   const [error, setError] = useState(null);
 
+  // Polling interval for live sync (30 seconds)
+  const SYNC_INTERVAL = 30000;
+
   const { data: suggestion, isLoading: suggestionLoading } = useQuery({
     queryKey: ['suggestion', suggestionId],
     queryFn: () => base44.entities.Suggestion.filter({ id: suggestionId }).then(s => s[0]),
     enabled: !!suggestionId,
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: allDocumentSuggestions } = useQuery({
@@ -42,6 +47,8 @@ export default function SuggestionSidebar({
     queryFn: () => base44.entities.Suggestion.filter({ documentId: suggestion.documentId }),
     enabled: !!suggestion?.documentId,
     initialData: [],
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: document } = useQuery({
@@ -88,6 +95,8 @@ export default function SuggestionSidebar({
       return votes.length > 0 ? votes[0] : null;
     },
     enabled: !!suggestionId && !!user?.id,
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: args } = useQuery({
