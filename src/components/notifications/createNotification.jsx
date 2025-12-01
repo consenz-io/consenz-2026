@@ -1,17 +1,25 @@
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 
-// Translation helper - gets user's preferred language
-async function getUserLanguage(userId) {
-  try {
-    const users = await base44.entities.User.filter({ id: userId });
-    if (users.length > 0 && users[0].preferredLanguage) {
-      return users[0].preferredLanguage;
-    }
-  } catch (error) {
-    console.error('Error getting user language:', error);
+// Cache for users to reduce API calls
+const userCache = new Map();
+const CACHE_TTL = 60000; // 1 minute
+
+async function getCachedUsers() {
+  const cacheKey = 'all_users';
+  const cached = userCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
   }
-  return 'he'; // default to Hebrew
+  const users = await base44.entities.User.list();
+  userCache.set(cacheKey, { data: users, timestamp: Date.now() });
+  return users;
+}
+
+function getUserFromCache(users, { id, email }) {
+  if (id) return users.find(u => u.id === id);
+  if (email) return users.find(u => u.email === email);
+  return null;
 }
 
 // Simple translation function
@@ -100,19 +108,29 @@ async function getDocumentAdmins(documentId) {
   }
 }
 
-// Helper to get document creator
-async function getDocumentCreator(documentId) {
+// Helper to get document creator - uses cached users
+async function getDocumentCreator(documentId, users, documents = null) {
   try {
-    const documents = await base44.entities.Document.filter({ id: documentId });
-    if (documents.length > 0 && documents[0].created_by) {
-      const users = await base44.entities.User.filter({ email: documents[0].created_by });
-      return users.length > 0 ? users[0] : null;
+    let docs = documents;
+    if (!docs) {
+      docs = await base44.entities.Document.filter({ id: documentId });
+    }
+    if (docs.length > 0 && docs[0].created_by) {
+      return getUserFromCache(users, { email: docs[0].created_by });
     }
     return null;
   } catch (error) {
     console.error('Error getting document creator:', error);
     return null;
   }
+}
+
+// Batch create notifications for efficiency
+async function batchCreateNotifications(notifications) {
+  // Create all notifications in parallel
+  await Promise.all(notifications.map(n => 
+    base44.entities.Notification.create({ ...n, read: false })
+  ));
 }
 
 /**
