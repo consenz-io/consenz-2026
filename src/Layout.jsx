@@ -167,8 +167,16 @@ function LayoutContent({ children, currentPageName }) {
                       <span className="font-bold text-lg text-blue-600">{user.points || 1000}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">{t('suggestions')}</span>
+                      <span className="text-slate-600">{t('suggestionsCreatedByYou')}</span>
                       <span className="font-semibold">{user.suggestionsCreated || 0}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-600">{t('proVotesOnYourSuggestions')}</span>
+                      <span className="font-semibold">{proVotesCount}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-600">{t('acceptedSuggestions')}</span>
+                      <span className="font-semibold text-green-600">{acceptedSuggestionsCount}</span>
                     </div>
                   </div>
                 </SidebarGroupContent>
