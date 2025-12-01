@@ -9,6 +9,7 @@ import DocumentCleanView from './pages/DocumentCleanView';
 import MyDocuments from './pages/MyDocuments';
 import SectionHistory from './pages/SectionHistory';
 import LearnMore from './pages/LearnMore';
+import UnderstandingConsensus from './pages/UnderstandingConsensus';
 import __Layout from './Layout.jsx';
 
 
@@ -24,6 +25,7 @@ export const PAGES = {
     "MyDocuments": MyDocuments,
     "SectionHistory": SectionHistory,
     "LearnMore": LearnMore,
+    "UnderstandingConsensus": UnderstandingConsensus,
 }
 
 export const pagesConfig = {

@@ -464,15 +464,16 @@ export default function DocumentView() {
             <div className="text-base md:text-xl font-bold text-slate-900">{suggestions.length}</div>
             <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('suggestions')}</div>
           </div>
-          <div 
-            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+          <Link 
+            to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-purple-400 transition-all"
           >
             <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-purple-600" />
             <div className="text-base md:text-xl font-bold text-slate-900">
               {((document.avgSuggestionConsensus || 0) * 100).toFixed(0)}%
             </div>
             <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('consensus')}</div>
-          </div>
+          </Link>
         </div>
 
         <DocumentContent
