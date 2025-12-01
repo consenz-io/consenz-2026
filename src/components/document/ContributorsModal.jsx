@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
@@ -8,77 +9,120 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Users, Loader2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
 export default function ContributorsModal({ isOpen, onClose, documentId }) {
-  const { t, isRTL } = useLanguage();
-  const [contributors, setContributors] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
-  useEffect(() => {
-    if (isOpen && documentId) {
-      fetchContributors();
+  // Fetch all data in parallel with caching
+  const { data: document } = useQuery({
+    queryKey: ['document', documentId],
+    queryFn: () => base44.entities.Document.filter({ id: documentId }).then(d => d[0]),
+    enabled: isOpen && !!documentId,
+    staleTime: 30000,
+  });
+
+  const { data: suggestions = [] } = useQuery({
+    queryKey: ['suggestions', documentId],
+    queryFn: () => base44.entities.Suggestion.filter({ documentId }),
+    enabled: isOpen && !!documentId,
+    staleTime: 30000,
+  });
+
+  const { data: sections = [] } = useQuery({
+    queryKey: ['sections', documentId],
+    queryFn: () => base44.entities.Section.filter({ documentId }),
+    enabled: isOpen && !!documentId,
+    staleTime: 30000,
+  });
+
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list(),
+    enabled: isOpen,
+    staleTime: 60000,
+  });
+
+  const { data: allVotes = [] } = useQuery({
+    queryKey: ['allVotes'],
+    queryFn: () => base44.entities.Vote.list(),
+    enabled: isOpen && suggestions.length > 0,
+    staleTime: 30000,
+  });
+
+  const { data: allComments = [] } = useQuery({
+    queryKey: ['allComments'],
+    queryFn: () => base44.entities.Comment.list(),
+    enabled: isOpen,
+    staleTime: 30000,
+  });
+
+  const { data: allArguments = [] } = useQuery({
+    queryKey: ['allArguments'],
+    queryFn: () => base44.entities.Argument.list(),
+    enabled: isOpen && suggestions.length > 0,
+    staleTime: 30000,
+  });
+
+  const { contributors, loading } = useMemo(() => {
+    if (!document || !allUsers.length) {
+      return { contributors: [], loading: true };
     }
-  }, [isOpen, documentId]);
 
-  const fetchContributors = async () => {
-    setLoading(true);
-    try {
-      // Get document creator
-      const [doc] = await base44.entities.Document.filter({ id: documentId });
-      const contributorEmails = new Set();
-      if (doc?.created_by) contributorEmails.add(doc.created_by);
+    const contributorEmails = new Set();
+    
+    // Document creator
+    if (document.created_by) contributorEmails.add(document.created_by);
 
-      // Get suggestion creators
-      const suggestions = await base44.entities.Suggestion.filter({ documentId });
-      suggestions.forEach(s => contributorEmails.add(s.created_by));
+    // Suggestion creators
+    suggestions.forEach(s => {
+      if (s.created_by) contributorEmails.add(s.created_by);
+    });
 
-      // Get voters
-      const allVotes = await base44.entities.Vote.list();
-      const suggestionIds = suggestions.map(s => s.id);
-      const votes = allVotes.filter(v => suggestionIds.includes(v.suggestionId));
-      const voterIds = [...new Set(votes.map(v => v.userId))];
-      const allUsers = await base44.entities.User.list();
-      allUsers.forEach(user => {
-        if (voterIds.includes(user.id)) {
-          contributorEmails.add(user.email);
-        }
-      });
+    // Voters
+    const suggestionIds = new Set(suggestions.map(s => s.id));
+    const voterIds = new Set();
+    allVotes.forEach(v => {
+      if (suggestionIds.has(v.suggestionId)) voterIds.add(v.userId);
+    });
+    allUsers.forEach(user => {
+      if (voterIds.has(user.id)) contributorEmails.add(user.email);
+    });
 
-      // Get argument writers
-      const allArgs = await base44.entities.Argument.list();
-      const args = allArgs.filter(arg => suggestionIds.includes(arg.suggestionId));
-      args.forEach(arg => contributorEmails.add(arg.created_by));
+    // Argument writers
+    allArguments.forEach(arg => {
+      if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
+        contributorEmails.add(arg.created_by);
+      }
+    });
 
-      // Get commenters
-      const allComments = await base44.entities.Comment.list();
-      const suggestionComments = allComments.filter(c => 
-        c.rootEntityType === 'suggestion' && suggestionIds.includes(c.rootEntityId)
-      );
-      suggestionComments.forEach(c => contributorEmails.add(c.created_by));
+    // Commenters on suggestions
+    allComments.forEach(c => {
+      if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId) && c.created_by) {
+        contributorEmails.add(c.created_by);
+      }
+    });
 
-      const sections = await base44.entities.Section.filter({ documentId });
-      const sectionIds = sections.map(s => s.id);
-      const sectionComments = allComments.filter(c =>
-        c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)
-      );
-      sectionComments.forEach(c => contributorEmails.add(c.created_by));
+    // Commenters on sections
+    const sectionIds = new Set(sections.map(s => s.id));
+    allComments.forEach(c => {
+      if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId) && c.created_by) {
+        contributorEmails.add(c.created_by);
+      }
+    });
 
-      // Filter users who are contributors
-      const contributorsList = allUsers.filter(user => 
-        contributorEmails.has(user.email)
-      );
+    // Document comments
+    allComments.forEach(c => {
+      if (c.rootEntityType === 'document' && c.rootEntityId === documentId && c.created_by) {
+        contributorEmails.add(c.created_by);
+      }
+    });
 
-      setContributors(contributorsList);
-    } catch (error) {
-      console.error('[CONTRIBUTORS ERROR]', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const contributorsList = allUsers.filter(user => contributorEmails.has(user.email));
+    return { contributors: contributorsList, loading: false };
+  }, [document, suggestions, sections, allUsers, allVotes, allComments, allArguments, documentId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
