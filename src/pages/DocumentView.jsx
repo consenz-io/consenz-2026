@@ -126,6 +126,14 @@ export default function DocumentView() {
     enabled: !!documentId,
   });
 
+  // Count all section comments for this document
+  const sectionCommentsCount = React.useMemo(() => {
+    const sectionIds = sections.map(s => s.id);
+    return allComments.filter(c => 
+      c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)
+    ).length;
+  }, [allComments, sections]);
+
   // Calculate real contributors count using shared logic
   const contributorsCount = React.useMemo(() => {
     return calculateContributorsFromData({
