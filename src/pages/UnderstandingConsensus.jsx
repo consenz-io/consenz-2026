@@ -77,11 +77,11 @@ export default function UnderstandingConsensus() {
         />
 
         {/* Hero Section - שני המושגים המרכזיים */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${isRTL ? 'direction-rtl' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
           {/* מד הקונצנזוס */}
           <Card className="bg-gradient-to-br from-indigo-600 to-purple-700 text-white border-0 shadow-xl">
             <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-4">
+              <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                 <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                   <Gauge className="w-6 h-6" />
                 </div>
@@ -113,7 +113,7 @@ export default function UnderstandingConsensus() {
           {/* רף התמיכה הדרוש */}
           <Card className="bg-gradient-to-br from-blue-600 to-cyan-600 text-white border-0 shadow-xl">
             <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-4">
+              <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                 <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                   <Scale className="w-6 h-6" />
                 </div>
@@ -127,7 +127,7 @@ export default function UnderstandingConsensus() {
                 <p className="text-blue-200 text-sm mt-2">{t('supportThresholdDescription')}</p>
               </div>
               {/* משתתפים */}
-              <div className="mt-4 bg-white/10 rounded-lg p-3 flex items-center justify-center gap-2">
+              <div className={`mt-4 bg-white/10 rounded-lg p-3 flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Users className="w-5 h-5" />
                 <span className="font-semibold">{totalUsers}</span>
                 <span className="text-blue-200">{t('totalParticipantsInDoc')}</span>
@@ -155,14 +155,14 @@ export default function UnderstandingConsensus() {
         {/* נוסחת החישוב */}
         <Card>
           <CardHeader>
-            <CardTitle className={`flex items-center gap-2 text-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <CardTitle className={`flex items-center gap-2 text-lg ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
               <Target className="w-5 h-5 text-blue-600" />
               {t('calculationFormula')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="bg-slate-50 rounded-xl p-6">
-              <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
+              <div className={`flex flex-col md:flex-row items-center justify-center gap-4 text-center ${isRTL ? 'md:flex-row-reverse' : ''}`}>
                 <div className="bg-white rounded-xl p-4 shadow-sm border-2 border-indigo-200 min-w-[140px]">
                   <div className="text-2xl font-bold text-indigo-700">{(documentConsensusMeter * 100).toFixed(0)}%</div>
                   <div className="text-xs text-slate-500 mt-1">{t('consensusMeterLabel')}</div>
@@ -187,12 +187,12 @@ export default function UnderstandingConsensus() {
 
         {/* היסטוריית ההצעות שאושרו */}
         <Card>
-          <CardHeader>
+          <CardHeader className={isRTL ? 'text-right' : ''}>
             <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <CheckCircle2 className="w-5 h-5 text-green-600" />
               {t('acceptedSuggestionsHistory')}
             </CardTitle>
-            <p className="text-sm text-slate-500 mt-1">{t('eachSuggestionAffectsThreshold')}</p>
+            <p className={`text-sm text-slate-500 mt-1 ${isRTL ? 'text-right' : ''}`}>{t('eachSuggestionAffectsThreshold')}</p>
           </CardHeader>
           <CardContent>
             {acceptedSuggestions.length === 0 ? (
@@ -219,11 +219,11 @@ export default function UnderstandingConsensus() {
                     >
                       {/* Header with number */}
                       <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 border-b border-green-100">
-                        <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
                           <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow">
                             {index + 1}
                           </div>
-                          <div className="flex-1">
+                          <div className={`flex-1 ${isRTL ? 'text-right' : ''}`}>
                             <h4 className="font-semibold text-slate-900">{suggestion.title}</h4>
                             <p className="text-xs text-slate-500">
                               {new Date(suggestion.created_date).toLocaleDateString(
@@ -236,7 +236,7 @@ export default function UnderstandingConsensus() {
                       
                       <div className="p-4">
                         {/* Votes visualization - horizontal */}
-                        <div className="flex items-center justify-center gap-3 flex-wrap">
+                        <div className={`flex items-center justify-center gap-3 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}
                           {/* Pro votes */}
                           <div className="flex items-center gap-2 bg-green-50 rounded-lg px-3 py-2">
                             <ThumbsUp className="w-4 h-4 text-green-600" />
@@ -287,11 +287,11 @@ export default function UnderstandingConsensus() {
 
                 {/* Average calculation summary */}
                 <div className="mt-6 p-5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border-2 border-indigo-200">
-                  <div className={`flex items-start gap-4 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
+                  <div className={`flex items-start gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
                       <TrendingUp className="w-6 h-6 text-white" />
                     </div>
-                    <div>
+                    <div className={isRTL ? 'text-right' : ''}>
                       <h4 className="font-bold text-indigo-900 text-lg">{t('averageCalculation')}</h4>
                       <p className="text-sm text-indigo-700 mt-1">
                         {t('avgConsensusResult', { 
@@ -313,8 +313,8 @@ export default function UnderstandingConsensus() {
 
         {/* What this means - practical explanation */}
         <Card className="bg-gradient-to-br from-slate-800 to-slate-900 text-white border-0">
-          <CardContent className="p-6 md:p-8">
-            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <CardContent className={`p-6 md:p-8 ${isRTL ? 'text-right' : ''}`}>
+            <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Scale className="w-6 h-6" />
               {t('whatThisMeansTitle')}
             </h3>
