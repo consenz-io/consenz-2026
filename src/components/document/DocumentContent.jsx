@@ -52,6 +52,9 @@ export default function DocumentContent({
     he: "Hebrew",
     ar: "Arabic"
   };
+
+  // Polling interval for live sync (30 seconds)
+  const SYNC_INTERVAL = 30000;
   
   const { data: users } = useQuery({
     queryKey: ['users'],
@@ -64,6 +67,8 @@ export default function DocumentContent({
     queryFn: () => base44.entities.TopicEditSuggestion.filter({ documentId: document.id }),
     enabled: !!document?.id,
     initialData: [],
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: topicEditVotes } = useQuery({
@@ -74,6 +79,8 @@ export default function DocumentContent({
     },
     enabled: !!user?.id && !!document?.id,
     initialData: [],
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   // בדיקה ואישור אוטומטי של הצעות שעברו את רף הקונסנזוס
@@ -203,6 +210,8 @@ export default function DocumentContent({
     enabled: !!user?.id && suggestions.length > 0,
     initialData: [],
     staleTime: 0, // תמיד רענן כשיש שינוי
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const getUserVote = React.useCallback((suggestionId) => {
