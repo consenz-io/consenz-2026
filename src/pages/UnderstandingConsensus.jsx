@@ -203,7 +203,8 @@ export default function UnderstandingConsensus() {
               </div>
             ) : (
               <div className="space-y-4">
-                {acceptedSuggestions.map((suggestion, index) => {
+                {[...acceptedSuggestions].reverse().map((suggestion, index) => {
+                const originalIndex = acceptedSuggestions.length - 1 - index;
                   const proVotes = suggestion.proVotes || 0;
                   const conVotes = suggestion.conVotes || 0;
                   const delta = proVotes - conVotes;
