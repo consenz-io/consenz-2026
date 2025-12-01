@@ -175,46 +175,26 @@ export async function createNotification({
 /**
  * יצירת התראה על הצבעה חדשה
  */
-export async function notifyVoteOnSuggestion({ suggestion, voterEmail }) {
+export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName }) {
   try {
-    console.log('[NOTIFICATION] Vote notification triggered:', {
-      suggestionId: suggestion.id,
-      suggestionCreator: suggestion.created_by,
-      voterEmail
-    });
+    if (voterEmail === suggestion.created_by) return;
     
-    const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
-    if (suggestionCreatorList.length === 0) {
-      console.log('[NOTIFICATION] Suggestion creator not found');
-      return;
-    }
+    const users = await getCachedUsers();
+    const suggestionCreator = getUserFromCache(users, { email: suggestion.created_by });
+    if (!suggestionCreator) return;
     
-    const suggestionCreator = suggestionCreatorList[0];
-    
-    // לא לשלוח התראה אם המצביע הוא יוצר ההצעה עצמו
-    if (voterEmail === suggestion.created_by) {
-      console.log('[NOTIFICATION] Voter is suggestion creator, skipping notification');
-      return;
-    }
-    
-    const voterList = await base44.entities.User.filter({ email: voterEmail });
-    const voterName = voterList.length > 0 ? voterList[0].full_name : voterEmail;
-    
-    console.log('[NOTIFICATION] Creating vote notification for user:', suggestionCreator.id);
-    
-    const userLang = await getUserLanguage(suggestionCreator.id);
+    const displayName = voterName || getUserFromCache(users, { email: voterEmail })?.full_name || voterEmail;
+    const userLang = suggestionCreator.preferredLanguage || 'he';
     
     await createNotification({
       userId: suggestionCreator.id,
       type: 'vote_on_suggestion',
       title: translate('notifVoteTitle', userLang),
-      message: translate('notifVoteMessage', userLang, { name: voterName, title: suggestion.title }),
+      message: translate('notifVoteMessage', userLang, { name: displayName, title: suggestion.title }),
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
       actionUrl: `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`
     });
-    
-    console.log('[NOTIFICATION] Vote notification created successfully');
   } catch (error) {
     console.error('[NOTIFICATION ERROR]', error);
   }
@@ -225,50 +205,46 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail }) {
  */
 export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
   try {
-    console.log('[NOTIFICATION] Status change notification triggered:', {
-      suggestionId: suggestion.id,
-      newStatus,
-      suggestionCreator: suggestion.created_by
-    });
-    
-    const notifiedUsers = new Set();
+    const users = await getCachedUsers();
+    const notifiedUserIds = new Set();
+    const notifications = [];
     const actionUrl = `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`;
     
-    // 1. שלח התראה ליוצר ההצעה
-    const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
-    if (suggestionCreatorList.length > 0) {
-      const suggestionCreator = suggestionCreatorList[0];
-      notifiedUsers.add(suggestionCreator.id);
-      
-      const userLang = await getUserLanguage(suggestionCreator.id);
-      
-      const statusKeys = {
-        accepted: { titleKey: 'notifAcceptedTitle', messageKey: 'notifAcceptedMessage' },
-        rejected: { titleKey: 'notifRejectedTitle', messageKey: 'notifRejectedMessage' }
-      };
-      
-      const statusKey = statusKeys[newStatus];
-      if (statusKey) {
-        await createNotification({
-          userId: suggestionCreator.id,
-          type: newStatus === 'accepted' ? 'suggestion_accepted' : 'suggestion_rejected',
-          title: translate(statusKey.titleKey, userLang),
-          message: translate(statusKey.messageKey, userLang, { title: suggestion.title }),
-          relatedEntityId: suggestion.id,
-          relatedEntityType: 'suggestion',
-          actionUrl
-        });
-      }
+    const statusKeys = {
+      accepted: { titleKey: 'notifAcceptedTitle', messageKey: 'notifAcceptedMessage' },
+      rejected: { titleKey: 'notifRejectedTitle', messageKey: 'notifRejectedMessage' }
+    };
+    const statusKey = statusKeys[newStatus];
+    if (!statusKey) return;
+    
+    // 1. יוצר ההצעה
+    const suggestionCreator = getUserFromCache(users, { email: suggestion.created_by });
+    if (suggestionCreator) {
+      notifiedUserIds.add(suggestionCreator.id);
+      const userLang = suggestionCreator.preferredLanguage || 'he';
+      notifications.push({
+        userId: suggestionCreator.id,
+        type: newStatus === 'accepted' ? 'suggestion_accepted' : 'suggestion_rejected',
+        title: translate(statusKey.titleKey, userLang),
+        message: translate(statusKey.messageKey, userLang, { title: suggestion.title }),
+        relatedEntityId: suggestion.id,
+        relatedEntityType: 'suggestion',
+        actionUrl
+      });
     }
     
-    // 2. אם התקבלה - שלח גם ליוצר המסמך, מנהלי המסמך, ומצביעי pro
+    // 2. אם התקבלה - יוצר המסמך, מנהלים, ומצביעי pro
     if (newStatus === 'accepted') {
-      // שלח ליוצר המסמך
-      const docCreator = await getDocumentCreator(suggestion.documentId);
-      if (docCreator && !notifiedUsers.has(docCreator.id)) {
-        notifiedUsers.add(docCreator.id);
-        const userLang = await getUserLanguage(docCreator.id);
-        await createNotification({
+      const [adminIds, proVotes] = await Promise.all([
+        getDocumentAdmins(suggestion.documentId),
+        base44.entities.Vote.filter({ suggestionId: suggestion.id, vote: 'pro' })
+      ]);
+      
+      const docCreator = await getDocumentCreator(suggestion.documentId, users);
+      if (docCreator && !notifiedUserIds.has(docCreator.id)) {
+        notifiedUserIds.add(docCreator.id);
+        const userLang = docCreator.preferredLanguage || 'he';
+        notifications.push({
           userId: docCreator.id,
           type: 'suggestion_accepted',
           title: translate('notifAcceptedTitle', userLang),
@@ -279,14 +255,12 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
         });
       }
       
-      // שלח למנהלי המסמך
-      const adminIds = await getDocumentAdmins(suggestion.documentId);
       for (const adminId of adminIds) {
-        if (notifiedUsers.has(adminId)) continue;
-        notifiedUsers.add(adminId);
-        
-        const userLang = await getUserLanguage(adminId);
-        await createNotification({
+        if (notifiedUserIds.has(adminId)) continue;
+        notifiedUserIds.add(adminId);
+        const admin = getUserFromCache(users, { id: adminId });
+        const userLang = admin?.preferredLanguage || 'he';
+        notifications.push({
           userId: adminId,
           type: 'suggestion_accepted',
           title: translate('notifAcceptedTitle', userLang),
@@ -297,14 +271,12 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
         });
       }
       
-      // שלח למצביעי pro
-      const proVotes = await base44.entities.Vote.filter({ suggestionId: suggestion.id, vote: 'pro' });
       for (const vote of proVotes) {
-        if (notifiedUsers.has(vote.userId)) continue;
-        notifiedUsers.add(vote.userId);
-        
-        const userLang = await getUserLanguage(vote.userId);
-        await createNotification({
+        if (notifiedUserIds.has(vote.userId)) continue;
+        notifiedUserIds.add(vote.userId);
+        const voter = getUserFromCache(users, { id: vote.userId });
+        const userLang = voter?.preferredLanguage || 'he';
+        notifications.push({
           userId: vote.userId,
           type: 'suggestion_accepted',
           title: translate('notifAcceptedVoterTitle', userLang),
@@ -316,7 +288,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
       }
     }
     
-    console.log('[NOTIFICATION] Status change notifications created successfully');
+    await batchCreateNotifications(notifications);
   } catch (error) {
     console.error('[NOTIFICATION ERROR]', error);
   }
