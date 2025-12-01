@@ -308,6 +308,7 @@ export default function DocumentComments() {
                         <>
                           <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                            <Badge variant="outline" className="text-xs font-semibold">{t('section')} {getSectionNumber(group.entityId)}</Badge>
                             <Badge variant="outline" className="text-xs">{group.topicName}</Badge>
                           </div>
                           {(() => {
@@ -315,9 +316,12 @@ export default function DocumentComments() {
                             const { text, needsExpand } = getSectionPreview(group.entityId, isExpanded);
                             return (
                               <div>
-                                <p className={`text-sm text-slate-700 mt-1 ${isExpanded ? '' : 'line-clamp-2'} ${isRTL ? 'text-right' : 'text-left'}`}>
+                                <Link 
+                                  to={`${createPageUrl("DocumentView")}?id=${documentId}&sectionId=${group.entityId}`}
+                                  className={`text-sm text-slate-700 mt-1 hover:text-blue-600 cursor-pointer block ${isExpanded ? '' : 'line-clamp-2'} ${isRTL ? 'text-right' : 'text-left'}`}
+                                >
                                   {text}
-                                </p>
+                                </Link>
                                 {needsExpand && (
                                   <button
                                     onClick={() => setExpandedSections(prev => ({ ...prev, [group.entityId]: !prev[group.entityId] }))}
@@ -336,7 +340,14 @@ export default function DocumentComments() {
                         </Link>
                       )}
                     </div>
-
+                    {group.type === 'section' && (
+                      <Link to={`${createPageUrl("DocumentView")}?id=${documentId}&sectionId=${group.entityId}`}>
+                        <Button variant="outline" size="sm" className="text-xs h-7 shrink-0">
+                          <Eye className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                          {t('viewInDocument')}
+                        </Button>
+                      </Link>
+                    )}
                   </div>
 
                   {/* Comments */}
