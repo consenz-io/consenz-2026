@@ -82,7 +82,7 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {suggestion.explanation && (
+                  {suggestion.explanation && typeof suggestion.explanation === 'string' && (
                     <div className="text-sm text-slate-600 line-clamp-2">
                       <TranslatableContent
                         content={suggestion.explanation}
