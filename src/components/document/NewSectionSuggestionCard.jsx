@@ -49,7 +49,7 @@ export default function NewSectionSuggestionCard({
             <h3 className="font-semibold text-slate-900 text-sm md:text-base mb-2 break-words">
               {typeof suggestion.title === 'string' ? suggestion.title : String(suggestion.title || '')}
             </h3>
-            {suggestion.explanation && (
+            {suggestion.explanation && typeof suggestion.explanation === 'string' && (
               <div className="text-xs md:text-sm mb-2">
                 <TranslatableContent
                   content={suggestion.explanation}
