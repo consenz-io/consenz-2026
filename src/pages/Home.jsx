@@ -177,7 +177,7 @@ export default function Home() {
               <CardContent className="p-6 text-center">
                 <Users className="w-8 h-8 mx-auto mb-3 text-indigo-600" />
                 <div className="text-3xl font-bold text-slate-900">
-                  {documents.reduce((sum, d) => sum + (d.totalUsersInteracted || 0), 0)}
+                  {documents.reduce((sum, d) => sum + Math.max(1, d.totalUsersInteracted || 0), 0)}
                 </div>
                 <div className="text-sm text-slate-600">{t('collaborators')}</div>
               </CardContent>
@@ -297,7 +297,7 @@ export default function Home() {
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <Users className="w-4 h-4" />
-                          <span>{doc.totalUsersInteracted || 0} {t('contributors')}</span>
+                          <span>{Math.max(1, doc.totalUsersInteracted || 0)} {t('contributors')}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <TrendingUp className="w-4 h-4" />

@@ -193,7 +193,7 @@ export default function MyDocuments() {
                           <Users className="w-4 h-4 text-slate-400" />
                           <div className="text-sm">
                             <div className="font-semibold text-slate-700">
-                              {doc.totalUsersInteracted || 0}
+                              {Math.max(1, doc.totalUsersInteracted || 0)}
                             </div>
                             <div className="text-xs text-slate-500">{t('contributors')}</div>
                           </div>
