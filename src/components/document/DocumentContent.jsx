@@ -225,61 +225,106 @@ export default function DocumentContent({
     }
   };
 
+  // מעקב אחרי הצבעות בתהליך למניעת race conditions
+  const votingInProgressRef = React.useRef(new Set());
+  
   const voteMutation = useMutation({
     mutationFn: async ({ suggestionId, vote, currentVote, willBeAccepted }) => {
       if (!user) throw new Error("יש להתחבר כדי להצביע");
 
-      const suggestion = suggestions.find(s => s.id === suggestionId);
-      
-      let newProVotes = suggestion.proVotes || 0;
-      let newConVotes = suggestion.conVotes || 0;
-      let pointsAction = null;
-      
-      // הפעלת פעולות ה-DB במקביל
-      const dbOperations = [];
-      
-      if (currentVote) {
-        if (currentVote.vote === vote) {
-          // ביטול הצבעה
-          dbOperations.push(base44.entities.Vote.delete(currentVote.id));
-          if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
-          else newConVotes = Math.max(0, newConVotes - 1);
-          pointsAction = 'cancel';
-        } else {
-          // שינוי כיוון הצבעה
-          dbOperations.push(base44.entities.Vote.update(currentVote.id, { vote }));
-          if (vote === 'pro') {
-            newProVotes += 1;
-            newConVotes = Math.max(0, newConVotes - 1);
-          } else {
-            newConVotes += 1;
-            newProVotes = Math.max(0, newProVotes - 1);
-          }
-          pointsAction = 'change';
-        }
-      } else {
-        // הצבעה חדשה
-        dbOperations.push(base44.entities.Vote.create({
-          suggestionId,
-          userId: user.id,
-          vote
-        }));
-        if (vote === 'pro') newProVotes += 1;
-        else newConVotes += 1;
-        pointsAction = 'new';
+      // מניעת הצבעות כפולות על אותה הצעה
+      if (votingInProgressRef.current.has(suggestionId)) {
+        console.log('[VOTE] Already voting on this suggestion, ignoring');
+        throw new Error("ההצבעה בתהליך, אנא המתן");
       }
-      
-      // עדכון ההצעה
-      dbOperations.push(base44.entities.Suggestion.update(suggestionId, {
-        proVotes: newProVotes,
-        conVotes: newConVotes
-      }));
-      
-      // הפעלת כל פעולות ה-DB במקביל
-      await Promise.all(dbOperations);
-      
-      // טיפול בנקודות ברקע - לא חוסם את ה-UI
-      handlePointsInBackground(pointsAction, suggestion, vote, currentVote);
+      votingInProgressRef.current.add(suggestionId);
+
+      try {
+        const suggestion = suggestions.find(s => s.id === suggestionId);
+        
+        // שלב 1: קריאת המצב העדכני מהשרת (source of truth)
+        const [freshVotes, freshSuggestions] = await Promise.all([
+          base44.entities.Vote.filter({ suggestionId, userId: user.id }),
+          base44.entities.Suggestion.filter({ id: suggestionId })
+        ]);
+        
+        const serverVote = freshVotes[0]; // ההצבעה האמיתית מהשרת
+        const freshSuggestion = freshSuggestions[0];
+        
+        if (!freshSuggestion) {
+          throw new Error("ההצעה לא נמצאה");
+        }
+        
+        // שימוש בערכים מהשרת, לא מהקאש
+        let newProVotes = freshSuggestion.proVotes || 0;
+        let newConVotes = freshSuggestion.conVotes || 0;
+        let pointsAction = null;
+        
+        // שלב 2: ביצוע הפעולות על בסיס המצב האמיתי מהשרת
+        if (serverVote) {
+          if (serverVote.vote === vote) {
+            // ביטול הצבעה
+            await base44.entities.Vote.delete(serverVote.id);
+            if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
+            else newConVotes = Math.max(0, newConVotes - 1);
+            pointsAction = 'cancel';
+          } else {
+            // שינוי כיוון הצבעה
+            await base44.entities.Vote.update(serverVote.id, { vote });
+            if (vote === 'pro') {
+              newProVotes += 1;
+              newConVotes = Math.max(0, newConVotes - 1);
+            } else {
+              newConVotes += 1;
+              newProVotes = Math.max(0, newProVotes - 1);
+            }
+            pointsAction = 'change';
+          }
+        } else {
+          // הצבעה חדשה - בודקים שוב שאין הצבעה קיימת
+          const doubleCheck = await base44.entities.Vote.filter({ suggestionId, userId: user.id });
+          if (doubleCheck.length > 0) {
+            // כבר קיימת הצבעה - משתמשים בה במקום ליצור חדשה
+            const existingVote = doubleCheck[0];
+            if (existingVote.vote !== vote) {
+              await base44.entities.Vote.update(existingVote.id, { vote });
+              if (vote === 'pro') {
+                newProVotes += 1;
+                newConVotes = Math.max(0, newConVotes - 1);
+              } else {
+                newConVotes += 1;
+                newProVotes = Math.max(0, newProVotes - 1);
+              }
+              pointsAction = 'change';
+            }
+            // אם אותה הצבעה - מבטלים
+            else {
+              await base44.entities.Vote.delete(existingVote.id);
+              if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
+              else newConVotes = Math.max(0, newConVotes - 1);
+              pointsAction = 'cancel';
+            }
+          } else {
+            // באמת הצבעה חדשה
+            await base44.entities.Vote.create({
+              suggestionId,
+              userId: user.id,
+              vote
+            });
+            if (vote === 'pro') newProVotes += 1;
+            else newConVotes += 1;
+            pointsAction = 'new';
+          }
+        }
+        
+        // שלב 3: עדכון ההצעה עם הערכים החדשים
+        await base44.entities.Suggestion.update(suggestionId, {
+          proVotes: newProVotes,
+          conVotes: newConVotes
+        });
+        
+        // טיפול בנקודות ברקע - לא חוסם את ה-UI
+        handlePointsInBackground(pointsAction, suggestion, vote, serverVote);
 
       // אם ידוע מראש שההצעה תתקבל - מפעילים את האישור מיידית וברקע
       if (willBeAccepted && suggestion.status === 'pending') {
