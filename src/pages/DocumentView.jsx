@@ -47,10 +47,15 @@ export default function DocumentView() {
   const [openSuggestionId, setOpenSuggestionId] = useState(null);
   const [newlyCreatedSuggestion, setNewlyCreatedSuggestion] = useState(null);
 
+  // Polling interval for live sync (30 seconds)
+  const SYNC_INTERVAL = 30000;
+
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
     queryFn: () => base44.entities.Document.filter({ id: documentId }).then(docs => docs[0]),
     enabled: !!documentId,
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: topics, isLoading: topicsLoading } = useQuery({
@@ -58,6 +63,8 @@ export default function DocumentView() {
     queryFn: () => base44.entities.Topic.filter({ documentId }, 'order'),
     initialData: [],
     enabled: !!documentId,
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: sections, isLoading: sectionsLoading } = useQuery({
@@ -65,6 +72,8 @@ export default function DocumentView() {
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order'),
     initialData: [],
     enabled: !!documentId,
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: suggestions, isLoading: suggestionsLoading } = useQuery({
@@ -72,6 +81,8 @@ export default function DocumentView() {
     queryFn: () => base44.entities.Suggestion.filter({ documentId }, '-created_date'),
     initialData: [],
     enabled: !!documentId,
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: documentComments } = useQuery({
