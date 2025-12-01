@@ -2,6 +2,8 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Target, TrendingUp } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 export default function VotesNeededCounter({ suggestion, document }) {
   const { t } = useLanguage();
@@ -54,9 +56,11 @@ export default function VotesNeededCounter({ suggestion, document }) {
   }
 
   return (
-    <Badge variant="outline" className="flex items-center gap-1">
-      <Target className="w-3 h-3" />
-      {t('votesNeededToPass').replace('{count}', votesNeeded)}
-    </Badge>
+    <Link to={`${createPageUrl("UnderstandingConsensus")}?id=${document?.id}`}>
+      <Badge variant="outline" className="flex items-center gap-1 cursor-pointer hover:bg-slate-100 transition-colors">
+        <Target className="w-3 h-3" />
+        {t('votesNeededToPass').replace('{count}', votesNeeded)}
+      </Badge>
+    </Link>
   );
 }
