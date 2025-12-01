@@ -465,7 +465,7 @@ export default function DocumentView() {
             onClick={() => setShowContributorsModal(true)}
           >
             <Users className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
-            <div className="text-base md:text-xl font-bold text-slate-900">{document.totalUsersInteracted || 0}</div>
+            <div className="text-base md:text-xl font-bold text-slate-900">{Math.max(1, document.totalUsersInteracted || 0)}</div>
             <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('contributors')}</div>
           </div>
           <div 
