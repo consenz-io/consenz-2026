@@ -34,12 +34,18 @@ export default function SectionDiff({ originalContent, newContent, documentId, s
   };
 
   const handleTranslate = async () => {
-    if (showTranslated && translatedContent) {
+    // בדיקה אם יש תרגום שמור ב-suggestion
+    const cachedTranslation = suggestion?.translations?.[language]?.newContent;
+    
+    if (showTranslated && (translatedContent || cachedTranslation)) {
       setShowTranslated(false);
       return;
     }
     
-    if (translatedContent) {
+    if (translatedContent || cachedTranslation) {
+      if (cachedTranslation && !translatedContent) {
+        setTranslatedContent(cachedTranslation);
+      }
       setShowTranslated(true);
       return;
     }
