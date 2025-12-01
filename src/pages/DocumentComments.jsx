@@ -216,12 +216,21 @@ export default function DocumentComments() {
                           </p>
                         </>
                       ) : (
-                        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <Edit className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                          <span className="text-sm font-medium text-slate-900">{t('suggestion')}: {getSuggestionTitle(group.entityId)}</span>
-                          <Badge className={group.suggestion?.status === 'accepted' ? 'bg-green-100 text-green-800' : group.suggestion?.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}>
-                            {t(group.suggestion?.status || 'pending')}
-                          </Badge>
+                        <div className={`flex items-center justify-between w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <Edit className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                            <span className={`text-sm font-medium text-slate-900 ${isRTL ? 'text-right' : 'text-left'}`}>{t('suggestion')}: {getSuggestionTitle(group.entityId)}</span>
+                          </div>
+                          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <Badge className={group.suggestion?.status === 'accepted' ? 'bg-green-100 text-green-800' : group.suggestion?.status === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}>
+                              {t(group.suggestion?.status || 'pending')}
+                            </Badge>
+                            <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.entityId}`}>
+                              <Button size="sm" variant="outline" className="text-xs">
+                                {t('viewDetails')}
+                              </Button>
+                            </Link>
+                          </div>
                         </div>
                       )}
                     </div>
