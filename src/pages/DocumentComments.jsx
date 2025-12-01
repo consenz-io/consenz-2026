@@ -148,11 +148,18 @@ export default function DocumentComments() {
     return topic?.title || '';
   };
 
-  const getSectionPreview = (sectionId) => {
+  const getSectionPreview = (sectionId, expanded = false) => {
     const section = sections.find(s => s.id === sectionId);
-    if (!section) return '';
+    if (!section) return { text: '', needsExpand: false };
     const text = section.content?.replace(/<[^>]*>/g, '') || '';
-    return text.length > 80 ? text.substring(0, 80) + '...' : text;
+    const needsExpand = text.length > 80;
+    if (expanded) {
+      return { text, needsExpand };
+    }
+    return { 
+      text: needsExpand ? text.substring(0, 80) + '...' : text, 
+      needsExpand 
+    };
   };
 
   const getSuggestionTitle = (suggestionId) => {
