@@ -116,23 +116,27 @@ function LayoutContent({ children, currentPageName }) {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {user && (
-              <SidebarGroup>
-                <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
-                  {t('newDocument')}
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <div className="px-3 py-2">
-                    <Link to={createPageUrl("CreateDocument")}>
-                      <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                        <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                        {t('newDocument')}
-                      </Button>
-                    </Link>
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
+                {t('language')}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <div className="px-3 py-2">
+                  <div className="relative">
+                    <Languages className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                    <select
+                      value={language}
+                      onChange={(e) => setLanguage(e.target.value)}
+                      className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm font-medium bg-white cursor-pointer"
+                    >
+                      <option value="en">English</option>
+                      <option value="he">עברית</option>
+                      <option value="ar">العربية</option>
+                    </select>
                   </div>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            )}
+                </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
             {user && (
               <SidebarGroup>
