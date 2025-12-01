@@ -213,9 +213,10 @@ export default function UnderstandingConsensus() {
                     : Math.min(1, Math.max(0, delta / totalUsers));
                   
                   return (
-                    <div 
+                    <Link 
                       key={suggestion.id}
-                      className="relative bg-white rounded-xl border-2 border-slate-100 hover:border-green-200 transition-all overflow-hidden"
+                      to={`${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`}
+                      className="block relative bg-white rounded-xl border-2 border-slate-100 hover:border-green-200 hover:shadow-md transition-all overflow-hidden cursor-pointer"
                     >
                       {/* Header with number */}
                       <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 border-b border-green-100">
@@ -281,7 +282,7 @@ export default function UnderstandingConsensus() {
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
 
