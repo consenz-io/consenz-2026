@@ -514,21 +514,7 @@ Return ONLY the translated HTML:`;
             </div>
           )}
 
-          {!isNewSection && existingSection && (
             <div>
-              <Label>{t('originalContent')}</Label>
-              <div className="border border-slate-200 rounded-lg p-4 bg-slate-50 mt-2">
-                <TranslatableContent
-                  content={existingSection.content}
-                  entity={existingSection}
-                  entityType="Section"
-                  className="prose prose-sm max-w-none"
-                />
-              </div>
-            </div>
-          )}
-
-          <div>
             <Label htmlFor="content">
               {isNewSection ? t('sectionContent') : t('proposedChanges')}
             </Label>
@@ -536,20 +522,12 @@ Return ONLY the translated HTML:`;
               <div className="border border-slate-200 rounded-lg p-4 bg-slate-50 text-center text-slate-500">
                 {t('translating')}
               </div>
-            ) : isDirectEdit ? (
+            ) : (
               <ReactQuill
                 value={formData.newContent}
                 onChange={(value) => setFormData({ ...formData, newContent: value })}
                 className="bg-white"
                 theme="snow"
-              />
-            ) : (
-              <Textarea
-                id="content"
-                value={formData.newContent}
-                onChange={(e) => setFormData({ ...formData, newContent: e.target.value })}
-                placeholder={t('enterContent')}
-                rows={8}
               />
             )}
           </div>
