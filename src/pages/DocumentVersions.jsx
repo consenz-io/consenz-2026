@@ -250,127 +250,110 @@ export default function DocumentVersions() {
           </Alert>
         )}
 
-        {compareMode && selectedVersions.length === 2 && (
-          <Card className="bg-white border-blue-200 w-full overflow-hidden">
-            <CardHeader className="p-4 md:p-6">
-              <CardTitle className="text-base md:text-lg">{t('compareVersions')}</CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 md:p-6 overflow-x-hidden">
-              <div className="space-y-4">
-                <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 ${isRTL ? 'md:grid-flow-col-dense' : ''}`}>
-                  <div className={isRTL ? 'text-right' : 'text-left'}>
-                    <Badge className="mb-2 text-xs">{t('version')} {selectedVersions[0].version}</Badge>
-                    <p className="text-xs md:text-sm text-slate-600">
-                      {new Date(selectedVersions[0].created_date).toLocaleString(isRTL ? 'he-IL' : 'en-US')}
-                    </p>
-                  </div>
-                  <div className={isRTL ? 'text-right' : 'text-left'}>
-                    <Badge className="mb-2 text-xs">{t('version')} {selectedVersions[1].version}</Badge>
-                    <p className="text-xs md:text-sm text-slate-600">
-                      {new Date(selectedVersions[1].created_date).toLocaleString(isRTL ? 'he-IL' : 'en-US')}
-                    </p>
-                  </div>
-                </div>
-                <SectionDiff
-                  key={`compare-${selectedVersions[0].id}-${selectedVersions[1].id}`}
-                  originalContent={selectedVersions[0].content}
-                  newContent={selectedVersions[1].content}
-                />
-              </div>
+        {/* Version History */}
+        {versionGroups.length > 0 ? (
+          <div className="space-y-4">
+            {versionGroups.filter(g => g.version && g.version.changeType).map((group, groupIndex) => {
+              const currentVer = group.version;
+              const prevVer = group.previousVersion;
+              const sectionTopic = topics.find(t => t.id === sections.find(s => s.id === currentVer.sectionId)?.topicId);
+              
+              return (
+                <Card key={groupIndex} className="bg-white border-slate-200 hover:shadow-lg transition-all">
+                  <CardHeader>
+                    <div className={`flex justify-between items-start gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className="flex-1">
+                        <div className={`flex items-center gap-2 mb-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <Badge variant="outline">{t('version')} {currentVer.version}</Badge>
+                          <Badge className="bg-blue-100 text-blue-800">
+                            {getChangeTypeLabel(currentVer.changeType)}
+                          </Badge>
+                          {sectionTopic && (
+                            <Badge variant="outline" className="bg-slate-50">
+                              {sectionTopic.title}
+                            </Badge>
+                          )}
+                          {currentVer.suggestionId && (
+                            <Link to={`${createPageUrl("SuggestionDetail")}?id=${currentVer.suggestionId}`}>
+                              <Badge className="bg-green-600 hover:bg-green-700 cursor-pointer flex items-center gap-1">
+                                <MessageSquare className="w-3 h-3" />
+                                {t('viewFullDiscussion')}
+                              </Badge>
+                            </Link>
+                          )}
+                        </div>
+                        <CardTitle className={`text-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+                          {typeof currentVer.changeDescription === 'string' 
+                            ? currentVer.changeDescription 
+                            : (currentVer.changeDescription?.title || t('changeWithoutDescription'))}
+                        </CardTitle>
+                        <div className={`flex items-center gap-4 mt-2 text-sm text-slate-500 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <Clock className="w-4 h-4" />
+                            {new Date(currentVer.created_date).toLocaleString(isRTL ? 'he-IL' : 'en-US')}
+                          </div>
+                          {currentVer.created_by && (
+                            <span>{t('by')} {getUserName(currentVer.created_by)}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Link to={`${createPageUrl("DocumentView")}?id=${documentId}&scrollTo=${currentVer.sectionId}`}>
+                          <Button variant="ghost" size="sm">
+                            <ExternalLink className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                            {t('viewInDocument')}
+                          </Button>
+                        </Link>
+                        {isAdmin && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (confirm(t('confirmRestoreVersion'))) {
+                                restoreVersionMutation.mutate(currentVer);
+                              }
+                            }}
+                            disabled={restoreVersionMutation.isPending}
+                          >
+                            <RotateCcw className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                            {t('restoreVersion')}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {prevVer ? (
+                      <SectionDiff
+                        key={`${currentVer.id}-${prevVer.id}`}
+                        originalContent={prevVer.content}
+                        newContent={currentVer.content}
+                        documentId={documentId}
+                        sectionId={currentVer.sectionId}
+                      />
+                    ) : (
+                      <div
+                        className="prose prose-sm max-w-none text-slate-700 p-4 bg-slate-50 rounded-lg"
+                        style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}
+                        dangerouslySetInnerHTML={{ __html: currentVer.content }}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <Card className="bg-white border-slate-200">
+            <CardContent className="p-6 md:p-12 text-center">
+              <History className="w-12 h-12 md:w-16 md:h-16 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-lg md:text-xl font-semibold text-slate-900 mb-2">{t('noPreviousVersions')}</h3>
+              <p className="text-sm md:text-base text-slate-600">{t('documentChangesSavedAutomatically')}</p>
             </CardContent>
           </Card>
         )}
-
-        <div className="space-y-6 md:space-y-8">
-          {/* Topic Changes */}
-          {topicEditSuggestions.length > 0 && (
-            <Card className="bg-white border-slate-200 w-full overflow-hidden">
-              <CardHeader className="p-4 md:p-6">
-                <CardTitle className="text-base md:text-lg">שינויים בכותרות נושאים</CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 md:p-6">
-                <div className="space-y-4">
-                  {topicEditSuggestions.map((suggestion) => (
-                    <div key={suggestion.id} className="border-b border-slate-200 pb-4 last:border-0">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div className="flex-1">
-                          <Badge className="mb-2 text-xs">כותרת נושא שונתה</Badge>
-                          <div className="space-y-2">
-                            <div>
-                              <span className="text-sm text-slate-600">נושא: </span>
-                              <span className="font-semibold text-slate-900">{getTopicName(suggestion.topicId)}</span>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg">
-                              <div>
-                                <span className="text-xs text-slate-600">כותרת מקורית:</span>
-                                <p className="text-sm text-slate-700 line-through">{suggestion.originalTitle}</p>
-                              </div>
-                              <div>
-                                <span className="text-xs text-slate-600">כותרת חדשה:</span>
-                                <p className="text-sm font-semibold text-green-700">{suggestion.newTitle}</p>
-                              </div>
-                            </div>
-                            {suggestion.explanation && typeof suggestion.explanation === 'string' && (
-                              <div className="text-sm text-slate-600 bg-blue-50 p-2 rounded">
-                                <span className="font-medium">הסבר: </span>
-                                {suggestion.explanation}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 text-xs text-slate-500">
-                        <Clock className="w-3 h-3" />
-                        <span>
-                          {new Date(suggestion.created_date).toLocaleDateString(isRTL ? 'he-IL' : 'en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </span>
-                        <span>•</span>
-                        <span>{t('by')} {getUserName(suggestion.created_by)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {versions.length === 0 && topicEditSuggestions.length === 0 ? (
-            <Card className="bg-white border-slate-200 w-full overflow-hidden">
-              <CardContent className="p-6 md:p-12 text-center">
-                <History className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-4 text-slate-300" />
-                <h3 className="text-lg md:text-xl font-semibold text-slate-900 mb-2">{t('noPreviousVersions')}</h3>
-                <p className="text-sm md:text-base text-slate-600">{t('documentChangesSavedAutomatically')}</p>
-              </CardContent>
-            </Card>
-          ) : (
-            Object.keys(groupedVersions)
-              .sort((a, b) => {
-                const sectionA = sections.find(s => s.id === a);
-                const sectionB = sections.find(s => s.id === b);
-                return (sectionA?.order || 0) - (sectionB?.order || 0);
-              })
-              .map(sectionId => (
-                <DocumentVersionHistory
-                  key={sectionId}
-                  sectionId={sectionId}
-                  sectionName={getSectionName(sectionId)}
-                  versions={groupedVersions[sectionId]}
-                  isAdmin={isAdmin}
-                  getUserName={getUserName}
-                  getChangeTypeLabel={getChangeTypeLabel}
-                  documentId={documentId}
-                  userId={user?.id}
-                  setError={setError}
-                />
-              ))
-          )}
-        </div>
       </div>
     </div>
   );
