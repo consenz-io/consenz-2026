@@ -308,7 +308,7 @@ const translations = {
     enterNewTopicName: "הזן שם נושא חדש...",
     topic: "נושא",
     content: "תוכן",
-    explanation: "הסבר (אופציונלי)",
+    explanation: "הסבר",
     createSuggestion: "צור הצעה",
     cancel: "ביטול",
     
