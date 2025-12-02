@@ -144,8 +144,22 @@ Return ONLY the translated HTML:`;
     if (!val) return null;
     if (typeof val === 'string') return val;
     if (typeof val === 'object') {
+      // Check if it's a character-indexed object (corrupted string like {'0': 'a', '1': 'b'...})
+      const keys = Object.keys(val);
+      if (keys.length > 0 && keys.every(k => /^\d+$/.test(k))) {
+        // Reconstruct string from indexed characters
+        const maxIndex = Math.max(...keys.map(k => parseInt(k)));
+        let reconstructed = '';
+        for (let i = 0; i <= maxIndex; i++) {
+          reconstructed += val[i.toString()] || '';
+        }
+        if (reconstructed.length > 0) {
+          return reconstructed;
+        }
+      }
+      
       // Try common response fields for LLM responses
-      const fields = ['content', 'text', 'translation', 'output', 'result', 'message'];
+      const fields = ['content', 'text', 'translation', 'output', 'result', 'message', 'newContent'];
       for (const field of fields) {
         if (typeof val[field] === 'string' && val[field].length > 0) {
           return val[field];
