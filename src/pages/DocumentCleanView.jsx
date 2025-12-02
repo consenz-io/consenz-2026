@@ -504,6 +504,12 @@ ${text}`;
                                  <>
                                    <div 
                                      className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none"
+                                     style={{ 
+                                       fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                       fontSize: "1.125rem",
+                                       lineHeight: "1.8",
+                                       letterSpacing: "0.01em"
+                                     }}
                                      dangerouslySetInnerHTML={{ __html: displayedContent }}
                                    />
                                     {(section.originalLanguage || 'he') !== language && (
