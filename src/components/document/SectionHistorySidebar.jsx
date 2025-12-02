@@ -211,6 +211,8 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                               <SectionDiff
                                 originalContent={prevVer.content}
                                 newContent={currentVer.content}
+                                originalVersion={prevVer}
+                                newVersion={currentVer}
                               />
                             </div>
                           )}
