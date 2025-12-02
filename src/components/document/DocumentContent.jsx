@@ -165,9 +165,20 @@ export default function DocumentContent({
     queryFn: async () => {
       if (!user?.id) return [];
       const allVotes = await base44.entities.Vote.filter({ userId: user.id });
-      return allVotes.filter(v => 
+      // מחזיר רק הצבעות על הצעות במסמך הזה, וממפה לפי suggestionId
+      const relevantVotes = allVotes.filter(v => 
         suggestions.some(s => s.id === v.suggestionId)
       );
+      // מסיר כפילויות - שומר רק את ההצבעה האחרונה לכל הצעה
+      const uniqueVotes = [];
+      const seenSuggestionIds = new Set();
+      for (const vote of relevantVotes.reverse()) {
+        if (!seenSuggestionIds.has(vote.suggestionId)) {
+          seenSuggestionIds.add(vote.suggestionId);
+          uniqueVotes.push(vote);
+        }
+      }
+      return uniqueVotes;
     },
     enabled: !!user?.id && suggestions.length > 0,
     initialData: [],
