@@ -609,7 +609,7 @@ export default function LearnMore() {
       </section>
 
       {/* Example: Consensus Calculation */}
-      <section className={`max-w-7xl mx-auto px-6 py-16 ${isRTL ? 'rtl' : 'ltr'}`}>
+      <section id="consensus-calculation" className={`max-w-7xl mx-auto px-6 py-16 ${isRTL ? 'rtl' : 'ltr'}`}>
         <Card className="bg-gradient-to-br from-slate-50 to-blue-50 border-slate-200">
           <CardHeader>
             <CardTitle className={`text-2xl ${isRTL ? 'text-right' : 'text-left'}`}>
