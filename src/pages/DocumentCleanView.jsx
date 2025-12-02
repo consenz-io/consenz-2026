@@ -182,24 +182,31 @@ export default function DocumentCleanView() {
   const currentSnapshot = versionGroups[currentVersionIndex];
   const newerSnapshot = currentVersionIndex > 0 ? versionGroups[currentVersionIndex - 1] : null;
 
-  // גלילה אוטומטית לסעיף שהשתנה
+  // גלילה אוטומטית לסעיף שהשתנה או נוצר
   React.useEffect(() => {
-    if (currentVersionIndex > 0 && currentSnapshot && newerSnapshot) {
+    if (currentVersionIndex > 0 && newerSnapshot) {
       setTimeout(() => {
-        // מציאת הסעיף הראשון שהשתנה
-        const changedSectionId = Object.keys(currentSnapshot.sectionContents).find(sectionId => {
-          const oldContent = currentSnapshot.sectionContents[sectionId];
-          const newContent = newerSnapshot.sectionContents[sectionId];
-          return oldContent && newContent && oldContent !== newContent;
-        });
+        let targetSectionId = null;
+        
+        // Check if a new section was created in the newer snapshot
+        if (newerSnapshot.isNewSection && newerSnapshot.newSectionId) {
+          targetSectionId = newerSnapshot.newSectionId;
+        } else if (currentSnapshot) {
+          // Find the first section that changed content
+          targetSectionId = Object.keys(currentSnapshot.sectionContents).find(sectionId => {
+            const oldContent = currentSnapshot.sectionContents[sectionId];
+            const newContent = newerSnapshot.sectionContents?.[sectionId];
+            return oldContent && newContent && oldContent !== newContent;
+          });
+        }
 
-        if (changedSectionId) {
-          const element = window.document.getElementById(`section-${changedSectionId}`);
+        if (targetSectionId) {
+          const element = window.document.getElementById(`section-${targetSectionId}`);
           if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
+            element.classList.add('ring-2', 'ring-green-500', 'ring-offset-2', 'rounded-lg');
             setTimeout(() => {
-              element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
+              element.classList.remove('ring-2', 'ring-green-500', 'ring-offset-2', 'rounded-lg');
             }, 2000);
           }
         }
