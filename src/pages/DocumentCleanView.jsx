@@ -80,12 +80,12 @@ export default function DocumentCleanView() {
     }
     
     // Get timestamp of the displayed version
-    const displayedVersion = versionGroups[versionIndex];
-    if (!displayedVersion || !displayedVersion.sections || displayedVersion.sections.length === 0) {
+    const displayedSnapshot = versionGroups[versionIndex];
+    if (!displayedSnapshot || !displayedSnapshot.timestamp) {
       return topic.title;
     }
     
-    const versionTimestamp = new Date(displayedVersion.sections[0].created_date).getTime();
+    const versionTimestamp = new Date(displayedSnapshot.timestamp).getTime();
     
     // Get all accepted suggestions for this topic that occurred before or at this timestamp
     const relevantSuggestions = topicEditSuggestions
