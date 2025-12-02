@@ -10,6 +10,7 @@ import { Users, TrendingUp, ThumbsUp, ThumbsDown, Info, CheckCircle2, Target, Sc
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
+import { calculateContributorsFromData } from "../components/document/calculateContributors";
 
 export default function UnderstandingConsensus() {
   const { t, isRTL, language } = useLanguage();
