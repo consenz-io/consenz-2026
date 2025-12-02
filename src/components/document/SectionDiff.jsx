@@ -33,12 +33,12 @@ export default function SectionDiff({
   const newNeedsTranslation = language !== newLanguage;
   const needsTranslation = originalNeedsTranslation || newNeedsTranslation;
 
-  // Auto-translate on mount if needed
+  // Only translate when user explicitly requests it
   useEffect(() => {
-    if (needsTranslation && showTranslated) {
+    if (showTranslated && needsTranslation && !translatedOriginal && !translatedNew) {
       handleTranslateBoth();
     }
-  }, [language, originalContent, newContent]);
+  }, [showTranslated]);
   
   const getTextContent = (html) => {
     const tempDiv = document.createElement('div');
