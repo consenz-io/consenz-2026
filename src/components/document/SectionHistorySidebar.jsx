@@ -13,10 +13,28 @@ import SectionDiff from "./SectionDiff";
 import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
 
+const languagePrompts = {
+  en: "English",
+  he: "Hebrew",
+  ar: "Arabic"
+};
+
+const detectLanguage = (text) => {
+  if (!text) return 'en';
+  const hebrewPattern = /[\u0590-\u05FF]/;
+  const arabicPattern = /[\u0600-\u06FF]/;
+  if (hebrewPattern.test(text)) return 'he';
+  if (arabicPattern.test(text)) return 'ar';
+  return 'en';
+};
+
 export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const queryClient = useQueryClient();
   const [showComments, setShowComments] = useState({});
+  const [showDiff, setShowDiff] = useState({});
+  const [translatedVersions, setTranslatedVersions] = useState({});
+  const [translatingVersions, setTranslatingVersions] = useState({});
 
   const { data: section, isLoading: sectionLoading } = useQuery({
     queryKey: ['section', sectionId],
