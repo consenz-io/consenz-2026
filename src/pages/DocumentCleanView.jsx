@@ -525,13 +525,27 @@ ${text}`;
                         // מציאת תוכן הסעיף בגרסה המוצגת ובגרסה החדשה יותר
                         const isViewingHistory = currentVersionIndex > 0;
                         
+                        // Check if this section exists in the current snapshot
+                        const sectionExistsInSnapshot = currentSnapshot?.existingSections?.has(section.id) ?? 
+                          currentSnapshot?.sectionContents?.hasOwnProperty(section.id);
+                        
+                        // If section doesn't exist in this historical snapshot, don't show it
+                        if (isViewingHistory && !sectionExistsInSnapshot) {
+                          return null;
+                        }
+                        
                         // Get content from the current snapshot
                         const displayedContent = currentSnapshot?.sectionContents?.[section.id] || section.content;
                         
                         // Get content from the newer snapshot (for diff)
                         const newerContent = newerSnapshot?.sectionContents?.[section.id];
                         
-                        // Check if this section changed between versions
+                        // Check if this section was newly created in the newer version
+                        const isNewlyCreatedSection = isViewingHistory && 
+                          newerSnapshot?.isNewSection && 
+                          newerSnapshot?.newSectionId === section.id;
+                        
+                        // Check if this section changed between versions (content edit)
                         const hasChanged = isViewingHistory && newerContent && displayedContent !== newerContent;
 
                         return (
