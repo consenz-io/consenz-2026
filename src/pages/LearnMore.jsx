@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,19 @@ import { useLanguage } from "@/components/LanguageContext";
 export default function LearnMore() {
   const { t, isRTL, language } = useLanguage();
   const [activeStep, setActiveStep] = useState(0);
+  const location = useLocation();
+
+  // Scroll to consensus-calculation section if hash is present
+  useEffect(() => {
+    if (location.hash === '#consensus-calculation') {
+      setTimeout(() => {
+        const element = document.getElementById('consensus-calculation');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }, [location.hash]);
 
   const getLocalizedText = (en, he, ar) => {
     if (language === 'ar') return ar;
