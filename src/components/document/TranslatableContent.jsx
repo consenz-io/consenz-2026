@@ -145,10 +145,24 @@ Return ONLY the translated HTML:`;
       // Clean up any markdown code blocks that might be added
       translatedText = translatedText.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
 
-      const newTranslations = {
-        ...translations,
-        [language]: translatedText
-      };
+      // Store translation with field name if provided
+      let newTranslations;
+      if (fieldName) {
+        const existingLangTranslation = translations[language] || {};
+        const langObj = typeof existingLangTranslation === 'string' 
+          ? { content: existingLangTranslation } 
+          : { ...existingLangTranslation };
+        langObj[fieldName] = translatedText;
+        newTranslations = {
+          ...translations,
+          [language]: langObj
+        };
+      } else {
+        newTranslations = {
+          ...translations,
+          [language]: translatedText
+        };
+      }
 
       await base44.entities[entityType].update(entity.id, {
         translations: newTranslations
