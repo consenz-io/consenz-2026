@@ -1,72 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useLanguage } from "@/components/LanguageContext";
-import { detectLanguage, translateForDiff } from "@/components/utils/translationUtils";
-import { Loader2 } from "lucide-react";
 
-const InlineDiff = ({ originalContent, newContent, originalEntity, newEntity }) => {
-  const { isRTL, language } = useLanguage();
-  const [translatedOriginal, setTranslatedOriginal] = useState(null);
-  const [translatedNew, setTranslatedNew] = useState(null);
-  const [isTranslating, setIsTranslating] = useState(false);
-  
-  // זיהוי שפות
-  const originalLang = originalEntity?.originalLanguage || detectLanguage(originalContent || '');
-  const newLang = newEntity?.originalLanguage || detectLanguage(newContent || '');
-  const crossLanguageDiff = originalLang !== newLang;
-  
-  // תרגום אוטומטי כאשר יש שפות שונות
-  useEffect(() => {
-    const autoTranslate = async () => {
-      if (crossLanguageDiff && !isTranslating && !translatedOriginal && !translatedNew) {
-        setIsTranslating(true);
-        try {
-          const { translatedOriginal: transOrig, translatedNew: transNew } = await translateForDiff({
-            originalContent,
-            newContent,
-            originalEntity,
-            newEntity,
-            originalEntityType: 'DocumentVersion',
-            newEntityType: 'DocumentVersion',
-            targetLanguage: language
-          });
-          
-          setTranslatedOriginal(transOrig);
-          setTranslatedNew(transNew);
-        } catch (error) {
-          console.error('InlineDiff auto translation error:', error);
-        } finally {
-          setIsTranslating(false);
-        }
-      }
-    };
-    
-    autoTranslate();
-  }, [crossLanguageDiff, originalContent, newContent, language]);
-  
-  // בחירת תוכן להשוואה
-  const displayOriginal = crossLanguageDiff && translatedOriginal ? translatedOriginal : originalContent;
-  const displayNew = crossLanguageDiff && translatedNew ? translatedNew : newContent;
+const InlineDiff = ({ originalContent, newContent }) => {
+  const { isRTL } = useLanguage();
   
   // Extract text from HTML
   const extractText = (html) => {
-    if (!html) return '';
     const div = document.createElement('div');
     div.innerHTML = html;
     return div.textContent || div.innerText || '';
   };
-  
-  // אם מתרגם, הצג טעינה
-  if (isTranslating && crossLanguageDiff) {
-    return (
-      <div className="flex items-center justify-center py-4">
-        <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-slate-600`}>מתרגם להשוואה...</span>
-      </div>
-    );
-  }
 
-  const originalText = extractText(displayOriginal);
-  const newText = extractText(displayNew);
+  const originalText = extractText(originalContent);
+  const newText = extractText(newContent);
 
   // Tokenize text - מפריד מילים, סימני פיסוק ורווחים כטוקנים נפרדים
   const tokenize = (text) => {

@@ -18,7 +18,6 @@ import TranslatableContent from "./TranslatableContent";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAutoAccept";
 import { useLanguage } from "@/components/LanguageContext";
 import { notifyVoteOnSuggestion, notifySuggestionStatusChange } from "../notifications/createNotification";
-import { detectLanguage } from "@/components/utils/translationUtils";
 
 export default function SuggestionSidebar({ 
   suggestionId, 
@@ -291,9 +290,6 @@ export default function SuggestionSidebar({
         const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
         const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
         
-        const oldContentLang = detectLanguage(section.content || '');
-        const newContentLang = detectLanguage(suggestion.newContent || '');
-        
         await base44.entities.DocumentVersion.create({
           documentId: suggestion.documentId,
           sectionId: section.id,
@@ -301,14 +297,12 @@ export default function SuggestionSidebar({
           changeDescription: `לפני: ${suggestion.title}`,
           version: nextVersion,
           changeType: 'suggestion_accepted',
-          suggestionId: suggestion.id,
-          originalLanguage: oldContentLang
+          suggestionId: suggestion.id
         });
         
         await base44.entities.Section.update(section.id, {
           content: suggestion.newContent,
-          lastEditedBy: user.id,
-          originalLanguage: newContentLang
+          lastEditedBy: user.id
         });
         
         await base44.entities.DocumentVersion.create({
@@ -318,8 +312,7 @@ export default function SuggestionSidebar({
           changeDescription: suggestion.title,
           version: nextVersion + 1,
           changeType: 'suggestion_accepted',
-          suggestionId: suggestion.id,
-          originalLanguage: newContentLang
+          suggestionId: suggestion.id
         });
       } else if (status === 'accepted' && suggestion.type === 'new_section') {
         const sections = await base44.entities.Section.filter({ 
@@ -339,15 +332,12 @@ export default function SuggestionSidebar({
           newOrder = maxOrder + 1;
         }
         
-        const newContentLang = detectLanguage(suggestion.newContent || '');
-        
         const newSection = await base44.entities.Section.create({
           documentId: suggestion.documentId,
           topicId: suggestion.topicId,
           content: suggestion.newContent,
           order: newOrder,
-          lastEditedBy: user.id,
-          originalLanguage: newContentLang
+          lastEditedBy: user.id
         });
         
         await base44.entities.DocumentVersion.create({
@@ -357,8 +347,7 @@ export default function SuggestionSidebar({
           changeDescription: suggestion.title,
           version: 1,
           changeType: 'section_created',
-          suggestionId: suggestion.id,
-          originalLanguage: newContentLang
+          suggestionId: suggestion.id
         });
       }
 
@@ -516,8 +505,6 @@ export default function SuggestionSidebar({
                 originalContent={suggestion.originalContent}
                 newContent={suggestion.newContent}
                 suggestion={suggestion}
-                originalEntity={section}
-                originalEntityType="Section"
               />
             </div>
           ) : (

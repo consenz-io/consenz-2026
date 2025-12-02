@@ -336,8 +336,6 @@ export default function SectionCarousel({
                     documentId={document?.id}
                     sectionId={section?.id}
                     suggestion={currentView.data}
-                    originalEntity={section}
-                    originalEntityType="Section"
                   />
                   <TranslatableContent
                     content={currentView.data.newContent}

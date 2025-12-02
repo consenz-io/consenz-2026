@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card } from "@/components/ui/card";
@@ -6,115 +6,103 @@ import { Button } from "@/components/ui/button";
 import { Languages, Loader2, Eye, FileText } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
-import { detectLanguage, translateForDiff } from "@/components/utils/translationUtils";
 
-export default function SectionDiff({ 
-  originalContent, 
-  newContent, 
-  documentId, 
-  sectionId, 
-  suggestion,
-  originalEntity,  // אופציונלי - ישות המכילה את התוכן המקורי (לדוגמה DocumentVersion)
-  originalEntityType = 'DocumentVersion' // סוג הישות המקורית
-}) {
+const detectLanguage = (text) => {
+  const hebrewPattern = /[\u0590-\u05FF]/;
+  const arabicPattern = /[\u0600-\u06FF]/;
+  
+  if (hebrewPattern.test(text)) return 'he';
+  if (arabicPattern.test(text)) return 'ar';
+  return 'en';
+};
+
+export default function SectionDiff({ originalContent, newContent, documentId, sectionId, suggestion }) {
   const { t, language, isRTL } = useLanguage();
-  const [translatedOriginal, setTranslatedOriginal] = useState(null);
-  const [translatedNew, setTranslatedNew] = useState(null);
+  const [translatedContent, setTranslatedContent] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [showTranslated, setShowTranslated] = useState(false);
   const [showDiff, setShowDiff] = useState(false);
-  const [autoTranslated, setAutoTranslated] = useState(false);
   
-  // זיהוי שפות התוכן
-  const originalLang = originalEntity?.originalLanguage || detectLanguage(originalContent || '');
-  const newLang = suggestion?.originalLanguage || detectLanguage(newContent || '');
+  // זיהוי אוטומטי של שפת התוכן המוצע - בודק את ה-suggestion או מזהה אוטומטית
+  const contentLanguage = suggestion?.originalLanguage || detectLanguage(newContent || '');
+  const needsTranslation = language !== contentLanguage;
   
-  // בדיקה אם צריך תרגום - אם אחת השפות שונה משפת התצוגה
-  const needsTranslation = originalLang !== language || newLang !== language;
-  
-  // בדיקה אם השפות של שני התכנים שונות זו מזו
-  const crossLanguageDiff = originalLang !== newLang;
-
-  // תרגום אוטומטי כאשר יש שפות שונות
-  useEffect(() => {
-    const autoTranslate = async () => {
-      if (crossLanguageDiff && !autoTranslated && !isTranslating) {
-        setIsTranslating(true);
-        try {
-          const { translatedOriginal: transOrig, translatedNew: transNew } = await translateForDiff({
-            originalContent,
-            newContent,
-            originalEntity,
-            newEntity: suggestion,
-            originalEntityType,
-            newEntityType: 'Suggestion',
-            targetLanguage: language
-          });
-          
-          setTranslatedOriginal(transOrig);
-          setTranslatedNew(transNew);
-          setShowTranslated(true);
-          setAutoTranslated(true);
-        } catch (error) {
-          console.error('Auto translation error:', error);
-        } finally {
-          setIsTranslating(false);
-        }
-      }
-    };
-    
-    autoTranslate();
-  }, [crossLanguageDiff, originalContent, newContent, language, autoTranslated]);
+  const getTextContent = (html) => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    return tempDiv.textContent || '';
+  };
 
   const handleTranslate = async () => {
-    // אם כבר מוצג תרגום - החזר למקור
-    if (showTranslated && (translatedOriginal || translatedNew)) {
+    // בדיקה אם יש תרגום שמור ב-suggestion
+    const cachedTranslation = suggestion?.translations?.[language]?.newContent;
+    
+    if (showTranslated && (translatedContent || cachedTranslation)) {
       setShowTranslated(false);
       return;
     }
     
-    // אם יש תרגום שמור - הצג אותו
-    if (translatedOriginal || translatedNew) {
+    if (translatedContent || cachedTranslation) {
+      if (cachedTranslation && !translatedContent) {
+        setTranslatedContent(cachedTranslation);
+      }
       setShowTranslated(true);
       return;
     }
 
-    // בצע תרגום
     setIsTranslating(true);
     try {
-      const { translatedOriginal: transOrig, translatedNew: transNew } = await translateForDiff({
-        originalContent,
-        newContent,
-        originalEntity,
-        newEntity: suggestion,
-        originalEntityType,
-        newEntityType: 'Suggestion',
-        targetLanguage: language
+      const languagePrompts = { en: "English", he: "Hebrew", ar: "Arabic" };
+      const prompt = `You are a professional translator. Translate the following HTML content to ${languagePrompts[language]}.
+
+CRITICAL INSTRUCTIONS:
+- Keep ALL HTML tags exactly as they are
+- Only translate the TEXT CONTENT between the tags
+- Return ONLY the translated HTML, nothing else
+- Do not add any explanations or comments
+- Maintain exact same structure and formatting
+
+HTML content to translate:
+${newContent}
+
+Return ONLY the translated HTML:`;
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: prompt,
+        add_context_from_internet: false,
       });
+
+      let translated = typeof result === 'string' ? result : result.content || result;
+      translated = translated.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
       
-      setTranslatedOriginal(transOrig);
-      setTranslatedNew(transNew);
+      setTranslatedContent(translated);
       setShowTranslated(true);
+      
+      // שמירת התרגום ב-suggestion אם קיים
+      if (suggestion?.id) {
+        try {
+          const newTranslations = {
+            ...(suggestion.translations || {}),
+            [language]: {
+              ...(suggestion.translations?.[language] || {}),
+              newContent: translated
+            }
+          };
+          await base44.entities.Suggestion.update(suggestion.id, { translations: newTranslations });
+        } catch (e) {
+          console.error('Error saving translation to suggestion:', e);
+        }
+      }
     } catch (error) {
       console.error('Translation error:', error);
     } finally {
       setIsTranslating(false);
     }
   };
-  
-  const getTextContent = (html) => {
-    if (!html) return '';
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-    return tempDiv.textContent || '';
-  };
 
-  // בחירת התוכן להצגה
-  const displayOriginal = showTranslated && translatedOriginal ? translatedOriginal : originalContent;
-  const displayNew = showTranslated && translatedNew ? translatedNew : newContent;
-  
-  const originalText = getTextContent(displayOriginal);
-  const displayText = getTextContent(displayNew);
+  const contentToDisplay = showTranslated && translatedContent ? translatedContent : newContent;
+  const originalText = getTextContent(originalContent);
+  const displayText = getTextContent(contentToDisplay);
   
   const computeDiffForDisplay = () => {
     const originalWords = originalText.split(/(\s+)/);
@@ -192,14 +180,7 @@ export default function SectionDiff({
       onClick={handleCardClick}
     >
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</div>
-          {crossLanguageDiff && showTranslated && (
-            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-              {t('translatedFrom')} {originalLang !== language ? originalLang : ''}{originalLang !== newLang ? ` / ${newLang}` : ''}
-            </span>
-          )}
-        </div>
+        <div className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</div>
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
@@ -235,48 +216,42 @@ export default function SectionDiff({
           )}
         </div>
       </div>
-      
-      {isTranslating && crossLanguageDiff && !autoTranslated ? (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-          <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-slate-600`}>{t('translating')}</span>
-        </div>
-      ) : (
-        <div 
-          className="prose prose-sm max-w-none" 
-          style={{ 
-            direction: isRTL ? 'rtl' : 'ltr', 
-            textAlign: isRTL ? 'right' : 'left',
-            fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
-            fontSize: "1.125rem",
-            lineHeight: "1.8",
-            letterSpacing: "0.01em",
-            fontWeight: "400"
-          }}
-        >
-          {!showDiff ? (
-            <div dangerouslySetInnerHTML={{ __html: displayNew }} />
-          ) : (
-            diff.map((part, idx) => {
-              if (part.type === 'removed') {
-                return (
-                  <span key={idx} className="bg-red-100 text-red-800 line-through px-1 rounded">
-                    {part.text}
-                  </span>
-                );
-              } else if (part.type === 'added') {
-                return (
-                  <span key={idx} className="bg-green-100 text-green-800 px-1 rounded font-medium">
-                    {part.text}
-                  </span>
-                );
-              } else {
-                return <span key={idx}>{part.text}</span>;
-              }
-            })
-          )}
-        </div>
-      )}
+      <div 
+        className="prose prose-sm max-w-none" 
+        style={{ 
+          direction: isRTL ? 'rtl' : 'ltr', 
+          textAlign: isRTL ? 'right' : 'left',
+          fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+          fontSize: "1.125rem",
+          lineHeight: "1.8",
+          letterSpacing: "0.01em",
+          fontWeight: "400"
+        }}
+      >
+        {!showDiff ? (
+          <div dangerouslySetInnerHTML={{ __html: contentToDisplay }} />
+        ) : showTranslated && translatedContent ? (
+          <div dangerouslySetInnerHTML={{ __html: translatedContent }} />
+        ) : (
+          diff.map((part, idx) => {
+            if (part.type === 'removed') {
+              return (
+                <span key={idx} className="bg-red-100 text-red-800 line-through px-1 rounded">
+                  {part.text}
+                </span>
+              );
+            } else if (part.type === 'added') {
+              return (
+                <span key={idx} className="bg-green-100 text-green-800 px-1 rounded font-medium">
+                  {part.text}
+                </span>
+              );
+            } else {
+              return <span key={idx}>{part.text}</span>;
+            }
+          })
+        )}
+      </div>
     </Card>
   );
 }

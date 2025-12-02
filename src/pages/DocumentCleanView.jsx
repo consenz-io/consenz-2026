@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Printer, Globe, Loader2, ChevronLeft, ChevronRight, Languages } from "lucide-react";
+import { ArrowLeft, Printer, Globe, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
 import InlineDiff from "@/components/document/InlineDiff";
 import PageHeader from "@/components/PageHeader";
-import { detectLanguage, getTranslatedContent } from "@/components/utils/translationUtils";
 
 export default function DocumentCleanView() {
   const { t, isRTL, language } = useLanguage();
@@ -18,13 +17,11 @@ export default function DocumentCleanView() {
   const [translatedSections, setTranslatedSections] = useState({});
   const [translatedTopics, setTranslatedTopics] = useState({});
   const [translatedDocTitle, setTranslatedDocTitle] = useState(null);
-  const [showTranslatedDoc, setShowTranslatedDoc] = useState({});
+  const [showTranslatedDoc, setShowTranslatedDoc] = useState(false);
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
   const [showTranslatedSections, setShowTranslatedSections] = useState({});
   const [translatingAll, setTranslatingAll] = useState(false);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
-  const [translatingSectionId, setTranslatingSectionId] = useState(null);
-  const [translatingTopicId, setTranslatingTopicId] = useState(null);
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
 
@@ -466,24 +463,22 @@ ${text}`;
                   ) : (
                     <div className="space-y-4 md:space-y-6">
                       {topicSections.map((section, sectionIndex) => {
+
+
                         // מציאת תוכן הסעיף בגרסה המוצגת ובגרסה החדשה יותר
                         const isViewingHistory = currentVersionIndex > 0;
                         let displayedContent, newerContent, hasChanged;
-                        let displayedVersionEntity = null;
-                        let newerVersionEntity = null;
                         
                         if (isViewingHistory) {
                           // תוכן בגרסה המוצגת כעת (הישנה יותר)
                           const displayedVersionSection = currentVersion?.sections.find(v => v.sectionId === section.id);
                           displayedContent = displayedVersionSection?.content || section.content;
-                          displayedVersionEntity = displayedVersionSection;
                           
                           // תוכן בגרסה החדשה יותר (אחת קדימה)
                           const newerVersionGroup = versionGroups[currentVersionIndex - 1];
                           if (newerVersionGroup) {
                             const newerVersionSection = newerVersionGroup.sections.find(v => v.sectionId === section.id);
                             newerContent = newerVersionSection?.content;
-                            newerVersionEntity = newerVersionSection;
                           }
                           
                           hasChanged = newerContent && displayedContent && displayedContent !== newerContent;
@@ -491,15 +486,6 @@ ${text}`;
                           displayedContent = section.content;
                           hasChanged = false;
                         }
-
-                        // זיהוי שפת הסעיף
-                        const sectionLang = section.originalLanguage || detectLanguage(displayedContent);
-                        const needsTranslation = sectionLang !== language;
-                        
-                        // תצוגה: אם יש תרגום ומוצג, השתמש בו; אחרת הצג מקור
-                        const translatedContent = translatedSections[section.id] || section.translations?.[language];
-                        const showingTranslated = showTranslatedSections[section.id] && translatedContent;
-                        const contentToDisplay = showingTranslated ? translatedContent : displayedContent;
 
                         return (
                           <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
@@ -513,16 +499,14 @@ ${text}`;
                                  <InlineDiff
                                    originalContent={displayedContent}
                                    newContent={newerContent}
-                                   originalEntity={displayedVersionEntity}
-                                   newEntity={newerVersionEntity}
                                  />
                                 ) : (
                                  <>
                                    <div 
                                      className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none"
-                                     dangerouslySetInnerHTML={{ __html: contentToDisplay }}
+                                     dangerouslySetInnerHTML={{ __html: displayedContent }}
                                    />
-                                    {needsTranslation && (
+                                    {(section.originalLanguage || 'he') !== language && (
                                       <Button
                                         variant="ghost"
                                         size="sm"
@@ -530,47 +514,30 @@ ${text}`;
                                         onClick={async (e) => {
                                           e.preventDefault();
                                           e.stopPropagation();
-                                          if (showingTranslated) {
-                                            // הצג מקור
-                                            setShowTranslatedSections(prev => ({
-                                              ...prev,
-                                              [section.id]: false
-                                            }));
-                                          } else if (translatedContent) {
-                                            // הצג תרגום שמור
+                                          if (!translatedSections[section.id] && !section.translations?.[language]) {
+                                            await translateSectionMutation.mutateAsync({ section, targetLanguage: language });
                                             setShowTranslatedSections(prev => ({
                                               ...prev,
                                               [section.id]: true
                                             }));
                                           } else {
-                                            // תרגם
-                                            setTranslatingSectionId(section.id);
-                                            try {
-                                              const translated = await getTranslatedContent(section, 'Section', displayedContent, language);
-                                              setTranslatedSections(prev => ({
-                                                ...prev,
-                                                [section.id]: translated
-                                              }));
-                                              setShowTranslatedSections(prev => ({
-                                                ...prev,
-                                                [section.id]: true
-                                              }));
-                                            } finally {
-                                              setTranslatingSectionId(null);
-                                            }
+                                            setShowTranslatedSections(prev => ({
+                                              ...prev,
+                                              [section.id]: !prev[section.id]
+                                            }));
                                           }
                                         }}
-                                        disabled={translatingSectionId === section.id}
+                                        disabled={translateSectionMutation.isPending}
                                       >
-                                        {translatingSectionId === section.id ? (
+                                        {translateSectionMutation.isPending ? (
                                           <>
                                             <Loader2 className="w-3 h-3 mr-1 animate-spin" />
                                             {t('translating')}
                                           </>
                                         ) : (
                                           <>
-                                            <Languages className="w-3 h-3 mr-1" />
-                                            {showingTranslated ? t('showOriginal') : t('translate')}
+                                            <Globe className="w-3 h-3 mr-1" />
+                                            {showTranslatedSections[section.id] ? 'הצג מקור' : t('translateSection')}
                                           </>
                                         )}
                                       </Button>
