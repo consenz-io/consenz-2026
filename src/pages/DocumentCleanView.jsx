@@ -36,6 +36,7 @@ export default function DocumentCleanView() {
   const [openSectionHistoryId, setOpenSectionHistoryId] = useState(null);
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
+  const scrollToSuggestionId = searchParams.get('scrollToSuggestion');
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
