@@ -26,12 +26,15 @@ const detectLanguage = (text) => {
 };
 
 export default function SectionHistory() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const sectionId = searchParams.get('id');
   const [showComments, setShowComments] = useState({});
   const [error, setError] = useState(null);
+  const [translatedVersions, setTranslatedVersions] = useState({});
+  const [showTranslated, setShowTranslated] = useState({});
+  const [translatingVersion, setTranslatingVersion] = useState(null);
 
   const { data: section, isLoading: sectionLoading } = useQuery({
     queryKey: ['section', sectionId],
