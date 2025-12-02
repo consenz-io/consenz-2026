@@ -466,22 +466,24 @@ ${text}`;
                   ) : (
                     <div className="space-y-4 md:space-y-6">
                       {topicSections.map((section, sectionIndex) => {
-
-
                         // מציאת תוכן הסעיף בגרסה המוצגת ובגרסה החדשה יותר
                         const isViewingHistory = currentVersionIndex > 0;
                         let displayedContent, newerContent, hasChanged;
+                        let displayedVersionEntity = null;
+                        let newerVersionEntity = null;
                         
                         if (isViewingHistory) {
                           // תוכן בגרסה המוצגת כעת (הישנה יותר)
                           const displayedVersionSection = currentVersion?.sections.find(v => v.sectionId === section.id);
                           displayedContent = displayedVersionSection?.content || section.content;
+                          displayedVersionEntity = displayedVersionSection;
                           
                           // תוכן בגרסה החדשה יותר (אחת קדימה)
                           const newerVersionGroup = versionGroups[currentVersionIndex - 1];
                           if (newerVersionGroup) {
                             const newerVersionSection = newerVersionGroup.sections.find(v => v.sectionId === section.id);
                             newerContent = newerVersionSection?.content;
+                            newerVersionEntity = newerVersionSection;
                           }
                           
                           hasChanged = newerContent && displayedContent && displayedContent !== newerContent;
@@ -489,6 +491,15 @@ ${text}`;
                           displayedContent = section.content;
                           hasChanged = false;
                         }
+
+                        // זיהוי שפת הסעיף
+                        const sectionLang = section.originalLanguage || detectLanguage(displayedContent);
+                        const needsTranslation = sectionLang !== language;
+                        
+                        // תצוגה: אם יש תרגום ומוצג, השתמש בו; אחרת הצג מקור
+                        const translatedContent = translatedSections[section.id] || section.translations?.[language];
+                        const showingTranslated = showTranslatedSections[section.id] && translatedContent;
+                        const contentToDisplay = showingTranslated ? translatedContent : displayedContent;
 
                         return (
                           <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
@@ -502,14 +513,16 @@ ${text}`;
                                  <InlineDiff
                                    originalContent={displayedContent}
                                    newContent={newerContent}
+                                   originalEntity={displayedVersionEntity}
+                                   newEntity={newerVersionEntity}
                                  />
                                 ) : (
                                  <>
                                    <div 
                                      className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none"
-                                     dangerouslySetInnerHTML={{ __html: displayedContent }}
+                                     dangerouslySetInnerHTML={{ __html: contentToDisplay }}
                                    />
-                                    {(section.originalLanguage || 'he') !== language && (
+                                    {needsTranslation && (
                                       <Button
                                         variant="ghost"
                                         size="sm"
@@ -517,30 +530,47 @@ ${text}`;
                                         onClick={async (e) => {
                                           e.preventDefault();
                                           e.stopPropagation();
-                                          if (!translatedSections[section.id] && !section.translations?.[language]) {
-                                            await translateSectionMutation.mutateAsync({ section, targetLanguage: language });
+                                          if (showingTranslated) {
+                                            // הצג מקור
+                                            setShowTranslatedSections(prev => ({
+                                              ...prev,
+                                              [section.id]: false
+                                            }));
+                                          } else if (translatedContent) {
+                                            // הצג תרגום שמור
                                             setShowTranslatedSections(prev => ({
                                               ...prev,
                                               [section.id]: true
                                             }));
                                           } else {
-                                            setShowTranslatedSections(prev => ({
-                                              ...prev,
-                                              [section.id]: !prev[section.id]
-                                            }));
+                                            // תרגם
+                                            setTranslatingSectionId(section.id);
+                                            try {
+                                              const translated = await getTranslatedContent(section, 'Section', displayedContent, language);
+                                              setTranslatedSections(prev => ({
+                                                ...prev,
+                                                [section.id]: translated
+                                              }));
+                                              setShowTranslatedSections(prev => ({
+                                                ...prev,
+                                                [section.id]: true
+                                              }));
+                                            } finally {
+                                              setTranslatingSectionId(null);
+                                            }
                                           }
                                         }}
-                                        disabled={translateSectionMutation.isPending}
+                                        disabled={translatingSectionId === section.id}
                                       >
-                                        {translateSectionMutation.isPending ? (
+                                        {translatingSectionId === section.id ? (
                                           <>
                                             <Loader2 className="w-3 h-3 mr-1 animate-spin" />
                                             {t('translating')}
                                           </>
                                         ) : (
                                           <>
-                                            <Globe className="w-3 h-3 mr-1" />
-                                            {showTranslatedSections[section.id] ? 'הצג מקור' : t('translateSection')}
+                                            <Languages className="w-3 h-3 mr-1" />
+                                            {showingTranslated ? t('showOriginal') : t('translate')}
                                           </>
                                         )}
                                       </Button>
