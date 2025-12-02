@@ -425,24 +425,36 @@ ${text}`;
                   size="sm"
                   onClick={() => setCurrentVersionIndex(Math.min(currentVersionIndex + 1, versionGroups.length - 1))}
                   disabled={currentVersionIndex >= versionGroups.length - 1}
+                  title={language === 'he' ? 'גרסה קודמת' : 'Previous version'}
                 >
                   {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                 </Button>
-                <Badge variant="outline" className="px-2 md:px-3 text-xs">
-                  {currentVersionIndex === 0 ? (
-                    language === 'he' ? 'נוכחית' : language === 'ar' ? 'حالية' : 'Current'
-                  ) : (
-                    `${language === 'he' ? 'ג׳' : language === 'ar' ? 'إ' : 'V'} ${currentVersion?.version || 0}`
+                <div className="flex flex-col items-center">
+                  <Badge variant="outline" className="px-2 md:px-3 text-xs">
+                    {currentVersionIndex === 0 ? (
+                      language === 'he' ? 'נוכחית' : language === 'ar' ? 'حالية' : 'Current'
+                    ) : (
+                      `${language === 'he' ? 'ג׳' : language === 'ar' ? 'إ' : 'V'} ${currentSnapshot?.version || 0}`
+                    )}
+                  </Badge>
+                  {currentSnapshot?.changeDescription && currentVersionIndex > 0 && (
+                    <span className="text-[10px] text-slate-500 mt-0.5 max-w-[120px] truncate">
+                      {currentSnapshot.changeDescription}
+                    </span>
                   )}
-                </Badge>
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentVersionIndex(Math.max(0, currentVersionIndex - 1))}
                   disabled={currentVersionIndex === 0}
+                  title={language === 'he' ? 'גרסה חדשה יותר' : 'Newer version'}
                 >
                   {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 </Button>
+                <span className="text-xs text-slate-400">
+                  ({currentVersionIndex + 1}/{versionGroups.length})
+                </span>
               </div>
             )}
 
