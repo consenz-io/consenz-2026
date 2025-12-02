@@ -95,8 +95,8 @@ export default function Home() {
     });
   };
 
-  // Calculate unique contributors across all documents
-  const totalUniqueContributors = useMemo(() => {
+  // Calculate unique contributors across all documents and build list
+  const { totalUniqueContributors, contributorsList } = useMemo(() => {
     const uniqueEmails = new Set();
     
     // Document creators
@@ -126,7 +126,23 @@ export default function Home() {
       if (c.created_by) uniqueEmails.add(c.created_by);
     });
     
-    return Math.max(1, uniqueEmails.size);
+    // Build contributors list with names
+    const emailToUser = {};
+    allUsers.forEach(u => { emailToUser[u.email] = u; });
+    
+    const list = Array.from(uniqueEmails).map(email => {
+      const user = emailToUser[email];
+      return {
+        email,
+        name: user?.full_name || email,
+        id: user?.id
+      };
+    }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    
+    return {
+      totalUniqueContributors: Math.max(1, uniqueEmails.size),
+      contributorsList: list
+    };
   }, [documents, allSuggestions, allVotes, allUsers, allArguments, allComments]);
 
   const calculateAverageConsensus = () => {
