@@ -142,9 +142,8 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
   const { t, isRTL, language } = useLanguage();
   const queryClient = useQueryClient();
   const [showComments, setShowComments] = useState({});
-  const [showDiff, setShowDiff] = useState({});
-  const [translatedVersions, setTranslatedVersions] = useState({});
-  const [translatingVersions, setTranslatingVersions] = useState({});
+  const [translatedPairs, setTranslatedPairs] = useState({}); // { versionId: { current: string, previous: string } }
+  const [translatingPairs, setTranslatingPairs] = useState({});
 
   const { data: section, isLoading: sectionLoading } = useQuery({
     queryKey: ['section', sectionId],
