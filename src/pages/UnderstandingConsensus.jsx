@@ -31,8 +31,52 @@ export default function UnderstandingConsensus() {
     enabled: !!documentId,
   });
 
+  const { data: sections } = useQuery({
+    queryKey: ['sections', documentId],
+    queryFn: () => base44.entities.Section.filter({ documentId }),
+    initialData: [],
+    enabled: !!documentId,
+  });
+
+  const { data: allVotes } = useQuery({
+    queryKey: ['allVotes'],
+    queryFn: () => base44.entities.Vote.list(),
+    initialData: [],
+  });
+
+  const { data: allUsers } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list(),
+    initialData: [],
+  });
+
+  const { data: allArguments } = useQuery({
+    queryKey: ['allArguments'],
+    queryFn: () => base44.entities.Argument.list(),
+    initialData: [],
+  });
+
+  const { data: allComments } = useQuery({
+    queryKey: ['allComments'],
+    queryFn: () => base44.entities.Comment.list(),
+    initialData: [],
+  });
+
   const acceptedSuggestions = suggestions.filter(s => s.status === 'accepted');
-  const totalUsers = document?.totalUsersInteracted || 1;
+  
+  // Calculate real contributors count using shared logic
+  const totalUsers = React.useMemo(() => {
+    const count = calculateContributorsFromData({
+      document,
+      suggestions,
+      allVotes,
+      allUsers,
+      allArguments,
+      allComments,
+      sections
+    });
+    return count > 0 ? count : 1;
+  }, [document, suggestions, allVotes, allUsers, allArguments, allComments, sections]);
   const consensuses = document?.consensuses || [];
   
   // מד הקונצנזוס הממוצע - ערך בין 0 ל-1 (מוגבל למקסימום 1)
