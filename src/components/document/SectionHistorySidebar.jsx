@@ -290,14 +290,15 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                                 </Button>
                               </div>
                               
-                              {/* Diff view */}
+                              {/* Diff view - inline diff display */}
                               {showDiff[currentVer.id] && (
-                                <SectionDiff
-                                  originalContent={translatedVersions[prevVer.id] || prevVer.content}
-                                  newContent={translatedVersions[currentVer.id] || currentVer.content}
-                                  originalVersion={prevVer}
-                                  newVersion={currentVer}
-                                />
+                                <div className="bg-white p-3 rounded-lg border border-slate-200">
+                                  <InlineDiffView
+                                    originalContent={translatedVersions[prevVer.id] || prevVer.content}
+                                    newContent={translatedVersions[currentVer.id] || currentVer.content}
+                                    isRTL={isRTL}
+                                  />
+                                </div>
                               )}
                             </div>
                           )}
