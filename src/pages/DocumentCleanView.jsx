@@ -11,6 +11,16 @@ import { useLanguage } from "@/components/LanguageContext";
 import InlineDiff from "@/components/document/InlineDiff";
 import PageHeader from "@/components/PageHeader";
 
+const detectLanguage = (text) => {
+  if (!text) return 'en';
+  const hebrewPattern = /[\u0590-\u05FF]/;
+  const arabicPattern = /[\u0600-\u06FF]/;
+  const cleanText = text.replace(/<[^>]*>/g, '');
+  if (hebrewPattern.test(cleanText)) return 'he';
+  if (arabicPattern.test(cleanText)) return 'ar';
+  return 'en';
+};
+
 export default function DocumentCleanView() {
   const { t, isRTL, language } = useLanguage();
   const queryClient = useQueryClient();
