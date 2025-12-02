@@ -85,6 +85,40 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
     }));
   };
 
+  const translateVersion = async (versionId, content) => {
+    if (translatedVersions[versionId]) {
+      // Toggle back to original
+      setTranslatedVersions(prev => {
+        const newState = { ...prev };
+        delete newState[versionId];
+        return newState;
+      });
+      return;
+    }
+
+    setTranslatingVersions(prev => ({ ...prev, [versionId]: true }));
+    try {
+      const prompt = `Translate the following HTML text to ${languagePrompts[language]}. Return ONLY the translated HTML, preserving all HTML tags:\n${content}`;
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt,
+        add_context_from_internet: false,
+      });
+      const translatedContent = (typeof result === 'string' ? result : result.content || result).trim();
+      setTranslatedVersions(prev => ({ ...prev, [versionId]: translatedContent }));
+    } catch (err) {
+      console.error('Translation error:', err);
+    } finally {
+      setTranslatingVersions(prev => ({ ...prev, [versionId]: false }));
+    }
+  };
+
+  const toggleDiff = (versionId) => {
+    setShowDiff(prev => ({
+      ...prev,
+      [versionId]: !prev[versionId]
+    }));
+  };
+
   if (!isOpen) return null;
 
   // Sort versions by version number descending and deduplicate by version number
