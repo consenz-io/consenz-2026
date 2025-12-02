@@ -457,8 +457,8 @@ ${generatedInviteLink.signupUrl}
                 />
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                <div>
+              <div className="flex items-center justify-between gap-4 p-4 bg-slate-50 rounded-lg">
+                <div className="flex-1 min-w-0">
                   <Label htmlFor="voting" className="text-base">Enable Voting Buttons</Label>
                   <p className="text-sm text-slate-500">Allow users to vote on suggestions</p>
                 </div>
@@ -466,11 +466,12 @@ ${generatedInviteLink.signupUrl}
                   id="voting"
                   checked={formData.votingButtonsEnabled}
                   onCheckedChange={(checked) => setFormData({ ...formData, votingButtonsEnabled: checked })}
+                  className="flex-shrink-0"
                 />
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div>
+              <div className="flex items-center justify-between gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex-1 min-w-0">
                   <Label htmlFor="gamification" className="text-base">Enable Gamification System</Label>
                   <p className="text-sm text-slate-500">Require points for creating suggestions and award points for contributions</p>
                 </div>
@@ -478,6 +479,7 @@ ${generatedInviteLink.signupUrl}
                   id="gamification"
                   checked={formData.gamificationEnabled}
                   onCheckedChange={(checked) => setFormData({ ...formData, gamificationEnabled: checked })}
+                  className="flex-shrink-0"
                 />
               </div>
 
