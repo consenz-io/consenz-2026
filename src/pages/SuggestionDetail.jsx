@@ -662,19 +662,20 @@ export default function SuggestionDetail() {
           </CardHeader>
           <CardContent className="space-y-4 md:space-y-6 p-3 md:p-6 overflow-x-hidden">
             {suggestion.explanation && typeof suggestion.explanation === 'string' && (
-              <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('explanation')}</h3>
-                <TranslatableContent
-                  content={suggestion.explanation}
-                  entity={suggestion}
-                  entityType="Suggestion"
-                  onUpdate={(updated) => {
-                    queryClient.setQueryData(['suggestion', suggestionId], updated);
-                  }}
-                  className="text-slate-600"
-                />
-              </div>
-            )}
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('explanation')}</h3>
+                  <TranslatableContent
+                    content={suggestion.explanation}
+                    entity={suggestion}
+                    entityType="Suggestion"
+                    fieldName="explanation"
+                    onUpdate={(updated) => {
+                      queryClient.setQueryData(['suggestion', suggestionId], updated);
+                    }}
+                    className="text-slate-600"
+                  />
+                </div>
+              )}
 
 
 
