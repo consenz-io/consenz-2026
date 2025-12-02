@@ -6,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { History, MessageSquare, Clock, RotateCcw, ExternalLink } from "lucide-react";
+import { History, MessageSquare, Clock, RotateCcw, ExternalLink, Languages, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
@@ -14,6 +14,16 @@ import SectionDiff from "../components/document/SectionDiff";
 import CommentsSection from "../components/document/CommentsSection";
 import TranslatableContent from "../components/document/TranslatableContent";
 import PageHeader from "../components/PageHeader";
+
+const detectLanguage = (text) => {
+  if (!text) return 'en';
+  const hebrewPattern = /[\u0590-\u05FF]/;
+  const arabicPattern = /[\u0600-\u06FF]/;
+  const cleanText = text.replace(/<[^>]*>/g, '');
+  if (hebrewPattern.test(cleanText)) return 'he';
+  if (arabicPattern.test(cleanText)) return 'ar';
+  return 'en';
+};
 
 export default function SectionHistory() {
   const { t, isRTL } = useLanguage();
