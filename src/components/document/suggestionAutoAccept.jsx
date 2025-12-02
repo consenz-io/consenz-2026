@@ -184,6 +184,8 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
       const newContentLanguage = detectLanguage(freshSuggestion.newContent || '');
       
+      const oldContentLanguage = detectLanguage(section.content || '');
+      
       // הפעלת כל הפעולות במקביל
       await Promise.all([
         // שמירת גרסה עם התוכן הישן
@@ -194,7 +196,8 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
           changeDescription: `לפני: ${freshSuggestion.title || 'הצעת עריכה'}`,
           version: nextVersion,
           changeType: 'suggestion_accepted',
-          suggestionId: freshSuggestion.id
+          suggestionId: freshSuggestion.id,
+          originalLanguage: oldContentLanguage
         }),
         // עדכון הסעיף עם התוכן החדש
         base44.entities.Section.update(section.id, {
@@ -210,7 +213,8 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
           changeDescription: freshSuggestion.title || 'הצעת עריכה',
           version: nextVersion + 1,
           changeType: 'suggestion_accepted',
-          suggestionId: freshSuggestion.id
+          suggestionId: freshSuggestion.id,
+          originalLanguage: newContentLanguage
         })
       ]);
     } 
