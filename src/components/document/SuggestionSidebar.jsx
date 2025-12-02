@@ -18,6 +18,7 @@ import TranslatableContent from "./TranslatableContent";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAutoAccept";
 import { useLanguage } from "@/components/LanguageContext";
 import { notifyVoteOnSuggestion, notifySuggestionStatusChange } from "../notifications/createNotification";
+import { detectLanguage } from "@/components/utils/translationUtils";
 
 export default function SuggestionSidebar({ 
   suggestionId, 
