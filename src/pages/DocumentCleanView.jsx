@@ -1,15 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Printer, Globe, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Printer, Globe, Loader2, ChevronLeft, ChevronRight, Languages } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
 import InlineDiff from "@/components/document/InlineDiff";
 import PageHeader from "@/components/PageHeader";
+import { detectLanguage, getTranslatedContent } from "@/components/utils/translationUtils";
 
 export default function DocumentCleanView() {
   const { t, isRTL, language } = useLanguage();
