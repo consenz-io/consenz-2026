@@ -114,9 +114,12 @@ export default function SectionDiff({
     }
   };
 
-  const handleToggleTranslation = () => {
+  const handleToggleTranslation = async () => {
     if (!showTranslated && needsTranslation) {
-      handleTranslateBoth();
+      // User wants to see translation - translate first if needed
+      if (!translatedOriginal || !translatedNew) {
+        await handleTranslateBoth();
+      }
     }
     setShowTranslated(!showTranslated);
   };
