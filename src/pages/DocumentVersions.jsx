@@ -322,6 +322,8 @@ export default function DocumentVersions() {
                   documentId={documentId}
                   userId={user?.id}
                   setError={setError}
+                  user={user}
+                  users={users}
                 />
               ))
           )}
