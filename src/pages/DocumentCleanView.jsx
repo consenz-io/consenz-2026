@@ -187,22 +187,22 @@ export default function DocumentCleanView() {
     return snapshots;
   }, [allVersions, sections]);
 
-  const currentVersion = versionGroups[currentVersionIndex];
-  const previousVersion = versionGroups[currentVersionIndex + 1];
+  const currentSnapshot = versionGroups[currentVersionIndex];
+  const newerSnapshot = currentVersionIndex > 0 ? versionGroups[currentVersionIndex - 1] : null;
 
   // גלילה אוטומטית לסעיף שהשתנה
   React.useEffect(() => {
-    if (currentVersionIndex > 0 && currentVersion && previousVersion && currentVersion.sections && previousVersion.sections) {
+    if (currentVersionIndex > 0 && currentSnapshot && newerSnapshot) {
       setTimeout(() => {
         // מציאת הסעיף הראשון שהשתנה
-        const changedSection = currentVersion.sections.find(currSection => {
-          if (!currSection || !currSection.sectionId) return false;
-          const prevSection = previousVersion.sections.find(ps => ps && ps.sectionId === currSection.sectionId);
-          return prevSection && currSection.content !== prevSection.content;
+        const changedSectionId = Object.keys(currentSnapshot.sectionContents).find(sectionId => {
+          const oldContent = currentSnapshot.sectionContents[sectionId];
+          const newContent = newerSnapshot.sectionContents[sectionId];
+          return oldContent && newContent && oldContent !== newContent;
         });
 
-        if (changedSection && changedSection.sectionId) {
-          const element = window.document.getElementById(`section-${changedSection.sectionId}`);
+        if (changedSectionId) {
+          const element = window.document.getElementById(`section-${changedSectionId}`);
           if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
             element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
@@ -213,7 +213,7 @@ export default function DocumentCleanView() {
         }
       }, 100);
     }
-  }, [currentVersionIndex, currentVersion, previousVersion]);
+  }, [currentVersionIndex, currentSnapshot, newerSnapshot]);
 
   if (docLoading || topicsLoading || sectionsLoading || versionsLoading) {
     return (
