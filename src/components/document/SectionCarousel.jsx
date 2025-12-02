@@ -42,6 +42,9 @@ export default function SectionCarousel({
   // שומר את ה-ID של ההצעה הנוכחית במקום index
   const [currentSuggestionId, setCurrentSuggestionId] = useState(null);
   
+  // שומר הצעות שהתקבלו בזמן שהיוזר צופה בהן - כדי שלא ייעלמו פתאום
+  const [recentlyAcceptedSuggestions, setRecentlyAcceptedSuggestions] = useState({});
+  
   // סדר הצגה: לפי דלתא קרובה ל-0, ואז כרונולוגי
   const sortedSuggestions = [...pendingSuggestions].sort((a, b) => {
     const deltaA = Math.abs((a.proVotes || 0) - (a.conVotes || 0));
@@ -54,12 +57,47 @@ export default function SectionCarousel({
     // אם הדלתא זהה, סדר כרונולוגי - האחרונה ראשונה
     return new Date(b.created_date) - new Date(a.created_date);
   });
+  
+  // אם היוזר צופה בהצעה שהתקבלה - נשמור אותה כדי להמשיך להציג
+  React.useEffect(() => {
+    if (currentSuggestionId && currentSuggestionId !== 'current') {
+      // בדוק אם ההצעה הנוכחית כבר לא ב-pending אבל היוזר עדיין צופה בה
+      const suggestionInPending = pendingSuggestions.find(s => s.id === currentSuggestionId);
+      if (!suggestionInPending && !recentlyAcceptedSuggestions[currentSuggestionId]) {
+        // ההצעה נעלמה מה-pending - כנראה התקבלה
+        // נחפש אותה בקאש או נשמור גרסה אחרונה שראינו
+        const lastKnownVersion = allViews.find(v => v.id === currentSuggestionId)?.data;
+        if (lastKnownVersion) {
+          setRecentlyAcceptedSuggestions(prev => ({
+            ...prev,
+            [currentSuggestionId]: { ...lastKnownVersion, status: 'accepted' }
+          }));
+        }
+      }
+    }
+  }, [pendingSuggestions, currentSuggestionId]);
 
-  // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות
-  const allViews = [
-    { type: 'current', data: section, id: 'current' },
-    ...sortedSuggestions.map(s => ({ type: 'suggestion', data: s, id: s.id }))
-  ];
+  // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות + הצעות שהתקבלו אבל היוזר עדיין צופה בהן
+  const allViews = React.useMemo(() => {
+    const views = [
+      { type: 'current', data: section, id: 'current' },
+      ...sortedSuggestions.map(s => ({ type: 'suggestion', data: s, id: s.id }))
+    ];
+    
+    // אם היוזר צופה בהצעה שהתקבלה ועדיין לא נמצאת ברשימה - נוסיף אותה
+    if (currentSuggestionId && 
+        currentSuggestionId !== 'current' && 
+        !views.find(v => v.id === currentSuggestionId) &&
+        recentlyAcceptedSuggestions[currentSuggestionId]) {
+      views.push({
+        type: 'suggestion',
+        data: recentlyAcceptedSuggestions[currentSuggestionId],
+        id: currentSuggestionId
+      });
+    }
+    
+    return views;
+  }, [section, sortedSuggestions, currentSuggestionId, recentlyAcceptedSuggestions]);
   
   // מחשב את ה-index הנוכחי לפי ה-ID
   const currentIndex = React.useMemo(() => {
