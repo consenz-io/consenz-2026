@@ -244,15 +244,61 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                             </div>
                           )}
                           
-                          {/* Show diff between this version and the previous one */}
+                          {/* Show content with translate/diff buttons for suggestion_accepted */}
                           {prevVer && currentVer.changeType === 'suggestion_accepted' && !isOldestVersion && (
-                            <div>
-                              <SectionDiff
-                                originalContent={prevVer.content}
-                                newContent={currentVer.content}
-                                originalVersion={prevVer}
-                                newVersion={currentVer}
-                              />
+                            <div className="space-y-2">
+                              {/* Content display */}
+                              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                <div 
+                                  className="prose prose-sm max-w-none text-slate-700"
+                                  dangerouslySetInnerHTML={{ 
+                                    __html: translatedVersions[currentVer.id] || currentVer.content 
+                                  }}
+                                  dir={isRTL ? 'rtl' : 'ltr'}
+                                />
+                              </div>
+                              
+                              {/* Action buttons */}
+                              <div className="flex gap-2 flex-wrap">
+                                {/* Translate button - only show if content language differs from UI language */}
+                                {detectLanguage(currentVer.content) !== language && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => translateVersion(currentVer.id, currentVer.content)}
+                                    disabled={translatingVersions[currentVer.id]}
+                                    className={`h-7 text-xs gap-1 ${translatedVersions[currentVer.id] ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`}
+                                  >
+                                    {translatingVersions[currentVer.id] ? (
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                    ) : (
+                                      <Languages className="w-3 h-3" />
+                                    )}
+                                    {translatedVersions[currentVer.id] ? t('showOriginal') : t('translate')}
+                                  </Button>
+                                )}
+                                
+                                {/* Show diff button */}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => toggleDiff(currentVer.id)}
+                                  className={`h-7 text-xs gap-1 ${showDiff[currentVer.id] ? 'bg-purple-50 text-purple-600 border-purple-200' : ''}`}
+                                >
+                                  <GitCompare className="w-3 h-3" />
+                                  {showDiff[currentVer.id] ? t('showLess') : t('showDiff')}
+                                </Button>
+                              </div>
+                              
+                              {/* Diff view */}
+                              {showDiff[currentVer.id] && (
+                                <SectionDiff
+                                  originalContent={translatedVersions[prevVer.id] || prevVer.content}
+                                  newContent={translatedVersions[currentVer.id] || currentVer.content}
+                                  originalVersion={prevVer}
+                                  newVersion={currentVer}
+                                />
+                              )}
                             </div>
                           )}
 
