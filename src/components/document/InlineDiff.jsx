@@ -4,11 +4,10 @@ import { useLanguage } from "@/components/LanguageContext";
 const InlineDiff = ({ originalContent, newContent }) => {
   const { isRTL } = useLanguage();
   
-  // Extract text from HTML
+  // Extract text from HTML using regex (safe for SSR)
   const extractText = (html) => {
-    const div = document.createElement('div');
-    div.innerHTML = html;
-    return div.textContent || div.innerText || '';
+    if (!html) return '';
+    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
   };
 
   const originalText = extractText(originalContent);

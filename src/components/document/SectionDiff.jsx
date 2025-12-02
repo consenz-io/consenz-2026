@@ -41,9 +41,9 @@ export default function SectionDiff({
   }, [showTranslated]);
   
   const getTextContent = (html) => {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-    return tempDiv.textContent || '';
+    if (!html) return '';
+    // Remove HTML tags using regex (safe for SSR)
+    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
   };
 
   const handleTranslateBoth = async () => {
