@@ -89,13 +89,15 @@ export default function SectionCarousel({
   const safeIndex = currentIndex >= allViews.length ? 0 : currentIndex;
   const currentView = allViews[safeIndex] || allViews[0];
 
-  // דפדוף מעגלי
+  // דפדוף מעגלי - משתמש ב-ID במקום index
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % allViews.length);
+    const nextIndex = (currentIndex + 1) % allViews.length;
+    setCurrentSuggestionId(allViews[nextIndex].id);
   };
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + allViews.length) % allViews.length);
+    const prevIndex = (currentIndex - 1 + allViews.length) % allViews.length;
+    setCurrentSuggestionId(allViews[prevIndex].id);
   };
 
   const isFirstView = currentIndex === 0;
