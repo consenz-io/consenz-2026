@@ -291,6 +291,9 @@ export default function SuggestionSidebar({
         const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
         const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
         
+        const oldContentLang = detectLanguage(section.content || '');
+        const newContentLang = detectLanguage(suggestion.newContent || '');
+        
         await base44.entities.DocumentVersion.create({
           documentId: suggestion.documentId,
           sectionId: section.id,
@@ -298,12 +301,14 @@ export default function SuggestionSidebar({
           changeDescription: `לפני: ${suggestion.title}`,
           version: nextVersion,
           changeType: 'suggestion_accepted',
-          suggestionId: suggestion.id
+          suggestionId: suggestion.id,
+          originalLanguage: oldContentLang
         });
         
         await base44.entities.Section.update(section.id, {
           content: suggestion.newContent,
-          lastEditedBy: user.id
+          lastEditedBy: user.id,
+          originalLanguage: newContentLang
         });
         
         await base44.entities.DocumentVersion.create({
@@ -313,7 +318,8 @@ export default function SuggestionSidebar({
           changeDescription: suggestion.title,
           version: nextVersion + 1,
           changeType: 'suggestion_accepted',
-          suggestionId: suggestion.id
+          suggestionId: suggestion.id,
+          originalLanguage: newContentLang
         });
       } else if (status === 'accepted' && suggestion.type === 'new_section') {
         const sections = await base44.entities.Section.filter({ 
