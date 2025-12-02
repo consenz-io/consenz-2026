@@ -559,8 +559,10 @@ ${text}`;
 
                         return (
                           <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
-                            <Link to={`${createPageUrl("SectionHistory")}?id=${section.id}`}>
-                              <div className="flex gap-2 md:gap-4 group cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors">
+                            <div 
+                              className="flex gap-2 md:gap-4 group cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors"
+                              onClick={() => setOpenSectionHistoryId(section.id)}
+                            >
                                 <span className="text-slate-500 font-medium min-w-[1.5rem] md:min-w-[2rem] text-sm md:text-base">
                                   {topicIndex + 1}.{sectionIndex + 1}
                                 </span>
