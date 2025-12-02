@@ -139,8 +139,28 @@ Return ONLY the translated HTML:`;
     },
   });
 
-  const displayContent = showTranslated && (translations[language] || translateMutation.isSuccess)
-    ? (translations[language] || translateMutation.data)
+  // Helper to ensure we get a string
+  const ensureString = (val) => {
+    if (typeof val === 'string') return val;
+    if (val && typeof val === 'object') {
+      // Try common response fields
+      if (typeof val.content === 'string') return val.content;
+      if (typeof val.text === 'string') return val.text;
+      if (typeof val.translation === 'string') return val.translation;
+      if (typeof val.output === 'string') return val.output;
+      // Find first string value
+      for (const key of Object.keys(val)) {
+        if (typeof val[key] === 'string' && val[key].length > 0) {
+          return val[key];
+        }
+      }
+    }
+    return content; // fallback to original
+  };
+
+  const translatedValue = translations[language] || translateMutation.data;
+  const displayContent = showTranslated && translatedValue
+    ? ensureString(translatedValue)
     : content;
 
   return (
