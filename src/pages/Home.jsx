@@ -26,6 +26,7 @@ export default function Home() {
   const queryClient = useQueryClient();
   const [translatingDoc, setTranslatingDoc] = useState(null);
   const [showTranslated, setShowTranslated] = useState({});
+  const [showContributorsModal, setShowContributorsModal] = useState(false);
   const { data: documents, isLoading } = useQuery({
     queryKey: ['publicDocuments'],
     queryFn: () => base44.entities.Document.list('-created_date', 20),
