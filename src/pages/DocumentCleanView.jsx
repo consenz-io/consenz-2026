@@ -682,6 +682,7 @@ ${text}`;
       {openSectionHistoryId && (
         <SectionHistorySidebar
           sectionId={openSectionHistoryId}
+          isOpen={true}
           onClose={() => setOpenSectionHistoryId(null)}
         />
       )}
