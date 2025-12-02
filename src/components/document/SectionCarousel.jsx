@@ -39,6 +39,9 @@ export default function SectionCarousel({
   const { t, isRTL, language } = useLanguage();
   const navigate = useNavigate();
   
+  // שומר את ה-ID של ההצעה הנוכחית במקום index
+  const [currentSuggestionId, setCurrentSuggestionId] = useState(null);
+  
   // סדר הצגה: לפי דלתא קרובה ל-0, ואז כרונולוגי
   const sortedSuggestions = [...pendingSuggestions].sort((a, b) => {
     const deltaA = Math.abs((a.proVotes || 0) - (a.conVotes || 0));
@@ -54,11 +57,16 @@ export default function SectionCarousel({
 
   // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות
   const allViews = [
-    { type: 'current', data: section },
-    ...sortedSuggestions.map(s => ({ type: 'suggestion', data: s }))
+    { type: 'current', data: section, id: 'current' },
+    ...sortedSuggestions.map(s => ({ type: 'suggestion', data: s, id: s.id }))
   ];
-
-  const [currentIndex, setCurrentIndex] = useState(0);
+  
+  // מחשב את ה-index הנוכחי לפי ה-ID
+  const currentIndex = React.useMemo(() => {
+    if (!currentSuggestionId) return 0;
+    const idx = allViews.findIndex(v => v.id === currentSuggestionId);
+    return idx >= 0 ? idx : 0;
+  }, [currentSuggestionId, allViews]);
   const [showTranslated, setShowTranslated] = useState({});
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showHistorySidebar, setShowHistorySidebar] = useState(false);
