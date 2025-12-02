@@ -83,6 +83,48 @@ export default function SectionHistory() {
     enabled: !!user?.id && !!document?.id,
   });
 
+  const translateVersionMutation = useMutation({
+    mutationFn: async ({ versionId, content }) => {
+      const languageNames = { en: 'English', he: 'Hebrew', ar: 'Arabic' };
+      const targetLangName = languageNames[language];
+      
+      const prompt = `You are a professional translator. Translate the following HTML content to ${targetLangName}.
+
+CRITICAL INSTRUCTIONS:
+- Keep ALL HTML tags exactly as they are (including <p>, <strong>, <em>, <ul>, <li>, etc.)
+- Only translate the TEXT CONTENT between the tags
+- Return ONLY the translated HTML, nothing else
+- Do not add any explanations or comments
+- Do not escape HTML characters
+- Maintain exact same structure and formatting
+
+HTML content to translate:
+${content}
+
+Return ONLY the translated HTML:`;
+
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: prompt,
+      });
+
+      let translatedContent = typeof result === 'string' ? result : result.content || result;
+      translatedContent = translatedContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+
+      return { versionId, translatedContent };
+    },
+    onMutate: ({ versionId }) => {
+      setTranslatingVersion(versionId);
+    },
+    onSuccess: ({ versionId, translatedContent }) => {
+      setTranslatedVersions(prev => ({ ...prev, [versionId]: translatedContent }));
+      setShowTranslated(prev => ({ ...prev, [versionId]: true }));
+      setTranslatingVersion(null);
+    },
+    onError: () => {
+      setTranslatingVersion(null);
+    }
+  });
+
   const restoreVersionMutation = useMutation({
     mutationFn: async (versionToRestore) => {
       if (!isAdmin) throw new Error(t("adminAccessRequired"));
