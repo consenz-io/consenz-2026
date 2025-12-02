@@ -267,7 +267,8 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
         changeDescription: freshSuggestion.title || 'סעיף חדש',
         version: 1,
         changeType: 'section_created',
-        suggestionId: freshSuggestion.id
+        suggestionId: freshSuggestion.id,
+        originalLanguage: newContentLanguage
       });
     }
     
