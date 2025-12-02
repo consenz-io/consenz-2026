@@ -131,56 +131,66 @@ export default function SectionDiff({
   const originalText = getTextContent(displayOriginal);
   const displayText = getTextContent(displayNew);
   
+  // Character-level diff using LCS algorithm for better block-based display
   const computeDiffForDisplay = () => {
-    const originalWords = originalText.split(/(\s+)/);
-    const displayWords = displayText.split(/(\s+)/);
+    const oldChars = originalText.split('');
+    const newChars = displayText.split('');
     
-    const result = [];
-    let i = 0, j = 0;
-
-    while (i < originalWords.length || j < displayWords.length) {
-      if (i >= originalWords.length) {
-        result.push({ type: 'added', text: displayWords.slice(j).join('') });
-        break;
-      }
-      if (j >= displayWords.length) {
-        result.push({ type: 'removed', text: originalWords.slice(i).join('') });
-        break;
-      }
-
-      if (originalWords[i] === displayWords[j]) {
-        result.push({ type: 'unchanged', text: displayWords[j] });
-        i++;
-        j++;
-      } else {
-        let foundMatch = false;
-        for (let k = j + 1; k < Math.min(j + 10, displayWords.length); k++) {
-          if (originalWords[i] === displayWords[k]) {
-            result.push({ type: 'added', text: displayWords.slice(j, k).join('') });
-            j = k;
-            foundMatch = true;
-            break;
-          }
-        }
-        if (!foundMatch) {
-          for (let k = i + 1; k < Math.min(i + 10, originalWords.length); k++) {
-            if (displayWords[j] === originalWords[k]) {
-              result.push({ type: 'removed', text: originalWords.slice(i, k).join('') });
-              i = k;
-              foundMatch = true;
-              break;
-            }
-          }
-        }
-        if (!foundMatch) {
-          result.push({ type: 'removed', text: originalWords[i] });
-          result.push({ type: 'added', text: displayWords[j] });
-          i++;
-          j++;
+    const m = oldChars.length;
+    const n = newChars.length;
+    
+    // Build LCS table
+    const lcs = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+    
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        if (oldChars[i - 1] === newChars[j - 1]) {
+          lcs[i][j] = lcs[i - 1][j - 1] + 1;
+        } else {
+          lcs[i][j] = Math.max(lcs[i - 1][j], lcs[i][j - 1]);
         }
       }
     }
-
+    
+    // Backtrack to find character-level diff
+    const charDiff = [];
+    let i = m, j = n;
+    
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0 && oldChars[i - 1] === newChars[j - 1]) {
+        charDiff.unshift({ type: 'unchanged', char: oldChars[i - 1] });
+        i--;
+        j--;
+      } else if (j > 0 && (i === 0 || lcs[i][j - 1] >= lcs[i - 1][j])) {
+        charDiff.unshift({ type: 'added', char: newChars[j - 1] });
+        j--;
+      } else if (i > 0) {
+        charDiff.unshift({ type: 'removed', char: oldChars[i - 1] });
+        i--;
+      }
+    }
+    
+    // Group consecutive characters of the same type into blocks
+    const result = [];
+    let currentType = null;
+    let currentText = '';
+    
+    for (const item of charDiff) {
+      if (item.type === currentType) {
+        currentText += item.char;
+      } else {
+        if (currentText) {
+          result.push({ type: currentType, text: currentText });
+        }
+        currentType = item.type;
+        currentText = item.char;
+      }
+    }
+    
+    if (currentText) {
+      result.push({ type: currentType, text: currentText });
+    }
+    
     return result;
   };
 

@@ -14,25 +14,20 @@ const InlineDiff = ({ originalContent, newContent }) => {
   const originalText = extractText(originalContent);
   const newText = extractText(newContent);
 
-  // Tokenize text - מפריד מילים, סימני פיסוק ורווחים כטוקנים נפרדים
-  const tokenize = (text) => {
-    const tokens = text.match(/[\p{L}\p{N}]+|[^\p{L}\p{N}\s]+|\s+/gu) || [];
-    return tokens;
-  };
-
-  // LCS-based diff algorithm - מזהה רצפים משותפים ארוכים
-  const diffWords = (oldText, newText) => {
-    const oldTokens = tokenize(oldText);
-    const newTokens = tokenize(newText);
+  // Character-level diff using LCS algorithm for block-based display
+  const computeCharDiff = (oldText, newText) => {
+    const oldChars = oldText.split('');
+    const newChars = newText.split('');
+    
+    const m = oldChars.length;
+    const n = newChars.length;
     
     // Build LCS table
-    const m = oldTokens.length;
-    const n = newTokens.length;
     const lcs = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
     
     for (let i = 1; i <= m; i++) {
       for (let j = 1; j <= n; j++) {
-        if (oldTokens[i - 1] === newTokens[j - 1]) {
+        if (oldChars[i - 1] === newChars[j - 1]) {
           lcs[i][j] = lcs[i - 1][j - 1] + 1;
         } else {
           lcs[i][j] = Math.max(lcs[i - 1][j], lcs[i][j - 1]);
@@ -40,131 +35,49 @@ const InlineDiff = ({ originalContent, newContent }) => {
       }
     }
     
-    // Backtrack to find the diff
-    const result = [];
+    // Backtrack to find character-level diff
+    const charDiff = [];
     let i = m, j = n;
     
     while (i > 0 || j > 0) {
-      if (i > 0 && j > 0 && oldTokens[i - 1] === newTokens[j - 1]) {
-        result.unshift({ type: 'unchanged', value: oldTokens[i - 1] });
+      if (i > 0 && j > 0 && oldChars[i - 1] === newChars[j - 1]) {
+        charDiff.unshift({ type: 'unchanged', char: oldChars[i - 1] });
         i--;
         j--;
       } else if (j > 0 && (i === 0 || lcs[i][j - 1] >= lcs[i - 1][j])) {
-        result.unshift({ type: 'added', value: newTokens[j - 1] });
+        charDiff.unshift({ type: 'added', char: newChars[j - 1] });
         j--;
       } else if (i > 0) {
-        result.unshift({ type: 'removed', value: oldTokens[i - 1] });
+        charDiff.unshift({ type: 'removed', char: oldChars[i - 1] });
         i--;
       }
+    }
+    
+    // Group consecutive characters of the same type into blocks
+    const result = [];
+    let currentType = null;
+    let currentText = '';
+    
+    for (const item of charDiff) {
+      if (item.type === currentType) {
+        currentText += item.char;
+      } else {
+        if (currentText) {
+          result.push({ type: currentType, value: currentText });
+        }
+        currentType = item.type;
+        currentText = item.char;
+      }
+    }
+    
+    if (currentText) {
+      result.push({ type: currentType, value: currentText });
     }
     
     return result;
   };
 
-  // Group consecutive changes - קיבוץ מתוקן עם התעלמות מ-unchanged קצרים
-  const groupChanges = (diffs) => {
-    if (diffs.length === 0) return [];
-    
-    const grouped = [];
-    let i = 0;
-    
-    while (i < diffs.length) {
-      const current = diffs[i];
-      
-      // בדוק אם זה unchanged ארוך (5+ מילים)
-      if (current.type === 'unchanged') {
-        // אסוף את כל ה-unchanged הרצופים
-        let unchangedTokens = [current];
-        let j = i + 1;
-        while (j < diffs.length && diffs[j].type === 'unchanged') {
-          unchangedTokens.push(diffs[j]);
-          j++;
-        }
-        
-        // אם זה רצף ארוך של unchanged - זה באמת לא השתנה
-        const unchangedText = unchangedTokens.map(t => t.value).join('');
-        const wordCount = unchangedText.trim().split(/\s+/).length;
-        
-        if (wordCount >= 5) {
-          // רצף ארוך - הצג כ-unchanged
-          grouped.push({
-            type: 'unchanged',
-            value: unchangedText
-          });
-          i = j;
-        } else {
-          // רצף קצר - כלול אותו בבלוק השינויים הבא
-          // פשוט נמשיך הלאה ונאסף אותו עם השינויים
-          i = j;
-        }
-      } else {
-        // אם removed או added - אסוף את כל הרצף (כולל unchanged קצרים!)
-        let removedParts = [];
-        let addedParts = [];
-        let j = i;
-        
-        while (j < diffs.length) {
-          // בדוק אם הגענו לרצף ארוך של unchanged
-          if (diffs[j].type === 'unchanged') {
-            // אסוף את ה-unchanged עד שמסתיים
-            let unchangedCount = 0;
-            let k = j;
-            let unchangedText = '';
-            while (k < diffs.length && diffs[k].type === 'unchanged') {
-              unchangedText += diffs[k].value;
-              k++;
-            }
-            
-            const wordCount = unchangedText.trim().split(/\s+/).length;
-            
-            if (wordCount >= 5) {
-              // רצף ארוך - עצור כאן
-              break;
-            } else {
-              // רצף קצר - כלול אותו בשינוי
-              while (j < k) {
-                // הוסף ל-removed וגם ל-added (זה לא השתנה אבל בתוך בלוק שינוי)
-                removedParts.push(diffs[j].value);
-                addedParts.push(diffs[j].value);
-                j++;
-              }
-            }
-          } else if (diffs[j].type === 'removed') {
-            removedParts.push(diffs[j].value);
-            j++;
-          } else if (diffs[j].type === 'added') {
-            addedParts.push(diffs[j].value);
-            j++;
-          }
-        }
-        
-        // צור בלוק לפי מה שנאסף
-        if (removedParts.length > 0 && addedParts.length > 0) {
-          grouped.push({
-            type: 'replaced',
-            deleted: removedParts.join(''),
-            added: addedParts.join('')
-          });
-        } else if (removedParts.length > 0) {
-          grouped.push({
-            type: 'removed',
-            value: removedParts.join('')
-          });
-        } else if (addedParts.length > 0) {
-          grouped.push({
-            type: 'added',
-            value: addedParts.join('')
-          });
-        }
-        
-        i = j;
-      }
-    }
-    
-    return grouped;
-  };
-
-  const differences = groupChanges(diffWords(originalText, newText));
+  const differences = computeCharDiff(originalText, newText)
 
   return (
     <div className="text-slate-700 leading-relaxed prose prose-slate max-w-none" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -186,18 +99,6 @@ const InlineDiff = ({ originalContent, newContent }) => {
               className="bg-red-100 text-red-800 line-through px-1 rounded"
             >
               {part.value}
-            </span>
-          );
-        }
-        if (part.type === 'replaced') {
-          return (
-            <span key={index}>
-              <span className="bg-red-100 text-red-800 line-through px-1 rounded">
-                {part.deleted}
-              </span>
-              <span className="bg-green-100 text-green-800 font-medium px-1 rounded">
-                {part.added}
-              </span>
             </span>
           );
         }
