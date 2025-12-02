@@ -194,10 +194,10 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
     }));
   };
 
-  const translateVersion = async (versionId, content) => {
-    if (translatedVersions[versionId]) {
+  const translatePairForDiff = async (versionId, currentContent, previousContent) => {
+    if (translatedPairs[versionId]) {
       // Toggle back to original
-      setTranslatedVersions(prev => {
+      setTranslatedPairs(prev => {
         const newState = { ...prev };
         delete newState[versionId];
         return newState;
@@ -205,27 +205,32 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
       return;
     }
 
-    setTranslatingVersions(prev => ({ ...prev, [versionId]: true }));
+    setTranslatingPairs(prev => ({ ...prev, [versionId]: true }));
     try {
-      const prompt = `Translate the following HTML text to ${languagePrompts[language]}. Return ONLY the translated HTML, preserving all HTML tags:\n${content}`;
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        add_context_from_internet: false,
-      });
-      const translatedContent = (typeof result === 'string' ? result : result.content || result).trim();
-      setTranslatedVersions(prev => ({ ...prev, [versionId]: translatedContent }));
+      // Translate both current and previous content
+      const [currentResult, previousResult] = await Promise.all([
+        base44.integrations.Core.InvokeLLM({
+          prompt: `Translate the following HTML text to ${languagePrompts[language]}. Return ONLY the translated HTML, preserving all HTML tags:\n${currentContent}`,
+          add_context_from_internet: false,
+        }),
+        base44.integrations.Core.InvokeLLM({
+          prompt: `Translate the following HTML text to ${languagePrompts[language]}. Return ONLY the translated HTML, preserving all HTML tags:\n${previousContent}`,
+          add_context_from_internet: false,
+        })
+      ]);
+      
+      const translatedCurrent = (typeof currentResult === 'string' ? currentResult : currentResult.content || currentResult).trim();
+      const translatedPrevious = (typeof previousResult === 'string' ? previousResult : previousResult.content || previousResult).trim();
+      
+      setTranslatedPairs(prev => ({ 
+        ...prev, 
+        [versionId]: { current: translatedCurrent, previous: translatedPrevious } 
+      }));
     } catch (err) {
       console.error('Translation error:', err);
     } finally {
-      setTranslatingVersions(prev => ({ ...prev, [versionId]: false }));
+      setTranslatingPairs(prev => ({ ...prev, [versionId]: false }));
     }
-  };
-
-  const toggleDiff = (versionId) => {
-    setShowDiff(prev => ({
-      ...prev,
-      [versionId]: !prev[versionId]
-    }));
   };
 
   if (!isOpen) return null;
