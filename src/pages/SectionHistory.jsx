@@ -6,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { History, MessageSquare, Clock, RotateCcw, ExternalLink, Languages, Loader2 } from "lucide-react";
+import { History, MessageSquare, Clock, RotateCcw, ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
@@ -15,26 +15,13 @@ import CommentsSection from "../components/document/CommentsSection";
 import TranslatableContent from "../components/document/TranslatableContent";
 import PageHeader from "../components/PageHeader";
 
-const detectLanguage = (text) => {
-  if (!text) return 'en';
-  const hebrewPattern = /[\u0590-\u05FF]/;
-  const arabicPattern = /[\u0600-\u06FF]/;
-  const cleanText = text.replace(/<[^>]*>/g, '');
-  if (hebrewPattern.test(cleanText)) return 'he';
-  if (arabicPattern.test(cleanText)) return 'ar';
-  return 'en';
-};
-
 export default function SectionHistory() {
-  const { t, isRTL, language } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const sectionId = searchParams.get('id');
   const [showComments, setShowComments] = useState({});
   const [error, setError] = useState(null);
-  const [translatedVersions, setTranslatedVersions] = useState({});
-  const [showTranslated, setShowTranslated] = useState({});
-  const [translatingVersion, setTranslatingVersion] = useState(null);
 
   const { data: section, isLoading: sectionLoading } = useQuery({
     queryKey: ['section', sectionId],
@@ -81,48 +68,6 @@ export default function SectionHistory() {
       return admins.length > 0;
     },
     enabled: !!user?.id && !!document?.id,
-  });
-
-  const translateVersionMutation = useMutation({
-    mutationFn: async ({ versionId, content }) => {
-      const languageNames = { en: 'English', he: 'Hebrew', ar: 'Arabic' };
-      const targetLangName = languageNames[language];
-      
-      const prompt = `You are a professional translator. Translate the following HTML content to ${targetLangName}.
-
-CRITICAL INSTRUCTIONS:
-- Keep ALL HTML tags exactly as they are (including <p>, <strong>, <em>, <ul>, <li>, etc.)
-- Only translate the TEXT CONTENT between the tags
-- Return ONLY the translated HTML, nothing else
-- Do not add any explanations or comments
-- Do not escape HTML characters
-- Maintain exact same structure and formatting
-
-HTML content to translate:
-${content}
-
-Return ONLY the translated HTML:`;
-
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: prompt,
-      });
-
-      let translatedContent = typeof result === 'string' ? result : result.content || result;
-      translatedContent = translatedContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
-
-      return { versionId, translatedContent };
-    },
-    onMutate: ({ versionId }) => {
-      setTranslatingVersion(versionId);
-    },
-    onSuccess: ({ versionId, translatedContent }) => {
-      setTranslatedVersions(prev => ({ ...prev, [versionId]: translatedContent }));
-      setShowTranslated(prev => ({ ...prev, [versionId]: true }));
-      setTranslatingVersion(null);
-    },
-    onError: () => {
-      setTranslatingVersion(null);
-    }
   });
 
   const restoreVersionMutation = useMutation({
@@ -326,59 +271,18 @@ Return ONLY the translated HTML:`;
                         sectionId={sectionId}
                       />
                     ) : (
-                      <div className="relative">
-                        {(() => {
-                          const contentLang = detectLanguage(currentVer.content);
-                          const needsTranslation = contentLang !== language;
-                          const isTranslating = translatingVersion === currentVer.id;
-                          const hasTranslation = translatedVersions[currentVer.id];
-                          const isShowingTranslated = showTranslated[currentVer.id];
-                          
-                          return (
-                            <>
-                              {needsTranslation && (
-                                <div className="absolute top-2 right-2 z-10">
-                                  {isTranslating ? (
-                                    <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                                  ) : !hasTranslation ? (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => translateVersionMutation.mutate({ versionId: currentVer.id, content: currentVer.content })}
-                                      className="h-7 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                    >
-                                      <Languages className="w-4 h-4 mr-1" />
-                                      {t('translate')}
-                                    </Button>
-                                  ) : (
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => setShowTranslated(prev => ({ ...prev, [currentVer.id]: !prev[currentVer.id] }))}
-                                      className={`h-7 px-2 ${isShowingTranslated ? 'text-blue-600 bg-blue-50' : 'text-slate-600'}`}
-                                    >
-                                      <Languages className="w-4 h-4 mr-1" />
-                                      {isShowingTranslated ? t('showOriginal') : t('showTranslation')}
-                                    </Button>
-                                  )}
-                                </div>
-                              )}
-                              <div
-                                className="prose prose-sm max-w-none text-slate-700 p-4 bg-slate-50 rounded-lg"
-                                style={{ 
-                                  direction: isRTL ? 'rtl' : 'ltr', 
-                                  textAlign: isRTL ? 'right' : 'left',
-                                  fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
-                                  fontSize: "1.125rem",
-                                  lineHeight: "1.8",
-                                  letterSpacing: "0.01em"
-                                }}
-                                dangerouslySetInnerHTML={{ __html: isShowingTranslated && hasTranslation ? hasTranslation : currentVer.content }}
-                              />
-                            </>
-                          );
-                        })()}
-                      </div>
+                      <div
+                        className="prose prose-sm max-w-none text-slate-700 p-4 bg-slate-50 rounded-lg"
+                        style={{ 
+                          direction: isRTL ? 'rtl' : 'ltr', 
+                          textAlign: isRTL ? 'right' : 'left',
+                          fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                          fontSize: "1.125rem",
+                          lineHeight: "1.8",
+                          letterSpacing: "0.01em"
+                        }}
+                        dangerouslySetInnerHTML={{ __html: currentVer.content }}
+                      />
                     )}
 
                     {/* Show suggestion details if available */}
