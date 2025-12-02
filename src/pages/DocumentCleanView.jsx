@@ -435,7 +435,7 @@ ${text}`;
                     {currentVersionIndex === 0 ? (
                       language === 'he' ? 'נוכחית' : language === 'ar' ? 'حالية' : 'Current'
                     ) : (
-                      `${language === 'he' ? 'ג׳' : language === 'ar' ? 'إ' : 'V'} ${currentSnapshot?.version || 0}`
+                      `${versionGroups.length - currentVersionIndex}/${versionGroups.length}`
                     )}
                   </Badge>
                   {currentSnapshot?.changeDescription && currentVersionIndex > 0 && (
@@ -452,10 +452,6 @@ ${text}`;
                   title={language === 'he' ? 'גרסה חדשה יותר' : 'Newer version'}
                 >
                   {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                </Button>
-                <span className="text-xs text-slate-400">
-                  ({currentVersionIndex + 1}/{versionGroups.length})
-                </span>
               </div>
             )}
 
