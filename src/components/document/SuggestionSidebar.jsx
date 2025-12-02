@@ -339,12 +339,15 @@ export default function SuggestionSidebar({
           newOrder = maxOrder + 1;
         }
         
+        const newContentLang = detectLanguage(suggestion.newContent || '');
+        
         const newSection = await base44.entities.Section.create({
           documentId: suggestion.documentId,
           topicId: suggestion.topicId,
           content: suggestion.newContent,
           order: newOrder,
-          lastEditedBy: user.id
+          lastEditedBy: user.id,
+          originalLanguage: newContentLang
         });
         
         await base44.entities.DocumentVersion.create({
@@ -354,7 +357,8 @@ export default function SuggestionSidebar({
           changeDescription: suggestion.title,
           version: 1,
           changeType: 'section_created',
-          suggestionId: suggestion.id
+          suggestionId: suggestion.id,
+          originalLanguage: newContentLang
         });
       }
 
