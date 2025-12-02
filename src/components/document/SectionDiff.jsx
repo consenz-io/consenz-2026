@@ -282,13 +282,13 @@ export default function SectionDiff({
           diff.map((part, idx) => {
             if (part.type === 'removed') {
               return (
-                <span key={idx} className="bg-red-100 text-red-800 line-through px-1 rounded">
+                <span key={idx} className="bg-red-100 text-red-800 line-through">
                   {part.text}
                 </span>
               );
             } else if (part.type === 'added') {
               return (
-                <span key={idx} className="bg-green-100 text-green-800 px-1 rounded font-medium">
+                <span key={idx} className="bg-green-100 text-green-800 font-medium">
                   {part.text}
                 </span>
               );

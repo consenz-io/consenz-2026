@@ -92,7 +92,7 @@ const InlineDiff = ({ originalContent, newContent }) => {
           return (
             <span
               key={index}
-              className="bg-green-100 text-green-800 font-medium px-1 rounded"
+              className="bg-green-100 text-green-800 font-medium"
             >
               {part.value}
             </span>
@@ -102,7 +102,7 @@ const InlineDiff = ({ originalContent, newContent }) => {
           return (
             <span
               key={index}
-              className="bg-red-100 text-red-800 line-through px-1 rounded"
+              className="bg-red-100 text-red-800 line-through"
             >
               {part.value}
             </span>
