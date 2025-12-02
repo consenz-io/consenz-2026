@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card } from "@/components/ui/card";
@@ -6,26 +6,39 @@ import { Button } from "@/components/ui/button";
 import { Languages, Loader2, Eye, FileText } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
+import { detectLanguage, translateContent } from "./translationService";
 
-const detectLanguage = (text) => {
-  const hebrewPattern = /[\u0590-\u05FF]/;
-  const arabicPattern = /[\u0600-\u06FF]/;
-  
-  if (hebrewPattern.test(text)) return 'he';
-  if (arabicPattern.test(text)) return 'ar';
-  return 'en';
-};
-
-export default function SectionDiff({ originalContent, newContent, documentId, sectionId, suggestion }) {
+export default function SectionDiff({ 
+  originalContent, 
+  newContent, 
+  documentId, 
+  sectionId, 
+  suggestion,
+  originalVersion,  // DocumentVersion entity for original content
+  newVersion        // DocumentVersion entity for new content
+}) {
   const { t, language, isRTL } = useLanguage();
-  const [translatedContent, setTranslatedContent] = useState(null);
+  const [translatedOriginal, setTranslatedOriginal] = useState(null);
+  const [translatedNew, setTranslatedNew] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
-  const [showTranslated, setShowTranslated] = useState(false);
+  const [showTranslated, setShowTranslated] = useState(true); // Default to translated view
   const [showDiff, setShowDiff] = useState(false);
   
-  // זיהוי אוטומטי של שפת התוכן המוצע - בודק את ה-suggestion או מזהה אוטומטית
-  const contentLanguage = suggestion?.originalLanguage || detectLanguage(newContent || '');
-  const needsTranslation = language !== contentLanguage;
+  // Detect languages for both contents
+  const originalLanguage = originalVersion?.originalLanguage || suggestion?.originalLanguage || detectLanguage(originalContent || '');
+  const newLanguage = newVersion?.originalLanguage || suggestion?.originalLanguage || detectLanguage(newContent || '');
+  
+  // Check if either content needs translation
+  const originalNeedsTranslation = language !== originalLanguage;
+  const newNeedsTranslation = language !== newLanguage;
+  const needsTranslation = originalNeedsTranslation || newNeedsTranslation;
+
+  // Auto-translate on mount if needed
+  useEffect(() => {
+    if (needsTranslation && showTranslated) {
+      handleTranslateBoth();
+    }
+  }, [language, originalContent, newContent]);
   
   const getTextContent = (html) => {
     const tempDiv = document.createElement('div');
@@ -33,66 +46,67 @@ export default function SectionDiff({ originalContent, newContent, documentId, s
     return tempDiv.textContent || '';
   };
 
-  const handleTranslate = async () => {
-    // בדיקה אם יש תרגום שמור ב-suggestion
-    const cachedTranslation = suggestion?.translations?.[language]?.newContent;
+  const handleTranslateBoth = async () => {
+    if (isTranslating) return;
     
-    if (showTranslated && (translatedContent || cachedTranslation)) {
-      setShowTranslated(false);
-      return;
-    }
+    // Check for cached translations
+    const cachedOriginal = originalVersion?.translations?.[language] || 
+                           (originalLanguage === language ? originalContent : null);
+    const cachedNew = newVersion?.translations?.[language] || 
+                      suggestion?.translations?.[language]?.newContent ||
+                      (newLanguage === language ? newContent : null);
     
-    if (translatedContent || cachedTranslation) {
-      if (cachedTranslation && !translatedContent) {
-        setTranslatedContent(cachedTranslation);
-      }
-      setShowTranslated(true);
+    if (cachedOriginal && cachedNew) {
+      setTranslatedOriginal(cachedOriginal);
+      setTranslatedNew(cachedNew);
       return;
     }
 
     setIsTranslating(true);
     try {
-      const languagePrompts = { en: "English", he: "Hebrew", ar: "Arabic" };
-      const prompt = `You are a professional translator. Translate the following HTML content to ${languagePrompts[language]}.
-
-CRITICAL INSTRUCTIONS:
-- Keep ALL HTML tags exactly as they are
-- Only translate the TEXT CONTENT between the tags
-- Return ONLY the translated HTML, nothing else
-- Do not add any explanations or comments
-- Maintain exact same structure and formatting
-
-HTML content to translate:
-${newContent}
-
-Return ONLY the translated HTML:`;
-
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: prompt,
-        add_context_from_internet: false,
-      });
-
-      let translated = typeof result === 'string' ? result : result.content || result;
-      translated = translated.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+      const translationPromises = [];
       
-      setTranslatedContent(translated);
-      setShowTranslated(true);
-      
-      // שמירת התרגום ב-suggestion אם קיים
-      if (suggestion?.id) {
-        try {
-          const newTranslations = {
-            ...(suggestion.translations || {}),
-            [language]: {
-              ...(suggestion.translations?.[language] || {}),
-              newContent: translated
+      // Translate original if needed
+      if (originalNeedsTranslation && !cachedOriginal) {
+        translationPromises.push(
+          translateContent(originalContent, language).then(result => {
+            setTranslatedOriginal(result);
+            // Cache in version if available
+            if (originalVersion?.id) {
+              const newTranslations = { ...(originalVersion.translations || {}), [language]: result };
+              base44.entities.DocumentVersion.update(originalVersion.id, { translations: newTranslations }).catch(() => {});
             }
-          };
-          await base44.entities.Suggestion.update(suggestion.id, { translations: newTranslations });
-        } catch (e) {
-          console.error('Error saving translation to suggestion:', e);
-        }
+            return result;
+          })
+        );
+      } else {
+        setTranslatedOriginal(cachedOriginal || originalContent);
       }
+      
+      // Translate new content if needed
+      if (newNeedsTranslation && !cachedNew) {
+        translationPromises.push(
+          translateContent(newContent, language).then(result => {
+            setTranslatedNew(result);
+            // Cache in version or suggestion if available
+            if (newVersion?.id) {
+              const newTranslations = { ...(newVersion.translations || {}), [language]: result };
+              base44.entities.DocumentVersion.update(newVersion.id, { translations: newTranslations }).catch(() => {});
+            } else if (suggestion?.id) {
+              const newTranslations = {
+                ...(suggestion.translations || {}),
+                [language]: { ...(suggestion.translations?.[language] || {}), newContent: result }
+              };
+              base44.entities.Suggestion.update(suggestion.id, { translations: newTranslations }).catch(() => {});
+            }
+            return result;
+          })
+        );
+      } else {
+        setTranslatedNew(cachedNew || newContent);
+      }
+      
+      await Promise.all(translationPromises);
     } catch (error) {
       console.error('Translation error:', error);
     } finally {
@@ -100,9 +114,19 @@ Return ONLY the translated HTML:`;
     }
   };
 
-  const contentToDisplay = showTranslated && translatedContent ? translatedContent : newContent;
-  const originalText = getTextContent(originalContent);
-  const displayText = getTextContent(contentToDisplay);
+  const handleToggleTranslation = () => {
+    if (!showTranslated && needsTranslation) {
+      handleTranslateBoth();
+    }
+    setShowTranslated(!showTranslated);
+  };
+
+  // Determine which content to use for display and diff
+  const displayOriginal = showTranslated && translatedOriginal ? translatedOriginal : originalContent;
+  const displayNew = showTranslated && translatedNew ? translatedNew : newContent;
+  
+  const originalText = getTextContent(displayOriginal);
+  const displayText = getTextContent(displayNew);
   
   const computeDiffForDisplay = () => {
     const originalWords = originalText.split(/(\s+)/);
@@ -201,10 +225,10 @@ Return ONLY the translated HTML:`;
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                handleTranslate();
+                handleToggleTranslation();
               }}
               disabled={isTranslating}
-              className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              className={`h-7 px-2 gap-1 ${showTranslated ? 'text-blue-600' : 'text-slate-600'} hover:text-blue-700 hover:bg-blue-50`}
               title={showTranslated ? t('showOriginal') : t('translate')}
             >
               {isTranslating ? (
@@ -212,6 +236,7 @@ Return ONLY the translated HTML:`;
               ) : (
                 <Languages className="w-4 h-4" />
               )}
+              <span className="text-xs">{showTranslated ? t('showOriginal') : t('translate')}</span>
             </Button>
           )}
         </div>
@@ -228,10 +253,13 @@ Return ONLY the translated HTML:`;
           fontWeight: "400"
         }}
       >
-        {!showDiff ? (
-          <div dangerouslySetInnerHTML={{ __html: contentToDisplay }} />
-        ) : showTranslated && translatedContent ? (
-          <div dangerouslySetInnerHTML={{ __html: translatedContent }} />
+        {isTranslating ? (
+          <div className="flex items-center justify-center py-4 gap-2 text-slate-500">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm">{t('translating')}</span>
+          </div>
+        ) : !showDiff ? (
+          <div dangerouslySetInnerHTML={{ __html: displayNew }} />
         ) : (
           diff.map((part, idx) => {
             if (part.type === 'removed') {
