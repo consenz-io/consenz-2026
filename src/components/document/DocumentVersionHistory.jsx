@@ -15,7 +15,14 @@ import CommentsSection from "./CommentsSection";
 function InlineDiffView({ originalContent, newContent, isRTL }) {
   const getTextContent = (html) => {
     if (!html) return '';
-    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+    // Replace common HTML entities with their character equivalent
+    let text = html.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+    // Remove all HTML tags
+    text = text.replace(/<[^>]*>/g, '');
+    // Replace multiple whitespace characters (spaces, tabs, newlines) with a single space
+    text = text.replace(/\s+/g, ' ');
+    // Trim leading/trailing spaces
+    return text.trim();
   };
 
   const originalText = getTextContent(originalContent);
