@@ -686,6 +686,8 @@ export default function SuggestionDetail() {
                   originalContent={suggestion.originalContent}
                   newContent={suggestion.newContent}
                   suggestion={suggestion}
+                  documentId={suggestion.documentId}
+                  sectionId={suggestion.sectionId}
                 />
               </div>
             ) : suggestion.type === 'new_section' ? (
