@@ -6,11 +6,10 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ArrowRight, History, GitCompare, RotateCcw, Clock } from "lucide-react";
+import { History, RotateCcw, Clock, MessageSquare, ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import SectionDiff from "../components/document/SectionDiff";
-import DocumentVersionHistory from "../components/document/DocumentVersionHistory";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
 
