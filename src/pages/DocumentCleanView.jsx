@@ -18,11 +18,13 @@ export default function DocumentCleanView() {
   const [translatedSections, setTranslatedSections] = useState({});
   const [translatedTopics, setTranslatedTopics] = useState({});
   const [translatedDocTitle, setTranslatedDocTitle] = useState(null);
-  const [showTranslatedDoc, setShowTranslatedDoc] = useState(false);
+  const [showTranslatedDoc, setShowTranslatedDoc] = useState({});
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
   const [showTranslatedSections, setShowTranslatedSections] = useState({});
   const [translatingAll, setTranslatingAll] = useState(false);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
+  const [translatingSectionId, setTranslatingSectionId] = useState(null);
+  const [translatingTopicId, setTranslatingTopicId] = useState(null);
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
 
