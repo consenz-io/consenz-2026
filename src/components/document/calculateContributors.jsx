@@ -99,14 +99,21 @@ export function calculateContributorsFromData({
     if (s.created_by) uniqueEmails.add(s.created_by);
   });
   
-  // 3. Voters
+  // 3. Voters - גם לפי userId וגם לפי created_by
   const suggestionIds = new Set(suggestions.map(s => s.id));
   const userIdToEmail = {};
   allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
   
   allVotes.forEach(v => {
-    if (suggestionIds.has(v.suggestionId) && userIdToEmail[v.userId]) {
-      uniqueEmails.add(userIdToEmail[v.userId]);
+    if (suggestionIds.has(v.suggestionId)) {
+      // לפי userId
+      if (userIdToEmail[v.userId]) {
+        uniqueEmails.add(userIdToEmail[v.userId]);
+      }
+      // גם לפי created_by של ההצבעה ישירות
+      if (v.created_by) {
+        uniqueEmails.add(v.created_by);
+      }
     }
   });
   
