@@ -512,7 +512,7 @@ ${text}`;
                                      }}
                                      dangerouslySetInnerHTML={{ __html: displayedContent }}
                                    />
-                                    {(section.originalLanguage || 'he') !== language && (
+                                    {(section.originalLanguage || detectLanguage(section.content)) !== language && (
                                       <Button
                                         variant="ghost"
                                         size="sm"
@@ -543,7 +543,7 @@ ${text}`;
                                         ) : (
                                           <>
                                             <Globe className="w-3 h-3 mr-1" />
-                                            {showTranslatedSections[section.id] ? 'הצג מקור' : t('translateSection')}
+                                            {showTranslatedSections[section.id] ? t('showOriginal') : t('translateSection')}
                                           </>
                                         )}
                                       </Button>
