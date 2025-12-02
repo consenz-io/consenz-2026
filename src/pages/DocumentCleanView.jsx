@@ -106,41 +106,86 @@ export default function DocumentCleanView() {
     return relevantSuggestions[relevantSuggestions.length - 1].newTitle;
   };
 
-  // קבוצת גרסאות לפי גרסה (כך שכל גרסה תכיל את כל הסעיפים שלה)
+  // Build document snapshots - each version change creates a new snapshot of the entire document
   const versionGroups = React.useMemo(() => {
-    if (!allVersions.length) return [];
+    if (!allVersions.length && !sections.length) return [];
     
-    const groups = {};
-    allVersions.forEach(v => {
-      if (!groups[v.version]) {
-        groups[v.version] = [];
+    // Get unique versions sorted by version number descending (newest first)
+    const uniqueVersions = [...new Set(allVersions.map(v => v.version))].sort((a, b) => b - a);
+    
+    // Build snapshots - for each version, show what the document looked like at that point
+    const snapshots = [];
+    
+    // First, add current state as version 0 (newest)
+    const currentSnapshot = {
+      version: 'current',
+      label: 'נוכחית',
+      timestamp: new Date().toISOString(),
+      sectionContents: {}
+    };
+    sections.forEach(s => {
+      currentSnapshot.sectionContents[s.id] = s.content;
+    });
+    snapshots.push(currentSnapshot);
+    
+    // Then build historical snapshots based on versions
+    // For each version, we need to reconstruct what the document looked like BEFORE that change
+    const sortedVersions = [...allVersions].sort((a, b) => {
+      // Sort by version descending, then by created_date descending
+      if (b.version !== a.version) return b.version - a.version;
+      return new Date(b.created_date) - new Date(a.created_date);
+    });
+    
+    // Group versions by their version number
+    const versionMap = {};
+    sortedVersions.forEach(v => {
+      if (!versionMap[v.version]) {
+        versionMap[v.version] = [];
       }
-      // טיפול בכפילויות - שומרים רק את הגרסה האחרונה (לפי תאריך יצירה)
-      const existing = groups[v.version].find(existing => existing.sectionId === v.sectionId);
-      if (!existing) {
-        groups[v.version].push(v);
-      } else {
-        // אם כבר יש גרסה לסעיף הזה, שומרים את החדשה יותר
-        const existingDate = new Date(existing.created_date);
-        const newDate = new Date(v.created_date);
-        if (newDate > existingDate) {
-          const index = groups[v.version].indexOf(existing);
-          groups[v.version][index] = v;
-        }
+      // Only add if this section isn't already in this version group
+      if (!versionMap[v.version].find(existing => existing.sectionId === v.sectionId)) {
+        versionMap[v.version].push(v);
       }
     });
     
-    // מיון הגרסאות בסדר יורד (החדשה ביותר קודם)
-    const sortedVersions = Object.keys(groups)
-      .map(Number)
-      .sort((a, b) => b - a)
-      .map(versionNum => ({
-        version: versionNum,
-        sections: groups[versionNum]
-      }));
+    // Create snapshot for each version (representing the state AFTER that version was applied)
+    // We go through versions in descending order
+    let previousSnapshot = { ...currentSnapshot.sectionContents };
     
-    return sortedVersions;
-  }, [allVersions]);
+    uniqueVersions.forEach((versionNum, idx) => {
+      const versionsInThisGroup = versionMap[versionNum] || [];
+      
+      // For this version, we show what the document looked like BEFORE these changes
+      const snapshotBeforeChange = { ...previousSnapshot };
+      
+      // Apply the changes in reverse - replace current content with the version's content
+      versionsInThisGroup.forEach(v => {
+        snapshotBeforeChange[v.sectionId] = v.content;
+      });
+      
+      // Get the change description
+      const changeDescriptions = versionsInThisGroup
+        .map(v => v.changeDescription)
+        .filter(Boolean)
+        .join(', ');
+      
+      const changeType = versionsInThisGroup[0]?.changeType || 'direct_edit';
+      
+      snapshots.push({
+        version: versionNum,
+        label: `גרסה ${versionNum}`,
+        timestamp: versionsInThisGroup[0]?.created_date,
+        changeDescription: changeDescriptions,
+        changeType: changeType,
+        sectionContents: snapshotBeforeChange,
+        changedSectionIds: versionsInThisGroup.map(v => v.sectionId)
+      });
+      
+      previousSnapshot = snapshotBeforeChange;
+    });
+    
+    return snapshots;
+  }, [allVersions, sections]);
 
   const currentVersion = versionGroups[currentVersionIndex];
   const previousVersion = versionGroups[currentVersionIndex + 1];
