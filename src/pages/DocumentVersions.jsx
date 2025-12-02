@@ -13,6 +13,7 @@ import SectionDiff from "../components/document/SectionDiff";
 import DocumentVersionHistory from "../components/document/DocumentVersionHistory";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
+import { detectLanguage } from "@/components/utils/translationUtils";
 
 export default function DocumentVersions() {
   const [searchParams] = useSearchParams();
