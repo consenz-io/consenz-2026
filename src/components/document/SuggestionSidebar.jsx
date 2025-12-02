@@ -505,6 +505,8 @@ export default function SuggestionSidebar({
                 originalContent={suggestion.originalContent}
                 newContent={suggestion.newContent}
                 suggestion={suggestion}
+                documentId={suggestion.documentId}
+                sectionId={suggestion.sectionId}
               />
             </div>
           ) : (
