@@ -81,11 +81,15 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       if (s.created_by) contributorEmails.add(s.created_by);
     });
 
-    // Voters
+    // Voters - גם לפי userId וגם לפי created_by של ההצבעה
     const suggestionIds = new Set(suggestions.map(s => s.id));
     const voterIds = new Set();
     allVotes.forEach(v => {
-      if (suggestionIds.has(v.suggestionId)) voterIds.add(v.userId);
+      if (suggestionIds.has(v.suggestionId)) {
+        voterIds.add(v.userId);
+        // גם להוסיף את created_by של ההצבעה ישירות
+        if (v.created_by) contributorEmails.add(v.created_by);
+      }
     });
     allUsers.forEach(user => {
       if (voterIds.has(user.id)) contributorEmails.add(user.email);
