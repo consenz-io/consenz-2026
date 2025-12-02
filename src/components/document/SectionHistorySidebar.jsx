@@ -12,6 +12,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import SectionDiff from "./SectionDiff";
 import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
+import { detectLanguage } from "@/components/utils/translationUtils";
 
 export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
   const { t, isRTL } = useLanguage();
