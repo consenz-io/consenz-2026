@@ -273,7 +273,14 @@ export default function SectionHistory() {
                     ) : (
                       <div
                         className="prose prose-sm max-w-none text-slate-700 p-4 bg-slate-50 rounded-lg"
-                        style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}
+                        style={{ 
+                          direction: isRTL ? 'rtl' : 'ltr', 
+                          textAlign: isRTL ? 'right' : 'left',
+                          fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                          fontSize: "1.125rem",
+                          lineHeight: "1.8",
+                          letterSpacing: "0.01em"
+                        }}
                         dangerouslySetInnerHTML={{ __html: currentVer.content }}
                       />
                     )}
