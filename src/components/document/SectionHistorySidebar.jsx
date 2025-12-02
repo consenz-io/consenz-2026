@@ -345,11 +345,15 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                               <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
                                 <div 
                                   className="prose prose-sm max-w-none text-slate-700"
-                                  dangerouslySetInnerHTML={{ 
-                                    __html: translatedVersions[currentVer.id] || currentVer.content 
-                                  }}
                                   dir={isRTL ? 'rtl' : 'ltr'}
-                                />
+                                >
+                                  {(() => {
+                                    const content = translatedVersions[currentVer.id] || currentVer.content;
+                                    const tempDiv = document.createElement('div');
+                                    tempDiv.innerHTML = content || '';
+                                    return tempDiv.textContent || '';
+                                  })()}
+                                </div>
                               </div>
                               
                               {/* Action buttons */}
