@@ -220,7 +220,6 @@ export default function SectionDiff({
             title={showDiff ? t('cleanView') : t('showChangesView')}
           >
             {showDiff ? <Eye className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
-            <span className="text-xs">{showDiff ? t('cleanView') : t('showChangesView')}</span>
           </Button>
           {needsTranslation && (
             <Button
