@@ -144,28 +144,13 @@ Return ONLY the translated HTML:`;
     if (!val) return null;
     if (typeof val === 'string') return val;
     if (typeof val === 'object') {
-      // Try common response fields
+      // Try common response fields for LLM responses
       const fields = ['content', 'text', 'translation', 'output', 'result', 'message'];
       for (const field of fields) {
         if (typeof val[field] === 'string' && val[field].length > 0) {
           return val[field];
         }
       }
-      // Find first non-empty string value recursively
-      const findFirstString = (obj) => {
-        for (const key of Object.keys(obj)) {
-          const v = obj[key];
-          if (typeof v === 'string' && v.length > 0 && !v.startsWith('<')) {
-            return v;
-          }
-          if (v && typeof v === 'object' && !Array.isArray(v)) {
-            const found = findFirstString(v);
-            if (found) return found;
-          }
-        }
-        return null;
-      };
-      return findFirstString(val);
     }
     return null;
   };
@@ -173,10 +158,9 @@ Return ONLY the translated HTML:`;
   const translatedValue = translations[language] || translateMutation.data;
   const safeTranslation = ensureString(translatedValue);
   
-  // Only show translation if it's valid and not just HTML artifacts
+  // Only show translation if it's valid
   const isValidTranslation = safeTranslation && 
     safeTranslation.length > 1 && 
-    !safeTranslation.match(/^\s*<\s*$/) &&
     safeTranslation !== '[object Object]';
   
   const displayContent = showTranslated && isValidTranslation
