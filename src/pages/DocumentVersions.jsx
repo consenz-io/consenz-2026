@@ -184,10 +184,10 @@ export default function DocumentVersions() {
 
   const getChangeTypeLabel = (type) => {
     switch (type) {
-      case 'suggestion_accepted': return 'הצעה התקבלה';
-      case 'direct_edit': return 'עריכה ישירה';
-      case 'section_created': return 'סעיף חדש נוצר';
-      case 'topic_title_changed': return 'כותרת נושא שונתה';
+      case 'suggestion_accepted': return t('suggestionAccepted');
+      case 'direct_edit': return t('directEdit');
+      case 'section_created': return t('sectionCreated');
+      case 'topic_title_changed': return t('topicTitleChanged') || 'כותרת נושא שונתה';
       default: return type;
     }
   };
@@ -196,6 +196,41 @@ export default function DocumentVersions() {
     const topic = topics.find(t => t.id === topicId);
     return topic?.title || 'Unknown Topic';
   };
+
+  const restoreVersionMutation = useMutation({
+    mutationFn: async (versionToRestore) => {
+      if (!isAdmin) throw new Error(t("adminAccessRequired"));
+
+      const allSectionVersions = await base44.entities.DocumentVersion.filter({ sectionId: versionToRestore.sectionId });
+      const nextVersion = allSectionVersions.length > 0 ? Math.max(...allSectionVersions.map(v => v.version)) + 1 : 1;
+
+      const currentSection = sections.find(s => s.id === versionToRestore.sectionId);
+      if (!currentSection) throw new Error("Section not found");
+
+      await base44.entities.DocumentVersion.create({
+        documentId,
+        sectionId: versionToRestore.sectionId,
+        content: currentSection.content,
+        changeDescription: t("restoredFromVersion", { version: versionToRestore.version }),
+        version: nextVersion,
+        changeType: 'direct_edit'
+      });
+
+      await base44.entities.Section.update(versionToRestore.sectionId, {
+        content: versionToRestore.content,
+        lastEditedBy: user?.id
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sections', documentId] });
+      queryClient.invalidateQueries({ queryKey: ['versions', documentId] });
+      setError(null);
+    },
+    onError: (err) => {
+      setError(err.message);
+      setTimeout(() => setError(null), 5000);
+    }
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
