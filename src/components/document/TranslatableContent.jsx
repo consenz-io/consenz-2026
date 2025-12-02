@@ -209,7 +209,7 @@ Return ONLY the translated HTML:`;
     return null;
   };
 
-  const translatedValue = translations[language] || translateMutation.data;
+  const translatedValue = getFieldTranslation() || translateMutation.data;
   const safeTranslation = ensureString(translatedValue);
   
   // Only show translation if it's valid
