@@ -386,6 +386,18 @@ export default function DocumentComments() {
                       </p>
                     )}
                   </div>
+
+                  {/* View in Document button at bottom */}
+                  {group.type === 'section' && (
+                    <div className="mt-3 pt-3 border-t border-slate-100">
+                      <Link to={`${createPageUrl("DocumentView")}?id=${documentId}&scrollTo=${group.entityId}`}>
+                        <Button variant="outline" size="sm" className="text-xs h-6 px-2">
+                          <Eye className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                          {t('viewInDocument')}
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
