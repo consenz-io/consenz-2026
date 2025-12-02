@@ -643,7 +643,7 @@ ${text}`;
                                 )}
                                 </div>
                               </div>
-                            </Link>
+                            </div>
                           </div>
                         );
                       })}
@@ -654,6 +654,13 @@ ${text}`;
             })
           )}
         </div>
+
+        {openSectionHistoryId && (
+          <SectionHistorySidebar
+            sectionId={openSectionHistoryId}
+            onClose={() => setOpenSectionHistoryId(null)}
+          />
+        )}
 
         {/* Footer */}
         <div className="mt-12 md:mt-16 pt-6 md:pt-8 border-t border-slate-300 text-center text-slate-500 text-xs md:text-sm">
