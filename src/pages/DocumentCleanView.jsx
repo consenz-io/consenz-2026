@@ -110,78 +110,70 @@ export default function DocumentCleanView() {
   const versionGroups = React.useMemo(() => {
     if (!allVersions.length && !sections.length) return [];
     
-    // Get unique versions sorted by version number descending (newest first)
-    const uniqueVersions = [...new Set(allVersions.map(v => v.version))].sort((a, b) => b - a);
+    // Sort all versions by created_date descending (newest first)
+    const sortedVersions = [...allVersions].sort((a, b) => {
+      return new Date(b.created_date) - new Date(a.created_date);
+    });
     
-    // Build snapshots - for each version, show what the document looked like at that point
+    // Build snapshots - start from current state and work backwards
     const snapshots = [];
     
-    // First, add current state as version 0 (newest)
+    // Current state snapshot
     const currentSnapshot = {
       version: 'current',
       label: 'נוכחית',
       timestamp: new Date().toISOString(),
-      sectionContents: {}
+      sectionContents: {},
+      existingSections: new Set()
     };
     sections.forEach(s => {
       currentSnapshot.sectionContents[s.id] = s.content;
+      currentSnapshot.existingSections.add(s.id);
     });
     snapshots.push(currentSnapshot);
     
-    // Then build historical snapshots based on versions
-    // For each version, we need to reconstruct what the document looked like BEFORE that change
-    const sortedVersions = [...allVersions].sort((a, b) => {
-      // Sort by version descending, then by created_date descending
-      if (b.version !== a.version) return b.version - a.version;
-      return new Date(b.created_date) - new Date(a.created_date);
-    });
+    // Track which sections exist at each point in time
+    // and their content at each version
+    let currentSectionContents = { ...currentSnapshot.sectionContents };
+    let currentExistingSections = new Set(currentSnapshot.existingSections);
     
-    // Group versions by their version number
-    const versionMap = {};
+    // Group versions by unique timestamp/version to avoid duplicates
+    const processedVersionKeys = new Set();
+    
     sortedVersions.forEach(v => {
-      if (!versionMap[v.version]) {
-        versionMap[v.version] = [];
+      const versionKey = `${v.version}-${v.sectionId}`;
+      if (processedVersionKeys.has(versionKey)) return;
+      processedVersionKeys.add(versionKey);
+      
+      // Create a snapshot representing the state BEFORE this change
+      const snapshotBeforeChange = {
+        version: v.version,
+        label: `גרסה ${v.version}`,
+        timestamp: v.created_date,
+        changeDescription: v.changeDescription,
+        changeType: v.changeType,
+        sectionContents: { ...currentSectionContents },
+        existingSections: new Set(currentExistingSections),
+        changedSectionIds: [v.sectionId]
+      };
+      
+      // Apply the change in reverse
+      if (v.changeType === 'section_created') {
+        // This section was created at this version - remove it from older snapshots
+        delete snapshotBeforeChange.sectionContents[v.sectionId];
+        snapshotBeforeChange.existingSections.delete(v.sectionId);
+        snapshotBeforeChange.isNewSection = true;
+        snapshotBeforeChange.newSectionId = v.sectionId;
+      } else {
+        // This was an edit - show the previous content
+        snapshotBeforeChange.sectionContents[v.sectionId] = v.content;
       }
-      // Only add if this section isn't already in this version group
-      if (!versionMap[v.version].find(existing => existing.sectionId === v.sectionId)) {
-        versionMap[v.version].push(v);
-      }
-    });
-    
-    // Create snapshot for each version (representing the state AFTER that version was applied)
-    // We go through versions in descending order
-    let previousSnapshot = { ...currentSnapshot.sectionContents };
-    
-    uniqueVersions.forEach((versionNum, idx) => {
-      const versionsInThisGroup = versionMap[versionNum] || [];
       
-      // For this version, we show what the document looked like BEFORE these changes
-      const snapshotBeforeChange = { ...previousSnapshot };
+      snapshots.push(snapshotBeforeChange);
       
-      // Apply the changes in reverse - replace current content with the version's content
-      versionsInThisGroup.forEach(v => {
-        snapshotBeforeChange[v.sectionId] = v.content;
-      });
-      
-      // Get the change description
-      const changeDescriptions = versionsInThisGroup
-        .map(v => v.changeDescription)
-        .filter(Boolean)
-        .join(', ');
-      
-      const changeType = versionsInThisGroup[0]?.changeType || 'direct_edit';
-      
-      snapshots.push({
-        version: versionNum,
-        label: `גרסה ${versionNum}`,
-        timestamp: versionsInThisGroup[0]?.created_date,
-        changeDescription: changeDescriptions,
-        changeType: changeType,
-        sectionContents: snapshotBeforeChange,
-        changedSectionIds: versionsInThisGroup.map(v => v.sectionId)
-      });
-      
-      previousSnapshot = snapshotBeforeChange;
+      // Update current state for next iteration
+      currentSectionContents = { ...snapshotBeforeChange.sectionContents };
+      currentExistingSections = new Set(snapshotBeforeChange.existingSections);
     });
     
     return snapshots;
