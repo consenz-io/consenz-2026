@@ -452,6 +452,7 @@ ${text}`;
                   title={language === 'he' ? 'גרסה חדשה יותר' : 'Newer version'}
                 >
                   {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                </Button>
               </div>
             )}
 
