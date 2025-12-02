@@ -21,7 +21,7 @@ export default function SectionDiff({
   const [translatedOriginal, setTranslatedOriginal] = useState(null);
   const [translatedNew, setTranslatedNew] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
-  const [showTranslated, setShowTranslated] = useState(true); // Default to translated view
+  const [showTranslated, setShowTranslated] = useState(false); // Default to original language
   const [showDiff, setShowDiff] = useState(false);
   
   // Detect languages for both contents
