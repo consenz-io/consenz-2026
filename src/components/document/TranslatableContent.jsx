@@ -42,7 +42,32 @@ export default function TranslatableContent({
   const detectedLanguage = entity.originalLanguage || detectLanguage(content || '');
   const originalLanguage = detectedLanguage;
   const translations = entity.translations || {};
-  const hasTranslation = translations[language];
+  
+  // Get translation for specific field if fieldName is provided
+  const getFieldTranslation = () => {
+    const langTranslation = translations[language];
+    if (!langTranslation) return null;
+    
+    // If it's a string, it's the main content translation
+    if (typeof langTranslation === 'string') {
+      return fieldName ? null : langTranslation;
+    }
+    
+    // If it's an object with field-specific translations
+    if (typeof langTranslation === 'object') {
+      if (fieldName && typeof langTranslation[fieldName] === 'string') {
+        return langTranslation[fieldName];
+      }
+      // For backwards compatibility - if no fieldName, try common fields
+      if (!fieldName) {
+        if (typeof langTranslation.content === 'string') return langTranslation.content;
+        if (typeof langTranslation.newContent === 'string') return langTranslation.newContent;
+      }
+    }
+    return null;
+  };
+  
+  const hasTranslation = getFieldTranslation() !== null;
   
   // בדיקה אם צריך תרגום - בודק גם אם השפות שונות וגם אם השפה אינה שפת המקור
   const needsTranslation = originalLanguage && language && originalLanguage !== language;
