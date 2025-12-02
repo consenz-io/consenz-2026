@@ -249,7 +249,7 @@ export default function LearnMore() {
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">
               {getLocalizedText(
                 "A platform for democratic collaboration in drafting policy documents, constitutions, and decisions using dynamic consensus algorithms",
-                "פלטפורמה לשיתוף פעולה דמוקרטי בניסוח מסמכי מדיניות, חוקות והחלטות באמצעעת אלגוריתמי קונצנזוס דינמיים",
+                "פלטפורמה לשיתוף פעולה דמוקרטי בניסוח מסמכי מדיניות, חוקות והחלטות באמצעות אלגוריתמי קונצנזוס דינמיים",
                 "منصة للتعاون الديمقراطي في صياغة وثائق السياسة والدساتير والقرارات باستخدام خوارزميات إجماع ديناميكية"
               )}
             </p>
