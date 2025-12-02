@@ -262,7 +262,7 @@ export default function SectionCarousel({
               </p>
             ) : (
               <button 
-                onClick={() => setCurrentIndex(0)}
+                onClick={() => setCurrentSuggestionId('current')}
                 className="text-sm font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer transition-colors"
               >
                 {t('viewCurrentVersion')}
