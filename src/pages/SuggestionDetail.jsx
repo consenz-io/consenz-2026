@@ -682,13 +682,20 @@ export default function SuggestionDetail() {
             {suggestion.type === 'edit_section' && suggestion.originalContent ? (
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedChanges')}</h3>
-                <SectionDiff
-                  originalContent={suggestion.originalContent}
-                  newContent={suggestion.newContent}
-                  suggestion={suggestion}
-                  documentId={suggestion.documentId}
-                  sectionId={suggestion.sectionId}
-                />
+                <Link 
+                  to={`${createPageUrl("DocumentCleanView")}?id=${suggestion.documentId}&scrollToSuggestion=${suggestionId}`}
+                  className="block"
+                >
+                  <div className="hover:shadow-md transition-all cursor-pointer rounded-lg">
+                    <SectionDiff
+                      originalContent={suggestion.originalContent}
+                      newContent={suggestion.newContent}
+                      suggestion={suggestion}
+                      documentId={suggestion.documentId}
+                      sectionId={suggestion.sectionId}
+                    />
+                  </div>
+                </Link>
               </div>
             ) : suggestion.type === 'new_section' ? (
               <div>
@@ -713,17 +720,22 @@ export default function SuggestionDetail() {
             ) : (
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedContent')}</h3>
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <TranslatableContent
-                    content={suggestion.newContent}
-                    entity={suggestion}
-                    entityType="Suggestion"
-                    onUpdate={(updated) => {
-                      queryClient.setQueryData(['suggestion', suggestionId], updated);
-                    }}
-                    className="prose prose-sm max-w-none"
-                  />
-                </div>
+                <Link 
+                  to={`${createPageUrl("DocumentCleanView")}?id=${suggestion.documentId}&scrollToSuggestion=${suggestionId}`}
+                  className="block"
+                >
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
+                    <TranslatableContent
+                      content={suggestion.newContent}
+                      entity={suggestion}
+                      entityType="Suggestion"
+                      onUpdate={(updated) => {
+                        queryClient.setQueryData(['suggestion', suggestionId], updated);
+                      }}
+                      className="prose prose-sm max-w-none"
+                    />
+                  </div>
+                </Link>
               </div>
             )}
 
