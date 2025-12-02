@@ -226,12 +226,12 @@ export default function SectionDiff({
             <Button
               variant="ghost"
               size="sm"
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                handleToggleTranslation();
+                await handleToggleTranslation();
               }}
               disabled={isTranslating}
-              className={`h-7 px-2 gap-1 ${showTranslated ? 'text-blue-600' : 'text-slate-600'} hover:text-blue-700 hover:bg-blue-50`}
+              className={`h-7 px-2 gap-1 ${showTranslated ? 'text-blue-600 bg-blue-50' : 'text-slate-600'} hover:text-blue-700 hover:bg-blue-50`}
               title={showTranslated ? t('showOriginal') : t('translate')}
             >
               {isTranslating ? (
