@@ -520,7 +520,11 @@ ${text}`;
                                        lineHeight: "1.8",
                                        letterSpacing: "0.01em"
                                      }}
-                                     dangerouslySetInnerHTML={{ __html: displayedContent }}
+                                     dangerouslySetInnerHTML={{ 
+                                       __html: showTranslatedSections[section.id] 
+                                         ? (translatedSections[section.id] || section.translations?.[language] || displayedContent)
+                                         : displayedContent 
+                                     }}
                                    />
                                     {(section.originalLanguage || detectLanguage(section.content)) !== language && (
                                       <Button
