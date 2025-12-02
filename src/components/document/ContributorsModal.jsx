@@ -124,7 +124,29 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       }
     });
 
-    const contributorsList = allUsers.filter(user => contributorEmails.has(user.email));
+    // מחזירים משתמשים שקיימים ב-DB, ועבור אימיילים שלא קיימים ב-DB יוצרים אובייקט בסיסי
+    const contributorsList = [];
+    const foundEmails = new Set();
+    
+    allUsers.forEach(user => {
+      if (contributorEmails.has(user.email)) {
+        contributorsList.push(user);
+        foundEmails.add(user.email);
+      }
+    });
+    
+    // הוספת משתמשים שלא נמצאו ב-DB (יש להם created_by אבל אין להם רשומת User)
+    contributorEmails.forEach(email => {
+      if (!foundEmails.has(email)) {
+        contributorsList.push({
+          id: email, // שימוש באימייל כ-ID זמני
+          email: email,
+          full_name: email.split('@')[0], // שם זמני מהאימייל
+          role: 'user'
+        });
+      }
+    });
+    
     return { contributors: contributorsList, loading: false };
   }, [document, suggestions, sections, allUsers, allVotes, allComments, allArguments, documentId]);
 
