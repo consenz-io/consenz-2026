@@ -315,7 +315,14 @@ export default function DocumentComments() {
                             const { text, needsExpand } = getSectionPreview(group.entityId, isExpanded);
                             return (
                               <div className="w-full">
-                                <p className={`text-sm text-slate-700 mt-1 ${isExpanded ? '' : 'line-clamp-2'}`}>
+                                <p 
+                                  className={`text-slate-700 mt-1 ${isExpanded ? '' : 'line-clamp-2'}`}
+                                  style={{ 
+                                    fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                    fontSize: "1rem",
+                                    lineHeight: "1.6"
+                                  }}
+                                >
                                   {text}
                                 </p>
                                 {needsExpand && (
