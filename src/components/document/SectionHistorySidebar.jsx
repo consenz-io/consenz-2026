@@ -69,8 +69,12 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  // Sort versions by version number descending and pair each with its previous version
-  const sortedVersions = [...versions].sort((a, b) => b.version - a.version);
+  // Sort versions by version number descending and deduplicate by version number
+  const sortedVersions = [...versions]
+    .sort((a, b) => b.version - a.version)
+    .filter((version, index, arr) => 
+      index === arr.findIndex(v => v.version === version.version)
+    );
   
   // Create version groups - each version paired with the one before it for diff display
   const versionGroups = sortedVersions.map((version, index) => {
@@ -127,34 +131,9 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
             </div>
           ) : (
             <>
-              {/* Current Version */}
-              <Card className="border-2 border-blue-500">
-                <CardHeader className="bg-blue-50 p-4">
-                  <CardTitle className="flex items-center justify-between text-base">
-                    <span>{t('currentVersion')}</span>
-                    <Badge className="bg-blue-600 text-xs">{t('current')}</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <TranslatableContent
-                    content={section.content}
-                    entity={section}
-                    entityType="section"
-                    onUpdate={(updated) => {
-                      queryClient.setQueryData(['section', sectionId], updated);
-                    }}
-                    className="prose prose-sm max-w-none text-slate-700"
-                  />
-                  <div className="text-xs text-slate-500 mt-4 pt-4 border-t">
-                    {t('lastUpdate')}: {new Date(section.updated_date).toLocaleString()}
-                  </div>
-                </CardContent>
-              </Card>
-
               {/* Version History */}
               {versionGroups.length > 0 ? (
                 <div className="space-y-4">
-                  <h3 className="text-base font-bold text-slate-900">{t('previousVersions')}</h3>
                   {versionGroups.filter(g => g.version && g.version.changeType).map((group, groupIndex) => {
                     const currentVer = group.version;
                     const prevVer = group.previousVersion;
