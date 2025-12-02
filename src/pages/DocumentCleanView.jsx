@@ -217,6 +217,42 @@ export default function DocumentCleanView() {
     }
   }, [currentVersionIndex, currentSnapshot, newerSnapshot]);
 
+  // Scroll to suggestion's version when scrollToSuggestionId is provided
+  React.useEffect(() => {
+    if (scrollToSuggestionId && allVersions.length > 0 && versionGroups.length > 0) {
+      // Find the version that contains this suggestion
+      const versionWithSuggestion = allVersions.find(v => v.suggestionId === scrollToSuggestionId);
+      
+      if (versionWithSuggestion) {
+        // Find the index in versionGroups that corresponds to this version
+        const targetVersionIndex = versionGroups.findIndex((snapshot, index) => {
+          // For suggestion versions, find the snapshot where this version's changes appear
+          if (index === 0) return false; // Skip current version
+          return snapshot.version === versionWithSuggestion.version || 
+                 (allVersions.some(v => v.suggestionId === scrollToSuggestionId && v.version === snapshot.version));
+        });
+        
+        if (targetVersionIndex > 0) {
+          // Navigate to the version before this one to show the diff
+          setCurrentVersionIndex(targetVersionIndex);
+        }
+        
+        // Also scroll to the section
+        setTimeout(() => {
+          const sectionId = versionWithSuggestion.sectionId;
+          const element = window.document.getElementById(`section-${sectionId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
+            setTimeout(() => {
+              element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
+            }, 3000);
+          }
+        }, 300);
+      }
+    }
+  }, [scrollToSuggestionId, allVersions, versionGroups]);
+
   if (docLoading || topicsLoading || sectionsLoading || versionsLoading) {
     return (
       <div className="min-h-screen bg-white p-8">
