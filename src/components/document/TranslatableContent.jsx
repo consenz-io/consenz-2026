@@ -32,7 +32,8 @@ export default function TranslatableContent({
   entityType,
   onUpdate,
   className = "",
-  renderContent = null
+  renderContent = null,
+  fieldName = null // Optional: specify which field is being translated (e.g., 'explanation', 'newContent')
 }) {
   const { language, isRTL } = useLanguage();
   const queryClient = useQueryClient();
