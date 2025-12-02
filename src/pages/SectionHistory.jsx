@@ -356,6 +356,7 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
             content={suggestion.explanation}
             entity={suggestion}
             entityType="Suggestion"
+            fieldName="explanation"
             className="text-xs md:text-sm text-slate-600 break-words"
           />
         </div>
