@@ -556,7 +556,22 @@ ${text}`;
                                   {topicIndex + 1}.{sectionIndex + 1}
                                 </span>
                                 <div className="flex-1">
-                                {isViewingHistory && hasChanged ? (
+                                {isViewingHistory && isNewlyCreatedSection ? (
+                                  <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded">
+                                    <Badge className="mb-2 bg-green-100 text-green-800 text-xs">
+                                      {language === 'he' ? 'סעיף חדש' : 'New Section'}
+                                    </Badge>
+                                    <div 
+                                      className="prose prose-sm max-w-none text-green-800"
+                                      style={{ 
+                                        fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                        fontSize: "1.125rem",
+                                        lineHeight: "1.8"
+                                      }}
+                                      dangerouslySetInnerHTML={{ __html: newerContent }}
+                                    />
+                                  </div>
+                                ) : isViewingHistory && hasChanged ? (
                                  <InlineDiff
                                    originalContent={displayedContent}
                                    newContent={newerContent}
