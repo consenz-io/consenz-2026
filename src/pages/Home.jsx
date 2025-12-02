@@ -424,6 +424,12 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      <AllContributorsModal
+        isOpen={showContributorsModal}
+        onClose={() => setShowContributorsModal(false)}
+        contributors={contributorsList}
+      />
     </div>
   );
 }
