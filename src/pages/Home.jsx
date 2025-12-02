@@ -270,12 +270,7 @@ export default function Home() {
             </Card>
             <Card 
               className="bg-white/80 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all"
-              onClick={() => {
-                const element = document.getElementById('recent-documents-section');
-                if (element) {
-                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-              }}
+              onClick={() => setShowContributorsModal(true)}
             >
               <CardContent className="p-6 text-center">
                 <Users className="w-8 h-8 mx-auto mb-3 text-indigo-600" />
