@@ -49,13 +49,24 @@ const InlineDiff = ({ originalContent, newContent, originalEntity, newEntity }) 
   
   // Extract text from HTML
   const extractText = (html) => {
+    if (!html) return '';
     const div = document.createElement('div');
     div.innerHTML = html;
     return div.textContent || div.innerText || '';
   };
+  
+  // אם מתרגם, הצג טעינה
+  if (isTranslating && crossLanguageDiff) {
+    return (
+      <div className="flex items-center justify-center py-4">
+        <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-slate-600`}>מתרגם להשוואה...</span>
+      </div>
+    );
+  }
 
-  const originalText = extractText(originalContent);
-  const newText = extractText(newContent);
+  const originalText = extractText(displayOriginal);
+  const newText = extractText(displayNew);
 
   // Tokenize text - מפריד מילים, סימני פיסוק ורווחים כטוקנים נפרדים
   const tokenize = (text) => {
