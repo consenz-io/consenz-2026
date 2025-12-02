@@ -70,18 +70,6 @@ export default function SectionHistory() {
     enabled: !!user?.id && !!document?.id,
   });
 
-  const getUserName = (email) => {
-    const foundUser = users.find(u => u.email === email);
-    return foundUser?.full_name || email;
-  };
-
-  const toggleComments = (suggestionId) => {
-    setShowComments(prev => ({
-      ...prev,
-      [suggestionId]: !prev[suggestionId]
-    }));
-  };
-
   const restoreVersionMutation = useMutation({
     mutationFn: async (versionToRestore) => {
       if (!isAdmin) throw new Error(t("adminAccessRequired"));
@@ -113,6 +101,18 @@ export default function SectionHistory() {
       setTimeout(() => setError(null), 5000);
     }
   });
+
+  const getUserName = (email) => {
+    const foundUser = users.find(u => u.email === email);
+    return foundUser?.full_name || email;
+  };
+
+  const toggleComments = (suggestionId) => {
+    setShowComments(prev => ({
+      ...prev,
+      [suggestionId]: !prev[suggestionId]
+    }));
+  };
 
   const getChangeTypeLabel = (type) => {
     switch (type) {
