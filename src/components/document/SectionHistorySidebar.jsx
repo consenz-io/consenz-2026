@@ -195,7 +195,6 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                           {/* Show diff between this version and the previous one */}
                           {prevVer && currentVer.changeType === 'suggestion_accepted' && !isOldestVersion && (
                             <div>
-                              <h4 className="text-xs font-semibold text-slate-700 mb-2">{t('changesInThisVersion')}</h4>
                               <SectionDiff
                                 originalContent={prevVer.content}
                                 newContent={currentVer.content}
