@@ -361,65 +361,14 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                             </div>
                           )}
                           
-                          {/* Show content with translate/diff buttons for suggestion_accepted */}
+                          {/* Show diff for suggestion_accepted */}
                           {prevVer && currentVer.changeType === 'suggestion_accepted' && !isOldestVersion && (
-                            <div className="space-y-2">
-                              {/* Content display */}
-                              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                <div 
-                                  className="prose prose-sm max-w-none text-slate-700"
-                                  dir={isRTL ? 'rtl' : 'ltr'}
-                                >
-                                  {(() => {
-                                    const content = translatedVersions[currentVer.id] || currentVer.content;
-                                    if (!content) return '';
-                                    return content.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-                                  })()}
-                                </div>
-                              </div>
-                              
-                              {/* Action buttons */}
-                              <div className="flex gap-2 flex-wrap">
-                                {/* Translate button - only show if content language differs from UI language */}
-                                {detectLanguage(currentVer.content) !== language && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => translateVersion(currentVer.id, currentVer.content)}
-                                    disabled={translatingVersions[currentVer.id]}
-                                    className={`h-7 text-xs gap-1 ${translatedVersions[currentVer.id] ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`}
-                                  >
-                                    {translatingVersions[currentVer.id] ? (
-                                      <Loader2 className="w-3 h-3 animate-spin" />
-                                    ) : (
-                                      <Languages className="w-3 h-3" />
-                                    )}
-                                    {translatedVersions[currentVer.id] ? t('showOriginal') : t('translate')}
-                                  </Button>
-                                )}
-                                
-                                {/* Show diff button */}
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => toggleDiff(currentVer.id)}
-                                  className={`h-7 text-xs gap-1 ${showDiff[currentVer.id] ? 'bg-purple-50 text-purple-600 border-purple-200' : ''}`}
-                                >
-                                  <GitCompare className="w-3 h-3" />
-                                  {showDiff[currentVer.id] ? t('showLess') : t('showDiff')}
-                                </Button>
-                              </div>
-                              
-                              {/* Diff view - inline diff display */}
-                              {showDiff[currentVer.id] && (
-                                <div className="bg-white p-3 rounded-lg border border-slate-200">
-                                  <InlineDiffView
-                                    originalContent={translatedVersions[prevVer.id] || prevVer.content}
-                                    newContent={translatedVersions[currentVer.id] || currentVer.content}
-                                    isRTL={isRTL}
-                                  />
-                                </div>
-                              )}
+                            <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                              <InlineDiffView
+                                originalContent={prevVer.content}
+                                newContent={currentVer.content}
+                                isRTL={isRTL}
+                              />
                             </div>
                           )}
 
