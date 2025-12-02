@@ -10,6 +10,7 @@ import { FileText, TrendingUp, Users, Clock, ArrowRight, ArrowLeft, Languages, L
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import { calculateContributorsFromData } from "@/components/document/calculateContributors";
+import AllContributorsModal from "@/components/home/AllContributorsModal";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
