@@ -141,11 +141,22 @@ export default function DocumentVersions() {
     return `Section ${sectionIndex + 1}`;
   };
 
-  const groupedVersions = versions.reduce((acc, version) => {
-    acc[version.sectionId] = acc[version.sectionId] || [];
-    acc[version.sectionId].push(version);
-    return acc;
-  }, {});
+  // מיון וסינון כפילויות - כל הגרסאות ברשימה אחת ממוינת לפי תאריך
+  const allVersionsSorted = [...versions]
+    .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+    .filter((version, index, arr) => {
+      if (index === arr.length - 1) return true;
+      const nextVersion = arr.find(v => v.sectionId === version.sectionId && new Date(v.created_date) < new Date(version.created_date));
+      return !nextVersion || version.content !== nextVersion.content;
+    });
+
+  // מיפוי גרסאות עם הגרסה הקודמת שלהן
+  const versionGroups = allVersionsSorted.map((version) => {
+    const previousVersion = allVersionsSorted.find(
+      v => v.sectionId === version.sectionId && new Date(v.created_date) < new Date(version.created_date)
+    );
+    return { version, previousVersion };
+  });
 
   if (docLoading || versionsLoading) {
     return (
