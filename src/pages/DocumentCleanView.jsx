@@ -678,6 +678,13 @@ ${text}`;
           }
         }
       `}</style>
+
+      {openSectionHistoryId && (
+        <SectionHistorySidebar
+          sectionId={openSectionHistoryId}
+          onClose={() => setOpenSectionHistoryId(null)}
+        />
+      )}
     </div>
   );
 }
