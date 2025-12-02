@@ -177,7 +177,10 @@ export default function DocumentContent({
   });
 
   const getUserVote = React.useCallback((suggestionId) => {
-    return userVotes?.find(v => v.suggestionId === suggestionId);
+    // מחזיר את ההצבעה האחרונה עבור ההצעה הספציפית
+    const votesForSuggestion = userVotes?.filter(v => v.suggestionId === suggestionId) || [];
+    // אם יש כפילויות (לא אמור לקרות), נחזיר את האחרונה
+    return votesForSuggestion[votesForSuggestion.length - 1] || null;
   }, [userVotes]);
 
   // פונקציית עזר לעדכון נקודות ברקע (לא חוסמת את ה-UI)
