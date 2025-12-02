@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
 import InlineDiff from "@/components/document/InlineDiff";
 import PageHeader from "@/components/PageHeader";
+import SectionHistorySidebar from "@/components/document/SectionHistorySidebar";
 
 const detectLanguage = (text) => {
   if (!text) return 'en';
