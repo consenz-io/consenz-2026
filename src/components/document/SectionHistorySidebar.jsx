@@ -77,12 +77,21 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
     );
   
   // Create version groups - each version paired with the one before it for diff display
+  // Also track which suggestionIds we've already shown to avoid duplicates
+  const seenSuggestionIds = new Set();
   const versionGroups = sortedVersions.map((version, index) => {
     const previousVersion = sortedVersions[index + 1]; // The older version
+    
+    // Only show suggestion details once (on the newer version that contains the change)
+    const shouldShowSuggestion = version.suggestionId && !seenSuggestionIds.has(version.suggestionId);
+    if (version.suggestionId) {
+      seenSuggestionIds.add(version.suggestionId);
+    }
+    
     return {
       version,
       previousVersion,
-      suggestionId: version.suggestionId,
+      suggestionId: shouldShowSuggestion ? version.suggestionId : null,
       changeDescription: version.changeDescription
     };
   });
