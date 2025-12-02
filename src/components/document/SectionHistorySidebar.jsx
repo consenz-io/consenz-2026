@@ -224,12 +224,19 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  // Sort versions by version number descending and deduplicate by version number
+  // Sort versions by version number descending, deduplicate, and filter versions with same content
   const sortedVersions = [...versions]
     .sort((a, b) => b.version - a.version)
     .filter((version, index, arr) => 
       index === arr.findIndex(v => v.version === version.version)
-    );
+    )
+    .filter((version, index, arr) => {
+      // הגרסה האחרונה תמיד נשארת
+      if (index === arr.length - 1) return true;
+      // אם התוכן זהה לגרסה הבאה (הקודמת כרונולוגית), נסנן אותה
+      const nextVersion = arr[index + 1];
+      return version.content !== nextVersion?.content;
+    });
   
   // Create version groups - each version paired with the one before it for diff display
   // Also track which suggestionIds we've already shown to avoid duplicates
