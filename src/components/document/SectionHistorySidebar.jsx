@@ -218,13 +218,11 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                   })}
                 </div>
               ) : (
-                <Card className="border-slate-200">
-                  <CardContent className="p-8 text-center">
-                    <History className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                    <p className="text-slate-500">{t('noPreviousVersions')}</p>
-                    <p className="text-xs text-slate-400 mt-2">{t('sectionChangesAutomaticallySaved')}</p>
-                  </CardContent>
-                </Card>
+                <div className="text-center py-12">
+                  <History className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                  <p className="text-slate-500">{t('noPreviousVersions')}</p>
+                  <p className="text-xs text-slate-400 mt-2">{t('sectionChangesAutomaticallySaved')}</p>
+                </div>
               )}
             </>
           )}
