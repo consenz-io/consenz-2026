@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ArrowRight, History, MessageSquare } from "lucide-react";
+import { History, MessageSquare, Clock, RotateCcw, ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
 import SectionDiff from "../components/document/SectionDiff";
 import CommentsSection from "../components/document/CommentsSection";
@@ -20,6 +21,7 @@ export default function SectionHistory() {
   const [searchParams] = useSearchParams();
   const sectionId = searchParams.get('id');
   const [showComments, setShowComments] = useState({});
+  const [error, setError] = useState(null);
 
   const { data: section, isLoading: sectionLoading } = useQuery({
     queryKey: ['section', sectionId],
@@ -58,6 +60,16 @@ export default function SectionHistory() {
     initialData: [],
   });
 
+  const { data: isAdmin } = useQuery({
+    queryKey: ['isAdmin', document?.id, user?.id],
+    queryFn: async () => {
+      if (!user?.id || !document?.id) return false;
+      const admins = await base44.entities.DocumentAdmin.filter({ documentId: document.id, userId: user.id });
+      return admins.length > 0;
+    },
+    enabled: !!user?.id && !!document?.id,
+  });
+
   const getUserName = (email) => {
     const foundUser = users.find(u => u.email === email);
     return foundUser?.full_name || email;
@@ -68,6 +80,47 @@ export default function SectionHistory() {
       ...prev,
       [suggestionId]: !prev[suggestionId]
     }));
+  };
+
+  const restoreVersionMutation = useMutation({
+    mutationFn: async (versionToRestore) => {
+      if (!isAdmin) throw new Error(t("adminAccessRequired"));
+
+      const allSectionVersions = await base44.entities.DocumentVersion.filter({ sectionId });
+      const nextVersion = allSectionVersions.length > 0 ? Math.max(...allSectionVersions.map(v => v.version)) + 1 : 1;
+
+      await base44.entities.DocumentVersion.create({
+        documentId: document.id,
+        sectionId,
+        content: section.content,
+        changeDescription: t("restoredFromVersion", { version: versionToRestore.version }),
+        version: nextVersion,
+        changeType: 'direct_edit'
+      });
+
+      await base44.entities.Section.update(sectionId, {
+        content: versionToRestore.content,
+        lastEditedBy: user.id
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['section', sectionId] });
+      queryClient.invalidateQueries({ queryKey: ['versions', sectionId] });
+      setError(null);
+    },
+    onError: (err) => {
+      setError(err.message);
+      setTimeout(() => setError(null), 5000);
+    }
+  });
+
+  const getChangeTypeLabel = (type) => {
+    switch (type) {
+      case 'suggestion_accepted': return t('suggestionAccepted');
+      case 'direct_edit': return t('directEdit');
+      case 'section_created': return t('sectionCreated');
+      default: return type;
+    }
   };
 
   if (sectionLoading || versionsLoading) {
@@ -125,113 +178,118 @@ export default function SectionHistory() {
         />
         
         {document && topic && (
-          <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>
-            <Link to={`${createPageUrl("DocumentView")}?id=${document.id}`} className="hover:underline">
-              {document.title}
+          <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>
+              <Link to={`${createPageUrl("DocumentView")}?id=${document.id}`} className="hover:underline">
+                {document.title}
+              </Link>
+              {' > '}
+              {topic.title}
+            </p>
+            <Link to={`${createPageUrl("DocumentView")}?id=${document.id}&scrollTo=${sectionId}`}>
+              <Button variant="ghost" size="sm">
+                <ExternalLink className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {t('viewInDocument')}
+              </Button>
             </Link>
-            {' > '}
-            {topic.title}
-          </p>
+          </div>
         )}
 
-        {/* Current Version */}
-        <Card className="bg-white border-2 border-blue-500 overflow-hidden">
-          <CardHeader className="bg-blue-50 p-4 md:p-6">
-            <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-              <span className="text-base md:text-lg">{t('currentVersion')}</span>
-              <Badge className="bg-blue-600 text-xs">{t('current')}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 md:p-6">
-            <TranslatableContent
-              content={section.content}
-              entity={section}
-              entityType="section"
-              onUpdate={(updated) => {
-                queryClient.setQueryData(['section', sectionId], updated);
-              }}
-              className="prose prose-sm max-w-none text-slate-700"
-            />
-            <div className="text-xs text-slate-500 mt-4 pt-4 border-t">
-              {t('lastUpdate')}: {new Date(section.updated_date).toLocaleString()}
-            </div>
-          </CardContent>
-        </Card>
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         {/* Version History */}
         {versionGroups.length > 0 ? (
-          <div className="space-y-4 md:space-y-6">
-            <h2 className="text-lg md:text-xl font-bold text-slate-900 px-2 md:px-0">{t('previousVersions')}</h2>
+          <div className="space-y-4">
             {versionGroups.filter(g => g.version && g.version.changeType).map((group, groupIndex) => {
               const currentVer = group.version;
               const prevVer = group.previousVersion;
               
               return (
-                <Card key={groupIndex} className="bg-white border-slate-200 overflow-hidden">
-                  <CardHeader className="border-b border-slate-100 p-4 md:p-6">
-                    <div className="flex flex-col gap-3">
-                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <CardTitle className="text-base md:text-lg">
-                            {t('version')} {currentVer.version}
-                          </CardTitle>
-                          <p className="text-xs md:text-sm text-slate-600 mt-1 break-words">
-                            {currentVer.changeDescription || t('noDescription')}
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            {currentVer.changeType === 'suggestion_accepted' ? t('suggestionAccepted') :
-                             currentVer.changeType === 'section_created' ? t('sectionCreated') :
-                             t('directEdit')}
+                <Card key={groupIndex} className="bg-white border-slate-200 hover:shadow-lg transition-all">
+                  <CardHeader>
+                    <div className={`flex justify-between items-start gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className="flex-1">
+                        <div className={`flex items-center gap-2 mb-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <Badge variant="outline">{t('version')} {currentVer.version}</Badge>
+                          <Badge className="bg-blue-100 text-blue-800">
+                            {getChangeTypeLabel(currentVer.changeType)}
                           </Badge>
                           {group.suggestionId && (
                             <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.suggestionId}`}>
-                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-8">
-                                <MessageSquare className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                <span className="hidden sm:inline">{t('viewFullDiscussion')}</span>
-                                <span className="sm:hidden">{t('comments')}</span>
-                              </Button>
+                              <Badge className="bg-green-600 hover:bg-green-700 cursor-pointer flex items-center gap-1">
+                                <MessageSquare className="w-3 h-3" />
+                                {t('viewFullDiscussion')}
+                              </Badge>
                             </Link>
                           )}
                         </div>
+                        <CardTitle className={`text-lg ${isRTL ? 'text-right' : 'text-left'}`}>
+                          {typeof currentVer.changeDescription === 'string' 
+                            ? currentVer.changeDescription 
+                            : (currentVer.changeDescription?.title || t('changeWithoutDescription'))}
+                        </CardTitle>
+                        <div className={`flex items-center gap-4 mt-2 text-sm text-slate-500 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <Clock className="w-4 h-4" />
+                            {new Date(currentVer.created_date).toLocaleString(isRTL ? 'he-IL' : 'en-US')}
+                          </div>
+                          {currentVer.created_by && (
+                            <span>{t('by')} {getUserName(currentVer.created_by)}</span>
+                          )}
+                        </div>
                       </div>
+                      {isAdmin && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (confirm(t('confirmRestoreVersion'))) {
+                              restoreVersionMutation.mutate(currentVer);
+                            }
+                          }}
+                          disabled={restoreVersionMutation.isPending}
+                        >
+                          <RotateCcw className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                          {t('restoreVersion')}
+                        </Button>
+                      )}
                     </div>
                   </CardHeader>
-                  <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4">
-                    {/* Show content for direct edits */}
-                    {currentVer.changeType === 'direct_edit' && (
-                      <div className="prose prose-sm max-w-none text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <div dangerouslySetInnerHTML={{ __html: currentVer.content }} />
-                      </div>
-                    )}
-                    
-                    {/* Show diff between this version and the previous one */}
-                    {prevVer && currentVer.changeType === 'suggestion_accepted' && (
-                      <div>
-                        <h3 className="text-xs md:text-sm font-semibold text-slate-700 mb-2">{t('changesInThisVersion')}</h3>
-                        <SectionDiff
-                          originalContent={prevVer.content}
-                          newContent={currentVer.content}
-                        />
-                      </div>
+                  <CardContent>
+                    {prevVer ? (
+                      <SectionDiff
+                        key={`${currentVer.id}-${prevVer.id}`}
+                        originalContent={prevVer.content}
+                        newContent={currentVer.content}
+                        documentId={document?.id}
+                        sectionId={sectionId}
+                      />
+                    ) : (
+                      <div
+                        className="prose prose-sm max-w-none text-slate-700 p-4 bg-slate-50 rounded-lg"
+                        style={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}
+                        dangerouslySetInnerHTML={{ __html: currentVer.content }}
+                      />
                     )}
 
                     {/* Show suggestion details if available */}
                     {group.suggestionId && (
-                      <SuggestionDetails 
-                        suggestionId={group.suggestionId}
-                        user={user}
-                        getUserName={getUserName}
-                        showComments={showComments}
-                        toggleComments={toggleComments}
-                      />
+                      <div className="mt-4">
+                        <SuggestionDetails 
+                          suggestionId={group.suggestionId}
+                          user={user}
+                          getUserName={getUserName}
+                          showComments={showComments}
+                          toggleComments={toggleComments}
+                        />
+                      </div>
                     )}
-
-                    <div className="text-[10px] md:text-xs text-slate-500 pt-3 md:pt-4 border-t break-words">
-                      {t('created')} {new Date(currentVer.created_date).toLocaleString()}
-                      {currentVer.created_by && ` ${t('by')} ${getUserName(currentVer.created_by)}`}
-                    </div>
                   </CardContent>
                 </Card>
               );
@@ -241,8 +299,8 @@ export default function SectionHistory() {
           <Card className="bg-white border-slate-200">
             <CardContent className="p-6 md:p-12 text-center">
               <History className="w-12 h-12 md:w-16 md:h-16 text-slate-300 mx-auto mb-4" />
-              <p className="text-sm md:text-base text-slate-500">{t('noPreviousVersions')}</p>
-              <p className="text-xs md:text-sm text-slate-400 mt-2 px-4">{t('sectionChangesAutomaticallySaved')}</p>
+              <h3 className="text-lg md:text-xl font-semibold text-slate-900 mb-2">{t('noPreviousVersions')}</h3>
+              <p className="text-sm md:text-base text-slate-600">{t('sectionChangesAutomaticallySaved')}</p>
             </CardContent>
           </Card>
         )}
