@@ -94,8 +94,16 @@ export default function SectionHistory() {
     );
   }
 
-  // Sort versions by version number descending and pair each with its previous version
-  const sortedVersions = [...versions].sort((a, b) => b.version - a.version);
+  // Sort versions by version number descending and filter duplicates
+  const sortedVersions = [...versions]
+    .sort((a, b) => b.version - a.version)
+    .filter((version, index, arr) => {
+      // הגרסה האחרונה תמיד נשארת
+      if (index === arr.length - 1) return true;
+      // אם התוכן זהה לגרסה הבאה (הקודמת כרונולוגית), נסנן אותה
+      const nextVersion = arr[index + 1];
+      return version.content !== nextVersion?.content;
+    });
   
   // Create version groups - each version paired with the one before it for diff display
   const versionGroups = sortedVersions.map((version, index) => {

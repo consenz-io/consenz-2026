@@ -24,7 +24,16 @@ export default function DocumentVersionHistory({
   const { t, isRTL } = useLanguage();
   const queryClient = useQueryClient();
 
-  const sortedVersions = [...versions].sort((a, b) => b.version - a.version);
+  // סינון כפילויות - שומרים רק גרסאות עם תוכן שונה מהגרסה הקודמת
+  const sortedVersions = [...versions]
+    .sort((a, b) => b.version - a.version)
+    .filter((version, index, arr) => {
+      // הגרסה האחרונה תמיד נשארת
+      if (index === arr.length - 1) return true;
+      // אם התוכן זהה לגרסה הבאה (הקודמת כרונולוגית), נסנן אותה
+      const nextVersion = arr[index + 1];
+      return version.content !== nextVersion?.content;
+    });
 
   const restoreVersionMutation = useMutation({
     mutationFn: async (versionToRestore) => {
