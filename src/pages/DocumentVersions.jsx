@@ -16,8 +16,7 @@ import PageHeader from "../components/PageHeader";
 export default function DocumentVersions() {
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
-  const [compareMode, setCompareMode] = useState(false);
-  const [selectedVersions, setSelectedVersions] = useState([]);
+
   const [error, setError] = useState(null);
   const queryClient = useQueryClient();
   const { t, isRTL } = useLanguage();
@@ -49,12 +48,7 @@ export default function DocumentVersions() {
     enabled: !!documentId,
   });
 
-  const { data: topicEditSuggestions } = useQuery({
-    queryKey: ['topicEditSuggestions', documentId],
-    queryFn: () => base44.entities.TopicEditSuggestion.filter({ documentId, status: 'accepted' }, '-created_date'),
-    initialData: [],
-    enabled: !!documentId,
-  });
+
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -83,51 +77,7 @@ export default function DocumentVersions() {
     return user?.full_name || email;
   };
 
-  const restoreVersionMutation = useMutation({
-    mutationFn: async (version) => {
-      if (!isAdmin) throw new Error("Admin access required");
-      
-      const section = sections.find(s => s.id === version.sectionId);
-      if (!section) throw new Error("Section not found");
 
-      // Save current state as new version before restoring
-      const allVersions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
-      const nextVersion = allVersions.length > 0 ? Math.max(...allVersions.map(v => v.version)) + 1 : 1;
-      
-      await base44.entities.DocumentVersion.create({
-        documentId,
-        sectionId: section.id,
-        content: section.content,
-        changeDescription: `שוחזר מגרסה ${version.version}`,
-        version: nextVersion,
-        changeType: 'direct_edit'
-      });
-
-      await base44.entities.Section.update(section.id, {
-        content: version.content,
-        lastEditedBy: user.id
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sections', documentId] });
-      queryClient.invalidateQueries({ queryKey: ['versions', documentId] });
-      setError(null);
-    },
-    onError: (err) => {
-      setError(err.message);
-      setTimeout(() => setError(null), 5000);
-    }
-  });
-
-  const handleVersionSelect = (version) => {
-    if (!compareMode) return;
-    
-    if (selectedVersions.find(v => v.id === version.id)) {
-      setSelectedVersions(selectedVersions.filter(v => v.id !== version.id));
-    } else if (selectedVersions.length < 2) {
-      setSelectedVersions([...selectedVersions, version]);
-    }
-  };
 
   const getSectionName = (sectionId) => {
     const section = sections.find(s => s.id === sectionId);
