@@ -1,8 +1,51 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/components/LanguageContext";
+import { detectLanguage, translateForDiff } from "@/components/utils/translationUtils";
+import { Loader2 } from "lucide-react";
 
-const InlineDiff = ({ originalContent, newContent }) => {
-  const { isRTL } = useLanguage();
+const InlineDiff = ({ originalContent, newContent, originalEntity, newEntity }) => {
+  const { isRTL, language } = useLanguage();
+  const [translatedOriginal, setTranslatedOriginal] = useState(null);
+  const [translatedNew, setTranslatedNew] = useState(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+  
+  // זיהוי שפות
+  const originalLang = originalEntity?.originalLanguage || detectLanguage(originalContent || '');
+  const newLang = newEntity?.originalLanguage || detectLanguage(newContent || '');
+  const crossLanguageDiff = originalLang !== newLang;
+  
+  // תרגום אוטומטי כאשר יש שפות שונות
+  useEffect(() => {
+    const autoTranslate = async () => {
+      if (crossLanguageDiff && !isTranslating && !translatedOriginal && !translatedNew) {
+        setIsTranslating(true);
+        try {
+          const { translatedOriginal: transOrig, translatedNew: transNew } = await translateForDiff({
+            originalContent,
+            newContent,
+            originalEntity,
+            newEntity,
+            originalEntityType: 'DocumentVersion',
+            newEntityType: 'DocumentVersion',
+            targetLanguage: language
+          });
+          
+          setTranslatedOriginal(transOrig);
+          setTranslatedNew(transNew);
+        } catch (error) {
+          console.error('InlineDiff auto translation error:', error);
+        } finally {
+          setIsTranslating(false);
+        }
+      }
+    };
+    
+    autoTranslate();
+  }, [crossLanguageDiff, originalContent, newContent, language]);
+  
+  // בחירת תוכן להשוואה
+  const displayOriginal = crossLanguageDiff && translatedOriginal ? translatedOriginal : originalContent;
+  const displayNew = crossLanguageDiff && translatedNew ? translatedNew : newContent;
   
   // Extract text from HTML
   const extractText = (html) => {
