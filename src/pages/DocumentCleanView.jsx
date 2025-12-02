@@ -530,29 +530,17 @@ ${text}`;
                   ) : (
                     <div className="space-y-4 md:space-y-6">
                       {topicSections.map((section, sectionIndex) => {
-
-
                         // מציאת תוכן הסעיף בגרסה המוצגת ובגרסה החדשה יותר
                         const isViewingHistory = currentVersionIndex > 0;
-                        let displayedContent, newerContent, hasChanged;
                         
-                        if (isViewingHistory) {
-                          // תוכן בגרסה המוצגת כעת (הישנה יותר)
-                          const displayedVersionSection = currentVersion?.sections.find(v => v.sectionId === section.id);
-                          displayedContent = displayedVersionSection?.content || section.content;
-                          
-                          // תוכן בגרסה החדשה יותר (אחת קדימה)
-                          const newerVersionGroup = versionGroups[currentVersionIndex - 1];
-                          if (newerVersionGroup) {
-                            const newerVersionSection = newerVersionGroup.sections.find(v => v.sectionId === section.id);
-                            newerContent = newerVersionSection?.content;
-                          }
-                          
-                          hasChanged = newerContent && displayedContent && displayedContent !== newerContent;
-                        } else {
-                          displayedContent = section.content;
-                          hasChanged = false;
-                        }
+                        // Get content from the current snapshot
+                        const displayedContent = currentSnapshot?.sectionContents?.[section.id] || section.content;
+                        
+                        // Get content from the newer snapshot (for diff)
+                        const newerContent = newerSnapshot?.sectionContents?.[section.id];
+                        
+                        // Check if this section changed between versions
+                        const hasChanged = isViewingHistory && newerContent && displayedContent !== newerContent;
 
                         return (
                           <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
