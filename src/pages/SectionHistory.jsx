@@ -326,18 +326,59 @@ Return ONLY the translated HTML:`;
                         sectionId={sectionId}
                       />
                     ) : (
-                      <div
-                        className="prose prose-sm max-w-none text-slate-700 p-4 bg-slate-50 rounded-lg"
-                        style={{ 
-                          direction: isRTL ? 'rtl' : 'ltr', 
-                          textAlign: isRTL ? 'right' : 'left',
-                          fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
-                          fontSize: "1.125rem",
-                          lineHeight: "1.8",
-                          letterSpacing: "0.01em"
-                        }}
-                        dangerouslySetInnerHTML={{ __html: currentVer.content }}
-                      />
+                      <div className="relative">
+                        {(() => {
+                          const contentLang = detectLanguage(currentVer.content);
+                          const needsTranslation = contentLang !== language;
+                          const isTranslating = translatingVersion === currentVer.id;
+                          const hasTranslation = translatedVersions[currentVer.id];
+                          const isShowingTranslated = showTranslated[currentVer.id];
+                          
+                          return (
+                            <>
+                              {needsTranslation && (
+                                <div className="absolute top-2 right-2 z-10">
+                                  {isTranslating ? (
+                                    <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                                  ) : !hasTranslation ? (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => translateVersionMutation.mutate({ versionId: currentVer.id, content: currentVer.content })}
+                                      className="h-7 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                    >
+                                      <Languages className="w-4 h-4 mr-1" />
+                                      {t('translate')}
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setShowTranslated(prev => ({ ...prev, [currentVer.id]: !prev[currentVer.id] }))}
+                                      className={`h-7 px-2 ${isShowingTranslated ? 'text-blue-600 bg-blue-50' : 'text-slate-600'}`}
+                                    >
+                                      <Languages className="w-4 h-4 mr-1" />
+                                      {isShowingTranslated ? t('showOriginal') : t('showTranslation')}
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
+                              <div
+                                className="prose prose-sm max-w-none text-slate-700 p-4 bg-slate-50 rounded-lg"
+                                style={{ 
+                                  direction: isRTL ? 'rtl' : 'ltr', 
+                                  textAlign: isRTL ? 'right' : 'left',
+                                  fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                  fontSize: "1.125rem",
+                                  lineHeight: "1.8",
+                                  letterSpacing: "0.01em"
+                                }}
+                                dangerouslySetInnerHTML={{ __html: isShowingTranslated && hasTranslation ? hasTranslation : currentVer.content }}
+                              />
+                            </>
+                          );
+                        })()}
+                      </div>
                     )}
 
                     {/* Show suggestion details if available */}
