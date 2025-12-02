@@ -301,7 +301,7 @@ export default function DocumentComments() {
               <Card key={idx} className="bg-white border-slate-200">
                 <CardContent className="p-4">
                   {/* Group Header */}
-                  <div className={`flex items-start justify-between gap-3 mb-3 pb-3 border-b border-slate-100 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={`mb-3 pb-3 border-b border-slate-100`}>
                     <div className="flex-1 min-w-0">
                       {group.type === 'section' ? (
                         <>
@@ -336,14 +336,6 @@ export default function DocumentComments() {
                         </Link>
                       )}
                     </div>
-                    {group.type === 'section' && (
-                      <Link to={`${createPageUrl("DocumentView")}?id=${documentId}&scrollTo=${group.entityId}`}>
-                        <Button variant="outline" size="sm" className="text-xs h-6 px-2 shrink-0">
-                          <Eye className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                          {t('viewInDocument')}
-                        </Button>
-                      </Link>
-                    )}
                   </div>
 
                   {/* Comments */}
