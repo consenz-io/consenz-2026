@@ -451,27 +451,24 @@ export default function DocumentContent({
         });
       }
       
-      // עדכון אופטימיסטי של ההצבעות
+      // עדכון אופטימיסטי של ההצבעות - מטפל רק בהצעה הספציפית
       queryClient.setQueryData(['userVotes', document?.id, user?.id], (old) => {
         if (!old) old = [];
         
+        // מסננים תחילה את כל ההצבעות שלא קשורות להצעה הנוכחית
+        const otherVotes = old.filter(v => v.suggestionId !== suggestionId);
+        
         if (currentVote) {
           if (currentVote.vote === vote) {
-            return old.filter(v => v.id !== currentVote.id && v.suggestionId !== suggestionId);
+            // ביטול הצבעה - מחזירים רק את ההצבעות האחרות
+            return otherVotes;
           } else {
-            return old.map(v => {
-              if (v.id === currentVote.id || v.suggestionId === suggestionId) {
-                return { ...v, vote };
-              }
-              return v;
-            });
+            // שינוי הצבעה - מוסיפים את ההצבעה המעודכנת
+            return [...otherVotes, { ...currentVote, vote }];
           }
         } else {
-          const exists = old.some(v => v.suggestionId === suggestionId);
-          if (exists) {
-            return old.map(v => v.suggestionId === suggestionId ? { ...v, vote } : v);
-          }
-          return [...old, { id: 'temp-' + Date.now(), suggestionId, userId: user.id, vote }];
+          // הצבעה חדשה - מוסיפים הצבעה חדשה
+          return [...otherVotes, { id: 'temp-' + Date.now() + '-' + suggestionId, suggestionId, userId: user.id, vote }];
         }
       });
       
