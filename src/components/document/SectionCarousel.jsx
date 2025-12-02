@@ -74,10 +74,9 @@ export default function SectionCarousel({
   // Effect to scroll to newly created suggestion
   React.useEffect(() => {
     if (newlyCreatedSuggestionId && sortedSuggestions.length > 0) {
-      const suggestionIndex = sortedSuggestions.findIndex(s => s.id === newlyCreatedSuggestionId);
-      if (suggestionIndex !== -1) {
-        // Index in allViews is suggestionIndex + 1 (because index 0 is 'current')
-        setCurrentIndex(suggestionIndex + 1);
+      const suggestion = sortedSuggestions.find(s => s.id === newlyCreatedSuggestionId);
+      if (suggestion) {
+        setCurrentSuggestionId(newlyCreatedSuggestionId);
         // Clear the flag after navigating
         if (onClearNewlyCreated) {
           setTimeout(() => onClearNewlyCreated(), 100);
@@ -86,7 +85,7 @@ export default function SectionCarousel({
     }
   }, [newlyCreatedSuggestionId, sortedSuggestions, onClearNewlyCreated]);
   
-  // Reset currentIndex if it's out of bounds
+  // Reset if current suggestion no longer exists
   const safeIndex = currentIndex >= allViews.length ? 0 : currentIndex;
   const currentView = allViews[safeIndex] || allViews[0];
 
