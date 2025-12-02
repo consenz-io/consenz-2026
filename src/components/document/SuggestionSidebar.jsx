@@ -491,6 +491,7 @@ export default function SuggestionSidebar({
                 content={suggestion.explanation}
                 entity={suggestion}
                 entityType="Suggestion"
+                fieldName="explanation"
                 className="text-sm text-slate-600"
               />
             </div>
