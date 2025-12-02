@@ -139,28 +139,48 @@ Return ONLY the translated HTML:`;
     },
   });
 
-  // Helper to ensure we get a string
+  // Helper to ensure we get a valid string for display
   const ensureString = (val) => {
+    if (!val) return null;
     if (typeof val === 'string') return val;
-    if (val && typeof val === 'object') {
+    if (typeof val === 'object') {
       // Try common response fields
-      if (typeof val.content === 'string') return val.content;
-      if (typeof val.text === 'string') return val.text;
-      if (typeof val.translation === 'string') return val.translation;
-      if (typeof val.output === 'string') return val.output;
-      // Find first string value
-      for (const key of Object.keys(val)) {
-        if (typeof val[key] === 'string' && val[key].length > 0) {
-          return val[key];
+      const fields = ['content', 'text', 'translation', 'output', 'result', 'message'];
+      for (const field of fields) {
+        if (typeof val[field] === 'string' && val[field].length > 0) {
+          return val[field];
         }
       }
+      // Find first non-empty string value recursively
+      const findFirstString = (obj) => {
+        for (const key of Object.keys(obj)) {
+          const v = obj[key];
+          if (typeof v === 'string' && v.length > 0 && !v.startsWith('<')) {
+            return v;
+          }
+          if (v && typeof v === 'object' && !Array.isArray(v)) {
+            const found = findFirstString(v);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+      return findFirstString(val);
     }
-    return content; // fallback to original
+    return null;
   };
 
   const translatedValue = translations[language] || translateMutation.data;
-  const displayContent = showTranslated && translatedValue
-    ? ensureString(translatedValue)
+  const safeTranslation = ensureString(translatedValue);
+  
+  // Only show translation if it's valid and not just HTML artifacts
+  const isValidTranslation = safeTranslation && 
+    safeTranslation.length > 1 && 
+    !safeTranslation.match(/^\s*<\s*$/) &&
+    safeTranslation !== '[object Object]';
+  
+  const displayContent = showTranslated && isValidTranslation
+    ? safeTranslation
     : content;
 
   return (
