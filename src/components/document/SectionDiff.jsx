@@ -271,11 +271,6 @@ export default function SectionDiff({
             <Check className="w-3 h-3 mr-1" />
             {t('translated')} | {t('showOriginal')}
           </Badge>
-          {translationResult?.fromCache?.original && translationResult?.fromCache?.modified && (
-            <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 text-xs">
-              ✓ {t('fromCache') || 'מהמטמון'}
-            </Badge>
-          )}
         </div>
       )}
       
