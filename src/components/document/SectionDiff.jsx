@@ -4,12 +4,18 @@ import { createPageUrl } from "@/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Languages, Loader2, Eye, FileText, Check } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Languages, Loader2, Eye, FileText, Check, Info } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
-import { base44 } from "@/api/base44Client";
-import { detectLanguage, translateContent } from "./translationService";
+import { getDiffInLanguage, detectLanguage } from "./SmartDiffTranslationService";
 import DiffModeSelector, { DIFF_MODES, useDiffMode } from "./DiffModeSelector";
 import { extractText, tokenize, computeWordDiff } from "./InlineDiff";
+
+const languageLabels = {
+  en: "English",
+  he: "עברית",
+  ar: "العربية"
+};
 
 export default function SectionDiff({ 
   originalContent, 
@@ -18,88 +24,59 @@ export default function SectionDiff({
   sectionId, 
   suggestion,
   originalVersion,
-  newVersion
+  newVersion,
+  section // Pass the section entity for cache
 }) {
   const { t, language, isRTL } = useLanguage();
-  const [translatedOriginal, setTranslatedOriginal] = useState(null);
-  const [translatedNew, setTranslatedNew] = useState(null);
+  const [translationResult, setTranslationResult] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [showTranslated, setShowTranslated] = useState(false);
   const [showDiff, setShowDiff] = useState(true);
   const [diffMode, setDiffMode] = useDiffMode();
   
-  const originalLanguage = originalVersion?.originalLanguage || suggestion?.originalLanguage || detectLanguage(originalContent || '');
-  const newLanguage = newVersion?.originalLanguage || suggestion?.originalLanguage || detectLanguage(newContent || '');
+  // Detect source languages
+  const originalSourceLang = originalVersion?.originalLanguage || 
+                              section?.originalLanguage || 
+                              detectLanguage(originalContent || '');
+  const modifiedSourceLang = newVersion?.originalLanguage || 
+                              suggestion?.createdByLanguage ||
+                              suggestion?.originalLanguage || 
+                              detectLanguage(newContent || '');
   
-  const originalNeedsTranslation = language !== originalLanguage;
-  const newNeedsTranslation = language !== newLanguage;
-  const needsTranslation = originalNeedsTranslation || newNeedsTranslation;
-  const hasTranslation = translatedOriginal && translatedNew;
+  const needsTranslation = originalSourceLang !== language || modifiedSourceLang !== language;
+  const hasTranslation = translationResult?.original && translationResult?.modified;
+  
+  // Check if suggestion was written in a different language than original
+  const isCrossLanguageSuggestion = originalSourceLang !== modifiedSourceLang;
 
+  // Auto-translate if user's language differs from content
   useEffect(() => {
-    if (showTranslated && needsTranslation && !translatedOriginal && !translatedNew) {
-      handleTranslateBoth();
+    if (needsTranslation && !translationResult && !isTranslating) {
+      handleSmartTranslate();
     }
-  }, [showTranslated]);
+  }, [language]);
   
-  const handleTranslateBoth = async () => {
+  const handleSmartTranslate = async () => {
     if (isTranslating) return;
     
-    const cachedOriginal = originalVersion?.translations?.[language] || 
-                           (originalLanguage === language ? originalContent : null);
-    const cachedNew = newVersion?.translations?.[language] || 
-                      suggestion?.translations?.[language]?.newContent ||
-                      (newLanguage === language ? newContent : null);
-    
-    if (cachedOriginal && cachedNew) {
-      setTranslatedOriginal(cachedOriginal);
-      setTranslatedNew(cachedNew);
-      return;
-    }
-
     setIsTranslating(true);
     try {
-      const translationPromises = [];
+      const result = await getDiffInLanguage({
+        originalContent,
+        modifiedContent: newContent,
+        originalEntity: originalVersion || section,
+        originalEntityType: originalVersion ? 'DocumentVersion' : 'Section',
+        modifiedEntity: suggestion || newVersion,
+        modifiedEntityType: suggestion ? 'Suggestion' : 'DocumentVersion',
+        targetLanguage: language,
+        originalFieldName: 'content',
+        modifiedFieldName: suggestion ? 'newContent' : 'content'
+      });
       
-      if (originalNeedsTranslation && !cachedOriginal) {
-        translationPromises.push(
-          translateContent(originalContent, language).then(result => {
-            setTranslatedOriginal(result);
-            if (originalVersion?.id) {
-              const newTranslations = { ...(originalVersion.translations || {}), [language]: result };
-              base44.entities.DocumentVersion.update(originalVersion.id, { translations: newTranslations }).catch(() => {});
-            }
-            return result;
-          })
-        );
-      } else {
-        setTranslatedOriginal(cachedOriginal || originalContent);
-      }
-      
-      if (newNeedsTranslation && !cachedNew) {
-        translationPromises.push(
-          translateContent(newContent, language).then(result => {
-            setTranslatedNew(result);
-            if (newVersion?.id) {
-              const newTranslations = { ...(newVersion.translations || {}), [language]: result };
-              base44.entities.DocumentVersion.update(newVersion.id, { translations: newTranslations }).catch(() => {});
-            } else if (suggestion?.id) {
-              const newTranslations = {
-                ...(suggestion.translations || {}),
-                [language]: { ...(suggestion.translations?.[language] || {}), newContent: result }
-              };
-              base44.entities.Suggestion.update(suggestion.id, { translations: newTranslations }).catch(() => {});
-            }
-            return result;
-          })
-        );
-      } else {
-        setTranslatedNew(cachedNew || newContent);
-      }
-      
-      await Promise.all(translationPromises);
+      setTranslationResult(result);
+      setShowTranslated(true);
     } catch (error) {
-      console.error('Translation error:', error);
+      console.error('Smart translation error:', error);
     } finally {
       setIsTranslating(false);
     }
@@ -107,15 +84,20 @@ export default function SectionDiff({
 
   const handleToggleTranslation = async () => {
     if (!showTranslated && needsTranslation) {
-      if (!translatedOriginal || !translatedNew) {
-        await handleTranslateBoth();
+      if (!hasTranslation) {
+        await handleSmartTranslate();
+        return;
       }
     }
     setShowTranslated(!showTranslated);
   };
 
-  const displayOriginal = showTranslated && translatedOriginal ? translatedOriginal : originalContent;
-  const displayNew = showTranslated && translatedNew ? translatedNew : newContent;
+  const displayOriginal = showTranslated && translationResult?.original 
+    ? translationResult.original 
+    : originalContent;
+  const displayNew = showTranslated && translationResult?.modified 
+    ? translationResult.modified 
+    : newContent;
   
   // Compute diff with memoization
   const diff = useMemo(() => {
