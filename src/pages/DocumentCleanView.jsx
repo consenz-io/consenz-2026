@@ -210,35 +210,31 @@ export default function DocumentCleanView() {
 
   // גלילה אוטומטית לסעיף שהשתנה או נוצר
   React.useEffect(() => {
-    if (currentVersionIndex > 0 && newerSnapshot) {
+    if (currentVersionIndex > 0 && currentSnapshot) {
       setTimeout(() => {
         let targetSectionId = null;
         
-        // Check if a new section was created in the newer snapshot
-        if (newerSnapshot.isNewSection && newerSnapshot.newSectionId) {
-          targetSectionId = newerSnapshot.newSectionId;
-        } else if (currentSnapshot) {
-          // Find the first section that changed content
-          targetSectionId = Object.keys(currentSnapshot.sectionContents).find(sectionId => {
-            const oldContent = currentSnapshot.sectionContents[sectionId];
-            const newContent = newerSnapshot.sectionContents?.[sectionId];
-            return oldContent && newContent && oldContent !== newContent;
-          });
+        // Check if a new section was created in this snapshot
+        if (currentSnapshot.isNewSection && currentSnapshot.newSectionId) {
+          targetSectionId = currentSnapshot.newSectionId;
+        } else if (currentSnapshot.changedSectionId) {
+          // Use the changed section ID from the snapshot
+          targetSectionId = currentSnapshot.changedSectionId;
         }
 
         if (targetSectionId) {
           const element = window.document.getElementById(`section-${targetSectionId}`);
           if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            element.classList.add('ring-2', 'ring-green-500', 'ring-offset-2', 'rounded-lg');
+            element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
             setTimeout(() => {
-              element.classList.remove('ring-2', 'ring-green-500', 'ring-offset-2', 'rounded-lg');
+              element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
             }, 2000);
           }
         }
-      }, 100);
+      }, 150);
     }
-  }, [currentVersionIndex, currentSnapshot, newerSnapshot]);
+  }, [currentVersionIndex, currentSnapshot]);
 
   if (docLoading || topicsLoading || sectionsLoading || versionsLoading) {
     return (
