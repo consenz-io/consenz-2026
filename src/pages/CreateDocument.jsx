@@ -227,10 +227,12 @@ Return ONLY valid JSON.`,
 
     } catch (err) {
       console.error("File processing error:", err);
+      console.error("Error details:", JSON.stringify(err, null, 2));
       setError(err.message || "Failed to process document. Please try manual creation or a different file.");
       setUploadedFile(null);
       setExtractedStructure(null);
     } finally {
+      console.log("Processing complete");
       setIsProcessing(false);
       setTimeout(() => setProcessingStage(""), 2000);
     }
