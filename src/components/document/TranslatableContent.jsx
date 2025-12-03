@@ -94,8 +94,12 @@ export default function TranslatableContent({
   
   const showTranslated = localShowTranslated;
   
+  // קביעת כיוון הטקסט לפי התוכן המוצג בפועל
   const displayLanguage = showTranslated && hasTranslation ? language : originalLanguage;
-  const isDisplayRTL = displayLanguage === 'he' || displayLanguage === 'ar';
+  // אם לא צריך תרגום (שפת המערכת = שפת התוכן), השתמש בשפת המערכת לקביעת הכיוון
+  const isDisplayRTL = needsTranslation 
+    ? (displayLanguage === 'he' || displayLanguage === 'ar')
+    : isRTL;
 
   const translateMutation = useMutation({
     mutationFn: async () => {
