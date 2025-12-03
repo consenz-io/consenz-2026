@@ -11,20 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
-
-// Use shared InlineDiff component
 import InlineDiff from "./InlineDiff";
-
-// Wrapper for backwards compatibility
-function InlineDiffView({ originalContent, newContent, isRTL }) {
-  return (
-    <InlineDiff 
-      originalContent={originalContent} 
-      newContent={newContent}
-      className="prose prose-sm max-w-none text-slate-700"
-    />
-  );
-}
 
 const languagePrompts = {
   en: "English",
