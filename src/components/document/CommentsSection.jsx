@@ -258,6 +258,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
                 entity={comment}
                 entityType="Comment"
                 className="text-sm text-slate-700 whitespace-pre-wrap break-words"
+                renderContent={(text) => <span>{text}</span>}
               />
               <div className="flex gap-2 mt-2">
                 {user && !isReply && (
