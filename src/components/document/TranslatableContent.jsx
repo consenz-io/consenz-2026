@@ -262,7 +262,7 @@ Return ONLY the translated HTML:`;
             />
           )}
           
-          {needsTranslation && (
+          {needsTranslation && originalLanguage !== language && (
             <div className="flex items-center gap-2 pt-1">
               {hasTranslation && showTranslated && (
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs gap-1">
