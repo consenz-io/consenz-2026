@@ -109,8 +109,10 @@ export default function CreateDocument() {
     setProcessingStage("Uploading file...");
 
     try {
+      console.log("Starting file upload...");
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      setProcessingStage("Analyzing document structure...");
+      console.log("File uploaded successfully:", file_url);
+      setProcessingStage("Analyzing document structure (this may take 30-60 seconds)...");
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `Analyze this document and extract its structure into topics and sections.
