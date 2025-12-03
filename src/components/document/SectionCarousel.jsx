@@ -283,14 +283,14 @@ export default function SectionCarousel({
 
       {/* כפתורי דפדוף */}
       {allViews.length > 1 && (
-        <div className={`flex items-center justify-between mb-4 pb-4 border-b-2 border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 p-3 rounded-lg shadow-sm ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className="flex items-center justify-between mb-4 pb-4 border-b-2 border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 p-3 rounded-lg shadow-sm">
           <Button
             variant="outline"
             size="sm"
-            onClick={handlePrev}
+            onClick={isRTL ? handleNext : handlePrev}
             className="flex items-center"
           >
-            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            <ChevronLeft className="w-4 h-4" />
           </Button>
 
           <div className="text-center">
@@ -311,10 +311,10 @@ export default function SectionCarousel({
           <Button
             variant="outline"
             size="sm"
-            onClick={handleNext}
+            onClick={isRTL ? handlePrev : handleNext}
             className="flex items-center"
           >
-            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
       )}
