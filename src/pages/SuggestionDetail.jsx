@@ -675,19 +675,66 @@ export default function SuggestionDetail() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4 md:space-y-6 p-3 md:p-6 overflow-x-hidden">
-            {suggestion.explanation && typeof suggestion.explanation === 'string' && (
+            {(suggestion.explanation || (user && user.email === suggestion.created_by)) && (
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('explanation')}</h3>
-                  <TranslatableContent
-                    content={suggestion.explanation}
-                    entity={suggestion}
-                    entityType="Suggestion"
-                    fieldName="explanation"
-                    onUpdate={(updated) => {
-                      queryClient.setQueryData(['suggestion', suggestionId], updated);
-                    }}
-                    className="text-slate-600"
-                  />
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-semibold text-slate-700">{t('explanation')}</h3>
+                    {user && user.email === suggestion.created_by && !isEditingExplanation && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditedExplanation(suggestion.explanation || "");
+                          setIsEditingExplanation(true);
+                        }}
+                        className="h-7 px-2"
+                      >
+                        <Edit2 className="w-3 h-3" />
+                      </Button>
+                    )}
+                  </div>
+                  {isEditingExplanation ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editedExplanation}
+                        onChange={(e) => setEditedExplanation(e.target.value)}
+                        placeholder={t('explainChange')}
+                        rows={3}
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => updateExplanationMutation.mutate(editedExplanation)}
+                          disabled={updateExplanationMutation.isPending}
+                        >
+                          <Save className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                          {t('saveChanges')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setIsEditingExplanation(false)}
+                        >
+                          <X className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                          {t('cancel')}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : suggestion.explanation && typeof suggestion.explanation === 'string' ? (
+                    <TranslatableContent
+                      content={suggestion.explanation}
+                      entity={suggestion}
+                      entityType="Suggestion"
+                      fieldName="explanation"
+                      onUpdate={(updated) => {
+                        queryClient.setQueryData(['suggestion', suggestionId], updated);
+                      }}
+                      className="text-slate-600"
+                    />
+                  ) : (
+                    <p className="text-slate-400 text-sm italic">{t('noDescription')}</p>
+                  )}
                 </div>
               )}
 
