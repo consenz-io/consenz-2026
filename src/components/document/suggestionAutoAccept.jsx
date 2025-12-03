@@ -105,8 +105,13 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
   let newThreshold = document.threshold || 2;
   
   if (shouldUpdateConsensusMeter) {
-    // חישוב section_consensus_meter לפי האפיון - מוגבל לערך בין 0 ל-1
-    const sectionConsensus = Math.min(1, Math.max(0, consensus / Math.max(1, totalUsers)));
+    // חישוב section_consensus_meter לפי האפיון:
+    // proVotes / (proVotes + conVotes) - יחס התמיכה מכלל המצביעים
+    // מוגבל לערך בין 0 ל-1
+    const totalVotes = (freshSuggestion.proVotes || 0) + (freshSuggestion.conVotes || 0);
+    const sectionConsensus = totalVotes > 0 
+      ? Math.min(1, Math.max(0, (freshSuggestion.proVotes || 0) / totalVotes))
+      : 1; // אם אין הצבעות כלל, נניח קונסנזוס מלא
     
     // עדכון המסמך: הוספת sectionConsensus למערך consensuses ועדכון threshold
     updatedConsensuses = [...updatedConsensuses, sectionConsensus];
@@ -115,7 +120,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / updatedConsensuses.length;
     
     // חישוב document_threshold חדש
-    newThreshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
+    newThreshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
     
     console.log('[CONSENSUS METER UPDATE]', {
       sectionConsensus,
