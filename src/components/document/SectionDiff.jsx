@@ -256,12 +256,37 @@ export default function SectionDiff({
         </div>
       </div>
       
+      {/* Cross-language suggestion alert */}
+      {isCrossLanguageSuggestion && (
+        <Alert className="mb-3 bg-blue-50 border-blue-200">
+          <Info className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="text-blue-800 text-sm">
+            {t('crossLanguageSuggestionAlert', { 
+              language: languageLabels[modifiedSourceLang] || modifiedSourceLang 
+            }) || `הצעה זו נכתבה ב${languageLabels[modifiedSourceLang] || modifiedSourceLang}`}
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {/* Translation indicator */}
       {showTranslated && hasTranslation && (
-        <Badge variant="outline" className="mb-2 bg-green-50 text-green-700 border-green-200 text-xs">
-          <Check className="w-3 h-3 mr-1" />
-          {t('translatedFrom') || 'מתורגם'}
-        </Badge>
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+            <Check className="w-3 h-3 mr-1" />
+            {t('translatedFrom') || 'מתורגם'}
+          </Badge>
+          {translationResult?.fromCache?.original && translationResult?.fromCache?.modified && (
+            <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 text-xs">
+              ✓ {t('fromCache') || 'מהמטמון'}
+            </Badge>
+          )}
+          {translationResult?.strategy && translationResult.strategy !== 'none' && (
+            <span className="text-xs text-slate-400">
+              ({translationResult.strategy === 'A' ? 'cached' : 
+                translationResult.strategy === 'C' ? 'pair-translated' : 'ref-translated'})
+            </span>
+          )}
+        </div>
       )}
       
       <div className="prose prose-sm max-w-none">
