@@ -11,7 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
-import InlineDiff from "./InlineDiff";
+import InlineDiff, { extractText, tokenize, computeWordDiff } from "./InlineDiff";
+import DiffModeSelector, { DIFF_MODES, useDiffMode } from "./DiffModeSelector";
 import { motion, AnimatePresence } from "framer-motion";
 
 const languagePrompts = {
