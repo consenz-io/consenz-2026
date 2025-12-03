@@ -19,6 +19,8 @@ import ContributorsModal from "../components/document/ContributorsModal";
 import CommentsSection from "../components/document/CommentsSection";
 import SuggestionSidebar from "../components/document/SuggestionSidebar";
 import { calculateContributorsFromData } from "../components/document/calculateContributors";
+import { TranslationProvider } from "../components/document/TranslationContext";
+import TranslateAllButton from "../components/document/TranslateAllButton";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -323,6 +325,7 @@ export default function DocumentView() {
   }
 
   return (
+    <TranslationProvider>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-1 md:p-6 w-full max-w-full overflow-x-hidden">
       <div className="max-w-6xl mx-auto space-y-2 md:space-y-6 px-1 md:px-4 w-full max-w-full">
         <div className="flex flex-col gap-1.5 md:gap-4 w-full max-w-full">
@@ -503,6 +506,11 @@ export default function DocumentView() {
             </div>
 
           <div className="flex gap-2 md:gap-3 flex-wrap justify-center">
+            <TranslateAllButton 
+              document={document} 
+              topics={topics} 
+              sections={sections} 
+            />
             <Link to={`${createPageUrl("DocumentVersions")}?id=${documentId}`} className="flex-shrink-0">
               <Button variant="outline" size="sm" className="text-xs md:text-sm px-3 md:px-4 h-8 md:h-9">
                 <History className={`w-4 h-4 ${isRTL ? 'ml-1.5 md:ml-2' : 'mr-1.5 md:mr-2'}`} />
@@ -609,5 +617,6 @@ export default function DocumentView() {
         />
       )}
       </div>
+    </TranslationProvider>
   );
 }
