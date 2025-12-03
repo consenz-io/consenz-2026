@@ -342,14 +342,17 @@ export default function SuggestionDetail() {
       setTimeout(() => setError(null), 5000);
     },
     onSuccess: (data) => {
+      // תמיד רענן את ההצעה כדי לקבל את הסטטוס האמיתי מהשרת
+      queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
+      queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
+      
       if (data?.accepted) {
+        // רענון כל הנתונים הרלוונטיים כשההצעה התקבלה
         queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
         queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
-        queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
         queryClient.invalidateQueries({ queryKey: ['allVersions'] });
         queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
       }
-      queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
     },
   });
 
