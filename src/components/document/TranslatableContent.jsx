@@ -66,14 +66,16 @@ export default function TranslatableContent({
     
     // If it's an object with field-specific translations
     if (typeof langTranslation === 'object') {
-      if (fieldName && typeof langTranslation[fieldName] === 'string') {
-        return langTranslation[fieldName];
+      // If fieldName is specified, only return that specific field's translation
+      if (fieldName) {
+        if (typeof langTranslation[fieldName] === 'string') {
+          return langTranslation[fieldName];
+        }
+        return null; // Don't fall back to other fields when fieldName is specified
       }
-      // For backwards compatibility - if no fieldName, try common fields
-      if (!fieldName) {
-        if (typeof langTranslation.content === 'string') return langTranslation.content;
-        if (typeof langTranslation.newContent === 'string') return langTranslation.newContent;
-      }
+      // For backwards compatibility - if no fieldName, try common fields (content first, then newContent)
+      if (typeof langTranslation.content === 'string') return langTranslation.content;
+      if (typeof langTranslation.newContent === 'string') return langTranslation.newContent;
     }
     return null;
   };
