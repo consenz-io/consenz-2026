@@ -478,7 +478,6 @@ Return JSON with title, topics array (each with title and sections array with co
         <div className="max-w-4xl mx-auto space-y-6">
         <PageHeader 
           title={t('createNewDocument')}
-          backUrl={createPageUrl("Home")}
         />
         
         <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>{t('fillDetailsBelow')}</p>
