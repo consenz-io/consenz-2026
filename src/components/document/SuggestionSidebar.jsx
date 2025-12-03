@@ -503,6 +503,7 @@ export default function SuggestionSidebar({
                 suggestion={suggestion}
                 documentId={suggestion.documentId}
                 sectionId={suggestion.sectionId}
+                section={section}
               />
             </div>
           ) : (
