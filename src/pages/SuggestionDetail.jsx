@@ -691,6 +691,7 @@ export default function SuggestionDetail() {
                       suggestion={suggestion}
                       documentId={suggestion.documentId}
                       sectionId={suggestion.sectionId}
+                      section={section}
                     />
                   </div>
                 </Link>
