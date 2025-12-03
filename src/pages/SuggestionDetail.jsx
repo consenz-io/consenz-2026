@@ -677,7 +677,7 @@ export default function SuggestionDetail() {
           <CardContent className="space-y-4 md:space-y-6 p-3 md:p-6 overflow-x-hidden">
             {(suggestion.explanation || (user && user.email === suggestion.created_by)) && (
                 <div>
-                  <div className="flex items-center justify-between mb-2">
+                  <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <h3 className="text-sm font-semibold text-slate-700">{t('explanation')}</h3>
                     {user && user.email === suggestion.created_by && !isEditingExplanation && (
                       <Button
