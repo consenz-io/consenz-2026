@@ -268,23 +268,25 @@ export default function SectionDiff({
         </Alert>
       )}
       
-      {/* Translation indicator */}
+      {/* Translation indicator - clickable to toggle */}
       {showTranslated && hasTranslation && (
         <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+          <Badge 
+            variant="outline" 
+            className="bg-green-50 text-green-700 border-green-200 text-xs cursor-pointer hover:bg-green-100 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowTranslated(false);
+            }}
+            title={t('showOriginal') || 'הצג מקור'}
+          >
             <Check className="w-3 h-3 mr-1" />
-            {t('translatedFrom') || 'מתורגם'}
+            {t('translatedFrom') || 'מתורגם'} - {t('showOriginal') || 'לחץ למקור'}
           </Badge>
           {translationResult?.fromCache?.original && translationResult?.fromCache?.modified && (
             <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 text-xs">
               ✓ {t('fromCache') || 'מהמטמון'}
             </Badge>
-          )}
-          {translationResult?.strategy && translationResult.strategy !== 'none' && (
-            <span className="text-xs text-slate-400">
-              ({translationResult.strategy === 'A' ? 'cached' : 
-                translationResult.strategy === 'C' ? 'pair-translated' : 'ref-translated'})
-            </span>
           )}
         </div>
       )}
