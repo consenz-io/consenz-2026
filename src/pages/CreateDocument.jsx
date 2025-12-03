@@ -106,44 +106,30 @@ export default function CreateDocument() {
     setUploadedFile(file);
     setError(null);
     setIsProcessing(true);
-    setProcessingStage("Uploading file...");
+    setProcessingStage("מעלה קובץ...");
 
     try {
-      console.log("Starting file upload...");
+      console.log("[PDF Upload] Starting file upload...", file.name, file.size);
+      const startTime = Date.now();
+      
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      console.log("File uploaded successfully:", file_url);
-      setProcessingStage("Analyzing document structure (this may take 30-60 seconds)...");
+      console.log("[PDF Upload] File uploaded in", Date.now() - startTime, "ms:", file_url);
+      
+      setProcessingStage("מנתח את מבנה המסמך (עד 2 דקות)...");
+      console.log("[PDF Upload] Starting LLM analysis...");
+      const llmStartTime = Date.now();
 
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analyze this document and extract its structure into topics and sections.
+        prompt: `Extract document structure into topics and sections.
 
-CRITICAL INSTRUCTIONS FOR STRUCTURE EXTRACTION:
+RULES:
+1. Find all headings/chapters - each becomes a TOPIC
+2. Split content into SHORT sections - each paragraph = 1 section  
+3. Keep sections under 200 words each
+4. Preserve original text exactly
+5. Use exact heading text for topic titles
 
-1. TOPIC IDENTIFICATION:
-   - Look for visual headings, bold text, numbered sections, or distinct thematic breaks
-   - Topic titles should match the EXACT headings from the document (e.g., "גבולות, פתוחים", "פליטים פלסטינים חוזרים למולדת", "במקום התנחלויות, ישראלים תושבי פלסטין")
-   - If headings are multi-line or stylized, combine them into a single topic title
-   - Each major heading/chapter becomes a separate topic
-
-2. SECTION SPLITTING - VERY IMPORTANT:
-   - EACH PARAGRAPH should become its OWN SECTION
-   - Keep sections SHORT - maximum 2-3 paragraphs per section
-   - If a paragraph is longer than 5-6 sentences, split it into multiple sections
-   - Never combine multiple distinct ideas into one section
-   - Each section should contain ONE cohesive idea or point
-
-3. CONTENT PRESERVATION:
-   - Preserve ALL original text exactly as written
-   - Do NOT summarize or shorten content
-   - Keep the original language and phrasing
-   - Include all details from the source document
-
-4. STRUCTURE QUALITY:
-   - Every document must have at least 2-3 topics
-   - Each topic must have at least 2-3 sections
-   - Prefer more sections with shorter content over fewer sections with long content
-
-Return ONLY valid JSON.`,
+Return JSON with title, topics array (each with title and sections array with content).`,
         file_urls: [file_url],
         response_json_schema: {
           type: "object",
@@ -174,7 +160,8 @@ Return ONLY valid JSON.`,
         }
       });
       
-      console.log("LLM response received:", result);
+      console.log("[PDF Upload] LLM completed in", Date.now() - llmStartTime, "ms");
+      console.log("[PDF Upload] Result:", JSON.stringify(result).substring(0, 500));
 
       setProcessingStage("Validating extracted data...");
       console.log("Validating result structure...");
