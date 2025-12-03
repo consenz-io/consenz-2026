@@ -591,7 +591,7 @@ ${text}`;
                                 {isViewingHistory && isNewlyCreatedSection ? (
                                   <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded">
                                     <Badge className="mb-2 bg-green-100 text-green-800 text-xs">
-                                      {language === 'he' ? 'סעיף חדש' : 'New Section'}
+                                      {language === 'he' ? 'סעיף חדש' : language === 'ar' ? 'قسم جديد' : 'New Section'}
                                     </Badge>
                                     <div 
                                       className="prose prose-sm max-w-none text-green-800"
@@ -600,7 +600,7 @@ ${text}`;
                                         fontSize: "1.125rem",
                                         lineHeight: "1.8"
                                       }}
-                                      dangerouslySetInnerHTML={{ __html: newerContent }}
+                                      dangerouslySetInnerHTML={{ __html: currentSnapshot?.newSectionContent || newerContent }}
                                     />
                                   </div>
                                 ) : isViewingHistory && hasChanged ? (
