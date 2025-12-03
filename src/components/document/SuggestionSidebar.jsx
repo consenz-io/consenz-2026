@@ -31,6 +31,8 @@ export default function SuggestionSidebar({
   const queryClient = useQueryClient();
   const [newArgument, setNewArgument] = useState({ type: null, content: "" });
   const [error, setError] = useState(null);
+  const [isEditingExplanation, setIsEditingExplanation] = useState(false);
+  const [editedExplanation, setEditedExplanation] = useState("");
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
