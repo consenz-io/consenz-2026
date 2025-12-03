@@ -564,9 +564,10 @@ Return JSON with title, topics array (each with title and sections array with co
                   <div className="text-center py-12">
                     <Loader2 className="w-16 h-16 mx-auto mb-4 text-blue-600 animate-spin" />
                     <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                      Processing Document
+                      מעבד את המסמך
                     </h3>
                     <p className="text-slate-600">{processingStage}</p>
+                    <p className="text-sm text-slate-400 mt-2">ניתוח PDF עשוי לקחת עד 2 דקות</p>
                     <div className="mt-4 max-w-md mx-auto">
                       <div className="w-full bg-slate-200 rounded-full h-2">
                         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }} />
