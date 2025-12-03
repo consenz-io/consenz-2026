@@ -163,26 +163,30 @@ Return JSON with title, topics array (each with title and sections array with co
       console.log("[PDF Upload] LLM completed in", Date.now() - llmStartTime, "ms");
       console.log("[PDF Upload] Result:", JSON.stringify(result).substring(0, 500));
 
-      setProcessingStage("Validating extracted data...");
-      console.log("Validating result structure...");
+      setProcessingStage("מאמת נתונים...");
 
       if (!result || !result.topics || !Array.isArray(result.topics)) {
-        console.error("Invalid result structure:", result);
-        throw new Error("Failed to extract valid document structure");
+        console.error("[PDF Upload] Invalid result:", result);
+        throw new Error("לא הצלחנו לחלץ מבנה תקין מהמסמך");
       }
       
-      console.log("Found", result.topics.length, "topics");
+      console.log("[PDF Upload] Found", result.topics.length, "raw topics");
 
       const validTopics = result.topics.filter(topic => {
-        return topic.title &&
+        const isValid = topic.title &&
                topic.sections &&
                Array.isArray(topic.sections) &&
                topic.sections.length > 0 &&
                topic.sections.some(section => section.content && section.content.trim().length > 0);
+        if (!isValid) {
+          console.log("[PDF Upload] Filtered out invalid topic:", topic.title);
+        }
+        return isValid;
       });
 
       if (validTopics.length === 0) {
-        throw new Error("No valid topics found in document. Please try manual creation.");
+        console.error("[PDF Upload] No valid topics after filtering");
+        throw new Error("לא נמצאו נושאים תקינים במסמך. נסה יצירה ידנית.");
       }
 
       const cleanTopics = validTopics.map(topic => ({
@@ -193,6 +197,9 @@ Return JSON with title, topics array (each with title and sections array with co
             content: section.content.trim()
           }))
       }));
+
+      const totalSections = cleanTopics.reduce((sum, t) => sum + t.sections.length, 0);
+      console.log("[PDF Upload] Final structure:", cleanTopics.length, "topics,", totalSections, "sections");
 
       setExtractedStructure({ ...result, topics: cleanTopics });
 
@@ -210,7 +217,7 @@ Return JSON with title, topics array (each with title and sections array with co
       });
 
       setTopics(cleanTopics);
-      setProcessingStage("Complete!");
+      setProcessingStage("הושלם!");
 
     } catch (err) {
       console.error("File processing error:", err);
