@@ -39,7 +39,15 @@ export default function TranslatableContent({
 }) {
   const { language, isRTL } = useLanguage();
   const queryClient = useQueryClient();
-  const { globalShowTranslated } = useDocumentTranslation();
+  const translationContext = useDocumentTranslation();
+  const globalShowTranslated = translationContext?.globalShowTranslated || false;
+
+  // Early return if no entity
+  if (!entity) {
+    return renderContent ? renderContent(content) : (
+      <div className={className} dangerouslySetInnerHTML={{ __html: content }} />
+    );
+  }
 
   // זיהוי אוטומטי של שפה אם לא מוגדרת
   const detectedLanguage = entity.originalLanguage || detectLanguage(content || '');
