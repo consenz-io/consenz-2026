@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
@@ -24,30 +24,28 @@ const translateTitle = (title, t, language) => {
   return title;
 };
 
-export default function PageHeader({ title, backUrl }) {
+export default function PageHeader({ title }) {
   const { isRTL, t, language } = useLanguage();
+  const navigate = useNavigate();
   const translatedTitle = translateTitle(title, t, language);
 
-  if (!backUrl) {
-    return (
-      <div className="mb-6">
-        <h1 className={`text-3xl font-bold text-slate-900 ${isRTL ? 'text-right' : ''}`}>
-          {translatedTitle}
-        </h1>
-      </div>
-    );
-  }
+  const handleBack = () => {
+    navigate(-1);
+  };
 
   return (
     <div className="flex items-center mb-6 relative">
       <h1 className="text-3xl font-bold text-slate-900 text-center flex-1">
         {translatedTitle}
       </h1>
-      <Link to={backUrl} className="absolute right-0">
-        <Button variant="outline" size="icon">
-          <ArrowRight className="w-4 h-4" />
-        </Button>
-      </Link>
+      <Button 
+        variant="outline" 
+        size="icon" 
+        onClick={handleBack}
+        className="absolute right-0"
+      >
+        <ArrowRight className="w-4 h-4" />
+      </Button>
     </div>
   );
 }
