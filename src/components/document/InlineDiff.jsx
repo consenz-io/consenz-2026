@@ -118,34 +118,47 @@ const InlineDiff = ({ originalContent, newContent, className = "" }) => {
     return computeWordDiff(oldTokens, newTokens);
   }, [originalContent, newContent]);
 
+  // Check if there are actual changes
+  const hasChanges = differences.some(d => d.type !== 'unchanged');
+
   return (
     <div 
       className={`text-slate-700 leading-relaxed prose prose-slate max-w-none ${className}`} 
       dir={isRTL ? 'rtl' : 'ltr'}
+      style={{ 
+        fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+        fontSize: "1.125rem",
+        lineHeight: "1.8"
+      }}
     >
-      {differences.map((part, index) => {
-        if (part.type === 'added') {
-          return (
-            <span
-              key={index}
-              className="bg-[#dcfce7] text-green-800 border-b-2 border-green-500 font-medium"
-            >
-              {part.value}
-            </span>
-          );
-        }
-        if (part.type === 'removed') {
-          return (
-            <span
-              key={index}
-              className="bg-[#fef2f2] text-red-700 line-through opacity-70"
-            >
-              {part.value}
-            </span>
-          );
-        }
-        return <span key={index}>{part.value}</span>;
-      })}
+      {!hasChanges ? (
+        <span>{extractText(newContent)}</span>
+      ) : (
+        differences.map((part, index) => {
+          if (part.type === 'added') {
+            return (
+              <span
+                key={index}
+                className="bg-green-100 text-green-800 px-0.5 rounded"
+                style={{ textDecoration: 'none' }}
+              >
+                {part.value}
+              </span>
+            );
+          }
+          if (part.type === 'removed') {
+            return (
+              <span
+                key={index}
+                className="bg-red-100 text-red-600 line-through px-0.5 rounded opacity-75"
+              >
+                {part.value}
+              </span>
+            );
+          }
+          return <span key={index}>{part.value}</span>;
+        })
+      )}
     </div>
   );
 };
