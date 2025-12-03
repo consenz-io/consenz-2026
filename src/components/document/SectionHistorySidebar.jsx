@@ -261,7 +261,20 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                                     old?.map(v => v.id === currentVer.id ? updated : v)
                                   );
                                 }}
-                                className="prose prose-sm max-w-none text-slate-700"
+                                renderContent={(content) => {
+                                  // Extract plain text from HTML
+                                  const plainText = content
+                                    ?.replace(/&nbsp;/g, ' ')
+                                    .replace(/&amp;/g, '&')
+                                    .replace(/&lt;/g, '<')
+                                    .replace(/&gt;/g, '>')
+                                    .replace(/<br\s*\/?>/gi, '\n')
+                                    .replace(/<\/p>/gi, '\n')
+                                    .replace(/<[^>]*>/g, '')
+                                    .replace(/\s+/g, ' ')
+                                    .trim() || '';
+                                  return <p className="text-slate-700 whitespace-pre-wrap">{plainText}</p>;
+                                }}
                               />
                             </div>
                           )}
