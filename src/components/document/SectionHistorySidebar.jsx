@@ -373,11 +373,14 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                                 <>
                                   {/* Show translate button if not yet translated */}
                                   {!translatedPairs[currentVer.id] ? (
-                                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-center">
-                                      <p className="text-sm text-slate-500 mb-2">
-                                        {language === 'he' ? 'יש לתרגם כדי לראות השוואת שינויים' : 'Translate to view changes comparison'}
-                                      </p>
-                                      <Button
+                                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                      <InlineDiffView
+                                        originalContent={prevVer.content}
+                                        newContent={currentVer.content}
+                                        isRTL={detectLanguage(currentVer.content) === 'he' || detectLanguage(currentVer.content) === 'ar'}
+                                      />
+                                      <div className="text-center mt-3 pt-3 border-t border-slate-200">
+                                        <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={() => translatePairForDiff(currentVer.id, currentVer.content, prevVer.content)}
