@@ -6,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { X, History, MessageSquare, Languages, Loader2, GitCompare } from "lucide-react";
+import { X, History, MessageSquare, Languages, Loader2, GitCompare, Eye, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import CommentsSection from "./CommentsSection";
