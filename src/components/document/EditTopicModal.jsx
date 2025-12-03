@@ -110,6 +110,12 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
       return;
     }
 
+    // Direct edit for admin
+    if (isDirectEdit && isAdmin) {
+      directEditMutation.mutate();
+      return;
+    }
+
     // Check points if gamification enabled and not admin
     if (document.gamificationEnabled && !isAdmin) {
       if (userPoints < SUGGESTION_COST) {
