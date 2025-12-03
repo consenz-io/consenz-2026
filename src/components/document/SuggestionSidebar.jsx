@@ -426,13 +426,23 @@ export default function SuggestionSidebar({
   return (
     <>
       {/* Overlay */}
-      <div 
+      <motion.div 
         className="fixed inset-0 bg-black/30 z-40"
         onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
       />
       
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-full md:w-[500px] bg-white shadow-2xl z-50 flex flex-col`}>
+      <motion.div 
+        className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-full md:w-[500px] bg-white shadow-2xl z-50 flex flex-col`}
+        initial={{ x: isRTL ? '100%' : '-100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: isRTL ? '100%' : '-100%' }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -718,7 +728,7 @@ export default function SuggestionSidebar({
             />
           </div>
         </div>
-      </div>
+      </motion.div>
     </>
   );
 }
