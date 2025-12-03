@@ -511,12 +511,7 @@ export default function DocumentView() {
               topics={topics} 
               sections={sections} 
             />
-            <Link to={`${createPageUrl("DocumentVersions")}?id=${documentId}`} className="flex-shrink-0">
-              <Button variant="outline" size="sm" className="text-xs md:text-sm px-3 md:px-4 h-8 md:h-9">
-                <History className={`w-4 h-4 ${isRTL ? 'ml-1.5 md:ml-2' : 'mr-1.5 md:mr-2'}`} />
-                <span>{t('versions')}</span>
-              </Button>
-            </Link>
+
             <Link to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`} className="flex-shrink-0">
               <Button variant="outline" size="sm" className="text-xs md:text-sm px-3 md:px-4 h-8 md:h-9">
                 <FileText className={`w-4 h-4 ${isRTL ? 'ml-1.5 md:ml-2' : 'mr-1.5 md:mr-2'}`} />
