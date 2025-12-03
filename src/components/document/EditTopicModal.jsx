@@ -20,6 +20,7 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
   const [error, setError] = useState(null);
   const [showPointsConfirm, setShowPointsConfirm] = useState(false);
   const [showInsufficientPoints, setShowInsufficientPoints] = useState(false);
+  const [isDirectEdit, setIsDirectEdit] = useState(false);
 
   const SUGGESTION_COST = 100;
   const userPoints = user?.points || 1000;
@@ -29,6 +30,7 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
       setNewTitle(topic.title);
       setExplanation("");
       setError(null);
+      setIsDirectEdit(false);
     }
   }, [topic]);
 
