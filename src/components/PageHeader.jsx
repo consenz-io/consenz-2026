@@ -34,18 +34,19 @@ export default function PageHeader({ title }) {
   };
 
   return (
-    <div className="flex items-center mb-6 relative">
-      <h1 className="text-3xl font-bold text-slate-900 text-center flex-1">
-        {translatedTitle}
-      </h1>
+    <div className="flex items-center mb-6 gap-3">
       <Button 
         variant="outline" 
         size="icon" 
         onClick={handleBack}
-        className="absolute right-0"
+        className="shrink-0"
       >
-        <ArrowRight className="w-4 h-4" />
+        {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
       </Button>
+      <h1 className="text-2xl md:text-3xl font-bold text-slate-900 flex-1 text-center">
+        {translatedTitle}
+      </h1>
+      <div className="w-10 shrink-0" /> {/* Spacer to balance the button */}
     </div>
   );
 }
