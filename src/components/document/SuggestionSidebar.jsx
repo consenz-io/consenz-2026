@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   X, ThumbsUp, ThumbsDown, MessageSquare, Clock, 
-  CheckCircle, XCircle, AlertCircle, Trash2, ExternalLink, Edit2, Save
+  CheckCircle, XCircle, AlertCircle, Trash2, ExternalLink
 } from "lucide-react";
 import VotesNeededCounter from "./VotesNeededCounter";
 import CommentsSection from "./CommentsSection";
@@ -31,8 +31,6 @@ export default function SuggestionSidebar({
   const queryClient = useQueryClient();
   const [newArgument, setNewArgument] = useState({ type: null, content: "" });
   const [error, setError] = useState(null);
-  const [isEditingExplanation, setIsEditingExplanation] = useState(false);
-  const [editedExplanation, setEditedExplanation] = useState("");
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
@@ -387,20 +385,6 @@ export default function SuggestionSidebar({
     }
   });
 
-  const updateExplanationMutation = useMutation({
-    mutationFn: async (newExplanation) => {
-      await base44.entities.Suggestion.update(suggestionId, { explanation: newExplanation });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
-      setIsEditingExplanation(false);
-    },
-    onError: (err) => {
-      setError(err.message);
-      setTimeout(() => setError(null), 5000);
-    }
-  });
-
   if (suggestionLoading || !suggestion) {
     return (
       <div className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-full md:w-[500px] bg-white shadow-2xl z-50 flex items-center justify-center`}>
@@ -507,78 +491,18 @@ export default function SuggestionSidebar({
           </div>
 
           {/* Explanation */}
-          <div className="bg-slate-50 rounded-lg p-3" dir={isRTL ? 'rtl' : 'ltr'}>
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="text-sm font-bold text-slate-700">הסבר:</h3>
-              {user && user.email === suggestion.created_by && !isEditingExplanation && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setEditedExplanation(suggestion.explanation || "");
-                    setIsEditingExplanation(true);
-                  }}
-                  className="h-6 w-6 p-0"
-                >
-                  <Edit2 className="w-3 h-3" />
-                </Button>
-              )}
-            </div>
-            {isEditingExplanation ? (
-              <div className="space-y-2">
-                <Textarea
-                  value={editedExplanation}
-                  onChange={(e) => setEditedExplanation(e.target.value)}
-                  placeholder={t('explainChange')}
-                  rows={3}
-                  className="text-sm"
-                />
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => updateExplanationMutation.mutate(editedExplanation)}
-                    disabled={updateExplanationMutation.isPending}
-                    className="h-7 text-xs"
-                  >
-                    <Save className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                    {t('saveChanges')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setIsEditingExplanation(false)}
-                    className="h-7 text-xs"
-                  >
-                    {t('cancel')}
-                  </Button>
-                </div>
-              </div>
-            ) : suggestion.explanation && typeof suggestion.explanation === 'string' ? (
+          {suggestion.explanation && typeof suggestion.explanation === 'string' && (
+            <div className="bg-slate-50 rounded-lg p-3">
+              <h3 className="text-xs font-semibold text-slate-700 mb-1">{t('explanation')}</h3>
               <TranslatableContent
                 content={suggestion.explanation}
                 entity={suggestion}
                 entityType="Suggestion"
                 fieldName="explanation"
-                className="text-sm text-slate-600 text-right"
+                className="text-sm text-slate-600"
               />
-            ) : (
-              <p className="text-sm text-slate-400 italic">
-                {user && user.email === suggestion.created_by ? (
-                  <button 
-                    onClick={() => {
-                      setEditedExplanation("");
-                      setIsEditingExplanation(true);
-                    }}
-                    className="hover:text-blue-600 transition-colors"
-                  >
-                    + הוסף הסבר
-                  </button>
-                ) : (
-                  "אין הסבר"
-                )}
-              </p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Content diff or proposed content */}
           {suggestion.type === 'edit_section' && suggestion.originalContent ? (
