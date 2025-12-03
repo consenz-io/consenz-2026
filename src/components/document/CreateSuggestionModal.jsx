@@ -298,6 +298,7 @@ Return ONLY the translated HTML:`;
         conVotes: 0,
         insertPosition: editingSection?.insertPosition,
         originalLanguage: detectedLanguage,
+        createdByLanguage: language, // Track language user was viewing when creating suggestion
       });
 
       // שליחת התראות ברקע (ללא המתנה)
