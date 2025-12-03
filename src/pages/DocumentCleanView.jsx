@@ -570,13 +570,17 @@ ${text}`;
                         // Get content from the newer snapshot (for diff)
                         const newerContent = newerSnapshot?.sectionContents?.[section.id];
                         
-                        // Check if this section was newly created in the newer version
+                        // Check if this section was newly created in THIS snapshot (current view)
                         const isNewlyCreatedSection = isViewingHistory && 
-                          newerSnapshot?.isNewSection && 
-                          newerSnapshot?.newSectionId === section.id;
+                          currentSnapshot?.isNewSection && 
+                          currentSnapshot?.newSectionId === section.id;
                         
                         // Check if this section changed between versions (content edit)
-                        const hasChanged = isViewingHistory && newerContent && displayedContent !== newerContent;
+                        // Compare the snapshot's content with the newer version's content
+                        const hasChanged = isViewingHistory && 
+                          currentSnapshot?.changedSectionId === section.id && 
+                          currentSnapshot?.newContent && 
+                          displayedContent !== currentSnapshot?.newContent;
 
                         return (
                           <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
