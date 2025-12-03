@@ -243,22 +243,23 @@ Return ONLY the translated HTML:`;
     : content;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" dir={isRTL ? 'rtl' : 'ltr'} style={{ textAlign: isRTL ? 'right' : 'left' }}>
       {translateMutation.isPending ? (
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-          <span className="mr-2 text-sm text-slate-600">מתרגם...</span>
+          <span className={`text-sm text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>
+            {isRTL ? 'מתרגם...' : 'Translating...'}
+          </span>
         </div>
       ) : (
         <>
           {renderContent ? (
-            <div style={{ direction: isDisplayRTL ? 'rtl' : 'ltr', textAlign: isDisplayRTL ? 'right' : 'left' }}>
+            <div>
               {renderContent(displayContent)}
             </div>
           ) : (
             <div 
               className={className}
-              style={{ direction: isDisplayRTL ? 'rtl' : 'ltr', textAlign: isDisplayRTL ? 'right' : 'left' }}
               dangerouslySetInnerHTML={{ __html: displayContent }}
             />
           )}
