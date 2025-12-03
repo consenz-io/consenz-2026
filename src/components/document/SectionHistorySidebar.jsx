@@ -124,8 +124,6 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
     }
   };
 
-  if (!isOpen) return null;
-
   // Sort versions by version number descending, deduplicate, and filter versions with same content
   const sortedVersions = [...versions]
     .sort((a, b) => b.version - a.version)
@@ -161,15 +159,27 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
   });
 
   return (
-    <>
-      {/* Overlay */}
-      <div 
-        className="fixed inset-0 bg-black/50 z-40"
-        onClick={onClose}
-      />
-      
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-full max-w-2xl bg-white shadow-2xl z-50 overflow-y-auto`}>
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Overlay */}
+          <motion.div 
+            className="fixed inset-0 bg-black/50 z-40"
+            onClick={onClose}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          />
+          
+          {/* Sidebar */}
+          <motion.div 
+            className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-full max-w-2xl bg-white shadow-2xl z-50 overflow-y-auto`}
+            initial={{ x: isRTL ? '100%' : '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: isRTL ? '100%' : '-100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+          >
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-slate-200 p-4 flex items-center justify-between z-10">
           <div className="flex items-center gap-3">
@@ -352,8 +362,10 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
             </>
           )}
         </div>
-      </div>
-    </>
+      </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
 
