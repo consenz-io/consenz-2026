@@ -256,18 +256,6 @@ export default function SectionDiff({
         </div>
       </div>
       
-      {/* Cross-language suggestion alert */}
-      {isCrossLanguageSuggestion && (
-        <Alert className="mb-3 bg-blue-50 border-blue-200">
-          <Info className="h-4 w-4 text-blue-600" />
-          <AlertDescription className="text-blue-800 text-sm">
-            {t('crossLanguageSuggestionAlert', { 
-              language: languageLabels[modifiedSourceLang] || modifiedSourceLang 
-            }) || `הצעה זו נכתבה ב${languageLabels[modifiedSourceLang] || modifiedSourceLang}`}
-          </AlertDescription>
-        </Alert>
-      )}
-      
       {/* Translation indicator - clickable to toggle */}
       {showTranslated && hasTranslation && (
         <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -281,7 +269,7 @@ export default function SectionDiff({
             title={t('showOriginal') || 'הצג מקור'}
           >
             <Check className="w-3 h-3 mr-1" />
-            {t('translatedFrom') || 'מתורגם'} - {t('showOriginal') || 'לחץ למקור'}
+            {t('translatedFrom') || 'תורגם מ'} {languageLabels[originalSourceLang] || originalSourceLang} - {t('showOriginal') || 'הצג מקור'}
           </Badge>
           {translationResult?.fromCache?.original && translationResult?.fromCache?.modified && (
             <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 text-xs">
