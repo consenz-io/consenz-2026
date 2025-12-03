@@ -392,8 +392,9 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                                         ) : (
                                           <Languages className="w-3 h-3" />
                                         )}
-                                        {translatingPairs[currentVer.id] ? t('translating') : t('translate')}
-                                      </Button>
+                                          {translatingPairs[currentVer.id] ? t('translating') : t('translate')}
+                                        </Button>
+                                      </div>
                                     </div>
                                   ) : (
                                     <>
