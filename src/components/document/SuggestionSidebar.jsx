@@ -387,6 +387,22 @@ export default function SuggestionSidebar({
     }
   });
 
+  const updateExplanationMutation = useMutation({
+    mutationFn: async (newExplanation) => {
+      await base44.entities.Suggestion.update(suggestionId, { 
+        explanation: newExplanation.trim() || null 
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
+      setIsEditingExplanation(false);
+    },
+    onError: (err) => {
+      setError(err.message);
+      setTimeout(() => setError(null), 5000);
+    }
+  });
+
   if (suggestionLoading || !suggestion) {
     return (
       <div className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-full md:w-[500px] bg-white shadow-2xl z-50 flex items-center justify-center`}>
