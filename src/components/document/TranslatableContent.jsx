@@ -186,7 +186,7 @@ Return ONLY the translated HTML:`;
 
       // Invalidate only the relevant entity queries, not the entire cache
       queryClient.invalidateQueries({ queryKey: [entityType.toLowerCase(), entity.id] });
-      setShowTranslated(true);
+      setLocalShowTranslated(true);
       return translatedText;
     },
   });
