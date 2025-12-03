@@ -440,18 +440,19 @@ ${text}`;
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {versionGroups.length > 1 && (
-              <div className="flex items-center gap-2 border-l border-slate-300 pl-2">
+              <div className={`flex items-center gap-2 ${isRTL ? 'border-r border-slate-300 pr-2' : 'border-l border-slate-300 pl-2'}`}>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentVersionIndex(Math.min(currentVersionIndex + 1, versionGroups.length - 1))}
                   disabled={currentVersionIndex >= versionGroups.length - 1}
                   title={language === 'he' ? 'גרסה קודמת' : 'Previous version'}
+                  className="h-8 w-8 p-0"
                 >
                   {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                 </Button>
-                <div className="flex flex-col items-center">
-                  <Badge variant="outline" className="px-2 md:px-3 text-xs">
+                <div className="flex flex-col items-center min-w-[80px]">
+                  <Badge variant="outline" className={`px-2 md:px-3 text-xs ${currentVersionIndex === 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                     {currentVersionIndex === 0 ? (
                       language === 'he' ? 'נוכחית' : language === 'ar' ? 'حالية' : 'Current'
                     ) : (
@@ -459,8 +460,8 @@ ${text}`;
                     )}
                   </Badge>
                   {currentSnapshot?.changeDescription && currentVersionIndex > 0 && (
-                    <span className="text-[10px] text-slate-500 mt-0.5 max-w-[120px] truncate">
-                      {currentSnapshot.changeDescription}
+                    <span className="text-[10px] text-slate-500 mt-0.5 max-w-[150px] truncate text-center" title={currentSnapshot.changeDescription}>
+                      {currentSnapshot.changeDescription.replace('לפני: ', '')}
                     </span>
                   )}
                 </div>
@@ -470,6 +471,7 @@ ${text}`;
                   onClick={() => setCurrentVersionIndex(Math.max(0, currentVersionIndex - 1))}
                   disabled={currentVersionIndex === 0}
                   title={language === 'he' ? 'גרסה חדשה יותר' : 'Newer version'}
+                  className="h-8 w-8 p-0"
                 >
                   {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 </Button>
