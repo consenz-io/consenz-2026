@@ -505,6 +505,20 @@ export default function SuggestionDetail() {
     }
   });
 
+  const updateExplanationMutation = useMutation({
+    mutationFn: async (newExplanation) => {
+      await base44.entities.Suggestion.update(suggestionId, { explanation: newExplanation });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
+      setIsEditingExplanation(false);
+    },
+    onError: (err) => {
+      setError(err.message);
+      setTimeout(() => setError(null), 5000);
+    }
+  });
+
   if (suggestionLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
