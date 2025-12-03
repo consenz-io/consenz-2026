@@ -269,7 +269,7 @@ export default function SuggestionDetail() {
       
       return { accepted: false };
     },
-    // Optimistic update
+    // Optimistic update - only for vote counts, NOT for status
     onMutate: async (vote) => {
       await queryClient.cancelQueries({ queryKey: ['suggestion', suggestionId] });
       await queryClient.cancelQueries({ queryKey: ['userVote', suggestionId, user?.id] });
@@ -277,7 +277,7 @@ export default function SuggestionDetail() {
       const previousSuggestion = queryClient.getQueryData(['suggestion', suggestionId]);
       const previousVote = queryClient.getQueryData(['userVote', suggestionId, user?.id]);
       
-      // עדכון אופטימיסטי של ההצעה
+      // עדכון אופטימיסטי של ההצעה - רק ספירת הצבעות, לא סטטוס!
       queryClient.setQueryData(['suggestion', suggestionId], (old) => {
         if (!old) return old;
         
@@ -305,16 +305,11 @@ export default function SuggestionDetail() {
           else newConVotes += 1;
         }
         
-        // בדיקה אופטימיסטית אם ההצעה תתקבל
-        const threshold = document?.threshold || 2;
-        const delta = newProVotes - newConVotes;
-        const willBeAccepted = delta >= threshold && old.status === 'pending';
-        
+        // לא משנים סטטוס באופטימיסטי - רק השרת יקבע אם ההצעה התקבלה
         return { 
           ...old, 
           proVotes: newProVotes, 
-          conVotes: newConVotes,
-          status: willBeAccepted ? 'accepted' : old.status
+          conVotes: newConVotes
         };
       });
       
