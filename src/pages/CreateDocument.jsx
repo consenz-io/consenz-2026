@@ -177,10 +177,14 @@ Return ONLY valid JSON.`,
       console.log("LLM response received:", result);
 
       setProcessingStage("Validating extracted data...");
+      console.log("Validating result structure...");
 
       if (!result || !result.topics || !Array.isArray(result.topics)) {
+        console.error("Invalid result structure:", result);
         throw new Error("Failed to extract valid document structure");
       }
+      
+      console.log("Found", result.topics.length, "topics");
 
       const validTopics = result.topics.filter(topic => {
         return topic.title &&
