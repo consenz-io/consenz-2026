@@ -220,13 +220,13 @@ Return JSON with title, topics array (each with title and sections array with co
       setProcessingStage("הושלם!");
 
     } catch (err) {
-      console.error("File processing error:", err);
-      console.error("Error details:", JSON.stringify(err, null, 2));
-      setError(err.message || "Failed to process document. Please try manual creation or a different file.");
+      console.error("[PDF Upload] ERROR:", err);
+      console.error("[PDF Upload] Error stack:", err.stack);
+      setError(err.message || "שגיאה בעיבוד המסמך. נסה יצירה ידנית או קובץ אחר.");
       setUploadedFile(null);
       setExtractedStructure(null);
     } finally {
-      console.log("Processing complete");
+      console.log("[PDF Upload] Process finished");
       setIsProcessing(false);
       setTimeout(() => setProcessingStage(""), 2000);
     }
