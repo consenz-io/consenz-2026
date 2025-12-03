@@ -284,64 +284,20 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                           
                           {/* Show diff for suggestion_accepted */}
                           {prevVer && currentVer.changeType === 'suggestion_accepted' && !isOldestVersion && (
-                            <div className="space-y-2">
-                              {/* Check if content needs translation */}
-                              {detectLanguage(currentVer.content) !== language ? (
-                                <>
-                                  {/* Show translate button if not yet translated */}
-                                  {!translatedPairs[currentVer.id] ? (
-                                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                      <InlineDiff
-                                        originalContent={prevVer.content}
-                                        newContent={currentVer.content}
-                                      />
-                                      <div className="text-center mt-3 pt-3 border-t border-slate-200">
-                                        <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => translatePairForDiff(currentVer.id, currentVer.content, prevVer.content)}
-                                        disabled={translatingPairs[currentVer.id]}
-                                        className="h-7 text-xs gap-1"
-                                      >
-                                        {translatingPairs[currentVer.id] ? (
-                                          <Loader2 className="w-3 h-3 animate-spin" />
-                                        ) : (
-                                          <Languages className="w-3 h-3" />
-                                        )}
-                                          {translatingPairs[currentVer.id] ? t('translating') : t('translate')}
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <>
-                                      {/* Show translated diff */}
-                                      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                        <InlineDiff
-                                          originalContent={translatedPairs[currentVer.id].previous}
-                                          newContent={translatedPairs[currentVer.id].current}
-                                        />
-                                      </div>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => translatePairForDiff(currentVer.id, currentVer.content, prevVer.content)}
-                                        className="h-6 text-xs text-slate-500"
-                                      >
-                                        {t('showOriginal')}
-                                      </Button>
-                                    </>
-                                  )}
-                                </>
-                              ) : (
-                                /* Content is in system language - show diff directly */
-                                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                  <InlineDiff
-                                    originalContent={prevVer.content}
-                                    newContent={currentVer.content}
-                                  />
-                                </div>
-                              )}
-                            </div>
+                            <VersionDiffDisplay
+                              currentVer={currentVer}
+                              prevVer={prevVer}
+                              translatedPairs={translatedPairs}
+                              translatingPairs={translatingPairs}
+                              translatePairForDiff={translatePairForDiff}
+                              diffMode={diffMode}
+                              setDiffMode={setDiffMode}
+                              showDiff={showDiff}
+                              setShowDiff={setShowDiff}
+                              isRTL={isRTL}
+                              language={language}
+                              t={t}
+                            />
                           )}
 
                           {/* Show suggestion details if available */}
