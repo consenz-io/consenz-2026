@@ -278,7 +278,6 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                                       <InlineDiff
                                         originalContent={prevVer.content}
                                         newContent={currentVer.content}
-                                        className="prose prose-sm max-w-none text-slate-700"
                                       />
                                       <div className="text-center mt-3 pt-3 border-t border-slate-200">
                                         <Button
