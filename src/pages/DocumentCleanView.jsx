@@ -109,14 +109,40 @@ export default function DocumentCleanView() {
     return relevantSuggestions[relevantSuggestions.length - 1].newTitle;
   };
 
-  // Build document snapshots - each version change creates a new snapshot of the entire document
+  // Build document snapshots - each suggestion acceptance creates one snapshot
   const versionGroups = React.useMemo(() => {
     if (!allVersions.length && !sections.length) return [];
     
-    // Sort all versions by created_date descending (newest first)
-    const sortedVersions = [...allVersions].sort((a, b) => {
-      return new Date(b.created_date) - new Date(a.created_date);
+    // Group versions by suggestionId - each accepted suggestion creates paired versions
+    const suggestionGroups = {};
+    allVersions.forEach(v => {
+      if (v.suggestionId) {
+        if (!suggestionGroups[v.suggestionId]) {
+          suggestionGroups[v.suggestionId] = [];
+        }
+        suggestionGroups[v.suggestionId].push(v);
+      }
     });
+    
+    // For each suggestion, find the "after" version (highest version number in the pair)
+    const uniqueChanges = [];
+    Object.entries(suggestionGroups).forEach(([suggestionId, versions]) => {
+      // Sort by version descending to get the "after" version first
+      const sorted = versions.sort((a, b) => (b.version || 0) - (a.version || 0));
+      const afterVersion = sorted[0]; // The higher version is "after"
+      const beforeVersion = sorted[1]; // The lower version is "before"
+      
+      if (afterVersion) {
+        uniqueChanges.push({
+          ...afterVersion,
+          beforeContent: beforeVersion?.content,
+          suggestionId
+        });
+      }
+    });
+    
+    // Sort by version descending (newest first)
+    uniqueChanges.sort((a, b) => (b.version || 0) - (a.version || 0));
     
     // Build snapshots - start from current state and work backwards
     const snapshots = [];
@@ -135,19 +161,12 @@ export default function DocumentCleanView() {
     });
     snapshots.push(currentSnapshot);
     
-    // Track which sections exist at each point in time
-    // and their content at each version
+    // Track section states
     let currentSectionContents = { ...currentSnapshot.sectionContents };
     let currentExistingSections = new Set(currentSnapshot.existingSections);
     
-    // Group versions by unique timestamp/version to avoid duplicates
-    const processedVersionKeys = new Set();
-    
-    sortedVersions.forEach(v => {
-      const versionKey = `${v.version}-${v.sectionId}`;
-      if (processedVersionKeys.has(versionKey)) return;
-      processedVersionKeys.add(versionKey);
-      
+    // Process each unique change
+    uniqueChanges.forEach(v => {
       // Create a snapshot representing the state BEFORE this change
       const snapshotBeforeChange = {
         version: v.version,
@@ -155,21 +174,25 @@ export default function DocumentCleanView() {
         timestamp: v.created_date,
         changeDescription: v.changeDescription,
         changeType: v.changeType,
+        suggestionId: v.suggestionId,
         sectionContents: { ...currentSectionContents },
         existingSections: new Set(currentExistingSections),
-        changedSectionIds: [v.sectionId]
+        changedSectionId: v.sectionId,
+        // Store the new content for display in diff
+        newContent: v.content
       };
       
       // Apply the change in reverse
       if (v.changeType === 'section_created') {
-        // This section was created at this version - remove it from older snapshots
-        delete snapshotBeforeChange.sectionContents[v.sectionId];
-        snapshotBeforeChange.existingSections.delete(v.sectionId);
+        // This section was created at this version - mark it and remove from older snapshots
         snapshotBeforeChange.isNewSection = true;
         snapshotBeforeChange.newSectionId = v.sectionId;
+        snapshotBeforeChange.newSectionContent = v.content;
+        delete snapshotBeforeChange.sectionContents[v.sectionId];
+        snapshotBeforeChange.existingSections.delete(v.sectionId);
       } else {
-        // This was an edit - show the previous content
-        snapshotBeforeChange.sectionContents[v.sectionId] = v.content;
+        // This was an edit - use the beforeContent if available, otherwise the version content
+        snapshotBeforeChange.sectionContents[v.sectionId] = v.beforeContent || v.content;
       }
       
       snapshots.push(snapshotBeforeChange);
@@ -216,42 +239,6 @@ export default function DocumentCleanView() {
       }, 100);
     }
   }, [currentVersionIndex, currentSnapshot, newerSnapshot]);
-
-  // Scroll to suggestion's version when scrollToSuggestionId is provided
-  React.useEffect(() => {
-    if (scrollToSuggestionId && allVersions.length > 0 && versionGroups.length > 0) {
-      // Find the version that contains this suggestion
-      const versionWithSuggestion = allVersions.find(v => v.suggestionId === scrollToSuggestionId);
-      
-      if (versionWithSuggestion) {
-        // Find the index in versionGroups that corresponds to this version
-        const targetVersionIndex = versionGroups.findIndex((snapshot, index) => {
-          // For suggestion versions, find the snapshot where this version's changes appear
-          if (index === 0) return false; // Skip current version
-          return snapshot.version === versionWithSuggestion.version || 
-                 (allVersions.some(v => v.suggestionId === scrollToSuggestionId && v.version === snapshot.version));
-        });
-        
-        if (targetVersionIndex > 0) {
-          // Navigate to the version before this one to show the diff
-          setCurrentVersionIndex(targetVersionIndex);
-        }
-        
-        // Also scroll to the section
-        setTimeout(() => {
-          const sectionId = versionWithSuggestion.sectionId;
-          const element = window.document.getElementById(`section-${sectionId}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
-            setTimeout(() => {
-              element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
-            }, 3000);
-          }
-        }, 300);
-      }
-    }
-  }, [scrollToSuggestionId, allVersions, versionGroups]);
 
   if (docLoading || topicsLoading || sectionsLoading || versionsLoading) {
     return (
