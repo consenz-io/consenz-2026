@@ -608,10 +608,15 @@ ${text}`;
                                     />
                                   </div>
                                 ) : isViewingHistory && hasChanged ? (
-                                 <InlineDiff
-                                   originalContent={displayedContent}
-                                   newContent={newerContent}
-                                 />
+                                 <div className="border-l-4 border-amber-400 pl-3 py-2 bg-amber-50/50 rounded">
+                                   <Badge className="mb-2 bg-amber-100 text-amber-800 text-xs">
+                                     {language === 'he' ? 'שינוי' : language === 'ar' ? 'تغيير' : 'Change'}
+                                   </Badge>
+                                   <InlineDiff
+                                     originalContent={displayedContent}
+                                     newContent={currentSnapshot?.newContent}
+                                   />
+                                 </div>
                                 ) : (
                                  <>
                                    <div 
