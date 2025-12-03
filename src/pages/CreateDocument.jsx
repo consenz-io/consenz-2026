@@ -143,33 +143,7 @@ CRITICAL INSTRUCTIONS FOR STRUCTURE EXTRACTION:
    - Each topic must have at least 2-3 sections
    - Prefer more sections with shorter content over fewer sections with long content
 
-Example of good structure:
-- Topic: "גבולות, פתוחים" 
-  - Section 1: First paragraph about borders
-  - Section 2: Second paragraph about borders
-  - Section 3: Third paragraph about implications
-- Topic: "פליטים פלסטינים חוזרים למולדת"
-  - Section 1: Introduction to refugee issue
-  - Section 2: Historical context
-  - Section 3: Proposed solution
-
-Return ONLY valid JSON in this exact format:
-{
-  "title": "Document Title Here",
-  "topics": [
-    {
-      "title": "Exact Topic Heading From Document",
-      "sections": [
-        {
-          "content": "First paragraph or short segment..."
-        },
-        {
-          "content": "Second paragraph or short segment..."
-        }
-      ]
-    }
-  ]
-}`,
+Return ONLY valid JSON.`,
         file_urls: [file_url],
         response_json_schema: {
           type: "object",
@@ -199,6 +173,8 @@ Return ONLY valid JSON in this exact format:
           required: ["title", "topics"]
         }
       });
+      
+      console.log("LLM response received:", result);
 
       setProcessingStage("Validating extracted data...");
 
