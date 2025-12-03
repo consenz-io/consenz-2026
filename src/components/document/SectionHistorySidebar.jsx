@@ -12,114 +12,17 @@ import { useLanguage } from "@/components/LanguageContext";
 import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
 
-// Inline diff view component
+// Use shared InlineDiff component
+import InlineDiff from "./InlineDiff";
+
+// Wrapper for backwards compatibility
 function InlineDiffView({ originalContent, newContent, isRTL }) {
-  const getTextContent = (html) => {
-    if (!html) return '';
-    // Replace common HTML entities with their character equivalent
-    let text = html.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-    // Remove all HTML tags
-    text = text.replace(/<[^>]*>/g, '');
-    // Replace multiple whitespace characters (spaces, tabs, newlines) with a single space
-    text = text.replace(/\s+/g, ' ');
-    // Trim leading/trailing spaces
-    return text.trim();
-  };
-
-  const originalText = getTextContent(originalContent);
-  const newText = getTextContent(newContent);
-
-  // Character-level diff using LCS algorithm for block-based display
-  const computeDiff = () => {
-    const oldChars = originalText.split('');
-    const newChars = newText.split('');
-    
-    const m = oldChars.length;
-    const n = newChars.length;
-    
-    // Build LCS table
-    const lcs = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
-    
-    for (let i = 1; i <= m; i++) {
-      for (let j = 1; j <= n; j++) {
-        if (oldChars[i - 1] === newChars[j - 1]) {
-          lcs[i][j] = lcs[i - 1][j - 1] + 1;
-        } else {
-          lcs[i][j] = Math.max(lcs[i - 1][j], lcs[i][j - 1]);
-        }
-      }
-    }
-    
-    // Backtrack to find character-level diff
-    const charDiff = [];
-    let i = m, j = n;
-    
-    while (i > 0 || j > 0) {
-      if (i > 0 && j > 0 && oldChars[i - 1] === newChars[j - 1]) {
-        charDiff.unshift({ type: 'unchanged', char: oldChars[i - 1] });
-        i--;
-        j--;
-      } else if (j > 0 && (i === 0 || lcs[i][j - 1] >= lcs[i - 1][j])) {
-        charDiff.unshift({ type: 'added', char: newChars[j - 1] });
-        j--;
-      } else if (i > 0) {
-        charDiff.unshift({ type: 'removed', char: oldChars[i - 1] });
-        i--;
-      }
-    }
-    
-    // Group consecutive characters of the same type into blocks
-    const result = [];
-    let currentType = null;
-    let currentText = '';
-    
-    for (const item of charDiff) {
-      if (item.type === currentType) {
-        currentText += item.char;
-      } else {
-        if (currentText) {
-          result.push({ type: currentType, text: currentText });
-        }
-        currentType = item.type;
-        currentText = item.char;
-      }
-    }
-    
-    if (currentText) {
-      result.push({ type: currentType, text: currentText });
-    }
-    
-    return result;
-  };
-
-  const diff = computeDiff();
-
   return (
-    <div 
+    <InlineDiff 
+      originalContent={originalContent} 
+      newContent={newContent}
       className="prose prose-sm max-w-none text-slate-700"
-      style={{ 
-        direction: isRTL ? 'rtl' : 'ltr', 
-        textAlign: isRTL ? 'right' : 'left'
-      }}
-    >
-      {diff.map((part, idx) => {
-        if (part.type === 'removed') {
-          return (
-            <span key={idx} className="bg-red-100 text-red-800 line-through">
-              {part.text}
-            </span>
-          );
-        } else if (part.type === 'added') {
-          return (
-            <span key={idx} className="bg-green-100 text-green-800 font-medium">
-              {part.text}
-            </span>
-          );
-        } else {
-          return <span key={idx}>{part.text}</span>;
-        }
-      })}
-    </div>
+    />
   );
 }
 
