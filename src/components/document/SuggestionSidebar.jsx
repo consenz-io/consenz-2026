@@ -240,17 +240,19 @@ export default function SuggestionSidebar({
     },
     onSuccess: (data) => {
       const doc = document || parentDocument;
+      // תמיד רענן את ההצעה כדי לקבל את הסטטוס האמיתי מהשרת
+      queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
+      queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
+      
       if (data?.accepted) {
-        // רענון כל הנתונים הרלוונטיים
+        // רענון כל הנתונים הרלוונטיים כשההצעה התקבלה
         queryClient.invalidateQueries({ queryKey: ['sections', doc?.id] });
         queryClient.invalidateQueries({ queryKey: ['suggestions', doc?.id] });
-        queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
         queryClient.invalidateQueries({ queryKey: ['allDocumentSuggestions', doc?.id] });
         queryClient.invalidateQueries({ queryKey: ['allVersions'] });
         queryClient.invalidateQueries({ queryKey: ['document', doc?.id] });
         queryClient.invalidateQueries({ queryKey: ['publicDocuments'] });
       }
-      queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
     },
   });
 
