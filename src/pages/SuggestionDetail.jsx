@@ -722,18 +722,16 @@ export default function SuggestionDetail() {
                       </div>
                     </div>
                   ) : suggestion.explanation && typeof suggestion.explanation === 'string' ? (
-                    <div dir={isRTL ? 'rtl' : 'ltr'} style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                      <TranslatableContent
-                        content={suggestion.explanation}
-                        entity={suggestion}
-                        entityType="Suggestion"
-                        fieldName="explanation"
-                        onUpdate={(updated) => {
-                          queryClient.setQueryData(['suggestion', suggestionId], updated);
-                        }}
-                        className="text-slate-600"
-                      />
-                    </div>
+                    <TranslatableContent
+                      content={suggestion.explanation}
+                      entity={suggestion}
+                      entityType="Suggestion"
+                      fieldName="explanation"
+                      onUpdate={(updated) => {
+                        queryClient.setQueryData(['suggestion', suggestionId], updated);
+                      }}
+                      className="text-slate-600"
+                    />
                   ) : (
                     <p className="text-slate-400 text-sm italic">{t('noDescription')}</p>
                   )}
