@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Languages, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Languages, Loader2, Check } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import { useDocumentTranslation } from "./TranslationContext";
 
 const languageNames = {
   en: "English",
@@ -37,6 +39,7 @@ export default function TranslatableContent({
 }) {
   const { language, isRTL } = useLanguage();
   const queryClient = useQueryClient();
+  const { globalShowTranslated } = useDocumentTranslation();
 
   // זיהוי אוטומטי של שפה אם לא מוגדרת
   const detectedLanguage = entity.originalLanguage || detectLanguage(content || '');
@@ -72,7 +75,16 @@ export default function TranslatableContent({
   // בדיקה אם צריך תרגום - בודק גם אם השפות שונות וגם אם השפה אינה שפת המקור
   const needsTranslation = originalLanguage && language && originalLanguage !== language;
   
-  const [showTranslated, setShowTranslated] = useState(needsTranslation && hasTranslation);
+  const [localShowTranslated, setLocalShowTranslated] = useState(needsTranslation && hasTranslation);
+  
+  // Sync with global translation state
+  useEffect(() => {
+    if (hasTranslation) {
+      setLocalShowTranslated(globalShowTranslated);
+    }
+  }, [globalShowTranslated, hasTranslation]);
+  
+  const showTranslated = localShowTranslated;
   
   const displayLanguage = showTranslated && hasTranslation ? language : originalLanguage;
   const isDisplayRTL = displayLanguage === 'he' || displayLanguage === 'ar';
@@ -244,6 +256,12 @@ Return ONLY the translated HTML:`;
           
           {needsTranslation && (
             <div className="flex items-center gap-2 pt-1">
+              {hasTranslation && showTranslated && (
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs gap-1">
+                  <Check className="w-3 h-3" />
+                  {languageNames[language]}
+                </Badge>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -251,17 +269,22 @@ Return ONLY the translated HTML:`;
                   e.preventDefault();
                   e.stopPropagation();
                   if (showTranslated && hasTranslation) {
-                    setShowTranslated(false);
+                    setLocalShowTranslated(false);
                   } else if (hasTranslation) {
-                    setShowTranslated(true);
+                    setLocalShowTranslated(true);
                   } else {
                     translateMutation.mutate();
                   }
                 }}
-                className="h-7 w-7 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                className={`h-7 px-2 gap-1 ${showTranslated && hasTranslation 
+                  ? 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' 
+                  : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'}`}
                 title={showTranslated && hasTranslation ? `${languageNames[originalLanguage]} (מקור)` : `תרגם ל${languageNames[language]}`}
               >
                 <Languages className="w-4 h-4" />
+                <span className="text-xs">
+                  {showTranslated && hasTranslation ? languageNames[originalLanguage] : languageNames[language]}
+                </span>
               </Button>
             </div>
           )}
