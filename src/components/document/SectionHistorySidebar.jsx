@@ -264,10 +264,10 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                                   {/* Show translate button if not yet translated */}
                                   {!translatedPairs[currentVer.id] ? (
                                     <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                      <InlineDiffView
+                                      <InlineDiff
                                         originalContent={prevVer.content}
                                         newContent={currentVer.content}
-                                        isRTL={detectLanguage(currentVer.content) === 'he' || detectLanguage(currentVer.content) === 'ar'}
+                                        className="prose prose-sm max-w-none text-slate-700"
                                       />
                                       <div className="text-center mt-3 pt-3 border-t border-slate-200">
                                         <Button
@@ -290,10 +290,10 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                                     <>
                                       {/* Show translated diff */}
                                       <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                        <InlineDiffView
+                                        <InlineDiff
                                           originalContent={translatedPairs[currentVer.id].previous}
                                           newContent={translatedPairs[currentVer.id].current}
-                                          isRTL={isRTL}
+                                          className="prose prose-sm max-w-none text-slate-700"
                                         />
                                       </div>
                                       <Button
@@ -310,10 +310,10 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                               ) : (
                                 /* Content is in system language - show diff directly */
                                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                                  <InlineDiffView
+                                  <InlineDiff
                                     originalContent={prevVer.content}
                                     newContent={currentVer.content}
-                                    isRTL={isRTL}
+                                    className="prose prose-sm max-w-none text-slate-700"
                                   />
                                 </div>
                               )}
