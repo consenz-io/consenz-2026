@@ -290,7 +290,7 @@ export default function SectionCarousel({
             onClick={handlePrev}
             className="flex items-center"
           >
-            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </Button>
 
           <div className="text-center">
@@ -314,7 +314,7 @@ export default function SectionCarousel({
             onClick={handleNext}
             className="flex items-center"
           >
-            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </Button>
         </div>
       )}
