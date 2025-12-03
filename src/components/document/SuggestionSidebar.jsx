@@ -559,7 +559,7 @@ export default function SuggestionSidebar({
                 entity={suggestion}
                 entityType="Suggestion"
                 fieldName="explanation"
-                className="text-sm text-slate-600"
+                className="text-sm text-slate-600 text-right"
               />
             ) : (
               <p className="text-sm text-slate-400 italic">
