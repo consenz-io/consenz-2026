@@ -186,13 +186,26 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
               />
             </div>
 
-            <div className="flex gap-2 justify-end">
+            <div className="flex gap-2 justify-end flex-wrap">
               <Button variant="outline" onClick={onClose}>
                 {t('cancel')}
               </Button>
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsDirectEdit(true);
+                    directEditMutation.mutate();
+                  }}
+                  disabled={directEditMutation.isPending || createSuggestionMutation.isPending}
+                  className="border-green-300 text-green-700 hover:bg-green-50"
+                >
+                  {directEditMutation.isPending ? 'שומר...' : 'עריכה ישירה (אדמין)'}
+                </Button>
+              )}
               <Button
                 onClick={handleSubmit}
-                disabled={createSuggestionMutation.isPending}
+                disabled={createSuggestionMutation.isPending || directEditMutation.isPending}
                 className="bg-gradient-to-r from-blue-600 to-indigo-600"
               >
                 {createSuggestionMutation.isPending ? 'יוצר...' : 'צור הצעה'}
