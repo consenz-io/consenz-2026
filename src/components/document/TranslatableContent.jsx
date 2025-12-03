@@ -256,8 +256,8 @@ Return ONLY the translated HTML:`;
             </div>
           ) : (
             <div 
-              className={className}
-              style={{ direction: isDisplayRTL ? 'rtl' : 'ltr', textAlign: isDisplayRTL ? 'right' : 'left' }}
+              className={`${className} ${isDisplayRTL ? 'text-right' : 'text-left'}`}
+              dir={isDisplayRTL ? 'rtl' : 'ltr'}
               dangerouslySetInnerHTML={{ __html: displayContent }}
             />
           )}
