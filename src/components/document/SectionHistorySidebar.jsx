@@ -338,6 +338,176 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
   );
 }
 
+// Component to display version diff with multiple view modes
+function VersionDiffDisplay({ 
+  currentVer, 
+  prevVer, 
+  translatedPairs, 
+  translatingPairs, 
+  translatePairForDiff,
+  diffMode,
+  setDiffMode,
+  showDiff,
+  setShowDiff,
+  isRTL,
+  language,
+  t
+}) {
+  const needsTranslation = detectLanguage(currentVer.content) !== language;
+  const hasTranslation = !!translatedPairs[currentVer.id];
+  const isDiffVisible = showDiff[currentVer.id] !== false; // Default to true
+  
+  const displayOriginal = hasTranslation ? translatedPairs[currentVer.id].previous : prevVer.content;
+  const displayNew = hasTranslation ? translatedPairs[currentVer.id].current : currentVer.content;
+  
+  const contentStyle = {
+    direction: isRTL ? 'rtl' : 'ltr',
+    textAlign: isRTL ? 'right' : 'left',
+    fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+    fontSize: "1rem",
+    lineHeight: "1.7"
+  };
+
+  // Compute diff
+  const diff = React.useMemo(() => {
+    const oldText = extractText(displayOriginal);
+    const newText = extractText(displayNew);
+    const oldTokens = tokenize(oldText);
+    const newTokens = tokenize(newText);
+    return computeWordDiff(oldTokens, newTokens);
+  }, [displayOriginal, displayNew]);
+
+  const renderInlineDiff = () => (
+    <div style={contentStyle}>
+      {diff.map((part, idx) => {
+        if (part.type === 'removed') {
+          return (
+            <span key={idx} className="bg-red-100 text-red-700 line-through opacity-75 px-0.5 rounded">
+              {part.value}
+            </span>
+          );
+        } else if (part.type === 'added') {
+          return (
+            <span key={idx} className="bg-green-100 text-green-800 px-0.5 rounded">
+              {part.value}
+            </span>
+          );
+        }
+        return <span key={idx}>{part.value}</span>;
+      })}
+    </div>
+  );
+
+  const renderSplitDiff = () => (
+    <div className="space-y-2">
+      <div className="p-2 bg-red-50/50 border border-red-200 rounded-lg">
+        <div className="text-xs font-medium text-red-600 mb-1 flex items-center gap-1">
+          <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+          {t('originalContent') || 'מקור'}
+        </div>
+        <div style={contentStyle} className="text-slate-700 text-sm">
+          {extractText(displayOriginal)}
+        </div>
+      </div>
+      <div className="p-2 bg-green-50/50 border border-green-200 rounded-lg">
+        <div className="text-xs font-medium text-green-600 mb-1 flex items-center gap-1">
+          <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+          {t('proposedContent') || 'חדש'}
+        </div>
+        <div style={contentStyle} className="text-slate-700 text-sm">
+          {extractText(displayNew)}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSideBySideDiff = () => (
+    <div className={`grid grid-cols-2 gap-2 ${isRTL ? 'direction-rtl' : ''}`}>
+      <div className="p-2 bg-red-50/50 border border-red-200 rounded-lg">
+        <div className="text-xs font-medium text-red-600 mb-1 flex items-center gap-1">
+          <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+          {t('originalContent') || 'מקור'}
+        </div>
+        <div style={contentStyle} className="text-slate-700 text-xs">
+          {extractText(displayOriginal)}
+        </div>
+      </div>
+      <div className="p-2 bg-green-50/50 border border-green-200 rounded-lg">
+        <div className="text-xs font-medium text-green-600 mb-1 flex items-center gap-1">
+          <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+          {t('proposedContent') || 'חדש'}
+        </div>
+        <div style={contentStyle} className="text-slate-700 text-xs">
+          {extractText(displayNew)}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-2">
+      {/* Controls row */}
+      <div className={`flex items-center justify-between gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className={`flex items-center gap-1.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          {isDiffVisible && (
+            <DiffModeSelector 
+              mode={diffMode} 
+              onModeChange={setDiffMode}
+              size="sm"
+            />
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowDiff(prev => ({ ...prev, [currentVer.id]: !isDiffVisible }))}
+            className={`h-7 px-2 gap-1 ${isDiffVisible ? 'bg-blue-50 text-blue-600' : 'text-slate-600'}`}
+            title={isDiffVisible ? t('hideChanges') : t('showDiff')}
+          >
+            {isDiffVisible ? <FileText className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+          </Button>
+        </div>
+        
+        {needsTranslation && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => translatePairForDiff(currentVer.id, currentVer.content, prevVer.content)}
+            disabled={translatingPairs[currentVer.id]}
+            className={`h-7 px-2 gap-1 ${hasTranslation ? 'bg-green-50 text-green-600' : 'text-slate-600'}`}
+            title={hasTranslation ? t('showOriginal') : t('translate')}
+          >
+            {translatingPairs[currentVer.id] ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Languages className="w-3.5 h-3.5" />
+            )}
+          </Button>
+        )}
+      </div>
+
+      {/* Diff content */}
+      <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+        {translatingPairs[currentVer.id] ? (
+          <div className="flex items-center justify-center py-4 gap-2 text-slate-500">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm">{t('translating')}</span>
+          </div>
+        ) : !isDiffVisible ? (
+          <div style={contentStyle} className="text-slate-700">
+            {extractText(displayNew)}
+          </div>
+        ) : diffMode === DIFF_MODES.INLINE ? (
+          renderInlineDiff()
+        ) : diffMode === DIFF_MODES.SPLIT ? (
+          renderSplitDiff()
+        ) : (
+          renderSideBySideDiff()
+        )}
+      </div>
+    </div>
+  );
+}
+
 // Component to display suggestion details
 function SuggestionDetails({ suggestionId, user, getUserName, showComments, toggleComments, users }) {
   const { t, isRTL } = useLanguage();
