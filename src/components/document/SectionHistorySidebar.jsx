@@ -12,6 +12,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
 import InlineDiff from "./InlineDiff";
+import { motion, AnimatePresence } from "framer-motion";
 
 const languagePrompts = {
   en: "English",
