@@ -507,7 +507,6 @@ export default function SuggestionSidebar({
           {/* Content diff or proposed content */}
           {suggestion.type === 'edit_section' && suggestion.originalContent ? (
             <div>
-              <h3 className="text-xs font-semibold text-slate-700 mb-2">{t('proposedChanges')}</h3>
               <SectionDiff
                 originalContent={suggestion.originalContent}
                 newContent={suggestion.newContent}
