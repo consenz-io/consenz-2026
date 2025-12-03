@@ -464,6 +464,7 @@ function VersionDiffDisplay({
             title={isDiffVisible ? t('hideChanges') : t('showDiff')}
           >
             {isDiffVisible ? <FileText className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            <span className="text-xs">{isDiffVisible ? t('hideChanges') : t('showDiff')}</span>
           </Button>
         </div>
         
