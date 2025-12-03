@@ -57,7 +57,10 @@ export default function DiffModeSelector({ mode, onModeChange, size = "sm" }) {
           key={id}
           variant="ghost"
           size={size}
-          onClick={() => onModeChange(id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onModeChange(id);
+          }}
           className={`h-7 px-2 rounded-md transition-all ${
             mode === id 
               ? 'bg-white shadow-sm text-blue-600' 
