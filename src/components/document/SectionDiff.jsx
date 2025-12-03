@@ -269,7 +269,7 @@ export default function SectionDiff({
             title={t('showOriginal') || 'הצג מקור'}
           >
             <Check className="w-3 h-3 mr-1" />
-            {t('translated') || 'מתורגם'} | {t('showOriginal') || 'הצג מקור'}
+            {t('translated')} | {t('showOriginal')}
           </Badge>
           {translationResult?.fromCache?.original && translationResult?.fromCache?.modified && (
             <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 text-xs">
