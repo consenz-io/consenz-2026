@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   X, ThumbsUp, ThumbsDown, MessageSquare, Clock, 
-  CheckCircle, XCircle, AlertCircle, Trash2, ExternalLink
+  CheckCircle, XCircle, AlertCircle, Trash2, ExternalLink, Edit2, Save
 } from "lucide-react";
 import VotesNeededCounter from "./VotesNeededCounter";
 import CommentsSection from "./CommentsSection";
@@ -31,6 +31,8 @@ export default function SuggestionSidebar({
   const queryClient = useQueryClient();
   const [newArgument, setNewArgument] = useState({ type: null, content: "" });
   const [error, setError] = useState(null);
+  const [isEditingExplanation, setIsEditingExplanation] = useState(false);
+  const [explanationText, setExplanationText] = useState("");
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
