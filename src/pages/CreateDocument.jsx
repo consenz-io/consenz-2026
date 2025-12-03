@@ -113,25 +113,56 @@ export default function CreateDocument() {
       setProcessingStage("Analyzing document structure...");
 
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Analyze this document and extract its structure. Divide it into logical topics and sections.
+        prompt: `Analyze this document and extract its structure into topics and sections.
 
-IMPORTANT INSTRUCTIONS:
-1. Identify main topics/chapters based on document headings
-2. Under each topic, extract sections with their complete content
-3. Preserve all original text - do not summarize
-4. If the document has no clear structure, create logical groupings
-5. Minimum: create at least 1 topic with 1 section
-6. Keep section content clear and well-formatted
+CRITICAL INSTRUCTIONS FOR STRUCTURE EXTRACTION:
+
+1. TOPIC IDENTIFICATION:
+   - Look for visual headings, bold text, numbered sections, or distinct thematic breaks
+   - Topic titles should match the EXACT headings from the document (e.g., "גבולות, פתוחים", "פליטים פלסטינים חוזרים למולדת", "במקום התנחלויות, ישראלים תושבי פלסטין")
+   - If headings are multi-line or stylized, combine them into a single topic title
+   - Each major heading/chapter becomes a separate topic
+
+2. SECTION SPLITTING - VERY IMPORTANT:
+   - EACH PARAGRAPH should become its OWN SECTION
+   - Keep sections SHORT - maximum 2-3 paragraphs per section
+   - If a paragraph is longer than 5-6 sentences, split it into multiple sections
+   - Never combine multiple distinct ideas into one section
+   - Each section should contain ONE cohesive idea or point
+
+3. CONTENT PRESERVATION:
+   - Preserve ALL original text exactly as written
+   - Do NOT summarize or shorten content
+   - Keep the original language and phrasing
+   - Include all details from the source document
+
+4. STRUCTURE QUALITY:
+   - Every document must have at least 2-3 topics
+   - Each topic must have at least 2-3 sections
+   - Prefer more sections with shorter content over fewer sections with long content
+
+Example of good structure:
+- Topic: "גבולות, פתוחים" 
+  - Section 1: First paragraph about borders
+  - Section 2: Second paragraph about borders
+  - Section 3: Third paragraph about implications
+- Topic: "פליטים פלסטינים חוזרים למולדת"
+  - Section 1: Introduction to refugee issue
+  - Section 2: Historical context
+  - Section 3: Proposed solution
 
 Return ONLY valid JSON in this exact format:
 {
   "title": "Document Title Here",
   "topics": [
     {
-      "title": "Topic 1 Title",
+      "title": "Exact Topic Heading From Document",
       "sections": [
         {
-          "content": "Complete section content here with all details..."
+          "content": "First paragraph or short segment..."
+        },
+        {
+          "content": "Second paragraph or short segment..."
         }
       ]
     }
