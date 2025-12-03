@@ -34,6 +34,24 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
     }
   }, [topic]);
 
+  // Direct edit mutation for admin
+  const directEditMutation = useMutation({
+    mutationFn: async () => {
+      await base44.entities.Topic.update(topic.id, {
+        title: newTitle.trim()
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
+      setNewTitle(topic?.title || "");
+      setExplanation("");
+      onClose();
+    },
+    onError: (err) => {
+      setError(err.message || "שגיאה בעדכון הכותרת");
+    }
+  });
+
   const createSuggestionMutation = useMutation({
     mutationFn: async () => {
       // Deduct points if gamification enabled and not admin
