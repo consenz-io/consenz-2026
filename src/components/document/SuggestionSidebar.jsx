@@ -507,9 +507,9 @@ export default function SuggestionSidebar({
           </div>
 
           {/* Explanation */}
-          <div className="bg-slate-50 rounded-lg p-3">
+          <div className="bg-slate-50 rounded-lg p-3" dir={isRTL ? 'rtl' : 'ltr'}>
             <div className="flex items-center justify-between mb-1">
-              <h3 className="text-xs font-semibold text-slate-700">{t('explanation')}</h3>
+              <h3 className="text-sm font-bold text-slate-700">הסבר:</h3>
               {user && user.email === suggestion.created_by && !isEditingExplanation && (
                 <Button
                   variant="ghost"
