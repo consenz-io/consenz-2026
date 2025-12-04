@@ -175,6 +175,26 @@ export default function DocumentView() {
     enabled: !!user?.id && !!documentId,
   });
 
+  const userHasAgreed = React.useMemo(() => {
+    if (!user?.id) return false;
+    return documentAgreements.some(a => a.userId === user.id);
+  }, [documentAgreements, user?.id]);
+
+  const signAgreementMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('Must be logged in');
+      await base44.entities.DocumentAgreement.create({
+        documentId,
+        userId: user.id,
+        userEmail: user.email
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documentAgreements', documentId] });
+      setShowAgreementModal(false);
+    },
+  });
+
   React.useEffect(() => {
     if (document) {
       setDescription(document.description || "");
