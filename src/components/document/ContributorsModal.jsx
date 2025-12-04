@@ -137,11 +137,11 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     
     // הוספת משתמשים שלא נמצאו ב-DB (יש להם created_by אבל אין להם רשומת User)
     contributorEmails.forEach(email => {
-      if (!foundEmails.has(email)) {
+      if (!foundEmails.has(email) && email) {
         contributorsList.push({
           id: email, // שימוש באימייל כ-ID זמני
           email: email,
-          full_name: email.split('@')[0], // שם זמני מהאימייל
+          full_name: email.split('@')[0] || email, // שם זמני מהאימייל
           role: 'user'
         });
       }

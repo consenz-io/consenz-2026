@@ -525,7 +525,7 @@ export default function DocumentContent({
 
   const getUserName = (email) => {
     const user = users.find(u => u.email === email);
-    return user?.full_name || email;
+    return user?.full_name || email?.split('@')[0] || email;
   };
 
   const toggleComments = (id) => {
