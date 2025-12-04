@@ -335,7 +335,7 @@ export default function SectionCarousel({
             />
             <div className={`flex flex-col md:flex-row items-start md:items-center justify-between mt-3 gap-2 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
               <div className="text-[10px] md:text-xs text-slate-400">
-                {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString()}
+                {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString('en-GB')}
               </div>
               <Button
                 variant="ghost"
