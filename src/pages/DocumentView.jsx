@@ -528,7 +528,7 @@ export default function DocumentView() {
                     }`}
                   >
                     <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'} ${userHasAgreed ? 'text-emerald-600' : ''}`} />
-                    <span className="hidden sm:inline">{language === 'he' ? 'חותמים' : language === 'ar' ? 'الموقعون' : 'Signers'}</span>
+                    <span className="hidden sm:inline">{language === 'he' ? 'חתומים' : language === 'ar' ? 'الموقعون' : 'Signers'}</span>
                     <span className={isRTL ? 'mr-1' : 'ml-1'}>({documentAgreements.length})</span>
                     {userHasAgreed && <span className="hidden sm:inline text-emerald-600 mr-1 ml-1">✓</span>}
                   </Button>
