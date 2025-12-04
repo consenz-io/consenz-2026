@@ -516,7 +516,7 @@ export default function DocumentView() {
                 </div>
               )}
               {!isEditingDescription && (
-                <div className="flex gap-2 flex-wrap mt-3 pt-3 border-t border-slate-200 justify-center sm:justify-start">
+                <div className="flex gap-2 flex-wrap mt-3 pt-3 border-t border-slate-200 justify-center">
                   <Button
                     variant="outline"
                     size="sm"
