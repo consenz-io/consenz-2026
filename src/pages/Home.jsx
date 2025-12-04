@@ -224,10 +224,10 @@ export default function Home() {
             </h1>
             <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
               {language === 'he' 
-                ? 'פלטפורמה מונעת AI לניסוח שיתופי של מסמכים בקבוצות גדולות, עם תרגום אוטומטי בין שפות ומנגנון קונצנזוס דינמי שמאפשר לכולם להשתתף.'
+                ? 'פלטפורמה מבוססת AI ליצירת מסמכים משותפים בקבוצות גדולות — במהירות, בשקיפות ובאופן דמוקרטי. הבינה המלאכותית מסייעת בניסוח ובהתאמת התוכן לכל משתתף, עם תרגום אוטומטי בין שפות ומנגנון קונצנזוס דינמי שמקרב בין דעות ומבטיח שכל קול יישמע.'
                 : language === 'ar'
-                ? 'منصة مدعومة بالذكاء الاصطناعي للصياغة التعاونية للوثائق في مجموعات كبيرة، مع ترجمة تلقائية بين اللغات وآلية إجماع ديناميكية تتيح للجميع المشاركة.'
-                : 'AI-powered platform for collaborative document drafting in large groups, with automatic translation across languages and a dynamic consensus mechanism that enables everyone to participate.'}
+                ? 'منصة قائمة على الذكاء الاصطناعي لإنشاء مستندات مشتركة في مجموعات كبيرة - بسرعة وشفافية وديمقراطية. يساعد الذكاء الاصطناعي في الصياغة وتكييف المحتوى لكل مشارك، مع ترجمة تلقائية بين اللغات وآلية إجماع ديناميكية تقرب الآراء وتضمن سماع كل صوت.'
+                : 'AI-powered platform for creating shared documents in large groups — quickly, transparently, and democratically. AI assists in drafting and adapting content for each participant, with automatic translation across languages and a dynamic consensus mechanism that bridges opinions and ensures every voice is heard.'}
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
               {user ? (
