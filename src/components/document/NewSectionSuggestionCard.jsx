@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThumbsUp, ThumbsDown, Plus } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import { base44 } from "@/api/base44Client";
 import VotesNeededCounter from "./VotesNeededCounter";
 import TranslatableContent from "./TranslatableContent";
 
@@ -72,13 +73,17 @@ export default function NewSectionSuggestionCard({
 
         <div className={`flex items-center justify-between gap-3 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
           <div className="flex items-center gap-3 text-sm flex-wrap">
-            {user && doc?.votingButtonsEnabled ? (
+            {doc?.votingButtonsEnabled ? (
               <>
                 <Button
                   variant={getUserVote(suggestion.id)?.vote === 'pro' ? 'default' : 'outline'}
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (!user) {
+                      base44.auth.redirectToLogin(window.location.href);
+                      return;
+                    }
                     voteMutation.mutate({
                       suggestionId: suggestion.id,
                       vote: 'pro',
@@ -96,6 +101,10 @@ export default function NewSectionSuggestionCard({
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (!user) {
+                      base44.auth.redirectToLogin(window.location.href);
+                      return;
+                    }
                     voteMutation.mutate({
                       suggestionId: suggestion.id,
                       vote: 'con',

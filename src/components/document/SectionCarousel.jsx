@@ -400,13 +400,17 @@ export default function SectionCarousel({
 
             {/* כפתורי הצבעה והערות */}
             <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap">
-              {user && document?.votingButtonsEnabled ? (
+              {document?.votingButtonsEnabled ? (
                 <>
                   <Button
                     variant={getUserVote(currentView.data.id)?.vote === 'pro' ? 'default' : 'outline'}
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!user) {
+                        base44.auth.redirectToLogin(window.location.href);
+                        return;
+                      }
                       voteMutation.mutate({
                         suggestionId: currentView.data.id,
                         vote: 'pro',
@@ -424,6 +428,10 @@ export default function SectionCarousel({
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
+                      if (!user) {
+                        base44.auth.redirectToLogin(window.location.href);
+                        return;
+                      }
                       voteMutation.mutate({
                         suggestionId: currentView.data.id,
                         vote: 'con',
@@ -501,17 +509,21 @@ export default function SectionCarousel({
       {/* כפתורים מרכזיים - ערוך/תגובה בתצוגה נוכחית */}
       {isFirstView && (
         <div className={`flex gap-2 mt-4 pt-4 border-t border-slate-200 ${isRTL ? 'justify-end' : 'justify-start'}`}>
-          {user && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onEditSection(section)}
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <Edit className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-              {t('suggestEditSection')}
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              if (!user) {
+                base44.auth.redirectToLogin(window.location.href);
+                return;
+              }
+              onEditSection(section);
+            }}
+            className="opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <Edit className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+            {t('suggestEditSection')}
+          </Button>
           {isAdmin && onDirectEdit && (
             <Button
               variant="default"
