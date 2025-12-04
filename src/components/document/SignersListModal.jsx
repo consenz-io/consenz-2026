@@ -11,6 +11,7 @@ import { CheckCircle, UserMinus, UserPlus } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { base44 } from "@/api/base44Client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -138,29 +139,33 @@ export default function SignersListModal({
               </div>
             )}
 
-            {user && (
-              <div className="pt-4 border-t border-slate-200">
-                {!userHasAgreed ? (
-                  <Button
-                    onClick={onJoinClick}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  >
-                    <UserPlus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {c.joinSigners}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    onClick={handleRemoveClick}
-                    disabled={isRemoving}
-                    className="w-full text-red-600 border-red-300 hover:bg-red-50"
-                  >
-                    <UserMinus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {c.removeSignature}
-                  </Button>
-                )}
-              </div>
-            )}
+            <div className="pt-4 border-t border-slate-200">
+              {!userHasAgreed ? (
+                <Button
+                  onClick={() => {
+                    if (!user) {
+                      base44.auth.redirectToLogin(window.location.href);
+                      return;
+                    }
+                    onJoinClick();
+                  }}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700"
+                >
+                  <UserPlus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {c.joinSigners}
+                </Button>
+              ) : user && (
+                <Button
+                  variant="outline"
+                  onClick={handleRemoveClick}
+                  disabled={isRemoving}
+                  className="w-full text-red-600 border-red-300 hover:bg-red-50"
+                >
+                  <UserMinus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {c.removeSignature}
+                </Button>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

@@ -312,42 +312,52 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
         </Alert>
       )}
 
-      {user && (
-        <form onSubmit={handleSubmit} className="space-y-2">
-          {replyTo && (
-            <div className="flex items-center gap-2 text-sm text-slate-600 bg-blue-50 p-2 rounded">
-              <Reply className="w-4 h-4" />
-              <span>{t('replyingTo')} {getUserName(replyTo.created_by)}</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setReplyTo(null)}
-                className="mr-auto h-6"
-              >
-                {t('cancel')}
-              </Button>
-            </div>
-          )}
-          <Textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder={replyTo ? t('writeReply') : t('addComment')}
-            className="min-h-[80px]"
-            dir="auto"
-          />
-          <div className="flex justify-end">
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        if (!user) {
+          base44.auth.redirectToLogin(window.location.href);
+          return;
+        }
+        handleSubmit(e);
+      }} className="space-y-2">
+        {replyTo && (
+          <div className="flex items-center gap-2 text-sm text-slate-600 bg-blue-50 p-2 rounded">
+            <Reply className="w-4 h-4" />
+            <span>{t('replyingTo')} {getUserName(replyTo.created_by)}</span>
             <Button
-              type="submit"
-              disabled={!newComment.trim() || createCommentMutation.isPending}
+              type="button"
+              variant="ghost"
               size="sm"
+              onClick={() => setReplyTo(null)}
+              className="mr-auto h-6"
             >
-              <Send className="w-4 h-4 mr-2" />
-              {t('postComment')}
+              {t('cancel')}
             </Button>
           </div>
-        </form>
-      )}
+        )}
+        <Textarea
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          placeholder={replyTo ? t('writeReply') : t('addComment')}
+          className="min-h-[80px]"
+          dir="auto"
+          onClick={() => {
+            if (!user) {
+              base44.auth.redirectToLogin(window.location.href);
+            }
+          }}
+        />
+        <div className="flex justify-end">
+          <Button
+            type="submit"
+            disabled={!newComment.trim() || createCommentMutation.isPending}
+            size="sm"
+          >
+            <Send className="w-4 h-4 mr-2" />
+            {t('postComment')}
+          </Button>
+        </div>
+      </form>
 
       <div className="space-y-3">
         {isLoading ? (
