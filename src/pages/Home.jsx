@@ -221,6 +221,10 @@ export default function Home() {
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 {t('draftTogetherTitle')}
               </span>
+              <br />
+              <span className="text-2xl md:text-3xl text-slate-700 font-medium">
+                נסחו ביחד הסכמות והסכמים
+              </span>
             </h1>
             <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
               {t('platformDescription')}
