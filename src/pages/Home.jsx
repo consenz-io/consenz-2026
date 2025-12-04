@@ -223,7 +223,11 @@ export default function Home() {
               </span>
             </h1>
             <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
-              {t('platformDescription')}
+              {language === 'he' 
+                ? 'פלטפורמה מונעת AI לניסוח שיתופי של מסמכים בקבוצות גדולות, עם תרגום אוטומטי בין שפות ומנגנון קונצנזוס דינמי שמאפשר לכולם להשתתף.'
+                : language === 'ar'
+                ? 'منصة مدعومة بالذكاء الاصطناعي للصياغة التعاونية للوثائق في مجموعات كبيرة، مع ترجمة تلقائية بين اللغات وآلية إجماع ديناميكية تتيح للجميع المشاركة.'
+                : 'AI-powered platform for collaborative document drafting in large groups, with automatic translation across languages and a dynamic consensus mechanism that enables everyone to participate.'}
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
               {user ? (
