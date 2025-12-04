@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X } from "lucide-react";
+import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import ReactQuill from "react-quill";
@@ -21,6 +21,7 @@ import SuggestionSidebar from "../components/document/SuggestionSidebar";
 import { calculateContributorsFromData } from "../components/document/calculateContributors";
 import { TranslationProvider } from "../components/document/TranslationContext";
 import TranslateAllButton from "../components/document/TranslateAllButton";
+import DocumentAgreementModal from "../components/document/DocumentAgreementModal";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -50,6 +51,7 @@ export default function DocumentView() {
   const [showDescriptionComments, setShowDescriptionComments] = useState(false);
   const [openSuggestionId, setOpenSuggestionId] = useState(null);
   const [newlyCreatedSuggestion, setNewlyCreatedSuggestion] = useState(null);
+  const [showAgreementModal, setShowAgreementModal] = useState(false);
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
@@ -126,6 +128,33 @@ export default function DocumentView() {
     }),
     initialData: [],
     enabled: !!documentId,
+  });
+
+  const { data: documentAgreements } = useQuery({
+    queryKey: ['documentAgreements', documentId],
+    queryFn: () => base44.entities.DocumentAgreement.filter({ documentId }),
+    initialData: [],
+    enabled: !!documentId,
+  });
+
+  const userHasAgreed = React.useMemo(() => {
+    if (!user?.id) return false;
+    return documentAgreements.some(a => a.userId === user.id);
+  }, [documentAgreements, user?.id]);
+
+  const signAgreementMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('Must be logged in');
+      await base44.entities.DocumentAgreement.create({
+        documentId,
+        userId: user.id,
+        userEmail: user.email
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documentAgreements', documentId] });
+      setShowAgreementModal(false);
+    },
   });
 
   // Count all section comments for this document
@@ -472,24 +501,54 @@ export default function DocumentView() {
                 </div>
               )}
               {!isEditingDescription && (
-                <div className="flex gap-2 flex-wrap mt-3 pt-3 border-t border-slate-200">
+                <div className="flex gap-2 flex-wrap mt-3 pt-3 border-t border-slate-200 justify-center sm:justify-start">
+                  {user && !userHasAgreed ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowAgreementModal(true)}
+                      className="text-emerald-700 border-emerald-300 bg-emerald-50 hover:bg-emerald-100 hover:text-emerald-800 h-8 md:h-9 text-xs md:text-sm px-2 md:px-4 font-medium shadow-sm"
+                    >
+                      <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
+                      <span className="hidden sm:inline">{language === 'he' ? 'להצטרפות לחותמים' : language === 'ar' ? 'للانضمام للموقعين' : 'Join Signers'}</span>
+                      <span className="sm:hidden">{language === 'he' ? 'חתימה' : language === 'ar' ? 'توقيع' : 'Sign'}</span>
+                      <span className="hidden sm:inline ml-1">({documentAgreements.length})</span>
+                    </Button>
+                  ) : user && userHasAgreed ? (
+                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 h-8 md:h-9 px-2 md:px-4 flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+                      <CheckCircle className="w-4 h-4" />
+                      <span className="hidden sm:inline">{language === 'he' ? 'חתום על ידך' : language === 'ar' ? 'موقع من قبلك' : 'Signed by you'}</span>
+                      <span className="sm:hidden">{language === 'he' ? 'חתום' : language === 'ar' ? 'موقع' : 'Signed'}</span>
+                      <span>({documentAgreements.length})</span>
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="h-8 md:h-9 px-2 md:px-4 flex items-center gap-1 md:gap-2 text-xs md:text-sm">
+                      <CheckCircle className="w-4 h-4" />
+                      <span className="hidden sm:inline">{language === 'he' ? 'חותמים' : language === 'ar' ? 'الموقعون' : 'Signers'}</span>
+                      <span>({documentAgreements.length})</span>
+                    </Badge>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowDescriptionComments(!showDescriptionComments)}
-                    className="text-blue-700 border-blue-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 h-8 md:h-9 text-sm px-4 font-medium shadow-sm"
+                    className="text-blue-700 border-blue-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-800 h-8 md:h-9 text-xs md:text-sm px-2 md:px-4 font-medium shadow-sm"
                   >
-                    <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {t('documentDiscussion')} ({documentComments.length})
+                    <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
+                    <span className="hidden sm:inline">{t('documentDiscussion')}</span>
+                    <span className="sm:hidden">{language === 'he' ? 'דיון' : language === 'ar' ? 'نقاش' : 'Discuss'}</span>
+                    <span className="ml-1">({documentComments.length})</span>
                   </Button>
                   <Link to={`${createPageUrl("DocumentComments")}?id=${documentId}`}>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-indigo-700 border-indigo-300 bg-indigo-50 hover:bg-indigo-100 hover:text-indigo-800 h-8 md:h-9 text-sm px-4 font-medium shadow-sm"
+                      className="text-indigo-700 border-indigo-300 bg-indigo-50 hover:bg-indigo-100 hover:text-indigo-800 h-8 md:h-9 text-xs md:text-sm px-2 md:px-4 font-medium shadow-sm"
                     >
-                      <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                      {t('sectionComments')} ({sectionCommentsCount})
+                      <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
+                      <span className="hidden sm:inline">{t('sectionComments')}</span>
+                      <span className="sm:hidden">{language === 'he' ? 'תגובות' : language === 'ar' ? 'تعليقات' : 'Comments'}</span>
+                      <span className="ml-1">({sectionCommentsCount})</span>
                     </Button>
                   </Link>
                 </div>
@@ -611,6 +670,13 @@ export default function DocumentView() {
           isAdmin={isAdmin}
         />
       )}
+
+      <DocumentAgreementModal
+        isOpen={showAgreementModal}
+        onClose={() => setShowAgreementModal(false)}
+        onConfirm={() => signAgreementMutation.mutate()}
+        isLoading={signAgreementMutation.isPending}
+      />
       </div>
     </TranslationProvider>
   );
