@@ -117,7 +117,7 @@ export default function SuggestionSidebar({
 
   const getUserName = (email) => {
     const u = users.find(usr => usr.email === email);
-    return u?.full_name || email;
+    return u?.full_name || email?.split('@')[0] || email;
   };
 
   const voteMutation = useMutation({
