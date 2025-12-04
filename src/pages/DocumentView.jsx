@@ -137,26 +137,6 @@ export default function DocumentView() {
     enabled: !!documentId,
   });
 
-  const userHasAgreed = React.useMemo(() => {
-    if (!user?.id) return false;
-    return documentAgreements.some(a => a.userId === user.id);
-  }, [documentAgreements, user?.id]);
-
-  const signAgreementMutation = useMutation({
-    mutationFn: async () => {
-      if (!user) throw new Error('Must be logged in');
-      await base44.entities.DocumentAgreement.create({
-        documentId,
-        userId: user.id,
-        userEmail: user.email
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documentAgreements', documentId] });
-      setShowAgreementModal(false);
-    },
-  });
-
   // Count all section comments for this document
   const sectionCommentsCount = React.useMemo(() => {
     const sectionIds = sections.map(s => s.id);
