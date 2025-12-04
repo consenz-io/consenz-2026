@@ -216,7 +216,7 @@ export default function Home() {
               {t('democraticCollaboration')}
             </Badge>
             <h1 className="font-bold leading-tight">
-              <span className="text-4xl md:text-6xl text-slate-900">{t('buildConsensusTitle')},</span>
+              <span className="text-4xl md:text-6xl text-slate-900">{t('buildConsensusTitle')}</span>
               <br />
               <span className="text-2xl md:text-4xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
                 {t('draftTogetherTitle')} {language === 'he' ? 'הסכמות והסכמים' : language === 'ar' ? 'اتفاقيات وعقود' : 'Agreements & Contracts'}
