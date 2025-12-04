@@ -342,7 +342,7 @@ const translations = {
     
     // דף הבית
     democraticCollaboration: "פלטפורמת שיתוף פעולה דמוקרטי",
-    buildConsensus: "בנו קונצננזוס, נסחו ביחד",
+    buildConsensus: "בנו קונצננזוס נסחו ביחד",
     buildConsensusTitle: "בנו קונסנזוס",
     draftTogetherTitle: "נסחו ביחד",
     platformDescription: "פלטפורמה לשיתוף פעולה לניסוח מסמכי מדיניות, חוקות והחלטות באמצעות הצבעה שקופה ואלגוריתמי קונצנזוס דינמיים.",
