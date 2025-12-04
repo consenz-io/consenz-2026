@@ -465,7 +465,7 @@ export default function SuggestionSidebar({
         <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <Badge variant="outline" className={`${getStatusColor(suggestion.status)} text-xs shrink-0`}>
-              {suggestion.status}
+              {t(suggestion.status)}
             </Badge>
             <h2 className="font-semibold text-slate-900 truncate">{suggestion.title}</h2>
           </div>
