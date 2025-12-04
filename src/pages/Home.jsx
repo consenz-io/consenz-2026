@@ -227,12 +227,19 @@ export default function Home() {
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
               {user ? (
-                <Link to={createPageUrl("CreateDocument")}>
-                  <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                    {t('newDocument')}
+                <Button 
+                    size="lg" 
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                    onClick={() => {
+                      const element = document.getElementById('recent-documents-section');
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }
+                    }}
+                  >
+                    הצטרפו לדיונים
                     {isRTL ? <ArrowLeft className="w-4 h-4 mr-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
                   </Button>
-                </Link>
               ) : (
                 <Button
                   size="lg"
