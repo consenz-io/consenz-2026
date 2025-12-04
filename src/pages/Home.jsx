@@ -215,15 +215,11 @@ export default function Home() {
             <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-4 py-1">
               {t('democraticCollaboration')}
             </Badge>
-            <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-              <span className="text-slate-900">{t('buildConsensusTitle')},</span>
+            <h1 className="font-bold leading-tight">
+              <span className="text-4xl md:text-6xl text-slate-900">{t('buildConsensusTitle')},</span>
               <br />
-              <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                {t('draftTogetherTitle')}
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                {language === 'he' ? 'הסכמות והסכמים' : language === 'ar' ? 'اتفاقيات وعقود' : 'Agreements & Contracts'}
+              <span className="text-2xl md:text-4xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                {t('draftTogetherTitle')} {language === 'he' ? 'הסכמות והסכמים' : language === 'ar' ? 'اتفاقيات وعقود' : 'Agreements & Contracts'}
               </span>
             </h1>
             <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
