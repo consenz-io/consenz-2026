@@ -241,7 +241,7 @@ export default function Home() {
                       }
                     }}
                   >
-                    הצטרפו לדיונים
+                    {language === 'he' ? 'הצטרפו לדיונים' : language === 'ar' ? 'انضموا للنقاشات' : 'Join the Discussions'}
                     {isRTL ? <ArrowLeft className="w-4 h-4 mr-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
                   </Button>
               ) : (
