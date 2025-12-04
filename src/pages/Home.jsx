@@ -426,6 +426,17 @@ export default function Home() {
             })}
           </div>
         )}
+
+        {/* Create New Document Button */}
+        {user && documents.length > 0 && (
+          <div className="flex justify-center mt-12">
+            <Link to={createPageUrl("CreateDocument")}>
+              <Button variant="outline" size="lg" className="border-blue-300 text-blue-700 hover:bg-blue-50">
+                {t('newDocument')}
+              </Button>
+            </Link>
+          </div>
+        )}
       </section>
 
       <AllContributorsModal
