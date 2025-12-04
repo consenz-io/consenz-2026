@@ -230,30 +230,19 @@ export default function Home() {
                 : 'AI-powered platform for creating shared documents in large groups — quickly, transparently, and democratically. AI assists in drafting and adapting content for each participant, with automatic translation across languages and a dynamic consensus mechanism that bridges opinions and ensures every voice is heard.'}
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
-              {user ? (
-                <Button 
-                    size="lg" 
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                    onClick={() => {
-                      const element = document.getElementById('recent-documents-section');
-                      if (element) {
-                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }
-                    }}
-                  >
-                    {language === 'he' ? 'הצטרפו לדיונים' : language === 'ar' ? 'انضموا للنقاشات' : 'Join the Discussions'}
-                    {isRTL ? <ArrowLeft className="w-4 h-4 mr-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
-                  </Button>
-              ) : (
-                <Button
-                  size="lg"
-                  onClick={() => base44.auth.redirectToLogin()}
+              <Button 
+                  size="lg" 
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  onClick={() => {
+                    const element = document.getElementById('recent-documents-section');
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                  }}
                 >
-                  {t('getStarted')}
+                  {language === 'he' ? 'הצטרפו לדיונים' : language === 'ar' ? 'انضموا للنقاشات' : 'Join the Discussions'}
                   {isRTL ? <ArrowLeft className="w-4 h-4 mr-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
                 </Button>
-              )}
               <Link to={createPageUrl("LearnMore")}>
                 <Button size="lg" variant="outline">
                   {t('learnMore')}
