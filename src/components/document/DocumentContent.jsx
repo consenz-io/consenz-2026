@@ -903,89 +903,98 @@ Return ONLY the translated text:`;
                       className={topicSnapshot.isDragging ? 'opacity-70' : ''}
                     >
                       <Card className="bg-white border-slate-200 w-full overflow-hidden">
-                        <CardHeader className="border-b border-slate-100 p-4 md:p-6 relative">
-                          {isAdmin && (
-                            <>
+                        <CardHeader className="border-b border-slate-100 p-4 md:p-6">
+                          <div className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            {/* Drag handle - only for admin */}
+                            {isAdmin && (
                               <div 
                                 {...topicProvided.dragHandleProps}
-                                className="absolute top-2 right-2 z-10 p-1 bg-white rounded border border-slate-300 cursor-move hover:bg-slate-50 transition-colors"
+                                className="p-1 bg-white rounded border border-slate-300 cursor-move hover:bg-slate-50 transition-colors flex-shrink-0 mt-1"
                               >
                                 <GripVertical className="w-5 h-5 text-slate-400" />
                               </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteTopic(topic.id, topic.title)}
-                                className="absolute top-2 left-2 z-10 text-red-600 hover:text-red-700 hover:bg-red-50 p-1 h-8 w-8"
-                                title="מחק נושא"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </>
-                          )}
-                          <div className={`flex flex-col md:flex-row justify-between md:items-center gap-3 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-                            <div className={`flex-1 min-w-0 flex items-center gap-2 ${isRTL ? 'justify-end flex-row-reverse' : ''}`}>
-                  <CardTitle className={`text-lg md:text-2xl break-words ${isRTL ? 'text-right w-full' : 'text-left'}`}>
-                    {(() => {
-                      const translatedTitle = topic.translations?.[language]?.title;
-                      if (showTranslatedTopics[topic.id] && typeof translatedTitle === 'string') {
-                        return translatedTitle;
-                      }
-                      return topic.title;
-                    })()}
-                  </CardTitle>
-                  {(() => {
-                    // זיהוי אוטומטי של שפת הנושא
-                    const detectLanguage = (text) => {
-                      const hebrewPattern = /[\u0590-\u05FF]/;
-                      const arabicPattern = /[\u0600-\u06FF]/;
-                      if (hebrewPattern.test(text)) return 'he';
-                      if (arabicPattern.test(text)) return 'ar';
-                      return 'en';
-                    };
-                    const topicOriginalLang = topic.originalLanguage || detectLanguage(topic.title);
-                    const needsTranslation = topicOriginalLang !== language;
-                    
-                    if (!needsTranslation) return null;
-                    
-                    if (translateTopicMutation.isPending && translateTopicMutation.variables?.id === topic.id) {
-                      return <Loader2 className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />;
-                    }
-                    
-                    return (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          if (showTranslatedTopics[topic.id] && topic.translations?.[language]?.title) {
-                            setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: false }));
-                          } else if (topic.translations?.[language]?.title) {
-                            setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: true }));
-                          } else {
-                            translateTopicMutation.mutate(topic);
-                          }
-                        }}
-                        className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 flex-shrink-0"
-                        title={showTranslatedTopics[topic.id] && topic.translations?.[language]?.title ? `${languageNames[topicOriginalLang]} (מקור)` : `תרגם ל${languageNames[language]}`}
-                      >
-                        <Languages className="w-4 h-4" />
-                      </Button>
-                    );
-                  })()}
-                </div>
-                {user && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setEditingTopic(topic)}
-                    className="absolute top-2 left-12 z-10 text-slate-600 hover:text-blue-600 hover:bg-blue-50 p-1 h-8 w-8"
-                    title="הצע עריכה לכותרת"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
+                            )}
+                            
+                            {/* Title - flexible width */}
+                            <CardTitle className={`text-lg md:text-2xl break-words flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                              {(() => {
+                                const translatedTitle = topic.translations?.[language]?.title;
+                                if (showTranslatedTopics[topic.id] && typeof translatedTitle === 'string') {
+                                  return translatedTitle;
+                                }
+                                return topic.title;
+                              })()}
+                            </CardTitle>
+                            
+                            {/* Action buttons - fixed on the side */}
+                            <div className={`flex items-center gap-1 flex-shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              {/* Translate button */}
+                              {(() => {
+                                const detectLanguage = (text) => {
+                                  const hebrewPattern = /[\u0590-\u05FF]/;
+                                  const arabicPattern = /[\u0600-\u06FF]/;
+                                  if (hebrewPattern.test(text)) return 'he';
+                                  if (arabicPattern.test(text)) return 'ar';
+                                  return 'en';
+                                };
+                                const topicOriginalLang = topic.originalLanguage || detectLanguage(topic.title);
+                                const needsTranslation = topicOriginalLang !== language;
+                                
+                                if (!needsTranslation) return null;
+                                
+                                if (translateTopicMutation.isPending && translateTopicMutation.variables?.id === topic.id) {
+                                  return <Loader2 className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />;
+                                }
+                                
+                                return (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (showTranslatedTopics[topic.id] && topic.translations?.[language]?.title) {
+                                        setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: false }));
+                                      } else if (topic.translations?.[language]?.title) {
+                                        setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: true }));
+                                      } else {
+                                        translateTopicMutation.mutate(topic);
+                                      }
+                                    }}
+                                    className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                    title={showTranslatedTopics[topic.id] && topic.translations?.[language]?.title ? `${languageNames[topicOriginalLang]} (מקור)` : `תרגם ל${languageNames[language]}`}
+                                  >
+                                    <Languages className="w-4 h-4" />
+                                  </Button>
+                                );
+                              })()}
+                              
+                              {/* Edit button */}
+                              {user && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setEditingTopic(topic)}
+                                  className="h-8 w-8 p-0 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
+                                  title="הצע עריכה לכותרת"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                              )}
+                              
+                              {/* Delete button - only for admin */}
+                              {isAdmin && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDeleteTopic(topic.id, topic.title)}
+                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  title="מחק נושא"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </CardHeader>
             <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
               {/* Topic Edit Suggestions */}
               {getTopicEditSuggestions(topic.id).map((suggestion) => {
