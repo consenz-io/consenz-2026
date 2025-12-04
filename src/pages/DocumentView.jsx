@@ -22,6 +22,7 @@ import { calculateContributorsFromData } from "../components/document/calculateC
 import { TranslationProvider } from "../components/document/TranslationContext";
 import TranslateAllButton from "../components/document/TranslateAllButton";
 import DocumentAgreementModal from "../components/document/DocumentAgreementModal";
+import SignersListModal from "../components/document/SignersListModal";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -52,6 +53,7 @@ export default function DocumentView() {
   const [openSuggestionId, setOpenSuggestionId] = useState(null);
   const [newlyCreatedSuggestion, setNewlyCreatedSuggestion] = useState(null);
   const [showAgreementModal, setShowAgreementModal] = useState(false);
+  const [showSignersListModal, setShowSignersListModal] = useState(false);
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
@@ -192,6 +194,19 @@ export default function DocumentView() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentAgreements', documentId] });
       setShowAgreementModal(false);
+    },
+  });
+
+  const removeSignatureMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error('Must be logged in');
+      const userAgreement = documentAgreements.find(a => a.userId === user.id);
+      if (userAgreement) {
+        await base44.entities.DocumentAgreement.delete(userAgreement.id);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documentAgreements', documentId] });
     },
   });
 
@@ -502,32 +517,21 @@ export default function DocumentView() {
               )}
               {!isEditingDescription && (
                 <div className="flex gap-2 flex-wrap mt-3 pt-3 border-t border-slate-200 justify-center sm:justify-start">
-                  {user && !userHasAgreed ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowAgreementModal(true)}
-                      className="text-emerald-700 border-emerald-300 bg-emerald-50 hover:bg-emerald-100 hover:text-emerald-800 h-8 md:h-9 text-xs md:text-sm px-2 md:px-4 font-medium shadow-sm"
-                    >
-                      <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
-                      <span className="hidden sm:inline">{language === 'he' ? 'להצטרפות לחותמים' : language === 'ar' ? 'للانضمام للموقعين' : 'Join Signers'}</span>
-                      <span className="sm:hidden">{language === 'he' ? 'חתימה' : language === 'ar' ? 'توقيع' : 'Sign'}</span>
-                      <span className="hidden sm:inline ml-1">({documentAgreements.length})</span>
-                    </Button>
-                  ) : user && userHasAgreed ? (
-                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 h-8 md:h-9 px-2 md:px-4 flex items-center gap-1 md:gap-2 text-xs md:text-sm">
-                      <CheckCircle className="w-4 h-4" />
-                      <span className="hidden sm:inline">{language === 'he' ? 'חתום על ידך' : language === 'ar' ? 'موقع من قبلك' : 'Signed by you'}</span>
-                      <span className="sm:hidden">{language === 'he' ? 'חתום' : language === 'ar' ? 'موقع' : 'Signed'}</span>
-                      <span>({documentAgreements.length})</span>
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="h-8 md:h-9 px-2 md:px-4 flex items-center gap-1 md:gap-2 text-xs md:text-sm">
-                      <CheckCircle className="w-4 h-4" />
-                      <span className="hidden sm:inline">{language === 'he' ? 'חותמים' : language === 'ar' ? 'الموقعون' : 'Signers'}</span>
-                      <span>({documentAgreements.length})</span>
-                    </Badge>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSignersListModal(true)}
+                    className={`h-8 md:h-9 text-xs md:text-sm px-2 md:px-4 font-medium shadow-sm ${
+                      userHasAgreed 
+                        ? 'text-emerald-700 border-emerald-300 bg-emerald-50 hover:bg-emerald-100 hover:text-emerald-800' 
+                        : 'text-slate-700 border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'} ${userHasAgreed ? 'text-emerald-600' : ''}`} />
+                    <span className="hidden sm:inline">{language === 'he' ? 'חותמים' : language === 'ar' ? 'الموقعون' : 'Signers'}</span>
+                    <span className={isRTL ? 'mr-1' : 'ml-1'}>({documentAgreements.length})</span>
+                    {userHasAgreed && <span className="hidden sm:inline text-emerald-600 mr-1 ml-1">✓</span>}
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -676,6 +680,21 @@ export default function DocumentView() {
         onClose={() => setShowAgreementModal(false)}
         onConfirm={() => signAgreementMutation.mutate()}
         isLoading={signAgreementMutation.isPending}
+      />
+
+      <SignersListModal
+        isOpen={showSignersListModal}
+        onClose={() => setShowSignersListModal(false)}
+        signers={documentAgreements}
+        allUsers={allUsers}
+        user={user}
+        userHasAgreed={userHasAgreed}
+        onJoinClick={() => {
+          setShowSignersListModal(false);
+          setShowAgreementModal(true);
+        }}
+        onRemoveSignature={() => removeSignatureMutation.mutate()}
+        isRemoving={removeSignatureMutation.isPending}
       />
       </div>
     </TranslationProvider>
