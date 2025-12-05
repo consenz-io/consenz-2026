@@ -20,6 +20,7 @@ export default function SectionHistory() {
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const sectionId = searchParams.get('id');
+  const commentId = searchParams.get('commentId');
   const [showComments, setShowComments] = useState({});
   const [error, setError] = useState(null);
 
@@ -69,6 +70,26 @@ export default function SectionHistory() {
     initialData: [],
     enabled: !!sectionId,
   });
+
+  // If there's a commentId in URL, open comments and scroll to it
+  React.useEffect(() => {
+    if (commentId && sectionId) {
+      // Open the section comments
+      setShowComments(prev => ({ ...prev, [`section-${sectionId}`]: true }));
+      
+      // Give time for comments to render then scroll
+      setTimeout(() => {
+        const commentElement = document.getElementById(`comment-${commentId}`);
+        if (commentElement) {
+          commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+          setTimeout(() => {
+            commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+          }, 3000);
+        }
+      }, 500);
+    }
+  }, [commentId, sectionId, sectionComments]);
 
   const { data: isAdmin } = useQuery({
     queryKey: ['isAdmin', document?.id, user?.id],

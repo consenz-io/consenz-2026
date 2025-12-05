@@ -530,9 +530,9 @@ export default function Profile() {
                         // Comment
                         let commentUrl = null;
                         if (item.rootEntityType === 'suggestion') {
-                          commentUrl = `${createPageUrl("SuggestionDetail")}?id=${item.rootEntityId}`;
+                          commentUrl = `${createPageUrl("SuggestionDetail")}?id=${item.rootEntityId}&commentId=${item.id}`;
                         } else if (item.rootEntityType === 'section') {
-                          commentUrl = `${createPageUrl("SectionHistory")}?id=${item.rootEntityId}`;
+                          commentUrl = `${createPageUrl("SectionHistory")}?id=${item.rootEntityId}&commentId=${item.id}`;
                         }
 
                         return (
