@@ -219,7 +219,7 @@ export default function Home() {
               <span className="text-4xl md:text-6xl text-slate-900">{t('buildConsensusTitle')}</span>
               <br />
               <span className="text-2xl md:text-4xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                {t('draftTogetherTitle')} {language === 'he' ? 'הסכמות והסכמים' : language === 'ar' ? 'اتفاقيات وعقود' : 'Agreements & Contracts'}
+                {t('draftTogetherTitle')} {language === 'he' ? 'הסכמות והסכמים' : language === 'ar' ? 'اتفاقيات وعقود' : 'Agreements'}
               </span>
             </h1>
             <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
