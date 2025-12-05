@@ -60,6 +60,16 @@ export default function SectionHistory() {
     initialData: [],
   });
 
+  const { data: sectionComments } = useQuery({
+    queryKey: ['sectionComments', sectionId],
+    queryFn: () => base44.entities.Comment.filter({ 
+      rootEntityType: 'section',
+      rootEntityId: sectionId 
+    }),
+    initialData: [],
+    enabled: !!sectionId,
+  });
+
   const { data: isAdmin } = useQuery({
     queryKey: ['isAdmin', document?.id, user?.id],
     queryFn: async () => {
@@ -200,6 +210,23 @@ export default function SectionHistory() {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
+
+        {/* Section Comments */}
+        <Card className="bg-white border-slate-200">
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+              <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
+              {t('comments')} ({sectionComments.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 md:p-6">
+            <CommentsSection
+              entityType="section"
+              entityId={sectionId}
+              user={user}
+            />
+          </CardContent>
+        </Card>
 
         {/* Version History */}
         {versionGroups.length > 0 ? (
