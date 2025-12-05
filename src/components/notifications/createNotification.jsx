@@ -367,9 +367,9 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
     
     let actionUrl;
     if (targetEntityType === 'suggestion') {
-      actionUrl = `${createPageUrl("SuggestionDetail")}?id=${targetEntity.id}`;
+      actionUrl = `${createPageUrl("SuggestionDetail")}?id=${targetEntity.id}&commentId=${comment.id}`;
     } else if (targetEntityType === 'section') {
-      actionUrl = `${createPageUrl("DocumentView")}?id=${targetEntity.documentId}&scrollTo=${targetEntity.id}`;
+      actionUrl = `${createPageUrl("SectionHistory")}?id=${targetEntity.id}&commentId=${comment.id}`;
     }
     
     // תשובה לתגובה
