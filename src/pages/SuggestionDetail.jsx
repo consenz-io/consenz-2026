@@ -26,6 +26,7 @@ export default function SuggestionDetail() {
   const { t, isRTL } = useLanguage();
   const [searchParams] = useSearchParams();
   const suggestionId = searchParams.get('id');
+  const commentId = searchParams.get('commentId');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [newArgument, setNewArgument] = useState({ type: null, content: "" });
@@ -125,6 +126,23 @@ export default function SuggestionDetail() {
     initialData: [],
     enabled: !!suggestionId,
   });
+
+  // If there's a commentId in URL, scroll to comments section
+  React.useEffect(() => {
+    if (commentId && suggestionId) {
+      // Give time for the page to render, then scroll to comment
+      setTimeout(() => {
+        const commentElement = document.getElementById(`comment-${commentId}`);
+        if (commentElement) {
+          commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+          setTimeout(() => {
+            commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+          }, 3000);
+        }
+      }, 500);
+    }
+  }, [commentId, suggestionId, comments]);
 
   const { data: sectionVersions } = useQuery({
     queryKey: ['sectionVersions', suggestion?.sectionId],
