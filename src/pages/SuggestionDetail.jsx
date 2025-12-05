@@ -129,10 +129,10 @@ export default function SuggestionDetail() {
 
   // If there's a commentId in URL, scroll to comments section
   React.useEffect(() => {
-    if (commentId && suggestionId) {
+    if (commentId && suggestionId && typeof window !== 'undefined') {
       // Give time for the page to render, then scroll to comment
       setTimeout(() => {
-        const commentElement = document.getElementById(`comment-${commentId}`);
+        const commentElement = window.document.getElementById(`comment-${commentId}`);
         if (commentElement) {
           commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
           commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
