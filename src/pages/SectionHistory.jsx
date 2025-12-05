@@ -211,23 +211,6 @@ export default function SectionHistory() {
           </Alert>
         )}
 
-        {/* Section Comments */}
-        <Card className="bg-white border-slate-200">
-          <CardHeader className="p-4 md:p-6">
-            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-              <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
-              {t('comments')} ({sectionComments.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 md:p-6">
-            <CommentsSection
-              entityType="section"
-              entityId={sectionId}
-              user={user}
-            />
-          </CardContent>
-        </Card>
-
         {/* Version History */}
         {versionGroups.length > 0 ? (
           <div className="space-y-4">
@@ -311,6 +294,28 @@ export default function SectionHistory() {
                         dangerouslySetInnerHTML={{ __html: currentVer.content }}
                       />
                     )}
+
+                    {/* Section Comments */}
+                    <div className="mt-4 pt-4 border-t border-slate-200">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleComments(`section-${sectionId}`)}
+                        className="text-slate-600 hover:text-blue-600 h-8 text-xs"
+                      >
+                        <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                        {t('comments')} ({sectionComments.length})
+                      </Button>
+                      {showComments[`section-${sectionId}`] && (
+                        <div className="mt-3">
+                          <CommentsSection
+                            entityType="section"
+                            entityId={sectionId}
+                            user={user}
+                          />
+                        </div>
+                      )}
+                    </div>
 
                     {/* Show suggestion details if available */}
                     {group.suggestionId && (
