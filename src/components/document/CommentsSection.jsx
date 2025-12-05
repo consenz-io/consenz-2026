@@ -225,7 +225,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     const replies = getReplies(comment.id);
 
     return (
-      <div className={`${isReply ? 'ml-8 mt-2' : ''}`}>
+      <div id={`comment-${comment.id}`} className={`${isReply ? 'ml-8 mt-2' : ''}`}>
         <Card className={`p-3 ${isReply ? 'bg-slate-50' : 'bg-white'}`}>
           <div className="flex gap-3">
             <Link 
