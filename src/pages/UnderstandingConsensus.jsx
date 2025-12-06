@@ -362,7 +362,7 @@ export default function UnderstandingConsensus() {
         {/* What this means - practical explanation */}
         <Card className="bg-gradient-to-br from-slate-800 to-slate-900 text-white border-0">
           <CardContent className={`p-6 md:p-8 ${isRTL ? 'text-right' : ''}`}>
-            <h3 className={`text-xl font-bold mb-4 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <h3 className={`text-xl font-bold mb-4 flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Scale className="w-6 h-6" />
               {t('whatThisMeansTitle')}
             </h3>
