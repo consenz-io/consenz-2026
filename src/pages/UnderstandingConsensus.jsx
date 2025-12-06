@@ -311,14 +311,14 @@ export default function UnderstandingConsensus() {
                         </div>
 
                         {/* Consensus meter for this suggestion */}
-                        <div className="mt-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4">
+                        <div className={`mt-4 bg-gradient-to-r rounded-lg p-4 ${isRTL ? 'from-purple-50 to-indigo-50' : 'from-indigo-50 to-purple-50'}`}>
                           <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <span className="text-sm font-medium text-indigo-800">{t('suggestionConsensusMeter')}</span>
+                            <span className="text-sm font-medium text-indigo-800">רמת הקונצנזוס של השינוי בגרסה</span>
                             <Badge className="bg-indigo-600 text-white">
                               {(suggestionConsensusMeter * 100).toFixed(0)}%
                             </Badge>
                           </div>
-                          <div className="h-2 bg-indigo-200 rounded-full overflow-hidden">
+                          <div className={`h-2 bg-indigo-200 rounded-full overflow-hidden ${isRTL ? 'transform scale-x-[-1]' : ''}`}>
                             <div 
                               className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
                               style={{ width: `${Math.min(100, suggestionConsensusMeter * 100)}%` }}
