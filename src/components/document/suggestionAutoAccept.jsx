@@ -101,7 +101,9 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
   // סעיפים חדשים, עריכות ישירות ושינויי כותרות לא נספרים במד הקונצנזוס
   const shouldUpdateConsensusMeter = freshSuggestion.type === 'edit_section';
   
-  const totalUsers = document.totalUsersInteracted || 1;
+  // שמירת מספר המשתתפים בזמן הקבלה של ההצעה הזו
+  const participantsAtAcceptance = document.totalUsersInteracted || 1;
+  
   let updatedConsensuses = document.consensuses || [];
   let newThreshold = document.threshold || 2;
   
@@ -120,15 +122,15 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     // חישוב document_consensus_meter חדש - מגבילים כל ערך ל-1 מקסימום
     const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / updatedConsensuses.length;
     
-    // חישוב document_threshold חדש
-    newThreshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
+    // חישוב document_threshold חדש - עם מספר המשתתפים הנוכחי
+    newThreshold = Math.max(2, Math.round(consensusMeterAverage * participantsAtAcceptance));
     
     console.log('[CONSENSUS METER UPDATE]', {
       sectionConsensus,
       updatedConsensuses,
       consensusMeterAverage,
       newThreshold,
-      totalUsers
+      participantsAtAcceptance
     });
     
     // עדכון המסמך עם הערכים החדשים
@@ -157,10 +159,12 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
   );
   
   // עדכון סטטוס ההצעה מיד כדי למנוע אישור כפול
+  // שמירת מספר המשתתפים בזמן הקבלה
   console.log('[AUTO-ACCEPT] Updating suggestion status to accepted immediately');
   await base44.entities.Suggestion.update(suggestion.id, { 
     status: 'accepted',
-    suggestionConsensus: consensus 
+    suggestionConsensus: consensus,
+    participantsAtAcceptance: participantsAtAcceptance
   });
 
   try {
