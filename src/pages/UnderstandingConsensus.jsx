@@ -267,18 +267,36 @@ export default function UnderstandingConsensus() {
                     >
                       {/* Header with number */}
                       <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 border-b border-green-100">
-                        <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
-                          <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow">
-                            {originalIndex + 1}
-                          </div>
-                          <div className={`flex-1 ${isRTL ? 'text-right' : ''}`}>
-                            <h4 className="font-semibold text-slate-900">{suggestion.title}</h4>
-                            <p className="text-xs text-slate-500">
-                              {new Date(suggestion.created_date).toLocaleDateString(
-                                language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-EG' : 'en-US'
-                              )}
-                            </p>
-                          </div>
+                        <div className="flex items-center gap-3">
+                          {isRTL ? (
+                            <>
+                              <div className="flex-1 text-right">
+                                <h4 className="font-semibold text-slate-900">{suggestion.title}</h4>
+                                <p className="text-xs text-slate-500">
+                                  {new Date(suggestion.created_date).toLocaleDateString(
+                                    language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-EG' : 'en-US'
+                                  )}
+                                </p>
+                              </div>
+                              <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow">
+                                {originalIndex + 1}
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow">
+                                {originalIndex + 1}
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-slate-900">{suggestion.title}</h4>
+                                <p className="text-xs text-slate-500">
+                                  {new Date(suggestion.created_date).toLocaleDateString(
+                                    language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-EG' : 'en-US'
+                                  )}
+                                </p>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                       
