@@ -141,7 +141,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
         contributorsList.push({
           id: email, // שימוש באימייל כ-ID זמני
           email: email,
-          full_name: email.split('@')[0] || email, // שם זמני מהאימייל
+          full_name: 'משתמש לא רשום', // שם ברור במקום חלק מאימייל
           role: 'user'
         });
       }
@@ -183,7 +183,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm md:text-base text-slate-900 truncate">
-                    {user.full_name}
+                    {user.full_name && user.full_name.trim() ? user.full_name : (user.email || 'Unknown User')}
                   </p>
                 </div>
                 {user.role === 'admin' && (

@@ -579,7 +579,11 @@ export default function DocumentContent({
 
   const getUserName = (email) => {
     const user = users.find(u => u.email === email);
-    return user?.full_name || email?.split('@')[0] || email;
+    // Always prefer full_name, only fallback to email if full_name is empty/null/undefined
+    if (user?.full_name && user.full_name.trim()) {
+      return user.full_name;
+    }
+    return email?.split('@')[0] || email || 'Unknown User';
   };
 
   const toggleComments = (id) => {
