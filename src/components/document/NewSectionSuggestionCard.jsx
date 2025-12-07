@@ -40,11 +40,8 @@ export default function NewSectionSuggestionCard({
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-1">
-              <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300 text-xs">
-                {t('newSection')}
-              </Badge>
               <span className="text-xs text-slate-500">
-                {t('by')} {getUserName(suggestion.created_by)}
+                הצעה לסעיף חדש מאת {getUserName(suggestion.created_by)}
               </span>
             </div>
             <h3 className="font-semibold text-slate-900 text-sm md:text-base mb-2 break-words">
