@@ -33,6 +33,8 @@ export default function SuggestionSidebar({
   const [error, setError] = useState(null);
   const [isEditingExplanation, setIsEditingExplanation] = useState(false);
   const [explanationText, setExplanationText] = useState("");
+  const [showAcceptedAnimation, setShowAcceptedAnimation] = useState(false);
+  const prevStatusRef = React.useRef(suggestion?.status);
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
@@ -119,6 +121,20 @@ export default function SuggestionSidebar({
     const u = users.find(usr => usr.email === email);
     return u?.full_name || email?.split('@')[0] || email;
   };
+
+  // מעקב אחרי שינוי סטטוס להצגת אנימציה
+  React.useEffect(() => {
+    if (suggestion && prevStatusRef.current === 'pending' && suggestion.status === 'accepted') {
+      setShowAcceptedAnimation(true);
+      setTimeout(() => {
+        setShowAcceptedAnimation(false);
+        onClose(); // סגור את הסיידבר אחרי האנימציה
+      }, 3000);
+    }
+    if (suggestion) {
+      prevStatusRef.current = suggestion.status;
+    }
+  }, [suggestion?.status, onClose]);
 
   const voteMutation = useMutation({
     mutationFn: async (vote) => {
@@ -455,18 +471,57 @@ export default function SuggestionSidebar({
       
       {/* Sidebar */}
       <motion.div 
-        className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-full md:w-[500px] bg-white shadow-2xl z-50 flex flex-col`}
+        className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-full md:w-[500px] shadow-2xl z-50 flex flex-col overflow-hidden`}
         initial={{ x: isRTL ? '100%' : '-100%' }}
-        animate={{ x: 0 }}
+        animate={{ 
+          x: 0,
+          backgroundColor: showAcceptedAnimation 
+            ? 'rgb(240 253 244)' 
+            : 'rgb(255 255 255)'
+        }}
         exit={{ x: isRTL ? '100%' : '-100%' }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       >
+        <AnimatePresence>
+          {showAcceptedAnimation && (
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-br from-green-400/20 to-emerald-400/20 pointer-events-none"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 1, 0] }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 2 }}
+            />
+          )}
+        </AnimatePresence>
+        
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
+        <motion.div 
+          className="flex items-center justify-between p-4 border-b border-slate-200 relative z-10"
+          animate={{
+            backgroundColor: showAcceptedAnimation ? 'rgb(220 252 231)' : 'rgb(248 250 252)'
+          }}
+        >
           <div className="flex items-center gap-2 flex-1 min-w-0">
-            <Badge variant="outline" className={`${getStatusColor(suggestion.status)} text-xs shrink-0`}>
-              {t(suggestion.status)}
-            </Badge>
+            <AnimatePresence mode="wait">
+              {showAcceptedAnimation ? (
+                <motion.div
+                  key="accepted"
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0 }}
+                  transition={{ type: "spring", duration: 0.5 }}
+                >
+                  <Badge className="bg-green-100 text-green-800 border-green-300 text-xs shrink-0 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    {t('accepted')}
+                  </Badge>
+                </motion.div>
+              ) : (
+                <Badge variant="outline" className={`${getStatusColor(suggestion.status)} text-xs shrink-0`}>
+                  {t(suggestion.status)}
+                </Badge>
+              )}
+            </AnimatePresence>
             <h2 className="font-semibold text-slate-900 truncate">{suggestion.title}</h2>
           </div>
           <div className="flex items-center gap-2 shrink-0">

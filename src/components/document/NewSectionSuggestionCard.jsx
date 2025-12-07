@@ -2,13 +2,14 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2 } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, CheckCircle } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import VotesNeededCounter from "./VotesNeededCounter";
 import TranslatableContent from "./TranslatableContent";
 import CommentsSection from "./CommentsSection";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function NewSectionSuggestionCard({ 
   suggestion, 
@@ -37,6 +38,8 @@ export default function NewSectionSuggestionCard({
   });
 
   const canDelete = user && (isAdmin || user.email === suggestion.created_by) && suggestion.status !== 'accepted';
+  const [showAcceptedAnimation, setShowAcceptedAnimation] = React.useState(false);
+  const prevStatusRef = React.useRef(suggestion.status);
 
   // Truncate content for preview
   const getContentPreview = (html) => {
@@ -45,6 +48,69 @@ export default function NewSectionSuggestionCard({
     const text = div.textContent || div.innerText || '';
     return text.length > 150 ? text.substring(0, 150) + '...' : text;
   };
+
+  // מעקב אחרי שינוי סטטוס להצגת אנימציה
+  React.useEffect(() => {
+    if (prevStatusRef.current === 'pending' && suggestion.status === 'accepted') {
+      setShowAcceptedAnimation(true);
+      setTimeout(() => setShowAcceptedAnimation(false), 3000);
+    }
+    prevStatusRef.current = suggestion.status;
+  }, [suggestion.status]);
+
+  // אם ההצעה התקבלה והאנימציה פועלת
+  if (showAcceptedAnimation) {
+    return (
+      <motion.div
+        initial={{ scale: 1 }}
+        animate={{ 
+          scale: [1, 1.02, 1],
+          borderColor: ['rgb(252 211 77)', 'rgb(34 197 94)', 'rgb(255 255 255)'],
+        }}
+        transition={{ duration: 2, ease: "easeInOut" }}
+      >
+        <Card 
+          className="relative overflow-hidden transition-all"
+          style={{
+            background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(255 255 255) 100%)',
+            border: '2px solid rgb(34 197 94)',
+          }}
+        >
+          <motion.div
+            className="absolute inset-0 bg-green-500/10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.3, 0] }}
+            transition={{ duration: 2 }}
+          />
+          <CardContent className="p-4 md:p-6 relative z-10">
+            <div className="flex items-center justify-center gap-3 py-8">
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", duration: 0.6, delay: 0.2 }}
+              >
+                <CheckCircle className="w-16 h-16 text-green-600" />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 }}
+                className="text-right"
+              >
+                <div className="text-2xl font-bold text-green-700">ההצעה התקבלה!</div>
+                <div className="text-sm text-slate-600">הסעיף נוסף למסמך</div>
+              </motion.div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  }
+
+  // אם ההצעה התקבלה אבל האנימציה כבר הסתיימה, אל תציג כלום
+  if (suggestion.status === 'accepted') {
+    return null;
+  }
 
   return (
     <Card 
