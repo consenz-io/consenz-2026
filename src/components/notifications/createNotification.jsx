@@ -212,6 +212,11 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
  */
 export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
   try {
+    if (!suggestion || !suggestion.id) {
+      console.error('[NOTIFICATION ERROR] Invalid suggestion:', suggestion);
+      return;
+    }
+    
     const users = await getCachedUsers();
     const notifiedUserIds = new Set();
     const notifications = [];
@@ -222,7 +227,12 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
       rejected: { titleKey: 'notifRejectedTitle', messageKey: 'notifRejectedMessage' }
     };
     const statusKey = statusKeys[newStatus];
-    if (!statusKey) return;
+    if (!statusKey) {
+      console.error('[NOTIFICATION ERROR] Invalid status:', newStatus);
+      return;
+    }
+    
+    const suggestionTitle = suggestion.title || 'הצעה ללא כותרת';
     
     // 1. יוצר ההצעה
     const suggestionCreator = getUserFromCache(users, { email: suggestion.created_by });
@@ -233,11 +243,13 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
         userId: suggestionCreator.id,
         type: newStatus === 'accepted' ? 'suggestion_accepted' : 'suggestion_rejected',
         title: translate(statusKey.titleKey, userLang),
-        message: translate(statusKey.messageKey, userLang, { title: suggestion.title }),
+        message: translate(statusKey.messageKey, userLang, { title: suggestionTitle }),
         relatedEntityId: suggestion.id,
         relatedEntityType: 'suggestion',
         actionUrl
       });
+    } else {
+      console.error('[NOTIFICATION ERROR] Suggestion creator not found:', suggestion.created_by);
     }
     
     // 2. אם התקבלה - יוצר המסמך, מנהלים, ומצביעי pro
@@ -255,7 +267,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
           userId: docCreator.id,
           type: 'suggestion_accepted',
           title: translate('notifAcceptedTitle', userLang),
-          message: translate('notifAcceptedMessage', userLang, { title: suggestion.title }),
+          message: translate('notifAcceptedMessage', userLang, { title: suggestionTitle }),
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
           actionUrl
@@ -271,7 +283,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
           userId: adminId,
           type: 'suggestion_accepted',
           title: translate('notifAcceptedTitle', userLang),
-          message: translate('notifAcceptedMessage', userLang, { title: suggestion.title }),
+          message: translate('notifAcceptedMessage', userLang, { title: suggestionTitle }),
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
           actionUrl
@@ -287,7 +299,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
           userId: vote.userId,
           type: 'suggestion_accepted',
           title: translate('notifAcceptedVoterTitle', userLang),
-          message: translate('notifAcceptedVoterMessage', userLang, { title: suggestion.title }),
+          message: translate('notifAcceptedVoterMessage', userLang, { title: suggestionTitle }),
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
           actionUrl
