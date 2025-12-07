@@ -87,6 +87,13 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     staleTime: 30000,
   });
 
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list(),
+    enabled: isOpen,
+    staleTime: 60000,
+  });
+
   const { contributors, loading } = useMemo(() => {
     if (!document) {
       return { contributors: [], loading: true };
@@ -174,21 +181,29 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       }
     });
 
-    // Build contributors list using entity embedded names or email username
+    // Build contributors list - use User entity full_name, fallback to email username
+    const emailToUser = new Map();
+    allUsers.forEach(u => {
+      if (u.email) emailToUser.set(u.email, u);
+    });
+
     const contributorsList = Array.from(contributorMap.values()).map(({ email, name, userId }) => {
-      // Use embedded name from entities, or fallback to email username
-      const displayName = (name && name.trim()) ? name : email.split('@')[0];
+      const user = emailToUser.get(email);
+      // Use User entity full_name if exists, otherwise email username
+      const displayName = (user?.full_name && user.full_name.trim()) 
+        ? user.full_name 
+        : email.split('@')[0];
       
       return {
-        id: userId || email,
+        id: user?.id || userId || email,
         email: email,
         full_name: displayName,
-        role: 'user'
+        role: user?.role || 'user'
       };
     });
     
     return { contributors: contributorsList, loading: false };
-  }, [document, suggestions, sections, relevantVotes, relevantComments, relevantArguments]);
+  }, [document, suggestions, sections, relevantVotes, relevantComments, relevantArguments, allUsers]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
