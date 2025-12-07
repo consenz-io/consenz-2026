@@ -170,12 +170,16 @@ export default function Home() {
     
     const list = Array.from(uniqueEmails).map(email => {
       const user = emailToUser[email];
+      const displayName = (user?.full_name && user.full_name.trim()) 
+        ? user.full_name 
+        : email.split('@')[0];
       return {
         email,
-        name: namesFromEntities.get(email) || user?.full_name || 'Unknown User',
-        id: user?.id
+        full_name: displayName,
+        id: user?.id,
+        role: user?.role || 'user'
       };
-    }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    }).sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
     
     return {
       totalUniqueContributors: Math.max(1, uniqueEmails.size),
@@ -474,6 +478,7 @@ export default function Home() {
         isOpen={showContributorsModal}
         onClose={() => setShowContributorsModal(false)}
         contributors={contributorsList}
+        allUsers={allUsers}
       />
     </div>
   );
