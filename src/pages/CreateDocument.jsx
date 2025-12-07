@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, Plus, Trash2, AlertCircle, Upload, Loader2, CheckCircle } from "lucide-react";
+import { FileText, Plus, Trash2, AlertCircle, Upload, Loader2, CheckCircle, Merge, Split } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
@@ -429,6 +429,43 @@ Return JSON with title, topics array (each with title and sections array with co
     setTopics(newTopics);
   };
 
+  const mergeSections = (topicIndex, sectionIndex) => {
+    if (sectionIndex === 0) return; // Can't merge with previous if first
+    const newTopics = [...topics];
+    const currentSection = newTopics[topicIndex].sections[sectionIndex];
+    const previousSection = newTopics[topicIndex].sections[sectionIndex - 1];
+    
+    // Merge current into previous
+    newTopics[topicIndex].sections[sectionIndex - 1].content = 
+      previousSection.content + '\n\n' + currentSection.content;
+    
+    // Remove current section
+    newTopics[topicIndex].sections.splice(sectionIndex, 1);
+    setTopics(newTopics);
+  };
+
+  const splitSection = (topicIndex, sectionIndex) => {
+    const newTopics = [...topics];
+    const section = newTopics[topicIndex].sections[sectionIndex];
+    const content = section.content.trim();
+    
+    if (!content) return;
+    
+    // Find midpoint (by newlines or half of content)
+    const lines = content.split('\n');
+    const midpoint = Math.ceil(lines.length / 2);
+    
+    const firstHalf = lines.slice(0, midpoint).join('\n');
+    const secondHalf = lines.slice(midpoint).join('\n');
+    
+    // Update current section with first half
+    newTopics[topicIndex].sections[sectionIndex].content = firstHalf;
+    
+    // Insert new section with second half
+    newTopics[topicIndex].sections.splice(sectionIndex + 1, 0, { content: secondHalf });
+    setTopics(newTopics);
+  };
+
   const resetUpload = () => {
     setUploadedFile(null);
     setExtractedStructure(null);
@@ -737,34 +774,61 @@ Return JSON with title, topics array (each with title and sections array with co
 
                     <div className="space-y-3">
                       {topic.sections.map((section, sectionIndex) => (
-                        <div key={sectionIndex} className="flex gap-2 items-start pl-4 border-l-2 border-blue-200">
-                          <div className="flex-1">
-                            <Label className="text-xs text-slate-500 mb-1">
-                              Section {sectionIndex + 1}
-                            </Label>
-                            <Textarea
-                              value={section.content}
-                              onChange={(e) => {
-                                const newTopics = [...topics];
-                                newTopics[topicIndex].sections[sectionIndex].content = e.target.value;
-                                setTopics(newTopics);
-                              }}
-                              placeholder="Enter section content..."
-                              className="bg-white"
-                              rows={4}
-                            />
+                        <div key={sectionIndex} className="border border-slate-200 rounded-lg p-3 bg-white">
+                          <div className="flex gap-2 items-start mb-2">
+                            <div className="flex-1">
+                              <Label className="text-xs text-slate-500 mb-1">
+                                Section {sectionIndex + 1}
+                              </Label>
+                              <Textarea
+                                value={section.content}
+                                onChange={(e) => {
+                                  const newTopics = [...topics];
+                                  newTopics[topicIndex].sections[sectionIndex].content = e.target.value;
+                                  setTopics(newTopics);
+                                }}
+                                placeholder="Enter section content..."
+                                className="bg-white"
+                                rows={4}
+                              />
+                            </div>
+                            {topic.sections.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeSection(topicIndex, sectionIndex)}
+                                className="mt-6"
+                                title="Delete section"
+                              >
+                                <Trash2 className="w-4 h-4 text-red-500" />
+                              </Button>
+                            )}
                           </div>
-                          {topic.sections.length > 1 && (
+                          <div className="flex gap-2 justify-end">
+                            {sectionIndex > 0 && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => mergeSections(topicIndex, sectionIndex)}
+                                title="Merge with previous section"
+                              >
+                                <Merge className="w-3 h-3 mr-1" />
+                                Merge Up
+                              </Button>
+                            )}
                             <Button
                               type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeSection(topicIndex, sectionIndex)}
-                              className="mt-6"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => splitSection(topicIndex, sectionIndex)}
+                              title="Split section in half"
                             >
-                              <Trash2 className="w-4 h-4 text-red-500" />
+                              <Split className="w-3 h-3 mr-1" />
+                              Split
                             </Button>
-                          )}
+                          </div>
                         </div>
                       ))}
                     </div>
