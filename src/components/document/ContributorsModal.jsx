@@ -236,7 +236,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm md:text-base text-slate-900 truncate">
-                    {user.full_name && user.full_name.trim() ? user.full_name : (user.email || 'Unknown User')}
+                    {user.full_name}
                   </p>
                 </div>
                 {user.role === 'admin' && (
