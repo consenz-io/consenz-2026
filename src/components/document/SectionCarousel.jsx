@@ -154,8 +154,8 @@ export default function SectionCarousel({
   // Effect to scroll to newly created suggestion
   React.useEffect(() => {
     if (newlyCreatedSuggestionId && sortedSuggestions.length > 0) {
-      const suggestion = sortedSuggestions.find(s => s.id === newlyCreatedSuggestionId);
-      if (suggestion) {
+      const foundSuggestion = sortedSuggestions.find(s => s.id === newlyCreatedSuggestionId);
+      if (foundSuggestion) {
         setCurrentSuggestionId(newlyCreatedSuggestionId);
         // Clear the flag after navigating
         if (onClearNewlyCreated) {
