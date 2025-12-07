@@ -582,7 +582,11 @@ export default function DocumentView() {
               </Button>
             </Link>
             {isAdmin && (
-              <Link to={`${createPageUrl("DocumentAdmin")}?id=${documentId}`} className="flex-shrink-0">
+              <Link 
+                to={`${createPageUrl("DocumentAdmin")}?id=${documentId}`} 
+                className="flex-shrink-0"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Button variant="outline" size="sm" className="text-xs md:text-sm px-3 md:px-4 h-8 md:h-9">
                   <Settings className={`w-4 h-4 ${isRTL ? 'ml-1.5 md:ml-2' : 'mr-1.5 md:mr-2'}`} />
                   <span>{t('admin')}</span>
