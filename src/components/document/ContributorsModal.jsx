@@ -163,17 +163,17 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       }
     });
 
-    // Build contributors list using only entity data
-    const contributorsList = Array.from(contributorMap.values())
-      .filter(({ name }) => name && name.trim()) // Only include if we have a real name
-      .map(({ email, name, userId }) => {
-        return {
-          id: userId || email,
-          email: email,
-          full_name: name,
-          role: 'user'
-        };
-      });
+    // Build contributors list using entity data, fallback to email username
+    const contributorsList = Array.from(contributorMap.values()).map(({ email, name, userId }) => {
+      const displayName = (name && name.trim()) ? name : email.split('@')[0];
+      
+      return {
+        id: userId || email,
+        email: email,
+        full_name: displayName,
+        role: 'user'
+      };
+    });
     
     return { contributors: contributorsList, loading: false };
   }, [document, suggestions, sections, relevantVotes, relevantComments, relevantArguments]);
