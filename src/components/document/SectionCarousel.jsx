@@ -73,37 +73,39 @@ export default function SectionCarousel({
   
   // מעקב אחרי שינוי סטטוס להצגת אנימציה - עובד על כל ההצעות
   React.useEffect(() => {
-    allSectionSuggestions.forEach(suggestion => {
-      const prevStatus = prevSuggestionsStatusRef.current[suggestion.id];
+    if (!allSectionSuggestions || allSectionSuggestions.length === 0) return;
+    
+    allSectionSuggestions.forEach(sug => {
+      const prevStatus = prevSuggestionsStatusRef.current[sug.id];
       
       // זיהוי מעבר מ-pending ל-accepted
-      if (prevStatus === 'pending' && suggestion.status === 'accepted' && !hasAnimatedRef.current.has(suggestion.id)) {
-        hasAnimatedRef.current.add(suggestion.id);
-        console.log('[EDIT ANIMATION] Starting celebration for suggestion:', suggestion.id);
+      if (prevStatus === 'pending' && sug.status === 'accepted' && !hasAnimatedRef.current.has(sug.id)) {
+        hasAnimatedRef.current.add(sug.id);
+        console.log('[EDIT ANIMATION] Starting celebration for suggestion:', sug.id);
         
         // אם המשתמש לא צופה בהצעה הזו - מעביר אותו אליה
-        if (currentSuggestionId !== suggestion.id) {
-          setCurrentSuggestionId(suggestion.id);
+        if (currentSuggestionId !== sug.id) {
+          setCurrentSuggestionId(sug.id);
         }
         
-        setAnimationPhases(prev => ({ ...prev, [suggestion.id]: 'celebrating' }));
+        setAnimationPhases(prev => ({ ...prev, [sug.id]: 'celebrating' }));
         
         // שלב 1: חגיגה (3 שניות)
         setTimeout(() => {
-          console.log('[EDIT ANIMATION] Transitioning to white for suggestion:', suggestion.id);
-          setAnimationPhases(prev => ({ ...prev, [suggestion.id]: 'transitioning' }));
+          console.log('[EDIT ANIMATION] Transitioning to white for suggestion:', sug.id);
+          setAnimationPhases(prev => ({ ...prev, [sug.id]: 'transitioning' }));
         }, 3000);
         
         // שלב 2: דהייה והעלמה (אחרי עוד 2 שניות - סה"כ 5 שניות)
         setTimeout(() => {
-          console.log('[EDIT ANIMATION] Fading out suggestion:', suggestion.id);
-          setAnimationPhases(prev => ({ ...prev, [suggestion.id]: 'fading' }));
+          console.log('[EDIT ANIMATION] Fading out suggestion:', sug.id);
+          setAnimationPhases(prev => ({ ...prev, [sug.id]: 'fading' }));
         }, 5000);
         
         // שלב 3: העלמה סופית (אחרי עוד 1 שניה - סה"כ 6 שניות)
         setTimeout(() => {
-          console.log('[EDIT ANIMATION] Hiding suggestion:', suggestion.id);
-          setAnimationPhases(prev => ({ ...prev, [suggestion.id]: 'hidden' }));
+          console.log('[EDIT ANIMATION] Hiding suggestion:', sug.id);
+          setAnimationPhases(prev => ({ ...prev, [sug.id]: 'hidden' }));
           // חוזרים לתצוגת הסעיף הנוכחי אחרי שהאנימציה הסתיימה
           setCurrentSuggestionId('current');
           // רענון הסעיפים כדי לקבל את השינוי
@@ -111,7 +113,7 @@ export default function SectionCarousel({
         }, 6000);
       }
       
-      prevSuggestionsStatusRef.current[suggestion.id] = suggestion.status;
+      prevSuggestionsStatusRef.current[sug.id] = sug.status;
     });
   }, [allSectionSuggestions, currentSuggestionId, document.id, queryClient]);
 
@@ -123,16 +125,18 @@ export default function SectionCarousel({
     ];
     
     // אם יש הצעה באנימציה שכבר לא ב-pending - נוסיף אותה לתצוגה
-    allSectionSuggestions.forEach(suggestion => {
-      const animationPhase = animationPhases[suggestion.id];
-      if (animationPhase && animationPhase !== 'hidden' && !views.find(v => v.id === suggestion.id)) {
-        views.push({
-          type: 'suggestion',
-          data: suggestion,
-          id: suggestion.id
-        });
-      }
-    });
+    if (allSectionSuggestions && allSectionSuggestions.length > 0) {
+      allSectionSuggestions.forEach(sug => {
+        const animationPhase = animationPhases[sug.id];
+        if (animationPhase && animationPhase !== 'hidden' && !views.find(v => v.id === sug.id)) {
+          views.push({
+            type: 'suggestion',
+            data: sug,
+            id: sug.id
+          });
+        }
+      });
+    }
     
     return views;
   }, [section, sortedSuggestions, allSectionSuggestions, animationPhases]);
