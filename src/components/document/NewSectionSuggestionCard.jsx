@@ -2,11 +2,12 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, Plus } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Plus, MessageSquare } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import VotesNeededCounter from "./VotesNeededCounter";
 import TranslatableContent from "./TranslatableContent";
+import CommentsSection from "./CommentsSection";
 
 export default function NewSectionSuggestionCard({ 
   suggestion, 
@@ -16,7 +17,10 @@ export default function NewSectionSuggestionCard({
   user,
   getUserVote,
   voteMutation,
-  onOpenSidebar
+  onOpenSidebar,
+  getCommentsCount,
+  toggleComments,
+  showComments
 }) {
   const { t, isRTL } = useLanguage();
 
@@ -129,8 +133,44 @@ export default function NewSectionSuggestionCard({
               document={doc}
               acceptedSuggestions={acceptedSuggestions}
             />
-            </div>
-            </div>
+          </div>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="text-xs h-7 px-3"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenSidebar && onOpenSidebar(suggestion.id);
+            }}
+          >
+            {t('viewDetails')}
+          </Button>
+        </div>
+
+        {/* תגובות */}
+        <div className="mt-3 pt-3 border-t border-amber-200">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleComments && toggleComments(`suggestion-${suggestion.id}`);
+            }}
+            className="h-7 text-xs px-2"
+          >
+            <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+            {t('comments')} ({getCommentsCount ? getCommentsCount('suggestion', suggestion.id) : 0})
+          </Button>
+        </div>
+        {showComments && showComments[`suggestion-${suggestion.id}`] && (
+          <div className="mt-4 pt-4 border-t border-amber-200">
+            <CommentsSection
+              entityType="suggestion"
+              entityId={suggestion.id}
+              user={user}
+            />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
