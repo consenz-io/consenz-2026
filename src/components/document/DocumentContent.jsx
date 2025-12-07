@@ -360,17 +360,19 @@ export default function DocumentContent({
         autoAcceptSuggestion({ ...freshSuggestion, proVotes: newProVotes, conVotes: newConVotes }, user.id, document)
           .then(accepted => {
             if (accepted) {
-              // רענון מיידי במקביל אחרי 6 שניות (אחרי שהאנימציה מסתיימת)
+              // רענון הסעיפים אחרי 7 שניות (אחרי שהאנימציה נעלמה לגמרי)
               setTimeout(() => {
                 Promise.all([
                   queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
-                  queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] }),
-                  queryClient.invalidateQueries({ queryKey: ['document', document?.id] }),
-                  queryClient.invalidateQueries({ queryKey: ['topics', document?.id] }),
                   queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
                   queryClient.invalidateQueries({ queryKey: ['versions', document?.id] })
                 ]);
-              }, 6000);
+              }, 7000);
+              
+              // רענון הצעות והמסמך מיד (כדי שהאנימציה תתחיל)
+              queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
+              queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
+              queryClient.invalidateQueries({ queryKey: ['topics', document?.id] });
               
               // טיפול בנקודות ברקע - לא חוסם
               if (!serverVote && vote === 'pro' && document.gamificationEnabled) {
@@ -600,23 +602,11 @@ Return ONLY the translated text:`;
   };
 
   const getNewSectionSuggestionsForTopic = (topicId) => {
-    // כולל גם הצעות accepted שעדיין באנימציה (עד 5 שניות אחרי הקבלה)
-    return suggestions.filter(s => {
-      if (s.topicId !== topicId || s.type !== 'new_section') return false;
-      
-      // תמיד הצג pending
-      if (s.status === 'pending') return true;
-      
-      // הצג accepted רק אם עבר פחות מ-6 שניות מאז העדכון (כדי שהאנימציה תסתיים)
-      if (s.status === 'accepted') {
-        const updatedDate = new Date(s.updated_date);
-        const now = new Date();
-        const secondsSinceUpdate = (now - updatedDate) / 1000;
-        return secondsSinceUpdate < 6;
-      }
-      
-      return false;
-    }).sort((a, b) => (a.insertPosition || 999) - (b.insertPosition || 999));
+    return suggestions.filter(s => 
+      s.topicId === topicId && 
+      s.type === 'new_section'
+      // מציג גם pending וגם accepted (האנימציה תטפל בהעלמה)
+    ).sort((a, b) => (a.insertPosition || 999) - (b.insertPosition || 999));
   };
 
   const reorderSectionsMutation = useMutation({

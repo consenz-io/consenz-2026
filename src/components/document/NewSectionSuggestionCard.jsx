@@ -38,10 +38,9 @@ export default function NewSectionSuggestionCard({
   });
 
   const canDelete = user && (isAdmin || user.email === suggestion.created_by) && suggestion.status !== 'accepted';
-  const [animationPhase, setAnimationPhase] = React.useState(
-    suggestion.status === 'accepted' ? 'none' : 'none'
-  ); // 'none', 'celebrating', 'transitioning', 'fading'
+  const [animationPhase, setAnimationPhase] = React.useState('none');
   const prevStatusRef = React.useRef(suggestion.status);
+  const hasAnimatedRef = React.useRef(false);
 
   // Truncate content for preview
   const getContentPreview = (html) => {
@@ -51,9 +50,10 @@ export default function NewSectionSuggestionCard({
     return text.length > 150 ? text.substring(0, 150) + '...' : text;
   };
 
-  // מעקב אחרי שינוי סטטוס להצגת אנימציה
+  // מעקב אחרי שינוי סטטוס להצגת אנימציה - רק פעם אחת
   React.useEffect(() => {
-    if (prevStatusRef.current === 'pending' && suggestion.status === 'accepted') {
+    if (prevStatusRef.current === 'pending' && suggestion.status === 'accepted' && !hasAnimatedRef.current) {
+      hasAnimatedRef.current = true;
       console.log('[ANIMATION] Starting celebration for suggestion:', suggestion.id);
       setAnimationPhase('celebrating');
       
@@ -63,17 +63,23 @@ export default function NewSectionSuggestionCard({
         setAnimationPhase('transitioning');
       }, 3000);
       
-      // שלב 2: התחלת דהייה (אחרי עוד 2 שניות - סה"כ 5 שניות)
+      // שלב 2: דהייה והעלמה (אחרי עוד 2 שניות - סה"כ 5 שניות)
       setTimeout(() => {
-        console.log('[ANIMATION] Starting fade for suggestion:', suggestion.id);
+        console.log('[ANIMATION] Fading out suggestion:', suggestion.id);
         setAnimationPhase('fading');
       }, 5000);
+      
+      // שלב 3: העלמה סופית (אחרי עוד 1 שניה - סה"כ 6 שניות)
+      setTimeout(() => {
+        console.log('[ANIMATION] Hiding suggestion:', suggestion.id);
+        setAnimationPhase('hidden');
+      }, 6000);
     }
     prevStatusRef.current = suggestion.status;
   }, [suggestion.status]);
 
-  // אם בשלב דהייה והסעיף כבר קיים במסמך - אל תציג
-  if (animationPhase === 'fading') {
+  // אם בשלב העלמה סופית - אל תציג כלום
+  if (animationPhase === 'hidden') {
     return null;
   }
 
@@ -146,14 +152,35 @@ export default function NewSectionSuggestionCard({
   // שלב המעבר - מעבר הדרגתי למראה של סעיף רגיל (2 שניות)
   if (animationPhase === 'transitioning') {
     return (
+      <Card 
+        className="relative overflow-hidden transition-all duration-[2000ms] ease-out"
+        style={{
+          background: 'rgb(255 255 255)',
+          border: '1px solid rgb(226 232 240)',
+        }}
+      >
+        <CardContent className="p-4 md:p-6">
+          <div className="prose prose-sm max-w-none">
+            <TranslatableContent
+              content={suggestion.newContent}
+              entity={suggestion}
+              entityType="Suggestion"
+              className="text-slate-700"
+              renderContent={(html) => <div dangerouslySetInnerHTML={{ __html: html }} />}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // שלב הדהייה - דהייה חלקה (1 שניה)
+  if (animationPhase === 'fading') {
+    return (
       <motion.div
-        initial={{ 
-          background: 'linear-gradient(135deg, rgb(220 252 231) 0%, rgb(255 255 255) 100%)'
-        }}
-        animate={{
-          background: 'rgb(255 255 255)'
-        }}
-        transition={{ duration: 2 }}
+        initial={{ opacity: 1 }}
+        animate={{ opacity: 0 }}
+        transition={{ duration: 1 }}
       >
         <Card 
           className="relative overflow-hidden"
