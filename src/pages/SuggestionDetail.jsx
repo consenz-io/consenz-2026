@@ -21,6 +21,8 @@ import { checkSuggestionConsensus, autoAcceptSuggestion } from "../components/do
 import { useLanguage } from "@/components/LanguageContext";
 import { notifyVoteOnSuggestion, notifySuggestionStatusChange } from "../components/notifications/createNotification";
 import PageHeader from "../components/PageHeader";
+import confetti from "canvas-confetti";
+import { toast } from "sonner";
 
 export default function SuggestionDetail() {
   const { t, isRTL } = useLanguage();
@@ -270,8 +272,21 @@ export default function SuggestionDetail() {
       
       if (shouldAccept && suggestion.status === 'pending') {
         const accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
-        
+
         if (accepted) {
+          // אנימציית חגיגה
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+
+          // הודעת הצלחה
+          toast.success('🎉 ' + t('notifAcceptedTitle'), {
+            description: t('notifAcceptedMessage').replace('{title}', suggestion.title || ''),
+            duration: 5000
+          });
+
           if (!userVote && vote === 'pro' && document?.gamificationEnabled) {
             base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
             base44.entities.PointsTransaction.create({
@@ -283,6 +298,12 @@ export default function SuggestionDetail() {
               relatedEntityType: 'suggestion'
             }).catch(() => {});
           }
+
+          // המתן 2 שניות לפני הניווט חזרה למסמך
+          setTimeout(() => {
+            window.location.href = `${createPageUrl("DocumentView")}?id=${document.id}&scrollTo=${suggestion.sectionId || suggestion.topicId}`;
+          }, 2000);
+
           return { accepted: true };
         }
       }
