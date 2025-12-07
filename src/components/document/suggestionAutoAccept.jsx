@@ -70,7 +70,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     return false;
   }
   
-  // בדיקה נוספת שההצעה אכן ממתינה - קוראים אותה מחדש מה-DB
+  // שלב 1: קריאת המצב העדכני ביותר מהשרת - source of truth
   let freshSuggestion;
   try {
     const freshSuggestions = await base44.entities.Suggestion.filter({ id: suggestion.id });
@@ -85,15 +85,17 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     return false;
   }
   
+  // Verify suggestion is still pending - בדיקה מול המצב האמיתי מהשרת
   if (freshSuggestion.status !== 'pending') {
-    console.log('[AUTO-ACCEPT] Suggestion already processed:', suggestion.id, freshSuggestion.status);
+    console.log('[AUTO-ACCEPT] Suggestion already processed (status:', freshSuggestion.status, '), skipping');
     return false;
   }
   
+  // וידוא שעדיין עומדים בתנאי הקונצנזוס לפי הנתונים העדכניים
   const { shouldAccept, consensus } = await checkSuggestionConsensus(freshSuggestion, document);
   
   if (!shouldAccept) {
-    console.log('[AUTO-ACCEPT] Suggestion does not meet threshold:', suggestion.id);
+    console.log('[AUTO-ACCEPT] Suggestion no longer meets threshold, skipping');
     return false;
   }
   
@@ -367,19 +369,26 @@ export function checkTopicEditConsensus(suggestion, document) {
  * אישור אוטומטי של הצעת עריכת כותרת נושא
  */
 export async function autoAcceptTopicEditSuggestion(suggestion, userId, document) {
+  // שלב 1: קריאת המצב העדכני ביותר מהשרת - source of truth
   const freshSuggestions = await base44.entities.TopicEditSuggestion.filter({ id: suggestion.id });
   const freshSuggestion = freshSuggestions[0];
 
-  if (!freshSuggestion || freshSuggestion.status !== 'pending') {
-    console.log('[AUTO-ACCEPT TOPIC] Suggestion not found or already processed:', suggestion.id, freshSuggestion?.status);
+  if (!freshSuggestion) {
+    console.log('[AUTO-ACCEPT TOPIC] Suggestion not found:', suggestion.id);
     return false;
   }
 
-  // שימוש בחישוב דינמי של הסף - זהה לחישוב של הצעות סעיפים
+  // Verify suggestion is still pending - בדיקה מול המצב האמיתי מהשרת
+  if (freshSuggestion.status !== 'pending') {
+    console.log('[AUTO-ACCEPT TOPIC] Suggestion already processed (status:', freshSuggestion.status, '), skipping');
+    return false;
+  }
+
+  // וידוא שעדיין עומדים בתנאי הקונצנזוס לפי הנתונים העדכניים
   const { shouldAccept, consensus } = checkTopicEditConsensus(freshSuggestion, document);
 
   if (!shouldAccept) {
-    console.log('[AUTO-ACCEPT TOPIC] Topic suggestion does not meet threshold:', suggestion.id);
+    console.log('[AUTO-ACCEPT TOPIC] Suggestion no longer meets threshold, skipping');
     return false;
   }
 
