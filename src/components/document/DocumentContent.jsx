@@ -360,15 +360,17 @@ export default function DocumentContent({
         autoAcceptSuggestion({ ...freshSuggestion, proVotes: newProVotes, conVotes: newConVotes }, user.id, document)
           .then(accepted => {
             if (accepted) {
-              // רענון מיידי במקביל - לא רציף
-              Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
-                queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] }),
-                queryClient.invalidateQueries({ queryKey: ['document', document?.id] }),
-                queryClient.invalidateQueries({ queryKey: ['topics', document?.id] }),
-                queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
-                queryClient.invalidateQueries({ queryKey: ['versions', document?.id] })
-              ]);
+              // רענון מיידי במקביל אחרי 6 שניות (אחרי שהאנימציה מסתיימת)
+              setTimeout(() => {
+                Promise.all([
+                  queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
+                  queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] }),
+                  queryClient.invalidateQueries({ queryKey: ['document', document?.id] }),
+                  queryClient.invalidateQueries({ queryKey: ['topics', document?.id] }),
+                  queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
+                  queryClient.invalidateQueries({ queryKey: ['versions', document?.id] })
+                ]);
+              }, 6000);
               
               // טיפול בנקודות ברקע - לא חוסם
               if (!serverVote && vote === 'pro' && document.gamificationEnabled) {
@@ -458,11 +460,13 @@ export default function DocumentContent({
         });
       });
       
-      // אם ההצעה תתקבל, מציגים הודעה מיידית
+      // אם ההצעה תתקבל, מציגים הודעה אחרי שניה (כדי שהאנימציה תתחיל קודם)
       if (willBeAccepted) {
-        toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', {
-          duration: 4000,
-        });
+        setTimeout(() => {
+          toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', {
+            duration: 4000,
+          });
+        }, 1000);
       }
       
       // עדכון אופטימיסטי של ההצבעות - מטפל רק בהצעה הספציפית
@@ -596,11 +600,23 @@ Return ONLY the translated text:`;
   };
 
   const getNewSectionSuggestionsForTopic = (topicId) => {
-    return suggestions.filter(s => 
-      s.topicId === topicId && 
-      s.type === 'new_section' && 
-      s.status === 'pending'
-    ).sort((a, b) => (a.insertPosition || 999) - (b.insertPosition || 999));
+    // כולל גם הצעות accepted שעדיין באנימציה (עד 5 שניות אחרי הקבלה)
+    return suggestions.filter(s => {
+      if (s.topicId !== topicId || s.type !== 'new_section') return false;
+      
+      // תמיד הצג pending
+      if (s.status === 'pending') return true;
+      
+      // הצג accepted רק אם עבר פחות מ-6 שניות מאז העדכון (כדי שהאנימציה תסתיים)
+      if (s.status === 'accepted') {
+        const updatedDate = new Date(s.updated_date);
+        const now = new Date();
+        const secondsSinceUpdate = (now - updatedDate) / 1000;
+        return secondsSinceUpdate < 6;
+      }
+      
+      return false;
+    }).sort((a, b) => (a.insertPosition || 999) - (b.insertPosition || 999));
   };
 
   const reorderSectionsMutation = useMutation({

@@ -38,7 +38,9 @@ export default function NewSectionSuggestionCard({
   });
 
   const canDelete = user && (isAdmin || user.email === suggestion.created_by) && suggestion.status !== 'accepted';
-  const [animationPhase, setAnimationPhase] = React.useState('none'); // 'none', 'celebrating', 'transitioning', 'complete'
+  const [animationPhase, setAnimationPhase] = React.useState(
+    suggestion.status === 'accepted' ? 'none' : 'none'
+  ); // 'none', 'celebrating', 'transitioning', 'fading'
   const prevStatusRef = React.useRef(suggestion.status);
 
   // Truncate content for preview
@@ -52,32 +54,30 @@ export default function NewSectionSuggestionCard({
   // מעקב אחרי שינוי סטטוס להצגת אנימציה
   React.useEffect(() => {
     if (prevStatusRef.current === 'pending' && suggestion.status === 'accepted') {
+      console.log('[ANIMATION] Starting celebration for suggestion:', suggestion.id);
       setAnimationPhase('celebrating');
       
-      // שלב 1: חגיגה (2 שניות)
+      // שלב 1: חגיגה (3 שניות)
       setTimeout(() => {
+        console.log('[ANIMATION] Transitioning to white for suggestion:', suggestion.id);
         setAnimationPhase('transitioning');
-      }, 2000);
+      }, 3000);
       
-      // שלב 2: מעבר לתצוגת סעיף רגיל (2 שניות נוספות)
+      // שלב 2: התחלת דהייה (אחרי עוד 2 שניות - סה"כ 5 שניות)
       setTimeout(() => {
-        setAnimationPhase('complete');
-      }, 4000);
-      
-      // שלב 3: העלמה אחרי עוד 2 שניות
-      setTimeout(() => {
-        setAnimationPhase('hidden');
-      }, 6000);
+        console.log('[ANIMATION] Starting fade for suggestion:', suggestion.id);
+        setAnimationPhase('fading');
+      }, 5000);
     }
     prevStatusRef.current = suggestion.status;
   }, [suggestion.status]);
 
-  // אם הגענו לשלב ההעלמה, אל תציג כלום
-  if (animationPhase === 'hidden') {
+  // אם בשלב דהייה והסעיף כבר קיים במסמך - אל תציג
+  if (animationPhase === 'fading') {
     return null;
   }
 
-  // שלב החגיגה - מסגרת ירוקה ואייקון
+  // שלב החגיגה - מסגרת ירוקה ואייקון (3 שניות)
   if (animationPhase === 'celebrating') {
     return (
       <motion.div
@@ -143,30 +143,23 @@ export default function NewSectionSuggestionCard({
     );
   }
 
-  // שלב המעבר - מעבר הדרגתי למראה של סעיף רגיל
-  if (animationPhase === 'transitioning' || animationPhase === 'complete') {
+  // שלב המעבר - מעבר הדרגתי למראה של סעיף רגיל (2 שניות)
+  if (animationPhase === 'transitioning') {
     return (
       <motion.div
+        initial={{ 
+          background: 'linear-gradient(135deg, rgb(220 252 231) 0%, rgb(255 255 255) 100%)'
+        }}
         animate={{
-          opacity: animationPhase === 'complete' ? [1, 1, 0] : 1,
+          background: 'rgb(255 255 255)'
         }}
-        transition={{ 
-          duration: animationPhase === 'complete' ? 2 : 0,
-          ease: "easeOut"
-        }}
+        transition={{ duration: 2 }}
       >
         <Card 
-          className="relative overflow-hidden transition-all duration-1000"
+          className="relative overflow-hidden"
           style={{
-            background: animationPhase === 'transitioning' 
-              ? 'linear-gradient(135deg, rgb(220 252 231) 0%, rgb(255 255 255) 100%)'
-              : 'rgb(255 255 255)',
-            border: animationPhase === 'transitioning'
-              ? '2px solid rgb(34 197 94)'
-              : '1px solid rgb(226 232 240)',
-            boxShadow: animationPhase === 'transitioning'
-              ? '0 4px 6px -1px rgba(34, 197, 94, 0.1)'
-              : 'none',
+            background: 'rgb(255 255 255)',
+            border: '1px solid rgb(226 232 240)',
           }}
         >
           <CardContent className="p-4 md:p-6">
