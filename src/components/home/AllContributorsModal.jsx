@@ -27,7 +27,8 @@ export default function AllContributorsModal({
   // Enrich contributors with full_name from User entity
   const enrichedContributors = contributors.map(contributor => {
     const user = emailToUser.get(contributor.email);
-    const displayName = user?.full_name?.trim() || 'Anonymous';
+    console.log('DEBUG - User data for:', contributor.email, user);
+    const displayName = user?.full_name?.trim() || user?.name?.trim() || 'Anonymous';
     
     return {
       ...contributor,
