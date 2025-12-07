@@ -39,14 +39,11 @@ export default function NewSectionSuggestionCard({
             <Plus className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-1">
-              <span className="text-xs text-slate-500">
+            <div className="flex items-center gap-2 flex-wrap mb-3">
+              <span className="text-sm md:text-base font-semibold text-slate-900">
                 הצעה לסעיף חדש מאת {getUserName(suggestion.created_by)}
               </span>
             </div>
-            <h3 className="font-semibold text-slate-900 text-sm md:text-base mb-2 break-words">
-              {typeof suggestion.title === 'string' ? suggestion.title : String(suggestion.title || '')}
-            </h3>
             {suggestion.explanation && typeof suggestion.explanation === 'string' && (
               <div className="text-xs md:text-sm mb-2">
                 <TranslatableContent
