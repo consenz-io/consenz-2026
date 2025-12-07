@@ -181,7 +181,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       }
     });
 
-    // Build contributors list - get full_name from User entity
+    // Build contributors list - use full_name from User entity only
     const emailToUser = new Map();
     allUsers.forEach(u => {
       if (u.email) emailToUser.set(u.email, u);
@@ -189,10 +189,8 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
 
     const contributorsList = Array.from(contributorMap.values()).map(({ email, name, userId }) => {
       const user = emailToUser.get(email);
-      // Always use full_name from User entity if exists, otherwise email username
-      const displayName = (user?.full_name && user.full_name.trim()) 
-        ? user.full_name 
-        : email.split('@')[0];
+      // Use full_name (display name) from User entity, fallback to email username
+      const displayName = user?.full_name?.trim() || email.split('@')[0];
       
       return {
         id: user?.id || userId || email,

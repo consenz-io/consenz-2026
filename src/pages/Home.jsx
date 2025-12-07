@@ -170,9 +170,8 @@ export default function Home() {
     
     const list = Array.from(uniqueEmails).map(email => {
       const user = emailToUser[email];
-      const displayName = (user?.full_name && user.full_name.trim()) 
-        ? user.full_name 
-        : email.split('@')[0];
+      // Use full_name (display name) from User entity, fallback to email username
+      const displayName = user?.full_name?.trim() || email.split('@')[0];
       return {
         email,
         full_name: displayName,
