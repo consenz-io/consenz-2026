@@ -238,15 +238,18 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       
       let newOrder;
       if (freshSuggestion.insertPosition !== undefined && freshSuggestion.insertPosition !== null) {
-        // הזחת סעיפים קיימים
-        const sectionsToUpdate = allSections.filter(s => (s.order || 0) >= freshSuggestion.insertPosition);
-        for (const sec of sectionsToUpdate) {
-          try {
-            await base44.entities.Section.update(sec.id, { order: (sec.order || 0) + 1 });
-          } catch (err) {
-            console.error('[AUTO-ACCEPT] Error updating section order:', err);
-          }
-        }
+        // הזחת סעיפים קיימים - מלמעלה למטה כדי למנוע התנגשויות
+        const sectionsToUpdate = allSections
+          .filter(s => (s.order || 0) >= freshSuggestion.insertPosition)
+          .sort((a, b) => (b.order || 0) - (a.order || 0)); // מלמעלה למטה
+        
+        // עדכון במקביל - כל סעיף מקבל order חדש שלא מתנגש
+        await Promise.all(
+          sectionsToUpdate.map(sec => 
+            base44.entities.Section.update(sec.id, { order: (sec.order || 0) + 1 })
+          )
+        );
+        
         newOrder = freshSuggestion.insertPosition;
       } else {
         // הוספה בסוף
