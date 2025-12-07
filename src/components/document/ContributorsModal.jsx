@@ -87,6 +87,13 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     staleTime: 30000,
   });
 
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list(),
+    enabled: isOpen,
+    staleTime: 60000,
+  });
+
   const { contributors, loading } = useMemo(() => {
     if (!document) {
       return { contributors: [], loading: true };
