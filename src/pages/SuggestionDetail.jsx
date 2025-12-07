@@ -159,9 +159,20 @@ export default function SuggestionDetail() {
     initialData: [],
   });
 
-  const getUserName = (email) => {
+  const getUserName = (emailOrEntity) => {
+    // If it's an entity with createdByFullName, use that
+    if (typeof emailOrEntity === 'object' && emailOrEntity?.createdByFullName && emailOrEntity.createdByFullName.trim()) {
+      return emailOrEntity.createdByFullName;
+    }
+    
+    // Otherwise treat as email
+    const email = typeof emailOrEntity === 'string' ? emailOrEntity : emailOrEntity?.created_by;
     const user = users.find(u => u.email === email);
-    return user?.full_name || email;
+    
+    if (user?.full_name && user.full_name.trim()) {
+      return user.full_name;
+    }
+    return email?.split('@')[0] || email || 'Unknown User';
   };
 
   // פונקציית עזר לטיפול בנקודות ברקע
@@ -241,7 +252,8 @@ export default function SuggestionDetail() {
         await base44.entities.Vote.create({
           suggestionId,
           userId: user.id,
-          vote
+          vote,
+          voterFullName: user.full_name || user.email
         });
         if (vote === 'pro') newProVotes += 1;
         else newConVotes += 1;
@@ -385,7 +397,8 @@ export default function SuggestionDetail() {
         suggestionId,
         type,
         content: content.trim(),
-        convincedCount: 0
+        convincedCount: 0,
+        createdByFullName: user?.full_name || user?.email
       });
       
       // עדכון מספר התורמים למסמך
@@ -434,7 +447,8 @@ export default function SuggestionDetail() {
         // Update section with new content
         await base44.entities.Section.update(section.id, {
           content: suggestion.newContent,
-          lastEditedBy: user.id
+          lastEditedBy: user.id,
+          lastEditedByFullName: user.full_name || user.email
         });
         
         // Save version with NEW content after updating
@@ -472,7 +486,8 @@ export default function SuggestionDetail() {
           topicId: suggestion.topicId,
           content: suggestion.newContent,
           order: newOrder,
-          lastEditedBy: user.id
+          lastEditedBy: user.id,
+          lastEditedByFullName: user.full_name || user.email
         });
         
         // Create initial version for new section
@@ -681,7 +696,7 @@ export default function SuggestionDetail() {
                 </Badge>
 
                 <span className="text-xs text-slate-500">
-                  {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
+                  {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion)}</Link>
                 </span>
               </div>
               {suggestion.status === 'pending' && suggestion.timerEndsAt && (
@@ -906,7 +921,7 @@ export default function SuggestionDetail() {
                   <div key={arg.id} className="p-3 bg-green-50 border border-green-200 rounded-lg">
                     <p className="text-sm text-slate-700">{arg.content}</p>
                     <div className="text-xs text-slate-500 mt-2">
-                      {t('by')} {getUserName(arg.created_by)} • {new Date(arg.created_date).toLocaleDateString()}
+                      {t('by')} {getUserName(arg)} • {new Date(arg.created_date).toLocaleDateString()}
                     </div>
                   </div>
                 ))
@@ -965,7 +980,7 @@ export default function SuggestionDetail() {
                   <div key={arg.id} className="p-3 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-sm text-slate-700">{arg.content}</p>
                     <div className="text-xs text-slate-500 mt-2">
-                      {t('by')} {getUserName(arg.created_by)} • {new Date(arg.created_date).toLocaleDateString()}
+                      {t('by')} {getUserName(arg)} • {new Date(arg.created_date).toLocaleDateString()}
                     </div>
                   </div>
                 ))

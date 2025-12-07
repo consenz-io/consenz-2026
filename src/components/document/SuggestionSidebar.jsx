@@ -292,12 +292,13 @@ export default function SuggestionSidebar({
       if (!user) throw new Error(t('mustBeLoggedIn'));
       if (!content.trim()) throw new Error(t('argumentContentRequired'));
 
+      const currentUser = await base44.auth.me();
       await base44.entities.Argument.create({
         suggestionId,
         type,
         content: content.trim(),
         convincedCount: 0,
-        createdByFullName: user?.full_name || user?.email
+        createdByFullName: currentUser?.full_name || currentUser?.email
       });
     },
     onSuccess: () => {

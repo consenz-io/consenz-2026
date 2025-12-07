@@ -222,7 +222,7 @@ export default function NewSectionSuggestionCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap mb-3">
               <span className="text-sm md:text-base font-semibold text-slate-900">
-                הצעה לסעיף חדש מאת {getUserName(suggestion.created_by)}
+                הצעה לסעיף חדש מאת {getUserName(suggestion)}
               </span>
             </div>
             {suggestion.explanation && typeof suggestion.explanation === 'string' && (

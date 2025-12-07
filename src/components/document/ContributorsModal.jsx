@@ -135,13 +135,51 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       }
     });
     
+    // Try to get names from entities instead of relying on User entity
+    const namesFromEntities = new Map();
+    
+    // Collect names from suggestions
+    suggestions.forEach(s => {
+      if (s.created_by && s.createdByFullName) {
+        namesFromEntities.set(s.created_by, s.createdByFullName);
+      }
+    });
+    
+    // Collect names from sections
+    sections.forEach(s => {
+      if (s.created_by && s.lastEditedByFullName) {
+        namesFromEntities.set(s.created_by, s.lastEditedByFullName);
+      }
+    });
+    
+    // Collect names from votes
+    allVotes.forEach(v => {
+      if (v.created_by && v.voterFullName) {
+        namesFromEntities.set(v.created_by, v.voterFullName);
+      }
+    });
+    
+    // Collect names from arguments
+    allArguments.forEach(arg => {
+      if (arg.created_by && arg.createdByFullName) {
+        namesFromEntities.set(arg.created_by, arg.createdByFullName);
+      }
+    });
+    
+    // Collect names from comments
+    allComments.forEach(c => {
+      if (c.created_by && c.createdByFullName) {
+        namesFromEntities.set(c.created_by, c.createdByFullName);
+      }
+    });
+    
     // הוספת משתמשים שלא נמצאו ב-DB (יש להם created_by אבל אין להם רשומת User)
     contributorEmails.forEach(email => {
       if (!foundEmails.has(email) && email) {
         contributorsList.push({
           id: email, // שימוש באימייל כ-ID זמני
           email: email,
-          full_name: 'משתמש לא רשום', // שם ברור במקום חלק מאימייל
+          full_name: namesFromEntities.get(email) || 'Unknown User',
           role: 'user'
         });
       }
