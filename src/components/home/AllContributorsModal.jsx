@@ -24,14 +24,12 @@ export default function AllContributorsModal({
     if (u.email) emailToUser.set(u.email, u);
   });
 
-  // Enrich contributors with full_name from User entity
+  // Contributors already enriched from parent component, just add role from User entity if available
   const enrichedContributors = contributors.map(contributor => {
     const user = emailToUser.get(contributor.email);
-    const displayName = user?.full_name?.trim() || 'Anonymous';
     
     return {
       ...contributor,
-      full_name: displayName,
       role: user?.role || contributor.role || 'user'
     };
   });
