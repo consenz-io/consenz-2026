@@ -64,32 +64,21 @@ export default function SectionCarousel({
     return new Date(b.created_date) - new Date(a.created_date);
   });
   
-  // אם היוזר צופה בהצעה שהתקבלה - נשמור אותה כדי להמשיך להציג
+  // מעקב אחרי שינוי סטטוס להצגת אנימציה - עובד על כל ההצעות
   React.useEffect(() => {
-    if (currentSuggestionId && currentSuggestionId !== 'current') {
-      // בדוק אם ההצעה הנוכחית כבר לא ב-pending אבל היוזר עדיין צופה בה
-      const suggestionInPending = pendingSuggestions.find(s => s.id === currentSuggestionId);
-      if (!suggestionInPending && !recentlyAcceptedSuggestions[currentSuggestionId]) {
-        // ההצעה נעלמה מה-pending - כנראה התקבלה
-        // נחפש אותה בקאש או נשמור גרסה אחרונה שראינו
-        const lastKnownVersion = allViews.find(v => v.id === currentSuggestionId)?.data;
-        if (lastKnownVersion) {
-          setRecentlyAcceptedSuggestions(prev => ({
-            ...prev,
-            [currentSuggestionId]: { ...lastKnownVersion, status: 'accepted' }
-          }));
-        }
-      }
-    }
-  }, [pendingSuggestions, currentSuggestionId]);
-
-  // מעקב אחרי שינוי סטטוס להצגת אנימציה - רק פעם אחת לכל הצעה
-  React.useEffect(() => {
-    pendingSuggestions.forEach(suggestion => {
+    allSectionSuggestions.forEach(suggestion => {
       const prevStatus = prevSuggestionsStatusRef.current[suggestion.id];
+      
+      // זיהוי מעבר מ-pending ל-accepted
       if (prevStatus === 'pending' && suggestion.status === 'accepted' && !hasAnimatedRef.current.has(suggestion.id)) {
         hasAnimatedRef.current.add(suggestion.id);
         console.log('[EDIT ANIMATION] Starting celebration for suggestion:', suggestion.id);
+        
+        // אם המשתמש לא צופה בהצעה הזו - מעביר אותו אליה
+        if (currentSuggestionId !== suggestion.id) {
+          setCurrentSuggestionId(suggestion.id);
+        }
+        
         setAnimationPhases(prev => ({ ...prev, [suggestion.id]: 'celebrating' }));
         
         // שלב 1: חגיגה (3 שניות)
@@ -110,33 +99,36 @@ export default function SectionCarousel({
           setAnimationPhases(prev => ({ ...prev, [suggestion.id]: 'hidden' }));
           // חוזרים לתצוגת הסעיף הנוכחי אחרי שהאנימציה הסתיימה
           setCurrentSuggestionId('current');
+          // רענון הסעיפים כדי לקבל את השינוי
+          queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
         }, 6000);
       }
+      
       prevSuggestionsStatusRef.current[suggestion.id] = suggestion.status;
     });
-  }, [pendingSuggestions]);
+  }, [allSectionSuggestions, currentSuggestionId, document.id, queryClient]);
 
-  // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות + הצעות שהתקבלו אבל היוזר עדיין צופה בהן
+  // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות + הצעות באנימציה
   const allViews = React.useMemo(() => {
     const views = [
       { type: 'current', data: section, id: 'current' },
       ...sortedSuggestions.map(s => ({ type: 'suggestion', data: s, id: s.id }))
     ];
     
-    // אם היוזר צופה בהצעה שהתקבלה ועדיין לא נמצאת ברשימה - נוסיף אותה
-    if (currentSuggestionId && 
-        currentSuggestionId !== 'current' && 
-        !views.find(v => v.id === currentSuggestionId) &&
-        recentlyAcceptedSuggestions[currentSuggestionId]) {
-      views.push({
-        type: 'suggestion',
-        data: recentlyAcceptedSuggestions[currentSuggestionId],
-        id: currentSuggestionId
-      });
-    }
+    // אם יש הצעה באנימציה שכבר לא ב-pending - נוסיף אותה לתצוגה
+    allSectionSuggestions.forEach(suggestion => {
+      const animationPhase = animationPhases[suggestion.id];
+      if (animationPhase && animationPhase !== 'hidden' && !views.find(v => v.id === suggestion.id)) {
+        views.push({
+          type: 'suggestion',
+          data: suggestion,
+          id: suggestion.id
+        });
+      }
+    });
     
     return views;
-  }, [section, sortedSuggestions, currentSuggestionId, recentlyAcceptedSuggestions]);
+  }, [section, sortedSuggestions, allSectionSuggestions, animationPhases]);
   
   // מחשב את ה-index הנוכחי לפי ה-ID
   const currentIndex = React.useMemo(() => {
@@ -179,8 +171,6 @@ export default function SectionCarousel({
 
   const isFirstView = currentIndex === 0;
   const isLastView = currentIndex === allViews.length - 1;
-
-  const queryClient = useQueryClient();
 
   const languageNames = {
     en: "English",
