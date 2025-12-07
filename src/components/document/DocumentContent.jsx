@@ -836,8 +836,10 @@ Return ONLY the translated text:`;
 
             // Award points for pro vote
             if (vote === 'pro' && document.gamificationEnabled) {
-              const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
-              if (suggestionCreatorList.length > 0) {
+              const suggestionCreatorEmail = suggestion.created_by;
+              if (suggestionCreatorEmail) {
+                const suggestionCreatorList = await base44.entities.User.filter({ email: suggestionCreatorEmail });
+                if (suggestionCreatorList.length > 0) {
                 const suggestionCreator = suggestionCreatorList[0];
                 const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
                 if (freshUser) {
@@ -850,11 +852,12 @@ Return ONLY the translated text:`;
                     action: 'vote_received',
                     description: `קיבל הצבעה בעד על הצעת עריכת כותרת`,
                     relatedEntityType: 'topic'
-                  });
-                }
-              }
-            }
-          }
+                    });
+                    }
+                    }
+                    }
+                    }
+                    }
         }
         
         // עדכון ההצעה עם הערכים החדשים
