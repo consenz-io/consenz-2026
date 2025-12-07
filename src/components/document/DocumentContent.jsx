@@ -100,7 +100,50 @@ export default function DocumentContent({
     });
 
     const checkAndAutoAccept = async () => {
-      // בדיקת הצעות עריכת כותרות נושאים בלבד - הצעות סעיפים מטופלות ב-voteMutation
+      // בדיקת הצעות סעיפים שעברו את הסף אבל לא התקבלו
+      const pendingSuggestions = suggestions.filter(s => s.status === 'pending' && s.type !== 'new_section');
+      for (const suggestion of pendingSuggestions) {
+        const consensuses = document.consensuses || [];
+        let threshold;
+        if (consensuses.length > 0) {
+          const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
+          threshold = Math.max(1, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
+        } else {
+          threshold = document.threshold || 2;
+        }
+        const delta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
+        const shouldAccept = delta >= threshold;
+
+        if (shouldAccept && !hasCheckedRef.current.has(`${suggestion.id}-accepted`)) {
+          console.log('[AUTO-ACCEPT SECTION] Auto-accepting section suggestion:', suggestion.id);
+          hasCheckedRef.current.add(`${suggestion.id}-accepted`);
+          
+          try {
+            const acceptingUserId = user?.id || suggestion.created_by;
+            const accepted = await autoAcceptSuggestion(suggestion, acceptingUserId, document);
+            if (accepted) {
+              // רענון הסעיפים אחרי 7 שניות (אחרי שהאנימציה נעלמה לגמרי)
+              setTimeout(() => {
+                Promise.all([
+                  queryClient.invalidateQueries({ queryKey: ['sections', document.id] }),
+                  queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
+                  queryClient.invalidateQueries({ queryKey: ['versions', document.id] })
+                ]);
+              }, 7000);
+              
+              // רענון הצעות והמסמך מיד (כדי שהאנימציה תתחיל)
+              queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
+              queryClient.invalidateQueries({ queryKey: ['document', document.id] });
+              queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
+            }
+          } catch (err) {
+            console.error('[AUTO-ACCEPT SECTION] Error:', err);
+            hasCheckedRef.current.delete(`${suggestion.id}-accepted`);
+          }
+        }
+      }
+      
+      // בדיקת הצעות עריכת כותרות נושאים
       if (topicEditSuggestions && topicEditSuggestions.length > 0) {
         for (const topicSuggestion of topicEditSuggestions) {
           if (topicSuggestion.status !== 'pending') continue;
@@ -139,7 +182,7 @@ export default function DocumentContent({
     };
 
     checkAndAutoAccept();
-  }, [topicEditSuggestions, document, user, queryClient]);
+  }, [topicEditSuggestions, document, user, queryClient, suggestions]);
 
   const { data: sectionComments } = useQuery({
     queryKey: ['sectionComments', document?.id],
