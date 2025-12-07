@@ -117,12 +117,23 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
 
     // Section editors
     sections.forEach(s => {
+      // Section creator
       if (s.created_by) {
         const existing = contributorMap.get(s.created_by);
         contributorMap.set(s.created_by, {
           email: s.created_by,
           name: s.lastEditedByFullName || existing?.name || null,
           userId: s.lastEditedBy || existing?.userId || null
+        });
+      }
+      
+      // Last editor (if different and if it's an email)
+      if (s.lastEditedBy && s.lastEditedBy.includes('@') && s.lastEditedBy !== s.created_by) {
+        const existing = contributorMap.get(s.lastEditedBy);
+        contributorMap.set(s.lastEditedBy, {
+          email: s.lastEditedBy,
+          name: s.lastEditedByFullName || existing?.name || null,
+          userId: existing?.userId || null
         });
       }
     });
