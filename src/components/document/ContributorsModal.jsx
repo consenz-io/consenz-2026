@@ -38,6 +38,55 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     staleTime: 30000,
   });
 
+  // Fetch only relevant votes/comments/arguments for this document's suggestions/sections
+  const suggestionIds = useMemo(() => suggestions.map(s => s.id), [suggestions]);
+  const sectionIds = useMemo(() => sections.map(s => s.id), [sections]);
+
+  const { data: relevantVotes = [] } = useQuery({
+    queryKey: ['documentVotes', documentId],
+    queryFn: async () => {
+      if (suggestionIds.length === 0) return [];
+      const allVotes = await base44.entities.Vote.list();
+      return allVotes.filter(v => suggestionIds.includes(v.suggestionId));
+    },
+    enabled: isOpen && suggestionIds.length > 0,
+    staleTime: 30000,
+  });
+
+  const { data: relevantComments = [] } = useQuery({
+    queryKey: ['documentComments', documentId],
+    queryFn: async () => {
+      const comments = [];
+      if (suggestionIds.length > 0) {
+        const suggComments = await base44.entities.Comment.filter({ rootEntityType: 'suggestion' });
+        comments.push(...suggComments.filter(c => suggestionIds.includes(c.rootEntityId)));
+      }
+      if (sectionIds.length > 0) {
+        const sectComments = await base44.entities.Comment.filter({ rootEntityType: 'section' });
+        comments.push(...sectComments.filter(c => sectionIds.includes(c.rootEntityId)));
+      }
+      const docComments = await base44.entities.Comment.filter({ 
+        rootEntityType: 'document',
+        rootEntityId: documentId 
+      });
+      comments.push(...docComments);
+      return comments;
+    },
+    enabled: isOpen,
+    staleTime: 30000,
+  });
+
+  const { data: relevantArguments = [] } = useQuery({
+    queryKey: ['documentArguments', documentId],
+    queryFn: async () => {
+      if (suggestionIds.length === 0) return [];
+      const allArgs = await base44.entities.Argument.list();
+      return allArgs.filter(arg => suggestionIds.includes(arg.suggestionId));
+    },
+    enabled: isOpen && suggestionIds.length > 0,
+    staleTime: 30000,
+  });
+
   const { data: allUsers = [] } = useQuery({
     queryKey: ['allUsers'],
     queryFn: () => base44.entities.User.list(),
@@ -45,50 +94,40 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     staleTime: 60000,
   });
 
-  const { data: allVotes = [] } = useQuery({
-    queryKey: ['allVotes'],
-    queryFn: () => base44.entities.Vote.list(),
-    enabled: isOpen && suggestions.length > 0,
-    staleTime: 30000,
-  });
-
-  const { data: allComments = [] } = useQuery({
-    queryKey: ['allComments'],
-    queryFn: () => base44.entities.Comment.list(),
-    enabled: isOpen,
-    staleTime: 30000,
-  });
-
-  const { data: allArguments = [] } = useQuery({
-    queryKey: ['allArguments'],
-    queryFn: () => base44.entities.Argument.list(),
-    enabled: isOpen && suggestions.length > 0,
-    staleTime: 30000,
-  });
-
   const { contributors, loading } = useMemo(() => {
-    if (!document || !allUsers.length) {
+    if (!document) {
       return { contributors: [], loading: true };
     }
 
     const contributorEmails = new Set();
+    const namesFromEntities = new Map();
     
     // Document creator
     if (document.created_by) contributorEmails.add(document.created_by);
 
     // Suggestion creators
     suggestions.forEach(s => {
-      if (s.created_by) contributorEmails.add(s.created_by);
+      if (s.created_by) {
+        contributorEmails.add(s.created_by);
+        if (s.createdByFullName) namesFromEntities.set(s.created_by, s.createdByFullName);
+      }
     });
 
-    // Voters - גם לפי userId וגם לפי created_by של ההצבעה
-    const suggestionIds = new Set(suggestions.map(s => s.id));
+    // Section editors
+    sections.forEach(s => {
+      if (s.created_by) {
+        contributorEmails.add(s.created_by);
+        if (s.lastEditedByFullName) namesFromEntities.set(s.created_by, s.lastEditedByFullName);
+      }
+    });
+
+    // Voters
     const voterIds = new Set();
-    allVotes.forEach(v => {
-      if (suggestionIds.has(v.suggestionId)) {
-        voterIds.add(v.userId);
-        // גם להוסיף את created_by של ההצבעה ישירות
-        if (v.created_by) contributorEmails.add(v.created_by);
+    relevantVotes.forEach(v => {
+      voterIds.add(v.userId);
+      if (v.created_by) {
+        contributorEmails.add(v.created_by);
+        if (v.voterFullName) namesFromEntities.set(v.created_by, v.voterFullName);
       }
     });
     allUsers.forEach(user => {
@@ -96,35 +135,22 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     });
 
     // Argument writers
-    allArguments.forEach(arg => {
-      if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
+    relevantArguments.forEach(arg => {
+      if (arg.created_by) {
         contributorEmails.add(arg.created_by);
+        if (arg.createdByFullName) namesFromEntities.set(arg.created_by, arg.createdByFullName);
       }
     });
 
-    // Commenters on suggestions
-    allComments.forEach(c => {
-      if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId) && c.created_by) {
+    // Commenters
+    relevantComments.forEach(c => {
+      if (c.created_by) {
         contributorEmails.add(c.created_by);
+        if (c.createdByFullName) namesFromEntities.set(c.created_by, c.createdByFullName);
       }
     });
 
-    // Commenters on sections
-    const sectionIds = new Set(sections.map(s => s.id));
-    allComments.forEach(c => {
-      if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId) && c.created_by) {
-        contributorEmails.add(c.created_by);
-      }
-    });
-
-    // Document comments
-    allComments.forEach(c => {
-      if (c.rootEntityType === 'document' && c.rootEntityId === documentId && c.created_by) {
-        contributorEmails.add(c.created_by);
-      }
-    });
-
-    // מחזירים משתמשים שקיימים ב-DB, ועבור אימיילים שלא קיימים ב-DB יוצרים אובייקט בסיסי
+    // Build contributors list
     const contributorsList = [];
     const foundEmails = new Set();
     
@@ -135,49 +161,11 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       }
     });
     
-    // Try to get names from entities instead of relying on User entity
-    const namesFromEntities = new Map();
-    
-    // Collect names from suggestions
-    suggestions.forEach(s => {
-      if (s.created_by && s.createdByFullName) {
-        namesFromEntities.set(s.created_by, s.createdByFullName);
-      }
-    });
-    
-    // Collect names from sections
-    sections.forEach(s => {
-      if (s.created_by && s.lastEditedByFullName) {
-        namesFromEntities.set(s.created_by, s.lastEditedByFullName);
-      }
-    });
-    
-    // Collect names from votes
-    allVotes.forEach(v => {
-      if (v.created_by && v.voterFullName) {
-        namesFromEntities.set(v.created_by, v.voterFullName);
-      }
-    });
-    
-    // Collect names from arguments
-    allArguments.forEach(arg => {
-      if (arg.created_by && arg.createdByFullName) {
-        namesFromEntities.set(arg.created_by, arg.createdByFullName);
-      }
-    });
-    
-    // Collect names from comments
-    allComments.forEach(c => {
-      if (c.created_by && c.createdByFullName) {
-        namesFromEntities.set(c.created_by, c.createdByFullName);
-      }
-    });
-    
-    // הוספת משתמשים שלא נמצאו ב-DB (יש להם created_by אבל אין להם רשומת User)
+    // Add users not found in DB
     contributorEmails.forEach(email => {
       if (!foundEmails.has(email) && email) {
         contributorsList.push({
-          id: email, // שימוש באימייל כ-ID זמני
+          id: email,
           email: email,
           full_name: namesFromEntities.get(email) || 'Unknown User',
           role: 'user'
@@ -186,7 +174,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     });
     
     return { contributors: contributorsList, loading: false };
-  }, [document, suggestions, sections, allUsers, allVotes, allComments, allArguments, documentId]);
+  }, [document, suggestions, sections, allUsers, relevantVotes, relevantComments, relevantArguments]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
