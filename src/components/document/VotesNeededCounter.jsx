@@ -46,7 +46,7 @@ export default function VotesNeededCounter({ suggestion, document, sectionId }) 
     return null;
   }
 
-  if (votesNeeded === 0) {
+  if (votesNeeded === 0 && suggestion.status === 'accepted') {
     return (
       <Badge className="bg-green-100 text-green-800 border-green-300 flex items-center gap-1">
         <TrendingUp className="w-3 h-3" />
