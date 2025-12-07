@@ -19,6 +19,8 @@ import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAuto
 import { useLanguage } from "@/components/LanguageContext";
 import { notifyVoteOnSuggestion, notifySuggestionStatusChange } from "../notifications/createNotification";
 import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
+import { toast } from "sonner";
 
 export default function SuggestionSidebar({ 
   suggestionId, 
@@ -173,6 +175,19 @@ export default function SuggestionSidebar({
       if (shouldAccept && suggestion.status === 'pending') {
         const accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, doc);
         if (accepted) {
+          // אנימציית חגיגה
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+          
+          // הודעת הצלחה
+          toast.success('🎉 ' + t('notifAcceptedTitle'), {
+            description: t('notifAcceptedMessage').replace('{title}', suggestion.title || ''),
+            duration: 4000
+          });
+          
           return { accepted: true };
         }
       }
@@ -255,6 +270,11 @@ export default function SuggestionSidebar({
         queryClient.invalidateQueries({ queryKey: ['allVersions'] });
         queryClient.invalidateQueries({ queryKey: ['document', doc?.id] });
         queryClient.invalidateQueries({ queryKey: ['publicDocuments'] });
+        
+        // סגירת הסיידבר אחרי 2.5 שניות
+        setTimeout(() => {
+          onClose();
+        }, 2500);
       }
     },
   });
