@@ -83,6 +83,11 @@ export default function NewSectionSuggestionCard({
     return null;
   }
 
+  // אם ההצעה התקבלה אבל האנימציה לא התחילה - אל תציג
+  if (suggestion.status === 'accepted' && animationPhase === 'none') {
+    return null;
+  }
+
   // שלב החגיגה - מסגרת ירוקה ואייקון (3 שניות)
   if (animationPhase === 'celebrating') {
     return (
