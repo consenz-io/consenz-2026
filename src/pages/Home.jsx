@@ -170,7 +170,8 @@ export default function Home() {
     
     const list = Array.from(uniqueEmails).map(email => {
       const user = emailToUser[email];
-      const displayName = user?.full_name?.trim() || 'Anonymous';
+      // Priority: stored name from entities > User entity full_name > fallback to Anonymous
+      const displayName = namesFromEntities.get(email)?.trim() || user?.full_name?.trim() || user?.name?.trim() || 'Anonymous';
       return {
         email,
         full_name: displayName,
