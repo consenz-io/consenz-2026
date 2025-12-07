@@ -224,23 +224,14 @@ export default function TranslateAllButton({ document, topics, sections }) {
             <Button
               variant={globalShowTranslated ? "default" : "outline"}
               size="sm"
-              onClick={() => setGlobalShowTranslated(!globalShowTranslated)}
+              onClick={() => setGlobalShowTranslated(true)}
               className={globalShowTranslated 
                 ? "bg-green-600 hover:bg-green-700 text-white gap-2" 
                 : "border-slate-300 text-slate-700 hover:bg-slate-100 gap-2"
               }
             >
-              {globalShowTranslated ? (
-                <>
-                  <Eye className="w-4 h-4" />
-                  {t('showTranslation')}
-                </>
-              ) : (
-                <>
-                  <EyeOff className="w-4 h-4" />
-                  {t('showOriginal')}
-                </>
-              )}
+              <Eye className="w-4 h-4" />
+              {t('showTranslation')}
             </Button>
           )}
         </>
