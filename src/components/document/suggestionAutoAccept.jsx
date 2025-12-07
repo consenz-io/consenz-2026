@@ -277,7 +277,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       });
     }
     
-    // שליחת התראה ונקודות - מחכים לנוטיפיקציות כדי להבטיח שהן נשלחות
+    // שליחת התראה ונקודות
     try {
       console.log('[AUTO ACCEPT] Sending notification for suggestion:', freshSuggestion.id, 'created_by:', freshSuggestion.created_by);
       await notifySuggestionStatusChange({ suggestion: freshSuggestion, newStatus: 'accepted' });
@@ -287,41 +287,33 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       console.error('[AUTO ACCEPT NOTIFICATION ERROR] Stack:', notifError.stack);
     }
     
-    // נקודות ברקע - לא חוסם
-    const backgroundTasks = async () => {
+    // Award 200 points to suggestion creator when accepted (only if gamification enabled)
+    const gamificationEnabled = document?.gamificationEnabled || false;
+    if (gamificationEnabled && freshSuggestion.created_by) {
       try {
-      
-      // Award 200 points to suggestion creator when accepted (only if gamification enabled)
-      const gamificationEnabled = document?.gamificationEnabled || false;
-      if (gamificationEnabled && freshSuggestion.created_by) {
-        try {
-          const suggestionCreatorList = await base44.entities.User.filter({ email: freshSuggestion.created_by });
-          if (suggestionCreatorList.length > 0) {
-            const creatorId = suggestionCreatorList[0].id;
-            const freshUser = await base44.entities.User.filter({ id: creatorId }).then(u => u[0]);
-            if (freshUser) {
-              const newPoints = (freshUser.points || 1000) + 200;
-              await Promise.all([
-                base44.entities.User.update(freshUser.id, { points: newPoints }),
-                base44.entities.PointsTransaction.create({
-                  userId: creatorId,
-                  amount: 200,
-                  action: 'suggestion_accepted',
-                  description: `ההצעה שלך התקבלה: ${freshSuggestion.title || 'הצעה'}`,
-                  relatedEntityId: freshSuggestion.id,
-                  relatedEntityType: 'suggestion'
-                })
-              ]);
-            }
+        const suggestionCreatorList = await base44.entities.User.filter({ email: freshSuggestion.created_by });
+        if (suggestionCreatorList.length > 0) {
+          const creatorId = suggestionCreatorList[0].id;
+          const freshUser = await base44.entities.User.filter({ id: creatorId }).then(u => u[0]);
+          if (freshUser) {
+            const newPoints = (freshUser.points || 1000) + 200;
+            await Promise.all([
+              base44.entities.User.update(freshUser.id, { points: newPoints }),
+              base44.entities.PointsTransaction.create({
+                userId: creatorId,
+                amount: 200,
+                action: 'suggestion_accepted',
+                description: `ההצעה שלך התקבלה: ${freshSuggestion.title || 'הצעה'}`,
+                relatedEntityId: freshSuggestion.id,
+                relatedEntityType: 'suggestion'
+              })
+            ]);
           }
-        } catch (pointsError) {
-          console.error('[POINTS DEBUG] Error awarding points:', pointsError);
         }
+      } catch (pointsError) {
+        console.error('[POINTS DEBUG] Error awarding points:', pointsError);
       }
-    };
-    
-    // הפעלה ברקע - לא מחכים
-    backgroundTasks();
+    }
     
     return true;
   } catch (error) {
