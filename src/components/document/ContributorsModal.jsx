@@ -16,7 +16,6 @@ import { useLanguage } from "@/components/LanguageContext";
 export default function ContributorsModal({ isOpen, onClose, documentId }) {
   const { t } = useLanguage();
 
-  // Fetch all data in parallel with caching
   const { data: document } = useQuery({
     queryKey: ['document', documentId],
     queryFn: () => base44.entities.Document.filter({ id: documentId }).then(d => d[0]),
@@ -38,7 +37,6 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     staleTime: 30000,
   });
 
-  // Fetch only relevant votes/comments/arguments for this document's suggestions/sections
   const suggestionIds = useMemo(() => suggestions.map(s => s.id), [suggestions]);
   const sectionIds = useMemo(() => sections.map(s => s.id), [sections]);
 
@@ -87,121 +85,69 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     staleTime: 30000,
   });
 
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
-    enabled: isOpen,
-    staleTime: 60000,
-  });
-
   const { contributors, loading } = useMemo(() => {
     if (!document) {
       return { contributors: [], loading: true };
     }
 
-    const contributorMap = new Map(); // email -> { email, name, userId }
+    // Map: email -> { full_name, email }
+    const contributorMap = new Map();
     
-    // Document creator
+    // Helper to add contributor with name priority from entity fields
+    const addContributor = (email, name) => {
+      if (!email) return;
+      const existing = contributorMap.get(email);
+      if (!existing || (!existing.full_name && name)) {
+        contributorMap.set(email, {
+          email,
+          full_name: name || existing?.full_name || null
+        });
+      }
+    };
+
+    // Document creator (no name stored in document entity)
     if (document.created_by) {
-      contributorMap.set(document.created_by, {
-        email: document.created_by,
-        name: null,
-        userId: null
-      });
+      addContributor(document.created_by, null);
     }
 
     // Suggestion creators
     suggestions.forEach(s => {
-      if (s.created_by) {
-        const existing = contributorMap.get(s.created_by);
-        contributorMap.set(s.created_by, {
-          email: s.created_by,
-          name: s.createdByFullName || existing?.name || null,
-          userId: existing?.userId || null
-        });
-      }
+      addContributor(s.created_by, s.createdByFullName);
     });
 
     // Section editors
     sections.forEach(s => {
-      // Section creator
-      if (s.created_by) {
-        const existing = contributorMap.get(s.created_by);
-        contributorMap.set(s.created_by, {
-          email: s.created_by,
-          name: s.lastEditedByFullName || existing?.name || null,
-          userId: s.lastEditedBy || existing?.userId || null
-        });
-      }
-      
-      // Last editor (if different and if it's an email)
-      if (s.lastEditedBy && s.lastEditedBy.includes('@') && s.lastEditedBy !== s.created_by) {
-        const existing = contributorMap.get(s.lastEditedBy);
-        contributorMap.set(s.lastEditedBy, {
-          email: s.lastEditedBy,
-          name: s.lastEditedByFullName || existing?.name || null,
-          userId: existing?.userId || null
-        });
+      addContributor(s.created_by, s.lastEditedByFullName);
+      if (s.lastEditedBy && s.lastEditedBy.includes('@')) {
+        addContributor(s.lastEditedBy, s.lastEditedByFullName);
       }
     });
 
-    // Voters - map userId to email using created_by
+    // Voters
     relevantVotes.forEach(v => {
-      if (v.created_by) {
-        const existing = contributorMap.get(v.created_by);
-        contributorMap.set(v.created_by, {
-          email: v.created_by,
-          name: v.voterFullName || existing?.name || null,
-          userId: v.userId || existing?.userId || null
-        });
-      }
+      addContributor(v.created_by, v.voterFullName);
     });
 
     // Argument writers
     relevantArguments.forEach(arg => {
-      if (arg.created_by) {
-        const existing = contributorMap.get(arg.created_by);
-        contributorMap.set(arg.created_by, {
-          email: arg.created_by,
-          name: arg.createdByFullName || existing?.name || null,
-          userId: existing?.userId || null
-        });
-      }
+      addContributor(arg.created_by, arg.createdByFullName);
     });
 
     // Commenters
     relevantComments.forEach(c => {
-      if (c.created_by) {
-        const existing = contributorMap.get(c.created_by);
-        contributorMap.set(c.created_by, {
-          email: c.created_by,
-          name: c.createdByFullName || existing?.name || null,
-          userId: existing?.userId || null
-        });
-      }
+      addContributor(c.created_by, c.createdByFullName);
     });
 
-    // Build contributors list - use full_name from User entity only
-    const emailToUser = new Map();
-    allUsers.forEach(u => {
-      if (u.email) emailToUser.set(u.email, u);
-    });
-
-    const contributorsList = Array.from(contributorMap.values()).map(({ email, name, userId }) => {
-      const user = emailToUser.get(email);
-      // Priority: stored name from entities > User entity full_name > fallback to Anonymous
-      const displayName = name?.trim() || user?.full_name?.trim() || user?.name?.trim() || 'Anonymous';
-      
-      return {
-        id: user?.id || userId || email,
-        email: email,
-        full_name: displayName,
-        role: user?.role || 'user'
-      };
-    });
+    // Build final list - use stored names or fallback to Anonymous
+    const contributorsList = Array.from(contributorMap.values()).map(({ email, full_name }) => ({
+      id: email,
+      email: email,
+      full_name: full_name?.trim() || 'Anonymous',
+      role: 'user'
+    }));
     
     return { contributors: contributorsList, loading: false };
-  }, [document, suggestions, sections, relevantVotes, relevantComments, relevantArguments, allUsers]);
+  }, [document, suggestions, sections, relevantVotes, relevantComments, relevantArguments]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -223,27 +169,22 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
           </div>
         ) : (
           <div className="space-y-2">
-            {contributors.map((user) => (
+            {contributors.map((contributor) => (
               <Link
-                key={user.id}
-                to={`${createPageUrl("Profile")}?userId=${user.id}`}
+                key={contributor.id}
+                to={`${createPageUrl("Profile")}?userId=${contributor.id}`}
                 className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
                   <span className="text-white font-medium text-sm md:text-base">
-                    {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                    {contributor.full_name?.charAt(0)?.toUpperCase() || 'U'}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm md:text-base text-slate-900 truncate">
-                    {user.full_name}
+                    {contributor.full_name}
                   </p>
                 </div>
-                {user.role === 'admin' && (
-                  <Badge variant="outline" className="text-[10px] md:text-xs">
-                    {t('admin')}
-                  </Badge>
-                )}
               </Link>
             ))}
           </div>
