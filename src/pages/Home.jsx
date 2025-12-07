@@ -130,11 +130,49 @@ export default function Home() {
     const emailToUser = {};
     allUsers.forEach(u => { emailToUser[u.email] = u; });
     
+    // Try to get names from entities instead of relying on User entity
+    const namesFromEntities = new Map();
+    
+    // Collect names from suggestions
+    allSuggestions.forEach(s => {
+      if (s.created_by && s.createdByFullName) {
+        namesFromEntities.set(s.created_by, s.createdByFullName);
+      }
+    });
+    
+    // Collect names from sections
+    allSections.forEach(s => {
+      if (s.created_by && s.lastEditedByFullName) {
+        namesFromEntities.set(s.created_by, s.lastEditedByFullName);
+      }
+    });
+    
+    // Collect names from votes
+    allVotes.forEach(v => {
+      if (v.created_by && v.voterFullName) {
+        namesFromEntities.set(v.created_by, v.voterFullName);
+      }
+    });
+    
+    // Collect names from arguments
+    allArguments.forEach(arg => {
+      if (arg.created_by && arg.createdByFullName) {
+        namesFromEntities.set(arg.created_by, arg.createdByFullName);
+      }
+    });
+    
+    // Collect names from comments
+    allComments.forEach(c => {
+      if (c.created_by && c.createdByFullName) {
+        namesFromEntities.set(c.created_by, c.createdByFullName);
+      }
+    });
+    
     const list = Array.from(uniqueEmails).map(email => {
       const user = emailToUser[email];
       return {
         email,
-        name: user?.full_name || email,
+        name: namesFromEntities.get(email) || user?.full_name || 'Unknown User',
         id: user?.id
       };
     }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));

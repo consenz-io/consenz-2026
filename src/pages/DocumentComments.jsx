@@ -93,9 +93,20 @@ export default function DocumentComments() {
     initialData: [],
   });
 
-  const getUserName = (email) => {
+  const getUserName = (emailOrEntity) => {
+    // If it's an entity with createdByFullName, use that
+    if (typeof emailOrEntity === 'object' && emailOrEntity?.createdByFullName && emailOrEntity.createdByFullName.trim()) {
+      return emailOrEntity.createdByFullName;
+    }
+    
+    // Otherwise treat as email
+    const email = typeof emailOrEntity === 'string' ? emailOrEntity : emailOrEntity?.created_by;
     const user = users.find(u => u.email === email);
-    return user?.full_name || email;
+    
+    if (user?.full_name && user.full_name.trim()) {
+      return user.full_name;
+    }
+    return 'Unknown User';
   };
 
   // Translate comment mutation
@@ -351,7 +362,7 @@ export default function DocumentComments() {
                       <div key={comment.id} className={`${isRTL ? 'text-right' : 'text-left'}`}>
                         <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
                           <div className={`flex items-center gap-2 ${isRTL ? 'justify-start' : ''}`}>
-                            <span className="text-sm font-medium text-slate-900">{getUserName(comment.created_by)}</span>
+                            <span className="text-sm font-medium text-slate-900">{getUserName(comment)}</span>
                             <span className="text-xs text-slate-500">{new Date(comment.created_date).toLocaleDateString()}</span>
                             {needsCommentTranslation(comment) && (
                               translatingComment === comment.id ? (
