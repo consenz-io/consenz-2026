@@ -99,78 +99,96 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       return { contributors: [], loading: true };
     }
 
-    const contributorEmails = new Set();
-    const namesFromEntities = new Map();
+    const contributorMap = new Map(); // email -> { email, name }
     
     // Document creator
-    if (document.created_by) contributorEmails.add(document.created_by);
+    if (document.created_by) {
+      contributorMap.set(document.created_by, {
+        email: document.created_by,
+        name: null
+      });
+    }
 
     // Suggestion creators
     suggestions.forEach(s => {
       if (s.created_by) {
-        contributorEmails.add(s.created_by);
-        if (s.createdByFullName) namesFromEntities.set(s.created_by, s.createdByFullName);
+        contributorMap.set(s.created_by, {
+          email: s.created_by,
+          name: s.createdByFullName || contributorMap.get(s.created_by)?.name || null
+        });
       }
     });
 
     // Section editors
     sections.forEach(s => {
       if (s.created_by) {
-        contributorEmails.add(s.created_by);
-        if (s.lastEditedByFullName) namesFromEntities.set(s.created_by, s.lastEditedByFullName);
+        contributorMap.set(s.created_by, {
+          email: s.created_by,
+          name: s.lastEditedByFullName || contributorMap.get(s.created_by)?.name || null
+        });
+      }
+      if (s.lastEditedBy && s.lastEditedByFullName) {
+        // Try to map userId to email from allUsers
+        const user = allUsers.find(u => u.id === s.lastEditedBy);
+        if (user) {
+          contributorMap.set(user.email, {
+            email: user.email,
+            name: s.lastEditedByFullName || contributorMap.get(user.email)?.name || null
+          });
+        }
       }
     });
 
     // Voters
-    const voterIds = new Set();
     relevantVotes.forEach(v => {
-      voterIds.add(v.userId);
-      if (v.created_by) {
-        contributorEmails.add(v.created_by);
-        if (v.voterFullName) namesFromEntities.set(v.created_by, v.voterFullName);
+      // Try to get email from userId
+      const user = allUsers.find(u => u.id === v.userId);
+      if (user) {
+        contributorMap.set(user.email, {
+          email: user.email,
+          name: v.voterFullName || contributorMap.get(user.email)?.name || null
+        });
       }
-    });
-    allUsers.forEach(user => {
-      if (voterIds.has(user.id)) contributorEmails.add(user.email);
+      // Also add from created_by if exists
+      if (v.created_by) {
+        contributorMap.set(v.created_by, {
+          email: v.created_by,
+          name: v.voterFullName || contributorMap.get(v.created_by)?.name || null
+        });
+      }
     });
 
     // Argument writers
     relevantArguments.forEach(arg => {
       if (arg.created_by) {
-        contributorEmails.add(arg.created_by);
-        if (arg.createdByFullName) namesFromEntities.set(arg.created_by, arg.createdByFullName);
+        contributorMap.set(arg.created_by, {
+          email: arg.created_by,
+          name: arg.createdByFullName || contributorMap.get(arg.created_by)?.name || null
+        });
       }
     });
 
     // Commenters
     relevantComments.forEach(c => {
       if (c.created_by) {
-        contributorEmails.add(c.created_by);
-        if (c.createdByFullName) namesFromEntities.set(c.created_by, c.createdByFullName);
+        contributorMap.set(c.created_by, {
+          email: c.created_by,
+          name: c.createdByFullName || contributorMap.get(c.created_by)?.name || null
+        });
       }
     });
 
-    // Build contributors list
-    const contributorsList = [];
-    const foundEmails = new Set();
-    
-    allUsers.forEach(user => {
-      if (contributorEmails.has(user.email)) {
-        contributorsList.push(user);
-        foundEmails.add(user.email);
-      }
-    });
-    
-    // Add users not found in DB
-    contributorEmails.forEach(email => {
-      if (!foundEmails.has(email) && email) {
-        contributorsList.push({
-          id: email,
-          email: email,
-          full_name: namesFromEntities.get(email) || 'Unknown User',
-          role: 'user'
-        });
-      }
+    // Build contributors list - prioritize names from entities over User entity
+    const contributorsList = Array.from(contributorMap.values()).map(({ email, name }) => {
+      // Try to get user from allUsers for id
+      const user = allUsers.find(u => u.email === email);
+      
+      return {
+        id: user?.id || email,
+        email: email,
+        full_name: name || user?.full_name || 'Unknown User',
+        role: user?.role || 'user'
+      };
     });
     
     return { contributors: contributorsList, loading: false };
