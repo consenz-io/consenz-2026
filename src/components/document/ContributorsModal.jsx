@@ -87,34 +87,30 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     staleTime: 30000,
   });
 
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
-    enabled: isOpen,
-    staleTime: 60000,
-  });
-
   const { contributors, loading } = useMemo(() => {
     if (!document) {
       return { contributors: [], loading: true };
     }
 
-    const contributorMap = new Map(); // email -> { email, name }
+    const contributorMap = new Map(); // email -> { email, name, userId }
     
     // Document creator
     if (document.created_by) {
       contributorMap.set(document.created_by, {
         email: document.created_by,
-        name: null
+        name: null,
+        userId: null
       });
     }
 
     // Suggestion creators
     suggestions.forEach(s => {
       if (s.created_by) {
+        const existing = contributorMap.get(s.created_by);
         contributorMap.set(s.created_by, {
           email: s.created_by,
-          name: s.createdByFullName || contributorMap.get(s.created_by)?.name || null
+          name: s.createdByFullName || existing?.name || null,
+          userId: existing?.userId || null
         });
       }
     });
@@ -122,38 +118,23 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     // Section editors
     sections.forEach(s => {
       if (s.created_by) {
+        const existing = contributorMap.get(s.created_by);
         contributorMap.set(s.created_by, {
           email: s.created_by,
-          name: s.lastEditedByFullName || contributorMap.get(s.created_by)?.name || null
+          name: s.lastEditedByFullName || existing?.name || null,
+          userId: s.lastEditedBy || existing?.userId || null
         });
-      }
-      if (s.lastEditedBy && s.lastEditedByFullName) {
-        // Try to map userId to email from allUsers
-        const user = allUsers.find(u => u.id === s.lastEditedBy);
-        if (user) {
-          contributorMap.set(user.email, {
-            email: user.email,
-            name: s.lastEditedByFullName || contributorMap.get(user.email)?.name || null
-          });
-        }
       }
     });
 
-    // Voters
+    // Voters - map userId to email using created_by
     relevantVotes.forEach(v => {
-      // Try to get email from userId
-      const user = allUsers.find(u => u.id === v.userId);
-      if (user) {
-        contributorMap.set(user.email, {
-          email: user.email,
-          name: v.voterFullName || contributorMap.get(user.email)?.name || null
-        });
-      }
-      // Also add from created_by if exists
       if (v.created_by) {
+        const existing = contributorMap.get(v.created_by);
         contributorMap.set(v.created_by, {
           email: v.created_by,
-          name: v.voterFullName || contributorMap.get(v.created_by)?.name || null
+          name: v.voterFullName || existing?.name || null,
+          userId: v.userId || existing?.userId || null
         });
       }
     });
@@ -161,9 +142,11 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     // Argument writers
     relevantArguments.forEach(arg => {
       if (arg.created_by) {
+        const existing = contributorMap.get(arg.created_by);
         contributorMap.set(arg.created_by, {
           email: arg.created_by,
-          name: arg.createdByFullName || contributorMap.get(arg.created_by)?.name || null
+          name: arg.createdByFullName || existing?.name || null,
+          userId: existing?.userId || null
         });
       }
     });
@@ -171,28 +154,27 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     // Commenters
     relevantComments.forEach(c => {
       if (c.created_by) {
+        const existing = contributorMap.get(c.created_by);
         contributorMap.set(c.created_by, {
           email: c.created_by,
-          name: c.createdByFullName || contributorMap.get(c.created_by)?.name || null
+          name: c.createdByFullName || existing?.name || null,
+          userId: existing?.userId || null
         });
       }
     });
 
-    // Build contributors list - prioritize names from entities over User entity
-    const contributorsList = Array.from(contributorMap.values()).map(({ email, name }) => {
-      // Try to get user from allUsers for id
-      const user = allUsers.find(u => u.email === email);
-      
+    // Build contributors list using only entity data
+    const contributorsList = Array.from(contributorMap.values()).map(({ email, name, userId }) => {
       return {
-        id: user?.id || email,
+        id: userId || email,
         email: email,
-        full_name: name || user?.full_name || 'Unknown User',
-        role: user?.role || 'user'
+        full_name: name || 'Unknown User',
+        role: 'user'
       };
-    });
+    }).filter(c => c.full_name !== 'Unknown User'); // Filter out unknown users
     
     return { contributors: contributorsList, loading: false };
-  }, [document, suggestions, sections, allUsers, relevantVotes, relevantComments, relevantArguments]);
+  }, [document, suggestions, sections, relevantVotes, relevantComments, relevantArguments]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
