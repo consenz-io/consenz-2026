@@ -303,7 +303,7 @@ export default function SectionCarousel({
                 onClick={() => setCurrentSuggestionId('current')}
                 className="text-sm font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer transition-colors"
               >
-                הצעת עריכה לשינוי הסעיף
+                הצעת עריכה מאת {getUserName(currentView.data.created_by)}
               </button>
             )}
           </div>
