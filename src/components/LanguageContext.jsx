@@ -347,7 +347,7 @@ const translations = {
     draftTogetherTitle: "נסחו ביחד",
     platformDescription: "פלטפורמה לשיתוף פעולה לניסוח מסמכי מדיניות, חוקות והחלטות באמצעות הצבעה שקופה ואלגוריתמי קונצנזוס דינמיים.",
     getStarted: "התחל",
-    learnMore: "למד עוד",
+    learnMore: "למדו עוד",
     recentDocuments: "מסמכים אחרונים",
     browseContribute: "עיין ותרום למסמכים משותפים מתמשכים",
     
