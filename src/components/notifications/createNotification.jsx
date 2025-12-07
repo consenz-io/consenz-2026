@@ -307,9 +307,17 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
       }
     }
     
-    await batchCreateNotifications(notifications);
+    if (notifications.length > 0) {
+      console.log('[NOTIFICATION] Creating', notifications.length, 'notifications for suggestion:', suggestion.id);
+      await batchCreateNotifications(notifications);
+      console.log('[NOTIFICATION] Successfully created notifications');
+    } else {
+      console.warn('[NOTIFICATION] No notifications to create for suggestion:', suggestion.id);
+    }
   } catch (error) {
-    console.error('[NOTIFICATION ERROR]', error);
+    console.error('[NOTIFICATION ERROR] Failed to send notifications:', error);
+    console.error('[NOTIFICATION ERROR] Stack:', error.stack);
+    throw error; // זורקים את השגיאה כדי שנראה אותה
   }
 }
 
