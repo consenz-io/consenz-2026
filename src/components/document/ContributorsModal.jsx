@@ -16,6 +16,7 @@ import { useLanguage } from "@/components/LanguageContext";
 export default function ContributorsModal({ isOpen, onClose, documentId }) {
   const { t } = useLanguage();
 
+  // Fetch all data in parallel with caching
   const { data: document } = useQuery({
     queryKey: ['document', documentId],
     queryFn: () => base44.entities.Document.filter({ id: documentId }).then(d => d[0]),
@@ -37,117 +38,117 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     staleTime: 30000,
   });
 
-  const suggestionIds = useMemo(() => suggestions.map(s => s.id), [suggestions]);
-  const sectionIds = useMemo(() => sections.map(s => s.id), [sections]);
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list(),
+    enabled: isOpen,
+    staleTime: 60000,
+  });
 
-  const { data: relevantVotes = [] } = useQuery({
-    queryKey: ['documentVotes', documentId],
-    queryFn: async () => {
-      if (suggestionIds.length === 0) return [];
-      const allVotes = await base44.entities.Vote.list();
-      return allVotes.filter(v => suggestionIds.includes(v.suggestionId));
-    },
-    enabled: isOpen && suggestionIds.length > 0,
+  const { data: allVotes = [] } = useQuery({
+    queryKey: ['allVotes'],
+    queryFn: () => base44.entities.Vote.list(),
+    enabled: isOpen && suggestions.length > 0,
     staleTime: 30000,
   });
 
-  const { data: relevantComments = [] } = useQuery({
-    queryKey: ['documentComments', documentId],
-    queryFn: async () => {
-      const comments = [];
-      if (suggestionIds.length > 0) {
-        const suggComments = await base44.entities.Comment.filter({ rootEntityType: 'suggestion' });
-        comments.push(...suggComments.filter(c => suggestionIds.includes(c.rootEntityId)));
-      }
-      if (sectionIds.length > 0) {
-        const sectComments = await base44.entities.Comment.filter({ rootEntityType: 'section' });
-        comments.push(...sectComments.filter(c => sectionIds.includes(c.rootEntityId)));
-      }
-      const docComments = await base44.entities.Comment.filter({ 
-        rootEntityType: 'document',
-        rootEntityId: documentId 
-      });
-      comments.push(...docComments);
-      return comments;
-    },
+  const { data: allComments = [] } = useQuery({
+    queryKey: ['allComments'],
+    queryFn: () => base44.entities.Comment.list(),
     enabled: isOpen,
     staleTime: 30000,
   });
 
-  const { data: relevantArguments = [] } = useQuery({
-    queryKey: ['documentArguments', documentId],
-    queryFn: async () => {
-      if (suggestionIds.length === 0) return [];
-      const allArgs = await base44.entities.Argument.list();
-      return allArgs.filter(arg => suggestionIds.includes(arg.suggestionId));
-    },
-    enabled: isOpen && suggestionIds.length > 0,
+  const { data: allArguments = [] } = useQuery({
+    queryKey: ['allArguments'],
+    queryFn: () => base44.entities.Argument.list(),
+    enabled: isOpen && suggestions.length > 0,
     staleTime: 30000,
   });
 
   const { contributors, loading } = useMemo(() => {
-    if (!document) {
+    if (!document || !allUsers.length) {
       return { contributors: [], loading: true };
     }
 
-    // Map: email -> { full_name, email }
-    const contributorMap = new Map();
+    const contributorEmails = new Set();
     
-    // Helper to add contributor with name priority from entity fields
-    const addContributor = (email, name) => {
-      if (!email) return;
-      const existing = contributorMap.get(email);
-      if (!existing || (!existing.full_name && name)) {
-        contributorMap.set(email, {
-          email,
-          full_name: name || existing?.full_name || null
-        });
-      }
-    };
-
-    // Document creator (no name stored in document entity)
-    if (document.created_by) {
-      addContributor(document.created_by, null);
-    }
+    // Document creator
+    if (document.created_by) contributorEmails.add(document.created_by);
 
     // Suggestion creators
     suggestions.forEach(s => {
-      addContributor(s.created_by, s.createdByFullName);
+      if (s.created_by) contributorEmails.add(s.created_by);
     });
 
-    // Section editors
-    sections.forEach(s => {
-      addContributor(s.created_by, s.lastEditedByFullName);
-      if (s.lastEditedBy && s.lastEditedBy.includes('@')) {
-        addContributor(s.lastEditedBy, s.lastEditedByFullName);
+    // Voters - גם לפי userId וגם לפי created_by של ההצבעה
+    const suggestionIds = new Set(suggestions.map(s => s.id));
+    const voterIds = new Set();
+    allVotes.forEach(v => {
+      if (suggestionIds.has(v.suggestionId)) {
+        voterIds.add(v.userId);
+        // גם להוסיף את created_by של ההצבעה ישירות
+        if (v.created_by) contributorEmails.add(v.created_by);
       }
     });
-
-    // Voters
-    relevantVotes.forEach(v => {
-      addContributor(v.created_by, v.voterFullName);
+    allUsers.forEach(user => {
+      if (voterIds.has(user.id)) contributorEmails.add(user.email);
     });
 
     // Argument writers
-    relevantArguments.forEach(arg => {
-      addContributor(arg.created_by, arg.createdByFullName);
+    allArguments.forEach(arg => {
+      if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
+        contributorEmails.add(arg.created_by);
+      }
     });
 
-    // Commenters
-    relevantComments.forEach(c => {
-      addContributor(c.created_by, c.createdByFullName);
+    // Commenters on suggestions
+    allComments.forEach(c => {
+      if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId) && c.created_by) {
+        contributorEmails.add(c.created_by);
+      }
     });
 
-    // Build final list - use stored names or fallback to Anonymous
-    const contributorsList = Array.from(contributorMap.values()).map(({ email, full_name }) => ({
-      id: email,
-      email: email,
-      full_name: full_name?.trim() || 'Anonymous',
-      role: 'user'
-    }));
+    // Commenters on sections
+    const sectionIds = new Set(sections.map(s => s.id));
+    allComments.forEach(c => {
+      if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId) && c.created_by) {
+        contributorEmails.add(c.created_by);
+      }
+    });
+
+    // Document comments
+    allComments.forEach(c => {
+      if (c.rootEntityType === 'document' && c.rootEntityId === documentId && c.created_by) {
+        contributorEmails.add(c.created_by);
+      }
+    });
+
+    // מחזירים משתמשים שקיימים ב-DB, ועבור אימיילים שלא קיימים ב-DB יוצרים אובייקט בסיסי
+    const contributorsList = [];
+    const foundEmails = new Set();
+    
+    allUsers.forEach(user => {
+      if (contributorEmails.has(user.email)) {
+        contributorsList.push(user);
+        foundEmails.add(user.email);
+      }
+    });
+    
+    // הוספת משתמשים שלא נמצאו ב-DB (יש להם created_by אבל אין להם רשומת User)
+    contributorEmails.forEach(email => {
+      if (!foundEmails.has(email) && email) {
+        contributorsList.push({
+          id: email, // שימוש באימייל כ-ID זמני
+          email: email,
+          full_name: 'משתמש לא רשום', // שם ברור במקום חלק מאימייל
+          role: 'user'
+        });
+      }
+    });
     
     return { contributors: contributorsList, loading: false };
-  }, [document, suggestions, sections, relevantVotes, relevantComments, relevantArguments]);
+  }, [document, suggestions, sections, allUsers, allVotes, allComments, allArguments, documentId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -169,22 +170,27 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
           </div>
         ) : (
           <div className="space-y-2">
-            {contributors.map((contributor) => (
+            {contributors.map((user) => (
               <Link
-                key={contributor.id}
-                to={`${createPageUrl("Profile")}?userId=${contributor.id}`}
+                key={user.id}
+                to={`${createPageUrl("Profile")}?userId=${user.id}`}
                 className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg hover:bg-slate-50 transition-colors"
               >
                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
                   <span className="text-white font-medium text-sm md:text-base">
-                    {contributor.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                    {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm md:text-base text-slate-900 truncate">
-                    {contributor.full_name}
+                    {user.full_name && user.full_name.trim() ? user.full_name : (user.email || 'Unknown User')}
                   </p>
                 </div>
+                {user.role === 'admin' && (
+                  <Badge variant="outline" className="text-[10px] md:text-xs">
+                    {t('admin')}
+                  </Badge>
+                )}
               </Link>
             ))}
           </div>

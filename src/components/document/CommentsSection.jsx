@@ -121,17 +121,9 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     initialData: [],
   });
 
-  const getUserName = (comment) => {
-    // Try to get name from comment directly first
-    if (comment?.createdByFullName && comment.createdByFullName.trim()) {
-      return comment.createdByFullName;
-    }
-    // Fallback to user lookup
-    const user = users.find(u => u.email === comment?.created_by);
-    if (user?.full_name && user.full_name.trim()) {
-      return user.full_name;
-    }
-    return comment?.created_by?.split('@')[0] || comment?.created_by || 'Unknown User';
+  const getUserName = (email) => {
+    const user = users.find(u => u.email === email);
+    return user?.full_name || email?.split('@')[0] || email;
   };
 
   const createCommentMutation = useMutation({
@@ -146,8 +138,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
       // Create comment - this is the only blocking call
       const comment = await base44.entities.Comment.create({
         ...data,
-        originalLanguage: detectedLanguage,
-        createdByFullName: user?.full_name || user?.email
+        originalLanguage: detectedLanguage
       });
       
       // Find parent comment for reply context (needed for background tasks)
@@ -242,7 +233,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
               className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0 hover:opacity-80 transition-opacity"
             >
               <span className="text-white font-medium text-sm">
-                {getUserName(comment)?.charAt(0)?.toUpperCase() || 'U'}
+                {getUserName(comment.created_by)?.charAt(0)?.toUpperCase() || 'U'}
               </span>
             </Link>
             <div className="flex-1 min-w-0">
@@ -251,7 +242,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
                   to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === comment.created_by)?.id}`}
                   className="font-medium text-sm text-slate-900 hover:underline"
                 >
-                  {getUserName(comment)}
+                  {getUserName(comment.created_by)}
                 </Link>
                 <span className="text-xs text-slate-500">
                   {new Date(comment.created_date).toLocaleDateString('he-IL', {
@@ -332,7 +323,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
         {replyTo && (
           <div className="flex items-center gap-2 text-sm text-slate-600 bg-blue-50 p-2 rounded">
             <Reply className="w-4 h-4" />
-            <span>{t('replyingTo')} {getUserName(replyTo)}</span>
+            <span>{t('replyingTo')} {getUserName(replyTo.created_by)}</span>
             <Button
               type="button"
               variant="ghost"

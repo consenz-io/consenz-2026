@@ -212,7 +212,6 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
         base44.entities.Section.update(section.id, {
           content: freshSuggestion.newContent,
           lastEditedBy: userId,
-          lastEditedByFullName: freshSuggestion.createdByFullName || freshSuggestion.created_by,
           originalLanguage: newContentLanguage,
         }),
         // שמירת גרסה עם התוכן החדש
@@ -268,7 +267,6 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
         content: freshSuggestion.newContent,
         order: newOrder,
         lastEditedBy: userId,
-        lastEditedByFullName: freshSuggestion.createdByFullName || freshSuggestion.created_by,
         originalLanguage: newContentLanguage,
       });
       

@@ -97,67 +97,53 @@ export default function Home() {
 
   // Calculate unique contributors across all documents and build list
   const { totalUniqueContributors, contributorsList } = useMemo(() => {
-    // Map: email -> { full_name, email, id, role }
-    const contributorMap = new Map();
+    const uniqueEmails = new Set();
     
-    // Helper to add contributor with name from entity fields only
-    const addContributor = (email, name) => {
-      if (!email) return;
-      const existing = contributorMap.get(email);
-      if (!existing || (!existing.full_name && name)) {
-        contributorMap.set(email, {
-          email,
-          full_name: name || existing?.full_name || null,
-          id: email,
-          role: 'user'
-        });
-      }
-    };
-    
-    // Document creators (no name stored)
+    // Document creators
     documents.forEach(d => {
-      addContributor(d.created_by, null);
+      if (d.created_by) uniqueEmails.add(d.created_by);
     });
     
     // Suggestion creators
     allSuggestions.forEach(s => {
-      addContributor(s.created_by, s.createdByFullName);
-    });
-    
-    // Section editors
-    allSections.forEach(s => {
-      addContributor(s.created_by, s.lastEditedByFullName);
-      if (s.lastEditedBy && s.lastEditedBy.includes('@')) {
-        addContributor(s.lastEditedBy, s.lastEditedByFullName);
-      }
+      if (s.created_by) uniqueEmails.add(s.created_by);
     });
     
     // Voters
+    const userIdToEmail = {};
+    allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
     allVotes.forEach(v => {
-      addContributor(v.created_by, v.voterFullName);
+      if (userIdToEmail[v.userId]) uniqueEmails.add(userIdToEmail[v.userId]);
     });
     
     // Argument writers
     allArguments.forEach(arg => {
-      addContributor(arg.created_by, arg.createdByFullName);
+      if (arg.created_by) uniqueEmails.add(arg.created_by);
     });
     
     // Commenters
     allComments.forEach(c => {
-      addContributor(c.created_by, c.createdByFullName);
+      if (c.created_by) uniqueEmails.add(c.created_by);
     });
     
-    // Build final list - use stored names or fallback to Anonymous
-    const list = Array.from(contributorMap.values()).map(contributor => ({
-      ...contributor,
-      full_name: contributor.full_name?.trim() || 'Anonymous'
-    })).sort((a, b) => a.full_name.localeCompare(b.full_name));
+    // Build contributors list with names
+    const emailToUser = {};
+    allUsers.forEach(u => { emailToUser[u.email] = u; });
+    
+    const list = Array.from(uniqueEmails).map(email => {
+      const user = emailToUser[email];
+      return {
+        email,
+        name: user?.full_name || email,
+        id: user?.id
+      };
+    }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     
     return {
-      totalUniqueContributors: Math.max(1, contributorMap.size),
+      totalUniqueContributors: Math.max(1, uniqueEmails.size),
       contributorsList: list
     };
-  }, [documents, allSuggestions, allVotes, allArguments, allComments, allSections]);
+  }, [documents, allSuggestions, allVotes, allUsers, allArguments, allComments]);
 
   const calculateAverageConsensus = () => {
     if (acceptedSuggestions.length === 0) return 0;

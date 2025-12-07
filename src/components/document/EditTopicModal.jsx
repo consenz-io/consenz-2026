@@ -77,8 +77,7 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
         originalTitle: topic.title,
         newTitle: newTitle.trim(),
         explanation: explanation.trim(),
-        timerEndsAt: timerEndsAt.toISOString(),
-        createdByFullName: user?.full_name || user?.email
+        timerEndsAt: timerEndsAt.toISOString()
       });
 
       if (document.gamificationEnabled && !isAdmin) {

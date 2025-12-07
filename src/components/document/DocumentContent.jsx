@@ -344,8 +344,8 @@ export default function DocumentContent({
           }
         } else {
           // הצבעה חדשה - בודקים שוב שאין הצבעה קיימת
-            const doubleCheck = await base44.entities.Vote.filter({ suggestionId, userId: user.id });
-            if (doubleCheck.length > 0) {
+          const doubleCheck = await base44.entities.Vote.filter({ suggestionId, userId: user.id });
+          if (doubleCheck.length > 0) {
             // כבר קיימת הצבעה - משתמשים בה במקום ליצור חדשה
             const existingVote = doubleCheck[0];
             if (existingVote.vote !== vote) {
@@ -371,8 +371,7 @@ export default function DocumentContent({
             await base44.entities.Vote.create({
               suggestionId,
               userId: user.id,
-              vote,
-              voterFullName: user.full_name || user.email
+              vote
             });
             if (vote === 'pro') newProVotes += 1;
             else newConVotes += 1;
@@ -578,16 +577,8 @@ export default function DocumentContent({
     },
   });
 
-  const getUserName = (emailOrEntity) => {
-    // If it's an entity with createdByFullName, use that
-    if (typeof emailOrEntity === 'object' && emailOrEntity?.createdByFullName && emailOrEntity.createdByFullName.trim()) {
-      return emailOrEntity.createdByFullName;
-    }
-    
-    // Otherwise treat as email
-    const email = typeof emailOrEntity === 'string' ? emailOrEntity : emailOrEntity?.created_by;
+  const getUserName = (email) => {
     const user = users.find(u => u.email === email);
-    
     // Always prefer full_name, only fallback to email if full_name is empty/null/undefined
     if (user?.full_name && user.full_name.trim()) {
       return user.full_name;
@@ -836,10 +827,8 @@ Return ONLY the translated text:`;
 
             // Award points for pro vote
             if (vote === 'pro' && document.gamificationEnabled) {
-              const suggestionCreatorEmail = suggestion.created_by;
-              if (suggestionCreatorEmail) {
-                const suggestionCreatorList = await base44.entities.User.filter({ email: suggestionCreatorEmail });
-                if (suggestionCreatorList.length > 0) {
+              const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+              if (suggestionCreatorList.length > 0) {
                 const suggestionCreator = suggestionCreatorList[0];
                 const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
                 if (freshUser) {
@@ -852,12 +841,11 @@ Return ONLY the translated text:`;
                     action: 'vote_received',
                     description: `קיבל הצבעה בעד על הצעת עריכת כותרת`,
                     relatedEntityType: 'topic'
-                    });
-                    }
-                    }
-                    }
-                    }
-                    }
+                  });
+                }
+              }
+            }
+          }
         }
         
         // עדכון ההצעה עם הערכים החדשים
@@ -1102,7 +1090,7 @@ Return ONLY the translated text:`;
                             </div>
                           )}
                           <div className="text-xs text-slate-500">
-                            {t('by')} {getUserName(suggestion)}
+                            {t('by')} {getUserName(suggestion.created_by)}
                           </div>
                         </div>
                       </div>

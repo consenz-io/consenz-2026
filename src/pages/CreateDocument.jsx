@@ -316,7 +316,6 @@ Return JSON with title, topics array (each with title and sections array with co
             content: sectionContent,
             order: j,
             lastEditedBy: user.id,
-            lastEditedByFullName: user.full_name || user.email,
             originalLanguage: sectionLanguage,
           });
 
