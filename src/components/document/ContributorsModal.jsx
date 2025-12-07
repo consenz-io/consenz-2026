@@ -87,13 +87,6 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     staleTime: 30000,
   });
 
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
-    enabled: isOpen,
-    staleTime: 60000,
-  });
-
   const { contributors, loading } = useMemo(() => {
     if (!document) {
       return { contributors: [], loading: true };
@@ -181,35 +174,21 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       }
     });
 
-    // Build contributors list - prefer User entity full_name, then entity names, then email username
-    const emailToUser = new Map();
-    allUsers.forEach(u => {
-      if (u.email) emailToUser.set(u.email, u);
-    });
-
+    // Build contributors list using entity embedded names or email username
     const contributorsList = Array.from(contributorMap.values()).map(({ email, name, userId }) => {
-      const user = emailToUser.get(email);
-      let displayName;
-      
-      // Priority: User entity full_name > entity embedded name > email username
-      if (user?.full_name && user.full_name.trim()) {
-        displayName = user.full_name;
-      } else if (name && name.trim()) {
-        displayName = name;
-      } else {
-        displayName = email.split('@')[0];
-      }
+      // Use embedded name from entities, or fallback to email username
+      const displayName = (name && name.trim()) ? name : email.split('@')[0];
       
       return {
-        id: user?.id || userId || email,
+        id: userId || email,
         email: email,
         full_name: displayName,
-        role: user?.role || 'user'
+        role: 'user'
       };
     });
     
     return { contributors: contributorsList, loading: false };
-  }, [document, suggestions, sections, relevantVotes, relevantComments, relevantArguments, allUsers]);
+  }, [document, suggestions, sections, relevantVotes, relevantComments, relevantArguments]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
