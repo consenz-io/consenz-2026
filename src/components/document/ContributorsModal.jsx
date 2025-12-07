@@ -176,8 +176,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
 
     const contributorsList = Array.from(contributorMap.values()).map(({ email, userId }) => {
       const user = emailToUser.get(email);
-      console.log('DEBUG - User data for:', email, user);
-      const displayName = user?.full_name?.trim() || user?.name?.trim() || 'Anonymous';
+      const displayName = user?.full_name?.trim() || 'Anonymous';
       
       return {
         id: user?.id || userId || email,

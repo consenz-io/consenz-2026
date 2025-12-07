@@ -170,8 +170,7 @@ export default function Home() {
     
     const list = Array.from(uniqueEmails).map(email => {
       const user = emailToUser[email];
-      console.log('DEBUG - User data for:', email, user);
-      const displayName = user?.full_name?.trim() || user?.name?.trim() || 'Anonymous';
+      const displayName = user?.full_name?.trim() || 'Anonymous';
       return {
         email,
         full_name: displayName,
