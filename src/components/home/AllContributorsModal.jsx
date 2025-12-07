@@ -24,10 +24,10 @@ export default function AllContributorsModal({
     if (u.email) emailToUser.set(u.email, u);
   });
 
-  // Enrich contributors with full_name (display name) from User entity
+  // Enrich contributors with full_name from User entity
   const enrichedContributors = contributors.map(contributor => {
     const user = emailToUser.get(contributor.email);
-    const displayName = user?.full_name?.trim() || contributor.email.split('@')[0];
+    const displayName = user?.full_name?.trim() || 'Anonymous';
     
     return {
       ...contributor,

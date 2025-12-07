@@ -99,13 +99,12 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       return { contributors: [], loading: true };
     }
 
-    const contributorMap = new Map(); // email -> { email, name, userId }
+    const contributorMap = new Map(); // email -> { email, userId }
     
     // Document creator
     if (document.created_by) {
       contributorMap.set(document.created_by, {
         email: document.created_by,
-        name: null,
         userId: null
       });
     }
@@ -113,11 +112,9 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     // Suggestion creators
     suggestions.forEach(s => {
       if (s.created_by) {
-        const existing = contributorMap.get(s.created_by);
         contributorMap.set(s.created_by, {
           email: s.created_by,
-          name: s.createdByFullName || existing?.name || null,
-          userId: existing?.userId || null
+          userId: contributorMap.get(s.created_by)?.userId || null
         });
       }
     });
@@ -126,21 +123,17 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     sections.forEach(s => {
       // Section creator
       if (s.created_by) {
-        const existing = contributorMap.get(s.created_by);
         contributorMap.set(s.created_by, {
           email: s.created_by,
-          name: s.lastEditedByFullName || existing?.name || null,
-          userId: s.lastEditedBy || existing?.userId || null
+          userId: s.lastEditedBy || contributorMap.get(s.created_by)?.userId || null
         });
       }
       
       // Last editor (if different and if it's an email)
       if (s.lastEditedBy && s.lastEditedBy.includes('@') && s.lastEditedBy !== s.created_by) {
-        const existing = contributorMap.get(s.lastEditedBy);
         contributorMap.set(s.lastEditedBy, {
           email: s.lastEditedBy,
-          name: s.lastEditedByFullName || existing?.name || null,
-          userId: existing?.userId || null
+          userId: contributorMap.get(s.lastEditedBy)?.userId || null
         });
       }
     });
@@ -148,11 +141,9 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     // Voters - map userId to email using created_by
     relevantVotes.forEach(v => {
       if (v.created_by) {
-        const existing = contributorMap.get(v.created_by);
         contributorMap.set(v.created_by, {
           email: v.created_by,
-          name: v.voterFullName || existing?.name || null,
-          userId: v.userId || existing?.userId || null
+          userId: v.userId || contributorMap.get(v.created_by)?.userId || null
         });
       }
     });
@@ -160,11 +151,9 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     // Argument writers
     relevantArguments.forEach(arg => {
       if (arg.created_by) {
-        const existing = contributorMap.get(arg.created_by);
         contributorMap.set(arg.created_by, {
           email: arg.created_by,
-          name: arg.createdByFullName || existing?.name || null,
-          userId: existing?.userId || null
+          userId: contributorMap.get(arg.created_by)?.userId || null
         });
       }
     });
@@ -172,11 +161,9 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     // Commenters
     relevantComments.forEach(c => {
       if (c.created_by) {
-        const existing = contributorMap.get(c.created_by);
         contributorMap.set(c.created_by, {
           email: c.created_by,
-          name: c.createdByFullName || existing?.name || null,
-          userId: existing?.userId || null
+          userId: contributorMap.get(c.created_by)?.userId || null
         });
       }
     });
@@ -187,10 +174,9 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       if (u.email) emailToUser.set(u.email, u);
     });
 
-    const contributorsList = Array.from(contributorMap.values()).map(({ email, name, userId }) => {
+    const contributorsList = Array.from(contributorMap.values()).map(({ email, userId }) => {
       const user = emailToUser.get(email);
-      // Use full_name (display name) from User entity, fallback to email username
-      const displayName = user?.full_name?.trim() || email.split('@')[0];
+      const displayName = user?.full_name?.trim() || 'Anonymous';
       
       return {
         id: user?.id || userId || email,
