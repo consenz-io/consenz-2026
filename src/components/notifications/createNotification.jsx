@@ -127,10 +127,19 @@ async function getDocumentCreator(documentId, users, documents = null) {
 
 // Batch create notifications for efficiency
 async function batchCreateNotifications(notifications) {
-  // Create all notifications in parallel
-  await Promise.all(notifications.map(n => 
-    base44.entities.Notification.create({ ...n, read: false })
-  ));
+  if (!notifications || notifications.length === 0) return;
+  
+  try {
+    // Create all notifications in parallel
+    await Promise.all(notifications.map(n => 
+      base44.entities.Notification.create({ ...n, read: false }).catch(err => {
+        console.error('[NOTIFICATION ERROR] Failed to create notification:', err);
+        return null;
+      })
+    ));
+  } catch (error) {
+    console.error('[NOTIFICATION ERROR] Batch create failed:', error);
+  }
 }
 
 /**
@@ -146,12 +155,10 @@ export async function createNotification({
   actionUrl
 }) {
   try {
-    console.log('[NOTIFICATION] Creating notification:', {
-      userId,
-      type,
-      title,
-      message
-    });
+    if (!userId) {
+      console.warn('[NOTIFICATION] Missing userId, skipping notification');
+      return null;
+    }
     
     const notification = await base44.entities.Notification.create({
       userId,
@@ -164,11 +171,11 @@ export async function createNotification({
       read: false
     });
     
-    console.log('[NOTIFICATION] Notification created successfully:', notification.id);
     return notification;
   } catch (error) {
-    console.error('[NOTIFICATION ERROR]', error);
-    throw error;
+    console.error('[NOTIFICATION ERROR] Failed to create notification:', error);
+    // Don't throw - notifications should not block main flow
+    return null;
   }
 }
 
@@ -299,14 +306,19 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
  */
 export async function notifyNewSuggestion({ suggestion, document, currentUser }) {
   try {
-    // שליפת כל הנתונים הדרושים לחישוב המשתתפים
-    const [users, allSuggestions, allVotes, allArguments, allComments, sections] = await Promise.all([
+    // שליפת כל הנתונים - מסוננים למסמך הספציפי לביצועים
+    const [users, allSuggestions, allArguments, sections] = await Promise.all([
       getCachedUsers(),
       base44.entities.Suggestion.filter({ documentId: document.id }),
-      base44.entities.Vote.list(),
       base44.entities.Argument.list(),
-      base44.entities.Comment.list(),
       base44.entities.Section.filter({ documentId: document.id })
+    ]);
+
+    // שליפת מצביעים ומגיבים - רק אלה שקשורים להצעות במסמך זה
+    const suggestionIds = allSuggestions.map(s => s.id);
+    const [allVotes, allComments] = await Promise.all([
+      Promise.all(suggestionIds.map(id => base44.entities.Vote.filter({ suggestionId: id }))).then(results => results.flat()),
+      base44.entities.Comment.list() // מגיבים על הצעות, סעיפים, ומסמכים
     ]);
 
     // חישוב כל המשתתפים במסמך
@@ -320,20 +332,27 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
       if (s.created_by) participantEmails.add(s.created_by);
     });
     
-    // מצביעים
+    // מצביעים (רק על הצעות במסמך זה)
     const userIdToEmail = {};
     users.forEach(u => { userIdToEmail[u.id] = u.email; });
     allVotes.forEach(v => {
       if (userIdToEmail[v.userId]) participantEmails.add(userIdToEmail[v.userId]);
     });
     
-    // כותבי טיעונים
-    allArguments.forEach(arg => {
+    // כותבי טיעונים (רק על הצעות במסמך זה)
+    const argumentsInDoc = allArguments.filter(arg => suggestionIds.includes(arg.suggestionId));
+    argumentsInDoc.forEach(arg => {
       if (arg.created_by) participantEmails.add(arg.created_by);
     });
     
-    // מגיבים
-    allComments.forEach(c => {
+    // מגיבים (על הצעות, סעיפים, ומסמך)
+    const sectionIds = sections.map(s => s.id);
+    const relevantComments = allComments.filter(c => 
+      (c.rootEntityType === 'suggestion' && suggestionIds.includes(c.rootEntityId)) ||
+      (c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)) ||
+      (c.rootEntityType === 'document' && c.rootEntityId === document.id)
+    );
+    relevantComments.forEach(c => {
       if (c.created_by) participantEmails.add(c.created_by);
     });
     
@@ -375,7 +394,7 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
       await batchCreateNotifications(notifications);
     }
   } catch (error) {
-    console.error('[NOTIFICATION ERROR]', error);
+    console.error('[NOTIFICATION ERROR] notifyNewSuggestion:', error);
   }
 }
 
