@@ -316,8 +316,8 @@ export default function SectionCarousel({
         </div>
       </div>
 
-      {/* כפתורי דפדוף */}
-      {allViews.length > 1 && (
+      {/* כפתורי דפדוף - רק אם לא באנימציה */}
+      {allViews.length > 1 && !['celebrating', 'transitioning', 'fading'].includes(animationPhases[currentView?.data?.id]) && (
         <div className="flex items-center justify-between mb-4 pb-4 border-b-2 border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 p-3 rounded-lg shadow-sm">
           <Button
             variant="outline"
