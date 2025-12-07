@@ -534,7 +534,7 @@ export default function SuggestionSidebar({
               <X className="w-5 h-5" />
             </Button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Content - Scrollable */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
