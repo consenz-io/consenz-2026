@@ -39,6 +39,12 @@ export default function SectionCarousel({
 }) {
   const { t, isRTL, language } = useLanguage();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  
+  // שליפת כל ההצעות של הסעיף (לא רק pending) כדי לעקוב אחרי שינויי סטטוס
+  const { data: allSectionSuggestions = [] } = useQueryClient().getQueryData(['suggestions', document?.id]) 
+    ? { data: useQueryClient().getQueryData(['suggestions', document?.id]).filter(s => s.sectionId === section.id && s.type === 'edit_section') }
+    : { data: [] };
   
   // שומר את ה-ID של ההצעה הנוכחית במקום index
   const [currentSuggestionId, setCurrentSuggestionId] = useState(null);
