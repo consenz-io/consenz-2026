@@ -38,7 +38,7 @@ export default function NewSectionSuggestionCard({
   });
 
   const canDelete = user && (isAdmin || user.email === suggestion.created_by) && suggestion.status !== 'accepted';
-  const [showAcceptedAnimation, setShowAcceptedAnimation] = React.useState(false);
+  const [animationPhase, setAnimationPhase] = React.useState('none'); // 'none', 'celebrating', 'transitioning', 'complete'
   const prevStatusRef = React.useRef(suggestion.status);
 
   // Truncate content for preview
@@ -52,54 +52,90 @@ export default function NewSectionSuggestionCard({
   // מעקב אחרי שינוי סטטוס להצגת אנימציה
   React.useEffect(() => {
     if (prevStatusRef.current === 'pending' && suggestion.status === 'accepted') {
-      setShowAcceptedAnimation(true);
-      setTimeout(() => setShowAcceptedAnimation(false), 3000);
+      setAnimationPhase('celebrating');
+      
+      // שלב 1: חגיגה (2 שניות)
+      setTimeout(() => {
+        setAnimationPhase('transitioning');
+      }, 2000);
+      
+      // שלב 2: מעבר לתצוגת סעיף רגיל (2 שניות נוספות)
+      setTimeout(() => {
+        setAnimationPhase('complete');
+      }, 4000);
+      
+      // שלב 3: העלמה אחרי עוד 2 שניות
+      setTimeout(() => {
+        setAnimationPhase('hidden');
+      }, 6000);
     }
     prevStatusRef.current = suggestion.status;
   }, [suggestion.status]);
 
-  // אם ההצעה התקבלה והאנימציה פועלת
-  if (showAcceptedAnimation) {
+  // אם הגענו לשלב ההעלמה, אל תציג כלום
+  if (animationPhase === 'hidden') {
+    return null;
+  }
+
+  // שלב החגיגה - מסגרת ירוקה ואייקון
+  if (animationPhase === 'celebrating') {
     return (
       <motion.div
         initial={{ scale: 1 }}
-        animate={{ 
-          scale: [1, 1.02, 1],
-          borderColor: ['rgb(252 211 77)', 'rgb(34 197 94)', 'rgb(255 255 255)'],
-        }}
-        transition={{ duration: 2, ease: "easeInOut" }}
+        animate={{ scale: [1, 1.02, 1] }}
+        transition={{ duration: 0.6, ease: "easeInOut" }}
       >
         <Card 
-          className="relative overflow-hidden transition-all"
+          className="relative overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(255 255 255) 100%)',
+            background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(220 252 231) 100%)',
             border: '2px solid rgb(34 197 94)',
           }}
         >
           <motion.div
             className="absolute inset-0 bg-green-500/10"
             initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0.3, 0] }}
-            transition={{ duration: 2 }}
+            animate={{ opacity: [0, 0.3, 0.1] }}
+            transition={{ duration: 1 }}
           />
           <CardContent className="p-4 md:p-6 relative z-10">
-            <div className="flex items-center justify-center gap-3 py-8">
+            <div className="flex items-start gap-3 mb-3">
               <motion.div
                 initial={{ scale: 0, rotate: -180 }}
                 animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring", duration: 0.6, delay: 0.2 }}
+                transition={{ type: "spring", duration: 0.6 }}
+                className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0"
               >
-                <CheckCircle className="w-16 h-16 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-white" />
               </motion.div>
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
-                className="text-right"
-              >
-                <div className="text-2xl font-bold text-green-700">ההצעה התקבלה!</div>
-                <div className="text-sm text-slate-600">הסעיף נוסף למסמך</div>
-              </motion.div>
+              <div className="flex-1 min-w-0">
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-lg font-bold text-green-700 mb-1"
+                >
+                  ההצעה התקבלה!
+                </motion.div>
+                {suggestion.explanation && typeof suggestion.explanation === 'string' && (
+                  <div className="text-xs md:text-sm mb-2">
+                    <TranslatableContent
+                      content={suggestion.explanation}
+                      entity={suggestion}
+                      entityType="Suggestion"
+                      className="text-slate-600 break-words"
+                    />
+                  </div>
+                )}
+                <div className="text-sm bg-white/80 p-3 rounded border border-green-200">
+                  <TranslatableContent
+                    content={getContentPreview(suggestion.newContent)}
+                    entity={suggestion}
+                    entityType="Suggestion"
+                    className="text-slate-700"
+                  />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -107,9 +143,46 @@ export default function NewSectionSuggestionCard({
     );
   }
 
-  // אם ההצעה התקבלה אבל האנימציה כבר הסתיימה, אל תציג כלום
-  if (suggestion.status === 'accepted') {
-    return null;
+  // שלב המעבר - מעבר הדרגתי למראה של סעיף רגיל
+  if (animationPhase === 'transitioning' || animationPhase === 'complete') {
+    return (
+      <motion.div
+        animate={{
+          opacity: animationPhase === 'complete' ? [1, 1, 0] : 1,
+        }}
+        transition={{ 
+          duration: animationPhase === 'complete' ? 2 : 0,
+          ease: "easeOut"
+        }}
+      >
+        <Card 
+          className="relative overflow-hidden transition-all duration-1000"
+          style={{
+            background: animationPhase === 'transitioning' 
+              ? 'linear-gradient(135deg, rgb(220 252 231) 0%, rgb(255 255 255) 100%)'
+              : 'rgb(255 255 255)',
+            border: animationPhase === 'transitioning'
+              ? '2px solid rgb(34 197 94)'
+              : '1px solid rgb(226 232 240)',
+            boxShadow: animationPhase === 'transitioning'
+              ? '0 4px 6px -1px rgba(34, 197, 94, 0.1)'
+              : 'none',
+          }}
+        >
+          <CardContent className="p-4 md:p-6">
+            <div className="prose prose-sm max-w-none">
+              <TranslatableContent
+                content={suggestion.newContent}
+                entity={suggestion}
+                entityType="Suggestion"
+                className="text-slate-700"
+                renderContent={(html) => <div dangerouslySetInnerHTML={{ __html: html }} />}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
   }
 
   return (
