@@ -1102,6 +1102,7 @@ Return ONLY the translated text:`;
                      getCommentsCount={getCommentsCount}
                      toggleComments={toggleComments}
                      showComments={showComments}
+                     isAdmin={isAdmin}
                     />
                   ))}
                 </>
@@ -1144,6 +1145,7 @@ Return ONLY the translated text:`;
                                   getCommentsCount={getCommentsCount}
                                   toggleComments={toggleComments}
                                   showComments={showComments}
+                                  isAdmin={isAdmin}
                                 />
                               ))}
 
@@ -1231,6 +1233,7 @@ Return ONLY the translated text:`;
                                         getCommentsCount={getCommentsCount}
                                         toggleComments={toggleComments}
                                         showComments={showComments}
+                                        isAdmin={isAdmin}
                                       />
                                     ))}
                               </>
