@@ -239,10 +239,13 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     const suggestionTitle = suggestion.title || 'הצעה ללא כותרת';
     
     // 1. יוצר ההצעה - שליפה ישירה מה-DB
+    console.log('[NOTIFICATION] Looking for suggestion creator:', suggestion.created_by);
     const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
-    const suggestionCreator = suggestionCreatorList[0];
+    console.log('[NOTIFICATION] Found users:', suggestionCreatorList?.length || 0, suggestionCreatorList?.map(u => u.email));
+    const suggestionCreator = suggestionCreatorList?.[0];
     
     if (suggestionCreator) {
+      console.log('[NOTIFICATION] Found creator:', suggestionCreator.email, 'ID:', suggestionCreator.id);
       notifiedUserIds.add(suggestionCreator.id);
       const userLang = suggestionCreator.preferredLanguage || 'he';
       notifications.push({
@@ -257,7 +260,8 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
       console.log('[NOTIFICATION] Added notification for suggestion creator:', suggestionCreator.email);
     } else {
       console.error('[NOTIFICATION ERROR] Suggestion creator not found in DB:', suggestion.created_by);
-      return; // אם יוצר ההצעה לא נמצא, לא שולחים נוטיפיקציות כלל
+      console.error('[NOTIFICATION ERROR] suggestionCreatorList was:', suggestionCreatorList);
+      return;
     }
     
     // 2. אם התקבלה - יוצר המסמך, מנהלים, ומצביעי pro
@@ -318,10 +322,12 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     
     if (notifications.length > 0) {
       console.log('[NOTIFICATION] Creating', notifications.length, 'notifications for suggestion:', suggestion.id);
+      console.log('[NOTIFICATION] Notifications data:', JSON.stringify(notifications, null, 2));
       await batchCreateNotifications(notifications);
       console.log('[NOTIFICATION] Successfully created notifications');
     } else {
       console.warn('[NOTIFICATION] No notifications to create for suggestion:', suggestion.id);
+      console.warn('[NOTIFICATION] notifiedUserIds:', Array.from(notifiedUserIds));
     }
   } catch (error) {
     console.error('[NOTIFICATION ERROR] Failed to send notifications:', error);
