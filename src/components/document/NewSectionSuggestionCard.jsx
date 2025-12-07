@@ -2,9 +2,10 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, Plus, MessageSquare } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import VotesNeededCounter from "./VotesNeededCounter";
 import TranslatableContent from "./TranslatableContent";
 import CommentsSection from "./CommentsSection";
@@ -20,9 +21,22 @@ export default function NewSectionSuggestionCard({
   onOpenSidebar,
   getCommentsCount,
   toggleComments,
-  showComments
+  showComments,
+  isAdmin
 }) {
   const { t, isRTL } = useLanguage();
+  const queryClient = useQueryClient();
+
+  const deleteSuggestionMutation = useMutation({
+    mutationFn: async () => {
+      await base44.entities.Suggestion.delete(suggestion.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suggestions', doc.id] });
+    },
+  });
+
+  const canDelete = user && (isAdmin || user.email === suggestion.created_by) && suggestion.status !== 'accepted';
 
   // Truncate content for preview
   const getContentPreview = (html) => {
@@ -133,17 +147,35 @@ export default function NewSectionSuggestionCard({
               acceptedSuggestions={acceptedSuggestions}
             />
           </div>
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="text-xs h-7 px-3"
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenSidebar && onOpenSidebar(suggestion.id);
-            }}
-          >
-            {t('viewDetails')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="text-xs h-7 px-3"
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenSidebar && onOpenSidebar(suggestion.id);
+              }}
+            >
+              {t('viewDetails')}
+            </Button>
+            {canDelete && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm(t('confirmDeleteSuggestion'))) {
+                    deleteSuggestionMutation.mutate();
+                  }
+                }}
+                disabled={deleteSuggestionMutation.isPending}
+                className="text-xs h-7 px-3"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* תגובות */}
