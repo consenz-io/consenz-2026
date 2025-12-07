@@ -280,9 +280,12 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     // שליחת התראה ונקודות ברקע - לא חוסמים את ה-return
     const backgroundTasks = async () => {
       try {
+        console.log('[AUTO ACCEPT] Sending notification for suggestion:', freshSuggestion.id);
         await notifySuggestionStatusChange({ suggestion: freshSuggestion, newStatus: 'accepted' });
+        console.log('[AUTO ACCEPT] Notification sent successfully');
       } catch (notifError) {
         console.error('[AUTO ACCEPT NOTIFICATION ERROR]', notifError);
+        console.error('[AUTO ACCEPT NOTIFICATION ERROR] Stack:', notifError.stack);
       }
       
       // Award 200 points to suggestion creator when accepted (only if gamification enabled)
