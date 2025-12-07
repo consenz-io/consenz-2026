@@ -42,15 +42,10 @@ export default function SectionCarousel({
   const queryClient = useQueryClient();
   
   // שליפת כל ההצעות של הסעיף (לא רק pending) כדי לעקוב אחרי שינויי סטטוס
-  const { data: allSuggestions = [] } = useQuery({
-    queryKey: ['suggestions', document?.id],
-    enabled: false, // לא נריץ query חדש, רק נשתמש בקאש
-  });
-  
-  const allSectionSuggestions = React.useMemo(() => 
-    allSuggestions.filter(s => s.sectionId === section.id && s.type === 'edit_section'),
-    [allSuggestions, section.id]
-  );
+  const allSectionSuggestions = React.useMemo(() => {
+    const allSuggestions = queryClient.getQueryData(['suggestions', document?.id]) || [];
+    return allSuggestions.filter(s => s.sectionId === section.id && s.type === 'edit_section');
+  }, [queryClient, document?.id, section.id]);
   
   // שומר את ה-ID של ההצעה הנוכחית במקום index
   const [currentSuggestionId, setCurrentSuggestionId] = useState(null);
