@@ -1090,15 +1090,18 @@ Return ONLY the translated text:`;
                   {/* Show new section suggestions when there are no sections */}
                   {getNewSectionSuggestionsForTopic(topic.id).map((suggestion) => (
                     <NewSectionSuggestionCard
-                      key={suggestion.id}
-                      suggestion={suggestion}
-                      document={document}
-                      getUserName={getUserName}
-                      acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
-                      user={user}
-                      getUserVote={getUserVote}
-                      voteMutation={voteMutation}
-                      onOpenSidebar={onOpenSuggestionSidebar}
+                     key={suggestion.id}
+                     suggestion={suggestion}
+                     document={document}
+                     getUserName={getUserName}
+                     acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                     user={user}
+                     getUserVote={getUserVote}
+                     voteMutation={voteMutation}
+                     onOpenSidebar={onOpenSuggestionSidebar}
+                     getCommentsCount={getCommentsCount}
+                     toggleComments={toggleComments}
+                     showComments={showComments}
                     />
                   ))}
                 </>
@@ -1138,6 +1141,9 @@ Return ONLY the translated text:`;
                                   getUserVote={getUserVote}
                                   voteMutation={voteMutation}
                                   onOpenSidebar={onOpenSuggestionSidebar}
+                                  getCommentsCount={getCommentsCount}
+                                  toggleComments={toggleComments}
+                                  showComments={showComments}
                                 />
                               ))}
 
@@ -1221,6 +1227,10 @@ Return ONLY the translated text:`;
                                         user={user}
                                         getUserVote={getUserVote}
                                         voteMutation={voteMutation}
+                                        onOpenSidebar={onOpenSuggestionSidebar}
+                                        getCommentsCount={getCommentsCount}
+                                        toggleComments={toggleComments}
+                                        showComments={showComments}
                                       />
                                     ))}
                               </>
