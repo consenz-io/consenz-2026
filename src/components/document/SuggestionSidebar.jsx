@@ -117,9 +117,20 @@ export default function SuggestionSidebar({
     initialData: [],
   });
 
-  const getUserName = (email) => {
+  const getUserName = (emailOrEntity) => {
+    // If it's an entity with createdByFullName, use that
+    if (typeof emailOrEntity === 'object' && emailOrEntity?.createdByFullName && emailOrEntity.createdByFullName.trim()) {
+      return emailOrEntity.createdByFullName;
+    }
+    
+    // Otherwise treat as email
+    const email = typeof emailOrEntity === 'string' ? emailOrEntity : emailOrEntity?.created_by;
     const u = users.find(usr => usr.email === email);
-    return u?.full_name || email?.split('@')[0] || email;
+    
+    if (u?.full_name && u.full_name.trim()) {
+      return u.full_name;
+    }
+    return email?.split('@')[0] || email || 'Unknown User';
   };
 
   // מעקב אחרי שינוי סטטוס להצגת אנימציה
@@ -166,7 +177,8 @@ export default function SuggestionSidebar({
         await base44.entities.Vote.create({
           suggestionId,
           userId: user.id,
-          vote
+          vote,
+          voterFullName: user.full_name || user.email
         });
         if (vote === 'pro') newProVotes += 1;
         else newConVotes += 1;
@@ -284,7 +296,8 @@ export default function SuggestionSidebar({
         suggestionId,
         type,
         content: content.trim(),
-        convincedCount: 0
+        convincedCount: 0,
+        createdByFullName: user?.full_name || user?.email
       });
     },
     onSuccess: () => {
@@ -317,7 +330,8 @@ export default function SuggestionSidebar({
         
         await base44.entities.Section.update(section.id, {
           content: suggestion.newContent,
-          lastEditedBy: user.id
+          lastEditedBy: user.id,
+          lastEditedByFullName: user.full_name || user.email
         });
         
         await base44.entities.DocumentVersion.create({
@@ -352,7 +366,8 @@ export default function SuggestionSidebar({
           topicId: suggestion.topicId,
           content: suggestion.newContent,
           order: newOrder,
-          lastEditedBy: user.id
+          lastEditedBy: user.id,
+          lastEditedByFullName: user.full_name || user.email
         });
         
         await base44.entities.DocumentVersion.create({
@@ -560,7 +575,7 @@ export default function SuggestionSidebar({
           </div>
 
           <div className="text-xs text-slate-500">
-            {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
+            {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion)}</Link>
           </div>
 
           {/* Explanation - always show for creator, editable */}
