@@ -344,8 +344,8 @@ export default function DocumentContent({
           }
         } else {
           // הצבעה חדשה - בודקים שוב שאין הצבעה קיימת
-          const doubleCheck = await base44.entities.Vote.filter({ suggestionId, userId: user.id });
-          if (doubleCheck.length > 0) {
+            const doubleCheck = await base44.entities.Vote.filter({ suggestionId, userId: user.id });
+            if (doubleCheck.length > 0) {
             // כבר קיימת הצבעה - משתמשים בה במקום ליצור חדשה
             const existingVote = doubleCheck[0];
             if (existingVote.vote !== vote) {
@@ -371,7 +371,8 @@ export default function DocumentContent({
             await base44.entities.Vote.create({
               suggestionId,
               userId: user.id,
-              vote
+              vote,
+              voterFullName: user.full_name || user.email
             });
             if (vote === 'pro') newProVotes += 1;
             else newConVotes += 1;
@@ -577,8 +578,16 @@ export default function DocumentContent({
     },
   });
 
-  const getUserName = (email) => {
+  const getUserName = (emailOrEntity) => {
+    // If it's an entity with createdByFullName, use that
+    if (typeof emailOrEntity === 'object' && emailOrEntity?.createdByFullName && emailOrEntity.createdByFullName.trim()) {
+      return emailOrEntity.createdByFullName;
+    }
+    
+    // Otherwise treat as email
+    const email = typeof emailOrEntity === 'string' ? emailOrEntity : emailOrEntity?.created_by;
     const user = users.find(u => u.email === email);
+    
     // Always prefer full_name, only fallback to email if full_name is empty/null/undefined
     if (user?.full_name && user.full_name.trim()) {
       return user.full_name;
@@ -1090,7 +1099,7 @@ Return ONLY the translated text:`;
                             </div>
                           )}
                           <div className="text-xs text-slate-500">
-                            {t('by')} {getUserName(suggestion.created_by)}
+                            {t('by')} {getUserName(suggestion)}
                           </div>
                         </div>
                       </div>
