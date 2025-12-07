@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, ThumbsUp, ThumbsDown, Languages, Loader2, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, ThumbsUp, ThumbsDown, Languages, Loader2, Trash2, CheckCircle } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import DeleteSectionDialog from "./DeleteSectionDialog";
@@ -14,6 +14,7 @@ import VotesNeededCounter from "./VotesNeededCounter";
 import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
 import DocumentTextContent from "./DocumentTextContent";
+import { motion } from "framer-motion";
 
 export default function SectionCarousel({
   section,
@@ -44,6 +45,11 @@ export default function SectionCarousel({
   
   // שומר הצעות שהתקבלו בזמן שהיוזר צופה בהן - כדי שלא ייעלמו פתאום
   const [recentlyAcceptedSuggestions, setRecentlyAcceptedSuggestions] = useState({});
+  
+  // מעקב אחרי אנימציות של הצעות מקובלות
+  const [animationPhases, setAnimationPhases] = useState({});
+  const prevSuggestionsStatusRef = React.useRef({});
+  const hasAnimatedRef = React.useRef(new Set());
   
   // סדר הצגה: לפי דלתא קרובה ל-0, ואז כרונולוגי
   const sortedSuggestions = [...pendingSuggestions].sort((a, b) => {
@@ -76,6 +82,39 @@ export default function SectionCarousel({
       }
     }
   }, [pendingSuggestions, currentSuggestionId]);
+
+  // מעקב אחרי שינוי סטטוס להצגת אנימציה - רק פעם אחת לכל הצעה
+  React.useEffect(() => {
+    pendingSuggestions.forEach(suggestion => {
+      const prevStatus = prevSuggestionsStatusRef.current[suggestion.id];
+      if (prevStatus === 'pending' && suggestion.status === 'accepted' && !hasAnimatedRef.current.has(suggestion.id)) {
+        hasAnimatedRef.current.add(suggestion.id);
+        console.log('[EDIT ANIMATION] Starting celebration for suggestion:', suggestion.id);
+        setAnimationPhases(prev => ({ ...prev, [suggestion.id]: 'celebrating' }));
+        
+        // שלב 1: חגיגה (3 שניות)
+        setTimeout(() => {
+          console.log('[EDIT ANIMATION] Transitioning to white for suggestion:', suggestion.id);
+          setAnimationPhases(prev => ({ ...prev, [suggestion.id]: 'transitioning' }));
+        }, 3000);
+        
+        // שלב 2: דהייה והעלמה (אחרי עוד 2 שניות - סה"כ 5 שניות)
+        setTimeout(() => {
+          console.log('[EDIT ANIMATION] Fading out suggestion:', suggestion.id);
+          setAnimationPhases(prev => ({ ...prev, [suggestion.id]: 'fading' }));
+        }, 5000);
+        
+        // שלב 3: העלמה סופית (אחרי עוד 1 שניה - סה"כ 6 שניות)
+        setTimeout(() => {
+          console.log('[EDIT ANIMATION] Hiding suggestion:', suggestion.id);
+          setAnimationPhases(prev => ({ ...prev, [suggestion.id]: 'hidden' }));
+          // חוזרים לתצוגת הסעיף הנוכחי אחרי שהאנימציה הסתיימה
+          setCurrentSuggestionId('current');
+        }, 6000);
+      }
+      prevSuggestionsStatusRef.current[suggestion.id] = suggestion.status;
+    });
+  }, [pendingSuggestions]);
 
   // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות + הצעות שהתקבלו אבל היוזר עדיין צופה בהן
   const allViews = React.useMemo(() => {
@@ -358,149 +397,248 @@ export default function SectionCarousel({
             )}
           </>
         ) : (
-          // תצוגת הצעה - diff
+          // תצוגת הצעה - diff או אנימציה
           <>
-            <div 
-              className="cursor-pointer hover:opacity-90 transition-opacity"
-              onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
-            >
-              {currentView.data.explanation && typeof currentView.data.explanation === 'string' && (
-                <div className="mb-3 text-sm">
-                  <TranslatableContent
-                    content={currentView.data.explanation}
-                    entity={currentView.data}
-                    entityType="Suggestion"
-                    className="text-slate-600"
-                  />
-                </div>
-              )}
+            {(() => {
+              const animationPhase = animationPhases[currentView.data.id] || 'none';
               
-              {currentView.data.originalContent ? (
-                <div>
-                  <SectionDiff
-                    originalContent={currentView.data.originalContent}
-                    newContent={currentView.data.newContent}
-                    documentId={document?.id}
-                    sectionId={section?.id}
-                    suggestion={currentView.data}
-                    section={section}
+              // שלב החגיגה - מסגרת ירוקה ואייקון (3 שניות)
+              if (animationPhase === 'celebrating') {
+                return (
+                  <motion.div
+                    initial={{ scale: 1 }}
+                    animate={{ scale: [1, 1.02, 1] }}
+                    transition={{ duration: 0.6, ease: "easeInOut" }}
+                    className="relative overflow-hidden rounded-lg p-4"
+                    style={{
+                      background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(220 252 231) 100%)',
+                      border: '2px solid rgb(34 197 94)',
+                    }}
+                  >
+                    <motion.div
+                      className="absolute inset-0 bg-green-500/10"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: [0, 0.3, 0.1] }}
+                      transition={{ duration: 1 }}
+                    />
+                    <div className="relative z-10">
+                      <div className="flex items-start gap-3 mb-3">
+                        <motion.div
+                          initial={{ scale: 0, rotate: -180 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ type: "spring", duration: 0.6 }}
+                          className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0"
+                        >
+                          <CheckCircle className="w-5 h-5 text-white" />
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="text-lg font-bold text-green-700"
+                        >
+                          ההצעה התקבלה!
+                        </motion.div>
+                      </div>
+                      <div className="prose prose-sm max-w-none">
+                        <DocumentTextContent content={currentView.data.newContent} className="text-slate-700" />
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              }
+              
+              // שלב המעבר - מעבר הדרגתי למראה של סעיף רגיל (2 שניות)
+              if (animationPhase === 'transitioning') {
+                return (
+                  <div 
+                    className="relative overflow-hidden rounded-lg p-4 transition-all duration-[2000ms] ease-out"
+                    style={{
+                      background: 'rgb(255 255 255)',
+                      border: '1px solid rgb(226 232 240)',
+                    }}
+                  >
+                    <div className="prose prose-sm max-w-none">
+                      <DocumentTextContent content={currentView.data.newContent} className="text-slate-700" />
+                    </div>
+                  </div>
+                );
+              }
+              
+              // שלב הדהייה - דהייה חלקה (1 שניה)
+              if (animationPhase === 'fading') {
+                return (
+                  <motion.div
+                    initial={{ opacity: 1 }}
+                    animate={{ opacity: 0 }}
+                    transition={{ duration: 1 }}
+                  >
+                    <div 
+                      className="relative overflow-hidden rounded-lg p-4"
+                      style={{
+                        background: 'rgb(255 255 255)',
+                        border: '1px solid rgb(226 232 240)',
+                      }}
+                    >
+                      <div className="prose prose-sm max-w-none">
+                        <DocumentTextContent content={currentView.data.newContent} className="text-slate-700" />
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              }
+              
+              // תצוגה רגילה - diff או הצעה
+              return (
+                <div 
+                  className="cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
+                >
+                  {currentView.data.explanation && typeof currentView.data.explanation === 'string' && (
+                    <div className="mb-3 text-sm">
+                      <TranslatableContent
+                        content={currentView.data.explanation}
+                        entity={currentView.data}
+                        entityType="Suggestion"
+                        className="text-slate-600"
+                      />
+                    </div>
+                  )}
+                  
+                  {currentView.data.originalContent ? (
+                    <div>
+                      <SectionDiff
+                        originalContent={currentView.data.originalContent}
+                        newContent={currentView.data.newContent}
+                        documentId={document?.id}
+                        sectionId={section?.id}
+                        suggestion={currentView.data}
+                        section={section}
+                      />
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-green-50 rounded border border-green-200 hover:bg-green-100 hover:shadow-md transition-all">
+                      <TranslatableContent
+                        content={currentView.data.newContent}
+                        entity={currentView.data}
+                        entityType="Suggestion"
+                        className="prose prose-sm max-w-none"
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* כפתורי הצבעה והערות - רק אם לא באנימציה */}
+            {!['celebrating', 'transitioning', 'fading'].includes(animationPhases[currentView.data.id]) && (
+              <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap">
+                {document?.votingButtonsEnabled ? (
+                  <>
+                    <Button
+                      variant={getUserVote(currentView.data.id)?.vote === 'pro' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!user) {
+                          base44.auth.redirectToLogin(window.location.href);
+                          return;
+                        }
+                        voteMutation.mutate({
+                          suggestionId: currentView.data.id,
+                          vote: 'pro',
+                          currentVote: getUserVote(currentView.data.id)
+                        });
+                      }}
+                      disabled={voteMutation.isPending}
+                      className={`text-xs px-2 md:px-3 ${getUserVote(currentView.data.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                    >
+                      <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                      {currentView.data.proVotes || 0}
+                    </Button>
+                    <Button
+                      variant={getUserVote(currentView.data.id)?.vote === 'con' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!user) {
+                          base44.auth.redirectToLogin(window.location.href);
+                          return;
+                        }
+                        voteMutation.mutate({
+                          suggestionId: currentView.data.id,
+                          vote: 'con',
+                          currentVote: getUserVote(currentView.data.id)
+                        });
+                      }}
+                      disabled={voteMutation.isPending}
+                      className={`text-xs px-2 md:px-3 ${getUserVote(currentView.data.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
+                    >
+                      <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                      {currentView.data.conVotes || 0}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-1 text-green-600 text-xs md:text-sm">
+                      <ThumbsUp className="w-3 h-3 md:w-4 md:h-4" />
+                      <span className="font-medium">{currentView.data.proVotes || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-red-600 text-xs md:text-sm">
+                      <ThumbsDown className="w-3 h-3 md:w-4 md:h-4" />
+                      <span className="font-medium">{currentView.data.conVotes || 0}</span>
+                    </div>
+                  </>
+                )}
+                <div className="flex-shrink-0">
+                  <VotesNeededCounter 
+                    suggestion={currentView.data} 
+                    document={document} 
+                    acceptedSuggestions={acceptedSuggestions}
+                    sectionId={section.id}
                   />
                 </div>
-              ) : (
-                <div className="p-3 bg-green-50 rounded border border-green-200 hover:bg-green-100 hover:shadow-md transition-all">
-                  <TranslatableContent
-                    content={currentView.data.newContent}
-                    entity={currentView.data}
-                    entityType="Suggestion"
-                    className="prose prose-sm max-w-none"
-                  />
+                <Link to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === currentView.data.created_by)?.id}`} className="flex-shrink-0">
+                  <Badge variant="outline" className="text-[10px] md:text-xs hover:bg-slate-50 cursor-pointer whitespace-nowrap">
+                    {t('by')} {getUserName(currentView.data.created_by)}
+                  </Badge>
+                </Link>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="text-[10px] md:text-xs h-7 md:h-8 px-2 md:px-3 flex-shrink-0"
+                  onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
+                >
+                  {t('viewDetails')}
+                </Button>
+              </div>
+            )}
+
+            {/* תגובות להצעה - רק אם לא באנימציה */}
+            {!['celebrating', 'transitioning', 'fading'].includes(animationPhases[currentView.data.id]) && (
+              <>
+                <div className="mt-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleComments(`suggestion-${currentView.data.id}`)}
+                    className="h-7 md:h-8 text-xs px-2"
+                  >
+                    <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                    {t('comments')} ({getCommentsCount('suggestion', currentView.data.id)})
+                  </Button>
                 </div>
-              )}
-            </div>
-
-            {/* כפתורי הצבעה והערות */}
-            <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap">
-              {document?.votingButtonsEnabled ? (
-                <>
-                  <Button
-                    variant={getUserVote(currentView.data.id)?.vote === 'pro' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!user) {
-                        base44.auth.redirectToLogin(window.location.href);
-                        return;
-                      }
-                      voteMutation.mutate({
-                        suggestionId: currentView.data.id,
-                        vote: 'pro',
-                        currentVote: getUserVote(currentView.data.id)
-                      });
-                    }}
-                    disabled={voteMutation.isPending}
-                    className={`text-xs px-2 md:px-3 ${getUserVote(currentView.data.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
-                  >
-                    <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                    {currentView.data.proVotes || 0}
-                  </Button>
-                  <Button
-                    variant={getUserVote(currentView.data.id)?.vote === 'con' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!user) {
-                        base44.auth.redirectToLogin(window.location.href);
-                        return;
-                      }
-                      voteMutation.mutate({
-                        suggestionId: currentView.data.id,
-                        vote: 'con',
-                        currentVote: getUserVote(currentView.data.id)
-                      });
-                    }}
-                    disabled={voteMutation.isPending}
-                    className={`text-xs px-2 md:px-3 ${getUserVote(currentView.data.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
-                  >
-                    <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                    {currentView.data.conVotes || 0}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-1 text-green-600 text-xs md:text-sm">
-                    <ThumbsUp className="w-3 h-3 md:w-4 md:h-4" />
-                    <span className="font-medium">{currentView.data.proVotes || 0}</span>
+                {showComments[`suggestion-${currentView.data.id}`] && (
+                  <div className="mt-4 pt-4 border-t border-slate-200">
+                    <CommentsSection
+                      entityType="suggestion"
+                      entityId={currentView.data.id}
+                      user={user}
+                      sectionId={section?.id}
+                    />
                   </div>
-                  <div className="flex items-center gap-1 text-red-600 text-xs md:text-sm">
-                    <ThumbsDown className="w-3 h-3 md:w-4 md:h-4" />
-                    <span className="font-medium">{currentView.data.conVotes || 0}</span>
-                  </div>
-                </>
-              )}
-              <div className="flex-shrink-0">
-                <VotesNeededCounter 
-                  suggestion={currentView.data} 
-                  document={document} 
-                  acceptedSuggestions={acceptedSuggestions}
-                  sectionId={section.id}
-                />
-              </div>
-              <Link to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === currentView.data.created_by)?.id}`} className="flex-shrink-0">
-                <Badge variant="outline" className="text-[10px] md:text-xs hover:bg-slate-50 cursor-pointer whitespace-nowrap">
-                  {t('by')} {getUserName(currentView.data.created_by)}
-                </Badge>
-              </Link>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="text-[10px] md:text-xs h-7 md:h-8 px-2 md:px-3 flex-shrink-0"
-                onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
-              >
-                {t('viewDetails')}
-              </Button>
-            </div>
-
-            {/* תגובות להצעה */}
-            <div className="mt-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => toggleComments(`suggestion-${currentView.data.id}`)}
-                className="h-7 md:h-8 text-xs px-2"
-              >
-                <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                {t('comments')} ({getCommentsCount('suggestion', currentView.data.id)})
-              </Button>
-            </div>
-            {showComments[`suggestion-${currentView.data.id}`] && (
-              <div className="mt-4 pt-4 border-t border-slate-200">
-                <CommentsSection
-                  entityType="suggestion"
-                  entityId={currentView.data.id}
-                  user={user}
-                  sectionId={section?.id}
-                />
-              </div>
+                )}
+              </>
             )}
           </>
         )}
