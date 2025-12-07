@@ -217,7 +217,11 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
       return;
     }
     
-    const users = await getCachedUsers();
+    if (!suggestion.created_by) {
+      console.error('[NOTIFICATION ERROR] Suggestion missing created_by:', suggestion.id);
+      return;
+    }
+    
     const notifiedUserIds = new Set();
     const notifications = [];
     const actionUrl = `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`;
@@ -234,8 +238,10 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     
     const suggestionTitle = suggestion.title || 'הצעה ללא כותרת';
     
-    // 1. יוצר ההצעה
-    const suggestionCreator = getUserFromCache(users, { email: suggestion.created_by });
+    // 1. יוצר ההצעה - שליפה ישירה מה-DB
+    const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+    const suggestionCreator = suggestionCreatorList[0];
+    
     if (suggestionCreator) {
       notifiedUserIds.add(suggestionCreator.id);
       const userLang = suggestionCreator.preferredLanguage || 'he';
@@ -248,18 +254,21 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
         relatedEntityType: 'suggestion',
         actionUrl
       });
+      console.log('[NOTIFICATION] Added notification for suggestion creator:', suggestionCreator.email);
     } else {
-      console.error('[NOTIFICATION ERROR] Suggestion creator not found:', suggestion.created_by);
+      console.error('[NOTIFICATION ERROR] Suggestion creator not found in DB:', suggestion.created_by);
+      return; // אם יוצר ההצעה לא נמצא, לא שולחים נוטיפיקציות כלל
     }
     
     // 2. אם התקבלה - יוצר המסמך, מנהלים, ומצביעי pro
     if (newStatus === 'accepted') {
-      const [adminIds, proVotes] = await Promise.all([
+      const [adminIds, proVotes, allUsers] = await Promise.all([
         getDocumentAdmins(suggestion.documentId),
-        base44.entities.Vote.filter({ suggestionId: suggestion.id, vote: 'pro' })
+        base44.entities.Vote.filter({ suggestionId: suggestion.id, vote: 'pro' }),
+        base44.entities.User.list()
       ]);
       
-      const docCreator = await getDocumentCreator(suggestion.documentId, users);
+      const docCreator = await getDocumentCreator(suggestion.documentId, allUsers);
       if (docCreator && !notifiedUserIds.has(docCreator.id)) {
         notifiedUserIds.add(docCreator.id);
         const userLang = docCreator.preferredLanguage || 'he';
@@ -277,7 +286,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
       for (const adminId of adminIds) {
         if (notifiedUserIds.has(adminId)) continue;
         notifiedUserIds.add(adminId);
-        const admin = getUserFromCache(users, { id: adminId });
+        const admin = getUserFromCache(allUsers, { id: adminId });
         const userLang = admin?.preferredLanguage || 'he';
         notifications.push({
           userId: adminId,
@@ -293,7 +302,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
       for (const vote of proVotes) {
         if (notifiedUserIds.has(vote.userId)) continue;
         notifiedUserIds.add(vote.userId);
-        const voter = getUserFromCache(users, { id: vote.userId });
+        const voter = getUserFromCache(allUsers, { id: vote.userId });
         const userLang = voter?.preferredLanguage || 'he';
         notifications.push({
           userId: vote.userId,
