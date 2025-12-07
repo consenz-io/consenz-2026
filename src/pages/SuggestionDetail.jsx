@@ -636,7 +636,7 @@ export default function SuggestionDetail() {
               backUrl={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}`}
             />
           </div>
-          {user && user.email === suggestion.created_by && (
+          {user && user.email === suggestion.created_by && suggestion.status !== 'accepted' && (
             <Button
               variant="destructive"
               size="sm"
