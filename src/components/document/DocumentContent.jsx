@@ -1128,8 +1128,8 @@ Return ONLY the translated text:`;
                             {newSectionSuggestions
                               .filter(s => {
                                 const pos = s.insertPosition;
-                                // Show suggestions with insertPosition matching this index
-                                return pos !== undefined && pos !== null && pos === index;
+                                // Show suggestions with insertPosition matching this section's order
+                                return pos !== undefined && pos !== null && pos === section.order;
                               })
                               .map((suggestion) => (
                                 <NewSectionSuggestionCard
@@ -1156,7 +1156,7 @@ Return ONLY the translated text:`;
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      onClick={() => onNewSection(topic.id, index)}
+                                      onClick={() => onNewSection(topic.id, section.order)}
                                       className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
                                     >
                                       <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
@@ -1172,7 +1172,7 @@ Return ONLY the translated text:`;
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => onNewSection(topic.id, 0)}
+                                  onClick={() => onNewSection(topic.id, section.order)}
                                   className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
                                 >
                                   <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
@@ -1216,8 +1216,8 @@ Return ONLY the translated text:`;
                                 {newSectionSuggestions
                                     .filter(s => {
                                       const pos = s.insertPosition;
-                                      // Show suggestions with insertPosition > last section index, or undefined/null (default to end)
-                                      return (pos !== undefined && pos !== null && pos > index) || (pos === undefined || pos === null);
+                                      // Show suggestions with insertPosition > last section order, or undefined/null (default to end)
+                                      return (pos !== undefined && pos !== null && pos > section.order) || (pos === undefined || pos === null);
                                     })
                                     .map((suggestion) => (
                                       <NewSectionSuggestionCard
@@ -1247,7 +1247,7 @@ Return ONLY the translated text:`;
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        onClick={() => onNewSection(topic.id, index + 1)}
+                                        onClick={() => onNewSection(topic.id, section.order + 1)}
                                         className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
                                       >
                                         <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
@@ -1260,7 +1260,7 @@ Return ONLY the translated text:`;
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => onNewSection(topic.id, index + 1)}
+                                    onClick={() => onNewSection(topic.id, section.order + 1)}
                                     className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
                                   >
                                     <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
