@@ -100,8 +100,8 @@ export default function DocumentContent({
     });
 
     const checkAndAutoAccept = async () => {
-      // בדיקת הצעות סעיפים שעברו את הסף אבל לא התקבלו
-      const pendingSuggestions = suggestions.filter(s => s.status === 'pending' && s.type !== 'new_section');
+      // בדיקת הצעות סעיפים שעברו את הסף אבל לא התקבלו - רק עבור edit_section
+      const pendingSuggestions = suggestions.filter(s => s.status === 'pending' && s.type === 'edit_section');
       for (const suggestion of pendingSuggestions) {
         const consensuses = document.consensuses || [];
         let threshold;
@@ -122,6 +122,11 @@ export default function DocumentContent({
             const acceptingUserId = user?.id || suggestion.created_by;
             const accepted = await autoAcceptSuggestion(suggestion, acceptingUserId, document);
             if (accepted) {
+              // הצגת הודעה
+              toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', {
+                duration: 4000,
+              });
+              
               // רענון הסעיפים אחרי 7 שניות (אחרי שהאנימציה נעלמה לגמרי)
               setTimeout(() => {
                 Promise.all([
