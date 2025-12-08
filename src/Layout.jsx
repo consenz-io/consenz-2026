@@ -290,13 +290,6 @@ function LayoutContent({ children, currentPageName }) {
                     <option value="ar">عر</option>
                   </select>
                 </div>
-                {user && (
-                  <div data-notification-bell className="hidden md:block">
-                    <NotificationErrorBoundary>
-                      <NotificationBell user={user} />
-                    </NotificationErrorBoundary>
-                  </div>
-                )}
               </div>
             </div>
           </header>
