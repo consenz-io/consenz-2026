@@ -78,14 +78,14 @@ export default function TranslatableContent({
   // בדיקה אם צריך תרגום - בודק גם אם השפות שונות וגם אם השפה אינה שפת המקור
   const needsTranslation = originalLanguage && language && originalLanguage !== language;
   
-  const [localShowTranslated, setLocalShowTranslated] = useState(needsTranslation && hasTranslation);
+  const [localShowTranslated, setLocalShowTranslated] = useState(false);
   
-  // Sync with global translation state
+  // Sync with global translation state and initial state
   useEffect(() => {
     if (hasTranslation) {
-      setLocalShowTranslated(globalShowTranslated);
+      setLocalShowTranslated(globalShowTranslated || (needsTranslation && hasTranslation));
     }
-  }, [globalShowTranslated, hasTranslation]);
+  }, [globalShowTranslated, hasTranslation, needsTranslation]);
   
   const showTranslated = localShowTranslated;
   
