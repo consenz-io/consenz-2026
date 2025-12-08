@@ -95,6 +95,9 @@ export default function TranslatableContent({
 
   const translateMutation = useMutation({
     mutationFn: async () => {
+      if (!entity || !entityType) {
+        throw new Error('Entity is required for translation');
+      }
       const prompt = `You are a professional translator. Translate the following HTML content to ${languagePrompts[language]}.
 
 CRITICAL INSTRUCTIONS:
