@@ -95,7 +95,9 @@ export default function DocumentComments() {
 
   const getUserName = (email) => {
     const profile = publicProfiles.find(p => p.email === email);
-    return profile?.fullName || 'User';
+    if (profile?.fullName) return profile.fullName;
+    // Fallback to email username if no profile found
+    return email ? email.split('@')[0] : 'User';
   };
 
   // Translate comment mutation
