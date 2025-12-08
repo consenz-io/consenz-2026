@@ -309,12 +309,12 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
               {isEditing ? (
                 <div className="space-y-2">
                   <Textarea
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    className="min-h-[80px] text-sm"
-                    dir={isRTL ? 'rtl' : 'ltr'}
-                    autoFocus
-                  />
+  value={editContent}
+  onChange={(e) => setEditContent(e.target.value)}
+  className="min-h-[80px] text-sm"
+  dir="auto" // <--- תיקון: זיהוי אוטומטי לפי התוכן
+  autoFocus
+/>
                   <div className="flex gap-2">
                     <Button
                       size="sm"
