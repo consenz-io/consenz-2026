@@ -21,6 +21,7 @@ import { checkSuggestionConsensus, autoAcceptSuggestion } from "../components/do
 import { useLanguage } from "@/components/LanguageContext";
 import { notifyVoteOnSuggestion, notifySuggestionStatusChange } from "../components/notifications/createNotification";
 import PageHeader from "../components/PageHeader";
+import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 
 export default function SuggestionDetail() {
   const { t, isRTL } = useLanguage();
@@ -33,6 +34,7 @@ export default function SuggestionDetail() {
   const [error, setError] = useState(null);
   const [isEditingExplanation, setIsEditingExplanation] = useState(false);
   const [editedExplanation, setEditedExplanation] = useState("");
+  const [showEditSuggestionModal, setShowEditSuggestionModal] = useState(false);
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
@@ -626,6 +628,34 @@ export default function SuggestionDetail() {
   const isNewestVersion = currentVersionIndex === 0;
   const isOldestVersion = currentVersionIndex === suggestionVersions.length - 1 || currentVersionIndex === -1;
 
+  // Check if section content matches current version in document
+  const isSectionContentCurrent = React.useMemo(() => {
+    if (!section || !suggestion || suggestion.type !== 'edit_section') return false;
+    // Compare stripped HTML to avoid whitespace/formatting differences
+    const stripHtml = (html) => html.replace(/<[^>]*>/g, '').trim();
+    return stripHtml(section.content) === stripHtml(suggestion.originalContent);
+  }, [section, suggestion]);
+
+  const { data: topics } = useQuery({
+    queryKey: ['topics', suggestion?.documentId],
+    queryFn: () => base44.entities.Topic.filter({ documentId: suggestion.documentId }, 'order'),
+    enabled: !!suggestion?.documentId,
+    initialData: [],
+  });
+
+  const { data: sections } = useQuery({
+    queryKey: ['sections', suggestion?.documentId],
+    queryFn: () => base44.entities.Section.filter({ documentId: suggestion.documentId }),
+    enabled: !!suggestion?.documentId,
+    initialData: [],
+  });
+
+  const handleSuggestionCreated = (newSuggestionId, newSectionId, newTopicId) => {
+    // Navigate to document view with new suggestion
+    const url = `${createPageUrl("DocumentView")}?id=${suggestion.documentId}&openSuggestion=${newSuggestionId}&scrollToSection=${newSectionId || 'new'}&scrollToTopic=${newTopicId}`;
+    navigate(url);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
       <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 w-full overflow-x-hidden">
@@ -779,7 +809,20 @@ export default function SuggestionDetail() {
               </div>
             ) : suggestion.type === 'new_section' ? (
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedContent')}</h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-slate-700">{t('proposedContent')}</h3>
+                  {user && isSectionContentCurrent && section && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowEditSuggestionModal(true)}
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      <Edit2 className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                      {t('suggestEditSection')}
+                    </Button>
+                  )}
+                </div>
                 <Link 
                   to={`${createPageUrl("DocumentCleanView")}?id=${suggestion.documentId}&scrollToSuggestion=${suggestionId}`}
                   className="block"
@@ -799,7 +842,20 @@ export default function SuggestionDetail() {
               </div>
             ) : (
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedContent')}</h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-slate-700">{t('proposedContent')}</h3>
+                  {user && isSectionContentCurrent && section && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowEditSuggestionModal(true)}
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      <Edit2 className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                      {t('suggestEditSection')}
+                    </Button>
+                  )}
+                </div>
                 <Link 
                   to={`${createPageUrl("DocumentCleanView")}?id=${suggestion.documentId}&scrollToSuggestion=${suggestionId}`}
                   className="block"
@@ -1023,6 +1079,24 @@ export default function SuggestionDetail() {
             />
           </CardContent>
         </Card>
+
+        {showEditSuggestionModal && section && document && (
+          <CreateSuggestionModal
+            document={document}
+            topics={topics}
+            sections={sections}
+            editingSection={{
+              id: section.id,
+              topicId: section.topicId,
+              isNew: false,
+              isDirectEdit: false
+            }}
+            user={user}
+            onClose={() => setShowEditSuggestionModal(false)}
+            isAdmin={isAdmin}
+            onSuggestionCreated={handleSuggestionCreated}
+          />
+        )}
       </div>
     </div>
   );
