@@ -21,6 +21,7 @@ import { checkSuggestionConsensus, autoAcceptSuggestion } from "../components/do
 import { useLanguage } from "@/components/LanguageContext";
 import { notifyVoteOnSuggestion, notifySuggestionStatusChange } from "../components/notifications/createNotification";
 import PageHeader from "../components/PageHeader";
+import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 
 export default function SuggestionDetail() {
   const { t, isRTL } = useLanguage();
@@ -33,6 +34,7 @@ export default function SuggestionDetail() {
   const [error, setError] = useState(null);
   const [isEditingExplanation, setIsEditingExplanation] = useState(false);
   const [editedExplanation, setEditedExplanation] = useState("");
+  const [showEditSectionModal, setShowEditSectionModal] = useState(false);
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
@@ -156,6 +158,20 @@ export default function SuggestionDetail() {
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: () => base44.entities.User.list(),
+    initialData: [],
+  });
+
+  const { data: topics } = useQuery({
+    queryKey: ['topics', suggestion?.documentId],
+    queryFn: () => base44.entities.Topic.filter({ documentId: suggestion.documentId }, 'order'),
+    enabled: !!suggestion?.documentId,
+    initialData: [],
+  });
+
+  const { data: sections } = useQuery({
+    queryKey: ['sections', suggestion?.documentId],
+    queryFn: () => base44.entities.Section.filter({ documentId: suggestion.documentId }),
+    enabled: !!suggestion?.documentId,
     initialData: [],
   });
 
@@ -626,6 +642,14 @@ export default function SuggestionDetail() {
   const isNewestVersion = currentVersionIndex === 0;
   const isOldestVersion = currentVersionIndex === suggestionVersions.length - 1 || currentVersionIndex === -1;
 
+  // Check if original content still matches current section content
+  const isContentStillCurrent = React.useMemo(() => {
+    if (suggestion?.type !== 'edit_section' || !suggestion?.originalContent || !section?.content) {
+      return false;
+    }
+    return suggestion.originalContent.trim() === section.content.trim();
+  }, [suggestion, section]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
       <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 w-full overflow-x-hidden">
@@ -796,6 +820,39 @@ export default function SuggestionDetail() {
                     />
                   </div>
                 </Link>
+              </div>
+            ) : suggestion.type === 'edit_section' && isContentStillCurrent ? (
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedContent')}</h3>
+                <div className="space-y-2">
+                  <Link 
+                    to={`${createPageUrl("DocumentCleanView")}?id=${suggestion.documentId}&scrollToSuggestion=${suggestionId}`}
+                    className="block"
+                  >
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
+                      <TranslatableContent
+                        content={suggestion.newContent}
+                        entity={suggestion}
+                        entityType="Suggestion"
+                        onUpdate={(updated) => {
+                          queryClient.setQueryData(['suggestion', suggestionId], updated);
+                        }}
+                        className="prose prose-sm max-w-none"
+                      />
+                    </div>
+                  </Link>
+                  {user && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowEditSectionModal(true)}
+                      className="w-full mt-2"
+                    >
+                      <Edit2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {t('suggestEditSection')}
+                    </Button>
+                  )}
+                </div>
               </div>
             ) : (
               <div>
@@ -1024,6 +1081,22 @@ export default function SuggestionDetail() {
           </CardContent>
         </Card>
       </div>
+
+      {showEditSectionModal && section && (
+        <CreateSuggestionModal
+          document={document}
+          topics={topics}
+          sections={sections}
+          editingSection={{ id: section.id, topicId: section.topicId }}
+          user={user}
+          onClose={() => setShowEditSectionModal(false)}
+          isAdmin={isAdmin}
+          onSuggestionCreated={(newSuggestionId) => {
+            setShowEditSectionModal(false);
+            navigate(`${createPageUrl("SuggestionDetail")}?id=${newSuggestionId}`);
+          }}
+        />
+      )}
     </div>
   );
 }
