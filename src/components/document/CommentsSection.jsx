@@ -26,14 +26,13 @@ const CommentItem = ({
   allComments,
   t
 }) => {
+  // Always call hooks in the same order, regardless of conditions
   const [localEditContent, setLocalEditContent] = useState(comment.content);
-  const isEditing = editingComment?.id === comment.id;
-
+  
+  // Always run useEffect
   useEffect(() => {
-    if (isEditing) {
-      setLocalEditContent(comment.content);
-    }
-  }, [isEditing, comment.content]);
+    setLocalEditContent(comment.content);
+  }, [comment.content, editingComment?.id]);
 
   const getUserName = (email) => {
     const profile = publicProfiles?.find(p => p.email === email);
@@ -45,6 +44,7 @@ const CommentItem = ({
     return 'User';
   };
 
+  const isEditing = editingComment?.id === comment.id;
   const replies = allComments.filter(c => c.parentCommentId === comment.id);
 
   return (
