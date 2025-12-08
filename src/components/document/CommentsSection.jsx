@@ -311,6 +311,14 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     queryKey: ['users'],
     queryFn: () => base44.entities.User.list(),
     initialData: [],
+    retry: false,
+    throwOnError: false,
+  });
+
+  const { data: publicProfiles } = useQuery({
+    queryKey: ['publicProfiles'],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
+    initialData: [],
   });
 
   const { data: publicProfiles } = useQuery({
