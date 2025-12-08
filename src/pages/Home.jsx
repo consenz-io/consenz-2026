@@ -58,14 +58,6 @@ export default function Home() {
     initialData: [],
   });
 
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
-    initialData: [],
-    retry: false,
-    throwOnError: false,
-  });
-
   const { data: publicProfiles = [] } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
@@ -97,7 +89,7 @@ export default function Home() {
       document: doc,
       suggestions: allSuggestions.filter(s => s.documentId === doc.id),
       allVotes,
-      allUsers,
+      allUsers: [],
       allArguments,
       allComments,
       sections: allSections.filter(s => s.documentId === doc.id)
@@ -120,12 +112,7 @@ export default function Home() {
     
     // Voters
     const userIdToEmail = {};
-    // First try public profiles (accessible to all)
     publicProfiles.forEach(p => { userIdToEmail[p.userId] = p.email; });
-    // Fallback to allUsers (for admins)
-    if (allUsers.length > 0) {
-      allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
-    }
     allVotes.forEach(v => {
       if (userIdToEmail[v.userId]) uniqueEmails.add(userIdToEmail[v.userId]);
     });
@@ -140,24 +127,17 @@ export default function Home() {
       if (c.created_by) uniqueEmails.add(c.created_by);
     });
     
-    // Build contributors list with names
-    // First map from public profiles (accessible to all)
+    // Build contributors list with names from public profiles
     const emailToProfile = {};
     publicProfiles.forEach(p => { emailToProfile[p.email] = p; });
     
-    // Fallback map from users (for admins or missing profiles)
-    const emailToUser = {};
-    if (allUsers.length > 0) {
-      allUsers.forEach(u => { emailToUser[u.email] = u; });
-    }
-    
     const list = Array.from(uniqueEmails).map(email => {
-      const user = emailToUser[email];
+      const profile = emailToProfile[email];
       
       return {
         email,
-        name: user?.full_name || 'User',
-        id: user?.id
+        name: profile?.fullName || 'User',
+        id: profile?.userId
       };
     }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     
@@ -165,7 +145,7 @@ export default function Home() {
       totalUniqueContributors: Math.max(1, uniqueEmails.size),
       contributorsList: list
     };
-  }, [documents, allSuggestions, allVotes, allUsers, publicProfiles, allArguments, allComments]);
+  }, [documents, allSuggestions, allVotes, publicProfiles, allArguments, allComments]);
 
   const calculateAverageConsensus = () => {
     if (!acceptedSuggestions || acceptedSuggestions.length === 0) return 0;
