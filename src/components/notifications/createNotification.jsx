@@ -210,29 +210,40 @@ export async function createNotification({
  */
 export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName }) {
   try {
+    // Don't notify if voter is the suggestion creator
     if (voterEmail === suggestion.created_by) return;
+    
+    // Validate required data
+    if (!suggestion?.id || !suggestion?.created_by || !voterEmail) {
+      console.error('[NOTIFICATION ERROR] Missing required data for vote notification:', { suggestion, voterEmail });
+      return;
+    }
     
     const [users, publicProfiles] = await Promise.all([
       getCachedUsers(),
       getCachedPublicProfiles()
     ]);
-    const suggestionCreator = getUserFromCache(users, publicProfiles, { email: suggestion.created_by });
-    if (!suggestionCreator) return;
     
-    const displayName = voterName || getUserFromCache(users, publicProfiles, { email: voterEmail })?.full_name || voterEmail;
+    const suggestionCreator = getUserFromCache(users, publicProfiles, { email: suggestion.created_by });
+    if (!suggestionCreator?.id) {
+      console.error('[NOTIFICATION ERROR] Suggestion creator not found:', suggestion.created_by);
+      return;
+    }
+    
+    const displayName = voterName || getUserFromCache(users, publicProfiles, { email: voterEmail })?.full_name || voterEmail.split('@')[0];
     const userLang = suggestionCreator.preferredLanguage || 'he';
     
     await createNotification({
       userId: suggestionCreator.id,
       type: 'vote_on_suggestion',
       title: translate('notifVoteTitle', userLang),
-      message: translate('notifVoteMessage', userLang, { name: displayName, title: suggestion.title }),
+      message: translate('notifVoteMessage', userLang, { name: displayName, title: suggestion.title || 'הצעה' }),
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
       actionUrl: createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`
     });
   } catch (error) {
-    console.error('[NOTIFICATION ERROR]', error);
+    console.error('[NOTIFICATION ERROR] notifyVoteOnSuggestion failed:', error);
   }
 }
 
@@ -371,6 +382,12 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
  */
 export async function notifyNewSuggestion({ suggestion, document, currentUser }) {
   try {
+    // Validate required data
+    if (!suggestion?.id || !document?.id || !currentUser?.email) {
+      console.error('[NOTIFICATION ERROR] Missing required data for new suggestion notification:', { suggestion, document, currentUser });
+      return;
+    }
+    
     // שליפת כל הנתונים - מסוננים למסמך הספציפי לביצועים
     const [users, publicProfiles, allSuggestions, allArguments, sections] = await Promise.all([
       getCachedUsers(),
@@ -469,6 +486,12 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
  */
 export async function notifyNewComment({ comment, targetEntity, targetEntityType, parentComment = null }) {
   try {
+    // Validate required data
+    if (!comment?.id || !comment?.created_by || !targetEntity?.id || !targetEntityType) {
+      console.error('[NOTIFICATION ERROR] Missing required data for comment notification:', { comment, targetEntity, targetEntityType });
+      return;
+    }
+    
     const [users, publicProfiles, allComments] = await Promise.all([
       getCachedUsers(),
       getCachedPublicProfiles(),
@@ -476,7 +499,7 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
     ]);
     
     const commenter = getUserFromCache(users, publicProfiles, { email: comment.created_by });
-    const commenterName = commenter?.full_name || commenter?.email || comment.created_by;
+    const commenterName = commenter?.full_name || commenter?.email?.split('@')[0] || 'משתמש';
     
     const notifiedEmails = new Set();
     notifiedEmails.add(comment.created_by);
@@ -546,6 +569,12 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
  */
 export async function notifyNewDocumentComment({ comment, document, parentComment = null }) {
   try {
+    // Validate required data
+    if (!comment?.id || !comment?.created_by || !document?.id) {
+      console.error('[NOTIFICATION ERROR] Missing required data for document comment notification:', { comment, document });
+      return;
+    }
+    
     const [users, publicProfiles, adminIds, allDocumentComments] = await Promise.all([
       getCachedUsers(),
       getCachedPublicProfiles(),
@@ -554,7 +583,7 @@ export async function notifyNewDocumentComment({ comment, document, parentCommen
     ]);
     
     const commenter = getUserFromCache(users, publicProfiles, { email: comment.created_by });
-    const commenterName = commenter?.full_name || commenter?.email || comment.created_by;
+    const commenterName = commenter?.full_name || commenter?.email?.split('@')[0] || 'משתמש';
     
     const notifiedEmails = new Set();
     notifiedEmails.add(comment.created_by);
