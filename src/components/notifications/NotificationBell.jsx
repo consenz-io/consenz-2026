@@ -26,9 +26,9 @@ export default function NotificationBell({ user }) {
       return notifs;
     },
     enabled: !!user?.id,
-    staleTime: 0,
-    refetchInterval: 30000,
-    refetchIntervalInBackground: true,
+    staleTime: 30000,
+    refetchInterval: 60000,
+    refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
     refetchOnMount: true,
   });
@@ -61,7 +61,7 @@ export default function NotificationBell({ user }) {
 
   const handleNotificationClick = async (notification) => {
     try {
-      // Mark as read first
+      // Mark as read first and WAIT for it
       if (!notification.read) {
         await markAsReadMutation.mutateAsync(notification.id);
       }
@@ -74,8 +74,6 @@ export default function NotificationBell({ user }) {
         // Small delay to ensure popover closes
         await new Promise(resolve => setTimeout(resolve, 150));
         
-        console.log('[NAVIGATION] Navigating to:', notification.actionUrl);
-        
         try {
           navigate(notification.actionUrl);
         } catch (navError) {
@@ -83,8 +81,6 @@ export default function NotificationBell({ user }) {
           // Fallback to window.location for external or problematic URLs
           window.location.href = notification.actionUrl;
         }
-      } else {
-        console.warn('[NAVIGATION] No valid actionUrl for notification:', notification.id);
       }
     } catch (error) {
       console.error('[NOTIFICATION CLICK ERROR]', error);

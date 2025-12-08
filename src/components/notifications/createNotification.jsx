@@ -5,6 +5,18 @@ import { createPageUrl } from "@/utils";
 const userCache = new Map();
 const CACHE_TTL = 60000; // 1 minute
 
+// Clean up old cache entries periodically
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, value] of userCache.entries()) {
+      if (now - value.timestamp > CACHE_TTL) {
+        userCache.delete(key);
+      }
+    }
+  }, CACHE_TTL);
+}
+
 async function getCachedUsers() {
   const cacheKey = 'all_users';
   const cached = userCache.get(cacheKey);
@@ -315,12 +327,21 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     
     // 2. אם התקבלה - יוצר המסמך, מנהלים, ומצביעי pro
     if (newStatus === 'accepted') {
-      const [adminIds, proVotes, allUsers, publicProfiles] = await Promise.all([
+      const [adminIds, proVotes, publicProfiles] = await Promise.all([
         getDocumentAdmins(suggestion.documentId),
         base44.entities.Vote.filter({ suggestionId: suggestion.id, vote: 'pro' }),
-        base44.entities.User.list(),
         getCachedPublicProfiles()
       ]);
+      
+      // שלוף רק משתמשים רלוונטיים במקום כולם
+      const relevantUserIds = [...new Set([
+        ...adminIds,
+        ...proVotes.map(v => v.userId)
+      ].filter(Boolean))];
+      
+      const allUsers = relevantUserIds.length > 0 
+        ? await base44.entities.User.filter({ id: { $in: relevantUserIds } })
+        : [];
       
       const docCreator = await getDocumentCreator(suggestion.documentId, allUsers, publicProfiles);
       if (docCreator && !notifiedUserIds.has(docCreator.id)) {
@@ -406,11 +427,10 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
       base44.entities.Section.filter({ documentId: document.id })
     ]);
 
-    // שליפת מצביעים ומגיבים - רק אלה שקשורים להצעות במסמך זה
-    const suggestionIds = allSuggestions.map(s => s.id);
+    // שליפת מצביעים ומגיבים - רק אלה שקשורים למסמך זה
     const [allVotes, allComments] = await Promise.all([
-      Promise.all(suggestionIds.map(id => base44.entities.Vote.filter({ suggestionId: id }))).then(results => results.flat()),
-      base44.entities.Comment.list() // מגיבים על הצעות, סעיפים, ומסמכים
+      base44.entities.Vote.filter({ documentId: document.id }),
+      base44.entities.Comment.list()
     ]);
 
     // חישוב כל המשתתפים במסמך

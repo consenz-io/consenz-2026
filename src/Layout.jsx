@@ -22,6 +22,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import NotificationErrorBoundary from "@/components/notifications/NotificationErrorBoundary";
 
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
@@ -234,7 +235,9 @@ function LayoutContent({ children, currentPageName }) {
                     </div>
                   </Link>
                   <div data-notification-bell className="md:hidden">
-                    <NotificationBell user={user} />
+                    <NotificationErrorBoundary>
+                      <NotificationBell user={user} />
+                    </NotificationErrorBoundary>
                   </div>
                 </div>
                 <Button
@@ -280,7 +283,9 @@ function LayoutContent({ children, currentPageName }) {
                 </div>
                 {user && (
                   <div data-notification-bell className="hidden md:block">
-                    <NotificationBell user={user} />
+                    <NotificationErrorBoundary>
+                      <NotificationBell user={user} />
+                    </NotificationErrorBoundary>
                   </div>
                 )}
               </div>
