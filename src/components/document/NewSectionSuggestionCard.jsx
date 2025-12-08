@@ -212,6 +212,7 @@ export default function NewSectionSuggestionCard({
 
   return (
     <Card 
+      id={`suggestion-${suggestion.id}`}
       className="bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-dashed border-amber-300 hover:border-amber-400 transition-all hover:shadow-lg"
     >
       <CardContent className="p-4 md:p-6">
