@@ -573,11 +573,15 @@ export default function SuggestionDetail() {
     );
   }
 
-  if (!suggestion) {
+  if (!suggestion || suggestionError) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-5xl mx-auto text-center py-20">
-          <h1 className="text-2xl font-bold text-slate-900">{t('suggestionNotFound')}</h1>
+          <AlertCircle className="w-16 h-16 mx-auto mb-4 text-slate-400" />
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">{t('suggestionNotFound')}</h1>
+          <p className="text-slate-600 mb-6">
+            {isRTL ? 'ההצעה אולי נמחקה או שאין לך הרשאה לצפות בה' : 'The suggestion may have been deleted or you don\'t have permission to view it'}
+          </p>
           <Button className="mt-4" onClick={() => navigate(createPageUrl("Home"))}>
             {t('goHome')}
           </Button>
