@@ -23,10 +23,17 @@ const CommentItem = ({
   updateCommentMutation,
   setReplyTo,
   deleteCommentMutation,
-  getReplies,
+  allComments,
   t
 }) => {
   const [localEditContent, setLocalEditContent] = useState(comment.content);
+  const isEditing = editingComment?.id === comment.id;
+
+  useEffect(() => {
+    if (isEditing) {
+      setLocalEditContent(comment.content);
+    }
+  }, [isEditing, comment.content]);
 
   const getUserName = (email) => {
     const profile = publicProfiles?.find(p => p.email === email);
@@ -38,14 +45,7 @@ const CommentItem = ({
     return 'User';
   };
 
-  const isEditing = editingComment?.id === comment.id;
-  const replies = getReplies(comment.id);
-
-  useEffect(() => {
-    if (isEditing) {
-      setLocalEditContent(comment.content);
-    }
-  }, [isEditing, comment.content]);
+  const replies = allComments.filter(c => c.parentCommentId === comment.id);
 
   return (
     <div id={`comment-${comment.id}`} className={`${isReply ? 'ml-8 mt-2' : ''}`}>
@@ -189,7 +189,7 @@ const CommentItem = ({
               updateCommentMutation={updateCommentMutation}
               setReplyTo={setReplyTo}
               deleteCommentMutation={deleteCommentMutation}
-              getReplies={getReplies}
+              allComments={allComments}
               t={t}
             />
           ))}
@@ -445,10 +445,6 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
   };
 
   const topLevelComments = comments.filter(c => !c.parentCommentId);
-  const getReplies = (commentId) => {
-    return comments.filter(c => c.parentCommentId === commentId);
-  };
-
   const totalCommentsCount = topLevelComments.length;
 
   return (
@@ -531,7 +527,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
               updateCommentMutation={updateCommentMutation}
               setReplyTo={setReplyTo}
               deleteCommentMutation={deleteCommentMutation}
-              getReplies={getReplies}
+              allComments={comments}
               t={t}
             />
           ))
