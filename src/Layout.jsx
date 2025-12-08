@@ -4,7 +4,6 @@ import { createPageUrl } from "@/utils";
 import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages } from "lucide-react";
 import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
 import { Toaster } from "sonner";
-import EnsureUserPublicProfile from "@/components/EnsureUserPublicProfile";
 import {
   Sidebar,
   SidebarContent,
@@ -59,6 +58,7 @@ function LayoutContent({ children, currentPageName }) {
   React.useEffect(() => {
     const initializeUserData = async () => {
       if (user) {
+        // Initialize user fields if needed
         const needsUpdate = {};
         if (user.suggestionsCreated === undefined) {
           needsUpdate.suggestionsCreated = 0;
@@ -69,6 +69,35 @@ function LayoutContent({ children, currentPageName }) {
         if (Object.keys(needsUpdate).length > 0) {
           await base44.auth.updateMe(needsUpdate);
           queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+        }
+
+        // Create or update UserPublicProfile automatically
+        try {
+          const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
+          const fullName = user.full_name || '';
+
+          if (existingProfiles.length === 0) {
+            // Create new public profile if user has a valid full name
+            if (fullName && fullName.trim().length >= 2) {
+              await base44.entities.UserPublicProfile.create({
+                userId: user.id,
+                email: user.email,
+                fullName: fullName.trim()
+              });
+              queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
+            }
+          } else {
+            // Update existing profile if name changed
+            const existingProfile = existingProfiles[0];
+            if (fullName && fullName.trim() !== existingProfile.fullName) {
+              await base44.entities.UserPublicProfile.update(existingProfile.id, {
+                fullName: fullName.trim()
+              });
+              queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
+            }
+          }
+        } catch (err) {
+          console.error('Error managing UserPublicProfile:', err);
         }
       }
     };
@@ -94,7 +123,6 @@ function LayoutContent({ children, currentPageName }) {
 
   return (
     <SidebarProvider>
-      <EnsureUserPublicProfile user={user} />
       <div className={`min-h-screen flex w-full max-w-full bg-gradient-to-br from-slate-50 to-blue-50 overflow-x-hidden ${isRTL ? 'flex-row-reverse' : ''}`} style={{ maxWidth: '100vw' }}>
         <Sidebar className={isRTL ? "border-l border-slate-200" : "border-r border-slate-200"}>
           <SidebarHeader className="border-b border-slate-200 p-4">
