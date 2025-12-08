@@ -186,6 +186,15 @@ export async function createNotification({
       return null;
     }
     
+    // Validate and sanitize actionUrl
+    const validActionUrl = (actionUrl && typeof actionUrl === 'string' && actionUrl.length > 0) 
+      ? actionUrl 
+      : null;
+    
+    if (!validActionUrl) {
+      console.warn('[NOTIFICATION] No valid actionUrl provided:', { type, relatedEntityType, relatedEntityId });
+    }
+    
     const notification = await base44.entities.Notification.create({
       userId,
       type,
@@ -193,7 +202,7 @@ export async function createNotification({
       message,
       relatedEntityId,
       relatedEntityType,
-      actionUrl,
+      actionUrl: validActionUrl,
       read: false
     });
     
