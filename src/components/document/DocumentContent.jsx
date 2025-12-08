@@ -584,22 +584,16 @@ export default function DocumentContent({
   });
 
   const getUserName = (email) => {
-    if (!email) return 'Anonymous User';
-    
-    // First try public profile (accessible to all)
+    // Try public profile first (accessible to everyone)
     const profile = publicProfiles?.find(p => p.email === email);
-    if (profile?.fullName) {
-      return profile.fullName;
-    }
+    if (profile?.fullName) return profile.fullName;
     
-    // Fallback to User entity
+    // Fallback to User entity (admins only)
     const user = users?.find(u => u.email === email);
-    if (user?.full_name && user.full_name.trim()) {
-      return user.full_name;
-    }
+    if (user?.full_name) return user.full_name;
     
-    // Last resort
-    return 'Anonymous User';
+    // User hasn't completed profile yet
+    return 'User';
   };
 
   const toggleComments = (id) => {

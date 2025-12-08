@@ -95,7 +95,7 @@ export default function DocumentComments() {
 
   const getUserName = (email) => {
     const user = users.find(u => u.email === email);
-    return user?.full_name || 'Anonymous User';
+    return user?.full_name || 'User';
   };
 
   // Translate comment mutation

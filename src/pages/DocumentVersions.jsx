@@ -81,7 +81,7 @@ export default function DocumentVersions() {
 
   const getUserName = (email) => {
     const user = users.find(u => u.email === email);
-    return user?.full_name || 'Anonymous User';
+    return user?.full_name || 'User';
   };
 
   const restoreVersionMutation = useMutation({

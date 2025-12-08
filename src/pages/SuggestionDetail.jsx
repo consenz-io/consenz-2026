@@ -161,7 +161,7 @@ export default function SuggestionDetail() {
 
   const getUserName = (email) => {
     const user = users.find(u => u.email === email);
-    return user?.full_name || 'Anonymous User';
+    return user?.full_name || 'User';
   };
 
   // פונקציית עזר לטיפול בנקודות ברקע
