@@ -144,24 +144,24 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       }
     });
 
-    // Build contributors list from public profiles (accessible to all)
+    // Build contributors list from User entity (like Profile page)
     const contributorsList = [];
     const foundEmails = new Set();
     
-    // First, try to match with public profiles
-    publicProfiles.forEach(profile => {
-      if (contributorEmails.has(profile.email)) {
+    // Match with users to get full_name
+    allUsers.forEach(user => {
+      if (contributorEmails.has(user.email)) {
         contributorsList.push({
-          id: profile.userId,
-          email: profile.email,
-          full_name: profile.fullName,
-          role: 'user' // We don't expose role in public profile
+          id: user.id,
+          email: user.email,
+          full_name: user.full_name || 'User',
+          role: user.role
         });
-        foundEmails.add(profile.email);
+        foundEmails.add(user.email);
       }
     });
     
-    // For any remaining emails without profile, show as "User"
+    // For any remaining emails without user data, show as "User"
     contributorEmails.forEach(email => {
       if (!foundEmails.has(email) && email) {
         contributorsList.push({
