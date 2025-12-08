@@ -11,6 +11,194 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
 
+// CommentItem Component - moved outside to avoid hooks issues
+const CommentItem = ({ 
+  comment, 
+  isReply = false, 
+  users,
+  publicProfiles,
+  user,
+  editingComment,
+  setEditingComment,
+  updateCommentMutation,
+  setReplyTo,
+  deleteCommentMutation,
+  getReplies,
+  t
+}) => {
+  const [localEditContent, setLocalEditContent] = useState(comment.content);
+
+  useEffect(() => {
+    if (editingComment?.id === comment.id) {
+      setLocalEditContent(comment.content);
+    }
+  }, [editingComment?.id === comment.id, comment.content]);
+
+  const getUserName = (email) => {
+    const profile = publicProfiles?.find(p => p.email === email);
+    if (profile?.fullName) return profile.fullName;
+    
+    const foundUser = users?.find(u => u.email === email);
+    if (foundUser?.full_name) return foundUser.full_name;
+    
+    return 'User';
+  };
+
+  const replies = getReplies(comment.id);
+  const isEditing = editingComment?.id === comment.id;
+
+  return (
+    <div id={`comment-${comment.id}`} className={`${isReply ? 'ml-8 mt-2' : ''}`}>
+      <Card className={`p-3 ${isReply ? 'bg-slate-50' : 'bg-white'}`}>
+        <div className="flex gap-3">
+          <Link 
+            to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === comment.created_by)?.id || publicProfiles?.find(p => p.email === comment.created_by)?.userId || ''}`}
+            className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0 hover:opacity-80 transition-opacity"
+          >
+            <span className="text-white font-medium text-sm">
+              {(getUserName(comment.created_by) || 'U').charAt(0)?.toUpperCase()}
+            </span>
+          </Link>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <Link 
+                to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === comment.created_by)?.id || publicProfiles?.find(p => p.email === comment.created_by)?.userId || ''}`}
+                className="font-medium text-sm text-slate-900 hover:underline"
+              >
+                {getUserName(comment.created_by)}
+              </Link>
+              <span className="text-xs text-slate-500">
+                {new Date(comment.created_date).toLocaleDateString('he-IL', {
+                  day: 'numeric',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
+            </div>
+            
+            {isEditing ? (
+              <div className="space-y-2">
+                <Textarea
+                  value={localEditContent}
+                  onChange={(e) => setLocalEditContent(e.target.value)}
+                  className="min-h-[80px] text-sm"
+                  dir="auto" 
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      if (localEditContent.trim()) {
+                        updateCommentMutation.mutate({
+                          commentId: comment.id,
+                          content: localEditContent.trim()
+                        });
+                      }
+                    }}
+                    disabled={!localEditContent.trim() || updateCommentMutation.isPending}
+                    className="h-7 text-xs"
+                  >
+                    {t('saveChanges')}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setEditingComment(null);
+                      setLocalEditContent(comment.content); 
+                    }}
+                    className="h-7 text-xs"
+                  >
+                    <X className="w-3 h-3 mr-1" />
+                    {t('cancel')}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <TranslatableContent
+                  content={comment.content}
+                  entity={comment}
+                  entityType="Comment"
+                  className="text-sm text-slate-700 whitespace-pre-wrap break-words"
+                  renderContent={(text) => <span>{text}</span>}
+                />
+                <div className="flex gap-2 mt-2">
+                  {!isReply && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        if (!user) {
+                          base44.auth.redirectToLogin(window.location.href);
+                          return;
+                        }
+                        setReplyTo(comment);
+                      }}
+                      className="h-7 text-xs"
+                    >
+                      <Reply className="w-3 h-3 mr-1" />
+                      {t('reply')}
+                    </Button>
+                  )}
+                  {user && user.email === comment.created_by && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setEditingComment(comment);
+                        }}
+                        className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        <Edit2 className="w-3 h-3 mr-1" />
+                        {t('edit')}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteCommentMutation.mutate(comment.id)}
+                        disabled={deleteCommentMutation.isPending}
+                        className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-3 h-3 mr-1" />
+                        {t('delete')}
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </Card>
+      {replies.length > 0 && (
+        <div className="mt-2 space-y-2">
+          {replies.map(reply => (
+            <CommentItem 
+              key={reply.id} 
+              comment={reply} 
+              isReply={true}
+              users={users}
+              publicProfiles={publicProfiles}
+              user={user}
+              editingComment={editingComment}
+              setEditingComment={setEditingComment}
+              updateCommentMutation={updateCommentMutation}
+              setReplyTo={setReplyTo}
+              deleteCommentMutation={deleteCommentMutation}
+              getReplies={getReplies}
+              t={t}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Background tasks - fire and forget
 const runBackgroundTasks = async (comment, entityType, entityId, parentComment) => {
   try {
@@ -263,162 +451,6 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
 
   const totalCommentsCount = topLevelComments.length;
 
-  const CommentItem = ({ comment, isReply = false }) => {
-    const replies = getReplies(comment.id);
-    const isEditing = editingComment?.id === comment.id;
-
-    // FIX 1: Local state for editing content. This stops keystrokes from forcing the parent to re-render.
-    const [localEditContent, setLocalEditContent] = useState(comment.content);
-
-    // FIX 2: Sync local state when entering edit mode (isEditing becomes true)
-    useEffect(() => {
-      if (isEditing) {
-        setLocalEditContent(comment.content);
-      }
-      // Note: No cleanup needed for exiting edit mode, as setEditingComment(null) handles the UI switch.
-    }, [isEditing, comment.content]);
-
-    return (
-      <div id={`comment-${comment.id}`} className={`${isReply ? 'ml-8 mt-2' : ''}`}>
-        <Card className={`p-3 ${isReply ? 'bg-slate-50' : 'bg-white'}`}>
-          <div className="flex gap-3">
-            <Link 
-              to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === comment.created_by)?.id || publicProfiles?.find(p => p.email === comment.created_by)?.userId || ''}`}
-              className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0 hover:opacity-80 transition-opacity"
-            >
-              <span className="text-white font-medium text-sm">
-                {(getUserName(comment.created_by) || 'U').charAt(0)?.toUpperCase()}
-              </span>
-            </Link>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <Link 
-                  to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === comment.created_by)?.id || publicProfiles?.find(p => p.email === comment.created_by)?.userId || ''}`}
-                  className="font-medium text-sm text-slate-900 hover:underline"
-                >
-                  {getUserName(comment.created_by)}
-                </Link>
-                <span className="text-xs text-slate-500">
-                  {new Date(comment.created_date).toLocaleDateString('he-IL', {
-                    day: 'numeric',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </span>
-              </div>
-              
-              {isEditing ? (
-                <div className="space-y-2">
-                  <Textarea
-                    // Use local state for value and onChange
-                    value={localEditContent}
-                    onChange={(e) => setLocalEditContent(e.target.value)}
-                    className="min-h-[80px] text-sm"
-                    // FIX 3: Use "auto" directionality for mixed content
-                    dir="auto" 
-                    autoFocus
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        if (localEditContent.trim()) {
-                          updateCommentMutation.mutate({
-                            commentId: comment.id,
-                            content: localEditContent.trim() // Use local state for mutation
-                          });
-                        }
-                      }}
-                      disabled={!localEditContent.trim() || updateCommentMutation.isPending}
-                      className="h-7 text-xs"
-                    >
-                      {t('saveChanges')}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setEditingComment(null);
-                        // Resetting local content when canceling, though not strictly required if initialized correctly.
-                        setLocalEditContent(comment.content); 
-                      }}
-                      className="h-7 text-xs"
-                    >
-                      <X className="w-3 h-3 mr-1" />
-                      {t('cancel')}
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <TranslatableContent
-                    content={comment.content}
-                    entity={comment}
-                    entityType="Comment"
-                    className="text-sm text-slate-700 whitespace-pre-wrap break-words"
-                    renderContent={(text) => <span>{text}</span>}
-                  />
-                  <div className="flex gap-2 mt-2">
-                    {!isReply && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          if (!user) {
-                            base44.auth.redirectToLogin(window.location.href);
-                            return;
-                          }
-                          setReplyTo(comment);
-                        }}
-                        className="h-7 text-xs"
-                      >
-                        <Reply className="w-3 h-3 mr-1" />
-                        {t('reply')}
-                      </Button>
-                    )}
-                    {user && user.email === comment.created_by && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditingComment(comment);
-                          }}
-                          className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                        >
-                          <Edit2 className="w-3 h-3 mr-1" />
-                          {t('edit')}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteCommentMutation.mutate(comment.id)}
-                          disabled={deleteCommentMutation.isPending}
-                          className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="w-3 h-3 mr-1" />
-                          {t('delete')}
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </Card>
-        {replies.length > 0 && (
-          <div className="mt-2 space-y-2">
-            {replies.map(reply => (
-              <CommentItem key={reply.id} comment={reply} />
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-slate-700">
@@ -488,7 +520,20 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
           </div>
         ) : (
           topLevelComments.map(comment => (
-            <CommentItem key={comment.id} comment={comment} />
+            <CommentItem 
+              key={comment.id} 
+              comment={comment}
+              users={users}
+              publicProfiles={publicProfiles}
+              user={user}
+              editingComment={editingComment}
+              setEditingComment={setEditingComment}
+              updateCommentMutation={updateCommentMutation}
+              setReplyTo={setReplyTo}
+              deleteCommentMutation={deleteCommentMutation}
+              getReplies={getReplies}
+              t={t}
+            />
           ))
         )}
       </div>
