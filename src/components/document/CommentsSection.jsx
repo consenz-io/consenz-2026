@@ -6,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageSquare, Send, Reply, Trash2 } from "lucide-react";
+import { MessageSquare, Send, Reply, Trash2, Edit2, Check, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
@@ -53,6 +53,8 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [error, setError] = useState(null);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editingContent, setEditingContent] = useState("");
   const queryClient = useQueryClient();
 
   const { data: suggestionComments, isLoading: suggestionCommentsLoading } = useQuery({
@@ -232,6 +234,21 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     },
   });
 
+  const updateCommentMutation = useMutation({
+    mutationFn: async ({ commentId, content }) => {
+      return await base44.entities.Comment.update(commentId, { content });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments'] });
+      setEditingCommentId(null);
+      setEditingContent("");
+      setError(null);
+    },
+    onError: (err) => {
+      setError(err.message || "Failed to update comment");
+    },
+  });
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -257,6 +274,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
 
   const CommentItem = ({ comment, isReply = false }) => {
     const replies = getReplies(comment.id);
+    const isEditing = editingCommentId === comment.id;
 
     return (
       <div id={`comment-${comment.id}`} className={`${isReply ? 'ml-8 mt-2' : ''}`}>
@@ -287,38 +305,96 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
                   })}
                 </span>
               </div>
-              <TranslatableContent
-                content={comment.content}
-                entity={comment}
-                entityType="Comment"
-                className="text-sm text-slate-700 whitespace-pre-wrap break-words"
-                renderContent={(text) => <span>{text}</span>}
-              />
-              <div className="flex gap-2 mt-2">
-                {user && !isReply && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setReplyTo(comment)}
-                    className="h-7 text-xs"
-                  >
-                    <Reply className="w-3 h-3 mr-1" />
-                    {t('reply')}
-                  </Button>
-                )}
-                {user && user.email === comment.created_by && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => deleteCommentMutation.mutate(comment.id)}
-                    disabled={deleteCommentMutation.isPending}
-                    className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <Trash2 className="w-3 h-3 mr-1" />
-                    {t('delete')}
-                  </Button>
-                )}
-              </div>
+              {isEditing ? (
+                <div className="space-y-2">
+                  <Textarea
+                    value={editingContent}
+                    onChange={(e) => setEditingContent(e.target.value)}
+                    className="min-h-[80px] text-sm"
+                    autoFocus
+                    dir="auto"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        if (editingContent.trim()) {
+                          updateCommentMutation.mutate({
+                            commentId: comment.id,
+                            content: editingContent.trim()
+                          });
+                        }
+                      }}
+                      disabled={updateCommentMutation.isPending || !editingContent.trim()}
+                      className="h-7 text-xs bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Check className="w-3 h-3 mr-1" />
+                      {t('saveChanges')}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setEditingCommentId(null);
+                        setEditingContent("");
+                      }}
+                      className="h-7 text-xs"
+                    >
+                      <X className="w-3 h-3 mr-1" />
+                      {t('cancel')}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <TranslatableContent
+                    content={comment.content}
+                    entity={comment}
+                    entityType="Comment"
+                    className="text-sm text-slate-700 whitespace-pre-wrap break-words"
+                    renderContent={(text) => <span>{text}</span>}
+                  />
+                  <div className="flex gap-2 mt-2">
+                    {user && !isReply && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setReplyTo(comment)}
+                        className="h-7 text-xs"
+                      >
+                        <Reply className="w-3 h-3 mr-1" />
+                        {t('reply')}
+                      </Button>
+                    )}
+                    {user && user.email === comment.created_by && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingCommentId(comment.id);
+                            setEditingContent(comment.content);
+                          }}
+                          className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        >
+                          <Edit2 className="w-3 h-3 mr-1" />
+                          {t('editProfile')}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteCommentMutation.mutate(comment.id)}
+                          disabled={deleteCommentMutation.isPending}
+                          className="h-7 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="w-3 h-3 mr-1" />
+                          {t('delete')}
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </Card>
