@@ -584,7 +584,7 @@ export default function DocumentContent({
   });
 
   const getUserName = (email) => {
-    if (!email) return 'Unknown User';
+    if (!email) return 'Anonymous User';
     
     // First try public profile (accessible to all)
     const profile = publicProfiles?.find(p => p.email === email);
@@ -599,7 +599,7 @@ export default function DocumentContent({
     }
     
     // Last resort
-    return email.split('@')[0] || email;
+    return 'Anonymous User';
   };
 
   const toggleComments = (id) => {

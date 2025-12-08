@@ -168,7 +168,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
           contributorsList.push({
             id: user.id,
             email: user.email,
-            full_name: user.full_name || user.email,
+            full_name: user.full_name || 'Anonymous User',
             role: user.role
           });
           foundEmails.add(user.email);
@@ -182,7 +182,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
         contributorsList.push({
           id: email,
           email: email,
-          full_name: email, // Show full email if no profile exists
+          full_name: 'Anonymous User',
           role: 'user'
         });
       }
@@ -224,7 +224,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm md:text-base text-slate-900 truncate">
-                    {user.full_name && user.full_name.trim() ? user.full_name : (user.email || 'Unknown User')}
+                    {user.full_name && user.full_name.trim() ? user.full_name : 'Anonymous User'}
                   </p>
                 </div>
                 {user.role === 'admin' && (

@@ -77,7 +77,8 @@ export default function SignersListModal({
 
   const getUserName = (signer) => {
     const foundUser = allUsers.find(u => u.id === signer.userId);
-    return foundUser?.full_name || signer.userEmail?.split('@')[0] || signer.userEmail;
+    if (foundUser?.full_name) return foundUser.full_name;
+    return 'Anonymous User';
   };
 
   const handleRemoveClick = () => {
