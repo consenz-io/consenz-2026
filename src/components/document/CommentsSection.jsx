@@ -34,6 +34,18 @@ const CommentItem = memo(({
     setLocalEditContent(comment.content);
   }, [comment.content, editingComment?.id]);
 
+  const getUserId = (email) => {
+    // Try public profile first (accessible to everyone)
+    const profile = publicProfiles?.find(p => p.email === email);
+    if (profile?.userId) return profile.userId;
+    
+    // Fallback to User entity (admins only)
+    const user = users?.find(u => u.email === email);
+    if (user?.id) return user.id;
+    
+    return '';
+  };
+
   const getUserName = (email) => {
     // Try public profile first (accessible to everyone)
     const profile = publicProfiles?.find(p => p.email === email);
@@ -55,7 +67,7 @@ const CommentItem = memo(({
       <Card className={`p-3 ${isReply ? 'bg-slate-50' : 'bg-white'}`}>
         <div className="flex gap-3">
           <Link 
-            to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === comment.created_by)?.id || publicProfiles?.find(p => p.email === comment.created_by)?.userId || ''}`}
+            to={`${createPageUrl("Profile")}?userId=${getUserId(comment.created_by)}`}
             className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0 hover:opacity-80 transition-opacity"
           >
             <span className="text-white font-medium text-sm">
@@ -65,7 +77,7 @@ const CommentItem = memo(({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <Link 
-                to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === comment.created_by)?.id || publicProfiles?.find(p => p.email === comment.created_by)?.userId || ''}`}
+                to={`${createPageUrl("Profile")}?userId=${getUserId(comment.created_by)}`}
                 className="font-medium text-sm text-slate-900 hover:underline"
               >
                 {getUserName(comment.created_by)}
@@ -466,7 +478,13 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
         {replyTo && (
           <div className="flex items-center gap-2 text-sm text-slate-600 bg-blue-50 p-2 rounded">
             <Reply className="w-4 h-4" />
-            <span>{t('replyingTo')} {getUserName(replyTo.created_by)}</span>
+            <span>{t('replyingTo')} {(() => {
+              const profile = publicProfiles?.find(p => p.email === replyTo.created_by);
+              if (profile?.fullName) return profile.fullName;
+              const user = users?.find(u => u.email === replyTo.created_by);
+              if (user?.full_name) return user.full_name;
+              return 'User';
+            })()}</span>
             <Button
               type="button"
               variant="ghost"
