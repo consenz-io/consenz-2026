@@ -43,6 +43,8 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     queryFn: () => base44.entities.User.list(),
     enabled: isOpen,
     staleTime: 60000,
+    retry: false, // Don't retry if user doesn't have permission
+    throwOnError: false, // Don't throw error, just return empty array
   });
 
   const { data: publicProfiles = [] } = useQuery({
@@ -74,7 +76,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
   });
 
   const { contributors, loading } = useMemo(() => {
-    if (!document || !allUsers.length) {
+    if (!document) {
       return { contributors: [], loading: true };
     }
 
@@ -98,9 +100,20 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
         if (v.created_by) contributorEmails.add(v.created_by);
       }
     });
-    allUsers.forEach(user => {
-      if (voterIds.has(user.id)) contributorEmails.add(user.email);
+    
+    // Convert voter IDs to emails using public profiles (accessible to all)
+    publicProfiles.forEach(profile => {
+      if (voterIds.has(profile.userId)) {
+        contributorEmails.add(profile.email);
+      }
     });
+    
+    // Fallback to allUsers for voters (for admins or if public profile not yet created)
+    if (allUsers.length > 0) {
+      allUsers.forEach(user => {
+        if (voterIds.has(user.id)) contributorEmails.add(user.email);
+      });
+    }
 
     // Argument writers
     allArguments.forEach(arg => {
@@ -149,17 +162,19 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     });
     
     // Fallback to allUsers for any missing (in case profile not created yet)
-    allUsers.forEach(user => {
-      if (contributorEmails.has(user.email) && !foundEmails.has(user.email)) {
-        contributorsList.push({
-          id: user.id,
-          email: user.email,
-          full_name: user.full_name || user.email.split('@')[0],
-          role: user.role
-        });
-        foundEmails.add(user.email);
-      }
-    });
+    if (allUsers.length > 0) {
+      allUsers.forEach(user => {
+        if (contributorEmails.has(user.email) && !foundEmails.has(user.email)) {
+          contributorsList.push({
+            id: user.id,
+            email: user.email,
+            full_name: user.full_name || user.email,
+            role: user.role
+          });
+          foundEmails.add(user.email);
+        }
+      });
+    }
     
     // For any remaining emails without profile
     contributorEmails.forEach(email => {
@@ -167,7 +182,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
         contributorsList.push({
           id: email,
           email: email,
-          full_name: email.split('@')[0] || 'User',
+          full_name: email, // Show full email if no profile exists
           role: 'user'
         });
       }

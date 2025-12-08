@@ -45,7 +45,7 @@ export default function AllContributorsModal({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-slate-900 truncate">
-                      {contributor.name || contributor.email?.split('@')[0] || t('anonymous')}
+                      {contributor.name || contributor.email || t('anonymous')}
                     </p>
                   </div>
                 </Link>
