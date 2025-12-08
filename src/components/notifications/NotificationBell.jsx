@@ -63,22 +63,16 @@ export default function NotificationBell({ user }) {
     try {
       // Mark as read first
       if (!notification.read) {
-        markAsReadMutation.mutate(notification.id);
+        await markAsReadMutation.mutateAsync(notification.id);
       }
       
       // Close the popover
       setOpen(false);
       
-      // Navigate with proper error handling
-      if (notification.actionUrl) {
+      // Navigate only if we have a valid actionUrl
+      if (notification.actionUrl && typeof notification.actionUrl === 'string' && notification.actionUrl.length > 0) {
         // Small delay to ensure popover closes
         await new Promise(resolve => setTimeout(resolve, 150));
-        
-        // Validate URL before navigating
-        if (!notification.actionUrl || typeof notification.actionUrl !== 'string') {
-          console.error('[NAVIGATION ERROR] Invalid actionUrl:', notification.actionUrl);
-          return;
-        }
         
         console.log('[NAVIGATION] Navigating to:', notification.actionUrl);
         
@@ -89,6 +83,8 @@ export default function NotificationBell({ user }) {
           // Fallback to window.location for external or problematic URLs
           window.location.href = notification.actionUrl;
         }
+      } else {
+        console.warn('[NAVIGATION] No valid actionUrl for notification:', notification.id);
       }
     } catch (error) {
       console.error('[NOTIFICATION CLICK ERROR]', error);
