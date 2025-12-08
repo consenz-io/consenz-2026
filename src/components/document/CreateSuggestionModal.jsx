@@ -536,12 +536,12 @@ Return ONLY the translated HTML:`;
                   value={formData.topicId}
                   onValueChange={(value) => setFormData({ ...formData, topicId: value })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className={isRTL ? "text-right" : "text-left"}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {topics.map((topic) => (
-                      <SelectItem key={topic.id} value={topic.id}>
+                      <SelectItem key={topic.id} value={topic.id} className={isRTL ? "text-right" : "text-left"}>
                         {topic.title}
                       </SelectItem>
                     ))}
