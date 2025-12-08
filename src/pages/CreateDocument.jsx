@@ -249,7 +249,11 @@ Return JSON with title, topics array (each with title and sections array with co
         throw new Error("Please add at least one topic with one section");
       }
 
-      // Check if user is admin - admins don't pay for document creation
+      // Check if user exists and is admin - admins don't pay for document creation
+      if (!user || !user.id) {
+        throw new Error('User not authenticated');
+      }
+      
       const isAdmin = user.role === 'admin';
       
       if (!isAdmin) {
@@ -271,6 +275,16 @@ Return JSON with title, topics array (each with title and sections array with co
           action: 'suggestion_created',
           description: `יצירת מסמך חדש: ${data.title}`,
           relatedEntityType: 'document'
+        });
+      }
+      
+      // Create or update public profile for creator
+      const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
+      if (existingProfiles.length === 0 && user.full_name) {
+        await base44.entities.UserPublicProfile.create({
+          userId: user.id,
+          email: user.email,
+          fullName: user.full_name
         });
       }
 

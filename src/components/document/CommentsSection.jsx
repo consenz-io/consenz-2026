@@ -121,9 +121,25 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     initialData: [],
   });
 
+  const { data: publicProfiles } = useQuery({
+    queryKey: ['publicProfiles'],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
+    initialData: [],
+  });
+
   const getUserName = (email) => {
-    const user = users.find(u => u.email === email);
-    return user?.full_name || email?.split('@')[0] || email;
+    if (!email) return 'Unknown User';
+    
+    // First try public profile
+    const profile = publicProfiles?.find(p => p.email === email);
+    if (profile?.fullName) return profile.fullName;
+    
+    // Fallback to User entity
+    const user = users?.find(u => u.email === email);
+    if (user?.full_name && user.full_name.trim()) return user.full_name;
+    
+    // Last resort
+    return email.split('@')[0] || email;
   };
 
   const createCommentMutation = useMutation({
@@ -141,6 +157,18 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
         originalLanguage: detectedLanguage
       });
       
+      // Create or update public profile for commenter
+      if (user?.id && user?.email && user?.full_name) {
+        const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
+        if (existingProfiles.length === 0) {
+          await base44.entities.UserPublicProfile.create({
+            userId: user.id,
+            email: user.email,
+            fullName: user.full_name
+          }).catch(() => {});
+        }
+      }
+      
       // Find parent comment for reply context (needed for background tasks)
       const parentComment = data.parentCommentId 
         ? comments.find(c => c.id === data.parentCommentId) 
@@ -153,6 +181,8 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     },
     // Optimistic update for instant feedback
     onMutate: async (data) => {
+      if (!user?.email) return { previousComments: null };
+      
       await queryClient.cancelQueries({ queryKey: ['comments', entityType, entityId] });
       
       const previousComments = queryClient.getQueryData(['comments', entityType, entityId]);
@@ -164,7 +194,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
         parentCommentId: data.parentCommentId || null,
         content: data.content,
         created_date: new Date().toISOString(),
-        created_by: user?.email,
+        created_by: user.email,
         _isOptimistic: true
       };
       
@@ -207,6 +237,10 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
+    if (!user || !user.id || !user.email) {
+      setError("Must be logged in to comment");
+      return;
+    }
 
     createCommentMutation.mutate({
       rootEntityType: entityType,
@@ -229,17 +263,17 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
         <Card className={`p-3 ${isReply ? 'bg-slate-50' : 'bg-white'}`}>
           <div className="flex gap-3">
             <Link 
-              to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === comment.created_by)?.id}`}
+              to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === comment.created_by)?.id || publicProfiles?.find(p => p.email === comment.created_by)?.userId || ''}`}
               className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0 hover:opacity-80 transition-opacity"
             >
               <span className="text-white font-medium text-sm">
-                {getUserName(comment.created_by)?.charAt(0)?.toUpperCase() || 'U'}
+                {(getUserName(comment.created_by) || 'U').charAt(0)?.toUpperCase()}
               </span>
             </Link>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <Link 
-                  to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === comment.created_by)?.id}`}
+                  to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === comment.created_by)?.id || publicProfiles?.find(p => p.email === comment.created_by)?.userId || ''}`}
                   className="font-medium text-sm text-slate-900 hover:underline"
                 >
                   {getUserName(comment.created_by)}

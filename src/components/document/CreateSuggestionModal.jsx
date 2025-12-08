@@ -301,6 +301,18 @@ Return ONLY the translated HTML:`;
         createdByLanguage: language, // Track language user was viewing when creating suggestion
       });
 
+      // Create or update public profile for creator
+      if (currentUser?.id && currentUser?.email && currentUser?.full_name) {
+        const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: currentUser.id });
+        if (existingProfiles.length === 0) {
+          await base44.entities.UserPublicProfile.create({
+            userId: currentUser.id,
+            email: currentUser.email,
+            fullName: currentUser.full_name
+          });
+        }
+      }
+
       // שליחת התראות ברקע (ללא המתנה)
       sendNotificationsInBackground(document, suggestion, currentUser);
 

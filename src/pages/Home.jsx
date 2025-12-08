@@ -146,12 +146,16 @@ export default function Home() {
   }, [documents, allSuggestions, allVotes, allUsers, allArguments, allComments]);
 
   const calculateAverageConsensus = () => {
-    if (acceptedSuggestions.length === 0) return 0;
+    if (!acceptedSuggestions || acceptedSuggestions.length === 0) return 0;
     
-    const consensusScores = acceptedSuggestions.map(s => {
-      const total = (s.proVotes || 0) + (s.conVotes || 0);
-      return total > 0 ? (s.proVotes / total) : 0;
-    });
+    const consensusScores = acceptedSuggestions
+      .filter(s => s && typeof s.proVotes === 'number' && typeof s.conVotes === 'number')
+      .map(s => {
+        const total = s.proVotes + s.conVotes;
+        return total > 0 ? (s.proVotes / total) : 0;
+      });
+    
+    if (consensusScores.length === 0) return 0;
     
     const sum = consensusScores.reduce((acc, score) => acc + score, 0);
     return (sum / consensusScores.length * 100).toFixed(0);
@@ -397,7 +401,8 @@ export default function Home() {
                           <TrendingUp className="w-4 h-4" />
                           <span>
                             {(() => {
-                              const docSuggestions = acceptedSuggestions.filter(s => s.documentId === doc.id);
+                              if (!acceptedSuggestions || !doc || !doc.id) return '0';
+                              const docSuggestions = acceptedSuggestions.filter(s => s && s.documentId === doc.id);
                               if (docSuggestions.length === 0) return '0';
                               const avg = docSuggestions.reduce((sum, s) => {
                                 const total = (s.proVotes || 0) + (s.conVotes || 0);

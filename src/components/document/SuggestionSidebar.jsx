@@ -117,30 +117,51 @@ export default function SuggestionSidebar({
     initialData: [],
   });
 
+  const { data: publicProfiles } = useQuery({
+    queryKey: ['publicProfiles'],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
+    initialData: [],
+  });
+
   const getUserName = (email) => {
-    const u = users.find(usr => usr.email === email);
-    return u?.full_name || email?.split('@')[0] || email;
+    if (!email) return 'Unknown User';
+    
+    // First try public profile
+    const profile = publicProfiles?.find(p => p.email === email);
+    if (profile?.fullName) return profile.fullName;
+    
+    // Fallback to User entity
+    const u = users?.find(usr => usr.email === email);
+    if (u?.full_name && u.full_name.trim()) return u.full_name;
+    
+    // Last resort
+    return email.split('@')[0] || email;
   };
 
   // מעקב אחרי שינוי סטטוס להצגת אנימציה
   React.useEffect(() => {
-    if (suggestion && prevStatusRef.current === 'pending' && suggestion.status === 'accepted') {
+    if (!suggestion) return;
+    
+    if (prevStatusRef.current === 'pending' && suggestion.status === 'accepted') {
       setShowAcceptedAnimation(true);
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setShowAcceptedAnimation(false);
         onClose(); // סגור את הסיידבר אחרי האנימציה
       }, 3000);
+      
+      return () => clearTimeout(timer);
     }
-    if (suggestion) {
-      prevStatusRef.current = suggestion.status;
-    }
-  }, [suggestion?.status, onClose]);
+    
+    prevStatusRef.current = suggestion.status;
+  }, [suggestion?.status, onClose, suggestion]);
 
   const voteMutation = useMutation({
     mutationFn: async (vote) => {
-      if (!user) throw new Error(t('mustBeLoggedInToVote'));
+      if (!user || !user.id) throw new Error(t('mustBeLoggedInToVote'));
+      if (!suggestion || !suggestion.id) throw new Error('Suggestion not found');
 
       const doc = document || parentDocument;
+      if (!doc || !doc.id) throw new Error('Document not found');
       let newProVotes = suggestion.proVotes || 0;
       let newConVotes = suggestion.conVotes || 0;
       
@@ -176,6 +197,18 @@ export default function SuggestionSidebar({
         proVotes: newProVotes,
         conVotes: newConVotes
       });
+
+      // Create or update public profile for voter
+      if (user.id && user.email && user.full_name) {
+        const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
+        if (existingProfiles.length === 0) {
+          await base44.entities.UserPublicProfile.create({
+            userId: user.id,
+            email: user.email,
+            fullName: user.full_name
+          }).catch(() => {});
+        }
+      }
 
       // פעולות ברקע - לא חוסמות
       notifyVoteOnSuggestion({ suggestion, voterEmail: user.email }).catch(() => {});
@@ -560,7 +593,7 @@ export default function SuggestionSidebar({
           </div>
 
           <div className="text-xs text-slate-500">
-            {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
+            {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === suggestion.created_by)?.id || publicProfiles?.find(p => p.email === suggestion.created_by)?.userId || ''}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
           </div>
 
           {/* Explanation - always show for creator, editable */}

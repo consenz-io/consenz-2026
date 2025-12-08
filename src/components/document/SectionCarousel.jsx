@@ -75,7 +75,7 @@ export default function SectionCarousel({
   
   // מעקב אחרי שינוי סטטוס להצגת אנימציה - עובד על כל ההצעות
   React.useEffect(() => {
-    if (!allSectionSuggestions || allSectionSuggestions.length === 0) return;
+    if (!allSectionSuggestions || allSectionSuggestions.length === 0 || !document?.id) return;
     
     allSectionSuggestions.forEach(sug => {
       const prevStatus = prevSuggestionsStatusRef.current[sug.id];
@@ -169,17 +169,19 @@ export default function SectionCarousel({
   
   // Reset if current suggestion no longer exists
   const safeIndex = currentIndex >= allViews.length ? 0 : currentIndex;
-  const currentView = allViews[safeIndex] || allViews[0];
+  const currentView = allViews && allViews.length > 0 ? (allViews[safeIndex] || allViews[0]) : null;
 
   // דפדוף מעגלי - משתמש ב-ID במקום index
   const handleNext = () => {
+    if (!allViews || allViews.length === 0) return;
     const nextIndex = (currentIndex + 1) % allViews.length;
-    setCurrentSuggestionId(allViews[nextIndex].id);
+    setCurrentSuggestionId(allViews[nextIndex]?.id);
   };
 
   const handlePrev = () => {
+    if (!allViews || allViews.length === 0) return;
     const prevIndex = (currentIndex - 1 + allViews.length) % allViews.length;
-    setCurrentSuggestionId(allViews[prevIndex].id);
+    setCurrentSuggestionId(allViews[prevIndex]?.id);
   };
 
   const isFirstView = currentIndex === 0;
@@ -345,7 +347,7 @@ export default function SectionCarousel({
                 onClick={() => setCurrentSuggestionId('current')}
                 className="text-sm font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer transition-colors"
               >
-                הצעת עריכה מאת {getUserName(currentView.data.created_by)}
+                הצעת עריכה מאת {getUserName(currentView?.data?.created_by)}
               </button>
             )}
           </div>
@@ -601,11 +603,23 @@ export default function SectionCarousel({
                     sectionId={section.id}
                   />
                 </div>
-                <Link to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === currentView.data.created_by)?.id}`} className="flex-shrink-0">
-                  <Badge variant="outline" className="text-[10px] md:text-xs hover:bg-slate-50 cursor-pointer whitespace-nowrap">
-                    {t('by')} {getUserName(currentView.data.created_by)}
-                  </Badge>
-                </Link>
+                {(() => {
+                  const creatorEmail = currentView?.data?.created_by;
+                  if (!creatorEmail) return null;
+                  const userId = users?.find(u => u.email === creatorEmail)?.id;
+                  if (!userId) return (
+                    <Badge variant="outline" className="text-[10px] md:text-xs whitespace-nowrap">
+                      {t('by')} {getUserName(creatorEmail)}
+                    </Badge>
+                  );
+                  return (
+                    <Link to={`${createPageUrl("Profile")}?userId=${userId}`} className="flex-shrink-0">
+                      <Badge variant="outline" className="text-[10px] md:text-xs hover:bg-slate-50 cursor-pointer whitespace-nowrap">
+                        {t('by')} {getUserName(creatorEmail)}
+                      </Badge>
+                    </Link>
+                  );
+                })()}
                 <Button 
                   size="sm" 
                   variant="outline" 
@@ -618,7 +632,7 @@ export default function SectionCarousel({
             )}
 
             {/* תגובות להצעה - רק אם לא באנימציה */}
-            {!['celebrating', 'transitioning', 'fading'].includes(animationPhases[currentView.data.id]) && (
+            {currentView?.data?.id && !['celebrating', 'transitioning', 'fading'].includes(animationPhases[currentView.data.id]) && (
               <>
                 <div className="mt-3">
                   <Button

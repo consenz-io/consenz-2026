@@ -578,20 +578,22 @@ export default function DocumentContent({
   });
 
   const getUserName = (email) => {
+    if (!email) return 'Unknown User';
+    
     // First try public profile (accessible to all)
-    const profile = publicProfiles.find(p => p.email === email);
+    const profile = publicProfiles?.find(p => p.email === email);
     if (profile?.fullName) {
       return profile.fullName;
     }
     
     // Fallback to User entity
-    const user = users.find(u => u.email === email);
+    const user = users?.find(u => u.email === email);
     if (user?.full_name && user.full_name.trim()) {
       return user.full_name;
     }
     
     // Last resort
-    return email?.split('@')[0] || email || 'Unknown User';
+    return email.split('@')[0] || email;
   };
 
   const toggleComments = (id) => {
