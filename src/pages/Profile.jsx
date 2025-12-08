@@ -109,11 +109,15 @@ export default function Profile() {
           fullName: data.full_name.trim()
         });
       }
+      
+      return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-      queryClient.invalidateQueries({ queryKey: ['viewUser'] });
-      queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
+    onSuccess: async (data) => {
+      // Force refetch all user data
+      await queryClient.refetchQueries({ queryKey: ['currentUser'] });
+      await queryClient.refetchQueries({ queryKey: ['viewUser', viewUserId] });
+      await queryClient.refetchQueries({ queryKey: ['publicProfiles'] });
+      
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
       setTimeout(() => setSuccess(null), 3000);
