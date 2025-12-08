@@ -659,6 +659,18 @@ export default function DocumentView() {
           }}
           onSuggestionCreated={(suggestionId, sectionId, topicId) => {
             setNewlyCreatedSuggestion({ suggestionId, sectionId, topicId });
+            
+            // גלילה להצעה החדשה אחרי יצירה
+            setTimeout(() => {
+              const element = window.document.getElementById(`suggestion-${suggestionId}`);
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+                setTimeout(() => {
+                  element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+                }, 2000);
+              }
+            }, 1000);
           }}
         />
       )}
