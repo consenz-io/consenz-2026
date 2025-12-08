@@ -45,60 +45,15 @@ export default function TranslatableContent({
   // CRITICAL: Always call all hooks in the same order, before any early returns
   const [localShowTranslated, setLocalShowTranslated] = useState(false);
   
-  // זיהוי אוטומטי של שפה אם לא מוגדרת
-  const detectedLanguage = entity?.originalLanguage || detectLanguage(content || '');
-  const originalLanguage = detectedLanguage;
-  const translations = entity?.translations || {};
-  
-  // Get translation for specific field if fieldName is provided
-  const getFieldTranslation = () => {
-    const langTranslation = translations[language];
-    if (!langTranslation) return null;
-    
-    // If it's a string, it's the main content translation
-    if (typeof langTranslation === 'string') {
-      return fieldName ? null : langTranslation;
-    }
-    
-    // If it's an object with field-specific translations
-    if (typeof langTranslation === 'object') {
-      // If fieldName is specified, only return that specific field's translation
-      if (fieldName) {
-        if (typeof langTranslation[fieldName] === 'string') {
-          return langTranslation[fieldName];
-        }
-        return null; // Don't fall back to other fields when fieldName is specified
-      }
-      // For backwards compatibility - if no fieldName, try common fields (content first, then newContent)
-      if (typeof langTranslation.content === 'string') return langTranslation.content;
-      if (typeof langTranslation.newContent === 'string') return langTranslation.newContent;
-    }
-    return null;
-  };
-  
-  const hasTranslation = getFieldTranslation() !== null;
-  
-  // בדיקה אם צריך תרגום - בודק גם אם השפות שונות וגם אם השפה אינה שפת המקור
-  const needsTranslation = originalLanguage && language && originalLanguage !== language;
-  
-  // Sync with global translation state and initial state
-  useEffect(() => {
-    if (hasTranslation) {
-      setLocalShowTranslated(globalShowTranslated || (needsTranslation && hasTranslation));
-    }
-  }, [globalShowTranslated, hasTranslation, needsTranslation]);
-  
-  const showTranslated = localShowTranslated;
-  
-  // קביעת כיוון הטקסט - תמיד לפי שפת המערכת (isRTL)
-  // כי המשתמש בחר את השפה הזו והוא מצפה שהממשק יתאים לה
-  const isDisplayRTL = isRTL;
-
+  // Define translateMutation hook BEFORE any conditional logic
   const translateMutation = useMutation({
     mutationFn: async () => {
       if (!entity || !entityType) {
         throw new Error('Entity is required for translation');
       }
+      
+      const translations = entity?.translations || {};
+      
       const prompt = `You are a professional translator. Translate the following HTML content to ${languagePrompts[language]}.
 
 CRITICAL INSTRUCTIONS:
@@ -198,6 +153,55 @@ Return ONLY the translated HTML:`;
       return translatedText;
     },
   });
+  
+  // זיהוי אוטומטי של שפה אם לא מוגדרת
+  const detectedLanguage = entity?.originalLanguage || detectLanguage(content || '');
+  const originalLanguage = detectedLanguage;
+  const translations = entity?.translations || {};
+  
+  // Get translation for specific field if fieldName is provided
+  const getFieldTranslation = () => {
+    const langTranslation = translations[language];
+    if (!langTranslation) return null;
+    
+    // If it's a string, it's the main content translation
+    if (typeof langTranslation === 'string') {
+      return fieldName ? null : langTranslation;
+    }
+    
+    // If it's an object with field-specific translations
+    if (typeof langTranslation === 'object') {
+      // If fieldName is specified, only return that specific field's translation
+      if (fieldName) {
+        if (typeof langTranslation[fieldName] === 'string') {
+          return langTranslation[fieldName];
+        }
+        return null; // Don't fall back to other fields when fieldName is specified
+      }
+      // For backwards compatibility - if no fieldName, try common fields (content first, then newContent)
+      if (typeof langTranslation.content === 'string') return langTranslation.content;
+      if (typeof langTranslation.newContent === 'string') return langTranslation.newContent;
+    }
+    return null;
+  };
+  
+  const hasTranslation = getFieldTranslation() !== null;
+  
+  // בדיקה אם צריך תרגום - בודק גם אם השפות שונות וגם אם השפה אינה שפת המקור
+  const needsTranslation = originalLanguage && language && originalLanguage !== language;
+  
+  // Sync with global translation state and initial state
+  useEffect(() => {
+    if (hasTranslation) {
+      setLocalShowTranslated(globalShowTranslated || (needsTranslation && hasTranslation));
+    }
+  }, [globalShowTranslated, hasTranslation, needsTranslation]);
+  
+  const showTranslated = localShowTranslated;
+  
+  // קביעת כיוון הטקסט - תמיד לפי שפת המערכת (isRTL)
+  // כי המשתמש בחר את השפה הזו והוא מצפה שהממשק יתאים לה
+  const isDisplayRTL = isRTL;
 
   // Helper to ensure we get a valid string for display
   const ensureString = (val) => {
