@@ -217,19 +217,44 @@ export default function DocumentView() {
   }, [document]);
 
   useEffect(() => {
-    if (scrollToSectionId && sections.length > 0) {
+    if (scrollToSectionId) {
       setTimeout(() => {
-        const element = window.document.getElementById(`section-${scrollToSectionId}`);
+        // Try both section-X and new-suggestion-X patterns
+        let element = window.document.getElementById(scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-') 
+          ? scrollToSectionId 
+          : `section-${scrollToSectionId}`
+        );
+        
+        // If not found, try the alternative pattern
+        if (!element && scrollToSectionId.startsWith('new-suggestion-')) {
+          element = window.document.getElementById(scrollToSectionId);
+        }
+        
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
           element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
           setTimeout(() => {
             element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
           }, 2000);
+        } else {
+          // Retry after a longer delay if suggestions haven't loaded yet
+          setTimeout(() => {
+            const retryElement = window.document.getElementById(scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-') 
+              ? scrollToSectionId 
+              : `section-${scrollToSectionId}`
+            );
+            if (retryElement) {
+              retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              retryElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+              setTimeout(() => {
+                retryElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+              }, 2000);
+            }
+          }, 1000);
         }
       }, 300);
     }
-  }, [scrollToSectionId, sections]);
+  }, [scrollToSectionId, sections, suggestions]);
 
   // Scroll to topic from URL hash
   useEffect(() => {
