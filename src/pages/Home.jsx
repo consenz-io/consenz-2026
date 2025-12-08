@@ -10,7 +10,7 @@ import { FileText, TrendingUp, Users, Clock, ArrowRight, ArrowLeft, Languages, L
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import { calculateContributorsFromData } from "@/components/document/calculateContributors";
-import AllContributorsModal from "@/components/home/AllContributorsModal";
+
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -26,7 +26,7 @@ export default function Home() {
   const queryClient = useQueryClient();
   const [translatingDoc, setTranslatingDoc] = useState(null);
   const [showTranslated, setShowTranslated] = useState({});
-  const [showContributorsModal, setShowContributorsModal] = useState(false);
+
   const { data: documents, isLoading } = useQuery({
     queryKey: ['publicDocuments'],
     queryFn: () => base44.entities.Document.list('-created_date', 20),
@@ -96,56 +96,7 @@ export default function Home() {
     });
   };
 
-  // Calculate unique contributors across all documents and build list
-  const { totalUniqueContributors, contributorsList } = useMemo(() => {
-    const uniqueEmails = new Set();
-    
-    // Document creators
-    documents.forEach(d => {
-      if (d.created_by) uniqueEmails.add(d.created_by);
-    });
-    
-    // Suggestion creators
-    allSuggestions.forEach(s => {
-      if (s.created_by) uniqueEmails.add(s.created_by);
-    });
-    
-    // Voters
-    const userIdToEmail = {};
-    publicProfiles.forEach(p => { userIdToEmail[p.userId] = p.email; });
-    allVotes.forEach(v => {
-      if (userIdToEmail[v.userId]) uniqueEmails.add(userIdToEmail[v.userId]);
-    });
-    
-    // Argument writers
-    allArguments.forEach(arg => {
-      if (arg.created_by) uniqueEmails.add(arg.created_by);
-    });
-    
-    // Commenters
-    allComments.forEach(c => {
-      if (c.created_by) uniqueEmails.add(c.created_by);
-    });
-    
-    // Build contributors list with names from public profiles
-    const emailToProfile = {};
-    publicProfiles.forEach(p => { emailToProfile[p.email] = p; });
-    
-    const list = Array.from(uniqueEmails).map(email => {
-      const profile = emailToProfile[email];
-      
-      return {
-        email,
-        name: profile?.fullName || 'User',
-        id: profile?.userId
-      };
-    }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    
-    return {
-      totalUniqueContributors: Math.max(1, uniqueEmails.size),
-      contributorsList: list
-    };
-  }, [documents, allSuggestions, allVotes, publicProfiles, allArguments, allComments]);
+
 
   const calculateAverageConsensus = () => {
     if (!acceptedSuggestions || acceptedSuggestions.length === 0) return 0;
@@ -258,7 +209,7 @@ export default function Home() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-16">
             <Card 
               className="bg-white/80 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all"
               onClick={() => {
@@ -274,18 +225,7 @@ export default function Home() {
                 <div className="text-sm text-slate-600">{t('activeDocuments')}</div>
               </CardContent>
             </Card>
-            <Card 
-              className="bg-white/80 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all"
-              onClick={() => setShowContributorsModal(true)}
-            >
-              <CardContent className="p-6 text-center">
-                <Users className="w-8 h-8 mx-auto mb-3 text-indigo-600" />
-                <div className="text-3xl font-bold text-slate-900">
-                  {totalUniqueContributors}
-                </div>
-                <div className="text-sm text-slate-600">{t('collaborators')}</div>
-              </CardContent>
-            </Card>
+
             <Link to={`${createPageUrl("LearnMore")}#consensus-calculation`}>
               <Card 
                 className="bg-white/80 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all"
@@ -439,11 +379,7 @@ export default function Home() {
         )}
       </section>
 
-      <AllContributorsModal
-        isOpen={showContributorsModal}
-        onClose={() => setShowContributorsModal(false)}
-        contributors={contributorsList}
-      />
+
     </div>
   );
 }
