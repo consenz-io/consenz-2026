@@ -353,7 +353,15 @@ export default function SectionCarousel({
                 onClick={() => setCurrentSuggestionId('current')}
                 className="text-sm font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer transition-colors"
               >
-                הצעת עריכה מאת {getUserName(currentView?.data?.created_by)}
+                הצעת עריכה מאת {(() => {
+                  const email = currentView?.data?.created_by;
+                  if (!email) return 'Unknown User';
+                  const profile = publicProfiles?.find(p => p.email === email);
+                  if (profile?.fullName) return profile.fullName;
+                  const user = users?.find(u => u.email === email);
+                  if (user?.full_name) return user.full_name;
+                  return email.split('@')[0] || 'Unknown User';
+                })()}
               </button>
             )}
           </div>
