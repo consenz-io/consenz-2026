@@ -786,7 +786,7 @@ export default function SuggestionDetail() {
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedChanges')}</h3>
                 <Link 
-                  to={`${createPageUrl("DocumentCleanView")}?id=${suggestion.documentId}&scrollToSuggestion=${suggestionId}`}
+                  to={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}&scrollTo=${suggestion.sectionId}`}
                   className="block"
                 >
                   <div className="hover:shadow-md transition-all cursor-pointer rounded-lg">
@@ -826,7 +826,7 @@ export default function SuggestionDetail() {
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedContent')}</h3>
                 <div className="space-y-2">
                   <Link 
-                    to={`${createPageUrl("DocumentCleanView")}?id=${suggestion.documentId}&scrollToSuggestion=${suggestionId}`}
+                    to={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}&scrollTo=${suggestion.sectionId}`}
                     className="block"
                   >
                     <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
@@ -858,7 +858,7 @@ export default function SuggestionDetail() {
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedContent')}</h3>
                 <Link 
-                  to={`${createPageUrl("DocumentCleanView")}?id=${suggestion.documentId}&scrollToSuggestion=${suggestionId}`}
+                  to={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}&scrollTo=${suggestion.sectionId}`}
                   className="block"
                 >
                   <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
