@@ -115,7 +115,7 @@ export default function DocumentContent({
           const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
           threshold = Math.max(1, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
         } else {
-          threshold = document.threshold || 2;
+          threshold = Math.max(1, document.threshold || 2);
         }
         const delta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
         const shouldAccept = delta >= threshold;
