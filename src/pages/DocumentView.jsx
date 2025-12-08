@@ -15,9 +15,9 @@ import ReactQuill from "react-quill";
 import DocumentContent from "../components/document/DocumentContent";
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 import PageHeader from "../components/PageHeader";
-
 import CommentsSection from "../components/document/CommentsSection";
 import SuggestionSidebar from "../components/document/SuggestionSidebar";
+import ContributorsModal from "@/components/contributors/ContributorsModal";
 
 import { TranslationProvider } from "../components/document/TranslationContext";
 import TranslateAllButton from "../components/document/TranslateAllButton";
