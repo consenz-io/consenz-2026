@@ -42,6 +42,9 @@ export default function TranslatableContent({
   const translationContext = useDocumentTranslation();
   const globalShowTranslated = translationContext?.globalShowTranslated || false;
 
+  // CRITICAL: Always call all hooks in the same order, before any early returns
+  const [localShowTranslated, setLocalShowTranslated] = useState(false);
+  
   // זיהוי אוטומטי של שפה אם לא מוגדרת
   const detectedLanguage = entity?.originalLanguage || detectLanguage(content || '');
   const originalLanguage = detectedLanguage;
@@ -77,8 +80,6 @@ export default function TranslatableContent({
   
   // בדיקה אם צריך תרגום - בודק גם אם השפות שונות וגם אם השפה אינה שפת המקור
   const needsTranslation = originalLanguage && language && originalLanguage !== language;
-  
-  const [localShowTranslated, setLocalShowTranslated] = useState(false);
   
   // Sync with global translation state and initial state
   useEffect(() => {
