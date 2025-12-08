@@ -1,7 +1,7 @@
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 
-// Cache for users to reduce API calls
+// Cache for users and public profiles to reduce API calls
 const userCache = new Map();
 const CACHE_TTL = 60000; // 1 minute
 
@@ -16,7 +16,33 @@ async function getCachedUsers() {
   return users;
 }
 
-function getUserFromCache(users, { id, email }) {
+async function getCachedPublicProfiles() {
+  const cacheKey = 'public_profiles';
+  const cached = userCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+  const profiles = await base44.entities.UserPublicProfile.list();
+  userCache.set(cacheKey, { data: profiles, timestamp: Date.now() });
+  return profiles;
+}
+
+function getUserFromCache(users, publicProfiles, { id, email }) {
+  // First try public profile (accessible to all)
+  if (email) {
+    const profile = publicProfiles.find(p => p.email === email);
+    if (profile) {
+      return { id: profile.userId, email: profile.email, full_name: profile.fullName };
+    }
+  }
+  if (id) {
+    const profile = publicProfiles.find(p => p.userId === id);
+    if (profile) {
+      return { id: profile.userId, email: profile.email, full_name: profile.fullName };
+    }
+  }
+  
+  // Fallback to User entity
   if (id) return users.find(u => u.id === id);
   if (email) return users.find(u => u.email === email);
   return null;
@@ -108,15 +134,15 @@ async function getDocumentAdmins(documentId) {
   }
 }
 
-// Helper to get document creator - uses cached users
-async function getDocumentCreator(documentId, users, documents = null) {
+// Helper to get document creator - uses cached users and profiles
+async function getDocumentCreator(documentId, users, publicProfiles, documents = null) {
   try {
     let docs = documents;
     if (!docs) {
       docs = await base44.entities.Document.filter({ id: documentId });
     }
     if (docs.length > 0 && docs[0].created_by) {
-      return getUserFromCache(users, { email: docs[0].created_by });
+      return getUserFromCache(users, publicProfiles, { email: docs[0].created_by });
     }
     return null;
   } catch (error) {
@@ -186,11 +212,14 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
   try {
     if (voterEmail === suggestion.created_by) return;
     
-    const users = await getCachedUsers();
-    const suggestionCreator = getUserFromCache(users, { email: suggestion.created_by });
+    const [users, publicProfiles] = await Promise.all([
+      getCachedUsers(),
+      getCachedPublicProfiles()
+    ]);
+    const suggestionCreator = getUserFromCache(users, publicProfiles, { email: suggestion.created_by });
     if (!suggestionCreator) return;
     
-    const displayName = voterName || getUserFromCache(users, { email: voterEmail })?.full_name || voterEmail;
+    const displayName = voterName || getUserFromCache(users, publicProfiles, { email: voterEmail })?.full_name || voterEmail;
     const userLang = suggestionCreator.preferredLanguage || 'he';
     
     await createNotification({
@@ -266,13 +295,14 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     
     // 2. אם התקבלה - יוצר המסמך, מנהלים, ומצביעי pro
     if (newStatus === 'accepted') {
-      const [adminIds, proVotes, allUsers] = await Promise.all([
+      const [adminIds, proVotes, allUsers, publicProfiles] = await Promise.all([
         getDocumentAdmins(suggestion.documentId),
         base44.entities.Vote.filter({ suggestionId: suggestion.id, vote: 'pro' }),
-        base44.entities.User.list()
+        base44.entities.User.list(),
+        getCachedPublicProfiles()
       ]);
       
-      const docCreator = await getDocumentCreator(suggestion.documentId, allUsers);
+      const docCreator = await getDocumentCreator(suggestion.documentId, allUsers, publicProfiles);
       if (docCreator && !notifiedUserIds.has(docCreator.id)) {
         notifiedUserIds.add(docCreator.id);
         const userLang = docCreator.preferredLanguage || 'he';
@@ -290,7 +320,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
       for (const adminId of adminIds) {
         if (notifiedUserIds.has(adminId)) continue;
         notifiedUserIds.add(adminId);
-        const admin = getUserFromCache(allUsers, { id: adminId });
+        const admin = getUserFromCache(allUsers, publicProfiles, { id: adminId });
         const userLang = admin?.preferredLanguage || 'he';
         notifications.push({
           userId: adminId,
@@ -306,7 +336,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
       for (const vote of proVotes) {
         if (notifiedUserIds.has(vote.userId)) continue;
         notifiedUserIds.add(vote.userId);
-        const voter = getUserFromCache(allUsers, { id: vote.userId });
+        const voter = getUserFromCache(allUsers, publicProfiles, { id: vote.userId });
         const userLang = voter?.preferredLanguage || 'he';
         notifications.push({
           userId: vote.userId,
@@ -342,8 +372,9 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
 export async function notifyNewSuggestion({ suggestion, document, currentUser }) {
   try {
     // שליפת כל הנתונים - מסוננים למסמך הספציפי לביצועים
-    const [users, allSuggestions, allArguments, sections] = await Promise.all([
+    const [users, publicProfiles, allSuggestions, allArguments, sections] = await Promise.all([
       getCachedUsers(),
+      getCachedPublicProfiles(),
       base44.entities.Suggestion.filter({ documentId: document.id }),
       base44.entities.Argument.list(),
       base44.entities.Section.filter({ documentId: document.id })
@@ -438,12 +469,13 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
  */
 export async function notifyNewComment({ comment, targetEntity, targetEntityType, parentComment = null }) {
   try {
-    const [users, allComments] = await Promise.all([
+    const [users, publicProfiles, allComments] = await Promise.all([
       getCachedUsers(),
+      getCachedPublicProfiles(),
       base44.entities.Comment.filter({ rootEntityType: targetEntityType, rootEntityId: targetEntity.id })
     ]);
     
-    const commenter = getUserFromCache(users, { email: comment.created_by });
+    const commenter = getUserFromCache(users, publicProfiles, { email: comment.created_by });
     const commenterName = commenter?.full_name || comment.created_by;
     
     const notifiedEmails = new Set();
@@ -459,9 +491,9 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
     
     // 1. יוצר ההצעה/סעיף
     let ownerEmail = targetEntityType === 'suggestion' ? targetEntity.created_by : null;
-    let owner = ownerEmail ? getUserFromCache(users, { email: ownerEmail }) : null;
+    let owner = ownerEmail ? getUserFromCache(users, publicProfiles, { email: ownerEmail }) : null;
     if (targetEntityType === 'section' && targetEntity.lastEditedBy) {
-      owner = getUserFromCache(users, { id: targetEntity.lastEditedBy });
+      owner = getUserFromCache(users, publicProfiles, { id: targetEntity.lastEditedBy });
       ownerEmail = owner?.email;
     }
     
@@ -489,7 +521,7 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
     for (const email of commentersEmails) {
       if (notifiedEmails.has(email)) continue;
       notifiedEmails.add(email);
-      const user = getUserFromCache(users, { email });
+      const user = getUserFromCache(users, publicProfiles, { email });
       if (!user) continue;
       const userLang = user.preferredLanguage || 'he';
       notifications.push({
@@ -514,13 +546,14 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
  */
 export async function notifyNewDocumentComment({ comment, document, parentComment = null }) {
   try {
-    const [users, adminIds, allDocumentComments] = await Promise.all([
+    const [users, publicProfiles, adminIds, allDocumentComments] = await Promise.all([
       getCachedUsers(),
+      getCachedPublicProfiles(),
       getDocumentAdmins(document.id),
       base44.entities.Comment.filter({ rootEntityType: 'document', rootEntityId: document.id })
     ]);
     
-    const commenter = getUserFromCache(users, { email: comment.created_by });
+    const commenter = getUserFromCache(users, publicProfiles, { email: comment.created_by });
     const commenterName = commenter?.full_name || comment.created_by;
     
     const notifiedEmails = new Set();
@@ -530,7 +563,7 @@ export async function notifyNewDocumentComment({ comment, document, parentCommen
     
     // תשובה לתגובה
     if (parentComment && comment.created_by !== parentComment.created_by) {
-      const parentCommenter = getUserFromCache(users, { email: parentComment.created_by });
+      const parentCommenter = getUserFromCache(users, publicProfiles, { email: parentComment.created_by });
       if (parentCommenter) {
         notifiedEmails.add(parentComment.created_by);
         const userLang = parentCommenter.preferredLanguage || 'he';
@@ -548,7 +581,7 @@ export async function notifyNewDocumentComment({ comment, document, parentCommen
     
     // יוצר המסמך
     if (document.created_by && !notifiedEmails.has(document.created_by)) {
-      const creator = getUserFromCache(users, { email: document.created_by });
+      const creator = getUserFromCache(users, publicProfiles, { email: document.created_by });
       if (creator) {
         notifiedEmails.add(document.created_by);
         const userLang = creator.preferredLanguage || 'he';
@@ -566,7 +599,7 @@ export async function notifyNewDocumentComment({ comment, document, parentCommen
     
     // מנהלים
     for (const adminId of adminIds) {
-      const admin = getUserFromCache(users, { id: adminId });
+      const admin = getUserFromCache(users, publicProfiles, { id: adminId });
       if (!admin || notifiedEmails.has(admin.email)) continue;
       notifiedEmails.add(admin.email);
       const userLang = admin.preferredLanguage || 'he';
@@ -586,7 +619,7 @@ export async function notifyNewDocumentComment({ comment, document, parentCommen
     for (const email of commentersEmails) {
       if (notifiedEmails.has(email)) continue;
       notifiedEmails.add(email);
-      const user = getUserFromCache(users, { email });
+      const user = getUserFromCache(users, publicProfiles, { email });
       if (!user) continue;
       const userLang = user.preferredLanguage || 'he';
       notifications.push({
