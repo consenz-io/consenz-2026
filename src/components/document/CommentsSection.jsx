@@ -12,7 +12,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
 
 // CommentItem Component - moved outside to avoid hooks issues
-const CommentItem = React.memo(({ 
+const CommentItem = ({ 
   comment, 
   isReply = false, 
   users,
@@ -26,16 +26,9 @@ const CommentItem = React.memo(({
   getReplies,
   t
 }) => {
-  const isEditing = editingComment?.id === comment.id;
   const [localEditContent, setLocalEditContent] = useState(comment.content);
 
-  useEffect(() => {
-    if (isEditing) {
-      setLocalEditContent(comment.content);
-    }
-  }, [isEditing, comment.content]);
-
-  const getUserName = React.useCallback((email) => {
+  const getUserName = (email) => {
     const profile = publicProfiles?.find(p => p.email === email);
     if (profile?.fullName) return profile.fullName;
     
@@ -43,9 +36,16 @@ const CommentItem = React.memo(({
     if (foundUser?.full_name) return foundUser.full_name;
     
     return 'User';
-  }, [publicProfiles, users]);
+  };
 
-  const replies = React.useMemo(() => getReplies(comment.id), [getReplies, comment.id]);
+  const isEditing = editingComment?.id === comment.id;
+  const replies = getReplies(comment.id);
+
+  useEffect(() => {
+    if (isEditing) {
+      setLocalEditContent(comment.content);
+    }
+  }, [isEditing, comment.content]);
 
   return (
     <div id={`comment-${comment.id}`} className={`${isReply ? 'ml-8 mt-2' : ''}`}>
@@ -197,7 +197,7 @@ const CommentItem = React.memo(({
       )}
     </div>
   );
-});
+};
 
 // Background tasks - fire and forget
 const runBackgroundTasks = async (comment, entityType, entityId, parentComment) => {
@@ -444,14 +444,10 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     });
   };
 
-  const topLevelComments = React.useMemo(() => 
-    comments.filter(c => !c.parentCommentId), 
-    [comments]
-  );
-  
-  const getReplies = React.useCallback((commentId) => {
+  const topLevelComments = comments.filter(c => !c.parentCommentId);
+  const getReplies = (commentId) => {
     return comments.filter(c => c.parentCommentId === commentId);
-  }, [comments]);
+  };
 
   const totalCommentsCount = topLevelComments.length;
 
