@@ -264,7 +264,7 @@ Return ONLY the translated HTML:`;
     ? safeTranslation
     : content;
 
-  // Render simple content if no entity
+  // Render simple content if no entity - after all hooks have been called
   if (!entity) {
     return renderContent ? renderContent(content) : (
       <div className={className} dangerouslySetInnerHTML={{ __html: content }} />
