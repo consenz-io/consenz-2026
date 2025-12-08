@@ -59,26 +59,39 @@ export default function NotificationBell({ user }) {
     },
   });
 
-  const handleNotificationClick = (notification) => {
-    // Mark as read first
-    if (!notification.read) {
-      markAsReadMutation.mutate(notification.id);
-    }
-    
-    // Close the popover
-    setOpen(false);
-    
-    // Navigate after a short delay to ensure popover closes first
-    if (notification.actionUrl) {
-      setTimeout(() => {
+  const handleNotificationClick = async (notification) => {
+    try {
+      // Mark as read first
+      if (!notification.read) {
+        markAsReadMutation.mutate(notification.id);
+      }
+      
+      // Close the popover
+      setOpen(false);
+      
+      // Navigate with proper error handling
+      if (notification.actionUrl) {
+        // Small delay to ensure popover closes
+        await new Promise(resolve => setTimeout(resolve, 150));
+        
+        // Validate URL before navigating
+        if (!notification.actionUrl || typeof notification.actionUrl !== 'string') {
+          console.error('[NAVIGATION ERROR] Invalid actionUrl:', notification.actionUrl);
+          return;
+        }
+        
+        console.log('[NAVIGATION] Navigating to:', notification.actionUrl);
+        
         try {
           navigate(notification.actionUrl);
-        } catch (error) {
-          console.error('Navigation error:', error);
-          // Fallback to window.location if navigate fails
+        } catch (navError) {
+          console.error('[NAVIGATION ERROR] React Router failed:', navError);
+          // Fallback to window.location for external or problematic URLs
           window.location.href = notification.actionUrl;
         }
-      }, 100);
+      }
+    } catch (error) {
+      console.error('[NOTIFICATION CLICK ERROR]', error);
     }
   };
 

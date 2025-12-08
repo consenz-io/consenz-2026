@@ -42,18 +42,18 @@ export default function SuggestionDetail() {
   const { data: suggestion, isLoading: suggestionLoading, error: suggestionError } = useQuery({
     queryKey: ['suggestion', suggestionId],
     queryFn: async () => {
-      try {
-        const results = await base44.entities.Suggestion.filter({ id: suggestionId });
-        return results[0] || null;
-      } catch (err) {
-        console.error('[SUGGESTION FETCH ERROR]', err);
-        return null;
+      if (!suggestionId) return null;
+      const results = await base44.entities.Suggestion.filter({ id: suggestionId });
+      if (!results || results.length === 0) {
+        throw new Error('Suggestion not found');
       }
+      return results[0];
     },
     enabled: !!suggestionId,
     refetchInterval: SYNC_INTERVAL,
     refetchIntervalInBackground: false,
-    retry: 1,
+    retry: false,
+    throwOnError: false,
   });
 
   const { data: allDocumentSuggestions } = useQuery({
@@ -573,7 +573,7 @@ export default function SuggestionDetail() {
     );
   }
 
-  if (!suggestion && !suggestionLoading) {
+  if (suggestionError || (!suggestion && !suggestionLoading)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-5xl mx-auto text-center py-20">

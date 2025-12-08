@@ -229,7 +229,7 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
       message: translate('notifVoteMessage', userLang, { name: displayName, title: suggestion.title }),
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
-      actionUrl: `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`
+      actionUrl: createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`
     });
   } catch (error) {
     console.error('[NOTIFICATION ERROR]', error);
@@ -253,7 +253,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     
     const notifiedUserIds = new Set();
     const notifications = [];
-    const actionUrl = `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`;
+    const actionUrl = createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
     
     const statusKeys = {
       accepted: { titleKey: 'notifAcceptedTitle', messageKey: 'notifAcceptedMessage' },
@@ -437,7 +437,7 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
     users.forEach(u => { emailToUser[u.email] = u; });
     
     const notifications = [];
-    const actionUrl = `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`;
+    const actionUrl = createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
     const suggestionTypeText = suggestion.type === 'new_section' ? 'הצעה לסעיף חדש' : 'הצעת עריכה';
 
     for (const email of participantEmails) {
@@ -484,9 +484,9 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
     
     let actionUrl;
     if (targetEntityType === 'suggestion') {
-      actionUrl = `${createPageUrl("SuggestionDetail")}?id=${targetEntity.id}&commentId=${comment.id}`;
+      actionUrl = createPageUrl("SuggestionDetail") + `?id=${targetEntity.id}&commentId=${comment.id}`;
     } else if (targetEntityType === 'section') {
-      actionUrl = `${createPageUrl("SectionHistory")}?id=${targetEntity.id}&commentId=${comment.id}`;
+      actionUrl = createPageUrl("SectionHistory") + `?id=${targetEntity.id}&commentId=${comment.id}`;
     }
     
     // 1. יוצר ההצעה/סעיף
@@ -559,7 +559,7 @@ export async function notifyNewDocumentComment({ comment, document, parentCommen
     const notifiedEmails = new Set();
     notifiedEmails.add(comment.created_by);
     const notifications = [];
-    const actionUrl = `${createPageUrl("DocumentView")}?id=${document.id}`;
+    const actionUrl = createPageUrl("DocumentView") + `?id=${document.id}`;
     
     // תשובה לתגובה
     if (parentComment && comment.created_by !== parentComment.created_by) {
