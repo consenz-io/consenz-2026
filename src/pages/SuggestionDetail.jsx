@@ -573,7 +573,7 @@ export default function SuggestionDetail() {
     );
   }
 
-  if (!suggestion || suggestionError) {
+  if (!suggestion && !suggestionLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-5xl mx-auto text-center py-20">
