@@ -4,6 +4,7 @@ import { createPageUrl } from "@/utils";
 import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages } from "lucide-react";
 import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
 import { Toaster } from "sonner";
+import EnsureUserPublicProfile from "@/components/EnsureUserPublicProfile";
 import {
   Sidebar,
   SidebarContent,
@@ -93,6 +94,7 @@ function LayoutContent({ children, currentPageName }) {
 
   return (
     <SidebarProvider>
+      <EnsureUserPublicProfile user={user} />
       <div className={`min-h-screen flex w-full max-w-full bg-gradient-to-br from-slate-50 to-blue-50 overflow-x-hidden ${isRTL ? 'flex-row-reverse' : ''}`} style={{ maxWidth: '100vw' }}>
         <Sidebar className={isRTL ? "border-l border-slate-200" : "border-r border-slate-200"}>
           <SidebarHeader className="border-b border-slate-200 p-4">
