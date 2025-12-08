@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, memo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -11,8 +11,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
 
-// CommentItem Component - moved outside to avoid hooks issues
-const CommentItem = ({ 
+// CommentItem Component - memoized to prevent unnecessary re-renders
+const CommentItem = memo(({ 
   comment, 
   isReply = false, 
   users,
