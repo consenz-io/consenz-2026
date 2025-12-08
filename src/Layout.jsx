@@ -102,11 +102,13 @@ function LayoutContent({ children, currentPageName }) {
               queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
             }
           } else {
-            // Update existing profile if name changed
+            // Always update existing profile to ensure sync
             const existingProfile = existingProfiles[0];
-            if (fullName && fullName.trim() !== existingProfile.fullName) {
+            const trimmedFullName = fullName.trim();
+            if (trimmedFullName.length >= 2 && trimmedFullName !== existingProfile.fullName) {
               await base44.entities.UserPublicProfile.update(existingProfile.id, {
-                fullName: fullName.trim()
+                fullName: trimmedFullName,
+                email: user.email
               });
               queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
             }

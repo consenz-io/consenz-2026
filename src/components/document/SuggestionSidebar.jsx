@@ -591,7 +591,20 @@ export default function SuggestionSidebar({
           </div>
 
           <div className="text-xs text-slate-500">
-            {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === suggestion.created_by)?.id || publicProfiles?.find(p => p.email === suggestion.created_by)?.userId || ''}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
+            {t('by')} {(() => {
+              const profile = publicProfiles?.find(p => p.email === suggestion.created_by);
+              const userObj = users?.find(u => u.email === suggestion.created_by);
+              const userId = profile?.userId || userObj?.id;
+              const userName = getUserName(suggestion.created_by);
+              
+              return userId ? (
+                <Link to={`${createPageUrl("Profile")}?userId=${userId}`} className="hover:underline text-blue-600">
+                  {userName}
+                </Link>
+              ) : (
+                <span className="text-slate-600">{userName}</span>
+              );
+            })()}
           </div>
 
           {/* Explanation - always show for creator, editable */}
