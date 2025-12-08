@@ -93,10 +93,19 @@ export default function DocumentComments() {
     initialData: [],
   });
 
+  const { data: users } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => base44.entities.User.list(),
+    initialData: [],
+  });
+
   const getUserName = (email) => {
     const profile = publicProfiles.find(p => p.email === email);
     if (profile?.fullName) return profile.fullName;
-    // Fallback to email username if no profile found
+    
+    const user = users.find(u => u.email === email);
+    if (user?.full_name) return user.full_name;
+    
     return email ? email.split('@')[0] : 'User';
   };
 
