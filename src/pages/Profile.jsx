@@ -112,6 +112,7 @@ export default function Profile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      queryClient.invalidateQueries({ queryKey: ['viewUser'] });
       queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
