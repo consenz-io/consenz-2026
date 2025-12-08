@@ -136,7 +136,10 @@ export default function DocumentCleanView() {
         uniqueChanges.push({
           ...afterVersion,
           beforeContent: beforeVersion?.content,
-          suggestionId
+          suggestionId,
+          // Preserve important metadata for new sections
+          changeType: afterVersion.changeType,
+          changeDescription: afterVersion.changeDescription
         });
       }
     });
@@ -167,8 +170,9 @@ export default function DocumentCleanView() {
     
     // Process each unique change
     uniqueChanges.forEach(v => {
-      // Create a snapshot representing the state BEFORE this change
-      const snapshotBeforeChange = {
+      // Create a snapshot representing the state AFTER this change (newer version)
+      // This is what we'll show when navigating to this version
+      const snapshotAfterChange = {
         version: v.version,
         label: `גרסה ${v.version}`,
         timestamp: v.created_date,
@@ -178,28 +182,30 @@ export default function DocumentCleanView() {
         sectionContents: { ...currentSectionContents },
         existingSections: new Set(currentExistingSections),
         changedSectionId: v.sectionId,
-        // Store the new content for display in diff
         newContent: v.content
       };
       
-      // Apply the change in reverse
+      // For new sections, this version shows the newly created section
       if (v.changeType === 'section_created') {
-        // This section was created at this version - mark it and remove from older snapshots
-        snapshotBeforeChange.isNewSection = true;
-        snapshotBeforeChange.newSectionId = v.sectionId;
-        snapshotBeforeChange.newSectionContent = v.content;
-        delete snapshotBeforeChange.sectionContents[v.sectionId];
-        snapshotBeforeChange.existingSections.delete(v.sectionId);
-      } else {
-        // This was an edit - use the beforeContent if available, otherwise the version content
-        snapshotBeforeChange.sectionContents[v.sectionId] = v.beforeContent || v.content;
+        snapshotAfterChange.isNewSection = true;
+        snapshotAfterChange.newSectionId = v.sectionId;
+        snapshotAfterChange.newSectionContent = v.content;
+        // Section exists in this snapshot
+        snapshotAfterChange.sectionContents[v.sectionId] = v.content;
+        snapshotAfterChange.existingSections.add(v.sectionId);
       }
       
-      snapshots.push(snapshotBeforeChange);
+      snapshots.push(snapshotAfterChange);
       
-      // Update current state for next iteration
-      currentSectionContents = { ...snapshotBeforeChange.sectionContents };
-      currentExistingSections = new Set(snapshotBeforeChange.existingSections);
+      // Update state for next older version
+      if (v.changeType === 'section_created') {
+        // Section didn't exist before this version
+        delete currentSectionContents[v.sectionId];
+        currentExistingSections.delete(v.sectionId);
+      } else {
+        // Section existed with different content
+        currentSectionContents[v.sectionId] = v.beforeContent || v.content;
+      }
     });
     
     return snapshots;
