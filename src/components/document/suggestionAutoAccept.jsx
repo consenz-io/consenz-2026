@@ -151,14 +151,34 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     status: 'pending'
   });
   
-  // עדכון במקביל במקום לולאה רציפה
-  await Promise.all(
-    pendingSuggestions
-      .filter(pendingSugg => pendingSugg.id !== suggestion.id)
-      .map(pendingSugg => 
-        base44.entities.Suggestion.update(pendingSugg.id, { threshold: newThreshold })
-      )
-  );
+  // עדכון במקביל - threshold וגם originalContent להצעות לאותו סעיף
+  if (freshSuggestion.type === 'edit_section' && freshSuggestion.sectionId) {
+    // אם זו הצעת עריכה לסעיף, עדכן את ה-originalContent של הצעות אחרות לאותו סעיף
+    await Promise.all(
+      pendingSuggestions
+        .filter(pendingSugg => pendingSugg.id !== suggestion.id)
+        .map(pendingSugg => {
+          // אם זו הצעה לאותו סעיף, עדכן גם את ה-originalContent
+          if (pendingSugg.type === 'edit_section' && pendingSugg.sectionId === freshSuggestion.sectionId) {
+            return base44.entities.Suggestion.update(pendingSugg.id, { 
+              threshold: newThreshold,
+              originalContent: freshSuggestion.newContent // התוכן החדש של הסעיף
+            });
+          }
+          // אחרת, רק עדכן את ה-threshold
+          return base44.entities.Suggestion.update(pendingSugg.id, { threshold: newThreshold });
+        })
+    );
+  } else {
+    // אם זו לא הצעת עריכה, רק עדכן threshold
+    await Promise.all(
+      pendingSuggestions
+        .filter(pendingSugg => pendingSugg.id !== suggestion.id)
+        .map(pendingSugg => 
+          base44.entities.Suggestion.update(pendingSugg.id, { threshold: newThreshold })
+        )
+    );
+  }
   
   // עדכון סטטוס ההצעה מיד כדי למנוע אישור כפול
   // שמירת מספר המשתתפים בזמן הקבלה
