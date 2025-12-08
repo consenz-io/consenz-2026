@@ -805,7 +805,7 @@ export default function SuggestionDetail() {
               <div>
                 <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedContent')}</h3>
                 <Link 
-                  to={`${createPageUrl("DocumentCleanView")}?id=${suggestion.documentId}&scrollToSuggestion=${suggestionId}`}
+                  to={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#topic-${suggestion.topicId}`}
                   className="block"
                 >
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg hover:border-green-400 hover:shadow-md transition-all cursor-pointer">
