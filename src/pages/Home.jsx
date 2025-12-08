@@ -152,13 +152,12 @@ export default function Home() {
     }
     
     const list = Array.from(uniqueEmails).map(email => {
-      const profile = emailToProfile[email];
       const user = emailToUser[email];
       
       return {
         email,
-        name: profile?.fullName || 'User',
-        id: profile?.userId || user?.id
+        name: user?.full_name || 'User',
+        id: user?.id
       };
     }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     
