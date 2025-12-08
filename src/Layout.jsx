@@ -56,53 +56,54 @@ function LayoutContent({ children, currentPageName }) {
   }, [location.pathname]);
 
   React.useEffect(() => {
-    const initializeUserData = async () => {
-      if (user) {
-        // Initialize user fields if needed
-        const needsUpdate = {};
-        if (user.suggestionsCreated === undefined) {
-          needsUpdate.suggestionsCreated = 0;
-        }
-        if (user.points === undefined) {
-          needsUpdate.points = 1000;
-        }
-        if (Object.keys(needsUpdate).length > 0) {
-          await base44.auth.updateMe(needsUpdate);
-          queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-        }
-
-        // Create or update UserPublicProfile automatically
-        try {
-          const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
-          const fullName = user.full_name || '';
-
-          if (existingProfiles.length === 0) {
-            // Create new public profile if user has a valid full name
-            if (fullName && fullName.trim().length >= 2) {
-              await base44.entities.UserPublicProfile.create({
-                userId: user.id,
-                email: user.email,
-                fullName: fullName.trim()
-              });
-              queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
-            }
-          } else {
-            // Update existing profile if name changed
-            const existingProfile = existingProfiles[0];
-            if (fullName && fullName.trim() !== existingProfile.fullName) {
-              await base44.entities.UserPublicProfile.update(existingProfile.id, {
-                fullName: fullName.trim()
-              });
-              queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
-            }
+      const initializeUserData = async () => {
+        if (user) {
+          // Initialize user fields if needed
+          const needsUpdate = {};
+          if (user.suggestionsCreated === undefined) {
+            needsUpdate.suggestionsCreated = 0;
           }
-        } catch (err) {
-          console.error('Error managing UserPublicProfile:', err);
+          if (user.points === undefined) {
+            needsUpdate.points = 1000;
+          }
+          if (Object.keys(needsUpdate).length > 0) {
+            await base44.auth.updateMe(needsUpdate);
+            queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+          }
+
+          // Sync UserPublicProfile with user.full_name from Google OAuth
+          try {
+            const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
+            const fullName = user.full_name || '';
+
+            // Only proceed if fullName is valid (at least 2 characters)
+            if (fullName && fullName.trim().length >= 2) {
+              if (existingProfiles.length === 0) {
+                // Create new public profile
+                await base44.entities.UserPublicProfile.create({
+                  userId: user.id,
+                  email: user.email,
+                  fullName: fullName.trim()
+                });
+                queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
+              } else {
+                // Update existing profile if name changed
+                const existingProfile = existingProfiles[0];
+                if (fullName.trim() !== existingProfile.fullName) {
+                  await base44.entities.UserPublicProfile.update(existingProfile.id, {
+                    fullName: fullName.trim()
+                  });
+                  queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
+                }
+              }
+            }
+          } catch (err) {
+            console.error('Error syncing UserPublicProfile:', err);
+          }
         }
-      }
-    };
-    initializeUserData();
-  }, [user, queryClient]);
+      };
+      initializeUserData();
+    }, [user, queryClient]);
 
   const handleLogout = () => {
     base44.auth.logout();

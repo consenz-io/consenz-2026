@@ -161,22 +161,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       }
     });
     
-    // Fallback to allUsers for any missing (in case profile not created yet)
-    if (allUsers.length > 0) {
-      allUsers.forEach(user => {
-        if (contributorEmails.has(user.email) && !foundEmails.has(user.email)) {
-          contributorsList.push({
-            id: user.id,
-            email: user.email,
-            full_name: user.full_name || 'User',
-            role: user.role
-          });
-          foundEmails.add(user.email);
-        }
-      });
-    }
-    
-    // For any remaining emails without profile
+    // For any remaining emails without profile, show as "User"
     contributorEmails.forEach(email => {
       if (!foundEmails.has(email) && email) {
         contributorsList.push({

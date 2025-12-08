@@ -140,16 +140,8 @@ export default function SectionHistory() {
   });
 
   const getUserName = (email) => {
-    // Try public profile first (accessible to everyone)
     const profile = publicProfiles?.find(p => p.email === email);
-    if (profile?.fullName) return profile.fullName;
-    
-    // Fallback to User entity (admins only)
-    const foundUser = users?.find(u => u.email === email);
-    if (foundUser?.full_name) return foundUser.full_name;
-    
-    // User hasn't completed profile yet
-    return 'User';
+    return profile?.fullName || 'User';
   };
 
   const toggleComments = (suggestionId) => {

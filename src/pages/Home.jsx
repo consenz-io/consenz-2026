@@ -157,7 +157,7 @@ export default function Home() {
       
       return {
         email,
-        name: profile?.fullName || user?.full_name || 'User',
+        name: profile?.fullName || 'User',
         id: profile?.userId || user?.id
       };
     }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));

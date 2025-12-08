@@ -124,16 +124,8 @@ export default function SuggestionSidebar({
   });
 
   const getUserName = (email) => {
-    // Try public profile first (accessible to everyone)
     const profile = publicProfiles?.find(p => p.email === email);
-    if (profile?.fullName) return profile.fullName;
-    
-    // Fallback to User entity (admins only)
-    const u = users?.find(usr => usr.email === email);
-    if (u?.full_name) return u.full_name;
-    
-    // User hasn't completed profile yet
-    return 'User';
+    return profile?.fullName || 'User';
   };
 
   // מעקב אחרי שינוי סטטוס להצגת אנימציה
