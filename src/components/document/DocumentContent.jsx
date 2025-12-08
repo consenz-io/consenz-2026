@@ -94,6 +94,39 @@ export default function DocumentContent({
   // מעקב אחרי הצעות שכבר ראינו כ-accepted כדי להציג toast רק פעם אחת
   const shownAcceptedToastsRef = React.useRef(new Set());
 
+  // Scroll to newly created suggestion
+  React.useEffect(() => {
+    if (newlyCreatedSuggestion?.suggestionId) {
+      const { suggestionId } = newlyCreatedSuggestion;
+      const timeoutId = setTimeout(() => {
+        const element = window.document.getElementById(`suggestion-${suggestionId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+          setTimeout(() => {
+            element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+            onClearNewlyCreated();
+          }, 2000);
+        } else {
+          // Retry after delay if element not found yet
+          setTimeout(() => {
+            const retryElement = window.document.getElementById(`suggestion-${suggestionId}`);
+            if (retryElement) {
+              retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              retryElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+              setTimeout(() => {
+                retryElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+                onClearNewlyCreated();
+              }, 2000);
+            }
+          }, 1000);
+        }
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [newlyCreatedSuggestion, onClearNewlyCreated]);
+
   React.useEffect(() => {
     if (!document || !suggestions) return;
 
