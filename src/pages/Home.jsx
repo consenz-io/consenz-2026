@@ -58,10 +58,19 @@ export default function Home() {
     initialData: [],
   });
 
-  const { data: allUsers } = useQuery({
+  const { data: allUsers = [] } = useQuery({
     queryKey: ['allUsers'],
     queryFn: () => base44.entities.User.list(),
     initialData: [],
+    retry: false,
+    throwOnError: false,
+  });
+
+  const { data: publicProfiles = [] } = useQuery({
+    queryKey: ['publicProfiles'],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
+    initialData: [],
+    staleTime: 60000,
   });
 
   const { data: allArguments } = useQuery({
@@ -111,7 +120,12 @@ export default function Home() {
     
     // Voters
     const userIdToEmail = {};
-    allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
+    // First try public profiles (accessible to all)
+    publicProfiles.forEach(p => { userIdToEmail[p.userId] = p.email; });
+    // Fallback to allUsers (for admins)
+    if (allUsers.length > 0) {
+      allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
+    }
     allVotes.forEach(v => {
       if (userIdToEmail[v.userId]) uniqueEmails.add(userIdToEmail[v.userId]);
     });
@@ -127,15 +141,24 @@ export default function Home() {
     });
     
     // Build contributors list with names
+    // First map from public profiles (accessible to all)
+    const emailToProfile = {};
+    publicProfiles.forEach(p => { emailToProfile[p.email] = p; });
+    
+    // Fallback map from users (for admins or missing profiles)
     const emailToUser = {};
-    allUsers.forEach(u => { emailToUser[u.email] = u; });
+    if (allUsers.length > 0) {
+      allUsers.forEach(u => { emailToUser[u.email] = u; });
+    }
     
     const list = Array.from(uniqueEmails).map(email => {
+      const profile = emailToProfile[email];
       const user = emailToUser[email];
+      
       return {
         email,
-        name: user?.full_name || email,
-        id: user?.id
+        name: profile?.fullName || user?.full_name || email,
+        id: profile?.userId || user?.id
       };
     }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     
@@ -143,7 +166,7 @@ export default function Home() {
       totalUniqueContributors: Math.max(1, uniqueEmails.size),
       contributorsList: list
     };
-  }, [documents, allSuggestions, allVotes, allUsers, allArguments, allComments]);
+  }, [documents, allSuggestions, allVotes, allUsers, publicProfiles, allArguments, allComments]);
 
   const calculateAverageConsensus = () => {
     if (!acceptedSuggestions || acceptedSuggestions.length === 0) return 0;
