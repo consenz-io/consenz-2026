@@ -258,14 +258,36 @@ Return ONLY the translated HTML:`;
       // Create new topic if needed
       if (isCreatingNewTopic && newTopicName.trim()) {
         const existingTopics = await base44.entities.Topic.filter({ documentId: document.id }, 'order');
-        const maxOrder = existingTopics.length > 0 ? Math.max(...existingTopics.map(t => t.order)) : -1;
+        
+        // If editingSection has topicId, insert the new topic after it
+        let newOrder;
+        if (editingSection?.topicId) {
+          const baseTopic = existingTopics.find(t => t.id === editingSection.topicId);
+          if (baseTopic) {
+            newOrder = baseTopic.order + 1;
+            // Shift all topics after this one
+            for (const topic of existingTopics) {
+              if (topic.order >= newOrder) {
+                await base44.entities.Topic.update(topic.id, { order: topic.order + 1 });
+              }
+            }
+          } else {
+            // Fallback if topic not found
+            const maxOrder = existingTopics.length > 0 ? Math.max(...existingTopics.map(t => t.order)) : -1;
+            newOrder = maxOrder + 1;
+          }
+        } else {
+          // No base topic specified, append at end
+          const maxOrder = existingTopics.length > 0 ? Math.max(...existingTopics.map(t => t.order)) : -1;
+          newOrder = maxOrder + 1;
+        }
         
         const topicLanguage = detectLanguage(newTopicName.trim());
         
         const newTopic = await base44.entities.Topic.create({
           documentId: document.id,
           title: newTopicName.trim(),
-          order: maxOrder + 1,
+          order: newOrder,
           originalLanguage: topicLanguage,
         });
         
@@ -354,9 +376,11 @@ Return ONLY the translated HTML:`;
         queryClient.invalidateQueries({ queryKey: ['document', document.id] });
         queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
         
-        // Notify parent to scroll to the new suggestion
+        // Notify parent to scroll to the new suggestion - wait for DOM update
         if (result?.id && onSuggestionCreated) {
-          onSuggestionCreated(result.id, result.sectionId, result.topicId);
+          setTimeout(() => {
+            onSuggestionCreated(result.id, result.sectionId, result.topicId);
+          }, 500);
         }
       }
     },
