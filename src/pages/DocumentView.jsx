@@ -54,6 +54,7 @@ export default function DocumentView() {
   const [newlyCreatedSuggestion, setNewlyCreatedSuggestion] = useState(null);
   const [showAgreementModal, setShowAgreementModal] = useState(false);
   const [showSignersListModal, setShowSignersListModal] = useState(false);
+  const [showContributorsModal, setShowContributorsModal] = useState(false);
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
@@ -101,9 +102,9 @@ export default function DocumentView() {
     staleTime: 30000,
   });
 
-  const { data: allUsers } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
+  const { data: publicProfiles = [] } = useQuery({
+    queryKey: ['publicProfiles'],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
     initialData: [],
     staleTime: 60000,
   });
@@ -146,6 +147,44 @@ export default function DocumentView() {
       c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)
     ).length;
   }, [allComments, sections]);
+
+  // Calculate document contributors count
+  const contributorsCount = React.useMemo(() => {
+    const contributorEmails = new Set();
+
+    // Suggestion creators
+    suggestions.forEach(s => {
+      if (s.created_by) contributorEmails.add(s.created_by);
+    });
+
+    // Voters
+    const suggestionIds = new Set(suggestions.map(s => s.id));
+    allVotes.forEach(v => {
+      if (suggestionIds.has(v.suggestionId) && v.created_by) {
+        contributorEmails.add(v.created_by);
+      }
+    });
+
+    // Argument writers
+    allArguments.forEach(arg => {
+      if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
+        contributorEmails.add(arg.created_by);
+      }
+    });
+
+    // Commenters
+    allComments.forEach(c => {
+      if (
+        (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
+        (c.rootEntityType === 'section' && sections.some(s => s.id === c.rootEntityId)) ||
+        (c.rootEntityType === 'document' && c.rootEntityId === documentId)
+      ) {
+        if (c.created_by) contributorEmails.add(c.created_by);
+      }
+    });
+
+    return Math.max(1, contributorEmails.size);
+  }, [suggestions, allVotes, allArguments, allComments, sections, documentId]);
 
 
 
@@ -585,7 +624,15 @@ export default function DocumentView() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 md:gap-4 w-full max-w-full">
+        <div className="grid grid-cols-3 gap-3 md:gap-4 w-full max-w-full">
+          <div 
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 cursor-pointer hover:border-blue-400 transition-all flex flex-col items-center justify-center gap-1"
+            onClick={() => setShowContributorsModal(true)}
+          >
+            <Users className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
+            <div className="text-base md:text-xl font-bold text-slate-900">{contributorsCount}</div>
+            <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('contributors')}</div>
+          </div>
           <div 
             className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1"
           >
@@ -677,7 +724,7 @@ export default function DocumentView() {
         isOpen={showSignersListModal}
         onClose={() => setShowSignersListModal(false)}
         signers={documentAgreements}
-        allUsers={allUsers}
+        allUsers={publicProfiles}
         user={user}
         userHasAgreed={userHasAgreed}
         onJoinClick={() => {
@@ -686,6 +733,12 @@ export default function DocumentView() {
         }}
         onRemoveSignature={() => removeSignatureMutation.mutate()}
         isRemoving={removeSignatureMutation.isPending}
+      />
+
+      <ContributorsModal
+        isOpen={showContributorsModal}
+        onClose={() => setShowContributorsModal(false)}
+        documentId={documentId}
       />
       </div>
     </TranslationProvider>

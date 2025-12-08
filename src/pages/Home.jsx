@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, TrendingUp, Users, Clock, ArrowRight, ArrowLeft, Languages, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
-import { calculateContributorsFromData } from "@/components/document/calculateContributors";
+import ContributorsModal from "@/components/contributors/ContributorsModal";
 
 
 const detectLanguage = (text) => {
@@ -26,6 +26,7 @@ export default function Home() {
   const queryClient = useQueryClient();
   const [translatingDoc, setTranslatingDoc] = useState(null);
   const [showTranslated, setShowTranslated] = useState({});
+  const [showContributorsModal, setShowContributorsModal] = useState(false);
 
   const { data: documents, isLoading } = useQuery({
     queryKey: ['publicDocuments'],
@@ -64,6 +65,8 @@ export default function Home() {
     initialData: [],
     staleTime: 60000,
   });
+
+  const totalRegisteredUsers = publicProfiles.length;
 
   const { data: allArguments } = useQuery({
     queryKey: ['allArguments'],
@@ -209,7 +212,7 @@ export default function Home() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
             <Card 
               className="bg-white/80 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all"
               onClick={() => {
@@ -223,6 +226,16 @@ export default function Home() {
                 <FileText className="w-8 h-8 mx-auto mb-3 text-blue-600" />
                 <div className="text-3xl font-bold text-slate-900">{documents.length}</div>
                 <div className="text-sm text-slate-600">{t('activeDocuments')}</div>
+              </CardContent>
+            </Card>
+            <Card 
+              className="bg-white/80 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all"
+              onClick={() => setShowContributorsModal(true)}
+            >
+              <CardContent className="p-6 text-center">
+                <Users className="w-8 h-8 mx-auto mb-3 text-indigo-600" />
+                <div className="text-3xl font-bold text-slate-900">{totalRegisteredUsers}</div>
+                <div className="text-sm text-slate-600">{t('collaborators')}</div>
               </CardContent>
             </Card>
 
