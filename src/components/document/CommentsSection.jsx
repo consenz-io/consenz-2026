@@ -378,7 +378,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
                           className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                         >
                           <Edit2 className="w-3 h-3 mr-1" />
-                          {t('editProfile')}
+                          {t('edit')}
                         </Button>
                         <Button
                           variant="ghost"
