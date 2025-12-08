@@ -476,7 +476,7 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
     ]);
     
     const commenter = getUserFromCache(users, publicProfiles, { email: comment.created_by });
-    const commenterName = commenter?.full_name || comment.created_by;
+    const commenterName = commenter?.full_name || commenter?.email || comment.created_by;
     
     const notifiedEmails = new Set();
     notifiedEmails.add(comment.created_by);
@@ -554,7 +554,7 @@ export async function notifyNewDocumentComment({ comment, document, parentCommen
     ]);
     
     const commenter = getUserFromCache(users, publicProfiles, { email: comment.created_by });
-    const commenterName = commenter?.full_name || comment.created_by;
+    const commenterName = commenter?.full_name || commenter?.email || comment.created_by;
     
     const notifiedEmails = new Set();
     notifiedEmails.add(comment.created_by);
