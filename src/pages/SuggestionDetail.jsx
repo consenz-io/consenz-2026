@@ -138,23 +138,6 @@ export default function SuggestionDetail() {
     enabled: !!suggestionId,
   });
 
-  // If there's a commentId in URL, scroll to comments section
-  React.useEffect(() => {
-    if (commentId && suggestionId && typeof window !== 'undefined') {
-      // Give time for the page to render, then scroll to comment
-      setTimeout(() => {
-        const commentElement = window.document.getElementById(`comment-${commentId}`);
-        if (commentElement) {
-          commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-          setTimeout(() => {
-            commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
-          }, 3000);
-        }
-      }, 500);
-    }
-  }, [commentId, suggestionId, comments]);
-
   const { data: sectionVersions } = useQuery({
     queryKey: ['sectionVersions', suggestion?.sectionId],
     queryFn: () => base44.entities.DocumentVersion.filter({ 
@@ -562,8 +545,23 @@ export default function SuggestionDetail() {
     }
   });
 
-  // All hooks MUST be called before any early returns
-  // Loading and error states AFTER all hooks
+  // useEffect must come after ALL other hooks
+  React.useEffect(() => {
+    if (commentId && suggestionId && typeof window !== 'undefined') {
+      setTimeout(() => {
+        const commentElement = window.document.getElementById(`comment-${commentId}`);
+        if (commentElement) {
+          commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+          setTimeout(() => {
+            commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+          }, 3000);
+        }
+      }, 500);
+    }
+  }, [commentId, suggestionId, comments]);
+
+  // Early returns MUST come after ALL hooks
   if (suggestionLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
