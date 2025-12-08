@@ -42,17 +42,10 @@ export default function TranslatableContent({
   const translationContext = useDocumentTranslation();
   const globalShowTranslated = translationContext?.globalShowTranslated || false;
 
-  // Early return if no entity
-  if (!entity) {
-    return renderContent ? renderContent(content) : (
-      <div className={className} dangerouslySetInnerHTML={{ __html: content }} />
-    );
-  }
-
   // זיהוי אוטומטי של שפה אם לא מוגדרת
-  const detectedLanguage = entity.originalLanguage || detectLanguage(content || '');
+  const detectedLanguage = entity?.originalLanguage || detectLanguage(content || '');
   const originalLanguage = detectedLanguage;
-  const translations = entity.translations || {};
+  const translations = entity?.translations || {};
   
   // Get translation for specific field if fieldName is provided
   const getFieldTranslation = () => {
