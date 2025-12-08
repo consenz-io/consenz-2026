@@ -39,12 +39,21 @@ export default function SuggestionDetail() {
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
 
-  const { data: suggestion, isLoading: suggestionLoading } = useQuery({
+  const { data: suggestion, isLoading: suggestionLoading, error: suggestionError } = useQuery({
     queryKey: ['suggestion', suggestionId],
-    queryFn: () => base44.entities.Suggestion.filter({ id: suggestionId }).then(s => s[0]),
+    queryFn: async () => {
+      try {
+        const results = await base44.entities.Suggestion.filter({ id: suggestionId });
+        return results[0] || null;
+      } catch (err) {
+        console.error('[SUGGESTION FETCH ERROR]', err);
+        return null;
+      }
+    },
     enabled: !!suggestionId,
     refetchInterval: SYNC_INTERVAL,
     refetchIntervalInBackground: false,
+    retry: 1,
   });
 
   const { data: allDocumentSuggestions } = useQuery({
