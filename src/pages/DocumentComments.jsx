@@ -87,15 +87,15 @@ export default function DocumentComments() {
     enabled: suggestions.length > 0,
   });
 
-  const { data: users } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => base44.entities.User.list(),
+  const { data: publicProfiles } = useQuery({
+    queryKey: ['publicProfiles'],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
     initialData: [],
   });
 
   const getUserName = (email) => {
-    const user = users.find(u => u.email === email);
-    return user?.full_name || 'User';
+    const profile = publicProfiles.find(p => p.email === email);
+    return profile?.fullName || 'User';
   };
 
   // Translate comment mutation
@@ -347,12 +347,20 @@ export default function DocumentComments() {
 
                   {/* Comments */}
                   <div className="space-y-3">
-                    {group.comments.slice(0, 3).map((comment) => (
-                      <div key={comment.id} className={`${isRTL ? 'text-right' : 'text-left'}`}>
-                        <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
-                          <div className={`flex items-center gap-2 ${isRTL ? 'justify-start' : ''}`}>
-                            <span className="text-sm font-medium text-slate-900">{getUserName(comment.created_by)}</span>
-                            <span className="text-xs text-slate-500">{new Date(comment.created_date).toLocaleDateString()}</span>
+                    {group.comments.slice(0, 3).map((comment) => {
+                      const suggestionCreatorEmail = group.type === 'suggestion' ? group.suggestion?.created_by : null;
+                      return (
+                     <div key={comment.id} className={`${isRTL ? 'text-right' : 'text-left'}`}>
+                       <div className={`flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                         <div className={`flex items-center gap-2 ${isRTL ? 'justify-start' : ''}`}>
+                           {group.type === 'suggestion' && suggestionCreatorEmail && (
+                             <>
+                               <span className="text-xs text-slate-500">{t('suggestion')}: {getUserName(suggestionCreatorEmail)}</span>
+                               <span className="text-xs text-slate-400">•</span>
+                             </>
+                           )}
+                           <span className="text-sm font-medium text-slate-900">{getUserName(comment.created_by)}</span>
+                           <span className="text-xs text-slate-500">{new Date(comment.created_date).toLocaleDateString()}</span>
                             {needsCommentTranslation(comment) && (
                               translatingComment === comment.id ? (
                                 <Loader2 className="w-3 h-3 animate-spin text-blue-600" />
@@ -386,7 +394,8 @@ export default function DocumentComments() {
                           <p className={`text-sm text-slate-700 mt-0.5 ${isRTL ? 'text-right' : 'text-left'}`}>{getCommentDisplayContent(comment)}</p>
                         </div>
                       </div>
-                    ))}
+                       );
+                    })}
                     {group.comments.length > 3 && (
                       <p className="text-xs text-slate-500 text-center">
                         +{group.comments.length - 3} {t('comments')}
