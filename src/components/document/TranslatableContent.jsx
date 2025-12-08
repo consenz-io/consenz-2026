@@ -42,7 +42,7 @@ export default function TranslatableContent({
   const translationContext = useDocumentTranslation();
   const globalShowTranslated = translationContext?.globalShowTranslated || false;
 
-  // CRITICAL: Always call all hooks in the same order, before any early returns
+  // CRITICAL: Always call all hooks in the same order, before any early returns or conditional logic
   const [localShowTranslated, setLocalShowTranslated] = useState(false);
   
   // Define translateMutation hook BEFORE any conditional logic
@@ -153,8 +153,34 @@ Return ONLY the translated HTML:`;
       return translatedText;
     },
   });
+
+  // Sync with global translation state - MUST be called before any early returns
+  useEffect(() => {
+    if (entity) {
+      const translations = entity?.translations || {};
+      const detectedLanguage = entity?.originalLanguage || detectLanguage(content || '');
+      const needsTranslation = detectedLanguage && language && detectedLanguage !== language;
+      
+      const langTranslation = translations[language];
+      let hasTranslation = false;
+      
+      if (langTranslation) {
+        if (typeof langTranslation === 'string' && !fieldName) {
+          hasTranslation = true;
+        } else if (typeof langTranslation === 'object' && fieldName && typeof langTranslation[fieldName] === 'string') {
+          hasTranslation = true;
+        } else if (typeof langTranslation === 'object' && !fieldName) {
+          hasTranslation = typeof langTranslation.content === 'string' || typeof langTranslation.newContent === 'string';
+        }
+      }
+      
+      if (hasTranslation) {
+        setLocalShowTranslated(globalShowTranslated || (needsTranslation && hasTranslation));
+      }
+    }
+  }, [globalShowTranslated, entity, language, fieldName, content]);
   
-  // זיהוי אוטומטי של שפה אם לא מוגדרת
+  // Now safe to calculate derived values after all hooks
   const detectedLanguage = entity?.originalLanguage || detectLanguage(content || '');
   const originalLanguage = detectedLanguage;
   const translations = entity?.translations || {};
@@ -189,13 +215,6 @@ Return ONLY the translated HTML:`;
   
   // בדיקה אם צריך תרגום - בודק גם אם השפות שונות וגם אם השפה אינה שפת המקור
   const needsTranslation = originalLanguage && language && originalLanguage !== language;
-  
-  // Sync with global translation state and initial state
-  useEffect(() => {
-    if (hasTranslation) {
-      setLocalShowTranslated(globalShowTranslated || (needsTranslation && hasTranslation));
-    }
-  }, [globalShowTranslated, hasTranslation, needsTranslation]);
   
   const showTranslated = localShowTranslated;
   
