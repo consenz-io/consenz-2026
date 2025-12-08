@@ -86,17 +86,42 @@ export default function Home() {
     initialData: [],
   });
 
-  // Calculate real contributors per document using shared logic
+  // Calculate real contributors per document
   const getDocumentContributors = (doc) => {
-    return calculateContributorsFromData({
-      document: doc,
-      suggestions: allSuggestions.filter(s => s.documentId === doc.id),
-      allVotes,
-      allUsers: [],
-      allArguments,
-      allComments,
-      sections: allSections.filter(s => s.documentId === doc.id)
+    const contributorEmails = new Set();
+    const docSuggestions = allSuggestions.filter(s => s.documentId === doc.id);
+    
+    docSuggestions.forEach(s => {
+      if (s.created_by) contributorEmails.add(s.created_by);
     });
+    
+    const suggestionIds = new Set(docSuggestions.map(s => s.id));
+    allVotes.forEach(v => {
+      if (suggestionIds.has(v.suggestionId) && v.created_by) {
+        contributorEmails.add(v.created_by);
+      }
+    });
+    
+    allArguments.forEach(arg => {
+      if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
+        contributorEmails.add(arg.created_by);
+      }
+    });
+    
+    const docSections = allSections.filter(s => s.documentId === doc.id);
+    const sectionIds = new Set(docSections.map(s => s.id));
+    
+    allComments.forEach(c => {
+      if (
+        (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
+        (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
+        (c.rootEntityType === 'document' && c.rootEntityId === doc.id)
+      ) {
+        if (c.created_by) contributorEmails.add(c.created_by);
+      }
+    });
+    
+    return Math.max(1, contributorEmails.size);
   };
 
 
@@ -392,7 +417,10 @@ export default function Home() {
         )}
       </section>
 
-
+      <ContributorsModal
+        isOpen={showContributorsModal}
+        onClose={() => setShowContributorsModal(false)}
+      />
     </div>
   );
 }
