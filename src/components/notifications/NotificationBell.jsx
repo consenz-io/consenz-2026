@@ -19,6 +19,7 @@ export default function NotificationBell({ user }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  // All hooks must be called before any conditional returns
   const { data: notifications = [] } = useQuery({
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
@@ -59,34 +60,6 @@ export default function NotificationBell({ user }) {
     },
   });
 
-  const handleNotificationClick = async (notification) => {
-    try {
-      // Mark as read first and WAIT for it
-      if (!notification.read) {
-        await markAsReadMutation.mutateAsync(notification.id);
-      }
-      
-      // Close the popover
-      setOpen(false);
-      
-      // Navigate only if we have a valid actionUrl
-      if (notification.actionUrl && typeof notification.actionUrl === 'string' && notification.actionUrl.length > 0) {
-        // Small delay to ensure popover closes
-        await new Promise(resolve => setTimeout(resolve, 150));
-        
-        try {
-          navigate(notification.actionUrl);
-        } catch (navError) {
-          console.error('[NAVIGATION ERROR] React Router failed:', navError);
-          // Fallback to window.location for external or problematic URLs
-          window.location.href = notification.actionUrl;
-        }
-      }
-    } catch (error) {
-      console.error('[NOTIFICATION CLICK ERROR]', error);
-    }
-  };
-
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const getNotificationIcon = (type) => {
@@ -121,6 +94,35 @@ export default function NotificationBell({ user }) {
     return `לפני ${days} ימים`;
   };
 
+  const handleNotificationClick = async (notification) => {
+    try {
+      // Mark as read first and WAIT for it
+      if (!notification.read) {
+        await markAsReadMutation.mutateAsync(notification.id);
+      }
+      
+      // Close the popover
+      setOpen(false);
+      
+      // Navigate only if we have a valid actionUrl
+      if (notification.actionUrl && typeof notification.actionUrl === 'string' && notification.actionUrl.length > 0) {
+        // Small delay to ensure popover closes
+        await new Promise(resolve => setTimeout(resolve, 150));
+        
+        try {
+          navigate(notification.actionUrl);
+        } catch (navError) {
+          console.error('[NAVIGATION ERROR] React Router failed:', navError);
+          // Fallback to window.location for external or problematic URLs
+          window.location.href = notification.actionUrl;
+        }
+      }
+    } catch (error) {
+      console.error('[NOTIFICATION CLICK ERROR]', error);
+    }
+  };
+
+  // Conditional return AFTER all hooks
   if (!user) return null;
 
   return (
