@@ -21,8 +21,7 @@ import {
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import NotificationBell from "@/components/notifications/NotificationBell";
-import NotificationErrorBoundary from "@/components/notifications/NotificationErrorBoundary";
+import FloatingNotificationBell from "@/components/notifications/FloatingNotificationBell";
 
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
@@ -247,14 +246,9 @@ function LayoutContent({ children, currentPageName }) {
                         <p className="font-medium text-slate-900 text-sm truncate">{user.full_name}</p>
                         <p className="text-xs text-slate-500 truncate">{user.email}</p>
                       </div>
-                    </div>
-                  </Link>
-                  <div data-notification-bell className="md:hidden">
-                    <NotificationErrorBoundary>
-                      <NotificationBell user={user} />
-                    </NotificationErrorBoundary>
-                  </div>
-                </div>
+                      </div>
+                      </Link>
+                      </div>
                 <Button
                   variant="outline"
                   size="sm"
@@ -319,10 +313,12 @@ function LayoutContent({ children, currentPageName }) {
               aria-label="Scroll to top"
             >
               <ArrowUp className="w-5 h-5" />
-            </button>
-          )}
-          </div>
-          </SidebarProvider>
+              </button>
+              )}
+
+              <FloatingNotificationBell />
+              </div>
+              </SidebarProvider>
           );
           }
 
