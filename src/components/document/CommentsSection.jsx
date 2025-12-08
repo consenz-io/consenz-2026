@@ -49,7 +49,7 @@ const runBackgroundTasks = async (comment, entityType, entityId, parentComment) 
 };
 
 export default function CommentsSection({ entityType, entityId, user, sectionId }) {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [error, setError] = useState(null);
@@ -312,7 +312,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
                     onChange={(e) => setEditingContent(e.target.value)}
                     className="min-h-[80px] text-sm"
                     autoFocus
-                    dir="auto"
+                    dir={isRTL ? 'rtl' : 'ltr'}
                   />
                   <div className="flex gap-2">
                     <Button
@@ -450,7 +450,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
           onChange={(e) => setNewComment(e.target.value)}
           placeholder={replyTo ? t('writeReply') : t('addComment')}
           className="min-h-[80px]"
-          dir="auto"
+          dir={isRTL ? 'rtl' : 'ltr'}
           onClick={() => {
             if (!user) {
               base44.auth.redirectToLogin(window.location.href);
