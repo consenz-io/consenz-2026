@@ -161,6 +161,28 @@ export default function SuggestionDetail() {
     initialData: [],
   });
 
+  const { data: topics } = useQuery({
+    queryKey: ['topics', suggestion?.documentId],
+    queryFn: () => base44.entities.Topic.filter({ documentId: suggestion.documentId }, 'order'),
+    enabled: !!suggestion?.documentId,
+    initialData: [],
+  });
+
+  const { data: sections } = useQuery({
+    queryKey: ['sections', suggestion?.documentId],
+    queryFn: () => base44.entities.Section.filter({ documentId: suggestion.documentId }),
+    enabled: !!suggestion?.documentId,
+    initialData: [],
+  });
+
+  // Check if section content matches current version in document
+  const isSectionContentCurrent = React.useMemo(() => {
+    if (!section || !suggestion || suggestion.type !== 'edit_section') return false;
+    // Compare stripped HTML to avoid whitespace/formatting differences
+    const stripHtml = (html) => html.replace(/<[^>]*>/g, '').trim();
+    return stripHtml(section.content) === stripHtml(suggestion.originalContent);
+  }, [section, suggestion]);
+
   const getUserName = (email) => {
     const user = users.find(u => u.email === email);
     return user?.full_name || 'User';
@@ -627,28 +649,6 @@ export default function SuggestionDetail() {
   const currentVersionIndex = suggestionVersions.findIndex(v => v.suggestionId === suggestionId);
   const isNewestVersion = currentVersionIndex === 0;
   const isOldestVersion = currentVersionIndex === suggestionVersions.length - 1 || currentVersionIndex === -1;
-
-  // Check if section content matches current version in document
-  const isSectionContentCurrent = React.useMemo(() => {
-    if (!section || !suggestion || suggestion.type !== 'edit_section') return false;
-    // Compare stripped HTML to avoid whitespace/formatting differences
-    const stripHtml = (html) => html.replace(/<[^>]*>/g, '').trim();
-    return stripHtml(section.content) === stripHtml(suggestion.originalContent);
-  }, [section, suggestion]);
-
-  const { data: topics } = useQuery({
-    queryKey: ['topics', suggestion?.documentId],
-    queryFn: () => base44.entities.Topic.filter({ documentId: suggestion.documentId }, 'order'),
-    enabled: !!suggestion?.documentId,
-    initialData: [],
-  });
-
-  const { data: sections } = useQuery({
-    queryKey: ['sections', suggestion?.documentId],
-    queryFn: () => base44.entities.Section.filter({ documentId: suggestion.documentId }),
-    enabled: !!suggestion?.documentId,
-    initialData: [],
-  });
 
   const handleSuggestionCreated = (newSuggestionId, newSectionId, newTopicId) => {
     // Navigate to document view with new suggestion
