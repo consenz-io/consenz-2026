@@ -1069,17 +1069,21 @@ Return ONLY the translated text:`;
                               })()}
                               
                               {/* Edit button */}
-                              {user && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setEditingTopic(topic)}
-                                  className="h-8 w-8 p-0 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
-                                  title="הצע עריכה לכותרת"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (!user) {
+                                    base44.auth.redirectToLogin(window.location.href);
+                                    return;
+                                  }
+                                  setEditingTopic(topic);
+                                }}
+                                className="h-8 w-8 p-0 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
+                                title="הצע עריכה לכותרת"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
                               
                               {/* Delete button - only for admin */}
                               {isAdmin && (
@@ -1140,16 +1144,22 @@ Return ONLY the translated text:`;
                     </div>
 
                     {/* Voting */}
-                    {document.votingButtonsEnabled && user && (
+                    {document.votingButtonsEnabled && (
                       <div className="flex items-center gap-3 pt-3 border-t border-amber-200">
                         <Button
                           size="sm"
                           variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
-                          onClick={() => voteTopicEditMutation.mutate({ 
-                            suggestionId: suggestion.id, 
-                            vote: 'pro',
-                            currentVote: userVote,
-                          })}
+                          onClick={() => {
+                            if (!user) {
+                              base44.auth.redirectToLogin(window.location.href);
+                              return;
+                            }
+                            voteTopicEditMutation.mutate({ 
+                              suggestionId: suggestion.id, 
+                              vote: 'pro',
+                              currentVote: userVote,
+                            });
+                          }}
                           disabled={voteTopicEditMutation.isPending}
                           className={userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}
                         >
@@ -1159,11 +1169,17 @@ Return ONLY the translated text:`;
                         <Button
                           size="sm"
                           variant={userVote?.vote === 'con' ? 'default' : 'outline'}
-                          onClick={() => voteTopicEditMutation.mutate({ 
-                            suggestionId: suggestion.id, 
-                            vote: 'con',
-                            currentVote: userVote
-                          })}
+                          onClick={() => {
+                            if (!user) {
+                              base44.auth.redirectToLogin(window.location.href);
+                              return;
+                            }
+                            voteTopicEditMutation.mutate({ 
+                              suggestionId: suggestion.id, 
+                              vote: 'con',
+                              currentVote: userVote
+                            });
+                          }}
                           disabled={voteTopicEditMutation.isPending}
                           className={userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}
                         >
@@ -1250,14 +1266,20 @@ Return ONLY the translated text:`;
                                 />
                               ))}
 
-                            {index > 0 && user && (
+                            {index > 0 && (
                               <div className="group relative h-4 flex items-center justify-center -my-2">
                                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                   <div className="h-full flex items-center justify-center">
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      onClick={() => onNewSection(topic.id, section.order)}
+                                      onClick={() => {
+                                        if (!user) {
+                                          base44.auth.redirectToLogin(window.location.href);
+                                          return;
+                                        }
+                                        onNewSection(topic.id, section.order);
+                                      }}
                                       className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
                                     >
                                       <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
@@ -1268,12 +1290,18 @@ Return ONLY the translated text:`;
                               </div>
                             )}
                           <div className="space-y-3 relative group/section">
-                            {user && index === 0 && (
+                            {index === 0 && (
                               <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 opacity-0 group-hover/section:opacity-100 transition-opacity">
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => onNewSection(topic.id, section.order)}
+                                  onClick={() => {
+                                    if (!user) {
+                                      base44.auth.redirectToLogin(window.location.href);
+                                      return;
+                                    }
+                                    onNewSection(topic.id, section.order);
+                                  }}
                                   className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
                                 >
                                   <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
@@ -1340,7 +1368,7 @@ Return ONLY the translated text:`;
                               </>
                             )}
 
-                            {index === topicSections.length - 1 && user && (
+                            {index === topicSections.length - 1 && (
                               <>
                                 <div className="group relative h-4 flex items-center justify-center mt-2">
                                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1348,7 +1376,13 @@ Return ONLY the translated text:`;
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        onClick={() => onNewSection(topic.id, section.order + 1)}
+                                        onClick={() => {
+                                          if (!user) {
+                                            base44.auth.redirectToLogin(window.location.href);
+                                            return;
+                                          }
+                                          onNewSection(topic.id, section.order + 1);
+                                        }}
                                         className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
                                       >
                                         <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
@@ -1361,7 +1395,13 @@ Return ONLY the translated text:`;
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => onNewSection(topic.id, section.order + 1)}
+                                    onClick={() => {
+                                      if (!user) {
+                                        base44.auth.redirectToLogin(window.location.href);
+                                        return;
+                                      }
+                                      onNewSection(topic.id, section.order + 1);
+                                    }}
                                     className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
                                   >
                                     <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />

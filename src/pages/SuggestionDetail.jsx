@@ -899,11 +899,17 @@ export default function SuggestionDetail() {
                 </div>
               </div>
 
-              {user && suggestion.status === 'pending' && document?.votingButtonsEnabled && (
+              {suggestion.status === 'pending' && document?.votingButtonsEnabled && (
                 <div className="flex gap-2 w-full md:w-auto">
                   <Button
                     variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
-                    onClick={() => voteMutation.mutate('pro')}
+                    onClick={() => {
+                      if (!user) {
+                        base44.auth.redirectToLogin(window.location.href);
+                        return;
+                      }
+                      voteMutation.mutate('pro');
+                    }}
                     disabled={voteMutation.isPending}
                     className={`flex-1 md:flex-initial text-xs md:text-sm ${userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
                   >
@@ -912,7 +918,13 @@ export default function SuggestionDetail() {
                   </Button>
                   <Button
                     variant={userVote?.vote === 'con' ? 'default' : 'outline'}
-                    onClick={() => voteMutation.mutate('con')}
+                    onClick={() => {
+                      if (!user) {
+                        base44.auth.redirectToLogin(window.location.href);
+                        return;
+                      }
+                      voteMutation.mutate('con');
+                    }}
                     disabled={voteMutation.isPending}
                     className={`flex-1 md:flex-initial text-xs md:text-sm ${userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
                   >
@@ -968,11 +980,17 @@ export default function SuggestionDetail() {
                   </div>
                 ))
               )}
-              {user && newArgument.type !== 'pro' && (
+              {newArgument.type !== 'pro' && (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setNewArgument({ type: 'pro', content: "" })}
+                  onClick={() => {
+                    if (!user) {
+                      base44.auth.redirectToLogin(window.location.href);
+                      return;
+                    }
+                    setNewArgument({ type: 'pro', content: "" });
+                  }}
                   className="w-full"
                 >
                   {t('addProArgument')}
@@ -1027,11 +1045,17 @@ export default function SuggestionDetail() {
                   </div>
                 ))
               )}
-              {user && newArgument.type !== 'con' && (
+              {newArgument.type !== 'con' && (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setNewArgument({ type: 'con', content: "" })}
+                  onClick={() => {
+                    if (!user) {
+                      base44.auth.redirectToLogin(window.location.href);
+                      return;
+                    }
+                    setNewArgument({ type: 'con', content: "" });
+                  }}
                   className="w-full"
                 >
                   {t('addConArgument')}

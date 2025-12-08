@@ -360,11 +360,17 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
                     renderContent={(text) => <span>{text}</span>}
                   />
                   <div className="flex gap-2 mt-2">
-                    {user && !isReply && (
+                    {!isReply && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => setReplyTo(comment)}
+                        onClick={() => {
+                          if (!user) {
+                            base44.auth.redirectToLogin(window.location.href);
+                            return;
+                          }
+                          setReplyTo(comment);
+                        }}
                         className="h-7 text-xs"
                       >
                         <Reply className="w-3 h-3 mr-1" />
@@ -378,7 +384,6 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
                           size="sm"
                           onClick={() => {
                             setEditingComment(comment);
-                            // No need to setEditContent here, as the local state and useEffect handle initialization
                           }}
                           className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                         >
@@ -456,7 +461,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
           placeholder={replyTo ? t('writeReply') : t('addComment')}
           className="min-h-[80px]"
           dir="auto"
-          onClick={() => {
+          onFocus={() => {
             if (!user) {
               base44.auth.redirectToLogin(window.location.href);
             }
