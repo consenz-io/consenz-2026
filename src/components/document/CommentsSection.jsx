@@ -12,7 +12,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
 
 // CommentItem Component - moved outside to avoid hooks issues
-const CommentItem = ({ 
+const CommentItem = React.memo(({ 
   comment, 
   isReply = false, 
   users,
@@ -26,15 +26,16 @@ const CommentItem = ({
   getReplies,
   t
 }) => {
+  const isEditing = editingComment?.id === comment.id;
   const [localEditContent, setLocalEditContent] = useState(comment.content);
 
   useEffect(() => {
-    if (editingComment?.id === comment.id) {
+    if (isEditing) {
       setLocalEditContent(comment.content);
     }
-  }, [editingComment?.id === comment.id, comment.content]);
+  }, [isEditing, comment.content]);
 
-  const getUserName = (email) => {
+  const getUserName = React.useCallback((email) => {
     const profile = publicProfiles?.find(p => p.email === email);
     if (profile?.fullName) return profile.fullName;
     
@@ -42,10 +43,9 @@ const CommentItem = ({
     if (foundUser?.full_name) return foundUser.full_name;
     
     return 'User';
-  };
+  }, [publicProfiles, users]);
 
-  const replies = getReplies(comment.id);
-  const isEditing = editingComment?.id === comment.id;
+  const replies = React.useMemo(() => getReplies(comment.id), [getReplies, comment.id]);
 
   return (
     <div id={`comment-${comment.id}`} className={`${isReply ? 'ml-8 mt-2' : ''}`}>
@@ -197,7 +197,7 @@ const CommentItem = ({
       )}
     </div>
   );
-};
+});
 
 // Background tasks - fire and forget
 const runBackgroundTasks = async (comment, entityType, entityId, parentComment) => {
@@ -444,10 +444,14 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     });
   };
 
-  const topLevelComments = comments.filter(c => !c.parentCommentId);
-  const getReplies = (commentId) => {
+  const topLevelComments = React.useMemo(() => 
+    comments.filter(c => !c.parentCommentId), 
+    [comments]
+  );
+  
+  const getReplies = React.useCallback((commentId) => {
     return comments.filter(c => c.parentCommentId === commentId);
-  };
+  }, [comments]);
 
   const totalCommentsCount = topLevelComments.length;
 
