@@ -254,22 +254,13 @@ Return ONLY the translated HTML:`;
 
       let targetTopicId = data.topicId;
       let topicTitle = '';
+      let newTopicTitle = null;
       
-      // Create new topic if needed
+      // Don't create new topic immediately - save title for when suggestion is accepted
       if (isCreatingNewTopic && newTopicName.trim()) {
-        const topicLanguage = detectLanguage(newTopicName.trim());
-        const maxOrder = topics.length > 0 ? Math.max(...topics.map(t => t.order)) : -1;
-        
-        // Always append new topics at the end for speed
-        const newTopic = await base44.entities.Topic.create({
-          documentId: document.id,
-          title: newTopicName.trim(),
-          order: maxOrder + 1,
-          originalLanguage: topicLanguage,
-        });
-        
-        targetTopicId = newTopic.id;
         topicTitle = newTopicName.trim();
+        newTopicTitle = newTopicName.trim();
+        targetTopicId = null; // Will be created when suggestion is accepted
       } else {
         const topic = topics.find(t => t.id === targetTopicId);
         topicTitle = topic?.title || '';
@@ -286,6 +277,7 @@ Return ONLY the translated HTML:`;
         documentId: document.id,
         sectionId: isNewSection ? null : editingSection.id,
         topicId: targetTopicId,
+        newTopicTitle: newTopicTitle, // Save new topic title if creating one
         type: isNewSection ? 'new_section' : 'edit_section',
         title: autoTitle,
         newContent: data.newContent,

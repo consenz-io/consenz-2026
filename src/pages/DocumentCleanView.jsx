@@ -488,6 +488,11 @@ ${text}`;
             topics.map((topic, topicIndex) => {
               const topicSections = sections.filter(s => s.topicId === topic.id);
               
+              // Don't show topics without sections in clean view
+              if (topicSections.length === 0) {
+                return null;
+              }
+              
               return (
                 <div key={topic.id} className="space-y-4 md:space-y-6 break-inside-avoid">
                   {/* Topic Title */}
