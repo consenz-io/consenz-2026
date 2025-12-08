@@ -61,6 +61,12 @@ export default function SectionHistory() {
     initialData: [],
   });
 
+  const { data: publicProfiles } = useQuery({
+    queryKey: ['publicProfiles'],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
+    initialData: [],
+  });
+
   const { data: sectionComments } = useQuery({
     queryKey: ['sectionComments', sectionId],
     queryFn: () => base44.entities.Comment.filter({ 
@@ -134,8 +140,16 @@ export default function SectionHistory() {
   });
 
   const getUserName = (email) => {
-    const foundUser = users.find(u => u.email === email);
-    return foundUser?.full_name || 'User';
+    // Try public profile first (accessible to everyone)
+    const profile = publicProfiles?.find(p => p.email === email);
+    if (profile?.fullName) return profile.fullName;
+    
+    // Fallback to User entity (admins only)
+    const foundUser = users?.find(u => u.email === email);
+    if (foundUser?.full_name) return foundUser.full_name;
+    
+    // User hasn't completed profile yet
+    return 'User';
   };
 
   const toggleComments = (suggestionId) => {
