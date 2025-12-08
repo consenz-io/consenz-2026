@@ -245,15 +245,13 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       pendingSuggestions
         .filter(pendingSugg => pendingSugg.id !== suggestion.id)
         .map(pendingSugg => {
-          // אם זו הצעה לאותו סעיף, עדכן originalContent, threshold ואפס הצבעות
+          // אם זו הצעה לאותו סעיף, עדכן originalContent ו-threshold (אבל לא מאפסים הצבעות)
           if (pendingSugg.type === 'edit_section' && pendingSugg.sectionId === freshSuggestion.sectionId) {
-            console.log('[THRESHOLD UPDATE] 🔄 RESETTING suggestion', pendingSugg.id, 'because section content changed');
-            console.log('[THRESHOLD UPDATE] - Resetting votes from', pendingSugg.proVotes, 'pro /', pendingSugg.conVotes, 'con to 0/0');
+            console.log('[THRESHOLD UPDATE] 🔄 Updating suggestion', pendingSugg.id, 'because section content changed');
+            console.log('[THRESHOLD UPDATE] - Keeping existing votes:', pendingSugg.proVotes, 'pro /', pendingSugg.conVotes, 'con');
             return base44.entities.Suggestion.update(pendingSugg.id, { 
               threshold: newThreshold,
-              originalContent: freshSuggestion.newContent, // התוכן החדש של הסעיף
-              proVotes: 0, // איפוס הצבעות בעד
-              conVotes: 0  // איפוס הצבעות נגד
+              originalContent: freshSuggestion.newContent // התוכן החדש של הסעיף
             });
           }
           // אחרת, רק עדכן את ה-threshold
@@ -263,20 +261,6 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     );
     
     console.log('[THRESHOLD UPDATE] Finished updating all suggestions');
-    
-    // מחק את כל ההצבעות על ההצעות האחרות לאותו סעיף
-    console.log('[THRESHOLD UPDATE] 🗑️  Deleting all votes for other suggestions to same section...');
-    const votesToDelete = [];
-    for (const otherSugg of otherSuggestionsToSameSection) {
-      const votes = await base44.entities.Vote.filter({ suggestionId: otherSugg.id });
-      votesToDelete.push(...votes);
-      console.log('[THRESHOLD UPDATE] - Found', votes.length, 'votes to delete for suggestion', otherSugg.id);
-    }
-    
-    if (votesToDelete.length > 0) {
-      await Promise.all(votesToDelete.map(vote => base44.entities.Vote.delete(vote.id)));
-      console.log('[THRESHOLD UPDATE] ✅ Deleted', votesToDelete.length, 'votes');
-    }
     
     // אחרי העדכון, בדוק מה המצב של ההצעות האחרות
     const updatedSuggestions = await base44.entities.Suggestion.filter({
