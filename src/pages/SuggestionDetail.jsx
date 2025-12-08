@@ -167,11 +167,6 @@ export default function SuggestionDetail() {
     initialData: [],
   });
 
-  const getUserName = (email) => {
-    const user = users.find(u => u.email === email);
-    return user?.full_name || 'User';
-  };
-
   // פונקציית עזר לטיפול בנקודות ברקע
   const handlePointsInBackground = async (action, vote, currentUserVote) => {
     if (!document?.gamificationEnabled) return;
@@ -545,7 +540,7 @@ export default function SuggestionDetail() {
     }
   });
 
-  // useEffect must come after ALL other hooks
+  // useEffect ALWAYS runs - before any conditional returns
   React.useEffect(() => {
     if (commentId && suggestionId && typeof window !== 'undefined') {
       setTimeout(() => {
@@ -561,7 +556,73 @@ export default function SuggestionDetail() {
     }
   }, [commentId, suggestionId, comments]);
 
-  // Early returns MUST come after ALL hooks
+  // useMemo ALWAYS runs - before any conditional returns
+  const isContentStillCurrent = React.useMemo(() => {
+    if (suggestion?.type !== 'edit_section' || !suggestion?.originalContent || !section?.content) {
+      return false;
+    }
+    return suggestion.originalContent.trim() === section.content.trim();
+  }, [suggestion, section]);
+
+  // Helper functions
+  const getUserName = (email) => {
+    const user = users.find(u => u.email === email);
+    return user?.full_name || 'User';
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'bg-amber-100 text-amber-800 border-amber-200';
+      case 'accepted': return 'bg-green-100 text-green-800 border-green-200';
+      case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-slate-100 text-slate-800 border-slate-200';
+    }
+  };
+
+  const getTimeRemaining = (timerEndsAt) => {
+    if (!timerEndsAt) return null;
+    const now = new Date();
+    const end = new Date(timerEndsAt);
+    const diff = end - now;
+    
+    if (diff <= 0) return t('votingEnded');
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(hours / 24);
+    
+    if (days > 0) return `${days}d ${hours % 24}h ${t('remaining')}`;
+    return `${hours}h ${t('remaining')}`;
+  };
+
+  const proArgs = args.filter(a => a.type === 'pro');
+  const conArgs = args.filter(a => a.type === 'con');
+  const consensusScore = suggestion && suggestion.proVotes + suggestion.conVotes > 0 
+    ? (suggestion.proVotes / (suggestion.proVotes + suggestion.conVotes) * 100).toFixed(0)
+    : 50;
+
+  const suggestionVersions = sectionVersions.filter(v => v.suggestionId);
+
+  const handleNavigateToVersion = (direction) => {
+    const currentIndex = suggestionVersions.findIndex(v => v.suggestionId === suggestionId);
+    let targetIndex;
+    
+    if (direction === 'newer') {
+      targetIndex = currentIndex - 1;
+    } else {
+      targetIndex = currentIndex + 1;
+    }
+    
+    if (targetIndex >= 0 && targetIndex < suggestionVersions.length) {
+      const targetVersion = suggestionVersions[targetIndex];
+      navigate(`${createPageUrl("SuggestionDetail")}?id=${targetVersion.suggestionId}`);
+    }
+  };
+
+  const currentVersionIndex = suggestionVersions.findIndex(v => v.suggestionId === suggestionId);
+  const isNewestVersion = currentVersionIndex === 0;
+  const isOldestVersion = currentVersionIndex === suggestionVersions.length - 1 || currentVersionIndex === -1;
+
+  // NOW check for loading/error states - AFTER all hooks
   if (suggestionLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
@@ -590,78 +651,7 @@ export default function SuggestionDetail() {
     );
   }
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'pending': return 'bg-amber-100 text-amber-800 border-amber-200';
-      case 'accepted': return 'bg-green-100 text-green-800 border-green-200';
-      case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-slate-100 text-slate-800 border-slate-200';
-    }
-  };
-
-  const getTimeRemaining = (timerEndsAt) => {
-    if (!timerEndsAt) return null;
-    const now = new Date();
-    const end = new Date(timerEndsAt);
-    const diff = end - now;
-    
-    if (diff <= 0) return t('votingEnded');
-    
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(hours / 24);
-    
-    if (days > 0) return `${days}d ${hours % 24}h ${t('remaining')}`;
-    return `${hours}h ${t('remaining')}`;
-  };
-
-  const proArgs = args.filter(a => a.type === 'pro');
-  const conArgs = args.filter(a => a.type === 'con');
-  const consensusScore = suggestion.proVotes + suggestion.conVotes > 0 
-    ? (suggestion.proVotes / (suggestion.proVotes + suggestion.conVotes) * 100).toFixed(0)
-    : 50;
-
-  // סינון רק גרסאות עם suggestionId
-  const suggestionVersions = sectionVersions.filter(v => v.suggestionId);
-
-  const handleNavigateToVersion = (direction) => {
-    console.log('[DEBUG] Navigate version:', direction);
-    console.log('[DEBUG] suggestionVersions:', suggestionVersions);
-    console.log('[DEBUG] current suggestionId:', suggestionId);
-    
-    const currentIndex = suggestionVersions.findIndex(v => v.suggestionId === suggestionId);
-    console.log('[DEBUG] currentIndex:', currentIndex);
-    
-    let targetIndex;
-    
-    if (direction === 'newer') {
-      targetIndex = currentIndex - 1;
-    } else {
-      targetIndex = currentIndex + 1;
-    }
-    
-    console.log('[DEBUG] targetIndex:', targetIndex);
-    
-    if (targetIndex >= 0 && targetIndex < suggestionVersions.length) {
-      const targetVersion = suggestionVersions[targetIndex];
-      console.log('[DEBUG] targetVersion:', targetVersion);
-      console.log('[DEBUG] Navigating to:', targetVersion.suggestionId);
-      navigate(`${createPageUrl("SuggestionDetail")}?id=${targetVersion.suggestionId}`);
-    } else {
-      console.log('[DEBUG] targetIndex out of bounds');
-    }
-  };
-
-  const currentVersionIndex = suggestionVersions.findIndex(v => v.suggestionId === suggestionId);
-  const isNewestVersion = currentVersionIndex === 0;
-  const isOldestVersion = currentVersionIndex === suggestionVersions.length - 1 || currentVersionIndex === -1;
-
-  // Check if original content still matches current section content
-  const isContentStillCurrent = React.useMemo(() => {
-    if (suggestion?.type !== 'edit_section' || !suggestion?.originalContent || !section?.content) {
-      return false;
-    }
-    return suggestion.originalContent.trim() === section.content.trim();
-  }, [suggestion, section]);
+  // Continue with JSX rendering
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
