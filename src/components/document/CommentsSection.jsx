@@ -35,12 +35,15 @@ const CommentItem = memo(({
   }, [comment.content, editingComment?.id]);
 
   const getUserName = (email) => {
+    // Try public profile first (accessible to everyone)
     const profile = publicProfiles?.find(p => p.email === email);
     if (profile?.fullName) return profile.fullName;
     
-    const foundUser = users?.find(u => u.email === email);
-    if (foundUser?.full_name) return foundUser.full_name;
+    // Fallback to User entity (admins only)
+    const user = users?.find(u => u.email === email);
+    if (user?.full_name) return user.full_name;
     
+    // Last resort
     return 'User';
   };
 
@@ -320,19 +323,6 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     queryFn: () => base44.entities.UserPublicProfile.list(),
     initialData: [],
   });
-
-  const getUserName = (email) => {
-    // Try public profile first (accessible to everyone)
-    const profile = publicProfiles?.find(p => p.email === email);
-    if (profile?.fullName) return profile.fullName;
-    
-    // Fallback to User entity (admins only)
-    const user = users?.find(u => u.email === email);
-    if (user?.full_name) return user.full_name;
-    
-    // Last resort
-    return 'User';
-  };
 
   const createCommentMutation = useMutation({
     mutationFn: async (data) => {
