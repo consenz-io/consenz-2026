@@ -93,9 +93,23 @@ export default function DocumentComments() {
     initialData: [],
   });
 
+  const { data: publicProfiles } = useQuery({
+    queryKey: ['publicProfiles'],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
+    initialData: [],
+  });
+
   const getUserName = (email) => {
-    const user = users.find(u => u.email === email);
-    return user?.full_name || 'User';
+    // Try public profile first (accessible to everyone)
+    const profile = publicProfiles?.find(p => p.email === email);
+    if (profile?.fullName) return profile.fullName;
+    
+    // Fallback to User entity (admins only)
+    const user = users?.find(u => u.email === email);
+    if (user?.full_name) return user.full_name;
+    
+    // User hasn't completed profile yet
+    return 'User';
   };
 
   // Translate comment mutation

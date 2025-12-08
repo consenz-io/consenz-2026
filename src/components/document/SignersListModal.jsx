@@ -76,8 +76,11 @@ export default function SignersListModal({
   const c = content[language] || content.en;
 
   const getUserName = (signer) => {
+    // Find user by ID from allUsers prop (should include full names)
     const foundUser = allUsers.find(u => u.id === signer.userId);
     if (foundUser?.full_name) return foundUser.full_name;
+    
+    // User hasn't completed profile yet
     return 'User';
   };
 
