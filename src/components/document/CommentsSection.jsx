@@ -312,7 +312,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
                     onChange={(e) => setEditingContent(e.target.value)}
                     className="min-h-[80px] text-sm"
                     autoFocus
-                    dir={isRTL ? 'rtl' : 'ltr'}
+                    dir="auto"
                   />
                   <div className="flex gap-2">
                     <Button
@@ -450,7 +450,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
           onChange={(e) => setNewComment(e.target.value)}
           placeholder={replyTo ? t('writeReply') : t('addComment')}
           className="min-h-[80px]"
-          dir={isRTL ? 'rtl' : 'ltr'}
+          dir="auto"
           onClick={() => {
             if (!user) {
               base44.auth.redirectToLogin(window.location.href);
