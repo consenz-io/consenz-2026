@@ -125,13 +125,21 @@ export default function ContributorsModal({ isOpen, onClose, documentId = null }
     const list = Array.from(contributorEmails)
       .map(email => {
         const profile = emailToProfile[email];
-        return profile ? {
-          id: profile.userId,
-          name: profile.fullName || 'User',
-          email: profile.email
-        } : null;
+        if (profile) {
+          return {
+            id: profile.userId,
+            name: profile.fullName || 'User',
+            email: profile.email
+          };
+        } else {
+          // User without public profile - show as "User"
+          return {
+            id: email,
+            name: 'User',
+            email: email
+          };
+        }
       })
-      .filter(Boolean)
       .sort((a, b) => a.name.localeCompare(b.name));
 
     return list;
