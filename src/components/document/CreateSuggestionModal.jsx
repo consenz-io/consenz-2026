@@ -257,37 +257,14 @@ Return ONLY the translated HTML:`;
       
       // Create new topic if needed
       if (isCreatingNewTopic && newTopicName.trim()) {
-        const existingTopics = await base44.entities.Topic.filter({ documentId: document.id }, 'order');
-        
-        // If editingSection has topicId, insert the new topic after it
-        let newOrder;
-        if (editingSection?.topicId) {
-          const baseTopic = existingTopics.find(t => t.id === editingSection.topicId);
-          if (baseTopic) {
-            newOrder = baseTopic.order + 1;
-            // Shift all topics after this one
-            for (const topic of existingTopics) {
-              if (topic.order >= newOrder) {
-                await base44.entities.Topic.update(topic.id, { order: topic.order + 1 });
-              }
-            }
-          } else {
-            // Fallback if topic not found
-            const maxOrder = existingTopics.length > 0 ? Math.max(...existingTopics.map(t => t.order)) : -1;
-            newOrder = maxOrder + 1;
-          }
-        } else {
-          // No base topic specified, append at end
-          const maxOrder = existingTopics.length > 0 ? Math.max(...existingTopics.map(t => t.order)) : -1;
-          newOrder = maxOrder + 1;
-        }
-        
         const topicLanguage = detectLanguage(newTopicName.trim());
+        const maxOrder = topics.length > 0 ? Math.max(...topics.map(t => t.order)) : -1;
         
+        // Always append new topics at the end for speed
         const newTopic = await base44.entities.Topic.create({
           documentId: document.id,
           title: newTopicName.trim(),
-          order: newOrder,
+          order: maxOrder + 1,
           originalLanguage: topicLanguage,
         });
         
@@ -323,16 +300,19 @@ Return ONLY the translated HTML:`;
         createdByLanguage: language, // Track language user was viewing when creating suggestion
       });
 
-      // Create or update public profile for creator
+      // Create or update public profile in background (non-blocking)
       if (currentUser?.id && currentUser?.email && currentUser?.full_name) {
-        const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: currentUser.id });
-        if (existingProfiles.length === 0) {
-          await base44.entities.UserPublicProfile.create({
-            userId: currentUser.id,
-            email: currentUser.email,
-            fullName: currentUser.full_name
-          });
-        }
+        base44.entities.UserPublicProfile.filter({ userId: currentUser.id })
+          .then(existingProfiles => {
+            if (existingProfiles.length === 0) {
+              return base44.entities.UserPublicProfile.create({
+                userId: currentUser.id,
+                email: currentUser.email,
+                fullName: currentUser.full_name
+              });
+            }
+          })
+          .catch(err => console.error('Error creating public profile:', err));
       }
 
       // שליחת התראות ברקע (ללא המתנה)
@@ -345,19 +325,21 @@ Return ONLY the translated HTML:`;
       
       if (gamificationEnabled) {
         updateData.points = currentPoints - pointsCost;
-        
-        // Create points transaction record
-        await base44.entities.PointsTransaction.create({
+      }
+      
+      await base44.auth.updateMe(updateData);
+      
+      // Create points transaction in background (non-blocking)
+      if (gamificationEnabled) {
+        base44.entities.PointsTransaction.create({
           userId: currentUser.id,
           amount: -pointsCost,
           action: 'suggestion_created',
           description: `${t('pointsTransactionCreated')} ${autoTitle}`,
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion'
-        });
+        }).catch(err => console.error('Error creating points transaction:', err));
       }
-      
-      await base44.auth.updateMe(updateData);
 
       // עדכון מספר התורמים ברקע (ללא המתנה)
       updateContributorsInBackground(document.id);
