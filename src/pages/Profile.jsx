@@ -83,7 +83,9 @@ export default function Profile() {
       if (!data.full_name || data.full_name.trim().length < 2) {
         throw new Error("Display name must be at least 2 characters");
       }
-      return await base44.auth.updateMe({ 
+      
+      // Update main user profile
+      await base44.auth.updateMe({ 
         full_name: data.full_name.trim(),
         bio: data.bio?.trim() || "",
         linkedin: data.linkedin?.trim() || "",
@@ -92,9 +94,25 @@ export default function Profile() {
         instagram: data.instagram?.trim() || "",
         website: data.website?.trim() || "",
       });
+      
+      // Update or create public profile
+      const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
+      if (existingProfiles.length > 0) {
+        await base44.entities.UserPublicProfile.update(existingProfiles[0].id, {
+          fullName: data.full_name.trim(),
+          email: user.email
+        });
+      } else {
+        await base44.entities.UserPublicProfile.create({
+          userId: user.id,
+          email: user.email,
+          fullName: data.full_name.trim()
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
       setTimeout(() => setSuccess(null), 3000);

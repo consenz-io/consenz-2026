@@ -45,6 +45,13 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     staleTime: 60000,
   });
 
+  const { data: publicProfiles = [] } = useQuery({
+    queryKey: ['publicProfiles'],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
+    enabled: isOpen,
+    staleTime: 60000,
+  });
+
   const { data: allVotes = [] } = useQuery({
     queryKey: ['allVotes'],
     queryFn: () => base44.entities.Vote.list(),
@@ -124,31 +131,50 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       }
     });
 
-    // מחזירים משתמשים שקיימים ב-DB, ועבור אימיילים שלא קיימים ב-DB יוצרים אובייקט בסיסי
+    // Build contributors list from public profiles (accessible to all)
     const contributorsList = [];
     const foundEmails = new Set();
     
+    // First, try to match with public profiles
+    publicProfiles.forEach(profile => {
+      if (contributorEmails.has(profile.email)) {
+        contributorsList.push({
+          id: profile.userId,
+          email: profile.email,
+          full_name: profile.fullName,
+          role: 'user' // We don't expose role in public profile
+        });
+        foundEmails.add(profile.email);
+      }
+    });
+    
+    // Fallback to allUsers for any missing (in case profile not created yet)
     allUsers.forEach(user => {
-      if (contributorEmails.has(user.email)) {
-        contributorsList.push(user);
+      if (contributorEmails.has(user.email) && !foundEmails.has(user.email)) {
+        contributorsList.push({
+          id: user.id,
+          email: user.email,
+          full_name: user.full_name || user.email.split('@')[0],
+          role: user.role
+        });
         foundEmails.add(user.email);
       }
     });
     
-    // הוספת משתמשים שלא נמצאו ב-DB (יש להם created_by אבל אין להם רשומת User)
+    // For any remaining emails without profile
     contributorEmails.forEach(email => {
       if (!foundEmails.has(email) && email) {
         contributorsList.push({
-          id: email, // שימוש באימייל כ-ID זמני
+          id: email,
           email: email,
-          full_name: 'משתמש לא רשום', // שם ברור במקום חלק מאימייל
+          full_name: email.split('@')[0] || 'User',
           role: 'user'
         });
       }
     });
     
     return { contributors: contributorsList, loading: false };
-  }, [document, suggestions, sections, allUsers, allVotes, allComments, allArguments, documentId]);
+  }, [document, suggestions, sections, allUsers, publicProfiles, allVotes, allComments, allArguments, documentId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
