@@ -240,6 +240,13 @@ Return ONLY the translated HTML:`;
     ? safeTranslation
     : content;
 
+  // Render simple content if no entity
+  if (!entity) {
+    return renderContent ? renderContent(content) : (
+      <div className={className} dangerouslySetInnerHTML={{ __html: content }} />
+    );
+  }
+
   return (
     <div className="space-y-2" dir={isRTL ? 'rtl' : 'ltr'} style={{ textAlign: isRTL ? 'right' : 'left' }}>
       {translateMutation.isPending ? (
