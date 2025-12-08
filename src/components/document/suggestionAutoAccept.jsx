@@ -15,13 +15,30 @@ const detectLanguage = (text) => {
  * מיושם לפי אפיון Consensus Meter Logic
  */
 export async function checkSuggestionConsensus(suggestion, document) {
+  console.log('='.repeat(80));
+  console.log('[CONSENSUS CHECK] ===== START CHECKING SUGGESTION =====');
+  console.log('[CONSENSUS CHECK] Suggestion ID:', suggestion.id);
+  console.log('[CONSENSUS CHECK] Suggestion Title:', suggestion.title);
+  console.log('[CONSENSUS CHECK] Suggestion Type:', suggestion.type);
+  console.log('[CONSENSUS CHECK] Suggestion Status:', suggestion.status);
+  
   const proVotes = suggestion.proVotes || 0;
   const conVotes = suggestion.conVotes || 0;
   const totalUsers = document.totalUsersInteracted || 1; // מונע חלוקה באפס
   
+  console.log('[CONSENSUS CHECK] Vote counts:');
+  console.log('[CONSENSUS CHECK] - Pro votes:', proVotes);
+  console.log('[CONSENSUS CHECK] - Con votes:', conVotes);
+  console.log('[CONSENSUS CHECK] - Total users interacted:', totalUsers);
+  
   // חישוב threshold דינמי על בסיס consensuses של המסמך
   let threshold;
   const consensuses = document.consensuses || [];
+  
+  console.log('[CONSENSUS CHECK] Document consensus data:');
+  console.log('[CONSENSUS CHECK] - Consensuses array:', consensuses);
+  console.log('[CONSENSUS CHECK] - Consensuses length:', consensuses.length);
+  console.log('[CONSENSUS CHECK] - Document default threshold:', document.threshold);
   
   if (consensuses.length > 0) {
     // document_consensus_meter = ממוצע כל ה-section_consensus_meter
@@ -30,9 +47,17 @@ export async function checkSuggestionConsensus(suggestion, document) {
     // document_threshold = document_consensus_meter * totalUsers
     // מינימום threshold הוא 1 (לא מעגלים למטה - רק למעלה)
     threshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
+    
+    console.log('[CONSENSUS CHECK] Threshold calculation (dynamic):');
+    console.log('[CONSENSUS CHECK] - Consensus meter average:', consensusMeterAverage);
+    console.log('[CONSENSUS CHECK] - Formula: Math.max(1, Math.round(' + consensusMeterAverage + ' * ' + totalUsers + '))');
+    console.log('[CONSENSUS CHECK] - Calculated threshold:', threshold);
   } else {
     // אם אין consensuses, משתמשים ב-threshold של המסמך (מינימום 1)
     threshold = Math.max(1, document.threshold || 2);
+    console.log('[CONSENSUS CHECK] Threshold calculation (default):');
+    console.log('[CONSENSUS CHECK] - Using document.threshold:', document.threshold);
+    console.log('[CONSENSUS CHECK] - Calculated threshold:', threshold);
   }
   
   // חישוב הדלתא הנוכחית
@@ -41,16 +66,13 @@ export async function checkSuggestionConsensus(suggestion, document) {
   // בדיקה אם עברנו את הסף
   const shouldAccept = currentDelta >= threshold;
   
-  console.log('[CONSENSUS CHECK]', {
-    suggestionId: suggestion.id,
-    proVotes: proVotes,
-    conVotes: conVotes,
-    currentDelta: currentDelta,
-    totalUsers: totalUsers,
-    consensuses: consensuses,
-    threshold: threshold,
-    shouldAccept
-  });
+  console.log('[CONSENSUS CHECK] Final calculation:');
+  console.log('[CONSENSUS CHECK] - Current delta (pro - con):', currentDelta);
+  console.log('[CONSENSUS CHECK] - Required threshold:', threshold);
+  console.log('[CONSENSUS CHECK] - Comparison:', currentDelta, '>=', threshold, '=', shouldAccept);
+  console.log('[CONSENSUS CHECK] - DECISION: Should accept?', shouldAccept ? '✅ YES' : '❌ NO');
+  console.log('[CONSENSUS CHECK] ===== END CHECKING SUGGESTION =====');
+  console.log('='.repeat(80));
   
   return { shouldAccept, consensus: currentDelta, threshold };
 }
@@ -59,45 +81,69 @@ export async function checkSuggestionConsensus(suggestion, document) {
  * מקבל הצעה אוטומטית - מיישם את השינוי במסמך
  */
 export async function autoAcceptSuggestion(suggestion, userId, document) {
+  console.log('🔵'.repeat(40));
+  console.log('[AUTO-ACCEPT] ========== AUTO ACCEPT FLOW START ==========');
+  console.log('[AUTO-ACCEPT] Called with suggestion ID:', suggestion.id);
+  console.log('[AUTO-ACCEPT] Suggestion title:', suggestion.title);
+  console.log('[AUTO-ACCEPT] User ID:', userId);
+  console.log('[AUTO-ACCEPT] Document ID:', document.id);
+  
   // Validate inputs
   if (!suggestion || !suggestion.id) {
-    console.error('[AUTO-ACCEPT] Invalid suggestion:', suggestion);
+    console.error('[AUTO-ACCEPT] ❌ FAILED: Invalid suggestion:', suggestion);
     return false;
   }
   
   if (!document || !document.id) {
-    console.error('[AUTO-ACCEPT] Invalid document:', document);
+    console.error('[AUTO-ACCEPT] ❌ FAILED: Invalid document:', document);
     return false;
   }
   
   // שלב 1: קריאת המצב העדכני ביותר מהשרת - source of truth
+  console.log('[AUTO-ACCEPT] Step 1: Fetching fresh suggestion data from server...');
   let freshSuggestion;
   try {
     const freshSuggestions = await base44.entities.Suggestion.filter({ id: suggestion.id });
     freshSuggestion = freshSuggestions[0];
+    console.log('[AUTO-ACCEPT] Fresh suggestion data:', {
+      id: freshSuggestion?.id,
+      status: freshSuggestion?.status,
+      proVotes: freshSuggestion?.proVotes,
+      conVotes: freshSuggestion?.conVotes,
+      type: freshSuggestion?.type,
+      sectionId: freshSuggestion?.sectionId
+    });
   } catch (err) {
-    console.error('[AUTO-ACCEPT] Error fetching suggestion:', err);
+    console.error('[AUTO-ACCEPT] ❌ FAILED: Error fetching suggestion:', err);
     return false;
   }
   
   if (!freshSuggestion) {
-    console.log('[AUTO-ACCEPT] Suggestion not found:', suggestion.id);
+    console.log('[AUTO-ACCEPT] ❌ FAILED: Suggestion not found:', suggestion.id);
     return false;
   }
   
   // Verify suggestion is still pending - בדיקה מול המצב האמיתי מהשרת
+  console.log('[AUTO-ACCEPT] Step 2: Verifying suggestion status...');
   if (freshSuggestion.status !== 'pending') {
-    console.log('[AUTO-ACCEPT] Suggestion already processed (status:', freshSuggestion.status, '), skipping');
+    console.log('[AUTO-ACCEPT] ⚠️ SKIP: Suggestion already processed (status:', freshSuggestion.status, ')');
     return false;
   }
+  console.log('[AUTO-ACCEPT] ✅ Status is pending, continuing...');
   
   // וידוא שעדיין עומדים בתנאי הקונצנזוס לפי הנתונים העדכניים
+  console.log('[AUTO-ACCEPT] Step 3: Checking consensus threshold...');
   const { shouldAccept, consensus } = await checkSuggestionConsensus(freshSuggestion, document);
   
   if (!shouldAccept) {
-    console.log('[AUTO-ACCEPT] Suggestion no longer meets threshold, skipping');
+    console.log('[AUTO-ACCEPT] ⚠️ SKIP: Suggestion does not meet threshold');
+    console.log('[AUTO-ACCEPT] - Consensus (delta):', consensus);
+    console.log('[AUTO-ACCEPT] - This suggestion will NOT be auto-accepted');
     return false;
   }
+  
+  console.log('[AUTO-ACCEPT] ✅ Threshold met! Proceeding with auto-acceptance...');
+  console.log('[AUTO-ACCEPT] - Consensus (delta):', consensus);
   
   // עדכון מד הקונצנזוס רק עבור עריכות סעיפים קיימים (לא סעיפים חדשים)
   // סעיפים חדשים, עריכות ישירות ושינויי כותרות לא נספרים במד הקונצנזוס
