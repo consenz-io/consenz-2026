@@ -803,7 +803,7 @@ Return ONLY the translated text:`;
       topicVotingInProgressRef.current.add(suggestionId);
 
       try {
-        const suggestion = topicEditSuggestions.find(s => s.id === suggestionId);
+        const topicSuggestion = topicEditSuggestions.find(s => s.id === suggestionId);
         
         // שלב 1: קריאת המצב העדכני מהשרת (source of truth)
         const [freshVotes, freshSuggestions] = await Promise.all([
@@ -869,8 +869,8 @@ Return ONLY the translated text:`;
             else newConVotes += 1;
 
             // Award points for pro vote
-            if (vote === 'pro' && document.gamificationEnabled) {
-              const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+            if (vote === 'pro' && document.gamificationEnabled && topicSuggestion) {
+              const suggestionCreatorList = await base44.entities.User.filter({ email: topicSuggestion.created_by });
               if (suggestionCreatorList.length > 0) {
                 const suggestionCreator = suggestionCreatorList[0];
                 const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
@@ -909,13 +909,13 @@ Return ONLY the translated text:`;
         dynamicThreshold = document.threshold || 2;
       }
       
-      if (delta >= dynamicThreshold) {
+      if (delta >= dynamicThreshold && topicSuggestion) {
         // Get current topic for version tracking
-        const currentTopic = topics.find(t => t.id === suggestion.topicId);
+        const currentTopic = topics.find(t => t.id === topicSuggestion.topicId);
         
         // Accept suggestion - update topic title
-        await base44.entities.Topic.update(suggestion.topicId, {
-          title: suggestion.newTitle
+        await base44.entities.Topic.update(topicSuggestion.topicId, {
+          title: topicSuggestion.newTitle
         });
         
         // שינויי כותרות נושאים לא נספרים במד הקונצנזוס - רק עריכות תוכן סעיפים
@@ -927,7 +927,7 @@ Return ONLY the translated text:`;
 
         // Award points to creator
         if (document.gamificationEnabled) {
-          const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+          const suggestionCreatorList = await base44.entities.User.filter({ email: topicSuggestion.created_by });
           if (suggestionCreatorList.length > 0) {
             const suggestionCreator = suggestionCreatorList[0];
             const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
