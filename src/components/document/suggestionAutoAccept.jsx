@@ -227,7 +227,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     
     console.log('[THRESHOLD UPDATE] Found other suggestions to same section:', otherSuggestionsToSameSection.length);
     otherSuggestionsToSameSection.forEach(s => {
-      console.log('[THRESHOLD UPDATE] - Suggestion:', {
+      console.log('[THRESHOLD UPDATE] - Suggestion BEFORE reset:', {
         id: s.id,
         title: s.title,
         proVotes: s.proVotes,
@@ -245,12 +245,15 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       pendingSuggestions
         .filter(pendingSugg => pendingSugg.id !== suggestion.id)
         .map(pendingSugg => {
-          // אם זו הצעה לאותו סעיף, עדכן גם את ה-originalContent
+          // אם זו הצעה לאותו סעיף, עדכן originalContent, threshold ואפס הצבעות
           if (pendingSugg.type === 'edit_section' && pendingSugg.sectionId === freshSuggestion.sectionId) {
-            console.log('[THRESHOLD UPDATE] Updating suggestion', pendingSugg.id, 'with new originalContent and threshold');
+            console.log('[THRESHOLD UPDATE] 🔄 RESETTING suggestion', pendingSugg.id, 'because section content changed');
+            console.log('[THRESHOLD UPDATE] - Resetting votes from', pendingSugg.proVotes, 'pro /', pendingSugg.conVotes, 'con to 0/0');
             return base44.entities.Suggestion.update(pendingSugg.id, { 
               threshold: newThreshold,
-              originalContent: freshSuggestion.newContent // התוכן החדש של הסעיף
+              originalContent: freshSuggestion.newContent, // התוכן החדש של הסעיף
+              proVotes: 0, // איפוס הצבעות בעד
+              conVotes: 0  // איפוס הצבעות נגד
             });
           }
           // אחרת, רק עדכן את ה-threshold
@@ -260,6 +263,20 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     );
     
     console.log('[THRESHOLD UPDATE] Finished updating all suggestions');
+    
+    // מחק את כל ההצבעות על ההצעות האחרות לאותו סעיף
+    console.log('[THRESHOLD UPDATE] 🗑️  Deleting all votes for other suggestions to same section...');
+    const votesToDelete = [];
+    for (const otherSugg of otherSuggestionsToSameSection) {
+      const votes = await base44.entities.Vote.filter({ suggestionId: otherSugg.id });
+      votesToDelete.push(...votes);
+      console.log('[THRESHOLD UPDATE] - Found', votes.length, 'votes to delete for suggestion', otherSugg.id);
+    }
+    
+    if (votesToDelete.length > 0) {
+      await Promise.all(votesToDelete.map(vote => base44.entities.Vote.delete(vote.id)));
+      console.log('[THRESHOLD UPDATE] ✅ Deleted', votesToDelete.length, 'votes');
+    }
     
     // אחרי העדכון, בדוק מה המצב של ההצעות האחרות
     const updatedSuggestions = await base44.entities.Suggestion.filter({
@@ -272,14 +289,14 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       .filter(s => s.type === 'edit_section' && s.sectionId === freshSuggestion.sectionId)
       .forEach(s => {
         const delta = (s.proVotes || 0) - (s.conVotes || 0);
-        console.log('[THRESHOLD UPDATE] - Suggestion:', {
+        console.log('[THRESHOLD UPDATE] - Suggestion AFTER reset:', {
           id: s.id,
           title: s.title,
           proVotes: s.proVotes,
           conVotes: s.conVotes,
           delta: delta,
           threshold: s.threshold,
-          wouldAutoAcceptWithOnVote: delta >= (s.threshold || newThreshold),
+          wouldAutoAcceptWithOneVote: delta >= (s.threshold || newThreshold),
           originalContentPreview: s.originalContent?.substring(0, 80)
         });
       });
