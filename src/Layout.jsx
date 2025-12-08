@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages } from "lucide-react";
+import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages, ArrowUp } from "lucide-react";
 import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
 import { Toaster } from "sonner";
 import {
@@ -28,6 +28,8 @@ function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
   const queryClient = useQueryClient();
   const { language, setLanguage, t, isRTL } = useLanguage();
+  const [showScrollTop, setShowScrollTop] = React.useState(false);
+  
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
@@ -55,6 +57,19 @@ function LayoutContent({ children, currentPageName }) {
   React.useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   React.useEffect(() => {
     const initializeUserData = async () => {
@@ -295,11 +310,21 @@ function LayoutContent({ children, currentPageName }) {
           <div className="flex-1 overflow-auto max-w-full min-w-0">
             {children}
           </div>
-        </main>
-      </div>
-    </SidebarProvider>
-  );
-}
+          </main>
+
+          {showScrollTop && (
+          <button
+            onClick={scrollToTop}
+            className={`fixed bottom-6 ${isRTL ? 'left-6' : 'right-6'} bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50`}
+            aria-label="Scroll to top"
+          >
+            <ArrowUp className="w-5 h-5" />
+          </button>
+          )}
+          </div>
+          </SidebarProvider>
+          );
+          }
 
 export default function Layout({ children, currentPageName }) {
   return (
