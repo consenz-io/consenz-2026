@@ -60,13 +60,26 @@ export default function NotificationBell({ user }) {
   });
 
   const handleNotificationClick = (notification) => {
-    if (notification.actionUrl) {
-      navigate(notification.actionUrl);
-    }
+    // Mark as read first
     if (!notification.read) {
       markAsReadMutation.mutate(notification.id);
     }
+    
+    // Close the popover
     setOpen(false);
+    
+    // Navigate after a short delay to ensure popover closes first
+    if (notification.actionUrl) {
+      setTimeout(() => {
+        try {
+          navigate(notification.actionUrl);
+        } catch (error) {
+          console.error('Navigation error:', error);
+          // Fallback to window.location if navigate fails
+          window.location.href = notification.actionUrl;
+        }
+      }, 100);
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
