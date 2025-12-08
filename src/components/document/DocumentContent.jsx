@@ -62,6 +62,12 @@ export default function DocumentContent({
     initialData: [],
   });
 
+  const { data: publicProfiles } = useQuery({
+    queryKey: ['publicProfiles'],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
+    initialData: [],
+  });
+
   const { data: topicEditSuggestions } = useQuery({
     queryKey: ['topicEditSuggestions', document?.id],
     queryFn: () => base44.entities.TopicEditSuggestion.filter({ documentId: document.id }),
