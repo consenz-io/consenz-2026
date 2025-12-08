@@ -135,7 +135,7 @@ export default function SectionHistory() {
 
   const getUserName = (email) => {
     const foundUser = users.find(u => u.email === email);
-    return foundUser?.full_name || email;
+    return foundUser?.full_name || 'Anonymous User';
   };
 
   const toggleComments = (suggestionId) => {

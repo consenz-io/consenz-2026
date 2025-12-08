@@ -124,7 +124,7 @@ export default function SuggestionSidebar({
   });
 
   const getUserName = (email) => {
-    if (!email) return 'Unknown User';
+    if (!email) return 'Anonymous User';
     
     // First try public profile
     const profile = publicProfiles?.find(p => p.email === email);
@@ -135,7 +135,7 @@ export default function SuggestionSidebar({
     if (u?.full_name && u.full_name.trim()) return u.full_name;
     
     // Last resort
-    return email.split('@')[0] || email;
+    return 'Anonymous User';
   };
 
   // מעקב אחרי שינוי סטטוס להצגת אנימציה
