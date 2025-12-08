@@ -15,10 +15,10 @@ import ReactQuill from "react-quill";
 import DocumentContent from "../components/document/DocumentContent";
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 import PageHeader from "../components/PageHeader";
+import ContributorsModal from "../components/document/ContributorsModal";
 import CommentsSection from "../components/document/CommentsSection";
 import SuggestionSidebar from "../components/document/SuggestionSidebar";
-import ContributorsModal from "@/components/contributors/ContributorsModal";
-
+import { calculateContributorsFromData } from "../components/document/calculateContributors";
 import { TranslationProvider } from "../components/document/TranslationContext";
 import TranslateAllButton from "../components/document/TranslateAllButton";
 import DocumentAgreementModal from "../components/document/DocumentAgreementModal";
@@ -44,7 +44,7 @@ export default function DocumentView() {
   const [editingSection, setEditingSection] = useState(null);
   const [showTranslated, setShowTranslated] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
-
+  const [showContributorsModal, setShowContributorsModal] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [description, setDescription] = useState("");
   const [showTranslatedDescription, setShowTranslatedDescription] = useState(false);
@@ -54,7 +54,6 @@ export default function DocumentView() {
   const [newlyCreatedSuggestion, setNewlyCreatedSuggestion] = useState(null);
   const [showAgreementModal, setShowAgreementModal] = useState(false);
   const [showSignersListModal, setShowSignersListModal] = useState(false);
-  const [showContributorsModal, setShowContributorsModal] = useState(false);
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
@@ -102,9 +101,9 @@ export default function DocumentView() {
     staleTime: 30000,
   });
 
-  const { data: publicProfiles = [] } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
+  const { data: allUsers } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list(),
     initialData: [],
     staleTime: 60000,
   });
@@ -148,45 +147,18 @@ export default function DocumentView() {
     ).length;
   }, [allComments, sections]);
 
-  // Calculate document contributors count
+  // Calculate real contributors count using shared logic
   const contributorsCount = React.useMemo(() => {
-    const contributorEmails = new Set();
-
-    // Suggestion creators
-    suggestions.forEach(s => {
-      if (s.created_by) contributorEmails.add(s.created_by);
+    return calculateContributorsFromData({
+      document,
+      suggestions,
+      allVotes,
+      allUsers,
+      allArguments,
+      allComments,
+      sections
     });
-
-    // Voters
-    const suggestionIds = new Set(suggestions.map(s => s.id));
-    allVotes.forEach(v => {
-      if (suggestionIds.has(v.suggestionId) && v.created_by) {
-        contributorEmails.add(v.created_by);
-      }
-    });
-
-    // Argument writers
-    allArguments.forEach(arg => {
-      if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
-        contributorEmails.add(arg.created_by);
-      }
-    });
-
-    // Commenters
-    allComments.forEach(c => {
-      if (
-        (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
-        (c.rootEntityType === 'section' && sections.some(s => s.id === c.rootEntityId)) ||
-        (c.rootEntityType === 'document' && c.rootEntityId === documentId)
-      ) {
-        if (c.created_by) contributorEmails.add(c.created_by);
-      }
-    });
-
-    return Math.max(1, contributorEmails.size);
-  }, [suggestions, allVotes, allArguments, allComments, sections, documentId]);
-
-
+  }, [document, suggestions, allVotes, allUsers, allArguments, allComments, sections]);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -703,6 +675,12 @@ export default function DocumentView() {
         />
       )}
 
+      <ContributorsModal
+        isOpen={showContributorsModal}
+        onClose={() => setShowContributorsModal(false)}
+        documentId={documentId}
+      />
+
       {openSuggestionId && (
         <SuggestionSidebar
           suggestionId={openSuggestionId}
@@ -724,7 +702,7 @@ export default function DocumentView() {
         isOpen={showSignersListModal}
         onClose={() => setShowSignersListModal(false)}
         signers={documentAgreements}
-        allUsers={publicProfiles}
+        allUsers={allUsers}
         user={user}
         userHasAgreed={userHasAgreed}
         onJoinClick={() => {
@@ -733,12 +711,6 @@ export default function DocumentView() {
         }}
         onRemoveSignature={() => removeSignatureMutation.mutate()}
         isRemoving={removeSignatureMutation.isPending}
-      />
-
-      <ContributorsModal
-        isOpen={showContributorsModal}
-        onClose={() => setShowContributorsModal(false)}
-        documentId={documentId}
       />
       </div>
     </TranslationProvider>

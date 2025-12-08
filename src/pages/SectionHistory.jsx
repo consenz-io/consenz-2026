@@ -61,12 +61,6 @@ export default function SectionHistory() {
     initialData: [],
   });
 
-  const { data: publicProfiles } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-    initialData: [],
-  });
-
   const { data: sectionComments } = useQuery({
     queryKey: ['sectionComments', sectionId],
     queryFn: () => base44.entities.Comment.filter({ 
@@ -140,8 +134,8 @@ export default function SectionHistory() {
   });
 
   const getUserName = (email) => {
-    const profile = publicProfiles?.find(p => p.email === email);
-    return profile?.fullName || 'User';
+    const foundUser = users.find(u => u.email === email);
+    return foundUser?.full_name || 'User';
   };
 
   const toggleComments = (suggestionId) => {

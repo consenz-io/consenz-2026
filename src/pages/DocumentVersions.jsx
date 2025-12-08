@@ -79,15 +79,9 @@ export default function DocumentVersions() {
     initialData: [],
   });
 
-  const { data: publicProfiles } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-    initialData: [],
-  });
-
   const getUserName = (email) => {
-    const profile = publicProfiles?.find(p => p.email === email);
-    return profile?.fullName || 'User';
+    const user = users.find(u => u.email === email);
+    return user?.full_name || 'User';
   };
 
   const restoreVersionMutation = useMutation({

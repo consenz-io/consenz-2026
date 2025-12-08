@@ -9,8 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, TrendingUp, Users, Clock, ArrowRight, ArrowLeft, Languages, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
-import ContributorsModal from "@/components/contributors/ContributorsModal";
-
+import { calculateContributorsFromData } from "@/components/document/calculateContributors";
+import AllContributorsModal from "@/components/home/AllContributorsModal";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -27,7 +27,6 @@ export default function Home() {
   const [translatingDoc, setTranslatingDoc] = useState(null);
   const [showTranslated, setShowTranslated] = useState({});
   const [showContributorsModal, setShowContributorsModal] = useState(false);
-
   const { data: documents, isLoading } = useQuery({
     queryKey: ['publicDocuments'],
     queryFn: () => base44.entities.Document.list('-created_date', 20),
@@ -59,14 +58,20 @@ export default function Home() {
     initialData: [],
   });
 
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list(),
+    initialData: [],
+    retry: false,
+    throwOnError: false,
+  });
+
   const { data: publicProfiles = [] } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
     initialData: [],
     staleTime: 60000,
   });
-
-  const totalRegisteredUsers = publicProfiles.length;
 
   const { data: allArguments } = useQuery({
     queryKey: ['allArguments'],
@@ -86,45 +91,82 @@ export default function Home() {
     initialData: [],
   });
 
-  // Calculate real contributors per document
+  // Calculate real contributors per document using shared logic
   const getDocumentContributors = (doc) => {
-    const contributorEmails = new Set();
-    const docSuggestions = allSuggestions.filter(s => s.documentId === doc.id);
-    
-    docSuggestions.forEach(s => {
-      if (s.created_by) contributorEmails.add(s.created_by);
+    return calculateContributorsFromData({
+      document: doc,
+      suggestions: allSuggestions.filter(s => s.documentId === doc.id),
+      allVotes,
+      allUsers,
+      allArguments,
+      allComments,
+      sections: allSections.filter(s => s.documentId === doc.id)
     });
-    
-    const suggestionIds = new Set(docSuggestions.map(s => s.id));
-    allVotes.forEach(v => {
-      if (suggestionIds.has(v.suggestionId) && v.created_by) {
-        contributorEmails.add(v.created_by);
-      }
-    });
-    
-    allArguments.forEach(arg => {
-      if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
-        contributorEmails.add(arg.created_by);
-      }
-    });
-    
-    const docSections = allSections.filter(s => s.documentId === doc.id);
-    const sectionIds = new Set(docSections.map(s => s.id));
-    
-    allComments.forEach(c => {
-      if (
-        (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
-        (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
-        (c.rootEntityType === 'document' && c.rootEntityId === doc.id)
-      ) {
-        if (c.created_by) contributorEmails.add(c.created_by);
-      }
-    });
-    
-    return Math.max(1, contributorEmails.size);
   };
 
-
+  // Calculate unique contributors across all documents and build list
+  const { totalUniqueContributors, contributorsList } = useMemo(() => {
+    const uniqueEmails = new Set();
+    
+    // Document creators
+    documents.forEach(d => {
+      if (d.created_by) uniqueEmails.add(d.created_by);
+    });
+    
+    // Suggestion creators
+    allSuggestions.forEach(s => {
+      if (s.created_by) uniqueEmails.add(s.created_by);
+    });
+    
+    // Voters
+    const userIdToEmail = {};
+    // First try public profiles (accessible to all)
+    publicProfiles.forEach(p => { userIdToEmail[p.userId] = p.email; });
+    // Fallback to allUsers (for admins)
+    if (allUsers.length > 0) {
+      allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
+    }
+    allVotes.forEach(v => {
+      if (userIdToEmail[v.userId]) uniqueEmails.add(userIdToEmail[v.userId]);
+    });
+    
+    // Argument writers
+    allArguments.forEach(arg => {
+      if (arg.created_by) uniqueEmails.add(arg.created_by);
+    });
+    
+    // Commenters
+    allComments.forEach(c => {
+      if (c.created_by) uniqueEmails.add(c.created_by);
+    });
+    
+    // Build contributors list with names
+    // First map from public profiles (accessible to all)
+    const emailToProfile = {};
+    publicProfiles.forEach(p => { emailToProfile[p.email] = p; });
+    
+    // Fallback map from users (for admins or missing profiles)
+    const emailToUser = {};
+    if (allUsers.length > 0) {
+      allUsers.forEach(u => { emailToUser[u.email] = u; });
+    }
+    
+    const list = Array.from(uniqueEmails).map(email => {
+      const profile = emailToProfile[email];
+      const user = emailToUser[email];
+      
+      return {
+        email,
+        name: profile?.fullName || user?.full_name || 'User',
+        id: profile?.userId || user?.id
+      };
+    }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    
+    return {
+      totalUniqueContributors: Math.max(1, uniqueEmails.size),
+      contributorsList: list
+    };
+  }, [documents, allSuggestions, allVotes, allUsers, publicProfiles, allArguments, allComments]);
 
   const calculateAverageConsensus = () => {
     if (!acceptedSuggestions || acceptedSuggestions.length === 0) return 0;
@@ -259,11 +301,12 @@ export default function Home() {
             >
               <CardContent className="p-6 text-center">
                 <Users className="w-8 h-8 mx-auto mb-3 text-indigo-600" />
-                <div className="text-3xl font-bold text-slate-900">{totalRegisteredUsers}</div>
+                <div className="text-3xl font-bold text-slate-900">
+                  {totalUniqueContributors}
+                </div>
                 <div className="text-sm text-slate-600">{t('collaborators')}</div>
               </CardContent>
             </Card>
-
             <Link to={`${createPageUrl("LearnMore")}#consensus-calculation`}>
               <Card 
                 className="bg-white/80 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all"
@@ -417,9 +460,10 @@ export default function Home() {
         )}
       </section>
 
-      <ContributorsModal
+      <AllContributorsModal
         isOpen={showContributorsModal}
         onClose={() => setShowContributorsModal(false)}
+        contributors={contributorsList}
       />
     </div>
   );

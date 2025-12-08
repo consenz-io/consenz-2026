@@ -584,8 +584,16 @@ export default function DocumentContent({
   });
 
   const getUserName = (email) => {
+    // Try public profile first (accessible to everyone)
     const profile = publicProfiles?.find(p => p.email === email);
-    return profile?.fullName || 'User';
+    if (profile?.fullName) return profile.fullName;
+    
+    // Fallback to User entity (admins only)
+    const user = users?.find(u => u.email === email);
+    if (user?.full_name) return user.full_name;
+    
+    // User hasn't completed profile yet
+    return 'User';
   };
 
   const toggleComments = (id) => {
