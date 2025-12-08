@@ -249,7 +249,7 @@ export default function DocumentView() {
     if (openSuggestionFromUrl && !openSuggestionId) {
       setOpenSuggestionId(openSuggestionFromUrl);
     }
-  }, [openSuggestionFromUrl, openSuggestionId]);
+  }, [openSuggestionFromUrl]);
 
   const handleEditSection = (section, isDirectEdit = false) => {
     setEditingSection(isDirectEdit ? { ...section, isDirectEdit: true } : section);

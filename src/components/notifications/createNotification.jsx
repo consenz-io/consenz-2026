@@ -222,14 +222,6 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
     const displayName = voterName || getUserFromCache(users, publicProfiles, { email: voterEmail })?.full_name || voterEmail;
     const userLang = suggestionCreator.preferredLanguage || 'he';
     
-    // Build actionUrl with document view + sidebar open + scroll to section/topic
-    let actionUrl = `${createPageUrl("DocumentView")}?id=${suggestion.documentId}&openSuggestion=${suggestion.id}`;
-    if (suggestion.type === 'edit_section' && suggestion.sectionId) {
-      actionUrl += `&scrollTo=${suggestion.sectionId}`;
-    } else if (suggestion.type === 'new_section' && suggestion.topicId) {
-      actionUrl += `#topic-${suggestion.topicId}`;
-    }
-    
     await createNotification({
       userId: suggestionCreator.id,
       type: 'vote_on_suggestion',
@@ -237,7 +229,7 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
       message: translate('notifVoteMessage', userLang, { name: displayName, title: suggestion.title }),
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
-      actionUrl
+      actionUrl: `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`
     });
   } catch (error) {
     console.error('[NOTIFICATION ERROR]', error);
@@ -261,14 +253,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     
     const notifiedUserIds = new Set();
     const notifications = [];
-    
-    // Build actionUrl with document view + sidebar open + scroll to section/topic
-    let actionUrl = `${createPageUrl("DocumentView")}?id=${suggestion.documentId}&openSuggestion=${suggestion.id}`;
-    if (suggestion.type === 'edit_section' && suggestion.sectionId) {
-      actionUrl += `&scrollTo=${suggestion.sectionId}`;
-    } else if (suggestion.type === 'new_section' && suggestion.topicId) {
-      actionUrl += `#topic-${suggestion.topicId}`;
-    }
+    const actionUrl = `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`;
     
     const statusKeys = {
       accepted: { titleKey: 'notifAcceptedTitle', messageKey: 'notifAcceptedMessage' },
@@ -452,15 +437,7 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
     users.forEach(u => { emailToUser[u.email] = u; });
     
     const notifications = [];
-    
-    // Build actionUrl with document view + sidebar open + scroll to section/topic
-    let actionUrl = `${createPageUrl("DocumentView")}?id=${suggestion.documentId}&openSuggestion=${suggestion.id}`;
-    if (suggestion.type === 'edit_section' && suggestion.sectionId) {
-      actionUrl += `&scrollTo=${suggestion.sectionId}`;
-    } else if (suggestion.type === 'new_section' && suggestion.topicId) {
-      actionUrl += `#topic-${suggestion.topicId}`;
-    }
-    
+    const actionUrl = `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`;
     const suggestionTypeText = suggestion.type === 'new_section' ? 'הצעה לסעיף חדש' : 'הצעת עריכה';
 
     for (const email of participantEmails) {

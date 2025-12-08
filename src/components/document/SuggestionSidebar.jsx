@@ -151,7 +151,7 @@ export default function SuggestionSidebar({
     }
     
     prevStatusRef.current = suggestion.status;
-  }, [suggestion, onClose]);
+  }, [suggestion?.status, onClose, suggestion]);
 
   const voteMutation = useMutation({
     mutationFn: async (vote) => {
