@@ -91,8 +91,13 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     queryKey: ['replies', allParentIds],
     queryFn: async () => {
       if (allParentIds.length === 0) return [];
-      const allComments = await base44.entities.Comment.list('-created_date', 500);
-      return allComments.filter(c => c.parentCommentId && allParentIds.includes(c.parentCommentId));
+      // Fetch replies for each parent ID in parallel - much more efficient than loading all 500 comments
+      const repliesArrays = await Promise.all(
+        allParentIds.map(parentId => 
+          base44.entities.Comment.filter({ parentCommentId: parentId })
+        )
+      );
+      return repliesArrays.flat();
     },
     initialData: [],
     enabled: allParentIds.length > 0,
