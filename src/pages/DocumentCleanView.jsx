@@ -113,39 +113,8 @@ export default function DocumentCleanView() {
   const versionGroups = React.useMemo(() => {
     if (!allVersions.length && !sections.length) return [];
     
-    // Group versions by suggestionId - each accepted suggestion creates paired versions
-    const suggestionGroups = {};
-    allVersions.forEach(v => {
-      if (v.suggestionId) {
-        if (!suggestionGroups[v.suggestionId]) {
-          suggestionGroups[v.suggestionId] = [];
-        }
-        suggestionGroups[v.suggestionId].push(v);
-      }
-    });
-    
-    // For each suggestion, find the "after" version (highest version number in the pair)
-    const uniqueChanges = [];
-    Object.entries(suggestionGroups).forEach(([suggestionId, versions]) => {
-      // Sort by version descending to get the "after" version first
-      const sorted = versions.sort((a, b) => (b.version || 0) - (a.version || 0));
-      const afterVersion = sorted[0]; // The higher version is "after"
-      const beforeVersion = sorted[1]; // The lower version is "before"
-      
-      if (afterVersion) {
-        uniqueChanges.push({
-          ...afterVersion,
-          beforeContent: beforeVersion?.content,
-          suggestionId,
-          // Preserve important metadata for new sections
-          changeType: afterVersion.changeType,
-          changeDescription: afterVersion.changeDescription
-        });
-      }
-    });
-    
-    // Sort by version descending (newest first)
-    uniqueChanges.sort((a, b) => (b.version || 0) - (a.version || 0));
+    // Sort all versions by version number descending (newest first)
+    const sortedVersions = [...allVersions].sort((a, b) => (b.version || 0) - (a.version || 0));
     
     // Build snapshots - start from current state and work backwards
     const snapshots = [];
@@ -164,47 +133,64 @@ export default function DocumentCleanView() {
     });
     snapshots.push(currentSnapshot);
     
-    // Track section states
+    // Track section states as we go backwards
     let currentSectionContents = { ...currentSnapshot.sectionContents };
     let currentExistingSections = new Set(currentSnapshot.existingSections);
     
-    // Process each unique change
-    uniqueChanges.forEach(v => {
-      // Create a snapshot representing the state AFTER this change (newer version)
-      // This is what we'll show when navigating to this version
+    // Group versions by suggestionId to handle paired versions (before/after)
+    const versionsBySuggestion = new Map();
+    sortedVersions.forEach(v => {
+      if (v.suggestionId) {
+        if (!versionsBySuggestion.has(v.suggestionId)) {
+          versionsBySuggestion.set(v.suggestionId, []);
+        }
+        versionsBySuggestion.get(v.suggestionId).push(v);
+      }
+    });
+    
+    // Process each suggestion (newest first)
+    const processedSuggestions = new Set();
+    sortedVersions.forEach(v => {
+      if (!v.suggestionId || processedSuggestions.has(v.suggestionId)) return;
+      processedSuggestions.add(v.suggestionId);
+      
+      const versionsForSuggestion = versionsBySuggestion.get(v.suggestionId);
+      // Sort by version to get after (higher) and before (lower)
+      versionsForSuggestion.sort((a, b) => (b.version || 0) - (a.version || 0));
+      const afterVersion = versionsForSuggestion[0];
+      const beforeVersion = versionsForSuggestion[1];
+      
+      // This snapshot shows the state RIGHT AFTER this change was applied
       const snapshotAfterChange = {
-        version: v.version,
-        label: `גרסה ${v.version}`,
-        timestamp: v.created_date,
-        changeDescription: v.changeDescription,
-        changeType: v.changeType,
-        suggestionId: v.suggestionId,
+        version: afterVersion.version,
+        label: `גרסה ${afterVersion.version}`,
+        timestamp: afterVersion.created_date,
+        changeDescription: afterVersion.changeDescription,
+        changeType: afterVersion.changeType,
+        suggestionId: afterVersion.suggestionId,
         sectionContents: { ...currentSectionContents },
         existingSections: new Set(currentExistingSections),
-        changedSectionId: v.sectionId,
-        newContent: v.content
+        changedSectionId: afterVersion.sectionId,
+        newContent: afterVersion.content
       };
       
-      // For new sections, this version shows the newly created section
-      if (v.changeType === 'section_created') {
+      // Mark if this is a new section creation
+      if (afterVersion.changeType === 'section_created') {
         snapshotAfterChange.isNewSection = true;
-        snapshotAfterChange.newSectionId = v.sectionId;
-        snapshotAfterChange.newSectionContent = v.content;
-        // Section exists in this snapshot
-        snapshotAfterChange.sectionContents[v.sectionId] = v.content;
-        snapshotAfterChange.existingSections.add(v.sectionId);
+        snapshotAfterChange.newSectionId = afterVersion.sectionId;
+        snapshotAfterChange.newSectionContent = afterVersion.content;
       }
       
       snapshots.push(snapshotAfterChange);
       
-      // Update state for next older version
-      if (v.changeType === 'section_created') {
-        // Section didn't exist before this version
-        delete currentSectionContents[v.sectionId];
-        currentExistingSections.delete(v.sectionId);
-      } else {
+      // Now update state for the OLDER version (before this change)
+      if (afterVersion.changeType === 'section_created') {
+        // This section didn't exist before, remove it
+        delete currentSectionContents[afterVersion.sectionId];
+        currentExistingSections.delete(afterVersion.sectionId);
+      } else if (beforeVersion) {
         // Section existed with different content
-        currentSectionContents[v.sectionId] = v.beforeContent || v.content;
+        currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
       }
     });
     
