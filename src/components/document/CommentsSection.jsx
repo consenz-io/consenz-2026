@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -52,8 +52,10 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
   const { t, isRTL } = useLanguage();
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
-  const [editingComment, setEditingComment] = useState(null);
-  const [editContent, setEditContent] = useState("");
+  
+  // FIX: Removed editContent from parent state to prevent re-renders on every keystroke
+  const [editingComment, setEditingComment] = useState(null); 
+  
   const [error, setError] = useState(null);
   const queryClient = useQueryClient();
 
@@ -67,7 +69,6 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     enabled: !!entityType && !!entityId,
   });
 
-  // אם יש sectionId, טען גם את התגובות של הסעיף
   const { data: sectionComments, isLoading: sectionCommentsLoading } = useQuery({
     queryKey: ['comments', 'section', sectionId],
     queryFn: () => base44.entities.Comment.filter({ 
@@ -78,7 +79,6 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     enabled: !!sectionId && entityType === 'suggestion',
   });
 
-  // טען את כל ה-replies לתגובות שטענו (כי replies יכולות להיות ב-rootEntityType שונה)
   const allParentIds = React.useMemo(() => {
     const ids = [...suggestionComments.map(c => c.id)];
     if (entityType === 'suggestion' && sectionId) {
@@ -91,7 +91,6 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     queryKey: ['replies', allParentIds],
     queryFn: async () => {
       if (allParentIds.length === 0) return [];
-      // טען תגובות שה-parentCommentId שלהן הוא אחד מהתגובות שטענו
       const allComments = await base44.entities.Comment.list('-created_date', 500);
       return allComments.filter(c => c.parentCommentId && allParentIds.includes(c.parentCommentId));
     },
@@ -99,7 +98,6 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     enabled: allParentIds.length > 0,
   });
 
-  // מיזוג התגובות - אם זו הצעה עם sectionId, הצג גם תגובות סעיף
   const comments = React.useMemo(() => {
     let baseComments = [...suggestionComments];
     
@@ -107,7 +105,6 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
       baseComments = [...baseComments, ...sectionComments];
     }
     
-    // הוסף replies שלא נכללות כבר
     const existingIds = new Set(baseComments.map(c => c.id));
     const newReplies = repliesComments.filter(r => !existingIds.has(r.id));
     baseComments = [...baseComments, ...newReplies];
@@ -130,15 +127,12 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
   });
 
   const getUserName = (email) => {
-    // Try public profile first (accessible to everyone)
     const profile = publicProfiles?.find(p => p.email === email);
     if (profile?.fullName) return profile.fullName;
     
-    // Fallback to User entity (admins only)
     const user = users?.find(u => u.email === email);
     if (user?.full_name) return user.full_name;
     
-    // User hasn't completed profile yet
     return 'User';
   };
 
@@ -151,13 +145,11 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
       if (hebrewPattern.test(data.content)) detectedLanguage = 'he';
       else if (arabicPattern.test(data.content)) detectedLanguage = 'ar';
       
-      // Create comment - this is the only blocking call
       const comment = await base44.entities.Comment.create({
         ...data,
         originalLanguage: detectedLanguage
       });
       
-      // Create or update public profile for commenter
       if (user?.id && user?.email && user?.full_name) {
         const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
         if (existingProfiles.length === 0) {
@@ -169,17 +161,14 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
         }
       }
       
-      // Find parent comment for reply context (needed for background tasks)
       const parentComment = data.parentCommentId 
         ? comments.find(c => c.id === data.parentCommentId) 
         : null;
       
-      // Run all other tasks in background - don't await
       runBackgroundTasks(comment, entityType, entityId, parentComment);
       
       return comment;
     },
-    // Optimistic update for instant feedback
     onMutate: async (data) => {
       if (!user?.email) return { previousComments: null };
       
@@ -202,7 +191,6 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
         return [tempComment, ...old];
       });
       
-      // Clear form immediately for instant feedback
       setNewComment("");
       setReplyTo(null);
       
@@ -213,7 +201,6 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
       setError(null);
     },
     onError: (err, variables, context) => {
-      // Rollback on error
       if (context?.previousComments) {
         queryClient.setQueryData(['comments', entityType, entityId], context.previousComments);
       }
@@ -241,7 +228,6 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments'] });
       setEditingComment(null);
-      setEditContent("");
       setError(null);
     },
     onError: (err) => {
@@ -276,6 +262,17 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     const replies = getReplies(comment.id);
     const isEditing = editingComment?.id === comment.id;
 
+    // FIX 1: Local state for editing content. This stops keystrokes from forcing the parent to re-render.
+    const [localEditContent, setLocalEditContent] = useState(comment.content);
+
+    // FIX 2: Sync local state when entering edit mode (isEditing becomes true)
+    useEffect(() => {
+      if (isEditing) {
+        setLocalEditContent(comment.content);
+      }
+      // Note: No cleanup needed for exiting edit mode, as setEditingComment(null) handles the UI switch.
+    }, [isEditing, comment.content]);
+
     return (
       <div id={`comment-${comment.id}`} className={`${isReply ? 'ml-8 mt-2' : ''}`}>
         <Card className={`p-3 ${isReply ? 'bg-slate-50' : 'bg-white'}`}>
@@ -309,24 +306,26 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
               {isEditing ? (
                 <div className="space-y-2">
                   <Textarea
-  value={editContent}
-  onChange={(e) => setEditContent(e.target.value)}
-  className="min-h-[80px] text-sm"
-  dir="auto" // <--- תיקון: זיהוי אוטומטי לפי התוכן
-  autoFocus
-/>
+                    // Use local state for value and onChange
+                    value={localEditContent}
+                    onChange={(e) => setLocalEditContent(e.target.value)}
+                    className="min-h-[80px] text-sm"
+                    // FIX 3: Use "auto" directionality for mixed content
+                    dir="auto" 
+                    autoFocus
+                  />
                   <div className="flex gap-2">
                     <Button
                       size="sm"
                       onClick={() => {
-                        if (editContent.trim()) {
+                        if (localEditContent.trim()) {
                           updateCommentMutation.mutate({
                             commentId: comment.id,
-                            content: editContent.trim()
+                            content: localEditContent.trim() // Use local state for mutation
                           });
                         }
                       }}
-                      disabled={!editContent.trim() || updateCommentMutation.isPending}
+                      disabled={!localEditContent.trim() || updateCommentMutation.isPending}
                       className="h-7 text-xs"
                     >
                       {t('saveChanges')}
@@ -336,7 +335,8 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
                       size="sm"
                       onClick={() => {
                         setEditingComment(null);
-                        setEditContent("");
+                        // Resetting local content when canceling, though not strictly required if initialized correctly.
+                        setLocalEditContent(comment.content); 
                       }}
                       className="h-7 text-xs"
                     >
@@ -373,7 +373,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
                           size="sm"
                           onClick={() => {
                             setEditingComment(comment);
-                            setEditContent(comment.content);
+                            // No need to setEditContent here, as the local state and useEffect handle initialization
                           }}
                           className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                         >
@@ -401,7 +401,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
         {replies.length > 0 && (
           <div className="mt-2 space-y-2">
             {replies.map(reply => (
-              <CommentItem key={reply.id} comment={reply} isReply={true} />
+              <CommentItem key={reply.id} comment={reply} />
             ))}
           </div>
         )}
