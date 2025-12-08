@@ -275,6 +275,16 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
   const CommentItem = ({ comment, isReply = false }) => {
     const replies = getReplies(comment.id);
     const isEditing = editingCommentId === comment.id;
+    
+    // Detect direction of comment content
+    const detectContentDirection = (text) => {
+      const hebrewPattern = /[\u0590-\u05FF]/;
+      const arabicPattern = /[\u0600-\u06FF]/;
+      if (hebrewPattern.test(text) || arabicPattern.test(text)) return 'rtl';
+      return 'ltr';
+    };
+    
+    const editingDirection = isEditing ? detectContentDirection(editingContent) : 'auto';
 
     return (
       <div id={`comment-${comment.id}`} className={`${isReply ? 'ml-8 mt-2' : ''}`}>
@@ -311,7 +321,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
                     value={editingContent}
                     onChange={(e) => setEditingContent(e.target.value)}
                     className="min-h-[80px] text-sm"
-                    dir={isRTL ? 'rtl' : 'ltr'}
+                    style={{ direction: editingDirection, textAlign: editingDirection === 'rtl' ? 'right' : 'left' }}
                     autoFocus
                   />
                   <div className="flex gap-2">
