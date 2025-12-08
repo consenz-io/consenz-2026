@@ -15,10 +15,10 @@ import ReactQuill from "react-quill";
 import DocumentContent from "../components/document/DocumentContent";
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 import PageHeader from "../components/PageHeader";
-import ContributorsModal from "../components/document/ContributorsModal";
+
 import CommentsSection from "../components/document/CommentsSection";
 import SuggestionSidebar from "../components/document/SuggestionSidebar";
-import { calculateContributorsFromData } from "../components/document/calculateContributors";
+
 import { TranslationProvider } from "../components/document/TranslationContext";
 import TranslateAllButton from "../components/document/TranslateAllButton";
 import DocumentAgreementModal from "../components/document/DocumentAgreementModal";
@@ -44,7 +44,7 @@ export default function DocumentView() {
   const [editingSection, setEditingSection] = useState(null);
   const [showTranslated, setShowTranslated] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
-  const [showContributorsModal, setShowContributorsModal] = useState(false);
+
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [description, setDescription] = useState("");
   const [showTranslatedDescription, setShowTranslatedDescription] = useState(false);
@@ -147,18 +147,7 @@ export default function DocumentView() {
     ).length;
   }, [allComments, sections]);
 
-  // Calculate real contributors count using shared logic
-  const contributorsCount = React.useMemo(() => {
-    return calculateContributorsFromData({
-      document,
-      suggestions,
-      allVotes,
-      allUsers,
-      allArguments,
-      allComments,
-      sections
-    });
-  }, [document, suggestions, allVotes, allUsers, allArguments, allComments, sections]);
+
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -596,15 +585,7 @@ export default function DocumentView() {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 md:gap-4 w-full max-w-full">
-          <div 
-            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 cursor-pointer hover:border-blue-400 transition-all flex flex-col items-center justify-center gap-1"
-            onClick={() => setShowContributorsModal(true)}
-          >
-            <Users className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
-            <div className="text-base md:text-xl font-bold text-slate-900">{contributorsCount}</div>
-            <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('contributors')}</div>
-          </div>
+        <div className="grid grid-cols-2 gap-3 md:gap-4 w-full max-w-full">
           <div 
             className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1"
           >
@@ -674,12 +655,6 @@ export default function DocumentView() {
           }}
         />
       )}
-
-      <ContributorsModal
-        isOpen={showContributorsModal}
-        onClose={() => setShowContributorsModal(false)}
-        documentId={documentId}
-      />
 
       {openSuggestionId && (
         <SuggestionSidebar
