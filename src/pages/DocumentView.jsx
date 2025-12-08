@@ -231,6 +231,19 @@ export default function DocumentView() {
     }
   }, [scrollToSectionId, sections]);
 
+  // Scroll to topic from URL hash
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && topics.length > 0) {
+      setTimeout(() => {
+        const element = window.document.querySelector(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 300);
+    }
+  }, [topics]);
+
   // Open suggestion sidebar from URL param
   useEffect(() => {
     if (openSuggestionFromUrl && !openSuggestionId) {
