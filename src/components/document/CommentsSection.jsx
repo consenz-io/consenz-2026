@@ -197,7 +197,7 @@ const CommentItem = memo(({
       )}
     </div>
   );
-};
+});
 
 // Background tasks - fire and forget
 const runBackgroundTasks = async (comment, entityType, entityId, parentComment) => {
