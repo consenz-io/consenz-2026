@@ -85,6 +85,7 @@ export default function UnderstandingConsensus() {
     : 0;
   
   // רף התמיכה הדרוש = מד הקונצנזוס × מספר המשתתפים
+  // CRITICAL: כאשר consensuses קיימים, threshold MUST חייב להיות 1 לפחות (לא מעגלים למטה)
   const threshold = consensuses.length > 0 
     ? Math.max(1, Math.round(documentConsensusMeter * totalUsers))
     : (document?.threshold || 2);
