@@ -177,11 +177,6 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
                     {user.full_name || 'User'}
                   </p>
                 </div>
-                {user.role === 'admin' && (
-                  <Badge variant="outline" className="text-[10px] md:text-xs">
-                    {t('admin')}
-                  </Badge>
-                )}
               </Link>
             ))}
           </div>
