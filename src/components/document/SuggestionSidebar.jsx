@@ -278,7 +278,8 @@ export default function SuggestionSidebar({
         queryClient.setQueryData(['userVote', suggestionId, user?.id], context.previousVote);
       }
       setError(err.message);
-      setTimeout(() => setError(null), 5000);
+      const errorTimer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(errorTimer);
     },
     onSuccess: (data) => {
       const doc = document || parentDocument;
@@ -405,7 +406,8 @@ export default function SuggestionSidebar({
     },
     onError: (err) => {
       setError(err.message);
-      setTimeout(() => setError(null), 5000);
+      const errorTimer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(errorTimer);
     }
   });
 
@@ -422,7 +424,8 @@ export default function SuggestionSidebar({
     },
     onError: (err) => {
       setError(err.message);
-      setTimeout(() => setError(null), 5000);
+      const errorTimer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(errorTimer);
     }
   });
 
@@ -438,7 +441,8 @@ export default function SuggestionSidebar({
     },
     onError: (err) => {
       setError(err.message);
-      setTimeout(() => setError(null), 5000);
+      const errorTimer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(errorTimer);
     }
   });
 
