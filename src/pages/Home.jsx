@@ -470,6 +470,7 @@ export default function Home() {
       <AllContributorsModal
         isOpen={showContributorsModal}
         onClose={() => setShowContributorsModal(false)}
+        contributors={publicProfiles}
       />
     </div>
   );
