@@ -92,6 +92,7 @@ export function calculateContributorsFromData({
   suggestions = [],
   allVotes = [],
   allUsers = [],
+  allPublicProfiles = [],
   allArguments = [],
   allComments = [],
   sections = []
@@ -106,10 +107,19 @@ export function calculateContributorsFromData({
     if (s.created_by) uniqueEmails.add(s.created_by);
   });
   
-  // 3. Voters - גם לפי userId וגם לפי created_by
+  // 3. Voters - use UserPublicProfile for userId to email mapping
   const suggestionIds = new Set(suggestions.map(s => s.id));
   const userIdToEmail = {};
-  allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
+  
+  // Build userId to email map from public profiles
+  allPublicProfiles.forEach(p => { userIdToEmail[p.userId] = p.email; });
+  
+  // Fallback to User entity for any missing mappings (admin only)
+  allUsers.forEach(u => { 
+    if (!userIdToEmail[u.id]) {
+      userIdToEmail[u.id] = u.email; 
+    }
+  });
   
   allVotes.forEach(v => {
     if (suggestionIds.has(v.suggestionId)) {
