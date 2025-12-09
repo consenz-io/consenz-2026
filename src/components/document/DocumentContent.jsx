@@ -153,7 +153,7 @@ export default function DocumentContent({
           threshold = Math.max(2, document.threshold || 2);
         }
         const delta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
-        const shouldAccept = delta > threshold;
+        const shouldAccept = delta >= threshold;
 
         if (shouldAccept && !hasCheckedRef.current.has(`${suggestion.id}-accepted`)) {
           console.log('[AUTO-ACCEPT SECTION] Auto-accepting section suggestion:', suggestion.id);
@@ -442,7 +442,7 @@ export default function DocumentContent({
       } else {
         threshold = Math.max(2, document.threshold || 2);
       }
-      const shouldAccept = freshSuggestion.status === 'pending' && (newProVotes - newConVotes) > threshold;
+      const shouldAccept = freshSuggestion.status === 'pending' && (newProVotes - newConVotes) >= threshold;
       
       // אם ההצעה צריכה להתקבל - מפעילים את האישור מיידית
       if (shouldAccept) {
@@ -537,7 +537,7 @@ export default function DocumentContent({
       } else {
         threshold = Math.max(2, document.threshold || 2);
       }
-      const willBeAccepted = suggestion?.status === 'pending' && (newProVotes - newConVotes) > threshold;
+      const willBeAccepted = suggestion?.status === 'pending' && (newProVotes - newConVotes) >= threshold;
       
       // עדכון אופטימיסטי של ההצעות
       queryClient.setQueryData(['suggestions', document?.id], (old) => {
@@ -944,7 +944,7 @@ Return ONLY the translated text:`;
         dynamicThreshold = Math.max(2, document.threshold || 2);
       }
       
-      if (delta > dynamicThreshold && topicSuggestion) {
+      if (delta >= dynamicThreshold && topicSuggestion) {
         // Get current topic for version tracking
         const currentTopic = topics.find(t => t.id === topicSuggestion.topicId);
         
