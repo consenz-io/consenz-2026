@@ -194,8 +194,15 @@ export default function DocumentComments() {
 
   const getSectionPreview = (sectionId, expanded = false) => {
     const section = sections.find(s => s.id === sectionId);
-    if (!section) return { text: '', needsExpand: false };
-    const text = section.content?.replace(/<[^>]*>/g, '') || '';
+    if (!section || !section.content) return { text: '', needsExpand: false };
+    
+    // Create temporary element to properly extract text from HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = section.content;
+    const text = (tempDiv.textContent || tempDiv.innerText || '').trim();
+    
+    if (!text) return { text: '', needsExpand: false };
+    
     const needsExpand = text.length > 80;
     if (expanded) {
       return { text, needsExpand };
