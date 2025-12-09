@@ -582,12 +582,6 @@ export default function SuggestionSidebar({
               {suggestion.type === 'new_section' ? t('newSection') : t('suggestionToEditSection')}
             </Badge>
             {topic && <Badge variant="outline" className="text-xs truncate max-w-[150px]">{topic.title}</Badge>}
-            {suggestion.status === 'pending' && suggestion.timerEndsAt && (
-              <Badge variant="outline" className="flex items-center gap-1 text-xs">
-                <Clock className="w-3 h-3" />
-                {getTimeRemaining(suggestion.timerEndsAt)}
-              </Badge>
-            )}
           </div>
 
           <div className="text-xs text-slate-500">
