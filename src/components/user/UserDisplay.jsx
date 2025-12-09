@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { useUserDisplay, useUsersDisplay } from '@/hooks/useUserDisplay';
+import { useUserDisplay, useUsersDisplay } from '@/components/userDisplay/useUserDisplay';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/components/LanguageContext';
