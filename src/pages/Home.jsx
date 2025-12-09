@@ -74,6 +74,16 @@ export default function Home() {
     staleTime: 60000,
   });
 
+  // Remove duplicates from publicProfiles by userId
+  const uniquePublicProfiles = React.useMemo(() => {
+    const seen = new Set();
+    return publicProfiles.filter(p => {
+      if (seen.has(p.userId)) return false;
+      seen.add(p.userId);
+      return true;
+    });
+  }, [publicProfiles]);
+
   const { data: allArguments } = useQuery({
     queryKey: ['allArguments'],
     queryFn: () => base44.entities.Argument.list(),
@@ -306,7 +316,7 @@ export default function Home() {
               <CardContent className="p-6 text-center">
                 <Users className="w-8 h-8 mx-auto mb-3 text-indigo-600" />
                 <div className="text-3xl font-bold text-slate-900">
-                  {publicProfiles.length}
+                  {uniquePublicProfiles.length}
                 </div>
                 <div className="text-sm text-slate-600">{t('collaborators')}</div>
               </CardContent>
@@ -470,7 +480,7 @@ export default function Home() {
       <AllContributorsModal
         isOpen={showContributorsModal}
         onClose={() => setShowContributorsModal(false)}
-        contributors={publicProfiles}
+        contributors={uniquePublicProfiles}
       />
     </div>
   );
