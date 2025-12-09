@@ -323,13 +323,6 @@ Return ONLY the translated HTML:`;
       sendNotificationsInBackground(document, suggestion, currentUser);
       updateContributorsInBackground(document.id);
 
-      // הצגת הודעת הצלחה
-      const { toast } = await import('sonner');
-      toast.success('ההצעה פורסמה בהצלחה! 🎉', {
-        description: 'גלול למטה לצפות בהצעה',
-        duration: 3000,
-      });
-
       return suggestion;
     },
     onSuccess: (result) => {
