@@ -64,7 +64,7 @@ export default function Home() {
     initialData: [],
     retry: false,
     throwOnError: false,
-    enabled: !!user?.role && user.role === 'admin', // Fetch for admins to match System User Management
+    enabled: user?.role === 'admin', // Fetch only for confirmed admins
   });
 
   const { data: publicProfiles = [] } = useQuery({
@@ -72,15 +72,16 @@ export default function Home() {
     queryFn: () => base44.entities.UserPublicProfile.list(),
     initialData: [],
     staleTime: 60000,
-    enabled: !user || user.role !== 'admin', // Fetch for non-admins and non-logged-in users
+    // Always fetch publicProfiles unless user is confirmed admin
+    enabled: user?.role !== 'admin',
   });
 
-  // Use allUsers for admins (matches System User Management), publicProfiles for others
+  // Use allUsers for admins (matches System User Management), publicProfiles for everyone else
   const displayedUsers = React.useMemo(() => {
     if (user?.role === 'admin' && allUsers.length > 0) {
       return allUsers;
     }
-    // Remove duplicates from publicProfiles by userId for non-admins
+    // Remove duplicates from publicProfiles by userId
     const seen = new Set();
     return publicProfiles.filter(p => {
       if (seen.has(p.userId)) return false;
