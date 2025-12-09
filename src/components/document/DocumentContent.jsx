@@ -99,7 +99,8 @@ export default function DocumentContent({
   React.useEffect(() => {
     if (newlyCreatedSuggestion?.suggestionId) {
       const { suggestionId } = newlyCreatedSuggestion;
-      const timeoutId = setTimeout(() => {
+      
+      const scrollToElement = () => {
         const element = window.document.getElementById(`suggestion-${suggestionId}`);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -108,25 +109,29 @@ export default function DocumentContent({
             element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
             onClearNewlyCreated();
           }, 2000);
-        } else {
-          // Retry after delay if element not found yet
-          setTimeout(() => {
-            const retryElement = window.document.getElementById(`suggestion-${suggestionId}`);
-            if (retryElement) {
-              retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              retryElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-              setTimeout(() => {
-                retryElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
-                onClearNewlyCreated();
+          return true;
+        }
+        return false;
+      };
+      
+      // נסה מספר פעמים עם השהיות גדולות יותר
+      const timeoutId1 = setTimeout(() => {
+        if (!scrollToElement()) {
+          const timeoutId2 = setTimeout(() => {
+            if (!scrollToElement()) {
+              const timeoutId3 = setTimeout(() => {
+                scrollToElement();
               }, 2000);
+              return () => clearTimeout(timeoutId3);
             }
           }, 1000);
+          return () => clearTimeout(timeoutId2);
         }
       }, 500);
       
-      return () => clearTimeout(timeoutId);
+      return () => clearTimeout(timeoutId1);
     }
-  }, [newlyCreatedSuggestion, onClearNewlyCreated]);
+  }, [newlyCreatedSuggestion, onClearNewlyCreated, suggestions, topics]);
 
   React.useEffect(() => {
     if (!document || !suggestions) return;
@@ -702,11 +707,18 @@ Return ONLY the translated text:`;
   };
 
   const getNewSectionSuggestionsForTopic = (topicId) => {
-    return suggestions.filter(s => 
-      s.topicId === topicId && 
-      s.type === 'new_section'
-      // מציג גם pending וגם accepted (האנימציה תטפל בהעלמה)
-    ).sort((a, b) => (a.insertPosition || 999) - (b.insertPosition || 999));
+    return suggestions.filter(s => {
+      // אם ההצעה מיועדת לנושא קיים - בדוק לפי topicId
+      if (s.topicId) {
+        return s.topicId === topicId && s.type === 'new_section';
+      }
+      // אם ההצעה מיועדת לנושא חדש - חפש נושא עם אותו שם
+      if (s.newTopicTitle && s.type === 'new_section') {
+        const matchingTopic = topics.find(t => t.title === s.newTopicTitle);
+        return matchingTopic && matchingTopic.id === topicId;
+      }
+      return false;
+    }).sort((a, b) => (a.insertPosition || 999) - (b.insertPosition || 999));
   };
 
   const reorderSectionsMutation = useMutation({
