@@ -412,6 +412,9 @@ export default function DocumentContent({
               userId: user.id,
               vote
             });
+
+            // Ensure UserPublicProfile exists for display
+            await ensureUserPublicProfile(user);
             if (vote === 'pro') newProVotes += 1;
             else newConVotes += 1;
             pointsAction = 'new';

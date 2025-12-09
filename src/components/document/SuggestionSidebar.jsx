@@ -187,6 +187,9 @@ export default function SuggestionSidebar({
           userId: user.id,
           vote
         });
+
+        // Ensure UserPublicProfile exists for display
+        await ensureUserPublicProfile(user);
         if (vote === 'pro') newProVotes += 1;
         else newConVotes += 1;
       }

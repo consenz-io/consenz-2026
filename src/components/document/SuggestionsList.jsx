@@ -13,15 +13,37 @@ import { useLanguage } from "@/components/LanguageContext";
 
 export default function SuggestionsList({ suggestions, document, user, isAdmin }) {
   const { t, isRTL } = useLanguage();
-  const { data: users } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => base44.entities.User.list(),
+  const { data: publicProfiles } = useQuery({
+    queryKey: ['publicProfiles'],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
     initialData: [],
   });
 
+  const { data: users } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      try {
+        return await base44.entities.User.list();
+      } catch (error) {
+        // Expected for non-admins
+        return [];
+      }
+    },
+    initialData: [],
+    retry: false,
+  });
+
   const getUserName = (email) => {
-    const user = users.find(u => u.email === email);
-    return user?.full_name || email;
+    // Try public profile first (accessible to everyone)
+    const profile = publicProfiles?.find(p => p.email === email);
+    if (profile?.fullName) return profile.fullName;
+    
+    // Fallback to User entity (admins only)
+    const user = users?.find(u => u.email === email);
+    if (user?.full_name) return user.full_name;
+    
+    // Last resort
+    return 'User';
   };
   const getStatusColor = (status) => {
     switch (status) {
