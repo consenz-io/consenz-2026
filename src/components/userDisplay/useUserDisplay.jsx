@@ -22,6 +22,7 @@ export function useUserDisplay(idOrOptions) {
     staleTime: 300000, // 5 minutes
     gcTime: 600000, // 10 minutes
     retry: false,
+    placeholderData: null,
   });
 }
 
@@ -33,5 +34,6 @@ export function useUsersDisplay(userIds) {
     staleTime: 300000,
     gcTime: 600000,
     retry: false,
+    placeholderData: [],
   });
 }
