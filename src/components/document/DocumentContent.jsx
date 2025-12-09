@@ -148,12 +148,12 @@ export default function DocumentContent({
         let threshold;
         if (consensuses.length > 0) {
           const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-          threshold = Math.max(1, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
+          threshold = Math.max(2, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
         } else {
-          threshold = Math.max(1, document.threshold || 2);
+          threshold = Math.max(2, document.threshold || 2);
         }
         const delta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
-        const shouldAccept = delta >= threshold;
+        const shouldAccept = delta > threshold;
 
         if (shouldAccept && !hasCheckedRef.current.has(`${suggestion.id}-accepted`)) {
           console.log('[AUTO-ACCEPT SECTION] Auto-accepting section suggestion:', suggestion.id);
@@ -438,11 +438,11 @@ export default function DocumentContent({
       let threshold;
       if (consensuses.length > 0) {
         const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-        threshold = Math.max(1, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
+        threshold = Math.max(2, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
       } else {
-        threshold = document.threshold || 2;
+        threshold = Math.max(2, document.threshold || 2);
       }
-      const shouldAccept = freshSuggestion.status === 'pending' && (newProVotes - newConVotes) >= threshold;
+      const shouldAccept = freshSuggestion.status === 'pending' && (newProVotes - newConVotes) > threshold;
       
       // אם ההצעה צריכה להתקבל - מפעילים את האישור מיידית
       if (shouldAccept) {
@@ -533,11 +533,11 @@ export default function DocumentContent({
       if (consensuses.length > 0) {
         // מגבילים כל ערך ל-1 מקסימום (כי consensuses אמורים להיות בין 0 ל-1)
         const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-        threshold = Math.max(1, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
+        threshold = Math.max(2, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
       } else {
-        threshold = document.threshold || 2;
+        threshold = Math.max(2, document.threshold || 2);
       }
-      const willBeAccepted = suggestion?.status === 'pending' && (newProVotes - newConVotes) >= threshold;
+      const willBeAccepted = suggestion?.status === 'pending' && (newProVotes - newConVotes) > threshold;
       
       // עדכון אופטימיסטי של ההצעות
       queryClient.setQueryData(['suggestions', document?.id], (old) => {
@@ -939,12 +939,12 @@ Return ONLY the translated text:`;
       let dynamicThreshold;
       if (consensuses.length > 0) {
         const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-        dynamicThreshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
+        dynamicThreshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
       } else {
-        dynamicThreshold = document.threshold || 2;
+        dynamicThreshold = Math.max(2, document.threshold || 2);
       }
       
-      if (delta >= dynamicThreshold && topicSuggestion) {
+      if (delta > dynamicThreshold && topicSuggestion) {
         // Get current topic for version tracking
         const currentTopic = topics.find(t => t.id === topicSuggestion.topicId);
         
@@ -1147,9 +1147,9 @@ Return ONLY the translated text:`;
                 let threshold;
                 if (consensuses.length > 0) {
                   const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-                  threshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
+                  threshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
                 } else {
-                  threshold = document.threshold || 2;
+                  threshold = Math.max(2, document.threshold || 2);
                 }
                 const votesNeeded = Math.max(0, threshold - delta);
 
