@@ -12,7 +12,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Users, Loader2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
-import { getUserFullName, getUserId } from "@/utils/userHelpers";
 
 export default function ContributorsModal({ isOpen, onClose, documentId }) {
   const { t } = useLanguage();
@@ -162,9 +161,9 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     publicProfiles.forEach(profile => {
       if (contributorEmails.has(profile.email)) {
         contributorsList.push({
-          id: getUserId(profile),
+          id: profile.userId,
           email: profile.email,
-          fullName: getUserFullName(profile),
+          full_name: profile.full_name || 'User',
           role: null
         });
         addedEmails.add(profile.email);
@@ -175,9 +174,9 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     allUsers.forEach(user => {
       if (contributorEmails.has(user.email) && !addedEmails.has(user.email)) {
         contributorsList.push({
-          id: getUserId(user),
+          id: user.id,
           email: user.email,
-          fullName: getUserFullName(user),
+          full_name: user.full_name || 'User',
           role: user.role
         });
         addedEmails.add(user.email);
@@ -215,12 +214,12 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
               >
                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
                   <span className="text-white font-medium text-sm md:text-base">
-                    {user.fullName?.charAt(0)?.toUpperCase() || 'U'}
+                    {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-sm md:text-base text-slate-900 truncate">
-                    {user.fullName}
+                    {user.full_name || 'User'}
                   </p>
                 </div>
                 {user.role === 'admin' && (

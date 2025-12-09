@@ -99,14 +99,14 @@ export default function Profile() {
       const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
       if (existingProfiles.length > 0) {
         await base44.entities.UserPublicProfile.update(existingProfiles[0].id, {
-          fullName: data.full_name.trim(),
+          full_name: data.full_name.trim(),
           email: user.email
         });
       } else {
         await base44.entities.UserPublicProfile.create({
           userId: user.id,
           email: user.email,
-          fullName: data.full_name.trim()
+          full_name: data.full_name.trim()
         });
       }
       
