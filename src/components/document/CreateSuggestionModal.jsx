@@ -22,6 +22,7 @@ import TranslatableContent from "./TranslatableContent";
 import { createPageUrl } from "@/utils";
 import InsufficientPointsDialog from "../InsufficientPointsDialog";
 import PointsCostConfirmDialog from "../PointsCostConfirmDialog";
+import { ensureUserPublicProfile } from "../ensureUserPublicProfile";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
