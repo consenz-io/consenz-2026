@@ -147,9 +147,9 @@ async function getDocumentAdmins(documentId) {
 }
 
 // Helper to get document creator - uses cached users and profiles
-async function getDocumentCreator(documentId, users, publicProfiles, documents = null) {
+async function getDocumentCreator(documentId, users, publicProfiles, docList = null) {
   try {
-    let docs = documents;
+    let docs = docList;
     if (!docs) {
       docs = await base44.entities.Document.filter({ id: documentId });
     }
