@@ -215,6 +215,7 @@ export default function SuggestionDetail() {
   const voteMutation = useMutation({
     mutationFn: async (vote) => {
       if (!user) throw new Error(t('mustBeLoggedInToVote'));
+      if (!suggestion) throw new Error('Suggestion not found');
 
       let newProVotes = suggestion.proVotes || 0;
       let newConVotes = suggestion.conVotes || 0;
@@ -261,17 +262,17 @@ export default function SuggestionDetail() {
       handlePointsInBackground(pointsAction, vote, userVote);
       
       // התראות ועדכון תורמים ברקע
-      notifyVoteOnSuggestion({ suggestion, voterEmail: user.email }).catch(() => {});
+      notifyVoteOnSuggestion({ suggestion: updatedSuggestion, voterEmail: user.email }).catch(() => {});
       import('../components/document/calculateContributors').then(({ calculateDocumentContributors }) => {
-        calculateDocumentContributors(suggestion.documentId).then(count => {
-          base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count });
+        calculateDocumentContributors(updatedSuggestion.documentId).then(count => {
+          base44.entities.Document.update(updatedSuggestion.documentId, { totalUsersInteracted: count });
         });
       }).catch(() => {});
 
       // בדיקת קונסנזוס
       const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
       
-      if (shouldAccept && suggestion.status === 'pending') {
+      if (shouldAccept && updatedSuggestion.status === 'pending') {
         const accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
         
         if (accepted) {
@@ -281,8 +282,8 @@ export default function SuggestionDetail() {
               userId: user.id,
               amount: 50,
               action: 'vote_influenced_acceptance',
-              description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${suggestion.title}`,
-              relatedEntityId: suggestion.id,
+              description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${updatedSuggestion.title}`,
+              relatedEntityId: updatedSuggestion.id,
               relatedEntityType: 'suggestion'
             }).catch(() => {});
           }
