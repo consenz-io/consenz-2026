@@ -24,17 +24,29 @@ export async function ensureUserPublicProfile(user) {
         await base44.entities.UserPublicProfile.create({
           userId: user.id,
           email: user.email,
-          full_name: fullName.trim()
+          full_name: fullName.trim(),
+          bio: user.bio || '',
+          linkedin: user.linkedin || '',
+          twitter: user.twitter || '',
+          facebook: user.facebook || '',
+          instagram: user.instagram || '',
+          website: user.website || ''
         });
       }
     } else {
       // Update existing profile to ensure sync
       const existingProfile = existingProfiles[0];
       const trimmedFullName = fullName.trim();
-      if (trimmedFullName.length >= 2 && trimmedFullName !== existingProfile.full_name) {
+      if (trimmedFullName.length >= 2) {
         await base44.entities.UserPublicProfile.update(existingProfile.id, {
           full_name: trimmedFullName,
-          email: user.email
+          email: user.email,
+          bio: user.bio || '',
+          linkedin: user.linkedin || '',
+          twitter: user.twitter || '',
+          facebook: user.facebook || '',
+          instagram: user.instagram || '',
+          website: user.website || ''
         });
       }
     }
