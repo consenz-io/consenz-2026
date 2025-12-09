@@ -293,19 +293,9 @@ Return ONLY the translated HTML:`;
       });
 
       // Create or update public profile in background (non-blocking)
-      if (currentUser?.id && currentUser?.email && currentUser?.full_name) {
-        base44.entities.UserPublicProfile.filter({ userId: currentUser.id })
-          .then(existingProfiles => {
-            if (existingProfiles.length === 0) {
-              return base44.entities.UserPublicProfile.create({
-                userId: currentUser.id,
-                email: currentUser.email,
-                fullName: currentUser.full_name
-              });
-            }
-          })
-          .catch(err => console.error('Error creating public profile:', err));
-      }
+      import('../ensureUserPublicProfile').then(({ ensureUserPublicProfile }) => {
+        ensureUserPublicProfile(currentUser);
+      }).catch(err => console.error('Error ensuring public profile:', err));
 
       // שליחת התראות ברקע (ללא המתנה)
       sendNotificationsInBackground(document, suggestion, currentUser);

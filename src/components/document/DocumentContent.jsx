@@ -415,6 +415,10 @@ export default function DocumentContent({
             if (vote === 'pro') newProVotes += 1;
             else newConVotes += 1;
             pointsAction = 'new';
+            
+            // Create or update public profile
+            const { ensureUserPublicProfile } = await import('../ensureUserPublicProfile');
+            await ensureUserPublicProfile(user);
           }
         }
         
@@ -867,6 +871,10 @@ Return ONLY the translated text:`;
             });
             if (vote === 'pro') newProVotes += 1;
             else newConVotes += 1;
+            
+            // Create or update public profile
+            const { ensureUserPublicProfile } = await import('../ensureUserPublicProfile');
+            await ensureUserPublicProfile(user);
 
             // Award points for pro vote
             if (vote === 'pro' && document.gamificationEnabled && topicSuggestion) {
