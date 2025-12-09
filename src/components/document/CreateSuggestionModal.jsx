@@ -186,6 +186,7 @@ Return ONLY the translated HTML:`;
           documentId: document.id,
           sectionId: isNewSection ? null : editingSection?.id,
           topicId: data.topicId,
+          newTopicTitle: isCreatingNewTopic ? newTopicName : null,
           type: isNewSection ? 'new_section' : 'edit_section',
           title: autoTitle,
           newContent: data.newContent,
@@ -320,15 +321,15 @@ Return ONLY the translated HTML:`;
         queryClient.invalidateQueries({ queryKey: ['allVersions'] });
         onClose();
       } else {
+        // Remove optimistic update
+        queryClient.setQueryData(['suggestions', document.id], (old = []) => {
+          return old.filter(s => !s._isOptimistic);
+        });
+        
         // Refresh data after successful creation
         queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
         queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-        
-        // Non-critical refreshes - don't block
-        setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey: ['document', document.id] });
-          queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
-        }, 100);
+        queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
         
         // Notify parent to scroll to the new suggestion
         if (result?.id && onSuggestionCreated) {
