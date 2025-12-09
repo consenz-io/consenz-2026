@@ -11,6 +11,7 @@ import SectionHistory from './pages/SectionHistory';
 import LearnMore from './pages/LearnMore';
 import UnderstandingConsensus from './pages/UnderstandingConsensus';
 import DocumentComments from './pages/DocumentComments';
+import AdminSyncProfiles from './pages/AdminSyncProfiles';
 import __Layout from './Layout.jsx';
 
 
@@ -28,6 +29,7 @@ export const PAGES = {
     "LearnMore": LearnMore,
     "UnderstandingConsensus": UnderstandingConsensus,
     "DocumentComments": DocumentComments,
+    "AdminSyncProfiles": AdminSyncProfiles,
 }
 
 export const pagesConfig = {
