@@ -23,8 +23,7 @@ export default function VotesNeededCounter({ suggestion, document, sectionId }) 
     if (consensuses.length > 0) {
       // מגבילים כל ערך ל-1 מקסימום (כי consensuses אמורים להיות בין 0 ל-1)
       const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-      // (participants - 1) כי יוצר ההצעה נחשב כמצביע אחד, נדרש רוב מהשאר
-      threshold = Math.max(2, Math.round(consensusMeterAverage * Math.max(1, totalUsers - 1)));
+      threshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
     } else {
       threshold = Math.max(2, document.threshold || 2);
     }
