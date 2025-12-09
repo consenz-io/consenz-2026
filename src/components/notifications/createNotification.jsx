@@ -6,8 +6,9 @@ const userCache = new Map();
 const CACHE_TTL = 60000; // 1 minute
 
 // Clean up old cache entries periodically
+let cleanupInterval = null;
 if (typeof window !== 'undefined') {
-  setInterval(() => {
+  cleanupInterval = setInterval(() => {
     const now = Date.now();
     for (const [key, value] of userCache.entries()) {
       if (now - value.timestamp > CACHE_TTL) {
@@ -15,6 +16,13 @@ if (typeof window !== 'undefined') {
       }
     }
   }, CACHE_TTL);
+}
+
+// Cleanup on module unload (for hot reload support)
+if (typeof window !== 'undefined' && module.hot) {
+  module.hot.dispose(() => {
+    if (cleanupInterval) clearInterval(cleanupInterval);
+  });
 }
 
 async function getCachedUsers() {
@@ -428,6 +436,7 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
     ]);
 
     // שליפת מצביעים ומגיבים - רק אלה שקשורים למסמך זה
+    const suggestionIds = allSuggestions.map(s => s.id);
     const [allVotes, allComments] = await Promise.all([
       base44.entities.Vote.filter({ documentId: document.id }),
       base44.entities.Comment.list()
