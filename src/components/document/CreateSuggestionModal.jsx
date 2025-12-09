@@ -53,13 +53,16 @@ const sendNotificationsInBackground = async (document, suggestion, currentUser) 
 // Background function for updating contributors
 const updateContributorsInBackground = async (documentId) => {
   try {
+    console.log('[UPDATE CONTRIBUTORS] Starting contributors calculation for document:', documentId);
     const { calculateDocumentContributors } = await import('./calculateContributors');
     const contributorsCount = await calculateDocumentContributors(documentId);
+    console.log('[UPDATE CONTRIBUTORS] Calculated contributors count:', contributorsCount);
     await base44.entities.Document.update(documentId, {
       totalUsersInteracted: contributorsCount,
     });
+    console.log('[UPDATE CONTRIBUTORS] Successfully updated document with contributors count');
   } catch (err) {
-    console.error('Error updating contributors:', err);
+    console.error('[UPDATE CONTRIBUTORS] Error updating contributors:', err);
   }
 };
 
