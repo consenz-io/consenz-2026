@@ -89,18 +89,33 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       if (s.created_by) contributorEmails.add(s.created_by);
     });
 
-    // Voters - convert voter IDs to emails using UserPublicProfile entity
+    // Voters - convert voter IDs to emails using both UserPublicProfile and User entities
     const suggestionIds = new Set(suggestions.map(s => s.id));
-    const voterIds = new Set();
-    allVotes.forEach(v => {
-      if (suggestionIds.has(v.suggestionId)) {
-        voterIds.add(v.userId);
-        if (v.created_by) contributorEmails.add(v.created_by);
+    const userIdToEmail = {};
+    
+    // Build userId to email map from public profiles (accessible to all)
+    publicProfiles.forEach(p => { 
+      userIdToEmail[p.userId] = p.email; 
+    });
+    
+    // Add from User entity for any missing mappings (admin only, but better coverage)
+    allUsers.forEach(u => { 
+      if (!userIdToEmail[u.id]) {
+        userIdToEmail[u.id] = u.email; 
       }
     });
     
-    publicProfiles.forEach(profile => {
-      if (voterIds.has(profile.userId)) contributorEmails.add(profile.email);
+    allVotes.forEach(v => {
+      if (suggestionIds.has(v.suggestionId)) {
+        // Add voter by userId mapping
+        if (userIdToEmail[v.userId]) {
+          contributorEmails.add(userIdToEmail[v.userId]);
+        }
+        // Also add by created_by if available
+        if (v.created_by) {
+          contributorEmails.add(v.created_by);
+        }
+      }
     });
 
     // Argument writers
