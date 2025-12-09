@@ -151,16 +151,19 @@ export default function Home() {
       allUsers.forEach(u => { emailToUser[u.email] = u; });
     }
     
-    const list = Array.from(uniqueEmails).map(email => {
-      const profile = emailToProfile[email];
-      const user = emailToUser[email];
-      
-      return {
-        email,
-        name: profile?.fullName || user?.full_name || 'User',
-        id: profile?.userId || user?.id
-      };
-    }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    const list = Array.from(uniqueEmails)
+      .map(email => {
+        const profile = emailToProfile[email];
+        const user = emailToUser[email];
+
+        return {
+          email,
+          name: profile?.fullName || user?.full_name || email.split('@')[0] || 'User',
+          id: profile?.userId || user?.id
+        };
+      })
+      .filter(contributor => contributor.name && contributor.name !== 'User')
+      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     
     return {
       totalUniqueContributors: Math.max(1, uniqueEmails.size),
@@ -373,6 +376,9 @@ export default function Home() {
                 ? translatedTitle 
                 : doc.title;
 
+              const creatorProfile = publicProfiles.find(p => p.email === doc.created_by);
+              const creatorName = creatorProfile?.fullName || 'User';
+
               return (
                 <Card key={doc.id} className="bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-200 h-full">
                   <CardHeader>
@@ -412,6 +418,9 @@ export default function Home() {
                         )}
                       </div>
                     </div>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {t('by')} {creatorName}
+                    </p>
                   </CardHeader>
                   <Link to={`${createPageUrl("DocumentView")}?id=${doc.id}`}>
                     <CardContent>
