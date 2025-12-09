@@ -426,10 +426,13 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
       base44.entities.Argument.list(),
       base44.entities.Section.filter({ documentId: document.id })
     ]);
+    
+    // רשימת מזהי הצעות למסמך זה (לסינון)
+    const suggestionIds = allSuggestions.map(s => s.id);
 
-    // שליפת מצביעים ומגיבים - רק אלה שקשורים למסמך זה
+    // שליפת מצביעים ומגיבים
     const [allVotes, allComments] = await Promise.all([
-      base44.entities.Vote.filter({ documentId: document.id }),
+      base44.entities.Vote.list(),
       base44.entities.Comment.list()
     ]);
 
@@ -447,7 +450,8 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
     // מצביעים (רק על הצעות במסמך זה)
     const userIdToEmail = {};
     users.forEach(u => { userIdToEmail[u.id] = u.email; });
-    allVotes.forEach(v => {
+    const votesInDoc = allVotes.filter(v => suggestionIds.includes(v.suggestionId));
+    votesInDoc.forEach(v => {
       if (userIdToEmail[v.userId]) participantEmails.add(userIdToEmail[v.userId]);
     });
     
