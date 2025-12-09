@@ -104,32 +104,28 @@ export default function DocumentContent({
         const element = window.document.getElementById(`suggestion-${suggestionId}`);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+          element.classList.add('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
           setTimeout(() => {
-            element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+            element.classList.remove('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
             onClearNewlyCreated();
-          }, 2000);
+          }, 3000);
           return true;
         }
         return false;
       };
       
-      // נסה מספר פעמים עם השהיות גדולות יותר
-      const timeoutId1 = setTimeout(() => {
-        if (!scrollToElement()) {
-          const timeoutId2 = setTimeout(() => {
-            if (!scrollToElement()) {
-              const timeoutId3 = setTimeout(() => {
-                scrollToElement();
-              }, 2000);
-              return () => clearTimeout(timeoutId3);
-            }
-          }, 1000);
-          return () => clearTimeout(timeoutId2);
+      // נסה מספר פעמים עד שנמצא את האלמנט
+      let attempts = 0;
+      const maxAttempts = 10;
+      const tryScroll = () => {
+        if (scrollToElement() || attempts >= maxAttempts) {
+          return;
         }
-      }, 500);
+        attempts++;
+        setTimeout(tryScroll, 500);
+      };
       
-      return () => clearTimeout(timeoutId1);
+      setTimeout(tryScroll, 300);
     }
   }, [newlyCreatedSuggestion, onClearNewlyCreated, suggestions, topics]);
 
