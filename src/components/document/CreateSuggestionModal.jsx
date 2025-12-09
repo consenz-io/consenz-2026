@@ -292,10 +292,11 @@ Return ONLY the translated HTML:`;
         createdByLanguage: language, // Track language user was viewing when creating suggestion
       });
 
-      // Create or update public profile in background (non-blocking)
-      import('../ensureUserPublicProfile').then(({ ensureUserPublicProfile }) => {
-        ensureUserPublicProfile(currentUser);
-      }).catch(err => console.error('Error ensuring public profile:', err));
+      // Ensure public profile exists
+      if (currentUser) {
+        const { userDisplayService } = await import('@/components/userDisplay/service');
+        await userDisplayService.ensurePublicProfile(currentUser);
+      }
 
       // שליחת התראות ברקע (ללא המתנה)
       sendNotificationsInBackground(document, suggestion, currentUser);
