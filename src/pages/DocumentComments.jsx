@@ -332,7 +332,7 @@ export default function DocumentComments() {
                           {(() => {
                             const isExpanded = expandedSections[group.entityId];
                             const { text, needsExpand } = getSectionPreview(group.entityId, isExpanded);
-                            return (
+                            return text ? (
                               <div className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 mb-3">
                                 <p 
                                   className={`text-slate-800 ${isExpanded ? '' : 'line-clamp-2'}`}
@@ -353,7 +353,7 @@ export default function DocumentComments() {
                                   </button>
                                 )}
                               </div>
-                            );
+                            ) : null;
                           })()}
                         </>
                       ) : (
