@@ -45,6 +45,14 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     staleTime: 60000,
   });
 
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list(),
+    enabled: isOpen,
+    staleTime: 60000,
+    retry: false,
+  });
+
   const { data: allVotes = [] } = useQuery({
     queryKey: ['allVotes'],
     queryFn: () => base44.entities.Vote.list(),
