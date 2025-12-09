@@ -124,22 +124,22 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       }
     });
 
-    // Build contributors list from User entity (accessible to all)
+    // Build contributors list from UserPublicProfile entity (accessible to all)
     const contributorsList = [];
     
-    allUsers.forEach(user => {
-      if (contributorEmails.has(user.email)) {
+    publicProfiles.forEach(profile => {
+      if (contributorEmails.has(profile.email)) {
         contributorsList.push({
-          id: user.id,
-          email: user.email,
-          full_name: user.full_name || 'User',
-          role: user.role
+          id: profile.userId,
+          email: profile.email,
+          full_name: profile.fullName || 'User',
+          role: null // role not available in public profile
         });
       }
     });
     
     return { contributors: contributorsList, loading: false };
-  }, [document, suggestions, sections, allUsers, allVotes, allComments, allArguments, documentId]);
+  }, [document, suggestions, sections, publicProfiles, allVotes, allComments, allArguments, documentId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
