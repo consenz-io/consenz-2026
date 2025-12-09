@@ -212,8 +212,8 @@ export default function NewSectionSuggestionCard({
 
   return (
     <Card 
-      id={`new-suggestion-${suggestion.id}`}
-      className="bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-dashed border-amber-300 hover:border-amber-400 transition-all hover:shadow-lg"
+      id={`suggestion-${suggestion.id}`}
+      className="bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-dashed border-amber-300 hover:border-amber-400 transition-all hover:shadow-lg scroll-mt-24"
     >
       <CardContent className="p-4 md:p-6">
         <div className="flex items-start gap-3 mb-3">
