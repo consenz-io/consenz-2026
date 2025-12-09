@@ -12,24 +12,24 @@ export function useUserDisplay(idOrOptions) {
 
   return useQuery({
     queryKey: isEmailQuery ? ['userDisplay', 'email', email] : ['userDisplay', 'id', userId],
-    queryFn: () => {
+    queryFn: async () => {
       if (isEmailQuery) {
-        return userDisplayService.getUserByEmail(email);
+        return await userDisplayService.getUserByEmail(email);
       }
-      return userDisplayService.getUserById(userId);
+      return await userDisplayService.getUserById(userId);
     },
     enabled: !!(userId || email),
     staleTime: 300000, // 5 minutes
     gcTime: 600000, // 10 minutes
     retry: false,
-    placeholderData: null,
+    placeholderData: { displayName: '', initials: '', userId: null },
   });
 }
 
 export function useUsersDisplay(userIds) {
   return useQuery({
     queryKey: ['usersDisplay', userIds?.join(',')],
-    queryFn: () => userDisplayService.getUsers(userIds),
+    queryFn: async () => await userDisplayService.getUsers(userIds),
     enabled: !!(userIds && userIds.length > 0),
     staleTime: 300000,
     gcTime: 600000,
