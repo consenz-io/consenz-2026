@@ -165,18 +165,39 @@ async function getDocumentCreator(documentId, users, publicProfiles, docList = n
 
 // Batch create notifications for efficiency
 async function batchCreateNotifications(notifications) {
-  if (!notifications || notifications.length === 0) return;
+  if (!notifications || notifications.length === 0) {
+    console.log('[BATCH NOTIFICATIONS] No notifications to create');
+    return;
+  }
+  
+  console.log('[BATCH NOTIFICATIONS] Creating', notifications.length, 'notifications...');
   
   try {
     // Create all notifications in parallel
-    await Promise.all(notifications.map(n => 
-      base44.entities.Notification.create({ ...n, read: false }).catch(err => {
-        console.error('[NOTIFICATION ERROR] Failed to create notification:', err);
-        return null;
-      })
+    const results = await Promise.all(notifications.map((n, index) => 
+      base44.entities.Notification.create({ ...n, read: false })
+        .then(result => {
+          console.log('[BATCH NOTIFICATIONS] Successfully created notification', index + 1, '/', notifications.length);
+          return result;
+        })
+        .catch(err => {
+          console.error('[BATCH NOTIFICATIONS] Failed to create notification', index + 1, ':', err);
+          console.error('[BATCH NOTIFICATIONS] Failed notification data:', JSON.stringify(n, null, 2));
+          return null;
+        })
     ));
+    
+    const successful = results.filter(r => r !== null).length;
+    const failed = results.length - successful;
+    
+    console.log('[BATCH NOTIFICATIONS] Batch complete: Success:', successful, 'Failed:', failed);
+    
+    if (failed > 0) {
+      console.error('[BATCH NOTIFICATIONS] WARNING:', failed, 'notifications failed to create');
+    }
   } catch (error) {
-    console.error('[NOTIFICATION ERROR] Batch create failed:', error);
+    console.error('[BATCH NOTIFICATIONS] CRITICAL: Batch create failed completely:', error);
+    console.error('[BATCH NOTIFICATIONS] Stack:', error.stack);
   }
 }
 
@@ -598,8 +619,12 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     const actionUrl = createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
     console.log('[NOTIFY NEW SUGGESTION] Action URL:', actionUrl);
     
-    if (!actionUrl || !actionUrl.includes('SuggestionDetail')) {
-      console.error('[NOTIFY NEW SUGGESTION] ERROR: Invalid action URL generated!');
+    // Validate actionUrl before proceeding
+    if (!actionUrl || !actionUrl.includes('SuggestionDetail') || !suggestion.id) {
+      console.error('[NOTIFY NEW SUGGESTION] CRITICAL ERROR: Invalid action URL generated!');
+      console.error('[NOTIFY NEW SUGGESTION] actionUrl:', actionUrl);
+      console.error('[NOTIFY NEW SUGGESTION] suggestion.id:', suggestion.id);
+      throw new Error('Invalid notification URL - aborting notification send');
     }
     
     const suggestionTypeText = suggestion.type === 'new_section' ? 'הצעה לסעיף חדש' : 'הצעת עריכה';
