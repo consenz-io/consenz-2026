@@ -63,9 +63,9 @@ export async function checkSuggestionConsensus(suggestion, document) {
   // חישוב הדלתא הנוכחית
   const currentDelta = proVotes - conVotes;
   
-  // בדיקה אם עברנו את הסף - דלתא חייבת להיות **גדולה מ** הסף (לא שווה!)
-  // כך אם threshold=2, נדרש delta של 3 לפחות (למשל: 3 בעד, 0 נגד)
-  const shouldAccept = currentDelta > threshold;
+  // בדיקה אם עברנו את הסף - דלתא חייבת להיות **גדולה או שווה ל** הסף
+  // כך אם threshold=2, נדרש delta של 2 לפחות (למשל: 2 בעד, 0 נגד)
+  const shouldAccept = currentDelta >= threshold;
   
   console.log('[CONSENSUS CHECK] Final calculation:');
   console.log('[CONSENSUS CHECK] - Current delta (pro - con):', currentDelta);
@@ -548,8 +548,8 @@ export function checkTopicEditConsensus(suggestion, document) {
   }
   
   const currentDelta = proVotes - conVotes;
-  // בדיקה אם עברנו את הסף - דלתא חייבת להיות **גדולה מ** הסף (לא שווה!)
-  const shouldAccept = currentDelta > threshold;
+  // בדיקה אם עברנו את הסף - דלתא חייבת להיות **גדולה או שווה ל** הסף
+  const shouldAccept = currentDelta >= threshold;
   
   console.log('[TOPIC CONSENSUS CHECK]', {
     suggestionId: suggestion.id,
