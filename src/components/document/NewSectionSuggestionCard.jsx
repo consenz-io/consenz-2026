@@ -51,10 +51,17 @@ export default function NewSectionSuggestionCard({
   };
 
   // מעקב אחרי שינוי סטטוס להצגת אנימציה - רק פעם אחת
+  // CRITICAL: וידוא שההצעה באמת התקבלה ברמת השרת ולא רק עדכון אופטימיסטי
   React.useEffect(() => {
-    if (prevStatusRef.current === 'pending' && suggestion.status === 'accepted' && !hasAnimatedRef.current) {
+    const isReallyAccepted = suggestion.status === 'accepted' && 
+                             suggestion.suggestionConsensus !== undefined && 
+                             suggestion.participantsAtAcceptance !== undefined;
+    
+    if (prevStatusRef.current === 'pending' && isReallyAccepted && !hasAnimatedRef.current) {
       hasAnimatedRef.current = true;
-      console.log('[ANIMATION] Starting celebration for suggestion:', suggestion.id);
+      console.log('[ANIMATION] ✅ Suggestion was REALLY accepted by server, starting celebration:', suggestion.id);
+      console.log('[ANIMATION] - suggestionConsensus:', suggestion.suggestionConsensus);
+      console.log('[ANIMATION] - participantsAtAcceptance:', suggestion.participantsAtAcceptance);
       setAnimationPhase('celebrating');
       
       // שלב 1: חגיגה (3 שניות)
@@ -74,9 +81,11 @@ export default function NewSectionSuggestionCard({
         console.log('[ANIMATION] Hiding suggestion:', suggestion.id);
         setAnimationPhase('hidden');
       }, 6000);
+    } else if (prevStatusRef.current === 'pending' && suggestion.status === 'accepted' && !isReallyAccepted) {
+      console.log('[ANIMATION] ⚠️ Status changed to accepted but missing server fields - likely optimistic update, waiting for real update...');
     }
     prevStatusRef.current = suggestion.status;
-  }, [suggestion.status]);
+  }, [suggestion.status, suggestion.suggestionConsensus, suggestion.participantsAtAcceptance]);
 
   // אם בשלב העלמה סופית - אל תציג כלום
   if (animationPhase === 'hidden') {
