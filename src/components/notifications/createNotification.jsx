@@ -6,9 +6,8 @@ const userCache = new Map();
 const CACHE_TTL = 60000; // 1 minute
 
 // Clean up old cache entries periodically
-let cleanupInterval = null;
 if (typeof window !== 'undefined') {
-  cleanupInterval = setInterval(() => {
+  setInterval(() => {
     const now = Date.now();
     for (const [key, value] of userCache.entries()) {
       if (now - value.timestamp > CACHE_TTL) {
@@ -16,13 +15,6 @@ if (typeof window !== 'undefined') {
       }
     }
   }, CACHE_TTL);
-}
-
-// Cleanup on module unload (for hot reload support)
-if (typeof window !== 'undefined' && module.hot) {
-  module.hot.dispose(() => {
-    if (cleanupInterval) clearInterval(cleanupInterval);
-  });
 }
 
 async function getCachedUsers() {
