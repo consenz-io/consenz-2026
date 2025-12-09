@@ -282,7 +282,10 @@ export default function DocumentView() {
   };
 
   const handleNewSection = (topicId, insertPosition) => {
-    setEditingSection({ topicId, isNew: true, insertPosition });
+    // מציאת ה-order של הנושא הנוכחי
+    const currentTopic = topics.find(t => t.id === topicId);
+    const topicOrder = currentTopic?.order;
+    setEditingSection({ topicId, insertPosition, isNew: true, topicOrder });
     setShowCreateSuggestion(true);
   };
 
