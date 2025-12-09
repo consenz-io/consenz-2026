@@ -36,7 +36,7 @@ export default function DocumentComments() {
   const [expandedSections, setExpandedSections] = React.useState({});
   const [openSectionSidebar, setOpenSectionSidebar] = React.useState(null);
 
-  const { data: document, isLoading: docLoading } = useQuery({
+  const { data: doc, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
     queryFn: () => base44.entities.Document.filter({ id: documentId }).then(docs => docs[0]),
     enabled: !!documentId,
@@ -284,7 +284,7 @@ export default function DocumentComments() {
     );
   }
 
-  if (!document) {
+  if (!doc) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
         <div className="max-w-4xl mx-auto text-center py-12">
@@ -309,7 +309,7 @@ export default function DocumentComments() {
           </Link>
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-slate-900">{t('allSectionComments')}</h1>
-            <p className="text-sm text-slate-600">{document.title}</p>
+            <p className="text-sm text-slate-600">{doc.title}</p>
           </div>
         </div>
 
