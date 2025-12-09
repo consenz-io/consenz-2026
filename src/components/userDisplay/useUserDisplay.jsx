@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { userDisplayService } from './service';
+import { userDisplayService } from './service.js';
 
 /**
  * Hook מרכזי לתצוגת משתמשים
