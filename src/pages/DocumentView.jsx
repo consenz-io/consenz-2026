@@ -227,7 +227,8 @@ export default function DocumentView() {
 
   useEffect(() => {
     if (scrollToSectionId) {
-      setTimeout(() => {
+      const timers = [];
+      const initialTimer = setTimeout(() => {
         // Try both section-X and new-suggestion-X patterns
         let element = window.document.getElementById(scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-') 
           ? scrollToSectionId 
@@ -242,12 +243,13 @@ export default function DocumentView() {
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
           element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-          setTimeout(() => {
+          const removeTimer = setTimeout(() => {
             element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
           }, 2000);
+          timers.push(removeTimer);
         } else {
           // Retry after a longer delay if suggestions haven't loaded yet
-          setTimeout(() => {
+          const retryTimer = setTimeout(() => {
             const retryElement = window.document.getElementById(scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-') 
               ? scrollToSectionId 
               : `section-${scrollToSectionId}`
@@ -255,13 +257,20 @@ export default function DocumentView() {
             if (retryElement) {
               retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
               retryElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-              setTimeout(() => {
+              const retryRemoveTimer = setTimeout(() => {
                 retryElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
               }, 2000);
+              timers.push(retryRemoveTimer);
             }
           }, 1000);
+          timers.push(retryTimer);
         }
       }, 300);
+      timers.push(initialTimer);
+      
+      return () => {
+        timers.forEach(timer => clearTimeout(timer));
+      };
     }
   }, [scrollToSectionId, sections, suggestions]);
 
@@ -269,12 +278,14 @@ export default function DocumentView() {
   useEffect(() => {
     const hash = window.location.hash;
     if (hash && topics.length > 0) {
-      setTimeout(() => {
+      const hashTimer = setTimeout(() => {
         const element = window.document.querySelector(hash);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }, 300);
+      
+      return () => clearTimeout(hashTimer);
     }
   }, [topics]);
 

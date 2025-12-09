@@ -98,32 +98,40 @@ export default function DocumentContent({
   React.useEffect(() => {
     if (newlyCreatedSuggestion?.suggestionId) {
       const { suggestionId } = newlyCreatedSuggestion;
+      const timers = [];
+      
       const timeoutId = setTimeout(() => {
         const element = window.document.getElementById(`suggestion-${suggestionId}`);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
           element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-          setTimeout(() => {
+          const removeHighlightTimer = setTimeout(() => {
             element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
             onClearNewlyCreated();
           }, 2000);
+          timers.push(removeHighlightTimer);
         } else {
           // Retry after delay if element not found yet
-          setTimeout(() => {
+          const retryTimer = setTimeout(() => {
             const retryElement = window.document.getElementById(`suggestion-${suggestionId}`);
             if (retryElement) {
               retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
               retryElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-              setTimeout(() => {
+              const retryRemoveTimer = setTimeout(() => {
                 retryElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
                 onClearNewlyCreated();
               }, 2000);
+              timers.push(retryRemoveTimer);
             }
           }, 1000);
+          timers.push(retryTimer);
         }
       }, 500);
+      timers.push(timeoutId);
       
-      return () => clearTimeout(timeoutId);
+      return () => {
+        timers.forEach(timer => clearTimeout(timer));
+      };
     }
   }, [newlyCreatedSuggestion, onClearNewlyCreated]);
 
@@ -146,7 +154,7 @@ export default function DocumentContent({
         let threshold;
         if (consensuses.length > 0) {
           const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-          threshold = Math.max(1, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
+          threshold = Math.max(1, Math.round(consensusMeterAverage * Math.max(1, document.totalUsersInteracted || 1)));
         } else {
           threshold = Math.max(1, document.threshold || 2);
         }
@@ -167,7 +175,7 @@ export default function DocumentContent({
               });
               
               // רענון הסעיפים אחרי 7 שניות (אחרי שהאנימציה נעלמה לגמרי)
-              setTimeout(() => {
+              const refreshTimer = setTimeout(() => {
                 Promise.all([
                   queryClient.invalidateQueries({ queryKey: ['sections', document.id] }),
                   queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
@@ -179,6 +187,9 @@ export default function DocumentContent({
               queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
               queryClient.invalidateQueries({ queryKey: ['document', document.id] });
               queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
+              
+              // Store timer in effect cleanup
+              return () => clearTimeout(refreshTimer);
             }
           } catch (err) {
             console.error('[AUTO-ACCEPT SECTION] Error:', err);
@@ -436,7 +447,7 @@ export default function DocumentContent({
       let threshold;
       if (consensuses.length > 0) {
         const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-        threshold = Math.max(1, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
+        threshold = Math.max(1, Math.round(consensusMeterAverage * Math.max(1, document.totalUsersInteracted || 1)));
       } else {
         threshold = document.threshold || 2;
       }
@@ -452,7 +463,7 @@ export default function DocumentContent({
           .then(accepted => {
             if (accepted) {
               // רענון הסעיפים אחרי 7 שניות (אחרי שהאנימציה נעלמה לגמרי)
-              setTimeout(() => {
+              const refreshTimer = setTimeout(() => {
                 Promise.all([
                   queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
                   queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
@@ -531,7 +542,7 @@ export default function DocumentContent({
       if (consensuses.length > 0) {
         // מגבילים כל ערך ל-1 מקסימום (כי consensuses אמורים להיות בין 0 ל-1)
         const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-        threshold = Math.max(1, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
+        threshold = Math.max(1, Math.round(consensusMeterAverage * Math.max(1, document.totalUsersInteracted || 1)));
       } else {
         threshold = document.threshold || 2;
       }
@@ -554,8 +565,9 @@ export default function DocumentContent({
       });
       
       // אם ההצעה תתקבל, מציגים הודעה אחרי שניה (כדי שהאנימציה תתחיל קודם)
+      let toastTimer;
       if (willBeAccepted) {
-        setTimeout(() => {
+        toastTimer = setTimeout(() => {
           toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', {
             duration: 4000,
           });
@@ -583,9 +595,13 @@ export default function DocumentContent({
         }
       });
       
-      return { previousSuggestions, previousVotes, willBeAccepted };
+      return { previousSuggestions, previousVotes, willBeAccepted, toastTimer };
     },
     onError: (err, variables, context) => {
+      // ניקוי הטיימר במקרה של שגיאה
+      if (context?.toastTimer) {
+        clearTimeout(context.toastTimer);
+      }
       // שחזור המצב הקודם במקרה של שגיאה
       if (context?.previousSuggestions) {
         queryClient.setQueryData(['suggestions', document?.id], context.previousSuggestions);
@@ -596,6 +612,10 @@ export default function DocumentContent({
       toast.error('שגיאה בהצבעה, נסה שוב');
     },
     onSuccess: (data, variables, context) => {
+      // ניקוי הטיימר כשההצבעה הצליחה
+      if (context?.toastTimer) {
+        clearTimeout(context.toastTimer);
+      }
       // עדכון הקאש עם הערכים האמיתיים מהשרת
       if (data?.newProVotes !== undefined) {
         queryClient.setQueryData(['suggestions', document?.id], (old) => {
@@ -908,7 +928,7 @@ Return ONLY the translated text:`;
       // Check consensus and auto-accept - שימוש בחישוב דינמי של הסף
       const delta = updatedSuggestion.proVotes - updatedSuggestion.conVotes;
       const consensuses = document.consensuses || [];
-      const totalUsers = document.totalUsersInteracted || 1;
+      const totalUsers = Math.max(1, document.totalUsersInteracted || 1);
       let dynamicThreshold;
       if (consensuses.length > 0) {
         const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
@@ -1116,7 +1136,7 @@ Return ONLY the translated text:`;
                 
                 // חישוב threshold דינמי - זהה לחישוב של הצעות סעיפים
                 const consensuses = document.consensuses || [];
-                const totalUsers = document.totalUsersInteracted || 1;
+                const totalUsers = Math.max(1, document.totalUsersInteracted || 1);
                 let threshold;
                 if (consensuses.length > 0) {
                   const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;

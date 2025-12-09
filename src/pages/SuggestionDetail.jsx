@@ -367,7 +367,8 @@ export default function SuggestionDetail() {
         queryClient.setQueryData(['userVote', suggestionId, user?.id], context.previousVote);
       }
       setError(err.message);
-      setTimeout(() => setError(null), 5000);
+      const errorTimer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(errorTimer);
     },
     onSuccess: (data) => {
       // תמיד רענן את ההצעה כדי לקבל את הסטטוס האמיתי מהשרת
@@ -419,7 +420,8 @@ export default function SuggestionDetail() {
     },
     onError: (err) => {
       setError(err.message);
-      setTimeout(() => setError(null), 5000);
+      const errorTimer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(errorTimer);
     }
   });
 
@@ -515,7 +517,8 @@ export default function SuggestionDetail() {
     },
     onError: (err) => {
       setError(err.message);
-      setTimeout(() => setError(null), 5000);
+      const errorTimer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(errorTimer);
     }
   });
 
@@ -531,7 +534,8 @@ export default function SuggestionDetail() {
     },
     onError: (err) => {
       setError(err.message);
-      setTimeout(() => setError(null), 5000);
+      const errorTimer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(errorTimer);
     }
   });
 
@@ -545,23 +549,31 @@ export default function SuggestionDetail() {
     },
     onError: (err) => {
       setError(err.message);
-      setTimeout(() => setError(null), 5000);
+      const errorTimer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(errorTimer);
     }
   });
 
   // useEffect ALWAYS runs - before any conditional returns
   React.useEffect(() => {
     if (commentId && suggestionId && typeof window !== 'undefined') {
-      setTimeout(() => {
+      const timers = [];
+      const initialTimer = setTimeout(() => {
         const commentElement = window.document.getElementById(`comment-${commentId}`);
         if (commentElement) {
           commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
           commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-          setTimeout(() => {
+          const removeHighlightTimer = setTimeout(() => {
             commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
           }, 3000);
+          timers.push(removeHighlightTimer);
         }
       }, 500);
+      timers.push(initialTimer);
+      
+      return () => {
+        timers.forEach(timer => clearTimeout(timer));
+      };
     }
   }, [commentId, suggestionId, comments]);
 

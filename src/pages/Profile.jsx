@@ -183,11 +183,13 @@ export default function Profile() {
       
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
-      setTimeout(() => setSuccess(null), 3000);
+      const successTimer = setTimeout(() => setSuccess(null), 3000);
+      return () => clearTimeout(successTimer);
     },
     onError: (err) => {
       setError(err.message || "Failed to update profile");
-      setTimeout(() => setError(null), 5000);
+      const errorTimer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(errorTimer);
     },
   });
 
