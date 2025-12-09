@@ -418,9 +418,6 @@ export default function Home() {
                         )}
                       </div>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1">
-                      {t('by')} {creatorName}
-                    </p>
                   </CardHeader>
                   <Link to={`${createPageUrl("DocumentView")}?id=${doc.id}`}>
                     <CardContent>
