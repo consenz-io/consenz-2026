@@ -137,55 +137,56 @@ export default function NotificationBell({ user }) {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className={`w-96 p-0 ${isRTL ? 'ml-4' : 'mr-4'}`} align={isRTL ? 'start' : 'end'}>
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-semibold">התראות</h3>
+      <PopoverContent className={`w-[calc(100vw-2rem)] sm:w-96 max-w-96 p-0 ${isRTL ? 'ml-2 sm:ml-4' : 'mr-2 sm:mr-4'}`} align={isRTL ? 'start' : 'end'}>
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b">
+          <h3 className="font-semibold text-sm sm:text-base">התראות</h3>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => markAllAsReadMutation.mutate()}
               disabled={markAllAsReadMutation.isPending}
+              className="text-xs sm:text-sm h-7 sm:h-9 px-2 sm:px-3"
             >
               סמן הכל כנקרא
             </Button>
           )}
         </div>
-        <ScrollArea className="h-[400px]">
+        <ScrollArea className="h-[60vh] sm:h-[400px] max-h-[500px]">
           {notifications.length === 0 ? (
-            <div className="p-8 text-center text-slate-500">
-              <Bell className="w-12 h-12 mx-auto mb-2 opacity-30" />
-              <p>אין התראות חדשות</p>
+            <div className="p-6 sm:p-8 text-center text-slate-500">
+              <Bell className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 opacity-30" />
+              <p className="text-sm sm:text-base">אין התראות חדשות</p>
             </div>
           ) : (
             <div className="divide-y">
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 hover:bg-slate-50 cursor-pointer transition-colors ${
+                  className={`p-3 sm:p-4 hover:bg-slate-50 active:bg-slate-100 cursor-pointer transition-colors ${
                     !notification.read ? 'bg-blue-50' : ''
                   }`}
                   onClick={() => handleNotificationClick(notification)}
                 >
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">{getNotificationIcon(notification.type)}</span>
+                  <div className="flex items-start gap-2 sm:gap-3">
+                    <span className="text-xl sm:text-2xl flex-shrink-0">{getNotificationIcon(notification.type)}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="font-medium text-sm">{notification.title}</p>
+                        <p className="font-medium text-xs sm:text-sm leading-tight">{notification.title}</p>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 hover:bg-slate-200"
+                          className="h-6 w-6 hover:bg-slate-200 flex-shrink-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             deleteNotificationMutation.mutate(notification.id);
                           }}
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-3 h-3 sm:w-4 sm:h-4" />
                         </Button>
                       </div>
-                      <p className="text-sm text-slate-600 mt-1">{notification.message}</p>
-                      <p className="text-xs text-slate-400 mt-2">
+                      <p className="text-xs sm:text-sm text-slate-600 mt-1 break-words">{notification.message}</p>
+                      <p className="text-[10px] sm:text-xs text-slate-400 mt-1 sm:mt-2">
                         {formatTimeAgo(notification.created_date)}
                       </p>
                     </div>
