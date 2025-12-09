@@ -34,7 +34,7 @@ export default function SuggestionSidebar({
   const [isEditingExplanation, setIsEditingExplanation] = useState(false);
   const [explanationText, setExplanationText] = useState("");
   const [showAcceptedAnimation, setShowAcceptedAnimation] = useState(false);
-  const prevStatusRef = React.useRef(suggestion?.status);
+  const prevStatusRef = React.useRef(null);
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
