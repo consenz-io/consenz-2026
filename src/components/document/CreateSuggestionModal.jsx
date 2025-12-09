@@ -163,10 +163,8 @@ Return ONLY the translated HTML:`;
 
   const createSuggestionMutation = useMutation({
     onMutate: async (data) => {
-      // Optimistic update - close modal immediately for non-direct edits
+      // Optimistic update for instant UI feedback
       if (!isDirectEdit) {
-        onClose();
-        
         // Cancel outgoing queries
         await queryClient.cancelQueries({ queryKey: ['suggestions', document.id] });
         
@@ -292,36 +290,25 @@ Return ONLY the translated HTML:`;
         createdByLanguage: language, // Track language user was viewing when creating suggestion
       });
 
-      // Ensure UserPublicProfile exists for display
-      await ensureUserPublicProfile(currentUser);
-
-      // שליחת התראות ברקע (ללא המתנה)
-      sendNotificationsInBackground(document, suggestion, currentUser);
-
-      // Deduct points for creating suggestion (only if gamification enabled)
-      const updateData = {
-        suggestionsCreated: (currentUser.suggestionsCreated || 0) + 1
-      };
-      
-      if (gamificationEnabled) {
-        updateData.points = currentPoints - pointsCost;
-      }
-      
-      await base44.auth.updateMe(updateData);
-      
-      // Create points transaction in background (non-blocking)
-      if (gamificationEnabled) {
-        base44.entities.PointsTransaction.create({
+      // All background tasks - don't block UI
+      Promise.all([
+        ensureUserPublicProfile(currentUser),
+        base44.auth.updateMe({
+          suggestionsCreated: (currentUser.suggestionsCreated || 0) + 1,
+          ...(gamificationEnabled ? { points: currentPoints - pointsCost } : {})
+        }),
+        gamificationEnabled ? base44.entities.PointsTransaction.create({
           userId: currentUser.id,
           amount: -pointsCost,
           action: 'suggestion_created',
           description: `${t('pointsTransactionCreated')} ${autoTitle}`,
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion'
-        }).catch(err => console.error('Error creating points transaction:', err));
-      }
+        }).catch(() => {}) : Promise.resolve()
+      ]).catch(err => console.error('Background tasks error:', err));
 
-      // עדכון מספר התורמים ברקע (ללא המתנה)
+      // Fire and forget - non-blocking
+      sendNotificationsInBackground(document, suggestion, currentUser);
       updateContributorsInBackground(document.id);
 
       return suggestion;
@@ -335,14 +322,18 @@ Return ONLY the translated HTML:`;
         // Refresh data after successful creation
         queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
         queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-        queryClient.invalidateQueries({ queryKey: ['document', document.id] });
-        queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
         
-        // Notify parent to scroll to the new suggestion - wait for DOM update
+        // Non-critical refreshes - don't block
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['document', document.id] });
+          queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
+        }, 100);
+        
+        // Notify parent to scroll to the new suggestion
         if (result?.id && onSuggestionCreated) {
           setTimeout(() => {
             onSuggestionCreated(result.id, result.sectionId, result.topicId);
-          }, 500);
+          }, 200);
         }
       }
     },
@@ -394,11 +385,18 @@ Return ONLY the translated HTML:`;
       }
     }
 
+    // Close modal immediately for instant feedback
+    if (!isDirectEdit) {
+      onClose();
+    }
+    
     createSuggestionMutation.mutate(formData);
   };
 
   const handleConfirmPoints = () => {
     if (pendingFormData) {
+      setShowPointsConfirm(false);
+      onClose(); // Close immediately
       createSuggestionMutation.mutate(pendingFormData);
       setPendingFormData(null);
     }
