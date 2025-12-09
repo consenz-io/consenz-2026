@@ -364,12 +364,45 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       ]);
     } 
     // טיפול בהצעה לסעיף חדש
-    else if (freshSuggestion.type === 'new_section' && freshSuggestion.topicId) {
+    else if (freshSuggestion.type === 'new_section') {
+      let targetTopicId = freshSuggestion.topicId;
+      
+      // אם יש newTopicTitle - צור נושא חדש
+      if (!targetTopicId && freshSuggestion.newTopicTitle) {
+        console.log('[AUTO-ACCEPT] Creating new topic:', freshSuggestion.newTopicTitle);
+        
+        // מצא את ה-order הגבוה ביותר של נושאים קיימים
+        const existingTopics = await base44.entities.Topic.filter({ 
+          documentId: freshSuggestion.documentId 
+        }, 'order');
+        
+        const maxTopicOrder = existingTopics.length > 0 
+          ? Math.max(...existingTopics.map(t => t.order || 0)) 
+          : -1;
+        
+        // יצירת הנושא החדש
+        const newTopicLanguage = detectLanguage(freshSuggestion.newTopicTitle);
+        const newTopic = await base44.entities.Topic.create({
+          documentId: freshSuggestion.documentId,
+          title: freshSuggestion.newTopicTitle,
+          order: maxTopicOrder + 1,
+          originalLanguage: newTopicLanguage
+        });
+        
+        targetTopicId = newTopic.id;
+        console.log('[AUTO-ACCEPT] Created new topic with ID:', targetTopicId);
+      }
+      
+      if (!targetTopicId) {
+        console.error('[AUTO-ACCEPT] No topicId and no newTopicTitle for new_section suggestion');
+        return false;
+      }
+      
       let allSections = [];
       try {
         allSections = await base44.entities.Section.filter({ 
           documentId: freshSuggestion.documentId,
-          topicId: freshSuggestion.topicId 
+          topicId: targetTopicId 
         }, 'order');
       } catch (err) {
         console.error('[AUTO-ACCEPT] Error fetching sections:', err);
@@ -400,7 +433,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       const newContentLanguage = detectLanguage(freshSuggestion.newContent || '');
       const newSection = await base44.entities.Section.create({
         documentId: freshSuggestion.documentId,
-        topicId: freshSuggestion.topicId,
+        topicId: targetTopicId,
         content: freshSuggestion.newContent,
         order: newOrder,
         lastEditedBy: userId,
