@@ -168,8 +168,8 @@ export default function SuggestionDetail() {
   });
 
   // פונקציית עזר לטיפול בנקודות ברקע
-  const handlePointsInBackground = async (action, vote, currentUserVote) => {
-    if (!document?.gamificationEnabled) return;
+  const handlePointsInBackground = async (suggestionData, action, vote, currentUserVote) => {
+    if (!document?.gamificationEnabled || !suggestionData) return;
     
     try {
       let pointsChange = 0;
@@ -177,22 +177,22 @@ export default function SuggestionDetail() {
       
       if (action === 'cancel' && vote === 'pro') {
         pointsChange = -10;
-        description = `ביטול הצבעה בעד על ההצעה: ${suggestion.title}`;
+        description = `ביטול הצבעה בעד על ההצעה: ${suggestionData.title}`;
       } else if (action === 'change') {
         if (currentUserVote?.vote === 'con' && vote === 'pro') {
           pointsChange = 10;
-          description = `קיבל הצבעה בעד על ההצעה: ${suggestion.title}`;
+          description = `קיבל הצבעה בעד על ההצעה: ${suggestionData.title}`;
         } else if (currentUserVote?.vote === 'pro' && vote === 'con') {
           pointsChange = -10;
-          description = `הצבעה השתנתה מבעד לנגד על ההצעה: ${suggestion.title}`;
+          description = `הצבעה השתנתה מבעד לנגד על ההצעה: ${suggestionData.title}`;
         }
       } else if (action === 'new' && vote === 'pro') {
         pointsChange = 10;
-        description = `קיבל הצבעה בעד על ההצעה: ${suggestion.title}`;
+        description = `קיבל הצבעה בעד על ההצעה: ${suggestionData.title}`;
       }
       
       if (pointsChange !== 0) {
-        const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+        const suggestionCreatorList = await base44.entities.User.filter({ email: suggestionData.created_by });
         if (suggestionCreatorList.length > 0) {
           const suggestionCreator = suggestionCreatorList[0];
           const newPoints = Math.max(0, (suggestionCreator.points || 1000) + pointsChange);
@@ -202,7 +202,7 @@ export default function SuggestionDetail() {
             amount: pointsChange,
             action: pointsChange > 0 ? 'vote_received' : 'vote_canceled',
             description,
-            relatedEntityId: suggestion.id,
+            relatedEntityId: suggestionData.id,
             relatedEntityType: 'suggestion'
           });
         }
@@ -259,7 +259,7 @@ export default function SuggestionDetail() {
       });
       
       // טיפול בנקודות ברקע - לא חוסם
-      handlePointsInBackground(pointsAction, vote, userVote);
+      handlePointsInBackground(updatedSuggestion, pointsAction, vote, userVote);
       
       // התראות ועדכון תורמים ברקע
       notifyVoteOnSuggestion({ suggestion: updatedSuggestion, voterEmail: user.email }).catch(() => {});
