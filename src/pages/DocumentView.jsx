@@ -582,7 +582,7 @@ export default function DocumentView() {
                     <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
                     <span className="hidden sm:inline">{t('documentDiscussion')}</span>
                     <span className="sm:hidden">{language === 'he' ? 'דיון' : language === 'ar' ? 'نقاش' : 'Discuss'}</span>
-                    <span className="ml-1">({documentComments.length})</span>
+                    {documentComments.length > 0 && <span className={isRTL ? 'mr-1' : 'ml-1'}>({documentComments.length})</span>}
                   </Button>
                   <Link to={`${createPageUrl("DocumentComments")}?id=${documentId}`}>
                     <Button
