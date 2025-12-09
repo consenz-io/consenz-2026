@@ -30,20 +30,43 @@ export default function Profile() {
     retry: false,
   });
 
-  const { data: viewUser, isLoading: viewUserLoading } = useQuery({
-    queryKey: ['viewUser', viewUserId],
-    queryFn: () => base44.entities.User.filter({ id: viewUserId }).then(users => users[0]),
+  // For viewing other users' profiles, use UserPublicProfile (public access)
+  const { data: viewUserProfile, isLoading: viewUserProfileLoading } = useQuery({
+    queryKey: ['viewUserProfile', viewUserId],
+    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: viewUserId }).then(profiles => profiles[0]),
     enabled: !!viewUserId,
   });
 
-  const user = viewUserId ? viewUser : currentUser;
+  // Try to get full User data if viewing your own profile or if you're an admin
+  const { data: viewUser, isLoading: viewUserLoading } = useQuery({
+    queryKey: ['viewUser', viewUserId],
+    queryFn: () => base44.entities.User.filter({ id: viewUserId }).then(users => users[0]),
+    enabled: !!viewUserId && (!currentUser || viewUserId === currentUser.id),
+    retry: false,
+  });
+
+  // Use viewUser if available (own profile or admin), otherwise use viewUserProfile
+  const user = viewUserId 
+    ? (viewUser || (viewUserProfile ? {
+        id: viewUserProfile.userId,
+        email: viewUserProfile.email,
+        full_name: viewUserProfile.fullName,
+        created_date: viewUserProfile.created_date,
+        bio: viewUserProfile.bio,
+        linkedin: viewUserProfile.linkedin,
+        twitter: viewUserProfile.twitter,
+        facebook: viewUserProfile.facebook,
+        instagram: viewUserProfile.instagram,
+        website: viewUserProfile.website,
+      } : null))
+    : currentUser;
   const isOwnProfile = !viewUserId || (currentUser && viewUserId === currentUser.id);
-  const isLoading = viewUserId ? viewUserLoading : false;
+  const isLoading = viewUserId ? (viewUserLoading || viewUserProfileLoading) : false;
 
   const { data: pointsTransactions } = useQuery({
     queryKey: ['pointsTransactions', user?.id],
     queryFn: () => base44.entities.PointsTransaction.filter({ userId: user.id }, '-created_date'),
-    enabled: !!user?.id,
+    enabled: !!user?.id && isOwnProfile, // Only show points for own profile
     initialData: [],
   });
 
@@ -94,19 +117,31 @@ export default function Profile() {
         instagram: data.instagram?.trim() || "",
         website: data.website?.trim() || "",
       });
-      
+
       // Update or create public profile
-      const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
+      const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: currentUser.id });
       if (existingProfiles.length > 0) {
         await base44.entities.UserPublicProfile.update(existingProfiles[0].id, {
           fullName: data.full_name.trim(),
-          email: user.email
+          email: currentUser.email,
+          bio: data.bio?.trim() || "",
+          linkedin: data.linkedin?.trim() || "",
+          twitter: data.twitter?.trim() || "",
+          facebook: data.facebook?.trim() || "",
+          instagram: data.instagram?.trim() || "",
+          website: data.website?.trim() || "",
         });
       } else {
         await base44.entities.UserPublicProfile.create({
-          userId: user.id,
-          email: user.email,
-          fullName: data.full_name.trim()
+          userId: currentUser.id,
+          email: currentUser.email,
+          fullName: data.full_name.trim(),
+          bio: data.bio?.trim() || "",
+          linkedin: data.linkedin?.trim() || "",
+          twitter: data.twitter?.trim() || "",
+          facebook: data.facebook?.trim() || "",
+          instagram: data.instagram?.trim() || "",
+          website: data.website?.trim() || "",
         });
       }
       
@@ -276,7 +311,7 @@ export default function Profile() {
               </div>
 
               <div className="border-t pt-4 space-y-4">
-                {(user.bio || isOwnProfile) && (
+                  {(user.bio || (isOwnProfile && currentUser)) && (
                   <div>
                     <Label htmlFor="bio" className="text-sm font-medium text-slate-700">
                       ביו
@@ -298,7 +333,7 @@ export default function Profile() {
                     </div>
                     )}
 
-                {(user.linkedin || user.twitter || user.facebook || user.instagram || user.website || isOwnProfile) && (
+                {(user.linkedin || user.twitter || user.facebook || user.instagram || user.website || (isOwnProfile && currentUser)) && (
                   <div>
                     <Label className="text-sm font-medium text-slate-700 mb-2 block">
                       רשתות חברתיות וקישורים
@@ -455,13 +490,15 @@ export default function Profile() {
           </CardHeader>
           <CardContent className="space-y-4 p-3 md:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                <Sparkles className="w-6 h-6 text-blue-600" />
-                <div>
-                  <p className="text-sm text-slate-500">{t('points')}</p>
-                  <p className="text-xl font-bold text-slate-900">{user.points || 1000}</p>
+              {isOwnProfile && (
+                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
+                  <Sparkles className="w-6 h-6 text-blue-600" />
+                  <div>
+                    <p className="text-sm text-slate-500">{t('points')}</p>
+                    <p className="text-xl font-bold text-slate-900">{user.points || 1000}</p>
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
                 <FileText className="w-6 h-6 text-green-600" />
                 <div>
@@ -482,16 +519,30 @@ export default function Profile() {
               </div>
             </div>
 
-              <h3 className="text-lg font-bold text-slate-900 mt-6 mb-4">
-                {isOwnProfile ? t('pointsHistory') : t('activityHistoryOf', { name: user.full_name })}
-              </h3>
-              {pointsTransactions.length === 0 && userComments.length === 0 ? (
+              {isOwnProfile && (
+                <h3 className="text-lg font-bold text-slate-900 mt-6 mb-4">
+                  {t('pointsHistory')}
+                </h3>
+              )}
+              {!isOwnProfile && (
+                <h3 className="text-lg font-bold text-slate-900 mt-6 mb-4">
+                  {t('activityHistoryOf', { name: user.full_name })}
+                </h3>
+              )}
+              {isOwnProfile && pointsTransactions.length === 0 && userComments.length === 0 ? (
                 <p className="text-slate-500 text-sm">
                   {isOwnProfile ? t('noPointsHistory') : t('noActivityHistory')}
                 </p>
+              ) : !isOwnProfile && userComments.length === 0 ? (
+                <p className="text-slate-500 text-sm">
+                  {t('noActivityHistory')}
+                </p>
               ) : (
                 <div className="space-y-3">
-                  {[...pointsTransactions.map(t => ({ ...t, type: 'transaction' })), ...userComments.map(c => ({ ...c, type: 'comment' }))]
+                  {(isOwnProfile 
+                    ? [...pointsTransactions.map(t => ({ ...t, type: 'transaction' })), ...userComments.map(c => ({ ...c, type: 'comment' }))]
+                    : userComments.map(c => ({ ...c, type: 'comment' }))
+                  )
                     .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
                     .map((item) => {
                       if (item.type === 'transaction') {
