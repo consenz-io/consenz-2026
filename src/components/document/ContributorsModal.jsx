@@ -43,15 +43,6 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     queryFn: () => base44.entities.User.list(),
     enabled: isOpen,
     staleTime: 60000,
-    retry: false, // Don't retry if user doesn't have permission
-    throwOnError: false, // Don't throw error, just return empty array
-  });
-
-  const { data: publicProfiles = [] } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-    enabled: isOpen,
-    staleTime: 60000,
   });
 
   const { data: allVotes = [] } = useQuery({
@@ -90,30 +81,19 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       if (s.created_by) contributorEmails.add(s.created_by);
     });
 
-    // Voters - גם לפי userId וגם לפי created_by של ההצבעה
+    // Voters - convert voter IDs to emails using User entity
     const suggestionIds = new Set(suggestions.map(s => s.id));
     const voterIds = new Set();
     allVotes.forEach(v => {
       if (suggestionIds.has(v.suggestionId)) {
         voterIds.add(v.userId);
-        // גם להוסיף את created_by של ההצבעה ישירות
         if (v.created_by) contributorEmails.add(v.created_by);
       }
     });
     
-    // Convert voter IDs to emails using public profiles (accessible to all)
-    publicProfiles.forEach(profile => {
-      if (voterIds.has(profile.userId)) {
-        contributorEmails.add(profile.email);
-      }
+    allUsers.forEach(user => {
+      if (voterIds.has(user.id)) contributorEmails.add(user.email);
     });
-    
-    // Fallback to allUsers for voters (for admins or if public profile not yet created)
-    if (allUsers.length > 0) {
-      allUsers.forEach(user => {
-        if (voterIds.has(user.id)) contributorEmails.add(user.email);
-      });
-    }
 
     // Argument writers
     allArguments.forEach(arg => {
@@ -144,52 +124,22 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       }
     });
 
-    // Build contributors list from public profiles (accessible to all)
+    // Build contributors list from User entity (accessible to all)
     const contributorsList = [];
-    const foundEmails = new Set();
     
-    // First, try to match with public profiles
-    publicProfiles.forEach(profile => {
-      if (contributorEmails.has(profile.email)) {
+    allUsers.forEach(user => {
+      if (contributorEmails.has(user.email)) {
         contributorsList.push({
-          id: profile.userId,
-          email: profile.email,
-          full_name: profile.fullName,
-          role: 'user' // We don't expose role in public profile
-        });
-        foundEmails.add(profile.email);
-      }
-    });
-    
-    // Fallback to allUsers for any missing (in case profile not created yet)
-    if (allUsers.length > 0) {
-      allUsers.forEach(user => {
-        if (contributorEmails.has(user.email) && !foundEmails.has(user.email)) {
-          contributorsList.push({
-            id: user.id,
-            email: user.email,
-            full_name: user.full_name || 'User',
-            role: user.role
-          });
-          foundEmails.add(user.email);
-        }
-      });
-    }
-    
-    // For any remaining emails without profile
-    contributorEmails.forEach(email => {
-      if (!foundEmails.has(email) && email) {
-        contributorsList.push({
-          id: email,
-          email: email,
-          full_name: 'User',
-          role: 'user'
+          id: user.id,
+          email: user.email,
+          full_name: user.full_name || 'User',
+          role: user.role
         });
       }
     });
     
     return { contributors: contributorsList, loading: false };
-  }, [document, suggestions, sections, allUsers, publicProfiles, allVotes, allComments, allArguments, documentId]);
+  }, [document, suggestions, sections, allUsers, allVotes, allComments, allArguments, documentId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
