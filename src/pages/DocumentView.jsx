@@ -18,7 +18,7 @@ import PageHeader from "../components/PageHeader";
 import ContributorsModal from "../components/document/ContributorsModal";
 import CommentsSection from "../components/document/CommentsSection";
 import SuggestionSidebar from "../components/document/SuggestionSidebar";
-import { calculateContributorsFromData } from "../components/document/calculateContributors";
+// ContributorIds calculation moved to ContributorsModal
 import { TranslationProvider } from "../components/document/TranslationContext";
 import TranslateAllButton from "../components/document/TranslateAllButton";
 import DocumentAgreementModal from "../components/document/DocumentAgreementModal";
@@ -155,19 +155,48 @@ export default function DocumentView() {
     ).length;
   }, [allComments, sections]);
 
-  // Calculate real contributors count using shared logic
+  // Calculate real contributors count
   const contributorsCount = React.useMemo(() => {
-    return calculateContributorsFromData({
-      document,
-      suggestions,
-      allVotes,
-      allUsers,
-      allPublicProfiles,
-      allArguments,
-      allComments,
-      sections
+    const uniqueUserIds = new Set();
+    
+    if (document?.created_by) {
+      const profile = allPublicProfiles?.find(p => p.email === document.created_by);
+      if (profile?.userId) uniqueUserIds.add(profile.userId);
+    }
+    
+    suggestions?.forEach(s => {
+      if (s.created_by) {
+        const profile = allPublicProfiles?.find(p => p.email === s.created_by);
+        if (profile?.userId) uniqueUserIds.add(profile.userId);
+      }
     });
-  }, [document, suggestions, allVotes, allUsers, allPublicProfiles, allArguments, allComments, sections]);
+    
+    const suggestionIds = new Set(suggestions?.map(s => s.id) || []);
+    allVotes?.forEach(v => {
+      if (suggestionIds.has(v.suggestionId) && v.userId) uniqueUserIds.add(v.userId);
+    });
+    
+    allArguments?.forEach(arg => {
+      if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
+        const profile = allPublicProfiles?.find(p => p.email === arg.created_by);
+        if (profile?.userId) uniqueUserIds.add(profile.userId);
+      }
+    });
+    
+    const sectionIds = new Set(sections?.map(s => s.id) || []);
+    allComments?.forEach(c => {
+      if ((c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
+          (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
+          (c.rootEntityType === 'document' && c.rootEntityId === document?.id)) {
+        if (c.created_by) {
+          const profile = allPublicProfiles?.find(p => p.email === c.created_by);
+          if (profile?.userId) uniqueUserIds.add(profile.userId);
+        }
+      }
+    });
+    
+    return Math.max(1, uniqueUserIds.size);
+  }, [document, suggestions, allVotes, allPublicProfiles, allArguments, allComments, sections]);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],

@@ -251,9 +251,9 @@ export default function SuggestionDetail() {
         else newConVotes += 1;
         pointsAction = 'new';
         
-        // Ensure UserPublicProfile exists for contributor visibility
-        const { ensureUserPublicProfile } = await import('../components/ensureUserPublicProfile');
-        await ensureUserPublicProfile(user);
+        // Ensure public profile exists
+        const { userDisplayService } = await import('@/components/userDisplay/service');
+        await userDisplayService.ensurePublicProfile(user);
       }
       
       // עדכון ההצעה - קרא קודם למניעת דריסת שינויים מקבילים
@@ -400,9 +400,9 @@ export default function SuggestionDetail() {
         convincedCount: 0
       });
       
-      // Ensure UserPublicProfile exists for contributor visibility
-      const { ensureUserPublicProfile } = await import('../components/ensureUserPublicProfile');
-      await ensureUserPublicProfile(user);
+      // Ensure public profile exists
+      const { userDisplayService } = await import('@/components/userDisplay/service');
+      await userDisplayService.ensurePublicProfile(user);
       
       // עדכון מספר התורמים למסמך
       if (suggestion?.documentId) {

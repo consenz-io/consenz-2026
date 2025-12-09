@@ -189,6 +189,10 @@ export default function SuggestionSidebar({
         });
         if (vote === 'pro') newProVotes += 1;
         else newConVotes += 1;
+        
+        // Ensure public profile exists
+        const { userDisplayService } = await import('@/components/userDisplay/service');
+        await userDisplayService.ensurePublicProfile(user);
       }
 
       // עדכון ההצעה - קרא קודם למניעת דריסת שינויים מקבילים
@@ -200,9 +204,7 @@ export default function SuggestionSidebar({
         conVotes: newConVotes
       });
 
-      // Create or update public profile for voter
-      const { ensureUserPublicProfile } = await import('../ensureUserPublicProfile');
-      await ensureUserPublicProfile(user);
+      // Ensure public profile exists - already done above after vote creation
 
       // פעולות ברקע - לא חוסמות
       notifyVoteOnSuggestion({ suggestion, voterEmail: user.email }).catch(() => {});
