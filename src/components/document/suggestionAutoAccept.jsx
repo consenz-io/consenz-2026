@@ -376,21 +376,41 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
           documentId: freshSuggestion.documentId 
         }, 'order');
         
-        const maxTopicOrder = existingTopics.length > 0 
-          ? Math.max(...existingTopics.map(t => t.order || 0)) 
-          : -1;
+        // השתמש ב-newTopicOrder אם קיים, אחרת הוסף בסוף
+        let topicOrderToUse;
+        if (freshSuggestion.newTopicOrder !== undefined && freshSuggestion.newTopicOrder !== null) {
+          console.log('[AUTO-ACCEPT] Using specified newTopicOrder:', freshSuggestion.newTopicOrder);
+          topicOrderToUse = freshSuggestion.newTopicOrder;
+          
+          // הזז נושאים קיימים עם order גדול או שווה
+          const topicsToShift = existingTopics.filter(t => (t.order || 0) >= topicOrderToUse);
+          if (topicsToShift.length > 0) {
+            console.log('[AUTO-ACCEPT] Shifting', topicsToShift.length, 'topics to make room');
+            await Promise.all(
+              topicsToShift.map(topic => 
+                base44.entities.Topic.update(topic.id, { order: (topic.order || 0) + 1 })
+              )
+            );
+          }
+        } else {
+          const maxTopicOrder = existingTopics.length > 0 
+            ? Math.max(...existingTopics.map(t => t.order || 0)) 
+            : -1;
+          topicOrderToUse = maxTopicOrder + 1;
+          console.log('[AUTO-ACCEPT] No newTopicOrder specified, adding at end with order:', topicOrderToUse);
+        }
         
         // יצירת הנושא החדש
         const newTopicLanguage = detectLanguage(freshSuggestion.newTopicTitle);
         const newTopic = await base44.entities.Topic.create({
           documentId: freshSuggestion.documentId,
           title: freshSuggestion.newTopicTitle,
-          order: maxTopicOrder + 1,
+          order: topicOrderToUse,
           originalLanguage: newTopicLanguage
         });
         
         targetTopicId = newTopic.id;
-        console.log('[AUTO-ACCEPT] Created new topic with ID:', targetTopicId);
+        console.log('[AUTO-ACCEPT] Created new topic with ID:', targetTopicId, 'at order:', topicOrderToUse);
       }
       
       if (!targetTopicId) {
