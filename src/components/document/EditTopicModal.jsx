@@ -80,6 +80,10 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
         timerEndsAt: timerEndsAt.toISOString()
       });
 
+      // Ensure UserPublicProfile exists for contributor visibility
+      const { ensureUserPublicProfile } = await import('../ensureUserPublicProfile');
+      await ensureUserPublicProfile(user);
+
       if (document.gamificationEnabled && !isAdmin) {
         const currentSuggestionsCreated = user.suggestionsCreated || 0;
         await base44.auth.updateMe({

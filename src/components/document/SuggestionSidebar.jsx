@@ -126,7 +126,7 @@ export default function SuggestionSidebar({
   const getUserName = (email) => {
     // Try public profile first (accessible to everyone)
     const profile = publicProfiles?.find(p => p.email === email);
-    if (profile?.fullName) return profile.fullName;
+    if (profile?.full_name) return profile.full_name;
     
     // Fallback to User entity (admins only)
     const u = users?.find(usr => usr.email === email);

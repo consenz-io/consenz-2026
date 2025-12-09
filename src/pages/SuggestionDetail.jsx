@@ -250,6 +250,10 @@ export default function SuggestionDetail() {
         if (vote === 'pro') newProVotes += 1;
         else newConVotes += 1;
         pointsAction = 'new';
+        
+        // Ensure UserPublicProfile exists for contributor visibility
+        const { ensureUserPublicProfile } = await import('../components/ensureUserPublicProfile');
+        await ensureUserPublicProfile(user);
       }
       
       // עדכון ההצעה
@@ -391,6 +395,10 @@ export default function SuggestionDetail() {
         content: content.trim(),
         convincedCount: 0
       });
+      
+      // Ensure UserPublicProfile exists for contributor visibility
+      const { ensureUserPublicProfile } = await import('../components/ensureUserPublicProfile');
+      await ensureUserPublicProfile(user);
       
       // עדכון מספר התורמים למסמך
       if (suggestion?.documentId) {
