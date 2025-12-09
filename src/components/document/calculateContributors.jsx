@@ -6,13 +6,13 @@ import { base44 } from "@/api/base44Client";
  */
 export async function calculateDocumentContributors(documentId) {
   try {
-    // Fetch all data in parallel
-    const [documents, suggestions, sections, allVotes, allUsers, allArguments, allComments] = await Promise.all([
+    // Fetch all data in parallel - use UserPublicProfile for public access
+    const [documents, suggestions, sections, allVotes, allPublicProfiles, allArguments, allComments] = await Promise.all([
       base44.entities.Document.filter({ id: documentId }),
       base44.entities.Suggestion.filter({ documentId }),
       base44.entities.Section.filter({ documentId }),
       base44.entities.Vote.list(),
-      base44.entities.User.list(),
+      base44.entities.UserPublicProfile.list(),
       base44.entities.Argument.list(),
       base44.entities.Comment.list()
     ]);
@@ -29,10 +29,10 @@ export async function calculateDocumentContributors(documentId) {
       if (s.created_by) uniqueEmails.add(s.created_by);
     });
     
-    // 3. Voters - גם לפי userId וגם לפי created_by
+    // 3. Voters - convert userId to email using UserPublicProfile
     const suggestionIds = new Set(suggestions.map(s => s.id));
     const userIdToEmail = {};
-    allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
+    allPublicProfiles.forEach(p => { userIdToEmail[p.userId] = p.email; });
     
     allVotes.forEach(v => {
       if (suggestionIds.has(v.suggestionId)) {
