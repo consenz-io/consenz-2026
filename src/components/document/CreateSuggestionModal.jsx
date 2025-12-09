@@ -257,10 +257,19 @@ Return ONLY the translated HTML:`;
       let newTopicTitle = null;
       
       // Don't create new topic immediately - save title for when suggestion is accepted
+      let newTopicOrder = null;
       if (isCreatingNewTopic && newTopicName.trim()) {
         topicTitle = newTopicName.trim();
         newTopicTitle = newTopicName.trim();
         targetTopicId = null; // Will be created when suggestion is accepted
+        // שמירת המיקום הרצוי של הנושא החדש
+        if (editingSection?.topicOrder !== undefined) {
+          newTopicOrder = editingSection.topicOrder + 1;
+        } else {
+          // ברירת מחדל - בסוף
+          const maxOrder = topics.length > 0 ? Math.max(...topics.map(t => t.order)) : -1;
+          newTopicOrder = maxOrder + 1;
+        }
       } else {
         const topic = topics.find(t => t.id === targetTopicId);
         topicTitle = topic?.title || '';
@@ -278,6 +287,7 @@ Return ONLY the translated HTML:`;
         sectionId: isNewSection ? null : editingSection.id,
         topicId: targetTopicId,
         newTopicTitle: newTopicTitle, // Save new topic title if creating one
+        newTopicOrder: newTopicOrder, // Save new topic order if creating one
         type: isNewSection ? 'new_section' : 'edit_section',
         title: autoTitle,
         newContent: data.newContent,
