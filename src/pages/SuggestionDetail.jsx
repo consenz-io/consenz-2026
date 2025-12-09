@@ -153,6 +153,12 @@ export default function SuggestionDetail() {
     initialData: [],
   });
 
+  const { data: publicProfiles } = useQuery({
+    queryKey: ['publicProfiles'],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
+    initialData: [],
+  });
+
   const { data: topics } = useQuery({
     queryKey: ['topics', suggestion?.documentId],
     queryFn: () => base44.entities.Topic.filter({ documentId: suggestion.documentId }, 'order'),
@@ -567,8 +573,15 @@ export default function SuggestionDetail() {
 
   // Helper functions
   const getUserName = (email) => {
+    // First try public profile (accessible to all)
+    const profile = publicProfiles.find(p => p.email === email);
+    if (profile?.fullName) return profile.fullName;
+    
+    // Fallback to User entity (requires permissions)
     const user = users.find(u => u.email === email);
-    return user?.full_name || 'User';
+    if (user?.full_name) return user.full_name;
+    
+    return 'User';
   };
 
   const getStatusColor = (status) => {
