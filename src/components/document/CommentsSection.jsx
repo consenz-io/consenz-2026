@@ -10,6 +10,7 @@ import { MessageSquare, Send, Reply, Trash2, Edit2, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
+import { getUserFullName, getUserId } from "@/utils/userHelpers";
 
 // CommentItem Component - memoized to prevent unnecessary re-renders
 const CommentItem = memo(({ 
@@ -34,27 +35,27 @@ const CommentItem = memo(({
     setLocalEditContent(comment.content);
   }, [comment.content, editingComment?.id]);
 
-  const getUserId = (email) => {
+  const getCommentUserId = (email) => {
     // Try public profile first (accessible to everyone)
     const profile = publicProfiles?.find(p => p.email === email);
-    if (profile?.userId) return profile.userId;
-    
+    if (profile) return getUserId(profile);
+
     // Fallback to User entity (admins only)
     const user = users?.find(u => u.email === email);
-    if (user?.id) return user.id;
-    
+    if (user) return getUserId(user);
+
     return '';
   };
 
-  const getUserName = (email) => {
+  const getCommentUserName = (email) => {
     // Try public profile first (accessible to everyone)
     const profile = publicProfiles?.find(p => p.email === email);
-    if (profile?.fullName) return profile.fullName;
-    
+    if (profile) return getUserFullName(profile);
+
     // Fallback to User entity (admins only)
     const user = users?.find(u => u.email === email);
-    if (user?.full_name) return user.full_name;
-    
+    if (user) return getUserFullName(user);
+
     // Last resort
     return 'User';
   };
@@ -67,20 +68,20 @@ const CommentItem = memo(({
       <Card className={`p-3 ${isReply ? 'bg-slate-50' : 'bg-white'}`}>
         <div className="flex gap-3">
           <Link 
-            to={`${createPageUrl("Profile")}?userId=${getUserId(comment.created_by)}`}
+            to={`${createPageUrl("Profile")}?userId=${getCommentUserId(comment.created_by)}`}
             className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0 hover:opacity-80 transition-opacity"
           >
             <span className="text-white font-medium text-sm">
-              {(getUserName(comment.created_by) || 'U').charAt(0)?.toUpperCase()}
+              {(getCommentUserName(comment.created_by) || 'U').charAt(0)?.toUpperCase()}
             </span>
           </Link>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <Link 
-                to={`${createPageUrl("Profile")}?userId=${getUserId(comment.created_by)}`}
+                to={`${createPageUrl("Profile")}?userId=${getCommentUserId(comment.created_by)}`}
                 className="font-medium text-sm text-slate-900 hover:underline"
               >
-                {getUserName(comment.created_by)}
+                {getCommentUserName(comment.created_by)}
               </Link>
               <span className="text-xs text-slate-500">
                 {new Date(comment.created_date).toLocaleDateString('he-IL', {
@@ -478,13 +479,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
         {replyTo && (
           <div className="flex items-center gap-2 text-sm text-slate-600 bg-blue-50 p-2 rounded">
             <Reply className="w-4 h-4" />
-            <span>{t('replyingTo')} {(() => {
-              const profile = publicProfiles?.find(p => p.email === replyTo.created_by);
-              if (profile?.fullName) return profile.fullName;
-              const user = users?.find(u => u.email === replyTo.created_by);
-              if (user?.full_name) return user.full_name;
-              return 'User';
-            })()}</span>
+            <span>{t('replyingTo')} {getCommentUserName(replyTo.created_by)}</span>
             <Button
               type="button"
               variant="ghost"
