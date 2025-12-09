@@ -24,16 +24,16 @@ export async function ensureUserPublicProfile(user) {
         await base44.entities.UserPublicProfile.create({
           userId: user.id,
           email: user.email,
-          fullName: fullName.trim()
+          full_name: fullName.trim()
         });
       }
     } else {
       // Update existing profile to ensure sync
       const existingProfile = existingProfiles[0];
       const trimmedFullName = fullName.trim();
-      if (trimmedFullName.length >= 2 && trimmedFullName !== existingProfile.fullName) {
+      if (trimmedFullName.length >= 2 && trimmedFullName !== existingProfile.full_name) {
         await base44.entities.UserPublicProfile.update(existingProfile.id, {
-          fullName: trimmedFullName,
+          full_name: trimmedFullName,
           email: user.email
         });
       }

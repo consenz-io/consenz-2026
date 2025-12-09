@@ -158,7 +158,7 @@ export default function Home() {
 
         return {
           email,
-          name: profile?.fullName || user?.full_name || email.split('@')[0] || 'User',
+          name: profile?.full_name || user?.full_name || email.split('@')[0] || 'User',
           id: profile?.userId || user?.id
         };
       })
@@ -377,7 +377,7 @@ export default function Home() {
                 : doc.title;
 
               const creatorProfile = publicProfiles.find(p => p.email === doc.created_by);
-              const creatorName = creatorProfile?.fullName || 'User';
+              const creatorName = creatorProfile?.full_name || 'User';
 
               return (
                 <Card key={doc.id} className="bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-200 h-full">
