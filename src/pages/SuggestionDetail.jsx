@@ -22,7 +22,6 @@ import { useLanguage } from "@/components/LanguageContext";
 import { notifyVoteOnSuggestion, notifySuggestionStatusChange } from "../components/notifications/createNotification";
 import PageHeader from "../components/PageHeader";
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
-import { UserInline } from "../components/user";
 
 export default function SuggestionDetail() {
   const { t, isRTL } = useLanguage();
@@ -732,7 +731,7 @@ export default function SuggestionDetail() {
                 </Badge>
 
                 <span className="text-xs text-slate-500">
-                  {t('by')} <UserInline email={suggestion.created_by} linkToProfile={true} />
+                  {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
                 </span>
               </div>
               {suggestion.status === 'pending' && suggestion.timerEndsAt && (
