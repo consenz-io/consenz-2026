@@ -30,71 +30,15 @@ export default function Profile() {
     retry: false,
   });
 
-  // Try UserPublicProfile first (accessible to all)
-  const { data: viewUserProfile, isLoading: viewUserProfileLoading } = useQuery({
-    queryKey: ['viewUserProfile', viewUserId],
-    queryFn: async () => {
-      try {
-        const profiles = await base44.entities.UserPublicProfile.filter({ userId: viewUserId });
-        return profiles[0];
-      } catch (error) {
-        console.warn('[Profile] Cannot load user profile:', error);
-        return null;
-      }
-    },
+  const { data: viewUser, isLoading: viewUserLoading } = useQuery({
+    queryKey: ['viewUser', viewUserId],
+    queryFn: () => base44.entities.User.filter({ id: viewUserId }).then(users => users[0]),
     enabled: !!viewUserId,
-    retry: false,
   });
-
-  // Try User entity (admin only, but has more details like points/role)
-  const { data: viewUserFull, isLoading: viewUserFullLoading } = useQuery({
-    queryKey: ['viewUserFull', viewUserId],
-    queryFn: async () => {
-      try {
-        const users = await base44.entities.User.filter({ id: viewUserId });
-        return users[0];
-      } catch (error) {
-        // Non-admin - this is expected
-        return null;
-      }
-    },
-    enabled: !!viewUserId && !!currentUser,
-    retry: false,
-  });
-
-  // Merge the data (prefer User, fallback to UserPublicProfile)
-  const viewUser = React.useMemo(() => {
-    if (!viewUserId) return null;
-    
-    if (viewUserFull) {
-      // Admin or viewing within allowed scope - full data
-      return viewUserFull;
-    }
-    
-    if (viewUserProfile) {
-      // Regular user viewing another profile - data from public profile
-      return {
-        id: viewUserProfile.userId,
-        email: viewUserProfile.email,
-        full_name: viewUserProfile.full_name,
-        bio: viewUserProfile.bio,
-        linkedin: viewUserProfile.linkedin,
-        twitter: viewUserProfile.twitter,
-        facebook: viewUserProfile.facebook,
-        instagram: viewUserProfile.instagram,
-        website: viewUserProfile.website,
-        points: null,
-        role: null,
-        created_date: viewUserProfile.created_date
-      };
-    }
-    
-    return null;
-  }, [viewUserId, viewUserFull, viewUserProfile]);
 
   const user = viewUserId ? viewUser : currentUser;
-  const isLoading = viewUserId ? (viewUserProfileLoading || viewUserFullLoading) : false;
   const isOwnProfile = !viewUserId || (currentUser && viewUserId === currentUser.id);
+  const isLoading = viewUserId ? viewUserLoading : false;
 
   const { data: pointsTransactions } = useQuery({
     queryKey: ['pointsTransactions', user?.id],
@@ -151,25 +95,18 @@ export default function Profile() {
         website: data.website?.trim() || "",
       });
       
-      // Update or create public profile with all fields
+      // Update or create public profile
       const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
-      const publicProfileData = {
-        full_name: data.full_name.trim(),
-        email: user.email,
-        bio: data.bio?.trim() || "",
-        linkedin: data.linkedin?.trim() || "",
-        twitter: data.twitter?.trim() || "",
-        facebook: data.facebook?.trim() || "",
-        instagram: data.instagram?.trim() || "",
-        website: data.website?.trim() || ""
-      };
-
       if (existingProfiles.length > 0) {
-        await base44.entities.UserPublicProfile.update(existingProfiles[0].id, publicProfileData);
+        await base44.entities.UserPublicProfile.update(existingProfiles[0].id, {
+          fullName: data.full_name.trim(),
+          email: user.email
+        });
       } else {
         await base44.entities.UserPublicProfile.create({
           userId: user.id,
-          ...publicProfileData
+          email: user.email,
+          fullName: data.full_name.trim()
         });
       }
       
@@ -183,13 +120,11 @@ export default function Profile() {
       
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
-      const successTimer = setTimeout(() => setSuccess(null), 3000);
-      return () => clearTimeout(successTimer);
+      setTimeout(() => setSuccess(null), 3000);
     },
     onError: (err) => {
       setError(err.message || "Failed to update profile");
-      const errorTimer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(errorTimer);
+      setTimeout(() => setError(null), 5000);
     },
   });
 
@@ -227,34 +162,6 @@ export default function Profile() {
   if (!user) {
     if (!viewUserId) {
       base44.auth.redirectToLogin(window.location.pathname);
-    } else {
-      // Profile not found
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-2 md:p-6">
-          <div className="max-w-4xl mx-auto px-2 md:px-0">
-            <PageHeader 
-              title={t('profile')}
-              backUrl={createPageUrl("Home")}
-            />
-            <Card className="bg-white mt-6">
-              <CardContent className="p-12 text-center">
-                <User className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-                <h2 className="text-xl font-semibold text-slate-900 mb-2">
-                  {language === 'he' ? 'פרופיל לא נמצא' : language === 'ar' ? 'الملف الشخصي غير موجود' : 'Profile not found'}
-                </h2>
-                <p className="text-slate-600 mb-6">
-                  {language === 'he' ? 'הפרופיל שחיפשת לא קיים במערכת או שהמשתמש עדיין לא השלים את הפרופיל שלו.' : 
-                   language === 'ar' ? 'الملف الشخصي الذي تبحث عنه غير موجود في النظام أو لم يكمل المستخدم ملفه الشخصي بعد.' : 
-                   'The profile you are looking for does not exist or the user has not completed their profile yet.'}
-                </p>
-                <Button onClick={() => window.history.back()} variant="outline">
-                  {t('goHome')}
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      );
     }
     return null;
   }
@@ -316,17 +223,6 @@ export default function Profile() {
           </CardHeader>
           <CardContent className="space-y-3 md:space-y-6 p-3 md:p-6 w-full max-w-full">
             <div className="space-y-3 md:space-y-4 w-full max-w-full">
-              {!viewUserFull && viewUserId && (
-                <Alert className="mb-4 bg-blue-50 border-blue-200">
-                  <AlertCircle className="h-4 w-4 text-blue-600" />
-                  <AlertDescription className="text-blue-900 text-sm">
-                    {language === 'he' ? 'מציג פרופיל ציבורי - מידע מוגבל זמין לצפייה.' : 
-                     language === 'ar' ? 'عرض الملف الشخصي العام - معلومات محدودة متاحة.' : 
-                     'Viewing public profile - Limited information available.'}
-                  </AlertDescription>
-                </Alert>
-              )}
-
               <div className="flex items-start gap-2 md:gap-4">
                 <div className="w-12 h-12 md:w-20 md:h-20 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white text-xl md:text-3xl font-bold shadow-lg flex-shrink-0">
                   {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
@@ -558,15 +454,14 @@ export default function Profile() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 p-3 md:p-6">
-            {(isOwnProfile || viewUserFull) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                  <Sparkles className="w-6 h-6 text-blue-600" />
-                  <div>
-                    <p className="text-sm text-slate-500">{t('points')}</p>
-                    <p className="text-xl font-bold text-slate-900">{user.points || 1000}</p>
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
+                <Sparkles className="w-6 h-6 text-blue-600" />
+                <div>
+                  <p className="text-sm text-slate-500">{t('points')}</p>
+                  <p className="text-xl font-bold text-slate-900">{user.points || 1000}</p>
                 </div>
+              </div>
               <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
                 <FileText className="w-6 h-6 text-green-600" />
                 <div>
@@ -585,12 +480,9 @@ export default function Profile() {
                   <p className="text-xl font-bold text-slate-900">{userComments.length || 0}</p>
                 </div>
               </div>
-              </div>
-              )}
+            </div>
 
-              {(isOwnProfile || viewUserFull) && (
-              <>
-                <h3 className="text-lg font-bold text-slate-900 mt-6 mb-4">
+              <h3 className="text-lg font-bold text-slate-900 mt-6 mb-4">
                 {isOwnProfile ? t('pointsHistory') : t('activityHistoryOf', { name: user.full_name })}
               </h3>
               {pointsTransactions.length === 0 && userComments.length === 0 ? (
@@ -707,12 +599,10 @@ export default function Profile() {
                         );
                       }
                     })}
-                    </div>
-                    )}
-                    </>
-                    )}
-                    </CardContent>
-                    </Card>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
       </div>
     </div>

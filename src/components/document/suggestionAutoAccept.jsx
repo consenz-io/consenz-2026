@@ -24,7 +24,7 @@ export async function checkSuggestionConsensus(suggestion, document) {
   
   const proVotes = suggestion.proVotes || 0;
   const conVotes = suggestion.conVotes || 0;
-  const totalUsers = Math.max(1, document.totalUsersInteracted || 1); // מונע חלוקה באפס
+  const totalUsers = document.totalUsersInteracted || 1; // מונע חלוקה באפס
   
   console.log('[CONSENSUS CHECK] Vote counts:');
   console.log('[CONSENSUS CHECK] - Pro votes:', proVotes);
@@ -150,7 +150,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
   const shouldUpdateConsensusMeter = freshSuggestion.type === 'edit_section';
   
   // שמירת מספר המשתתפים בזמן הקבלה של ההצעה הזו
-  const participantsAtAcceptance = Math.max(1, document.totalUsersInteracted || 1);
+  const participantsAtAcceptance = document.totalUsersInteracted || 1;
   
   let updatedConsensuses = document.consensuses || [];
   let newThreshold = document.threshold || 2;
@@ -297,18 +297,9 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     console.log('[THRESHOLD UPDATE] Finished updating all suggestions');
   }
   
-  // עדכון סטטוס ההצעה מיד כדי למנוע אישור כפול - ATOMIC UPDATE
+  // עדכון סטטוס ההצעה מיד כדי למנוע אישור כפול
   // שמירת מספר המשתתפים בזמן הקבלה
-  console.log('[AUTO-ACCEPT] Updating suggestion status to accepted immediately (ATOMIC)');
-  
-  // Atomic check-and-set: קרא את הסטטוס הנוכחי ועדכן רק אם pending
-  const freshCheckSuggestion = await base44.entities.Suggestion.filter({ id: suggestion.id }).then(s => s[0]);
-  
-  if (!freshCheckSuggestion || freshCheckSuggestion.status !== 'pending') {
-    console.log('[AUTO-ACCEPT] ⚠️ RACE CONDITION PREVENTED: Status already changed to', freshCheckSuggestion?.status || 'DELETED');
-    return false;
-  }
-  
+  console.log('[AUTO-ACCEPT] Updating suggestion status to accepted immediately');
   await base44.entities.Suggestion.update(suggestion.id, { 
     status: 'accepted',
     suggestionConsensus: consensus,
@@ -354,17 +345,12 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
           changeType: 'suggestion_accepted',
           suggestionId: freshSuggestion.id
         }),
-        // עדכון הסעיף עם התוכן החדש - READ CURRENT FIRST למניעת דריסה
-        (async () => {
-          const currentSection = await base44.entities.Section.filter({ id: section.id }).then(s => s[0]);
-          if (currentSection) {
-            await base44.entities.Section.update(section.id, {
-              content: freshSuggestion.newContent,
-              lastEditedBy: userId,
-              originalLanguage: newContentLanguage,
-            });
-          }
-        })(),
+        // עדכון הסעיף עם התוכן החדש
+        base44.entities.Section.update(section.id, {
+          content: freshSuggestion.newContent,
+          lastEditedBy: userId,
+          originalLanguage: newContentLanguage,
+        }),
         // שמירת גרסה עם התוכן החדש
         base44.entities.DocumentVersion.create({
           documentId: freshSuggestion.documentId,
@@ -488,7 +474,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
 export function checkTopicEditConsensus(suggestion, document) {
   const proVotes = suggestion.proVotes || 0;
   const conVotes = suggestion.conVotes || 0;
-  const totalUsers = Math.max(1, document.totalUsersInteracted || 1);
+  const totalUsers = document.totalUsersInteracted || 1;
   
   // חישוב threshold דינמי על בסיס consensuses של המסמך - זהה לחישוב של הצעות סעיפים
   let threshold;

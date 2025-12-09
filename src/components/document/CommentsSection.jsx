@@ -49,7 +49,7 @@ const CommentItem = memo(({
   const getUserName = (email) => {
     // Try public profile first (accessible to everyone)
     const profile = publicProfiles?.find(p => p.email === email);
-    if (profile?.full_name) return profile.full_name;
+    if (profile?.fullName) return profile.fullName;
     
     // Fallback to User entity (admins only)
     const user = users?.find(u => u.email === email);
@@ -350,10 +350,15 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
         originalLanguage: detectedLanguage
       });
       
-      // Ensure user has public profile
-      if (user?.id) {
-        const { ensureUserPublicProfile } = await import('../ensureUserPublicProfile');
-        await ensureUserPublicProfile(user);
+      if (user?.id && user?.email && user?.full_name) {
+        const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
+        if (existingProfiles.length === 0) {
+          await base44.entities.UserPublicProfile.create({
+            userId: user.id,
+            email: user.email,
+            fullName: user.full_name
+          }).catch(() => {});
+        }
       }
       
       const parentComment = data.parentCommentId 
@@ -475,7 +480,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
             <Reply className="w-4 h-4" />
             <span>{t('replyingTo')} {(() => {
               const profile = publicProfiles?.find(p => p.email === replyTo.created_by);
-              if (profile?.full_name) return profile.full_name;
+              if (profile?.fullName) return profile.fullName;
               const user = users?.find(u => u.email === replyTo.created_by);
               if (user?.full_name) return user.full_name;
               return 'User';

@@ -10,6 +10,7 @@ import { FileText, TrendingUp, Users, Clock, ArrowRight, ArrowLeft, Languages, L
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import { calculateContributorsFromData } from "@/components/document/calculateContributors";
+import AllContributorsModal from "@/components/home/AllContributorsModal";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -157,7 +158,7 @@ export default function Home() {
 
         return {
           email,
-          name: profile?.full_name || user?.full_name || email.split('@')[0] || 'User',
+          name: profile?.fullName || user?.full_name || email.split('@')[0] || 'User',
           id: profile?.userId || user?.id
         };
       })
@@ -376,7 +377,7 @@ export default function Home() {
                 : doc.title;
 
               const creatorProfile = publicProfiles.find(p => p.email === doc.created_by);
-              const creatorName = creatorProfile?.full_name || 'User';
+              const creatorName = creatorProfile?.fullName || 'User';
 
               return (
                 <Card key={doc.id} className="bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-200 h-full">
@@ -468,7 +469,11 @@ export default function Home() {
         )}
       </section>
 
-
+      <AllContributorsModal
+        isOpen={showContributorsModal}
+        onClose={() => setShowContributorsModal(false)}
+        contributors={contributorsList}
+      />
     </div>
   );
 }

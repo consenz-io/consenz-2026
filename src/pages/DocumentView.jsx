@@ -18,7 +18,7 @@ import PageHeader from "../components/PageHeader";
 import ContributorsModal from "../components/document/ContributorsModal";
 import CommentsSection from "../components/document/CommentsSection";
 import SuggestionSidebar from "../components/document/SuggestionSidebar";
-// ContributorIds calculation moved to ContributorsModal
+import { calculateContributorsFromData } from "../components/document/calculateContributors";
 import { TranslationProvider } from "../components/document/TranslationContext";
 import TranslateAllButton from "../components/document/TranslateAllButton";
 import DocumentAgreementModal from "../components/document/DocumentAgreementModal";
@@ -106,14 +106,6 @@ export default function DocumentView() {
     queryFn: () => base44.entities.User.list(),
     initialData: [],
     staleTime: 60000,
-    retry: false,
-  });
-
-  const { data: allPublicProfiles } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-    initialData: [],
-    staleTime: 60000,
   });
 
   const { data: allArguments } = useQuery({
@@ -155,48 +147,18 @@ export default function DocumentView() {
     ).length;
   }, [allComments, sections]);
 
-  // Calculate real contributors count
+  // Calculate real contributors count using shared logic
   const contributorsCount = React.useMemo(() => {
-    const uniqueUserIds = new Set();
-    
-    if (document?.created_by) {
-      const profile = allPublicProfiles?.find(p => p.email === document.created_by);
-      if (profile?.userId) uniqueUserIds.add(profile.userId);
-    }
-    
-    suggestions?.forEach(s => {
-      if (s.created_by) {
-        const profile = allPublicProfiles?.find(p => p.email === s.created_by);
-        if (profile?.userId) uniqueUserIds.add(profile.userId);
-      }
+    return calculateContributorsFromData({
+      document,
+      suggestions,
+      allVotes,
+      allUsers,
+      allArguments,
+      allComments,
+      sections
     });
-    
-    const suggestionIds = new Set(suggestions?.map(s => s.id) || []);
-    allVotes?.forEach(v => {
-      if (suggestionIds.has(v.suggestionId) && v.userId) uniqueUserIds.add(v.userId);
-    });
-    
-    allArguments?.forEach(arg => {
-      if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
-        const profile = allPublicProfiles?.find(p => p.email === arg.created_by);
-        if (profile?.userId) uniqueUserIds.add(profile.userId);
-      }
-    });
-    
-    const sectionIds = new Set(sections?.map(s => s.id) || []);
-    allComments?.forEach(c => {
-      if ((c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
-          (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
-          (c.rootEntityType === 'document' && c.rootEntityId === document?.id)) {
-        if (c.created_by) {
-          const profile = allPublicProfiles?.find(p => p.email === c.created_by);
-          if (profile?.userId) uniqueUserIds.add(profile.userId);
-        }
-      }
-    });
-    
-    return Math.max(1, uniqueUserIds.size);
-  }, [document, suggestions, allVotes, allPublicProfiles, allArguments, allComments, sections]);
+  }, [document, suggestions, allVotes, allUsers, allArguments, allComments, sections]);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -256,8 +218,7 @@ export default function DocumentView() {
 
   useEffect(() => {
     if (scrollToSectionId) {
-      const timers = [];
-      const initialTimer = setTimeout(() => {
+      setTimeout(() => {
         // Try both section-X and new-suggestion-X patterns
         let element = window.document.getElementById(scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-') 
           ? scrollToSectionId 
@@ -272,13 +233,12 @@ export default function DocumentView() {
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
           element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-          const removeTimer = setTimeout(() => {
+          setTimeout(() => {
             element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
           }, 2000);
-          timers.push(removeTimer);
         } else {
           // Retry after a longer delay if suggestions haven't loaded yet
-          const retryTimer = setTimeout(() => {
+          setTimeout(() => {
             const retryElement = window.document.getElementById(scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-') 
               ? scrollToSectionId 
               : `section-${scrollToSectionId}`
@@ -286,20 +246,13 @@ export default function DocumentView() {
             if (retryElement) {
               retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
               retryElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-              const retryRemoveTimer = setTimeout(() => {
+              setTimeout(() => {
                 retryElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
               }, 2000);
-              timers.push(retryRemoveTimer);
             }
           }, 1000);
-          timers.push(retryTimer);
         }
       }, 300);
-      timers.push(initialTimer);
-      
-      return () => {
-        timers.forEach(timer => clearTimeout(timer));
-      };
     }
   }, [scrollToSectionId, sections, suggestions]);
 
@@ -307,14 +260,12 @@ export default function DocumentView() {
   useEffect(() => {
     const hash = window.location.hash;
     if (hash && topics.length > 0) {
-      const hashTimer = setTimeout(() => {
+      setTimeout(() => {
         const element = window.document.querySelector(hash);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       }, 300);
-      
-      return () => clearTimeout(hashTimer);
     }
   }, [topics]);
 

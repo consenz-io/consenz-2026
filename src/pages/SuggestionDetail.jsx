@@ -250,16 +250,9 @@ export default function SuggestionDetail() {
         if (vote === 'pro') newProVotes += 1;
         else newConVotes += 1;
         pointsAction = 'new';
-        
-        // Ensure public profile exists
-        const { userDisplayService } = await import('@/components/userDisplay/service');
-        await userDisplayService.ensurePublicProfile(user);
       }
       
-      // עדכון ההצעה - קרא קודם למניעת דריסת שינויים מקבילים
-      const currentSuggestion = await base44.entities.Suggestion.filter({ id: suggestionId }).then(s => s[0]);
-      if (!currentSuggestion) throw new Error('Suggestion was deleted');
-      
+      // עדכון ההצעה
       const updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, {
         proVotes: newProVotes,
         conVotes: newConVotes
@@ -370,8 +363,7 @@ export default function SuggestionDetail() {
         queryClient.setQueryData(['userVote', suggestionId, user?.id], context.previousVote);
       }
       setError(err.message);
-      const errorTimer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(errorTimer);
+      setTimeout(() => setError(null), 5000);
     },
     onSuccess: (data) => {
       // תמיד רענן את ההצעה כדי לקבל את הסטטוס האמיתי מהשרת
@@ -400,10 +392,6 @@ export default function SuggestionDetail() {
         convincedCount: 0
       });
       
-      // Ensure public profile exists
-      const { userDisplayService } = await import('@/components/userDisplay/service');
-      await userDisplayService.ensurePublicProfile(user);
-      
       // עדכון מספר התורמים למסמך
       if (suggestion?.documentId) {
         try {
@@ -423,8 +411,7 @@ export default function SuggestionDetail() {
     },
     onError: (err) => {
       setError(err.message);
-      const errorTimer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(errorTimer);
+      setTimeout(() => setError(null), 5000);
     }
   });
 
@@ -520,8 +507,7 @@ export default function SuggestionDetail() {
     },
     onError: (err) => {
       setError(err.message);
-      const errorTimer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(errorTimer);
+      setTimeout(() => setError(null), 5000);
     }
   });
 
@@ -537,8 +523,7 @@ export default function SuggestionDetail() {
     },
     onError: (err) => {
       setError(err.message);
-      const errorTimer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(errorTimer);
+      setTimeout(() => setError(null), 5000);
     }
   });
 
@@ -552,31 +537,23 @@ export default function SuggestionDetail() {
     },
     onError: (err) => {
       setError(err.message);
-      const errorTimer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(errorTimer);
+      setTimeout(() => setError(null), 5000);
     }
   });
 
   // useEffect ALWAYS runs - before any conditional returns
   React.useEffect(() => {
     if (commentId && suggestionId && typeof window !== 'undefined') {
-      const timers = [];
-      const initialTimer = setTimeout(() => {
+      setTimeout(() => {
         const commentElement = window.document.getElementById(`comment-${commentId}`);
         if (commentElement) {
           commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
           commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-          const removeHighlightTimer = setTimeout(() => {
+          setTimeout(() => {
             commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
           }, 3000);
-          timers.push(removeHighlightTimer);
         }
       }, 500);
-      timers.push(initialTimer);
-      
-      return () => {
-        timers.forEach(timer => clearTimeout(timer));
-      };
     }
   }, [commentId, suggestionId, comments]);
 

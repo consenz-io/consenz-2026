@@ -428,7 +428,6 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
     ]);
 
     // שליפת מצביעים ומגיבים - רק אלה שקשורים למסמך זה
-    const suggestionIds = allSuggestions.map(s => s.id);
     const [allVotes, allComments] = await Promise.all([
       base44.entities.Vote.filter({ documentId: document.id }),
       base44.entities.Comment.list()

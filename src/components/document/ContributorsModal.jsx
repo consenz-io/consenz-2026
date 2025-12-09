@@ -1,179 +1,186 @@
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useMemo } from "react";
 import { base44 } from "@/api/base44Client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { UsersList } from "@/components/user";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Users, Loader2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
-import { Skeleton } from "@/components/ui/skeleton";
-
-/**
- * חישוב IDs של משתמשים תורמים (לא שמות!)
- */
-function calculateContributorIds({ 
-  document, 
-  suggestions, 
-  allVotes, 
-  allPublicProfiles, 
-  allArguments, 
-  allComments, 
-  sections 
-}) {
-  const uniqueUserIds = new Set();
-  
-  // יוצר המסמך
-  if (document?.created_by) {
-    const profile = allPublicProfiles?.find(p => p.email === document.created_by);
-    if (profile?.userId) uniqueUserIds.add(profile.userId);
-  }
-  
-  // יוצרי הצעות
-  suggestions?.forEach(s => {
-    if (s.created_by) {
-      const profile = allPublicProfiles?.find(p => p.email === s.created_by);
-      if (profile?.userId) uniqueUserIds.add(profile.userId);
-    }
-  });
-  
-  // מצביעים
-  const suggestionIds = new Set(suggestions?.map(s => s.id) || []);
-  allVotes?.forEach(v => {
-    if (suggestionIds.has(v.suggestionId) && v.userId) {
-      uniqueUserIds.add(v.userId);
-    }
-  });
-  
-  // כותבי טיעונים
-  allArguments?.forEach(arg => {
-    if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
-      const profile = allPublicProfiles?.find(p => p.email === arg.created_by);
-      if (profile?.userId) uniqueUserIds.add(profile.userId);
-    }
-  });
-  
-  // מגיבים על הצעות
-  allComments?.forEach(c => {
-    if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId) && c.created_by) {
-      const profile = allPublicProfiles?.find(p => p.email === c.created_by);
-      if (profile?.userId) uniqueUserIds.add(profile.userId);
-    }
-  });
-  
-  // מגיבים על סעיפים
-  const sectionIds = new Set(sections?.map(s => s.id) || []);
-  allComments?.forEach(c => {
-    if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId) && c.created_by) {
-      const profile = allPublicProfiles?.find(p => p.email === c.created_by);
-      if (profile?.userId) uniqueUserIds.add(profile.userId);
-    }
-  });
-  
-  // מגיבים על מסמך
-  if (document?.id) {
-    allComments?.forEach(c => {
-      if (c.rootEntityType === 'document' && c.rootEntityId === document.id && c.created_by) {
-        const profile = allPublicProfiles?.find(p => p.email === c.created_by);
-        if (profile?.userId) uniqueUserIds.add(profile.userId);
-      }
-    });
-  }
-  
-  return Array.from(uniqueUserIds);
-}
 
 export default function ContributorsModal({ isOpen, onClose, documentId }) {
   const { t } = useLanguage();
 
+  // Fetch all data in parallel with caching
   const { data: document } = useQuery({
     queryKey: ['document', documentId],
     queryFn: () => base44.entities.Document.filter({ id: documentId }).then(d => d[0]),
-    enabled: !!documentId && isOpen,
+    enabled: isOpen && !!documentId,
+    staleTime: 30000,
   });
 
-  const { data: suggestions } = useQuery({
+  const { data: suggestions = [] } = useQuery({
     queryKey: ['suggestions', documentId],
     queryFn: () => base44.entities.Suggestion.filter({ documentId }),
-    enabled: !!documentId && isOpen,
-    initialData: [],
+    enabled: isOpen && !!documentId,
+    staleTime: 30000,
   });
 
-  const { data: sections } = useQuery({
+  const { data: sections = [] } = useQuery({
     queryKey: ['sections', documentId],
     queryFn: () => base44.entities.Section.filter({ documentId }),
-    enabled: !!documentId && isOpen,
-    initialData: [],
+    enabled: isOpen && !!documentId,
+    staleTime: 30000,
   });
 
-  const { data: allPublicProfiles } = useQuery({
+  const { data: publicProfiles = [] } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
-    initialData: [],
+    enabled: isOpen,
     staleTime: 60000,
   });
 
-  const { data: allVotes } = useQuery({
+  const { data: allVotes = [] } = useQuery({
     queryKey: ['allVotes'],
     queryFn: () => base44.entities.Vote.list(),
-    initialData: [],
+    enabled: isOpen && suggestions.length > 0,
     staleTime: 30000,
   });
 
-  const { data: allArguments } = useQuery({
-    queryKey: ['allArguments'],
-    queryFn: () => base44.entities.Argument.list(),
-    initialData: [],
-    staleTime: 30000,
-  });
-
-  const { data: allComments } = useQuery({
+  const { data: allComments = [] } = useQuery({
     queryKey: ['allComments'],
     queryFn: () => base44.entities.Comment.list(),
-    initialData: [],
+    enabled: isOpen,
     staleTime: 30000,
   });
 
-  const contributorIds = React.useMemo(() => {
-    return calculateContributorIds({
-      document,
-      suggestions,
-      allVotes,
-      allPublicProfiles,
-      allArguments,
-      allComments,
-      sections,
-    });
-  }, [document, suggestions, allVotes, allPublicProfiles, allArguments, allComments, sections]);
+  const { data: allArguments = [] } = useQuery({
+    queryKey: ['allArguments'],
+    queryFn: () => base44.entities.Argument.list(),
+    enabled: isOpen && suggestions.length > 0,
+    staleTime: 30000,
+  });
 
-  const isLoading = !document || !suggestions || !allPublicProfiles;
+  const { contributors, loading } = useMemo(() => {
+    if (!document) {
+      return { contributors: [], loading: true };
+    }
+
+    const contributorEmails = new Set();
+    
+    // Document creator
+    if (document.created_by) contributorEmails.add(document.created_by);
+
+    // Suggestion creators
+    suggestions.forEach(s => {
+      if (s.created_by) contributorEmails.add(s.created_by);
+    });
+
+    // Voters - convert voter IDs to emails using UserPublicProfile entity
+    const suggestionIds = new Set(suggestions.map(s => s.id));
+    const voterIds = new Set();
+    allVotes.forEach(v => {
+      if (suggestionIds.has(v.suggestionId)) {
+        voterIds.add(v.userId);
+        if (v.created_by) contributorEmails.add(v.created_by);
+      }
+    });
+    
+    publicProfiles.forEach(profile => {
+      if (voterIds.has(profile.userId)) contributorEmails.add(profile.email);
+    });
+
+    // Argument writers
+    allArguments.forEach(arg => {
+      if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
+        contributorEmails.add(arg.created_by);
+      }
+    });
+
+    // Commenters on suggestions
+    allComments.forEach(c => {
+      if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId) && c.created_by) {
+        contributorEmails.add(c.created_by);
+      }
+    });
+
+    // Commenters on sections
+    const sectionIds = new Set(sections.map(s => s.id));
+    allComments.forEach(c => {
+      if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId) && c.created_by) {
+        contributorEmails.add(c.created_by);
+      }
+    });
+
+    // Document comments
+    allComments.forEach(c => {
+      if (c.rootEntityType === 'document' && c.rootEntityId === documentId && c.created_by) {
+        contributorEmails.add(c.created_by);
+      }
+    });
+
+    // Build contributors list from UserPublicProfile entity (accessible to all)
+    const contributorsList = [];
+    
+    publicProfiles.forEach(profile => {
+      if (contributorEmails.has(profile.email)) {
+        contributorsList.push({
+          id: profile.userId,
+          email: profile.email,
+          full_name: profile.fullName || 'User',
+          role: null // role not available in public profile
+        });
+      }
+    });
+    
+    return { contributors: contributorsList, loading: false };
+  }, [document, suggestions, sections, publicProfiles, allVotes, allComments, allArguments, documentId]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {t('contributors')} ({contributorIds?.length || 0})
+          <DialogTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-blue-600" />
+            {t('contributors')} ({contributors.length})
           </DialogTitle>
-          {document?.title && (
-            <p className="text-sm text-slate-500">{document.title}</p>
-          )}
         </DialogHeader>
-        
-        <div className="flex-1 overflow-y-auto">
-          {isLoading ? (
-            <div className="space-y-2">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="flex items-center gap-3 p-3">
-                  <Skeleton className="w-10 h-10 rounded-full" />
-                  <Skeleton className="h-4 w-32 flex-1" />
+
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          </div>
+        ) : contributors.length === 0 ? (
+          <div className="text-center py-8 text-slate-500">
+            {t('noContributors')}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {contributors.map((user) => (
+              <Link
+                key={user.id}
+                to={`${createPageUrl("Profile")}?userId=${user.id}`}
+                className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-medium text-sm md:text-base">
+                    {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                  </span>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <UsersList 
-              userIds={contributorIds} 
-              emptyMessage={t('noContributors')}
-            />
-          )}
-        </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm md:text-base text-slate-900 truncate">
+                    {user.full_name || 'User'}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

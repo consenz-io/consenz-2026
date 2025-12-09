@@ -126,7 +126,7 @@ export default function SuggestionSidebar({
   const getUserName = (email) => {
     // Try public profile first (accessible to everyone)
     const profile = publicProfiles?.find(p => p.email === email);
-    if (profile?.full_name) return profile.full_name;
+    if (profile?.fullName) return profile.fullName;
     
     // Fallback to User entity (admins only)
     const u = users?.find(usr => usr.email === email);
@@ -189,22 +189,24 @@ export default function SuggestionSidebar({
         });
         if (vote === 'pro') newProVotes += 1;
         else newConVotes += 1;
-        
-        // Ensure public profile exists
-        const { userDisplayService } = await import('@/components/userDisplay/service');
-        await userDisplayService.ensurePublicProfile(user);
       }
 
-      // עדכון ההצעה - קרא קודם למניעת דריסת שינויים מקבילים
-      const currentSuggestion = await base44.entities.Suggestion.filter({ id: suggestionId }).then(s => s[0]);
-      if (!currentSuggestion) throw new Error('Suggestion was deleted');
-      
       const updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, {
         proVotes: newProVotes,
         conVotes: newConVotes
       });
 
-      // Ensure public profile exists - already done above after vote creation
+      // Create or update public profile for voter
+      if (user.id && user.email && user.full_name) {
+        const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
+        if (existingProfiles.length === 0) {
+          await base44.entities.UserPublicProfile.create({
+            userId: user.id,
+            email: user.email,
+            fullName: user.full_name
+          }).catch(() => {});
+        }
+      }
 
       // פעולות ברקע - לא חוסמות
       notifyVoteOnSuggestion({ suggestion, voterEmail: user.email }).catch(() => {});
@@ -284,8 +286,7 @@ export default function SuggestionSidebar({
         queryClient.setQueryData(['userVote', suggestionId, user?.id], context.previousVote);
       }
       setError(err.message);
-      const errorTimer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(errorTimer);
+      setTimeout(() => setError(null), 5000);
     },
     onSuccess: (data) => {
       const doc = document || parentDocument;
@@ -412,8 +413,7 @@ export default function SuggestionSidebar({
     },
     onError: (err) => {
       setError(err.message);
-      const errorTimer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(errorTimer);
+      setTimeout(() => setError(null), 5000);
     }
   });
 
@@ -430,8 +430,7 @@ export default function SuggestionSidebar({
     },
     onError: (err) => {
       setError(err.message);
-      const errorTimer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(errorTimer);
+      setTimeout(() => setError(null), 5000);
     }
   });
 
@@ -447,8 +446,7 @@ export default function SuggestionSidebar({
     },
     onError: (err) => {
       setError(err.message);
-      const errorTimer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(errorTimer);
+      setTimeout(() => setError(null), 5000);
     }
   });
 

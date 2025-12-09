@@ -1,72 +1,159 @@
-/**
- * חישוב IDs של תורמים למסמך (לשימוש async במקומות שצריכים ספירה)
- * לתצוגה - השתמש ב-ContributorsModal שמחשב את זה בצד הקליינט
- */
 import { base44 } from "@/api/base44Client";
 
+/**
+ * מחשב את מספר התורמים הייחודיים למסמך (גרסה אסינכרונית)
+ * כולל: יוצר המסמך, יוצרי הצעות, מצביעים, כותבי טיעונים וכותבי תגובות
+ */
 export async function calculateDocumentContributors(documentId) {
   try {
-    const [document, suggestions, sections, allPublicProfiles, allVotes, allArguments, allComments] = await Promise.all([
-      base44.entities.Document.filter({ id: documentId }).then(d => d[0]),
+    // Fetch all data in parallel
+    const [documents, suggestions, sections, allVotes, allUsers, allArguments, allComments] = await Promise.all([
+      base44.entities.Document.filter({ id: documentId }),
       base44.entities.Suggestion.filter({ documentId }),
       base44.entities.Section.filter({ documentId }),
-      base44.entities.UserPublicProfile.list(),
       base44.entities.Vote.list(),
+      base44.entities.User.list(),
       base44.entities.Argument.list(),
       base44.entities.Comment.list()
     ]);
 
-    const uniqueUserIds = new Set();
+    const uniqueEmails = new Set();
     
-    // יוצר המסמך
-    if (document?.created_by) {
-      const profile = allPublicProfiles?.find(p => p.email === document.created_by);
-      if (profile?.userId) uniqueUserIds.add(profile.userId);
+    // 1. Document creator
+    if (documents.length > 0 && documents[0].created_by) {
+      uniqueEmails.add(documents[0].created_by);
     }
     
-    // יוצרי הצעות
-    suggestions?.forEach(s => {
-      if (s.created_by) {
-        const profile = allPublicProfiles?.find(p => p.email === s.created_by);
-        if (profile?.userId) uniqueUserIds.add(profile.userId);
-      }
+    // 2. Suggestion creators
+    suggestions.forEach(s => {
+      if (s.created_by) uniqueEmails.add(s.created_by);
     });
     
-    // מצביעים
-    const suggestionIds = new Set(suggestions?.map(s => s.id) || []);
-    allVotes?.forEach(v => {
-      if (suggestionIds.has(v.suggestionId) && v.userId) {
-        uniqueUserIds.add(v.userId);
-      }
-    });
+    // 3. Voters - גם לפי userId וגם לפי created_by
+    const suggestionIds = new Set(suggestions.map(s => s.id));
+    const userIdToEmail = {};
+    allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
     
-    // כותבי טיעונים
-    allArguments?.forEach(arg => {
-      if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
-        const profile = allPublicProfiles?.find(p => p.email === arg.created_by);
-        if (profile?.userId) uniqueUserIds.add(profile.userId);
-      }
-    });
-    
-    // מגיבים
-    const sectionIds = new Set(sections?.map(s => s.id) || []);
-    allComments?.forEach(c => {
-      if ((c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
-          (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
-          (c.rootEntityType === 'document' && c.rootEntityId === documentId)) {
-        if (c.created_by) {
-          const profile = allPublicProfiles?.find(p => p.email === c.created_by);
-          if (profile?.userId) uniqueUserIds.add(profile.userId);
+    allVotes.forEach(v => {
+      if (suggestionIds.has(v.suggestionId)) {
+        // לפי userId
+        if (userIdToEmail[v.userId]) {
+          uniqueEmails.add(userIdToEmail[v.userId]);
+        }
+        // גם לפי created_by של ההצבעה ישירות
+        if (v.created_by) {
+          uniqueEmails.add(v.created_by);
         }
       }
     });
     
-    return Math.max(1, uniqueUserIds.size);
+    // 4. Argument writers
+    allArguments.forEach(arg => {
+      if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
+        uniqueEmails.add(arg.created_by);
+      }
+    });
+    
+    // 5. Commenters on suggestions
+    allComments.forEach(c => {
+      if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId) && c.created_by) {
+        uniqueEmails.add(c.created_by);
+      }
+    });
+    
+    // 6. Commenters on sections
+    const sectionIds = new Set(sections.map(s => s.id));
+    allComments.forEach(c => {
+      if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId) && c.created_by) {
+        uniqueEmails.add(c.created_by);
+      }
+    });
+    
+    // 7. Commenters on document
+    allComments.forEach(c => {
+      if (c.rootEntityType === 'document' && c.rootEntityId === documentId && c.created_by) {
+        uniqueEmails.add(c.created_by);
+      }
+    });
+    
+    return Math.max(1, uniqueEmails.size);
   } catch (error) {
-    console.error('[calculateDocumentContributors] Error:', error);
+    console.error('[CALCULATE CONTRIBUTORS ERROR]', error);
     return 1;
   }
 }
 
-// Export for backwards compatibility
-export { calculateDocumentContributors as calculateContributorsFromData };
+/**
+ * חישוב סינכרוני של תורמים מנתונים שכבר נטענו
+ * משמש לתצוגה בזמן אמת בקאונטרים
+ */
+export function calculateContributorsFromData({
+  document,
+  suggestions = [],
+  allVotes = [],
+  allUsers = [],
+  allArguments = [],
+  allComments = [],
+  sections = []
+}) {
+  const uniqueEmails = new Set();
+  
+  // 1. Document creator
+  if (document?.created_by) uniqueEmails.add(document.created_by);
+  
+  // 2. Suggestion creators
+  suggestions.forEach(s => {
+    if (s.created_by) uniqueEmails.add(s.created_by);
+  });
+  
+  // 3. Voters - גם לפי userId וגם לפי created_by
+  const suggestionIds = new Set(suggestions.map(s => s.id));
+  const userIdToEmail = {};
+  allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
+  
+  allVotes.forEach(v => {
+    if (suggestionIds.has(v.suggestionId)) {
+      // לפי userId
+      if (userIdToEmail[v.userId]) {
+        uniqueEmails.add(userIdToEmail[v.userId]);
+      }
+      // גם לפי created_by של ההצבעה ישירות
+      if (v.created_by) {
+        uniqueEmails.add(v.created_by);
+      }
+    }
+  });
+  
+  // 4. Argument writers
+  allArguments.forEach(arg => {
+    if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
+      uniqueEmails.add(arg.created_by);
+    }
+  });
+  
+  // 5. Commenters on suggestions
+  allComments.forEach(c => {
+    if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId) && c.created_by) {
+      uniqueEmails.add(c.created_by);
+    }
+  });
+  
+  // 6. Commenters on sections
+  const sectionIds = new Set(sections.map(s => s.id));
+  allComments.forEach(c => {
+    if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId) && c.created_by) {
+      uniqueEmails.add(c.created_by);
+    }
+  });
+  
+  // 7. Commenters on document
+  if (document?.id) {
+    allComments.forEach(c => {
+      if (c.rootEntityType === 'document' && c.rootEntityId === document.id && c.created_by) {
+        uniqueEmails.add(c.created_by);
+      }
+    });
+  }
+  
+  return Math.max(1, uniqueEmails.size);
+}
