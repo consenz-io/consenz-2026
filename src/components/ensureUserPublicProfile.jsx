@@ -16,7 +16,7 @@ export async function ensureUserPublicProfile(user) {
       userId: user.id 
     });
 
-    const fullName = user.full_name || '';
+    const fullName = user.full_name || user.name || '';
     
     if (existingProfiles.length === 0) {
       // Create new profile if user has a valid name
