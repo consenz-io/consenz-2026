@@ -12,6 +12,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +37,13 @@ export default function SignersListModal({
 }) {
   const { language, isRTL } = useLanguage();
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+
+  // Fetch public profiles for displaying names
+  const { data: publicProfiles } = useQuery({
+    queryKey: ['publicProfiles'],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
+    initialData: [],
+  });
 
   const content = {
     he: {
@@ -76,8 +84,17 @@ export default function SignersListModal({
   const c = content[language] || content.en;
 
   const getUserName = (signer) => {
+    // First try public profile (accessible to all, even non-logged in users)
+    const profile = publicProfiles.find(p => p.userId === signer.userId);
+    if (profile?.fullName) return profile.fullName;
+    
+    // Fallback to email if available
+    if (signer.userEmail) return signer.userEmail.split('@')[0];
+    
+    // Fallback to allUsers (only accessible if user has permissions)
     const foundUser = allUsers.find(u => u.id === signer.userId);
     if (foundUser?.full_name) return foundUser.full_name;
+    
     return 'User';
   };
 
