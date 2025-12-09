@@ -10,7 +10,7 @@ import { MessageSquare, Send, Reply, Trash2, Edit2, X } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
-import { ensureUserPublicProfile } from "../ensureUserPublicProfile";
+import { ensureUserPublicProfile } from "@/components/ensureUserPublicProfile";
 
 // CommentItem Component - memoized to prevent unnecessary re-renders
 const CommentItem = memo(({ 
