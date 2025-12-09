@@ -305,7 +305,7 @@ export default function Home() {
               <CardContent className="p-6 text-center">
                 <Users className="w-8 h-8 mx-auto mb-3 text-indigo-600" />
                 <div className="text-3xl font-bold text-slate-900">
-                  {totalUniqueContributors}
+                  {allUsers.length}
                 </div>
                 <div className="text-sm text-slate-600">{t('collaborators')}</div>
               </CardContent>
@@ -469,7 +469,6 @@ export default function Home() {
       <AllContributorsModal
         isOpen={showContributorsModal}
         onClose={() => setShowContributorsModal(false)}
-        contributors={contributorsList}
       />
     </div>
   );
