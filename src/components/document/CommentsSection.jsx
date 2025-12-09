@@ -352,7 +352,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
       
       // Ensure user has public profile
       if (user?.id) {
-        const { ensureUserPublicProfile } = await import('./ensureUserPublicProfile');
+        const { ensureUserPublicProfile } = await import('../ensureUserPublicProfile');
         await ensureUserPublicProfile(user);
       }
       
