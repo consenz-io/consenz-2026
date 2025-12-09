@@ -708,17 +708,26 @@ Return ONLY the translated text:`;
 
   const getNewSectionSuggestionsForTopic = (topicId) => {
     return suggestions.filter(s => {
+      if (s.type !== 'new_section') return false;
+      
       // אם ההצעה מיועדת לנושא קיים - בדוק לפי topicId
       if (s.topicId) {
-        return s.topicId === topicId && s.type === 'new_section';
+        return s.topicId === topicId;
       }
-      // אם ההצעה מיועדת לנושא חדש - חפש נושא עם אותו שם
-      if (s.newTopicTitle && s.type === 'new_section') {
-        const matchingTopic = topics.find(t => t.title === s.newTopicTitle);
-        return matchingTopic && matchingTopic.id === topicId;
-      }
+      
+      // אם ההצעה מיועדת לנושא חדש שעדיין לא נוצר - לא מציגים אותה בשום נושא
       return false;
     }).sort((a, b) => (a.insertPosition || 999) - (b.insertPosition || 999));
+  };
+
+  // פונקציה נפרדת להצעות לנושאים חדשים שעדיין לא נוצרו
+  const getNewTopicSuggestions = () => {
+    return suggestions.filter(s => 
+      s.type === 'new_section' && 
+      !s.topicId && 
+      s.newTopicTitle &&
+      s.status === 'pending'
+    );
   };
 
   const reorderSectionsMutation = useMutation({
@@ -1452,7 +1461,37 @@ Return ONLY the translated text:`;
             })}
             {provided.placeholder}
 
-            {topics.length === 0 && (
+            {/* הצעות לסעיפים חדשים בנושאים חדשים */}
+            {getNewTopicSuggestions().map((suggestion) => (
+              <Card key={suggestion.id} className="bg-white border-slate-200 w-full overflow-hidden">
+                <CardHeader className="border-b border-slate-100 p-4 md:p-6 bg-purple-50">
+                  <div className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <CardTitle className={`text-lg md:text-2xl break-words flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      {suggestion.newTopicTitle} <Badge className="ml-2 bg-purple-600 text-white">נושא חדש מוצע</Badge>
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
+                  <NewSectionSuggestionCard
+                    key={suggestion.id}
+                    suggestion={suggestion}
+                    document={document}
+                    getUserName={getUserName}
+                    acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                    user={user}
+                    getUserVote={getUserVote}
+                    voteMutation={voteMutation}
+                    onOpenSidebar={onOpenSuggestionSidebar}
+                    getCommentsCount={getCommentsCount}
+                    toggleComments={toggleComments}
+                    showComments={showComments}
+                    isAdmin={isAdmin}
+                  />
+                </CardContent>
+              </Card>
+            ))}
+
+            {topics.length === 0 && getNewTopicSuggestions().length === 0 && (
               <Card className="bg-white border-slate-200 w-full overflow-hidden">
                 <CardContent className="p-6 md:p-12 text-center">
                   <p className="text-slate-500 text-sm md:text-base">{t('noTopicsYet')}</p>
