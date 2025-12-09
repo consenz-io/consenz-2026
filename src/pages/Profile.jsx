@@ -95,7 +95,6 @@ export default function Profile() {
   const user = viewUserId ? viewUser : currentUser;
   const isLoading = viewUserId ? (viewUserProfileLoading || viewUserFullLoading) : false;
   const isOwnProfile = !viewUserId || (currentUser && viewUserId === currentUser.id);
-  const isLoading = viewUserId ? viewUserLoading : false;
 
   const { data: pointsTransactions } = useQuery({
     queryKey: ['pointsTransactions', user?.id],
