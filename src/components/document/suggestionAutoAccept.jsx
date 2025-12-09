@@ -44,13 +44,14 @@ export async function checkSuggestionConsensus(suggestion, document) {
     // document_consensus_meter = ממוצע כל ה-section_consensus_meter
     // מגבילים כל ערך ל-1 מקסימום (כי consensuses אמורים להיות בין 0 ל-1)
     const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-    // document_threshold = document_consensus_meter * totalUsers
+    // document_threshold = consensus_meter * (participants - 1)
+    // (participants - 1) כי יוצר ההצעה נחשב כמצביע אחד, נדרש רוב מהשאר
     // מינימום threshold הוא 2 (רף כניסה מינימלי)
-    threshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
+    threshold = Math.max(2, Math.round(consensusMeterAverage * Math.max(1, totalUsers - 1)));
     
     console.log('[CONSENSUS CHECK] Threshold calculation (dynamic):');
     console.log('[CONSENSUS CHECK] - Consensus meter average:', consensusMeterAverage);
-    console.log('[CONSENSUS CHECK] - Formula: Math.max(2, Math.round(' + consensusMeterAverage + ' * ' + totalUsers + '))');
+    console.log('[CONSENSUS CHECK] - Formula: Math.max(2, Math.round(' + consensusMeterAverage + ' * ' + Math.max(1, totalUsers - 1) + '))');
     console.log('[CONSENSUS CHECK] - Calculated threshold:', threshold);
   } else {
     // אם אין consensuses, משתמשים ב-threshold של המסמך (מינימום 2)
@@ -171,7 +172,8 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / updatedConsensuses.length;
     
     // חישוב document_threshold חדש - עם מספר המשתתפים הנוכחי (מינימום 2)
-    newThreshold = Math.max(2, Math.round(consensusMeterAverage * participantsAtAcceptance));
+    // (participants - 1) כי יוצר ההצעה נחשב כמצביע אחד, נדרש רוב מהשאר
+    newThreshold = Math.max(2, Math.round(consensusMeterAverage * Math.max(1, participantsAtAcceptance - 1)));
     
     console.log('[CONSENSUS METER UPDATE]', {
       sectionConsensus,
@@ -536,8 +538,8 @@ export function checkTopicEditConsensus(suggestion, document) {
   if (consensuses.length > 0) {
     // מגבילים כל ערך ל-1 מקסימום (כי consensuses אמורים להיות בין 0 ל-1)
     const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-    // מינימום threshold הוא 2 (רף כניסה מינימלי)
-    threshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
+    // (participants - 1) כי יוצר ההצעה נחשב כמצביע אחד, נדרש רוב מהשאר
+    threshold = Math.max(2, Math.round(consensusMeterAverage * Math.max(1, totalUsers - 1)));
   } else {
     threshold = Math.max(2, document.threshold || 2);
   }
