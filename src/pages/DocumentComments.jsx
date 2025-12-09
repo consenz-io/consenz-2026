@@ -109,6 +109,14 @@ export default function DocumentComments() {
     return email ? email.split('@')[0] : 'User';
   };
 
+  const getUserId = (email) => {
+    const profile = publicProfiles.find(p => p.email === email);
+    if (profile?.userId) return profile.userId;
+    
+    const user = users.find(u => u.email === email);
+    return user?.id;
+  };
+
   // Translate comment mutation
   const translateCommentMutation = useMutation({
     mutationFn: async (comment) => {
@@ -370,7 +378,12 @@ export default function DocumentComments() {
                                <span className="text-xs text-slate-400">•</span>
                              </>
                            )}
-                           <span className="text-sm font-medium text-slate-900">{getUserName(comment.created_by)}</span>
+                           <Link 
+                             to={`${createPageUrl("Profile")}?userId=${getUserId(comment.created_by)}`}
+                             className="text-sm font-medium text-slate-900 hover:text-blue-600 transition-colors"
+                           >
+                             {getUserName(comment.created_by)}
+                           </Link>
                            <span className="text-xs text-slate-500">{new Date(comment.created_date).toLocaleDateString()}</span>
                             {needsCommentTranslation(comment) && (
                               translatingComment === comment.id ? (
