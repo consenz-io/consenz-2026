@@ -21,21 +21,21 @@ export default function AllContributorsModal({
   const { t, isRTL } = useLanguage();
   const [searchQuery, setSearchQuery] = React.useState("");
 
-  // Fetch all users from the system (same as System User Management)
-  const { data: allUsers = [], isLoading } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list('-created_date'),
+  // Fetch all public profiles (accessible to everyone, including non-logged-in users)
+  const { data: publicProfiles = [], isLoading } = useQuery({
+    queryKey: ['publicProfiles'],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
     enabled: isOpen,
   });
 
-  const filteredUsers = React.useMemo(() => {
-    if (!searchQuery) return allUsers;
+  const filteredProfiles = React.useMemo(() => {
+    if (!searchQuery) return publicProfiles;
     const query = searchQuery.toLowerCase();
-    return allUsers.filter(u => 
-      u.full_name?.toLowerCase().includes(query) ||
-      u.email?.toLowerCase().includes(query)
+    return publicProfiles.filter(p => 
+      p.fullName?.toLowerCase().includes(query) ||
+      p.email?.toLowerCase().includes(query)
     );
-  }, [allUsers, searchQuery]);
+  }, [publicProfiles, searchQuery]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -43,7 +43,7 @@ export default function AllContributorsModal({
         <DialogHeader>
           <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Users className="w-5 h-5 text-indigo-600" />
-            {t('collaborators')} ({allUsers.length})
+            {t('collaborators')} ({publicProfiles.length})
           </DialogTitle>
         </DialogHeader>
         
@@ -62,33 +62,26 @@ export default function AllContributorsModal({
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
             <p className="text-slate-500 text-center py-8">{t('loading')}</p>
-          ) : filteredUsers.length === 0 ? (
+          ) : filteredProfiles.length === 0 ? (
             <p className="text-slate-500 text-center py-8">{t('noContributors')}</p>
           ) : (
             <div className="space-y-2">
-              {filteredUsers.map((user) => (
+              {filteredProfiles.map((profile) => (
                 <Link
-                  key={user.id}
-                  to={`${createPageUrl("Profile")}?userId=${user.id}`}
+                  key={profile.userId}
+                  to={`${createPageUrl("Profile")}?userId=${profile.userId}`}
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors"
                 >
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-medium">
-                      {user.full_name?.charAt(0)?.toUpperCase() || '?'}
+                      {profile.fullName?.charAt(0)?.toUpperCase() || '?'}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-slate-900 truncate">
-                        {user.full_name || user.email}
-                      </p>
-                      {user.role === 'admin' && (
-                        <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200 text-xs">
-                          Admin
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                    <p className="font-medium text-slate-900 truncate">
+                      {profile.fullName || profile.email}
+                    </p>
+                    <p className="text-xs text-slate-500 truncate">{profile.email}</p>
                   </div>
                 </Link>
               ))}
@@ -96,9 +89,9 @@ export default function AllContributorsModal({
           )}
         </div>
 
-        {filteredUsers.length > 0 && searchQuery && (
+        {filteredProfiles.length > 0 && searchQuery && (
           <div className="text-sm text-slate-600 text-center pt-2 border-t">
-            {filteredUsers.length} of {allUsers.length}
+            {filteredProfiles.length} of {publicProfiles.length}
           </div>
         )}
       </DialogContent>
