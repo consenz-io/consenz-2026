@@ -278,6 +278,9 @@ export default function UnderstandingConsensus() {
                                     language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-EG' : 'en-US'
                                   )}
                                 </p>
+                                {suggestion.explanation && (
+                                  <p className="text-xs text-slate-600 mt-1 line-clamp-2">{suggestion.explanation}</p>
+                                )}
                               </div>
                               <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow">
                                 {originalIndex + 1}
@@ -295,6 +298,9 @@ export default function UnderstandingConsensus() {
                                     language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-EG' : 'en-US'
                                   )}
                                 </p>
+                                {suggestion.explanation && (
+                                  <p className="text-xs text-slate-600 mt-1 line-clamp-2">{suggestion.explanation}</p>
+                                )}
                               </div>
                             </>
                           )}
