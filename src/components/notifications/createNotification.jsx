@@ -418,6 +418,9 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
       return;
     }
     
+    console.log('[NOTIFY NEW SUGGESTION] Starting notification process for suggestion:', suggestion.id);
+    console.log('[NOTIFY NEW SUGGESTION] Document:', document.id, 'Current user:', currentUser.email);
+    
     // שליפת כל הנתונים - מסוננים למסמך הספציפי לביצועים
     const [users, publicProfiles, allSuggestions, allArguments, sections] = await Promise.all([
       getCachedUsers(),
@@ -427,14 +430,19 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
       base44.entities.Section.filter({ documentId: document.id })
     ]);
     
+    console.log('[NOTIFY NEW SUGGESTION] Fetched suggestions count:', allSuggestions.length);
+    
     // רשימת מזהי הצעות למסמך זה (לסינון)
     const suggestionIds = allSuggestions.map(s => s.id);
+    console.log('[NOTIFY NEW SUGGESTION] Suggestion IDs in document:', suggestionIds.length);
 
     // שליפת מצביעים ומגיבים
     const [allVotes, allComments] = await Promise.all([
       base44.entities.Vote.list(),
       base44.entities.Comment.list()
     ]);
+    
+    console.log('[NOTIFY NEW SUGGESTION] Total votes:', allVotes.length, 'Total comments:', allComments.length);
 
     // חישוב כל המשתתפים במסמך
     const participantEmails = new Set();
@@ -480,7 +488,13 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
     // מסירים את יוצר ההצעה הנוכחית
     participantEmails.delete(currentUser.email);
 
-    if (participantEmails.size === 0) return;
+    console.log('[NOTIFY NEW SUGGESTION] Participant emails found:', participantEmails.size);
+    console.log('[NOTIFY NEW SUGGESTION] Participants:', Array.from(participantEmails));
+    
+    if (participantEmails.size === 0) {
+      console.log('[NOTIFY NEW SUGGESTION] No participants to notify');
+      return;
+    }
 
     // המרה למזהי משתמשים
     const emailToUser = {};
@@ -492,7 +506,10 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
 
     for (const email of participantEmails) {
       const user = emailToUser[email];
-      if (!user) continue;
+      if (!user) {
+        console.log('[NOTIFY NEW SUGGESTION] User not found for email:', email);
+        continue;
+      }
       
       const userLang = user.preferredLanguage || 'he';
       notifications.push({
@@ -506,8 +523,12 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
       });
     }
 
+    console.log('[NOTIFY NEW SUGGESTION] Notifications to create:', notifications.length);
+    
     if (notifications.length > 0) {
+      console.log('[NOTIFY NEW SUGGESTION] Creating notifications...');
       await batchCreateNotifications(notifications);
+      console.log('[NOTIFY NEW SUGGESTION] Notifications created successfully');
     }
   } catch (error) {
     console.error('[NOTIFICATION ERROR] notifyNewSuggestion:', error);
