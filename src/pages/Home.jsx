@@ -60,11 +60,11 @@ export default function Home() {
 
   const { data: allUsers = [] } = useQuery({
     queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: () => base44.entities.User.list('-created_date'),
     initialData: [],
     retry: false,
     throwOnError: false,
-    enabled: false, // Don't fetch for regular users - use publicProfiles instead
+    enabled: !!user?.role && user.role === 'admin', // Fetch for admins to match System User Management
   });
 
   const { data: publicProfiles = [] } = useQuery({
@@ -72,17 +72,22 @@ export default function Home() {
     queryFn: () => base44.entities.UserPublicProfile.list(),
     initialData: [],
     staleTime: 60000,
+    enabled: !user || user.role !== 'admin', // Fetch for non-admins and non-logged-in users
   });
 
-  // Remove duplicates from publicProfiles by userId
-  const uniquePublicProfiles = React.useMemo(() => {
+  // Use allUsers for admins (matches System User Management), publicProfiles for others
+  const displayedUsers = React.useMemo(() => {
+    if (user?.role === 'admin' && allUsers.length > 0) {
+      return allUsers;
+    }
+    // Remove duplicates from publicProfiles by userId for non-admins
     const seen = new Set();
     return publicProfiles.filter(p => {
       if (seen.has(p.userId)) return false;
       seen.add(p.userId);
       return true;
     });
-  }, [publicProfiles]);
+  }, [user, allUsers, publicProfiles]);
 
   const { data: allArguments } = useQuery({
     queryKey: ['allArguments'],
@@ -316,7 +321,7 @@ export default function Home() {
               <CardContent className="p-6 text-center">
                 <Users className="w-8 h-8 mx-auto mb-3 text-indigo-600" />
                 <div className="text-3xl font-bold text-slate-900">
-                  {uniquePublicProfiles.length}
+                  {displayedUsers.length}
                 </div>
                 <div className="text-sm text-slate-600">{t('collaborators')}</div>
               </CardContent>
@@ -480,7 +485,7 @@ export default function Home() {
       <AllContributorsModal
         isOpen={showContributorsModal}
         onClose={() => setShowContributorsModal(false)}
-        contributors={uniquePublicProfiles}
+        contributors={displayedUsers}
       />
     </div>
   );
