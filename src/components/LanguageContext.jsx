@@ -421,7 +421,7 @@ const translations = {
     costToCreate: "עלות יצירת הצעה:",
     yourPoints: "הנקודות שלך:",
     originalContent: "התוכן המקורי:",
-    cleanView: "צפייה במסמך",
+    cleanView: "גרסאות קודמות",
     viewCurrentVersion: "לצפייה בגרסת המסמך העדכנית",
     section: "סעיף",
     history: "היסטוריה",
