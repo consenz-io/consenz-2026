@@ -320,11 +320,11 @@ export default function DocumentComments() {
               <Card key={idx} className="bg-white border-slate-200">
                 <CardContent className="p-4">
                   {/* Group Header */}
-                  <div className={`mb-3 pb-3 border-b border-slate-100`}>
+                  <div className={`mb-4`}>
                     <div className="flex-1 min-w-0">
                       {group.type === 'section' ? (
                         <>
-                          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className={`flex items-center gap-2 mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
                             <Badge variant="outline" className="text-xs font-semibold">{t('section')} {getSectionNumber(group.entityId)}</Badge>
                             <Badge variant="outline" className="text-xs">{group.topicName}</Badge>
@@ -333,12 +333,12 @@ export default function DocumentComments() {
                             const isExpanded = expandedSections[group.entityId];
                             const { text, needsExpand } = getSectionPreview(group.entityId, isExpanded);
                             return (
-                              <div className="w-full">
+                              <div className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 mb-3">
                                 <p 
-                                  className={`text-slate-700 mt-1 ${isExpanded ? '' : 'line-clamp-2'}`}
+                                  className={`text-slate-800 ${isExpanded ? '' : 'line-clamp-2'}`}
                                   style={{ 
                                     fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
-                                    fontSize: "1rem",
+                                    fontSize: "0.95rem",
                                     lineHeight: "1.6"
                                   }}
                                 >
@@ -347,7 +347,7 @@ export default function DocumentComments() {
                                 {needsExpand && (
                                   <button
                                     onClick={() => setExpandedSections(prev => ({ ...prev, [group.entityId]: !prev[group.entityId] }))}
-                                    className="text-xs text-blue-600 hover:text-blue-700 mt-1 font-medium"
+                                    className="text-xs text-blue-600 hover:text-blue-700 mt-2 font-medium"
                                   >
                                     {isExpanded ? t('showLess') : t('showMore')}
                                   </button>
@@ -357,15 +357,21 @@ export default function DocumentComments() {
                           })()}
                         </>
                       ) : (
-                        <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.entityId}`} className={`block w-full ${isRTL ? 'text-right' : 'text-left'}`}>
-                          <span className="text-sm font-medium text-slate-900 hover:text-blue-600 transition-colors">{t('suggestion')}: {getSuggestionTitle(group.entityId)}</span>
-                        </Link>
+                        <div className="mb-3">
+                          <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.entityId}`} className={`block w-full ${isRTL ? 'text-right' : 'text-left'}`}>
+                            <span className="text-sm font-medium text-slate-900 hover:text-blue-600 transition-colors">{t('suggestion')}: {getSuggestionTitle(group.entityId)}</span>
+                          </Link>
+                        </div>
                       )}
                     </div>
                   </div>
 
                   {/* Comments */}
-                  <div className="space-y-3">
+                  <div className="space-y-3 border-t border-slate-200 pt-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{t('comments')}</span>
+                    </div>
                     {group.comments.slice(0, 3).map((comment) => {
                       const suggestionCreatorEmail = group.type === 'suggestion' ? group.suggestion?.created_by : null;
                       return (
