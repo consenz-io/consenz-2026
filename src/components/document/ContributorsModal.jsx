@@ -47,10 +47,16 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
 
   const { data: allUsers = [] } = useQuery({
     queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: async () => {
+      try {
+        return await base44.entities.User.list();
+      } catch (error) {
+        // Non-admins cannot access User entity - return empty array
+        return [];
+      }
+    },
     enabled: isOpen,
     staleTime: 60000,
-    retry: false,
   });
 
   const { data: allVotes = [] } = useQuery({
