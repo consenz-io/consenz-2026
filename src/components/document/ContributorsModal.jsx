@@ -81,7 +81,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       if (s.created_by) contributorEmails.add(s.created_by);
     });
 
-    // Voters - convert voter IDs to emails using User entity
+    // Voters - convert voter IDs to emails using UserPublicProfile entity
     const suggestionIds = new Set(suggestions.map(s => s.id));
     const voterIds = new Set();
     allVotes.forEach(v => {
@@ -91,8 +91,8 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       }
     });
     
-    allUsers.forEach(user => {
-      if (voterIds.has(user.id)) contributorEmails.add(user.email);
+    publicProfiles.forEach(profile => {
+      if (voterIds.has(profile.userId)) contributorEmails.add(profile.email);
     });
 
     // Argument writers
