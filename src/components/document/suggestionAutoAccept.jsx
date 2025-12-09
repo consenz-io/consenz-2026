@@ -299,16 +299,8 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     console.log('[THRESHOLD UPDATE] Finished updating all suggestions');
   }
   
-  // עדכון סטטוס ההצעה מיד כדי למנוע אישור כפול
-  // שמירת מספר המשתתפים בזמן הקבלה
-  console.log('[AUTO-ACCEPT] Updating suggestion status to accepted immediately');
-  await base44.entities.Suggestion.update(suggestion.id, { 
-    status: 'accepted',
-    suggestionConsensus: consensus,
-    participantsAtAcceptance: participantsAtAcceptance
-  });
-
   try {
+    console.log('[AUTO-ACCEPT] Starting section creation/update...');
     // טיפול בהצעת עריכה לסעיף קיים
     if (freshSuggestion.type === 'edit_section' && freshSuggestion.sectionId) {
       let section;
@@ -474,6 +466,14 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       });
     }
     
+    // עדכון סטטוס ההצעה רק אחרי שהסעיף נוצר בהצלחה
+    console.log('[AUTO-ACCEPT] Section created successfully, updating suggestion status to accepted');
+    await base44.entities.Suggestion.update(suggestion.id, { 
+      status: 'accepted',
+      suggestionConsensus: consensus,
+      participantsAtAcceptance: participantsAtAcceptance
+    });
+    
     // שליחת התראה ונקודות - בדיקה שיש created_by
     if (freshSuggestion.created_by) {
       try {
@@ -518,7 +518,11 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     
     return true;
   } catch (error) {
-    console.error('Error auto-accepting suggestion:', error);
+    console.error('[AUTO-ACCEPT] ❌ CRITICAL ERROR during section creation:', error);
+    console.error('[AUTO-ACCEPT] Error details:', error.message);
+    console.error('[AUTO-ACCEPT] Stack trace:', error.stack);
+    console.error('[AUTO-ACCEPT] Suggestion ID:', suggestion.id);
+    console.error('[AUTO-ACCEPT] Suggestion type:', freshSuggestion?.type);
     return false;
   }
 }
