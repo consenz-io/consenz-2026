@@ -24,7 +24,7 @@ export async function checkSuggestionConsensus(suggestion, document) {
   
   const proVotes = suggestion.proVotes || 0;
   const conVotes = suggestion.conVotes || 0;
-  const totalUsers = document.totalUsersInteracted || 1; // מונע חלוקה באפס
+  const totalUsers = Math.max(1, document.totalUsersInteracted || 1); // מונע חלוקה באפס
   
   console.log('[CONSENSUS CHECK] Vote counts:');
   console.log('[CONSENSUS CHECK] - Pro votes:', proVotes);
@@ -150,7 +150,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
   const shouldUpdateConsensusMeter = freshSuggestion.type === 'edit_section';
   
   // שמירת מספר המשתתפים בזמן הקבלה של ההצעה הזו
-  const participantsAtAcceptance = document.totalUsersInteracted || 1;
+  const participantsAtAcceptance = Math.max(1, document.totalUsersInteracted || 1);
   
   let updatedConsensuses = document.consensuses || [];
   let newThreshold = document.threshold || 2;
@@ -474,7 +474,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
 export function checkTopicEditConsensus(suggestion, document) {
   const proVotes = suggestion.proVotes || 0;
   const conVotes = suggestion.conVotes || 0;
-  const totalUsers = document.totalUsersInteracted || 1;
+  const totalUsers = Math.max(1, document.totalUsersInteracted || 1);
   
   // חישוב threshold דינמי על בסיס consensuses של המסמך - זהה לחישוב של הצעות סעיפים
   let threshold;
