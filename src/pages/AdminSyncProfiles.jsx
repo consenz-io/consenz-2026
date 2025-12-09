@@ -15,7 +15,7 @@ export default function AdminSyncProfiles() {
     
     try {
       // Get all suggestions, votes, comments, arguments to find unique creators
-      const [suggestions, votes, comments, arguments, sections] = await Promise.all([
+      const [suggestions, votes, comments, allArguments, sections] = await Promise.all([
         base44.entities.Suggestion.list(),
         base44.entities.Vote.list(),
         base44.entities.Comment.list(),
@@ -28,7 +28,7 @@ export default function AdminSyncProfiles() {
       suggestions.forEach(s => s.created_by && uniqueEmails.add(s.created_by));
       votes.forEach(v => v.created_by && uniqueEmails.add(v.created_by));
       comments.forEach(c => c.created_by && uniqueEmails.add(c.created_by));
-      arguments.forEach(a => a.created_by && uniqueEmails.add(a.created_by));
+      allArguments.forEach(a => a.created_by && uniqueEmails.add(a.created_by));
       sections.forEach(s => s.created_by && uniqueEmails.add(s.created_by));
 
       // Get all existing public profiles
