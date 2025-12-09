@@ -410,24 +410,24 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
 /**
  * יצירת התראה על הצעה חדשה במסמך - לכל המשתתפים
  */
-export async function notifyNewSuggestion({ suggestion, document, currentUser }) {
+export async function notifyNewSuggestion({ suggestion, document: doc, currentUser }) {
   try {
     // Validate required data
-    if (!suggestion?.id || !document?.id || !currentUser?.email) {
-      console.error('[NOTIFICATION ERROR] Missing required data for new suggestion notification:', { suggestion, document, currentUser });
+    if (!suggestion?.id || !doc?.id || !currentUser?.email) {
+      console.error('[NOTIFICATION ERROR] Missing required data for new suggestion notification:', { suggestion, doc, currentUser });
       return;
     }
     
     console.log('[NOTIFY NEW SUGGESTION] Starting notification process for suggestion:', suggestion.id);
-    console.log('[NOTIFY NEW SUGGESTION] Document:', document.id, 'Current user:', currentUser.email);
+    console.log('[NOTIFY NEW SUGGESTION] Document:', doc.id, 'Current user:', currentUser.email);
     
     // שליפת כל הנתונים - מסוננים למסמך הספציפי לביצועים
     const [users, publicProfiles, allSuggestions, allArguments, sections] = await Promise.all([
       getCachedUsers(),
       getCachedPublicProfiles(),
-      base44.entities.Suggestion.filter({ documentId: document.id }),
+      base44.entities.Suggestion.filter({ documentId: doc.id }),
       base44.entities.Argument.list(),
-      base44.entities.Section.filter({ documentId: document.id })
+      base44.entities.Section.filter({ documentId: doc.id })
     ]);
     
     console.log('[NOTIFY NEW SUGGESTION] Fetched suggestions count:', allSuggestions.length);
@@ -448,7 +448,7 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
     const participantEmails = new Set();
     
     // יוצר המסמך
-    if (document.created_by) participantEmails.add(document.created_by);
+    if (doc.created_by) participantEmails.add(doc.created_by);
     
     // יוצרי הצעות
     allSuggestions.forEach(s => {
@@ -474,7 +474,7 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
     const relevantComments = allComments.filter(c => 
       (c.rootEntityType === 'suggestion' && suggestionIds.includes(c.rootEntityId)) ||
       (c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)) ||
-      (c.rootEntityType === 'document' && c.rootEntityId === document.id)
+      (c.rootEntityType === 'document' && c.rootEntityId === doc.id)
     );
     relevantComments.forEach(c => {
       if (c.created_by) participantEmails.add(c.created_by);
@@ -516,7 +516,7 @@ export async function notifyNewSuggestion({ suggestion, document, currentUser })
         userId: user.id,
         type: 'new_suggestion',
         title: translate('notifNewSuggestionTitle', userLang),
-        message: `${currentUser.full_name} פרסם/ה ${suggestionTypeText} במסמך "${document.title}"`,
+        message: `${currentUser.full_name} פרסם/ה ${suggestionTypeText} במסמך "${doc.title}"`,
         relatedEntityId: suggestion.id,
         relatedEntityType: 'suggestion',
         actionUrl
@@ -621,19 +621,19 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
 /**
  * יצירת התראה על תגובה חדשה בדיון כללי של מסמך
  */
-export async function notifyNewDocumentComment({ comment, document, parentComment = null }) {
+export async function notifyNewDocumentComment({ comment, document: doc, parentComment = null }) {
   try {
     // Validate required data
-    if (!comment?.id || !comment?.created_by || !document?.id) {
-      console.error('[NOTIFICATION ERROR] Missing required data for document comment notification:', { comment, document });
+    if (!comment?.id || !comment?.created_by || !doc?.id) {
+      console.error('[NOTIFICATION ERROR] Missing required data for document comment notification:', { comment, doc });
       return;
     }
     
     const [users, publicProfiles, adminIds, allDocumentComments] = await Promise.all([
       getCachedUsers(),
       getCachedPublicProfiles(),
-      getDocumentAdmins(document.id),
-      base44.entities.Comment.filter({ rootEntityType: 'document', rootEntityId: document.id })
+      getDocumentAdmins(doc.id),
+      base44.entities.Comment.filter({ rootEntityType: 'document', rootEntityId: doc.id })
     ]);
     
     const commenter = getUserFromCache(users, publicProfiles, { email: comment.created_by });
@@ -642,7 +642,7 @@ export async function notifyNewDocumentComment({ comment, document, parentCommen
     const notifiedEmails = new Set();
     notifiedEmails.add(comment.created_by);
     const notifications = [];
-    const actionUrl = createPageUrl("DocumentView") + `?id=${document.id}`;
+    const actionUrl = createPageUrl("DocumentView") + `?id=${doc.id}`;
     
     // תשובה לתגובה
     if (parentComment && comment.created_by !== parentComment.created_by) {
@@ -655,7 +655,7 @@ export async function notifyNewDocumentComment({ comment, document, parentCommen
           type: 'comment_reply',
           title: translate('notifReplyTitle', userLang),
           message: translate('notifReplyMessage', userLang, { name: commenterName }),
-          relatedEntityId: document.id,
+          relatedEntityId: doc.id,
           relatedEntityType: 'document',
           actionUrl
         });
@@ -663,17 +663,17 @@ export async function notifyNewDocumentComment({ comment, document, parentCommen
     }
     
     // יוצר המסמך
-    if (document.created_by && !notifiedEmails.has(document.created_by)) {
-      const creator = getUserFromCache(users, publicProfiles, { email: document.created_by });
+    if (doc.created_by && !notifiedEmails.has(doc.created_by)) {
+      const creator = getUserFromCache(users, publicProfiles, { email: doc.created_by });
       if (creator) {
-        notifiedEmails.add(document.created_by);
+        notifiedEmails.add(doc.created_by);
         const userLang = creator.preferredLanguage || 'he';
         notifications.push({
           userId: creator.id,
           type: 'document_comment',
           title: translate('notifDocumentCommentTitle', userLang),
-          message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: document.title }),
-          relatedEntityId: document.id,
+          message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: doc.title }),
+          relatedEntityId: doc.id,
           relatedEntityType: 'document',
           actionUrl
         });
@@ -690,8 +690,8 @@ export async function notifyNewDocumentComment({ comment, document, parentCommen
         userId: adminId,
         type: 'document_comment',
         title: translate('notifDocumentCommentTitle', userLang),
-        message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: document.title }),
-        relatedEntityId: document.id,
+        message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: doc.title }),
+        relatedEntityId: doc.id,
         relatedEntityType: 'document',
         actionUrl
       });
@@ -709,8 +709,8 @@ export async function notifyNewDocumentComment({ comment, document, parentCommen
         userId: user.id,
         type: 'document_comment',
         title: translate('notifDocumentCommentTitle', userLang),
-        message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: document.title }),
-        relatedEntityId: document.id,
+        message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: doc.title }),
+        relatedEntityId: doc.id,
         relatedEntityType: 'document',
         actionUrl
       });
