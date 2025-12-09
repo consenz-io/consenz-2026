@@ -106,6 +106,14 @@ export default function DocumentView() {
     queryFn: () => base44.entities.User.list(),
     initialData: [],
     staleTime: 60000,
+    retry: false,
+  });
+
+  const { data: allPublicProfiles } = useQuery({
+    queryKey: ['publicProfiles'],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
+    initialData: [],
+    staleTime: 60000,
   });
 
   const { data: allArguments } = useQuery({
@@ -154,11 +162,12 @@ export default function DocumentView() {
       suggestions,
       allVotes,
       allUsers,
+      allPublicProfiles,
       allArguments,
       allComments,
       sections
     });
-  }, [document, suggestions, allVotes, allUsers, allArguments, allComments, sections]);
+  }, [document, suggestions, allVotes, allUsers, allPublicProfiles, allArguments, allComments, sections]);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
