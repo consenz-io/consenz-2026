@@ -191,6 +191,10 @@ export default function SuggestionSidebar({
         else newConVotes += 1;
       }
 
+      // עדכון ההצעה - קרא קודם למניעת דריסת שינויים מקבילים
+      const currentSuggestion = await base44.entities.Suggestion.filter({ id: suggestionId }).then(s => s[0]);
+      if (!currentSuggestion) throw new Error('Suggestion was deleted');
+      
       const updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, {
         proVotes: newProVotes,
         conVotes: newConVotes

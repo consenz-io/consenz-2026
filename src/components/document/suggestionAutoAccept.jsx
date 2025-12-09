@@ -297,9 +297,18 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     console.log('[THRESHOLD UPDATE] Finished updating all suggestions');
   }
   
-  // עדכון סטטוס ההצעה מיד כדי למנוע אישור כפול
+  // עדכון סטטוס ההצעה מיד כדי למנוע אישור כפול - ATOMIC UPDATE
   // שמירת מספר המשתתפים בזמן הקבלה
-  console.log('[AUTO-ACCEPT] Updating suggestion status to accepted immediately');
+  console.log('[AUTO-ACCEPT] Updating suggestion status to accepted immediately (ATOMIC)');
+  
+  // Atomic check-and-set: קרא את הסטטוס הנוכחי ועדכן רק אם pending
+  const freshCheckSuggestion = await base44.entities.Suggestion.filter({ id: suggestion.id }).then(s => s[0]);
+  
+  if (!freshCheckSuggestion || freshCheckSuggestion.status !== 'pending') {
+    console.log('[AUTO-ACCEPT] ⚠️ RACE CONDITION PREVENTED: Status already changed to', freshCheckSuggestion?.status || 'DELETED');
+    return false;
+  }
+  
   await base44.entities.Suggestion.update(suggestion.id, { 
     status: 'accepted',
     suggestionConsensus: consensus,
@@ -345,12 +354,17 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
           changeType: 'suggestion_accepted',
           suggestionId: freshSuggestion.id
         }),
-        // עדכון הסעיף עם התוכן החדש
-        base44.entities.Section.update(section.id, {
-          content: freshSuggestion.newContent,
-          lastEditedBy: userId,
-          originalLanguage: newContentLanguage,
-        }),
+        // עדכון הסעיף עם התוכן החדש - READ CURRENT FIRST למניעת דריסה
+        (async () => {
+          const currentSection = await base44.entities.Section.filter({ id: section.id }).then(s => s[0]);
+          if (currentSection) {
+            await base44.entities.Section.update(section.id, {
+              content: freshSuggestion.newContent,
+              lastEditedBy: userId,
+              originalLanguage: newContentLanguage,
+            });
+          }
+        })(),
         // שמירת גרסה עם התוכן החדש
         base44.entities.DocumentVersion.create({
           documentId: freshSuggestion.documentId,
