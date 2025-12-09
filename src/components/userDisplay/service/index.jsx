@@ -1,0 +1,1 @@
+export { userDisplayService } from '../service';
