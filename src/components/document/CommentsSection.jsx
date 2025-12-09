@@ -221,31 +221,31 @@ const runBackgroundTasks = async (comment, entityType, entityId, parentComment) 
     const { notifyNewComment, notifyNewDocumentComment } = await import("../notifications/createNotification");
     const { calculateDocumentContributors } = await import('./calculateContributors');
     
-    let documentId;
+    let docId;
     
     if (entityType === 'suggestion') {
       const suggestions = await base44.entities.Suggestion.filter({ id: entityId });
       if (suggestions.length > 0) {
-        documentId = suggestions[0].documentId;
+        docId = suggestions[0].documentId;
         notifyNewComment({ comment, targetEntity: suggestions[0], targetEntityType: 'suggestion', parentComment });
       }
     } else if (entityType === 'section') {
       const sections = await base44.entities.Section.filter({ id: entityId });
       if (sections.length > 0) {
-        documentId = sections[0].documentId;
+        docId = sections[0].documentId;
         notifyNewComment({ comment, targetEntity: sections[0], targetEntityType: 'section', parentComment });
       }
     } else if (entityType === 'document') {
-      const documents = await base44.entities.Document.filter({ id: entityId });
-      if (documents.length > 0) {
-        documentId = entityId;
-        notifyNewDocumentComment({ comment, document: documents[0], parentComment });
+      const docs = await base44.entities.Document.filter({ id: entityId });
+      if (docs.length > 0) {
+        docId = entityId;
+        notifyNewDocumentComment({ comment, document: docs[0], parentComment });
       }
     }
     
-    if (documentId) {
-      const count = await calculateDocumentContributors(documentId);
-      await base44.entities.Document.update(documentId, { totalUsersInteracted: count });
+    if (docId) {
+      const count = await calculateDocumentContributors(docId);
+      await base44.entities.Document.update(docId, { totalUsersInteracted: count });
     }
   } catch (err) {
     console.error('[BACKGROUND TASKS ERROR]', err);
