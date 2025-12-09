@@ -292,20 +292,8 @@ Return ONLY the translated HTML:`;
         createdByLanguage: language, // Track language user was viewing when creating suggestion
       });
 
-      // Create or update public profile in background (non-blocking)
-      if (currentUser?.id && currentUser?.email && currentUser?.full_name) {
-        base44.entities.UserPublicProfile.filter({ userId: currentUser.id })
-          .then(existingProfiles => {
-            if (existingProfiles.length === 0) {
-              return base44.entities.UserPublicProfile.create({
-                userId: currentUser.id,
-                email: currentUser.email,
-                fullName: currentUser.full_name
-              });
-            }
-          })
-          .catch(err => console.error('Error creating public profile:', err));
-      }
+      // Ensure UserPublicProfile exists for display
+      await ensureUserPublicProfile(currentUser);
 
       // שליחת התראות ברקע (ללא המתנה)
       sendNotificationsInBackground(document, suggestion, currentUser);

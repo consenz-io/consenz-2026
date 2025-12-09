@@ -350,16 +350,8 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
         originalLanguage: detectedLanguage
       });
       
-      if (user?.id && user?.email && user?.full_name) {
-        const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
-        if (existingProfiles.length === 0) {
-          await base44.entities.UserPublicProfile.create({
-            userId: user.id,
-            email: user.email,
-            fullName: user.full_name
-          }).catch(() => {});
-        }
-      }
+      // Ensure UserPublicProfile exists for display
+      await ensureUserPublicProfile(user);
       
       const parentComment = data.parentCommentId 
         ? comments.find(c => c.id === data.parentCommentId) 

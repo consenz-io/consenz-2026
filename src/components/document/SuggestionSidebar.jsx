@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ensureUserPublicProfile } from "@/components/ensureUserPublicProfile";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -190,6 +191,7 @@ export default function SuggestionSidebar({
 
         // Ensure UserPublicProfile exists for display
         await ensureUserPublicProfile(user);
+        
         if (vote === 'pro') newProVotes += 1;
         else newConVotes += 1;
       }
@@ -198,18 +200,6 @@ export default function SuggestionSidebar({
         proVotes: newProVotes,
         conVotes: newConVotes
       });
-
-      // Create or update public profile for voter
-      if (user.id && user.email && user.full_name) {
-        const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
-        if (existingProfiles.length === 0) {
-          await base44.entities.UserPublicProfile.create({
-            userId: user.id,
-            email: user.email,
-            fullName: user.full_name
-          }).catch(() => {});
-        }
-      }
 
       // פעולות ברקע - לא חוסמות
       notifyVoteOnSuggestion({ suggestion, voterEmail: user.email }).catch(() => {});
