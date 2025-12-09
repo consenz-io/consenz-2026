@@ -37,12 +37,12 @@ const POINTS_COST_EDIT = 200;
 const POINTS_COST_NEW = 350;
 
 // Background function for sending notifications
-const sendNotificationsInBackground = async (document, suggestion, currentUser) => {
+const sendNotificationsInBackground = async (doc, suggestion, currentUser) => {
   try {
     const { notifyNewSuggestion } = await import('@/components/notifications/createNotification');
     await notifyNewSuggestion({
       suggestion,
-      document,
+      document: doc,
       currentUser
     });
   } catch (err) {
@@ -51,18 +51,15 @@ const sendNotificationsInBackground = async (document, suggestion, currentUser) 
 };
 
 // Background function for updating contributors
-const updateContributorsInBackground = async (documentId) => {
+const updateContributorsInBackground = async (docId) => {
   try {
-    console.log('[UPDATE CONTRIBUTORS] Starting contributors calculation for document:', documentId);
     const { calculateDocumentContributors } = await import('./calculateContributors');
-    const contributorsCount = await calculateDocumentContributors(documentId);
-    console.log('[UPDATE CONTRIBUTORS] Calculated contributors count:', contributorsCount);
-    await base44.entities.Document.update(documentId, {
+    const contributorsCount = await calculateDocumentContributors(docId);
+    await base44.entities.Document.update(docId, {
       totalUsersInteracted: contributorsCount,
     });
-    console.log('[UPDATE CONTRIBUTORS] Successfully updated document with contributors count');
   } catch (err) {
-    console.error('[UPDATE CONTRIBUTORS] Error updating contributors:', err);
+    console.error('Error updating contributors:', err);
   }
 };
 
