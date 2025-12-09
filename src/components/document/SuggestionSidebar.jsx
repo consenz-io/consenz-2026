@@ -576,14 +576,6 @@ export default function SuggestionSidebar({
             </Alert>
           )}
 
-          {/* Meta info */}
-          <div className="flex flex-wrap gap-2 items-center text-sm">
-            <Badge variant="outline" className="text-xs">
-              {suggestion.type === 'new_section' ? t('newSection') : t('suggestionToEditSection')}
-            </Badge>
-            {topic && <Badge variant="outline" className="text-xs truncate max-w-[150px]">{topic.title}</Badge>}
-          </div>
-
           <div className="text-xs text-slate-500">
             {t('by')} {(() => {
               const profile = publicProfiles?.find(p => p.email === suggestion.created_by);
