@@ -89,7 +89,7 @@ function LayoutContent({ children, currentPageName }) {
         // Create or update UserPublicProfile automatically
         try {
           const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
-          const fullName = user.full_name || '';
+          const fullName = user.full_name || user.name || '';
 
           if (existingProfiles.length === 0) {
             // Create new public profile if user has a valid full name
@@ -102,7 +102,7 @@ function LayoutContent({ children, currentPageName }) {
               queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
             }
           } else {
-            // Always update existing profile to ensure sync
+            // Always update existing profile to ensure sync with latest name
             const existingProfile = existingProfiles[0];
             const trimmedFullName = fullName.trim();
             if (trimmedFullName.length >= 2 && trimmedFullName !== existingProfile.fullName) {
