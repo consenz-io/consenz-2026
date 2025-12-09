@@ -595,14 +595,6 @@ export default function SuggestionDetail() {
     return `${hours}h ${t('remaining')}`;
   };
 
-  const proArgs = args.filter(a => a.type === 'pro');
-  const conArgs = args.filter(a => a.type === 'con');
-  const consensusScore = suggestion && suggestion.proVotes + suggestion.conVotes > 0 
-    ? (suggestion.proVotes / (suggestion.proVotes + suggestion.conVotes) * 100).toFixed(0)
-    : 50;
-
-  const suggestionVersions = sectionVersions.filter(v => v.suggestionId);
-
   const handleNavigateToVersion = (direction) => {
     const currentIndex = suggestionVersions.findIndex(v => v.suggestionId === suggestionId);
     let targetIndex;
@@ -619,6 +611,13 @@ export default function SuggestionDetail() {
     }
   };
 
+  const proArgs = args.filter(a => a.type === 'pro');
+  const conArgs = args.filter(a => a.type === 'con');
+  const consensusScore = suggestion && suggestion.proVotes + suggestion.conVotes > 0 
+    ? (suggestion.proVotes / (suggestion.proVotes + suggestion.conVotes) * 100).toFixed(0)
+    : 50;
+
+  const suggestionVersions = sectionVersions.filter(v => v.suggestionId);
   const currentVersionIndex = suggestionVersions.findIndex(v => v.suggestionId === suggestionId);
   const isNewestVersion = currentVersionIndex === 0;
   const isOldestVersion = currentVersionIndex === suggestionVersions.length - 1 || currentVersionIndex === -1;
