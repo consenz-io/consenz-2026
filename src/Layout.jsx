@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages, ArrowUp, ChevronLeft, ChevronRight } from "lucide-react";
+import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages, ArrowUp } from "lucide-react";
 import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
 import { Toaster } from "sonner";
 import {
@@ -141,7 +141,7 @@ function LayoutContent({ children, currentPageName }) {
   return (
     <SidebarProvider>
       <div className={`min-h-screen flex w-full max-w-full bg-gradient-to-br from-slate-50 to-blue-50 overflow-x-hidden ${isRTL ? 'flex-row-reverse' : ''}`} style={{ maxWidth: '100vw' }}>
-        <Sidebar className={`${isRTL ? "border-l border-slate-200" : "border-r border-slate-200"} relative`}>
+        <Sidebar className={isRTL ? "border-l border-slate-200" : "border-r border-slate-200"}>
           <SidebarHeader className="border-b border-slate-200 p-4">
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -153,15 +153,6 @@ function LayoutContent({ children, currentPageName }) {
               </div>
             </div>
           </SidebarHeader>
-          
-          {/* Toggle Button */}
-          <SidebarTrigger className={`absolute top-20 ${isRTL ? 'left-0 -translate-x-1/2' : 'right-0 translate-x-1/2'} z-50 w-8 h-8 bg-white border-2 border-slate-200 rounded-full shadow-lg hover:bg-slate-50 transition-all duration-200 flex items-center justify-center group hover:scale-110`}>
-            {isRTL ? (
-              <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-blue-600" />
-            ) : (
-              <ChevronLeft className="w-4 h-4 text-slate-600 group-hover:text-blue-600" />
-            )}
-          </SidebarTrigger>
           
           <SidebarContent className="p-2">
             <SidebarGroup>
@@ -285,6 +276,7 @@ function LayoutContent({ children, currentPageName }) {
           <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-30">
             <div className="flex items-center justify-between gap-2 px-2 py-2 md:px-6 md:py-4">
               <div className="flex items-center gap-2 md:gap-4">
+                <SidebarTrigger className="md:hidden hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200 touch-manipulation" />
                 <h1 className="text-base md:text-xl font-bold text-slate-900 md:hidden truncate">Consenz</h1>
               </div>
               <div className="flex items-center gap-2 md:gap-3">
