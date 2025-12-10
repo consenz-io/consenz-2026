@@ -130,6 +130,8 @@ export default function DocumentView() {
     }),
     initialData: [],
     enabled: !!documentId,
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: documentAgreements } = useQuery({
