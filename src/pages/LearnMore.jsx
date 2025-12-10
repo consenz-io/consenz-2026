@@ -483,80 +483,142 @@ export default function LearnMore() {
           </Card>
         </div>
 
-        {/* Example Scenario */}
-        <Card className="bg-gradient-to-br from-slate-50 to-blue-50 border-slate-200">
+        {/* How Gamification Works */}
+        <Card className="bg-gradient-to-br from-slate-50 to-blue-50 border-slate-200" id="gamification">
           <CardHeader className={isRTL ? 'text-right' : ''}>
             <CardTitle>
-              {getLocalizedText("Example Scenario", "תרחיש לדוגמה", "سيناريو مثال")}
+              {getLocalizedText("How Does Gamification Enable Noise Filtering and Create Incentives?", "איך הגיימיפיקציה מאפשרת סינון רעשים ויוצרת תמריצים?", "كيف يتيح التلعيب تصفية الضوضاء وخلق الحوافز؟")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <Badge className="bg-slate-700 mt-1">1</Badge>
-                <div className={isRTL ? 'text-right' : 'text-left'}>
-                  <p className="text-slate-900">
+            <div className="space-y-6">
+              {/* Noise Filtering */}
+              <div className={`p-4 bg-white rounded-lg border border-slate-200 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
+                  <Badge className="bg-red-600">1</Badge>
+                  {getLocalizedText("Noise Filtering Mechanism", "מנגנון סינון רעשים", "آلية تصفية الضوضاء")}
+                </h4>
+                <div className="space-y-3">
+                  <div>
+                    <p className="font-semibold text-slate-800 mb-1">
+                      {getLocalizedText("Entry Cost Creates Quality Threshold", "מחיר כניסה יוצר סף איכות", "تكلفة الدخول تخلق عتبة جودة")}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {getLocalizedText(
+                        "The 200-350 point cost for creating suggestions acts as a 'spam filter' - users think twice before adding content. Only those who believe their suggestion has real value will invest their points.",
+                        "העלות של 200-350 נקודות ליצירת הצעות משמשת כ'פילטר ספאם' - משתמשים חושבים פעמיים לפני הוספת תוכן. רק מי שמאמין שההצעה שלו בעלת ערך אמיתי ישקיע את הנקודות שלו.",
+                        "تكلفة 200-350 نقطة لإنشاء مقترحات تعمل كـ'مرشح للبريد المزعج' - يفكر المستخدمون مرتين قبل إضافة محتوى. فقط أولئك الذين يعتقدون أن اقتراحهم له قيمة حقيقية سيستثمرون نقاطهم."
+                      )}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p className="font-semibold text-slate-800 mb-1">
+                      {getLocalizedText("Risk vs. Reward Calculation", "חישוב סיכון מול תמורה", "حساب المخاطرة مقابل المكافأة")}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {getLocalizedText(
+                        "Before submitting, users must evaluate: 'Is my suggestion good enough to get support?' This cognitive step automatically filters out low-quality contributions.",
+                        "לפני הגשה, משתמשים חייבים לשקול: 'האם ההצעה שלי מספיק טובה כדי לקבל תמיכה?' שלב קוגניטיבי זה מסנן אוטומטית תרומות באיכות נמוכה.",
+                        "قبل الإرسال، يجب على المستخدمين التقييم: 'هل اقتراحي جيد بما يكفي للحصول على الدعم؟' هذه الخطوة المعرفية تصفي تلقائيًا المساهمات منخفضة الجودة."
+                      )}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p className="font-semibold text-slate-800 mb-1">
+                      {getLocalizedText("Self-Regulation Without Censorship", "ויסות עצמי ללא צנזורה", "التنظيم الذاتي بدون رقابة")}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {getLocalizedText(
+                        "Unlike traditional moderation, no one decides what's 'spam' - the economic mechanism creates natural self-regulation. Users who spam lose points quickly.",
+                        "בניגוד למודרציה מסורתית, אף אחד לא מחליט מה הוא 'ספאם' - המנגנון הכלכלי יוצר ויסות עצמי טבעי. משתמשים שמספמים מפסידים נקודות במהירות.",
+                        "على عكس الإشراف التقليدي، لا يقرر أحد ما هو 'البريد المزعج' - الآلية الاقتصادية تخلق تنظيمًا ذاتيًا طبيعيًا. المستخدمون الذين يرسلون بريدًا مزعجًا يفقدون النقاط بسرعة."
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Positive Incentives */}
+              <div className={`p-4 bg-white rounded-lg border border-slate-200 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
+                  <Badge className="bg-green-600">2</Badge>
+                  {getLocalizedText("Creating Positive Incentives", "יצירת תמריצים חיוביים", "خلق حوافز إيجابية")}
+                </h4>
+                <div className="space-y-3">
+                  <div>
+                    <p className="font-semibold text-slate-800 mb-1">
+                      {getLocalizedText("Reward for Community Support", "תגמול עבור תמיכה קהילתית", "مكافأة لدعم المجتمع")}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {getLocalizedText(
+                        "Every pro vote earns +10 points - this incentivizes creating content that the community finds valuable. Quality is measured by community consensus, not a central authority.",
+                        "כל הצבעה בעד מזכה ב-+10 נקודות - זה מעודד יצירת תוכן שהקהילה מוצאת בעל ערך. האיכות נמדדת בקונצנזוס קהילתי, לא ברשות מרכזית.",
+                        "كل صوت مع يكسب +10 نقاط - هذا يحفز على إنشاء محتوى يجده المجتمع قيمًا. يتم قياس الجودة بالإجماع المجتمعي، وليس من قبل سلطة مركزية."
+                      )}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p className="font-semibold text-slate-800 mb-1">
+                      {getLocalizedText("Big Bonus for Acceptance", "בונוס גדול על קבלה", "مكافأة كبيرة للقبول")}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {getLocalizedText(
+                        "+100 points for accepted suggestions creates a strong incentive to propose changes that truly improve the document. This aligns personal benefit with collective good.",
+                        "+100 נקודות על הצעות שהתקבלו יוצר תמריץ חזק להציע שינויים שבאמת משפרים את המסמך. זה מיישר תועלת אישית עם טובת הכלל.",
+                        "+100 نقطة للمقترحات المقبولة تخلق حافزًا قويًا لاقتراح تغييرات تحسن الوثيقة حقًا. هذا يوائم الفائدة الشخصية مع الصالح الجماعي."
+                      )}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p className="font-semibold text-slate-800 mb-1">
+                      {getLocalizedText("Building Reputation Score", "בניית ציון מוניטין", "بناء نقاط السمعة")}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {getLocalizedText(
+                        "Points become a visible reputation metric - users with high points are recognized as valuable contributors. This creates social incentive beyond the numerical value.",
+                        "הנקודות הופכות למדד מוניטין גלוי - משתמשים עם נקודות גבוהות מוכרים כתורמים בעלי ערך. זה יוצר תמריץ חברתי מעבר לערך המספרי.",
+                        "النقاط تصبح مقياسًا للسمعة مرئيًا - يُعترف بالمستخدمين ذوي النقاط العالية كمساهمين قيمين. هذا يخلق حافزًا اجتماعيًا يتجاوز القيمة الرقمية."
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Real Example */}
+              <div className={`p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <h4 className="font-bold text-indigo-900 mb-3 flex items-center gap-2">
+                  <Badge className="bg-indigo-600">💡</Badge>
+                  {getLocalizedText("Real Scenario", "תרחיש אמיתי", "سيناريو حقيقي")}
+                </h4>
+                <div className="space-y-2 text-sm text-slate-700">
+                  <p><strong>{getLocalizedText("Starting balance:", "יתרת פתיחה:", "الرصيد الأولي:")}</strong> 1,000 {getLocalizedText("points", "נקודות", "نقطة")}</p>
+                  <p><strong>{getLocalizedText("Create suggestion:", "יצירת הצעה:", "إنشاء مقترح:")}</strong> -200 = 800 {getLocalizedText("points", "נקודות", "نقطة")}</p>
+                  <p><strong>{getLocalizedText("Receive 5 pro votes:", "קבלת 5 הצבעות בעד:", "تلقي 5 أصوات مع:")}</strong> +50 = 850 {getLocalizedText("points", "נקודות", "نقطة")}</p>
+                  <p><strong>{getLocalizedText("Suggestion accepted:", "ההצעה התקבלה:", "تم قبول المقترح:")}</strong> +100 = 950 {getLocalizedText("points", "נקודות", "نقطة")}</p>
+                  <p className="text-red-700 font-bold pt-2 border-t border-indigo-300 mt-2">
                     {getLocalizedText(
-                      "You start with 1,000 points",
-                      "התחלה עם 1,000 נקודות",
-                      "تبدأ بـ 1000 نقطة"
+                      "Net result: -50 points, BUT your contribution improved the document and built your reputation!",
+                      "תוצאה נטו: -50 נקודות, אבל התרומה שלך שיפרה את המסמך ובנתה את המוניטין שלך!",
+                      "النتيجة الصافية: -50 نقطة، لكن مساهمتك حسنت الوثيقة وبنت سمعتك!"
                     )}
                   </p>
                 </div>
               </div>
 
-              <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <Badge className="bg-red-600 mt-1">2</Badge>
-                <div className={isRTL ? 'text-right' : 'text-left'}>
-                  <p className="text-slate-900">
-                    {getLocalizedText(
-                      "You create an edit suggestion: 1,000 - 200 = 800 points",
-                      "יצירת הצעה לעריכת סעיף: 1,000 - 200 = 800 נקודות",
-                      "تنشئ مقترح تعديل: 1000 - 200 = 800 نقطة"
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <Badge className="bg-green-600 mt-1">3</Badge>
-                <div className={isRTL ? 'text-right' : 'text-left'}>
-                  <p className="text-slate-900">
-                    {getLocalizedText(
-                      "You receive 5 pro votes: 800 + (5 × 10) = 850 points",
-                      "קבלת 5 הצבעות בעד: 800 + (5 × 10) = 850 נקודות",
-                      "تتلقى 5 أصوات مع: 800 + (5 × 10) = 850 نقطة"
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <Badge className="bg-blue-600 mt-1">4</Badge>
-                <div className={isRTL ? 'text-right' : 'text-left'}>
-                  <p className="text-slate-900">
-                    {getLocalizedText(
-                      "Your suggestion is accepted: 850 + 100 = 950 points",
-                      "ההצעה מתקבלת: 850 + 100 = 950 נקודות",
-                      "يتم قبول مقترحك: 850 + 100 = 950 نقطة"
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className={`p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-lg border border-red-200 ${isRTL ? 'text-right' : 'text-left'}`}>
-                <p className="font-bold text-red-900 mb-2">
-                  {getLocalizedText(
-                    "Final result: -50 points net loss (but your content was accepted!) 📝",
-                    "תוצאה סופית: -50 נקודות הפסד נטו (אבל התוכן התקבל!) 📝",
-                    "النتيجة النهائية: -50 نقطة خسارة صافية (لكن تم قبول محتواك!) 📝"
-                  )}
+              {/* Key Insight */}
+              <div className={`p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-300 ${isRTL ? 'text-right' : 'text-left'}`}>
+                <p className="font-bold text-amber-900 mb-2">
+                  {getLocalizedText("Key Insight:", "תובנה מרכזית:", "رؤية رئيسية:")}
                 </p>
-                <p className="text-sm text-slate-700">
+                <p className="text-sm text-amber-800">
                   {getLocalizedText(
-                    "Note: Creating a new section costs 350 points (instead of 200 for edits)",
-                    "שים לב: יצירת סעיף חדש עולה 350 נקודות (במקום 200 לעריכות)",
-                    "ملاحظة: إنشاء قسم جديد يكلف 350 نقطة (بدلاً من 200 للتعديلات)"
+                    "The system doesn't punish participation - it rewards QUALITY participation. Even if you invest points, if your suggestions are valuable and get community support, you gain reputation and can continue contributing. Only spam and low-quality content results in point depletion.",
+                    "המערכת לא מענישה השתתפות - היא מתגמלת השתתפות באיכות. גם אם אתה משקיע נקודות, אם ההצעות שלך בעלות ערך ומקבלות תמיכה קהילתית, אתה צובר מוניטין ויכול להמשיך לתרום. רק ספאם ותוכן באיכות נמוכה מביאים לדלדול נקודות.",
+                    "النظام لا يعاقب المشاركة - بل يكافئ المشاركة الجيدة. حتى لو استثمرت نقاطًا، إذا كانت مقترحاتك قيمة وحصلت على دعم المجتمع، فإنك تكتسب سمعة ويمكنك الاستمرار في المساهمة. فقط البريد المزعج والمحتوى منخفض الجودة يؤدي إلى استنزاف النقاط."
                   )}
                 </p>
               </div>
