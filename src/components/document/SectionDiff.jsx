@@ -205,8 +205,7 @@ export default function SectionDiff({
   
   return (
     <Card 
-      className="p-4 bg-slate-50 border-slate-200 cursor-pointer hover:bg-slate-100 hover:shadow-md transition-all"
-      onClick={handleCardClick}
+      className="p-4 bg-slate-50 border-slate-200"
     >
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
         <div className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</div>
@@ -274,7 +273,10 @@ export default function SectionDiff({
         </div>
       )}
       
-      <div className="prose prose-sm max-w-none">
+      <div 
+        className="prose prose-sm max-w-none cursor-pointer hover:bg-slate-100 rounded-lg p-2 -m-2 transition-colors"
+        onClick={handleCardClick}
+      >
         {isTranslating ? (
           <div className="flex items-center justify-center py-4 gap-2 text-slate-500">
             <Loader2 className="w-4 h-4 animate-spin" />
