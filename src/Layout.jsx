@@ -143,14 +143,17 @@ function LayoutContent({ children, currentPageName }) {
       <div className={`min-h-screen flex w-full max-w-full bg-gradient-to-br from-slate-50 to-blue-50 overflow-x-hidden ${isRTL ? 'flex-row-reverse' : ''}`} style={{ maxWidth: '100vw' }}>
         <Sidebar className={isRTL ? "border-l border-slate-200" : "border-r border-slate-200"}>
           <SidebarHeader className="border-b border-slate-200 p-4">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                <FileText className="w-6 h-6 text-white" />
+            <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="flex items-center gap-2 flex-1">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-xl text-slate-900">Consenz</h2>
+                  <p className="text-xs text-slate-500">Collaborative Consensus</p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-bold text-xl text-slate-900">Consenz</h2>
-                <p className="text-xs text-slate-500">Collaborative Consensus</p>
-              </div>
+              <SidebarTrigger className="hover:bg-slate-100 p-2 rounded-lg transition-colors" />
             </div>
           </SidebarHeader>
           
