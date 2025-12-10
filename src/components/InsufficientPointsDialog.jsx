@@ -8,8 +8,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, TrendingUp, Award, Users } from "lucide-react";
+import { AlertCircle, TrendingUp, Award, Users, ExternalLink } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import { createPageUrl } from "@/utils";
 
 export default function InsufficientPointsDialog({ 
   isOpen, 
@@ -93,7 +94,18 @@ export default function InsufficientPointsDialog({
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col gap-2">
+          <a
+            href={`${createPageUrl("LearnMore")}#gamification`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full"
+          >
+            <Button variant="outline" className="w-full gap-2">
+              {t('learnMore')}
+              <ExternalLink className="w-4 h-4" />
+            </Button>
+          </a>
           <Button onClick={onClose} className="w-full">
             הבנתי
           </Button>

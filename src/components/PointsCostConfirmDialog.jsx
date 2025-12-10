@@ -9,8 +9,9 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AlertCircle, Coins } from "lucide-react";
+import { AlertCircle, Coins, ExternalLink } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import { createPageUrl } from "@/utils";
 
 export default function PointsCostConfirmDialog({ 
   isOpen, 
@@ -69,18 +70,29 @@ export default function PointsCostConfirmDialog({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <Checkbox
-              id="dontShowAgain"
-              checked={dontShowAgain}
-              onCheckedChange={setDontShowAgain}
-            />
-            <label
-              htmlFor="dontShowAgain"
-              className="text-sm text-blue-900 cursor-pointer"
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <Checkbox
+                id="dontShowAgain"
+                checked={dontShowAgain}
+                onCheckedChange={setDontShowAgain}
+              />
+              <label
+                htmlFor="dontShowAgain"
+                className="text-sm text-blue-900 cursor-pointer"
+              >
+                אל תציג הודעה זו שוב
+              </label>
+            </div>
+            <a
+              href={`${createPageUrl("LearnMore")}#gamification`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 hover:underline"
             >
-              אל תציג הודעה זו שוב
-            </label>
+              {t('learnMore')}
+              <ExternalLink className="w-3 h-3" />
+            </a>
           </div>
         </div>
 
