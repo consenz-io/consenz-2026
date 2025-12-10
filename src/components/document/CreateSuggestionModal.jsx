@@ -16,7 +16,7 @@ import "react-quill/dist/quill.snow.css";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Sparkles } from "lucide-react";
+import { AlertCircle, Sparkles, ExternalLink } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
 import { createPageUrl } from "@/utils";
@@ -478,6 +478,16 @@ Return ONLY the translated HTML:`;
                 {currentUser?.points || 1000} {t('points')}
               </span>
             </div>
+            <a
+              href={`${createPageUrl("LearnMore")}#gamification`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mt-2 hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {t('learnMore')}
+              <ExternalLink className="w-3 h-3" />
+            </a>
           </div>
         )}
 
