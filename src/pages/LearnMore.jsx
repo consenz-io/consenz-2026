@@ -588,27 +588,6 @@ export default function LearnMore() {
                 </div>
               </div>
 
-              {/* Real Example */}
-              <div className={`p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200 ${isRTL ? 'text-right' : 'text-left'}`}>
-                <h4 className="font-bold text-indigo-900 mb-3 flex items-center gap-2">
-                  <Badge className="bg-indigo-600">💡</Badge>
-                  {getLocalizedText("Real Scenario", "תרחיש אמיתי", "سيناريو حقيقي")}
-                </h4>
-                <div className="space-y-2 text-sm text-slate-700">
-                  <p><strong>{getLocalizedText("Starting balance:", "יתרת פתיחה:", "الرصيد الأولي:")}</strong> 1,000 {getLocalizedText("points", "נקודות", "نقطة")}</p>
-                  <p><strong>{getLocalizedText("Create suggestion:", "יצירת הצעה:", "إنشاء مقترح:")}</strong> -200 = 800 {getLocalizedText("points", "נקודות", "نقطة")}</p>
-                  <p><strong>{getLocalizedText("Receive 5 pro votes:", "קבלת 5 הצבעות בעד:", "تلقي 5 أصوات مع:")}</strong> +50 = 850 {getLocalizedText("points", "נקודות", "نقطة")}</p>
-                  <p><strong>{getLocalizedText("Suggestion accepted:", "ההצעה התקבלה:", "تم قبول المقترح:")}</strong> +100 = 950 {getLocalizedText("points", "נקודות", "نقطة")}</p>
-                  <p className="text-red-700 font-bold pt-2 border-t border-indigo-300 mt-2">
-                    {getLocalizedText(
-                      "Net result: -50 points, BUT your contribution improved the document and built your reputation!",
-                      "תוצאה נטו: -50 נקודות, אבל התרומה שלך שיפרה את המסמך ובנתה את המוניטין שלך!",
-                      "النتيجة الصافية: -50 نقطة، لكن مساهمتك حسنت الوثيقة وبنت سمعتك!"
-                    )}
-                  </p>
-                </div>
-              </div>
-
               {/* Key Insight */}
               <div className={`p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-300 ${isRTL ? 'text-right' : 'text-left'}`}>
                 <p className="font-bold text-amber-900 mb-2">
