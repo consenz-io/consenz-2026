@@ -72,8 +72,7 @@ export default function Home() {
     queryFn: () => base44.entities.UserPublicProfile.list(),
     initialData: [],
     staleTime: 60000,
-    // Fetch publicProfiles when user is not loaded yet or when user is not admin
-    enabled: !user || user?.role !== 'admin',
+    // Always fetch - it's public data available to everyone
   });
 
   // Use allUsers for admins (matches System User Management), publicProfiles for everyone else
