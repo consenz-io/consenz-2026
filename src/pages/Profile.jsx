@@ -490,15 +490,13 @@ export default function Profile() {
           </CardHeader>
           <CardContent className="space-y-4 p-3 md:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {isOwnProfile && (
-                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                  <Sparkles className="w-6 h-6 text-blue-600" />
-                  <div>
-                    <p className="text-sm text-slate-500">{t('points')}</p>
-                    <p className="text-xl font-bold text-slate-900">{user.points || 1000}</p>
-                  </div>
+              <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
+                <Sparkles className="w-6 h-6 text-blue-600" />
+                <div>
+                  <p className="text-sm text-slate-500">{t('points')}</p>
+                  <p className="text-xl font-bold text-slate-900">{user.points || 1000}</p>
                 </div>
-              )}
+              </div>
               <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
                 <FileText className="w-6 h-6 text-green-600" />
                 <div>
