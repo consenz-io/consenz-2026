@@ -25,8 +25,7 @@ export default function AllContributorsModal({
     const query = searchQuery.toLowerCase();
     return contributors.filter(c => {
       const name = c.fullName || c.full_name || '';
-      const email = c.email || '';
-      return name.toLowerCase().includes(query) || email.toLowerCase().includes(query);
+      return name.toLowerCase().includes(query);
     });
   }, [contributors, searchQuery]);
 
@@ -44,7 +43,7 @@ export default function AllContributorsModal({
           <div className="flex items-center gap-2 mb-2">
             <Search className="w-4 h-4 text-slate-400" />
             <Input
-              placeholder={isRTL ? "חיפוש לפי שם או מייל..." : "Search by name or email..."}
+              placeholder={isRTL ? "חיפוש לפי שם..." : "Search by name..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1"
@@ -86,7 +85,6 @@ export default function AllContributorsModal({
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-slate-500 truncate">{contributor.email}</p>
                     </div>
                   </Link>
                 );
