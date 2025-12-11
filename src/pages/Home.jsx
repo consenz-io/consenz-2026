@@ -67,7 +67,7 @@ export default function Home() {
     enabled: !!user && user?.role === 'admin', // Fetch only for confirmed admins
   });
 
-  const { data: publicProfiles = [] } = useQuery({
+  const { data: publicProfiles = [], isLoading: publicProfilesLoading } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
     initialData: [],
@@ -326,8 +326,12 @@ export default function Home() {
             >
               <CardContent className="p-6 text-center">
                 <Users className="w-8 h-8 mx-auto mb-3 text-indigo-600" />
-                <div className="text-3xl font-bold text-slate-900">
-                  {displayedUsers.length}
+                <div className="text-3xl font-bold text-slate-900 flex items-center justify-center min-h-[2.25rem]">
+                  {publicProfilesLoading ? (
+                    <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
+                  ) : (
+                    displayedUsers.length
+                  )}
                 </div>
                 <div className="text-sm text-slate-600">{t('collaborators')}</div>
               </CardContent>
