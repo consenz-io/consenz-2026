@@ -101,7 +101,7 @@ export default function PointsCostConfirmDialog({
             ביטול
           </Button>
           <Button onClick={handleConfirm} className="bg-gradient-to-r from-blue-600 to-indigo-600">
-            אישור ומשיך
+            אישור
           </Button>
         </DialogFooter>
       </DialogContent>
