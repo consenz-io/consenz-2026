@@ -64,7 +64,7 @@ export default function Home() {
     initialData: [],
     retry: false,
     throwOnError: false,
-    enabled: user?.role === 'admin', // Fetch only for confirmed admins
+    enabled: !!user && user?.role === 'admin', // Fetch only for confirmed admins
   });
 
   const { data: publicProfiles = [] } = useQuery({
@@ -72,8 +72,8 @@ export default function Home() {
     queryFn: () => base44.entities.UserPublicProfile.list(),
     initialData: [],
     staleTime: 60000,
-    // Always fetch publicProfiles unless user is confirmed admin
-    enabled: user?.role !== 'admin',
+    // Fetch publicProfiles when user is not loaded yet or when user is not admin
+    enabled: !user || user?.role !== 'admin',
   });
 
   // Use allUsers for admins (matches System User Management), publicProfiles for everyone else
