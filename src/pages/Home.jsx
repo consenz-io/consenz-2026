@@ -77,12 +77,18 @@ export default function Home() {
 
   // Use allUsers for admins (matches System User Management), publicProfiles for everyone else
   const displayedUsers = React.useMemo(() => {
+    // For admins with loaded users data
     if (user?.role === 'admin' && allUsers.length > 0) {
       return allUsers;
+    }
+    // For everyone else (including non-logged-in users), use publicProfiles
+    if (!publicProfiles || publicProfiles.length === 0) {
+      return [];
     }
     // Remove duplicates from publicProfiles by userId
     const seen = new Set();
     return publicProfiles.filter(p => {
+      if (!p || !p.userId) return false;
       if (seen.has(p.userId)) return false;
       seen.add(p.userId);
       return true;
