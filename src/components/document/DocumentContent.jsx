@@ -1497,7 +1497,20 @@ Return ONLY the translated text:`;
 
             {/* הצעות לנושאים חדשים בסוף (שלא שויכו לנושא מסוים) */}
             {getNewTopicSuggestions()
-              .filter(s => !s.newTopicOrder || s.newTopicOrder > Math.max(...topics.map(t => t.order), 0))
+              .filter(s => {
+                // אם אין newTopicOrder - הצג בסוף
+                if (!s.newTopicOrder && s.newTopicOrder !== 0) return true;
+                
+                // אם יש נושאים - הצג רק הצעות שמעבר לנושא האחרון
+                if (topics.length > 0) {
+                  const maxTopicOrder = Math.max(...topics.map(t => t.order));
+                  // הצג רק אם newTopicOrder גדול מ-maxTopicOrder+1 (כלומר לא מוצג אחרי נושא קיים)
+                  return s.newTopicOrder > maxTopicOrder + 1;
+                }
+                
+                // אם אין נושאים - הצג הכל
+                return true;
+              })
               .map((suggestion) => (
                 <Card key={suggestion.id} className="bg-white border-slate-200 w-full overflow-hidden">
                   <CardHeader className="border-b border-slate-100 p-4 md:p-6 bg-purple-50">
