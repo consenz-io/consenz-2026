@@ -250,7 +250,7 @@ export async function createNotification({
 /**
  * יצירת התראה על הצבעה חדשה
  */
-export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName }) {
+export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName, currentUser = null }) {
   try {
     // Don't notify if voter is the suggestion creator
     if (voterEmail === suggestion.created_by) return;
@@ -259,6 +259,11 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
     if (!suggestion?.id || !suggestion?.created_by || !voterEmail) {
       console.error('[NOTIFICATION ERROR] Missing required data for vote notification:', { suggestion, voterEmail });
       return;
+    }
+    
+    // Ensure voter has public profile
+    if (currentUser) {
+      await ensureUserPublicProfileForInteraction(currentUser);
     }
     
     const [users, publicProfiles] = await Promise.all([
@@ -691,12 +696,17 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
 /**
  * יצירת התראה על תגובה חדשה - ליוצר ההצעה ולכל המגיבים
  */
-export async function notifyNewComment({ comment, targetEntity, targetEntityType, parentComment = null }) {
+export async function notifyNewComment({ comment, targetEntity, targetEntityType, parentComment = null, currentUser = null }) {
   try {
     // Validate required data
     if (!comment?.id || !comment?.created_by || !targetEntity?.id || !targetEntityType) {
       console.error('[NOTIFICATION ERROR] Missing required data for comment notification:', { comment, targetEntity, targetEntityType });
       return;
+    }
+    
+    // Ensure commenter has public profile
+    if (currentUser) {
+      await ensureUserPublicProfileForInteraction(currentUser);
     }
     
     const [users, publicProfiles, allComments] = await Promise.all([
@@ -774,12 +784,17 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
 /**
  * יצירת התראה על תגובה חדשה בדיון כללי של מסמך
  */
-export async function notifyNewDocumentComment({ comment, document: doc, parentComment = null }) {
+export async function notifyNewDocumentComment({ comment, document: doc, parentComment = null, currentUser = null }) {
   try {
     // Validate required data
     if (!comment?.id || !comment?.created_by || !doc?.id) {
       console.error('[NOTIFICATION ERROR] Missing required data for document comment notification:', { comment, doc });
       return;
+    }
+    
+    // Ensure commenter has public profile
+    if (currentUser) {
+      await ensureUserPublicProfileForInteraction(currentUser);
     }
     
     const [users, publicProfiles, adminIds, allDocumentComments] = await Promise.all([

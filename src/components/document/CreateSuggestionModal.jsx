@@ -325,11 +325,11 @@ Return ONLY the translated HTML:`;
 
       // All background tasks - don't block UI
       Promise.all([
-        ensureUserPublicProfile(currentUser),
+        ensureUserPublicProfile(currentUser).catch(err => console.error('Error ensuring public profile:', err)),
         base44.auth.updateMe({
           suggestionsCreated: (currentUser.suggestionsCreated || 0) + 1,
           ...(gamificationEnabled ? { points: currentPoints - pointsCost } : {})
-        }),
+        }).catch(err => console.error('Error updating user:', err)),
         gamificationEnabled ? base44.entities.PointsTransaction.create({
           userId: currentUser.id,
           amount: -pointsCost,
