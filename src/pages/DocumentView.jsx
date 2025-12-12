@@ -56,6 +56,7 @@ export default function DocumentView() {
   const [showSignersListModal, setShowSignersListModal] = useState(false);
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
   const [targetSuggestionId, setTargetSuggestionId] = useState(null);
+  const [showSuggestionNav, setShowSuggestionNav] = useState(false);
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
@@ -737,6 +738,7 @@ export default function DocumentView() {
             className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 cursor-pointer hover:border-indigo-400 transition-all flex flex-col items-center justify-center gap-1"
             onClick={() => {
               if (pendingSuggestions.length > 0) {
+                setShowSuggestionNav(true);
                 scrollToSuggestion(currentSuggestionIndex);
               }
             }}
@@ -836,12 +838,12 @@ export default function DocumentView() {
       />
 
       {/* Floating navigation for suggestions */}
-      {pendingSuggestions.length > 0 && (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
+      {pendingSuggestions.length > 0 && showSuggestionNav && (
+        <div className="fixed bottom-20 right-6 z-40 flex gap-2">
           <Button
             size="sm"
             variant="default"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg h-10 px-4"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg h-10 px-3"
             onClick={() => {
               const newIndex = currentSuggestionIndex === 0 
                 ? pendingSuggestions.length - 1 
@@ -850,21 +852,19 @@ export default function DocumentView() {
               scrollToSuggestion(newIndex);
             }}
           >
-            {isRTL ? <ChevronRight className="w-4 h-4 mr-2" /> : <ChevronLeft className="w-4 h-4 mr-2" />}
-            {language === 'he' ? 'להצעה הקודמת' : language === 'ar' ? 'للمقترح السابق' : 'Previous Suggestion'}
+            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </Button>
           <Button
             size="sm"
             variant="default"
-            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg h-10 px-4"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg h-10 px-3"
             onClick={() => {
               const newIndex = (currentSuggestionIndex + 1) % pendingSuggestions.length;
               setCurrentSuggestionIndex(newIndex);
               scrollToSuggestion(newIndex);
             }}
           >
-            {language === 'he' ? 'להצעה הבאה' : language === 'ar' ? 'للمقترح التالي' : 'Next Suggestion'}
-            {isRTL ? <ChevronLeft className="w-4 h-4 ml-2" /> : <ChevronRight className="w-4 h-4 ml-2" />}
+            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </Button>
         </div>
       )}
