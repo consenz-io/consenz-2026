@@ -236,7 +236,8 @@ export default function NewSectionSuggestionCard({
               </span>
             </div>
             {suggestion.explanation && typeof suggestion.explanation === 'string' && (
-              <div className="text-xs md:text-sm mb-2">
+              <div className="text-xs md:text-sm mb-3 p-3 bg-amber-50 rounded border border-amber-200">
+                <div className="font-semibold text-slate-700 mb-1">הסבר:</div>
                 <TranslatableContent
                   content={suggestion.explanation}
                   entity={suggestion}
@@ -245,13 +246,17 @@ export default function NewSectionSuggestionCard({
                 />
               </div>
             )}
-            <div className="text-sm bg-white/60 p-3 rounded border border-amber-200 mb-3">
-              <TranslatableContent
-                content={getContentPreview(suggestion.newContent)}
-                entity={suggestion}
-                entityType="Suggestion"
-                className="text-slate-700"
-              />
+            <div className="text-sm bg-white/80 p-4 rounded border border-amber-200 mb-3">
+              <div className="font-semibold text-slate-700 mb-2">תוכן מוצע:</div>
+              <div className="prose prose-sm max-w-none">
+                <TranslatableContent
+                  content={suggestion.newContent}
+                  entity={suggestion}
+                  entityType="Suggestion"
+                  className="text-slate-700"
+                  renderContent={(html) => <div dangerouslySetInnerHTML={{ __html: html }} />}
+                />
+              </div>
             </div>
           </div>
         </div>
