@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle } from "lucide-react";
+import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import ReactQuill from "react-quill";
@@ -54,6 +54,7 @@ export default function DocumentView() {
   const [newlyCreatedSuggestion, setNewlyCreatedSuggestion] = useState(null);
   const [showAgreementModal, setShowAgreementModal] = useState(false);
   const [showSignersListModal, setShowSignersListModal] = useState(false);
+  const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
@@ -161,6 +162,57 @@ export default function DocumentView() {
       sections
     });
   }, [document, suggestions, allVotes, allUsers, allArguments, allComments, sections]);
+
+  // Get pending suggestions ordered by section appearance
+  const pendingSuggestions = React.useMemo(() => {
+    if (!suggestions || !sections || !topics) return [];
+    
+    return suggestions
+      .filter(s => s.status === 'pending')
+      .sort((a, b) => {
+        // Sort by topic order first
+        const topicA = topics.find(t => t.id === a.topicId);
+        const topicB = topics.find(t => t.id === b.topicId);
+        const topicOrderA = topicA?.order ?? 999;
+        const topicOrderB = topicB?.order ?? 999;
+        
+        if (topicOrderA !== topicOrderB) {
+          return topicOrderA - topicOrderB;
+        }
+        
+        // Then by section order
+        if (a.type === 'edit_section' && b.type === 'edit_section') {
+          const sectionA = sections.find(s => s.id === a.sectionId);
+          const sectionB = sections.find(s => s.id === b.sectionId);
+          const orderA = sectionA?.order ?? 999;
+          const orderB = sectionB?.order ?? 999;
+          return orderA - orderB;
+        }
+        
+        // edit_section before new_section
+        if (a.type === 'edit_section') return -1;
+        if (b.type === 'edit_section') return 1;
+        
+        return 0;
+      });
+  }, [suggestions, sections, topics]);
+
+  const scrollToSuggestion = (index) => {
+    const suggestion = pendingSuggestions[index];
+    if (!suggestion) return;
+    
+    const elementId = `suggestion-${suggestion.id}`;
+    setTimeout(() => {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
+        setTimeout(() => {
+          element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
+        }, 2000);
+      }
+    }, 100);
+  };
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -649,11 +701,51 @@ export default function DocumentView() {
             <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('contributors')}</div>
           </div>
           <div 
-            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 cursor-pointer hover:border-indigo-400 transition-all flex flex-col items-center justify-center gap-1 relative group"
+            onClick={() => {
+              if (pendingSuggestions.length > 0) {
+                scrollToSuggestion(currentSuggestionIndex);
+              }
+            }}
           >
             <MessageSquare className="w-4 h-4 md:w-6 md:h-6 text-indigo-600" />
-            <div className="text-base md:text-xl font-bold text-slate-900">{suggestions.length}</div>
-            <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('suggestions')}</div>
+            <div className="text-base md:text-xl font-bold text-slate-900">{pendingSuggestions.length}</div>
+            <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{language === 'he' ? 'הצעות פתוחות' : language === 'ar' ? 'مقترحات مفتوحة' : 'Open Suggestions'}</div>
+            
+            {pendingSuggestions.length > 1 && (
+              <div className="absolute -bottom-8 left-0 right-0 flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-6 w-6 p-0 bg-white shadow-md"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const newIndex = currentSuggestionIndex === 0 
+                      ? pendingSuggestions.length - 1 
+                      : currentSuggestionIndex - 1;
+                    setCurrentSuggestionIndex(newIndex);
+                    scrollToSuggestion(newIndex);
+                  }}
+                  disabled={pendingSuggestions.length === 0}
+                >
+                  {isRTL ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-6 w-6 p-0 bg-white shadow-md"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const newIndex = (currentSuggestionIndex + 1) % pendingSuggestions.length;
+                    setCurrentSuggestionIndex(newIndex);
+                    scrollToSuggestion(newIndex);
+                  }}
+                  disabled={pendingSuggestions.length === 0}
+                >
+                  {isRTL ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                </Button>
+              </div>
+            )}
           </div>
           <Link 
             to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
