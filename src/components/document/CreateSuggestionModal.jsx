@@ -184,50 +184,6 @@ Return ONLY the translated HTML:`;
   }, [existingSection?.id, language]);
 
   const createSuggestionMutation = useMutation({
-    onMutate: async (data) => {
-      // Optimistic update for instant UI feedback
-      if (!isDirectEdit) {
-        // Cancel outgoing queries
-        await queryClient.cancelQueries({ queryKey: ['suggestions', document.id] });
-        
-        // Snapshot previous state
-        const previousSuggestions = queryClient.getQueryData(['suggestions', document.id]);
-        
-        // Create temporary suggestion for immediate UI feedback
-        const targetTopic = isCreatingNewTopic 
-          ? { title: newTopicName }
-          : topics.find(t => t.id === data.topicId);
-        
-        const autoTitle = isNewSection 
-          ? t('newSectionIn', { topic: targetTopic?.title || '' })
-          : t('editSectionIn', { topic: targetTopic?.title || '' });
-        
-        const tempSuggestion = {
-          id: `temp-${Date.now()}`,
-          documentId: document.id,
-          sectionId: isNewSection ? null : editingSection?.id,
-          topicId: data.topicId,
-          newTopicTitle: isCreatingNewTopic ? newTopicName : null,
-          type: isNewSection ? 'new_section' : 'edit_section',
-          title: autoTitle,
-          newContent: data.newContent,
-          explanation: data.explanation,
-          status: 'pending',
-          proVotes: 0,
-          conVotes: 0,
-          created_date: new Date().toISOString(),
-          created_by: currentUser.email,
-          _isOptimistic: true
-        };
-        
-        // Update UI immediately
-        queryClient.setQueryData(['suggestions', document.id], (old = []) => {
-          return [...old, tempSuggestion];
-        });
-        
-        return { previousSuggestions };
-      }
-    },
     mutationFn: async (data) => {
       // If direct edit, save immediately without creating suggestion
       if (isDirectEdit && existingSection) {
@@ -352,11 +308,6 @@ Return ONLY the translated HTML:`;
         queryClient.invalidateQueries({ queryKey: ['allVersions'] });
         onClose();
       } else {
-        // Remove optimistic update
-        queryClient.setQueryData(['suggestions', document.id], (old = []) => {
-          return old.filter(s => !s._isOptimistic);
-        });
-        
         // Refresh data after successful creation
         queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
         queryClient.invalidateQueries({ queryKey: ['currentUser'] });
@@ -371,11 +322,6 @@ Return ONLY the translated HTML:`;
       }
     },
     onError: (err, variables, context) => {
-      // Restore previous state on error
-      if (context?.previousSuggestions) {
-        queryClient.setQueryData(['suggestions', document.id], context.previousSuggestions);
-      }
-      
       if (err.message === 'INSUFFICIENT_POINTS') {
         setShowInsufficientPointsDialog(true);
       } else {
