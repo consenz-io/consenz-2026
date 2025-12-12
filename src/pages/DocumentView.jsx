@@ -701,7 +701,7 @@ export default function DocumentView() {
             <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('contributors')}</div>
           </div>
           <div 
-            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 cursor-pointer hover:border-indigo-400 transition-all flex flex-col items-center justify-center gap-1 relative group"
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 cursor-pointer hover:border-indigo-400 transition-all flex flex-col items-center justify-center gap-1"
             onClick={() => {
               if (pendingSuggestions.length > 0) {
                 scrollToSuggestion(currentSuggestionIndex);
@@ -711,41 +711,6 @@ export default function DocumentView() {
             <MessageSquare className="w-4 h-4 md:w-6 md:h-6 text-indigo-600" />
             <div className="text-base md:text-xl font-bold text-slate-900">{pendingSuggestions.length}</div>
             <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{language === 'he' ? 'הצעות פתוחות' : language === 'ar' ? 'مقترحات مفتوحة' : 'Open Suggestions'}</div>
-            
-            {pendingSuggestions.length > 1 && (
-              <div className="absolute -bottom-8 left-0 right-0 flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-6 w-6 p-0 bg-white shadow-md"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const newIndex = currentSuggestionIndex === 0 
-                      ? pendingSuggestions.length - 1 
-                      : currentSuggestionIndex - 1;
-                    setCurrentSuggestionIndex(newIndex);
-                    scrollToSuggestion(newIndex);
-                  }}
-                  disabled={pendingSuggestions.length === 0}
-                >
-                  {isRTL ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-6 w-6 p-0 bg-white shadow-md"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const newIndex = (currentSuggestionIndex + 1) % pendingSuggestions.length;
-                    setCurrentSuggestionIndex(newIndex);
-                    scrollToSuggestion(newIndex);
-                  }}
-                  disabled={pendingSuggestions.length === 0}
-                >
-                  {isRTL ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                </Button>
-              </div>
-            )}
           </div>
           <Link 
             to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
@@ -835,6 +800,40 @@ export default function DocumentView() {
         onRemoveSignature={() => removeSignatureMutation.mutate()}
         isRemoving={removeSignatureMutation.isPending}
       />
+
+      {/* Floating navigation for suggestions */}
+      {pendingSuggestions.length > 0 && (
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
+          <Button
+            size="sm"
+            variant="default"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg h-10 px-4"
+            onClick={() => {
+              const newIndex = currentSuggestionIndex === 0 
+                ? pendingSuggestions.length - 1 
+                : currentSuggestionIndex - 1;
+              setCurrentSuggestionIndex(newIndex);
+              scrollToSuggestion(newIndex);
+            }}
+          >
+            {isRTL ? <ChevronRight className="w-4 h-4 mr-2" /> : <ChevronLeft className="w-4 h-4 mr-2" />}
+            {language === 'he' ? 'להצעה הקודמת' : language === 'ar' ? 'للمقترح السابق' : 'Previous Suggestion'}
+          </Button>
+          <Button
+            size="sm"
+            variant="default"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg h-10 px-4"
+            onClick={() => {
+              const newIndex = (currentSuggestionIndex + 1) % pendingSuggestions.length;
+              setCurrentSuggestionIndex(newIndex);
+              scrollToSuggestion(newIndex);
+            }}
+          >
+            {language === 'he' ? 'להצעה הבאה' : language === 'ar' ? 'للمقترح التالي' : 'Next Suggestion'}
+            {isRTL ? <ChevronLeft className="w-4 h-4 ml-2" /> : <ChevronRight className="w-4 h-4 ml-2" />}
+          </Button>
+        </div>
+      )}
       </div>
     </TranslationProvider>
   );
