@@ -298,6 +298,8 @@ Return ONLY the translated HTML:`;
       ]).catch(err => console.error('Background tasks error:', err));
 
       // Fire and forget - non-blocking
+      console.log('[CREATE SUGGESTION] Suggestion created:', suggestion.id, 'type:', suggestion.type);
+      console.log('[CREATE SUGGESTION] Calling sendNotificationsInBackground...');
       sendNotificationsInBackground(document, suggestion, currentUser);
       updateContributorsInBackground(document.id);
 
