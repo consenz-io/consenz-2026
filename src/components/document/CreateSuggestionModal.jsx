@@ -239,8 +239,9 @@ Return ONLY the translated HTML:`;
         topicTitle = newTopicName.trim();
         newTopicTitle = newTopicName.trim();
         targetTopicId = null; // Will be created when suggestion is accepted
-        // שמירת המיקום הרצוי של הנושא החדש
-        if (editingSection?.topicOrder !== undefined) {
+        // קביעת המיקום של הנושא החדש
+        if (editingSection?.topicOrder !== undefined && editingSection.topicOrder !== null) {
+          // הוסף אחרי הנושא הנוכחי
           newTopicOrder = editingSection.topicOrder + 1;
         } else {
           // ברירת מחדל - בסוף
