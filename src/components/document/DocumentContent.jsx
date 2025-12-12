@@ -34,7 +34,8 @@ export default function DocumentContent({
   onDirectEdit,
   onOpenSuggestionSidebar,
   newlyCreatedSuggestion,
-  onClearNewlyCreated
+  onClearNewlyCreated,
+  targetSuggestionId
 }) {
   const [showComments, setShowComments] = useState({});
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
@@ -1372,6 +1373,7 @@ Return ONLY the translated text:`;
                               onOpenSuggestionSidebar={onOpenSuggestionSidebar}
                               newlyCreatedSuggestionId={newlyCreatedSuggestion?.sectionId === section.id ? newlyCreatedSuggestion?.suggestionId : null}
                               onClearNewlyCreated={onClearNewlyCreated}
+                              targetSuggestionId={targetSuggestionId}
                             />
                           </div>
                             {/* Show suggestions after the last section */}

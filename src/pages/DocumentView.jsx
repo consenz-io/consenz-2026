@@ -760,6 +760,7 @@ export default function DocumentView() {
             onOpenSuggestionSidebar={(suggestionId) => setOpenSuggestionId(suggestionId)}
             newlyCreatedSuggestion={newlyCreatedSuggestion}
             onClearNewlyCreated={() => setNewlyCreatedSuggestion(null)}
+            targetSuggestionId={targetSuggestionId}
           />
       </div>
 
