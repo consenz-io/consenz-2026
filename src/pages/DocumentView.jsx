@@ -839,7 +839,7 @@ export default function DocumentView() {
 
       {/* Floating navigation for suggestions */}
       {pendingSuggestions.length > 0 && showSuggestionNav && (
-        <div className="fixed bottom-20 right-6 z-40 flex gap-2">
+        <div className="fixed bottom-20 right-6 z-40 flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-3 py-2 border border-slate-200">
           <Button
             size="sm"
             variant="default"
@@ -854,6 +854,9 @@ export default function DocumentView() {
           >
             {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </Button>
+          <span className="text-sm font-medium text-slate-700 px-2">
+            {currentSuggestionIndex + 1} / {pendingSuggestions.length}
+          </span>
           <Button
             size="sm"
             variant="default"
