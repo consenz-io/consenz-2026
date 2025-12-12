@@ -203,7 +203,7 @@ export default function DocumentView() {
     
     const elementId = `suggestion-${suggestion.id}`;
     setTimeout(() => {
-      const element = document.getElementById(elementId);
+      const element = window.document.getElementById(elementId);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
