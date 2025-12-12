@@ -205,8 +205,10 @@ export default function DocumentView() {
     // אם זו הצעה לעריכת סעיף - צריך לגלול לסעיף ולהעביר את הקרוסלה
     if (suggestion.type === 'edit_section') {
       setTargetSuggestionId(suggestion.id);
+      
+      // המתן רגע קצר שהקרוסלה תעדכן את ה-ID שלה, ואז גלול
       setTimeout(() => {
-        const element = window.document.getElementById(`section-${suggestion.sectionId}`);
+        const element = window.document.getElementById(`suggestion-${suggestion.id}`);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
           element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
@@ -214,8 +216,21 @@ export default function DocumentView() {
             element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
             setTargetSuggestionId(null);
           }, 2000);
+        } else {
+          // אם לא מצאנו עדיין, נסה שוב אחרי delay נוסף
+          setTimeout(() => {
+            const retryElement = window.document.getElementById(`suggestion-${suggestion.id}`);
+            if (retryElement) {
+              retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              retryElement.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
+              setTimeout(() => {
+                retryElement.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
+                setTargetSuggestionId(null);
+              }, 2000);
+            }
+          }, 300);
         }
-      }, 100);
+      }, 200);
     } else {
       // הצעה לסעיף חדש - גלילה רגילה
       const elementId = `suggestion-${suggestion.id}`;
