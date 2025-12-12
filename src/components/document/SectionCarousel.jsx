@@ -35,7 +35,8 @@ export default function SectionCarousel({
   users,
   onOpenSuggestionSidebar,
   newlyCreatedSuggestionId,
-  onClearNewlyCreated
+  onClearNewlyCreated,
+  targetSuggestionId
 }) {
   const { t, isRTL, language } = useLanguage();
   const navigate = useNavigate();
@@ -172,6 +173,16 @@ export default function SectionCarousel({
       }
     }
   }, [newlyCreatedSuggestionId, sortedSuggestions, onClearNewlyCreated]);
+  
+  // Effect to navigate to target suggestion (from floating nav buttons)
+  React.useEffect(() => {
+    if (targetSuggestionId && sortedSuggestions.length > 0) {
+      const foundSuggestion = sortedSuggestions.find(s => s.id === targetSuggestionId);
+      if (foundSuggestion) {
+        setCurrentSuggestionId(targetSuggestionId);
+      }
+    }
+  }, [targetSuggestionId, sortedSuggestions]);
   
   // Reset if current suggestion no longer exists
   const safeIndex = currentIndex >= allViews.length ? 0 : currentIndex;

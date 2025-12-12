@@ -55,6 +55,7 @@ export default function DocumentView() {
   const [showAgreementModal, setShowAgreementModal] = useState(false);
   const [showSignersListModal, setShowSignersListModal] = useState(false);
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
+  const [targetSuggestionId, setTargetSuggestionId] = useState(null);
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
@@ -201,17 +202,34 @@ export default function DocumentView() {
     const suggestion = pendingSuggestions[index];
     if (!suggestion) return;
     
-    const elementId = `suggestion-${suggestion.id}`;
-    setTimeout(() => {
-      const element = window.document.getElementById(elementId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
-        setTimeout(() => {
-          element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
-        }, 2000);
-      }
-    }, 100);
+    // אם זו הצעה לעריכת סעיף - צריך לגלול לסעיף ולהעביר את הקרוסלה
+    if (suggestion.type === 'edit_section') {
+      setTargetSuggestionId(suggestion.id);
+      setTimeout(() => {
+        const element = window.document.getElementById(`section-${suggestion.sectionId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
+          setTimeout(() => {
+            element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
+            setTargetSuggestionId(null);
+          }, 2000);
+        }
+      }, 100);
+    } else {
+      // הצעה לסעיף חדש - גלילה רגילה
+      const elementId = `suggestion-${suggestion.id}`;
+      setTimeout(() => {
+        const element = window.document.getElementById(elementId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
+          setTimeout(() => {
+            element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
+          }, 2000);
+        }
+      }, 100);
+    }
   };
 
   const { data: user } = useQuery({
