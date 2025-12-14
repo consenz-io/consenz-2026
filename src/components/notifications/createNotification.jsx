@@ -451,13 +451,18 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
       console.error('[NOTIFICATION ERROR] Missing currentUser.email');
       return;
     }
-    if (!currentUser?.full_name) {
-      console.error('[NOTIFICATION ERROR] Missing currentUser.full_name');
-      return;
-    }
     if (!suggestion.type) {
       console.error('[NOTIFICATION ERROR] Missing suggestion.type');
       return;
+    }
+    
+    // Fix missing full_name - don't block notifications because of it
+    if (!currentUser?.full_name) {
+      console.warn('[NOTIFICATION WARNING] Missing currentUser.full_name, using email fallback');
+      currentUser = { 
+        ...currentUser, 
+        full_name: currentUser.email.split('@')[0] || 'User'
+      };
     }
     
     console.log('[NOTIFY NEW SUGGESTION] ===== STARTING NOTIFICATION PROCESS =====');
