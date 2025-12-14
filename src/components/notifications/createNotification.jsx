@@ -429,16 +429,17 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
   } catch (error) {
     console.error('[NOTIFICATION ERROR] Failed to send notifications:', error);
     console.error('[NOTIFICATION ERROR] Stack:', error.stack);
-    throw error; // זורקים את השגיאה כדי שנראה אותה
+    throw error;
   }
 }
 
 /**
  * יצירת התראה על הצעה חדשה במסמך - לכל המשתתפים
+ * ✅ FIXED: Uses User.filter() instead of User.list() to avoid permission errors
  */
 export async function notifyNewSuggestion({ suggestion, document: doc, currentUser }) {
   try {
-    // Validate required data with detailed logging
+    // Validate required data
     if (!suggestion?.id) {
       console.error('[NOTIFICATION ERROR] Missing suggestion.id');
       return;
@@ -456,7 +457,7 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
       return;
     }
     
-    // Fix missing full_name - don't block notifications because of it
+    // Fix missing full_name
     if (!currentUser?.full_name) {
       console.warn('[NOTIFICATION WARNING] Missing currentUser.full_name, using email fallback');
       currentUser = { 
@@ -472,51 +473,30 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     console.log('[NOTIFY NEW SUGGESTION] Document Title:', doc.title);
     console.log('[NOTIFY NEW SUGGESTION] Current User:', currentUser.email, '/', currentUser.full_name);
     
-    // פונקציית timeout helper
-    const promiseWithTimeout = (promise, timeoutMs = 5000) => {
-      return Promise.race([
-        promise,
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
-        )
-      ]);
-    };
-
-    // שליפת כל הנתונים - מסוננים למסמך הספציפי לביצועים
-    console.log('[NOTIFY NEW SUGGESTION] Fetching data from database with 5s timeout...');
-    const [users, publicProfiles, allSuggestions, allArguments, sections, adminIds] = await Promise.all([
-      promiseWithTimeout(getCachedUsers(), 5000),
-      promiseWithTimeout(getCachedPublicProfiles(), 5000),
-      promiseWithTimeout(base44.entities.Suggestion.filter({ documentId: doc.id }), 5000),
-      promiseWithTimeout(base44.entities.Argument.list(), 5000),
-      promiseWithTimeout(base44.entities.Section.filter({ documentId: doc.id }), 5000),
-      promiseWithTimeout(getDocumentAdmins(doc.id), 5000)
-    ]).catch(err => {
-      console.error('[NOTIFY NEW SUGGESTION] Promise.all failed:', err);
-      throw err;
-    });
+    // ===== FIXED: Removed getCachedUsers() from initial fetch =====
+    console.log('[NOTIFY NEW SUGGESTION] Fetching data from database...');
+    const [publicProfiles, allSuggestions, allArguments, sections, adminIds] = await Promise.all([
+      getCachedPublicProfiles(),
+      base44.entities.Suggestion.filter({ documentId: doc.id }),
+      base44.entities.Argument.list(),
+      base44.entities.Section.filter({ documentId: doc.id }),
+      getDocumentAdmins(doc.id)
+    ]);
     
     console.log('[NOTIFY NEW SUGGESTION] Data fetched successfully:');
-    console.log('[NOTIFY NEW SUGGESTION] - Users:', users.length);
     console.log('[NOTIFY NEW SUGGESTION] - Public Profiles:', publicProfiles.length);
     console.log('[NOTIFY NEW SUGGESTION] - Suggestions in document:', allSuggestions.length);
     console.log('[NOTIFY NEW SUGGESTION] - Arguments (all):', allArguments.length);
     console.log('[NOTIFY NEW SUGGESTION] - Sections:', sections.length);
     console.log('[NOTIFY NEW SUGGESTION] - Admin IDs:', adminIds.length);
     
-    // רשימת מזהי הצעות למסמך זה (לסינון)
+    // Build suggestion IDs list
     const suggestionIds = allSuggestions.map(s => s.id);
-    console.log('[NOTIFY NEW SUGGESTION] Building suggestion IDs list:', suggestionIds.length);
-    
-    // ודא שההצעה החדשה נכללת (אם היא כבר ב-DB)
-    const newSuggestionInList = suggestionIds.includes(suggestion.id);
-    console.log('[NOTIFY NEW SUGGESTION] New suggestion in list?', newSuggestionInList);
-    if (!newSuggestionInList) {
-      console.log('[NOTIFY NEW SUGGESTION] Adding new suggestion to list for filtering');
+    if (!suggestionIds.includes(suggestion.id)) {
       suggestionIds.push(suggestion.id);
     }
 
-    // שליפת מצביעים ומגיבים
+    // Fetch votes and comments
     console.log('[NOTIFY NEW SUGGESTION] Fetching votes and comments...');
     const [allVotes, allComments] = await Promise.all([
       base44.entities.Vote.list(),
@@ -526,78 +506,66 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     console.log('[NOTIFY NEW SUGGESTION] - Total votes:', allVotes.length);
     console.log('[NOTIFY NEW SUGGESTION] - Total comments:', allComments.length);
 
-    // חישוב כל המשתתפים במסמך
+    // ===== Calculate participant emails =====
     console.log('[NOTIFY NEW SUGGESTION] ===== CALCULATING PARTICIPANTS =====');
     const participantEmails = new Set();
     
-    // יוצר המסמך
+    // Document creator
     if (doc.created_by) {
       console.log('[NOTIFY NEW SUGGESTION] Adding document creator:', doc.created_by);
       participantEmails.add(doc.created_by);
-    } else {
-      console.log('[NOTIFY NEW SUGGESTION] WARNING: Document has no creator');
     }
     
-    // מנהלי המסמך
-    console.log('[NOTIFY NEW SUGGESTION] Processing document admins...');
-    let adminsCount = 0;
-    for (const adminId of adminIds) {
-      const admin = getUserFromCache(users, publicProfiles, { id: adminId });
-      if (admin && admin.email) {
-        participantEmails.add(admin.email);
-        adminsCount++;
-      } else {
-        console.warn('[NOTIFY NEW SUGGESTION] Admin user not found or missing email for ID:', adminId);
-      }
-    }
-    console.log('[NOTIFY NEW SUGGESTION] - Added', adminsCount, 'document admins');
-    
-    // יוצרי הצעות
+    // Suggestion creators
     console.log('[NOTIFY NEW SUGGESTION] Processing suggestion creators...');
-    let suggestionCreatorsCount = 0;
     allSuggestions.forEach(s => {
       if (s.created_by) {
         participantEmails.add(s.created_by);
-        suggestionCreatorsCount++;
       }
     });
-    console.log('[NOTIFY NEW SUGGESTION] - Added', suggestionCreatorsCount, 'suggestion creators');
+    console.log('[NOTIFY NEW SUGGESTION] - Added', allSuggestions.filter(s => s.created_by).length, 'suggestion creators');
     
-    // מצביעים (רק על הצעות במסמך זה)
+    // ===== FIXED: Fetch admin users to get their emails =====
+    console.log('[NOTIFY NEW SUGGESTION] Processing document admins...');
+    let adminUsers = [];
+    if (adminIds.length > 0) {
+      adminUsers = await base44.entities.User.filter({ id: { $in: adminIds } });
+      adminUsers.forEach(admin => {
+        if (admin.email) {
+          participantEmails.add(admin.email);
+        }
+      });
+      console.log('[NOTIFY NEW SUGGESTION] - Added', adminUsers.length, 'document admins');
+    }
+    
+    // ===== FIXED: Fetch voter users to get their emails =====
     console.log('[NOTIFY NEW SUGGESTION] Processing voters...');
-    const userIdToEmail = {};
-    users.forEach(u => { 
-      if (u.id && u.email) {
-        userIdToEmail[u.id] = u.email;
-      }
-    });
     const votesInDoc = allVotes.filter(v => suggestionIds.includes(v.suggestionId));
     console.log('[NOTIFY NEW SUGGESTION] - Votes in document:', votesInDoc.length);
-    let votersCount = 0;
-    votesInDoc.forEach(v => {
-      if (userIdToEmail[v.userId]) {
-        participantEmails.add(userIdToEmail[v.userId]);
-        votersCount++;
-      } else {
-        console.log('[NOTIFY NEW SUGGESTION] WARNING: No email found for voter userId:', v.userId);
-      }
-    });
-    console.log('[NOTIFY NEW SUGGESTION] - Added', votersCount, 'voters');
     
-    // כותבי טיעונים (רק על הצעות במסמך זה)
+    const voterIds = [...new Set(votesInDoc.map(v => v.userId))];
+    let voterUsers = [];
+    if (voterIds.length > 0) {
+      voterUsers = await base44.entities.User.filter({ id: { $in: voterIds } });
+      voterUsers.forEach(voter => {
+        if (voter.email) {
+          participantEmails.add(voter.email);
+        }
+      });
+      console.log('[NOTIFY NEW SUGGESTION] - Added', voterUsers.length, 'voters');
+    }
+    
+    // Argument authors
     console.log('[NOTIFY NEW SUGGESTION] Processing argument authors...');
     const argumentsInDoc = allArguments.filter(arg => suggestionIds.includes(arg.suggestionId));
-    console.log('[NOTIFY NEW SUGGESTION] - Arguments in document:', argumentsInDoc.length);
-    let argumentAuthorsCount = 0;
     argumentsInDoc.forEach(arg => {
       if (arg.created_by) {
         participantEmails.add(arg.created_by);
-        argumentAuthorsCount++;
       }
     });
-    console.log('[NOTIFY NEW SUGGESTION] - Added', argumentAuthorsCount, 'argument authors');
+    console.log('[NOTIFY NEW SUGGESTION] - Added', argumentsInDoc.filter(a => a.created_by).length, 'argument authors');
     
-    // מגיבים (על הצעות, סעיפים, ומסמך)
+    // Commenters
     console.log('[NOTIFY NEW SUGGESTION] Processing commenters...');
     const sectionIds = sections.map(s => s.id);
     const relevantComments = allComments.filter(c => 
@@ -605,34 +573,26 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
       (c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)) ||
       (c.rootEntityType === 'document' && c.rootEntityId === doc.id)
     );
-    console.log('[NOTIFY NEW SUGGESTION] - Relevant comments:', relevantComments.length);
-    let commentersCount = 0;
     relevantComments.forEach(c => {
       if (c.created_by) {
         participantEmails.add(c.created_by);
-        commentersCount++;
       }
     });
-    console.log('[NOTIFY NEW SUGGESTION] - Added', commentersCount, 'commenters');
+    console.log('[NOTIFY NEW SUGGESTION] - Added', relevantComments.filter(c => c.created_by).length, 'commenters');
     
-    // עורכי סעיפים
+    // Section editors
     console.log('[NOTIFY NEW SUGGESTION] Processing section editors...');
-    let sectionEditorsCount = 0;
     sections.forEach(s => {
       if (s.created_by) {
         participantEmails.add(s.created_by);
-        sectionEditorsCount++;
       }
     });
-    console.log('[NOTIFY NEW SUGGESTION] - Added', sectionEditorsCount, 'section editors');
+    console.log('[NOTIFY NEW SUGGESTION] - Added', sections.filter(s => s.created_by).length, 'section editors');
 
     console.log('[NOTIFY NEW SUGGESTION] Total unique participants (before filtering):', participantEmails.size);
-    console.log('[NOTIFY NEW SUGGESTION] Current user to exclude:', currentUser.email);
     
-    // מסירים את יוצר ההצעה הנוכחית
-    const hadCurrentUser = participantEmails.has(currentUser.email);
+    // Remove current user
     participantEmails.delete(currentUser.email);
-    console.log('[NOTIFY NEW SUGGESTION] Current user was in list?', hadCurrentUser);
 
     console.log('[NOTIFY NEW SUGGESTION] ===== FINAL PARTICIPANTS =====');
     console.log('[NOTIFY NEW SUGGESTION] Total participants to notify:', participantEmails.size);
@@ -640,33 +600,22 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     
     if (participantEmails.size === 0) {
       console.log('[NOTIFY NEW SUGGESTION] ===== NO PARTICIPANTS TO NOTIFY =====');
-      
-      // אם יש מנהלים, נסה להוסיף אותם (למקרה שהמשתמש הנוכחי היה המנהל היחיד)
-      if (adminIds.length > 0) {
-        console.log('[NOTIFY NEW SUGGESTION] But there are admins, checking if we should notify them anyway...');
-        let addedAdmins = false;
-        for (const adminId of adminIds) {
-          const admin = getUserFromCache(users, publicProfiles, { id: adminId });
-          if (admin && admin.email && admin.email !== currentUser.email) {
-            participantEmails.add(admin.email);
-            addedAdmins = true;
-          }
-        }
-        
-        if (addedAdmins) {
-          console.log('[NOTIFY NEW SUGGESTION] Added admins to participant list:', participantEmails.size);
-        } else {
-          console.log('[NOTIFY NEW SUGGESTION] No admins to add (current user is the only admin)');
-          return;
-        }
-      } else {
-        console.log('[NOTIFY NEW SUGGESTION] This might be the first activity in the document');
-        return;
-      }
+      console.log('[NOTIFY NEW SUGGESTION] This might be the first activity in the document');
+      return;
     }
 
-    // המרה למזהי משתמשים
-    console.log('[NOTIFY NEW SUGGESTION] ===== BUILDING NOTIFICATIONS =====');
+    // ===== FIXED: Fetch participant users using User.filter() instead of cache =====
+    console.log('[NOTIFY NEW SUGGESTION] ===== FETCHING PARTICIPANT USER DATA =====');
+    const participantEmailsArray = Array.from(participantEmails);
+    console.log('[NOTIFY NEW SUGGESTION] Fetching users for', participantEmailsArray.length, 'emails...');
+    
+    const users = await base44.entities.User.filter({ 
+      email: { $in: participantEmailsArray } 
+    });
+    
+    console.log('[NOTIFY NEW SUGGESTION] Fetched', users.length, 'users');
+
+    // Build email to user mapping
     const emailToUser = {};
     users.forEach(u => { 
       if (u.email && u.id) {
@@ -675,20 +624,18 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     });
     console.log('[NOTIFY NEW SUGGESTION] Email to user mapping size:', Object.keys(emailToUser).length);
     
+    // ===== Build notifications =====
+    console.log('[NOTIFY NEW SUGGESTION] ===== BUILDING NOTIFICATIONS =====');
     const notifications = [];
     const actionUrl = createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
     console.log('[NOTIFY NEW SUGGESTION] Action URL:', actionUrl);
     
-    // Validate actionUrl before proceeding
     if (!actionUrl || !actionUrl.includes('SuggestionDetail') || !suggestion.id) {
-      console.error('[NOTIFY NEW SUGGESTION] CRITICAL ERROR: Invalid action URL generated!');
-      console.error('[NOTIFY NEW SUGGESTION] actionUrl:', actionUrl);
-      console.error('[NOTIFY NEW SUGGESTION] suggestion.id:', suggestion.id);
-      throw new Error('Invalid notification URL - aborting notification send');
+      console.error('[NOTIFY NEW SUGGESTION] CRITICAL ERROR: Invalid action URL!');
+      throw new Error('Invalid notification URL');
     }
     
     const suggestionTypeText = suggestion.type === 'new_section' ? 'הצעה לסעיף חדש' : 'הצעת עריכה';
-    console.log('[NOTIFY NEW SUGGESTION] Suggestion type text:', suggestionTypeText);
 
     let successfulNotifications = 0;
     let failedNotifications = 0;
@@ -745,7 +692,7 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     console.error('[NOTIFICATION ERROR] Suggestion ID:', suggestion?.id);
     console.error('[NOTIFICATION ERROR] Document ID:', doc?.id);
     console.error('[NOTIFICATION ERROR] Current user:', currentUser?.email);
-    throw error; // Throw the error so it's visible in parent catch
+    throw error;
   }
 }
 
@@ -808,9 +755,9 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
       });
     }
     
-    // 2. כל המגיבים הקודמים (לא כולל התגובה החדשה)
+    // 2. כל המגיבים הקודמים
     const commentersEmails = [...new Set(allComments
-      .filter(c => c.id !== comment.id) // לא כולל את התגובה החדשה
+      .filter(c => c.id !== comment.id)
       .map(c => c.created_by)
     )];
     
