@@ -376,7 +376,6 @@ Return ONLY the translated HTML:`;
   const handleConfirmPoints = () => {
     if (pendingFormData) {
       setShowPointsConfirm(false);
-      onClose(); // Close immediately
       createSuggestionMutation.mutate(pendingFormData);
       setPendingFormData(null);
     }
