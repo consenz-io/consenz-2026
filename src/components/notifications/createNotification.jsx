@@ -695,6 +695,7 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     console.error('[NOTIFICATION ERROR] Suggestion ID:', suggestion?.id);
     console.error('[NOTIFICATION ERROR] Document ID:', doc?.id);
     console.error('[NOTIFICATION ERROR] Current user:', currentUser?.email);
+    throw error; // Throw the error so it's visible in parent catch
   }
 }
 
