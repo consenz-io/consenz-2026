@@ -472,16 +472,29 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     console.log('[NOTIFY NEW SUGGESTION] Document Title:', doc.title);
     console.log('[NOTIFY NEW SUGGESTION] Current User:', currentUser.email, '/', currentUser.full_name);
     
+    // פונקציית timeout helper
+    const promiseWithTimeout = (promise, timeoutMs = 5000) => {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
+        )
+      ]);
+    };
+
     // שליפת כל הנתונים - מסוננים למסמך הספציפי לביצועים
-    console.log('[NOTIFY NEW SUGGESTION] Fetching data from database...');
+    console.log('[NOTIFY NEW SUGGESTION] Fetching data from database with 5s timeout...');
     const [users, publicProfiles, allSuggestions, allArguments, sections, adminIds] = await Promise.all([
-      getCachedUsers(),
-      getCachedPublicProfiles(),
-      base44.entities.Suggestion.filter({ documentId: doc.id }),
-      base44.entities.Argument.list(),
-      base44.entities.Section.filter({ documentId: doc.id }),
-      getDocumentAdmins(doc.id)
-    ]);
+      promiseWithTimeout(getCachedUsers(), 5000),
+      promiseWithTimeout(getCachedPublicProfiles(), 5000),
+      promiseWithTimeout(base44.entities.Suggestion.filter({ documentId: doc.id }), 5000),
+      promiseWithTimeout(base44.entities.Argument.list(), 5000),
+      promiseWithTimeout(base44.entities.Section.filter({ documentId: doc.id }), 5000),
+      promiseWithTimeout(getDocumentAdmins(doc.id), 5000)
+    ]).catch(err => {
+      console.error('[NOTIFY NEW SUGGESTION] Promise.all failed:', err);
+      throw err;
+    });
     
     console.log('[NOTIFY NEW SUGGESTION] Data fetched successfully:');
     console.log('[NOTIFY NEW SUGGESTION] - Users:', users.length);
