@@ -18,7 +18,7 @@ import SectionDiff from "./SectionDiff";
 import TranslatableContent from "./TranslatableContent";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAutoAccept";
 import { useLanguage } from "@/components/LanguageContext";
-import { notifyVoteOnSuggestion, notifySuggestionStatusChange } from "../notifications/createNotification";
+import { notifySuggestionStatusChange } from "../notifications/createNotification";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function SuggestionSidebar({ 
@@ -201,8 +201,7 @@ export default function SuggestionSidebar({
         conVotes: newConVotes
       });
 
-      // פעולות ברקע - לא חוסמות
-      notifyVoteOnSuggestion({ suggestion, voterEmail: user.email }).catch(() => {});
+      // עדכון מספר המשתתפים ברקע - לא חוסם
       import('./calculateContributors').then(({ calculateDocumentContributors }) => {
         calculateDocumentContributors(suggestion.documentId).then(count => {
           base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count });
