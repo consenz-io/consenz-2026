@@ -1,5 +1,6 @@
 import { base44 } from "@/api/base44Client";
 import { notifySuggestionStatusChange } from "../notifications/createNotification";
+import { calculateContributorsFromData } from "./calculateContributors";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -24,7 +25,26 @@ export async function checkSuggestionConsensus(suggestion, document) {
   
   const proVotes = suggestion.proVotes || 0;
   const conVotes = suggestion.conVotes || 0;
-  const totalUsers = document.totalUsersInteracted || 1; // מונע חלוקה באפס
+  
+  // חישוב דינמי של מספר המשתתפים
+  const [suggestions, allVotes, allUsers, allArguments, allComments, sections] = await Promise.all([
+    base44.entities.Suggestion.filter({ documentId: document.id }),
+    base44.entities.Vote.list(),
+    base44.entities.User.list(),
+    base44.entities.Argument.list(),
+    base44.entities.Comment.list(),
+    base44.entities.Section.filter({ documentId: document.id })
+  ]);
+  
+  const totalUsers = calculateContributorsFromData({
+    document,
+    suggestions,
+    allVotes,
+    allUsers,
+    allArguments,
+    allComments,
+    sections
+  }) || 1;
   
   console.log('[CONSENSUS CHECK] Vote counts:');
   console.log('[CONSENSUS CHECK] - Pro votes:', proVotes);
@@ -45,8 +65,8 @@ export async function checkSuggestionConsensus(suggestion, document) {
     // מגבילים כל ערך ל-1 מקסימום (כי consensuses אמורים להיות בין 0 ל-1)
     const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
     // document_threshold = document_consensus_meter * totalUsers
-    // מינימום threshold הוא 2 (רף כניסה מינימלי)
-    threshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
+    // מינימום threshold הוא 1 כשיש consensuses
+    threshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
     
     console.log('[CONSENSUS CHECK] Threshold calculation (dynamic):');
     console.log('[CONSENSUS CHECK] - Consensus meter average:', consensusMeterAverage);
@@ -172,8 +192,8 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     // חישוב document_consensus_meter חדש - מגבילים כל ערך ל-1 מקסימום
     const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / updatedConsensuses.length;
     
-    // חישוב document_threshold חדש - עם מספר המשתתפים הנוכחי (מינימום 2)
-    newThreshold = Math.max(2, Math.round(consensusMeterAverage * participantsAtAcceptance));
+    // חישוב document_threshold חדש - עם מספר המשתתפים הנוכחי (מינימום 1)
+    newThreshold = Math.max(1, Math.round(consensusMeterAverage * participantsAtAcceptance));
     
     console.log('[CONSENSUS METER UPDATE]', {
       sectionConsensus,
@@ -530,10 +550,29 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
 /**
  * בדיקה אם הצעת עריכת כותרת נושא עברה את סף הקונסנזוס
  */
-export function checkTopicEditConsensus(suggestion, document) {
+export async function checkTopicEditConsensus(suggestion, document) {
   const proVotes = suggestion.proVotes || 0;
   const conVotes = suggestion.conVotes || 0;
-  const totalUsers = document.totalUsersInteracted || 1;
+  
+  // חישוב דינמי של מספר המשתתפים
+  const [suggestions, allVotes, allUsers, allArguments, allComments, sections] = await Promise.all([
+    base44.entities.Suggestion.filter({ documentId: document.id }),
+    base44.entities.Vote.list(),
+    base44.entities.User.list(),
+    base44.entities.Argument.list(),
+    base44.entities.Comment.list(),
+    base44.entities.Section.filter({ documentId: document.id })
+  ]);
+  
+  const totalUsers = calculateContributorsFromData({
+    document,
+    suggestions,
+    allVotes,
+    allUsers,
+    allArguments,
+    allComments,
+    sections
+  }) || 1;
   
   // חישוב threshold דינמי על בסיס consensuses של המסמך - זהה לחישוב של הצעות סעיפים
   let threshold;
@@ -542,7 +581,7 @@ export function checkTopicEditConsensus(suggestion, document) {
   if (consensuses.length > 0) {
     // מגבילים כל ערך ל-1 מקסימום (כי consensuses אמורים להיות בין 0 ל-1)
     const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-    threshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
+    threshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
   } else {
     threshold = Math.max(2, document.threshold || 2);
   }

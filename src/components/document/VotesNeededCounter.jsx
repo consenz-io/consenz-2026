@@ -4,9 +4,51 @@ import { Target, TrendingUp } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { calculateContributorsFromData } from "./calculateContributors";
 
 export default function VotesNeededCounter({ suggestion, document, sectionId }) {
   const { t } = useLanguage();
+
+  // Fetch all data needed for dynamic contributor calculation
+  const { data: suggestions = [] } = useQuery({
+    queryKey: ['suggestions', document?.id],
+    queryFn: () => base44.entities.Suggestion.filter({ documentId: document.id }),
+    enabled: !!document?.id,
+    initialData: [],
+  });
+
+  const { data: allVotes = [] } = useQuery({
+    queryKey: ['allVotes'],
+    queryFn: () => base44.entities.Vote.list(),
+    initialData: [],
+  });
+
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list(),
+    initialData: [],
+  });
+
+  const { data: allArguments = [] } = useQuery({
+    queryKey: ['allArguments'],
+    queryFn: () => base44.entities.Argument.list(),
+    initialData: [],
+  });
+
+  const { data: allComments = [] } = useQuery({
+    queryKey: ['allComments'],
+    queryFn: () => base44.entities.Comment.list(),
+    initialData: [],
+  });
+
+  const { data: sections = [] } = useQuery({
+    queryKey: ['sections', document?.id],
+    queryFn: () => base44.entities.Section.filter({ documentId: document.id }),
+    enabled: !!document?.id,
+    initialData: [],
+  });
 
   // חישוב כמה הצבעות נדרשות
   const calculateVotesNeeded = () => {
@@ -14,7 +56,20 @@ export default function VotesNeededCounter({ suggestion, document, sectionId }) 
     
     const proVotes = suggestion.proVotes || 0;
     const conVotes = suggestion.conVotes || 0;
-    const totalUsers = document.totalUsersInteracted || 1;
+    
+    // חישוב דינמי של מספר המשתתפים - בדיוק כמו ב-UnderstandingConsensus
+    const totalUsers = React.useMemo(() => {
+      const count = calculateContributorsFromData({
+        document,
+        suggestions,
+        allVotes,
+        allUsers,
+        allArguments,
+        allComments,
+        sections
+      });
+      return count > 0 ? count : 1;
+    }, [suggestions, allVotes, allUsers, allArguments, allComments, sections]);
     
     // חישוב threshold דינמי על בסיס consensuses של המסמך
     let threshold;
@@ -23,7 +78,7 @@ export default function VotesNeededCounter({ suggestion, document, sectionId }) 
     if (consensuses.length > 0) {
       // מגבילים כל ערך ל-1 מקסימום (כי consensuses אמורים להיות בין 0 ל-1)
       const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-      threshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
+      threshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
     } else {
       threshold = Math.max(2, document.threshold || 2);
     }
