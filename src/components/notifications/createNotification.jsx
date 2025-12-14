@@ -474,12 +474,13 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     
     // שליפת כל הנתונים - מסוננים למסמך הספציפי לביצועים
     console.log('[NOTIFY NEW SUGGESTION] Fetching data from database...');
-    const [users, publicProfiles, allSuggestions, allArguments, sections] = await Promise.all([
+    const [users, publicProfiles, allSuggestions, allArguments, sections, adminIds] = await Promise.all([
       getCachedUsers(),
       getCachedPublicProfiles(),
       base44.entities.Suggestion.filter({ documentId: doc.id }),
       base44.entities.Argument.list(),
-      base44.entities.Section.filter({ documentId: doc.id })
+      base44.entities.Section.filter({ documentId: doc.id }),
+      getDocumentAdmins(doc.id)
     ]);
     
     console.log('[NOTIFY NEW SUGGESTION] Data fetched successfully:');
@@ -488,6 +489,7 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     console.log('[NOTIFY NEW SUGGESTION] - Suggestions in document:', allSuggestions.length);
     console.log('[NOTIFY NEW SUGGESTION] - Arguments (all):', allArguments.length);
     console.log('[NOTIFY NEW SUGGESTION] - Sections:', sections.length);
+    console.log('[NOTIFY NEW SUGGESTION] - Admin IDs:', adminIds.length);
     
     // רשימת מזהי הצעות למסמך זה (לסינון)
     const suggestionIds = allSuggestions.map(s => s.id);
@@ -522,6 +524,20 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     } else {
       console.log('[NOTIFY NEW SUGGESTION] WARNING: Document has no creator');
     }
+    
+    // מנהלי המסמך
+    console.log('[NOTIFY NEW SUGGESTION] Processing document admins...');
+    let adminsCount = 0;
+    for (const adminId of adminIds) {
+      const admin = getUserFromCache(users, publicProfiles, { id: adminId });
+      if (admin && admin.email) {
+        participantEmails.add(admin.email);
+        adminsCount++;
+      } else {
+        console.warn('[NOTIFY NEW SUGGESTION] Admin user not found or missing email for ID:', adminId);
+      }
+    }
+    console.log('[NOTIFY NEW SUGGESTION] - Added', adminsCount, 'document admins');
     
     // יוצרי הצעות
     console.log('[NOTIFY NEW SUGGESTION] Processing suggestion creators...');
@@ -611,8 +627,29 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     
     if (participantEmails.size === 0) {
       console.log('[NOTIFY NEW SUGGESTION] ===== NO PARTICIPANTS TO NOTIFY =====');
-      console.log('[NOTIFY NEW SUGGESTION] This might be the first activity in the document');
-      return;
+      
+      // אם יש מנהלים, נסה להוסיף אותם (למקרה שהמשתמש הנוכחי היה המנהל היחיד)
+      if (adminIds.length > 0) {
+        console.log('[NOTIFY NEW SUGGESTION] But there are admins, checking if we should notify them anyway...');
+        let addedAdmins = false;
+        for (const adminId of adminIds) {
+          const admin = getUserFromCache(users, publicProfiles, { id: adminId });
+          if (admin && admin.email && admin.email !== currentUser.email) {
+            participantEmails.add(admin.email);
+            addedAdmins = true;
+          }
+        }
+        
+        if (addedAdmins) {
+          console.log('[NOTIFY NEW SUGGESTION] Added admins to participant list:', participantEmails.size);
+        } else {
+          console.log('[NOTIFY NEW SUGGESTION] No admins to add (current user is the only admin)');
+          return;
+        }
+      } else {
+        console.log('[NOTIFY NEW SUGGESTION] This might be the first activity in the document');
+        return;
+      }
     }
 
     // המרה למזהי משתמשים
