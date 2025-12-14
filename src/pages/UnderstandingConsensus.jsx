@@ -85,9 +85,9 @@ export default function UnderstandingConsensus() {
     : 0;
   
   // רף התמיכה הדרוש = מד הקונצנזוס × מספר המשתתפים
-  // CRITICAL: כאשר consensuses קיימים, threshold MUST חייב להיות 1 לפחות (לא מעגלים למטה)
+  // CRITICAL: מינימום threshold הוא 2 תמיד (רף כניסה מינימלי)
   const threshold = consensuses.length > 0 
-    ? Math.max(1, Math.round(documentConsensusMeter * totalUsers))
+    ? Math.max(2, Math.round(documentConsensusMeter * totalUsers))
     : (document?.threshold || 2);
 
   if (docLoading || suggestionsLoading) {
