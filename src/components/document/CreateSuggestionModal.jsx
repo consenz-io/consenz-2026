@@ -369,11 +369,6 @@ Return ONLY the translated HTML:`;
         return;
       }
     }
-
-    // Close modal immediately for instant feedback
-    if (!isDirectEdit) {
-      onClose();
-    }
     
     createSuggestionMutation.mutate(formData);
   };
