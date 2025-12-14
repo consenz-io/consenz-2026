@@ -319,6 +319,9 @@ Return ONLY the translated HTML:`;
         queryClient.invalidateQueries({ queryKey: ['currentUser'] });
         queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
         
+        // Close modal only after notifications are sent
+        onClose();
+        
         // Notify parent to scroll to the new suggestion
         if (result?.id && onSuggestionCreated) {
           setTimeout(() => {
