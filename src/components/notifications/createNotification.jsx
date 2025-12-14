@@ -630,11 +630,6 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     const actionUrl = createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
     console.log('[NOTIFY NEW SUGGESTION] Action URL:', actionUrl);
     
-    if (!actionUrl || !actionUrl.includes('SuggestionDetail') || !suggestion.id) {
-      console.error('[NOTIFY NEW SUGGESTION] CRITICAL ERROR: Invalid action URL!');
-      throw new Error('Invalid notification URL');
-    }
-    
     const suggestionTypeText = suggestion.type === 'new_section' ? 'הצעה לסעיף חדש' : 'הצעת עריכה';
 
     let successfulNotifications = 0;
