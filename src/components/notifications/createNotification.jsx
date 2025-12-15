@@ -266,18 +266,21 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
       await ensureUserPublicProfileForInteraction(currentUser);
     }
     
-    const [users, publicProfiles] = await Promise.all([
-      getCachedUsers(),
-      getCachedPublicProfiles()
-    ]);
-    
-    const suggestionCreator = getUserFromCache(users, publicProfiles, { email: suggestion.created_by });
+    // Fetch suggestion creator directly
+    const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+    const suggestionCreator = suggestionCreatorList[0];
     if (!suggestionCreator?.id) {
       console.error('[NOTIFICATION ERROR] Suggestion creator not found:', suggestion.created_by);
       return;
     }
     
-    const displayName = voterName || getUserFromCache(users, publicProfiles, { email: voterEmail })?.full_name || voterEmail.split('@')[0];
+    // Get voter name if not provided
+    let displayName = voterName;
+    if (!displayName && voterEmail) {
+      const voterList = await base44.entities.User.filter({ email: voterEmail });
+      displayName = voterList[0]?.full_name || voterEmail.split('@')[0];
+    }
+    
     const userLang = suggestionCreator.preferredLanguage || 'he';
     
     await createNotification({
@@ -707,18 +710,16 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
       await ensureUserPublicProfileForInteraction(currentUser);
     }
     
-    const [users, publicProfiles, allComments] = await Promise.all([
-      getCachedUsers(),
+    const [publicProfiles, allComments] = await Promise.all([
       getCachedPublicProfiles(),
       base44.entities.Comment.filter({ rootEntityType: targetEntityType, rootEntityId: targetEntity.id })
     ]);
     
-    const commenter = getUserFromCache(users, publicProfiles, { email: comment.created_by });
-    const commenterName = commenter?.full_name || commenter?.email?.split('@')[0] || 'משתמש';
-    
     const notifiedEmails = new Set();
     notifiedEmails.add(comment.created_by);
     const notifications = [];
+    
+    // ===== Collect all emails that need notifications =====
     
     let actionUrl;
     if (targetEntityType === 'suggestion') {
@@ -729,14 +730,52 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
     
     // 1. יוצר ההצעה/סעיף
     let ownerEmail = targetEntityType === 'suggestion' ? targetEntity.created_by : null;
-    let owner = ownerEmail ? getUserFromCache(users, publicProfiles, { email: ownerEmail }) : null;
     if (targetEntityType === 'section' && targetEntity.lastEditedBy) {
-      owner = getUserFromCache(users, publicProfiles, { id: targetEntity.lastEditedBy });
-      ownerEmail = owner?.email;
+      // Need to fetch user by ID to get email
+      const ownerUsers = await base44.entities.User.filter({ id: targetEntity.lastEditedBy });
+      if (ownerUsers.length > 0) {
+        ownerEmail = ownerUsers[0].email;
+      }
     }
     
-    if (owner && ownerEmail && !notifiedEmails.has(ownerEmail)) {
+    if (ownerEmail && !notifiedEmails.has(ownerEmail)) {
       notifiedEmails.add(ownerEmail);
+    }
+    
+    // 2. כל המגיבים הקודמים
+    const commentersEmails = [...new Set(allComments
+      .filter(c => c.id !== comment.id && c.created_by)
+      .map(c => c.created_by)
+    )];
+    
+    commentersEmails.forEach(email => {
+      if (!notifiedEmails.has(email)) {
+        notifiedEmails.add(email);
+      }
+    });
+    
+    // ===== Fetch all users who need notifications =====
+    const emailsArray = Array.from(notifiedEmails).filter(e => e !== comment.created_by);
+    if (emailsArray.length === 0) return;
+    
+    const users = await base44.entities.User.filter({ email: { $in: emailsArray } });
+    
+    // Get commenter for name
+    const commenterUsers = await base44.entities.User.filter({ email: comment.created_by });
+    const commenter = commenterUsers[0] || { email: comment.created_by, full_name: comment.created_by.split('@')[0] };
+    const commenterName = commenter.full_name || commenter.email?.split('@')[0] || 'משתמש';
+    
+    // ===== Build notifications =====
+    const emailToUser = {};
+    users.forEach(u => {
+      if (u.email && u.id) {
+        emailToUser[u.email] = u;
+      }
+    });
+    
+    // Owner notification
+    if (ownerEmail && emailToUser[ownerEmail]) {
+      const owner = emailToUser[ownerEmail];
       const userLang = owner.preferredLanguage || 'he';
       const messageKey = targetEntityType === 'suggestion' ? 'notifCommentMessageSuggestion' : 'notifCommentMessageSection';
       notifications.push({
@@ -750,30 +789,26 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
       });
     }
     
-    // 2. כל המגיבים הקודמים
-    const commentersEmails = [...new Set(allComments
-      .filter(c => c.id !== comment.id)
-      .map(c => c.created_by)
-    )];
+    // Previous commenters notifications
+    commentersEmails.forEach(email => {
+      if (email !== ownerEmail && emailToUser[email]) {
+        const user = emailToUser[email];
+        const userLang = user.preferredLanguage || 'he';
+        notifications.push({
+          userId: user.id,
+          type: targetEntityType === 'suggestion' ? 'suggestion_comment' : 'section_comment',
+          title: translate('notifCommentTitle', userLang),
+          message: translate('notifCommentOnDiscussion', userLang, { name: commenterName }),
+          relatedEntityId: targetEntity.id,
+          relatedEntityType: targetEntityType,
+          actionUrl
+        });
+      }
+    });
     
-    for (const email of commentersEmails) {
-      if (notifiedEmails.has(email)) continue;
-      notifiedEmails.add(email);
-      const user = getUserFromCache(users, publicProfiles, { email });
-      if (!user) continue;
-      const userLang = user.preferredLanguage || 'he';
-      notifications.push({
-        userId: user.id,
-        type: targetEntityType === 'suggestion' ? 'suggestion_comment' : 'section_comment',
-        title: translate('notifCommentTitle', userLang),
-        message: translate('notifCommentOnDiscussion', userLang, { name: commenterName }),
-        relatedEntityId: targetEntity.id,
-        relatedEntityType: targetEntityType,
-        actionUrl
-      });
+    if (notifications.length > 0) {
+      await batchCreateNotifications(notifications);
     }
-    
-    await batchCreateNotifications(notifications);
   } catch (error) {
     console.error('[NOTIFICATION ERROR]', error);
   }
@@ -795,26 +830,72 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
       await ensureUserPublicProfileForInteraction(currentUser);
     }
     
-    const [users, publicProfiles, adminIds, allDocumentComments] = await Promise.all([
-      getCachedUsers(),
+    const [publicProfiles, adminIds, allDocumentComments] = await Promise.all([
       getCachedPublicProfiles(),
       getDocumentAdmins(doc.id),
       base44.entities.Comment.filter({ rootEntityType: 'document', rootEntityId: doc.id })
     ]);
-    
-    const commenter = getUserFromCache(users, publicProfiles, { email: comment.created_by });
-    const commenterName = commenter?.full_name || commenter?.email?.split('@')[0] || 'משתמש';
     
     const notifiedEmails = new Set();
     notifiedEmails.add(comment.created_by);
     const notifications = [];
     const actionUrl = createPageUrl("DocumentView") + `?id=${doc.id}`;
     
-    // תשובה לתגובה
-    if (parentComment && comment.created_by !== parentComment.created_by) {
-      const parentCommenter = getUserFromCache(users, publicProfiles, { email: parentComment.created_by });
+    // ===== Collect all emails that need notifications =====
+    
+    // Parent comment author
+    if (parentComment && comment.created_by !== parentComment.created_by && parentComment.created_by) {
+      notifiedEmails.add(parentComment.created_by);
+    }
+    
+    // Document creator
+    if (doc.created_by && !notifiedEmails.has(doc.created_by)) {
+      notifiedEmails.add(doc.created_by);
+    }
+    
+    // Admin emails
+    if (adminIds.length > 0) {
+      const adminUsers = await base44.entities.User.filter({ id: { $in: adminIds } });
+      adminUsers.forEach(admin => {
+        if (admin.email && !notifiedEmails.has(admin.email)) {
+          notifiedEmails.add(admin.email);
+        }
+      });
+    }
+    
+    // Discussion participants
+    const commentersEmails = [...new Set(allDocumentComments
+      .filter(c => c.created_by)
+      .map(c => c.created_by))];
+    commentersEmails.forEach(email => {
+      if (!notifiedEmails.has(email)) {
+        notifiedEmails.add(email);
+      }
+    });
+    
+    // ===== Fetch all users who need notifications =====
+    const emailsArray = Array.from(notifiedEmails).filter(e => e !== comment.created_by);
+    if (emailsArray.length === 0) return;
+    
+    const users = await base44.entities.User.filter({ email: { $in: emailsArray } });
+    
+    // Get commenter for name
+    const commenterUsers = await base44.entities.User.filter({ email: comment.created_by });
+    const commenter = commenterUsers[0] || { email: comment.created_by, full_name: comment.created_by.split('@')[0] };
+    const commenterName = commenter.full_name || commenter.email?.split('@')[0] || 'משתמש';
+    
+    // ===== Build notifications =====
+    const emailToUser = {};
+    users.forEach(u => {
+      if (u.email && u.id) {
+        emailToUser[u.email] = u;
+      }
+    });
+    
+    // Parent commenter notification (reply)
+    if (parentComment && parentComment.created_by && parentComment.created_by !== comment.created_by) {
+      const parentCommenter = emailToUser[parentComment.created_by];
       if (parentCommenter) {
-        notifiedEmails.add(parentComment.created_by);
         const userLang = parentCommenter.preferredLanguage || 'he';
         notifications.push({
           userId: parentCommenter.id,
@@ -828,32 +909,12 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
       }
     }
     
-    // יוצר המסמך
-    if (doc.created_by && !notifiedEmails.has(doc.created_by)) {
-      const creator = getUserFromCache(users, publicProfiles, { email: doc.created_by });
-      if (creator) {
-        notifiedEmails.add(doc.created_by);
-        const userLang = creator.preferredLanguage || 'he';
-        notifications.push({
-          userId: creator.id,
-          type: 'document_comment',
-          title: translate('notifDocumentCommentTitle', userLang),
-          message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: doc.title }),
-          relatedEntityId: doc.id,
-          relatedEntityType: 'document',
-          actionUrl
-        });
-      }
-    }
-    
-    // מנהלים
-    for (const adminId of adminIds) {
-      const admin = getUserFromCache(users, publicProfiles, { id: adminId });
-      if (!admin || notifiedEmails.has(admin.email)) continue;
-      notifiedEmails.add(admin.email);
-      const userLang = admin.preferredLanguage || 'he';
+    // Document creator notification
+    if (doc.created_by && emailToUser[doc.created_by] && doc.created_by !== comment.created_by) {
+      const creator = emailToUser[doc.created_by];
+      const userLang = creator.preferredLanguage || 'he';
       notifications.push({
-        userId: adminId,
+        userId: creator.id,
         type: 'document_comment',
         title: translate('notifDocumentCommentTitle', userLang),
         message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: doc.title }),
@@ -863,13 +924,14 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
       });
     }
     
-    // משתתפי הדיון
-    const commentersEmails = [...new Set(allDocumentComments.map(c => c.created_by))];
-    for (const email of commentersEmails) {
-      if (notifiedEmails.has(email)) continue;
-      notifiedEmails.add(email);
-      const user = getUserFromCache(users, publicProfiles, { email });
-      if (!user) continue;
+    // Admins and other participants notifications
+    emailsArray.forEach(email => {
+      // Skip if already notified as parent commenter or doc creator
+      if (email === parentComment?.created_by || email === doc.created_by) return;
+      
+      const user = emailToUser[email];
+      if (!user) return;
+      
       const userLang = user.preferredLanguage || 'he';
       notifications.push({
         userId: user.id,
@@ -880,9 +942,11 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
         relatedEntityType: 'document',
         actionUrl
       });
-    }
+    });
     
-    await batchCreateNotifications(notifications);
+    if (notifications.length > 0) {
+      await batchCreateNotifications(notifications);
+    }
   } catch (error) {
     console.error('[NOTIFICATION ERROR]', error);
   }
