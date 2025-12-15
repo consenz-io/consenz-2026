@@ -50,26 +50,27 @@ export default function VotesNeededCounter({ suggestion, document, sectionId }) 
     initialData: [],
   });
 
+  // חישוב דינמי של מספר המשתתפים - בדיוק כמו ב-UnderstandingConsensus
+  const totalUsers = React.useMemo(() => {
+    if (!document) return 1;
+    const count = calculateContributorsFromData({
+      document,
+      suggestions,
+      allVotes,
+      allUsers,
+      allArguments,
+      allComments,
+      sections
+    });
+    return count > 0 ? count : 1;
+  }, [document, suggestions, allVotes, allUsers, allArguments, allComments, sections]);
+
   // חישוב כמה הצבעות נדרשות
   const calculateVotesNeeded = () => {
     if (!document || !suggestion) return 1;
     
     const proVotes = suggestion.proVotes || 0;
     const conVotes = suggestion.conVotes || 0;
-    
-    // חישוב דינמי של מספר המשתתפים - בדיוק כמו ב-UnderstandingConsensus
-    const totalUsers = React.useMemo(() => {
-      const count = calculateContributorsFromData({
-        document,
-        suggestions,
-        allVotes,
-        allUsers,
-        allArguments,
-        allComments,
-        sections
-      });
-      return count > 0 ? count : 1;
-    }, [suggestions, allVotes, allUsers, allArguments, allComments, sections]);
     
     // חישוב threshold דינמי על בסיס consensuses של המסמך
     let threshold;
