@@ -267,7 +267,10 @@ export default function SectionDiff({
       
       {/* Translation indicator - clickable to toggle */}
       {showTranslated && hasTranslation && (
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
+        <div 
+          className="flex items-center gap-2 mb-2 flex-wrap"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Badge 
             variant="outline" 
             className="bg-green-50 text-green-700 border-green-200 text-xs cursor-pointer hover:bg-green-100 transition-colors"
