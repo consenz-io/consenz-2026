@@ -214,7 +214,10 @@ export default function SectionDiff({
     <Card 
       className="p-4 bg-slate-50 border-slate-200"
     >
-      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+      <div 
+        className="flex items-center justify-between mb-3 flex-wrap gap-2"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</div>
         <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
           {showDiff && (
