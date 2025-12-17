@@ -34,6 +34,13 @@ export default function SectionDiff({
   const [showDiff, setShowDiff] = useState(true);
   const [diffMode, setDiffMode] = useDiffMode();
   
+  // Reset state when suggestion changes
+  useEffect(() => {
+    setTranslationResult(null);
+    setShowTranslated(false);
+    setIsTranslating(false);
+  }, [suggestion?.id, sectionId, originalContent, newContent]);
+  
   // Detect source languages
   const originalSourceLang = originalVersion?.originalLanguage || 
                               section?.originalLanguage || 
