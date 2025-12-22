@@ -24,6 +24,7 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [showPointsHistory, setShowPointsHistory] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -67,7 +68,7 @@ export default function Profile() {
   const { data: pointsTransactions } = useQuery({
     queryKey: ['pointsTransactions', user?.id],
     queryFn: () => base44.entities.PointsTransaction.filter({ userId: user.id }, '-created_date'),
-    enabled: !!user?.id && isOwnProfile, // Only show points for own profile
+    enabled: !!user?.id,
     initialData: [],
   });
 
@@ -505,7 +506,10 @@ export default function Profile() {
           </CardHeader>
           <CardContent className="space-y-4 p-3 md:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
+              <div 
+                className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+                onClick={() => setShowPointsHistory(!showPointsHistory)}
+              >
                 <Sparkles className="w-6 h-6 text-blue-600" />
                 <div>
                   <p className="text-sm text-slate-500">{t('points')}</p>
@@ -531,6 +535,56 @@ export default function Profile() {
                 </div>
               </div>
             </div>
+
+            {showPointsHistory && pointsTransactions.length > 0 && (
+              <div className="border-t pt-4">
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">
+                  {language === 'he' ? 'היסטוריית נקודות' : language === 'ar' ? 'تاريخ النقاط' : 'Points History'}
+                </h3>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {pointsTransactions.map((transaction) => (
+                    <div 
+                      key={transaction.id}
+                      className={`p-3 rounded-lg border ${
+                        transaction.amount > 0 
+                          ? 'bg-green-50 border-green-200' 
+                          : 'bg-red-50 border-red-200'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="outline" className={`text-xs font-semibold ${
+                              transaction.amount > 0 
+                                ? 'bg-green-100 text-green-800 border-green-300' 
+                                : 'bg-red-100 text-red-800 border-red-300'
+                            }`}>
+                              {transaction.amount > 0 ? '+' : ''}{transaction.amount}
+                            </Badge>
+                            <span className="text-xs text-slate-500">
+                              {new Date(transaction.created_date).toLocaleDateString(
+                                language === 'en' ? 'en-US' : language === 'ar' ? 'ar-EG' : 'he-IL',
+                                { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }
+                              )}
+                            </span>
+                          </div>
+                          <p className="text-sm text-slate-700">{transaction.description}</p>
+                          {transaction.relatedEntityId && transaction.relatedEntityType === 'suggestion' && (
+                            <Link 
+                              to={`${createPageUrl("SuggestionDetail")}?id=${transaction.relatedEntityId}`}
+                              className="text-blue-600 hover:underline inline-flex items-center gap-1 text-xs mt-1"
+                            >
+                              {language === 'he' ? 'צפה בהצעה' : language === 'ar' ? 'عرض المقترح' : 'View suggestion'}
+                              <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <Tabs defaultValue="comments" className="w-full" dir={isRTL ? 'rtl' : 'ltr'}>
               <TabsList className="grid w-full grid-cols-3">
