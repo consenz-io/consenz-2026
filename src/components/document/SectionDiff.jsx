@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -112,6 +114,20 @@ export default function SectionDiff({
     const newTokens = tokenize(newText);
     return computeWordDiff(oldTokens, newTokens);
   }, [displayOriginal, displayNew]);
+  
+  const navigate = useNavigate();
+  
+  const handleCardClick = () => {
+    if (documentId && sectionId) {
+      navigate(`${createPageUrl("DocumentView")}?id=${documentId}#section-${sectionId}`);
+      setTimeout(() => {
+        const element = document.getElementById(`section-${sectionId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+    }
+  };
 
   const contentStyle = {
     direction: isRTL ? 'rtl' : 'ltr',
@@ -270,7 +286,10 @@ export default function SectionDiff({
         </div>
       )}
       
-      <div className="prose prose-sm max-w-none">
+      <div 
+        className="prose prose-sm max-w-none cursor-pointer hover:bg-slate-100 rounded-lg p-2 -m-2 transition-colors"
+        onClick={handleCardClick}
+      >
         {isTranslating ? (
           <div className="flex items-center justify-center py-4 gap-2 text-slate-500">
             <Loader2 className="w-4 h-4 animate-spin" />
