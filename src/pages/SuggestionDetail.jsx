@@ -52,8 +52,10 @@ export default function SuggestionDetail() {
     enabled: !!suggestionId,
     refetchInterval: SYNC_INTERVAL,
     refetchIntervalInBackground: false,
-    retry: false,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
     throwOnError: false,
+    staleTime: 5000,
   });
 
   const { data: allDocumentSuggestions } = useQuery({
@@ -67,24 +69,42 @@ export default function SuggestionDetail() {
 
   const { data: document } = useQuery({
     queryKey: ['document', suggestion?.documentId],
-    queryFn: () => base44.entities.Document.filter({ id: suggestion.documentId }).then(d => d[0]),
+    queryFn: async () => {
+      const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
+      return docs && docs.length > 0 ? docs[0] : null;
+    },
     enabled: !!suggestion?.documentId,
     refetchInterval: SYNC_INTERVAL,
     refetchIntervalInBackground: false,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
+    staleTime: 5000,
   });
 
   const { data: section } = useQuery({
     queryKey: ['section', suggestion?.sectionId],
-    queryFn: () => base44.entities.Section.filter({ id: suggestion.sectionId }).then(s => s[0]),
+    queryFn: async () => {
+      const sections = await base44.entities.Section.filter({ id: suggestion.sectionId });
+      return sections && sections.length > 0 ? sections[0] : null;
+    },
     enabled: !!suggestion?.sectionId,
     refetchInterval: SYNC_INTERVAL,
     refetchIntervalInBackground: false,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
+    staleTime: 5000,
   });
 
   const { data: topic } = useQuery({
     queryKey: ['topic', suggestion?.topicId],
-    queryFn: () => base44.entities.Topic.filter({ id: suggestion.topicId }).then(t => t[0]),
+    queryFn: async () => {
+      const topics = await base44.entities.Topic.filter({ id: suggestion.topicId });
+      return topics && topics.length > 0 ? topics[0] : null;
+    },
     enabled: !!suggestion?.topicId,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
+    staleTime: 5000,
   });
 
   const { data: user } = useQuery({

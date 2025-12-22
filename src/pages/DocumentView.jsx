@@ -63,10 +63,16 @@ export default function DocumentView() {
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
-    queryFn: () => base44.entities.Document.filter({ id: documentId }).then(docs => docs[0]),
+    queryFn: async () => {
+      const docs = await base44.entities.Document.filter({ id: documentId });
+      return docs && docs.length > 0 ? docs[0] : null;
+    },
     enabled: !!documentId,
     refetchInterval: SYNC_INTERVAL,
     refetchIntervalInBackground: false,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
+    staleTime: 5000,
   });
 
   const { data: topics, isLoading: topicsLoading } = useQuery({
