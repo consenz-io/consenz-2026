@@ -800,31 +800,93 @@ export default function SuggestionDetail() {
 
             {suggestion.type === 'edit_section' && suggestion.originalContent ? (
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedChanges')}</h3>
-                <Link 
-                  to={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}&scrollTo=${suggestion.sectionId}`}
-                  className="block"
-                >
-                  <div className="hover:shadow-md transition-all cursor-pointer rounded-lg">
-                    <SectionDiff
-                      originalContent={suggestion.originalContent}
-                      newContent={suggestion.newContent}
-                      suggestion={suggestion}
-                      documentId={suggestion.documentId}
-                      sectionId={suggestion.sectionId}
-                      section={section}
-                    />
-                  </div>
-                </Link>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);
+                      setTimeout(() => {
+                        const element = document.getElementById(`section-${suggestion.sectionId}`);
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }, 300);
+                    }}
+                    className="h-7 px-2 text-xs"
+                  >
+                    <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
+                    {isRTL ? 'חזרה למסמך' : 'Back to Document'}
+                  </Button>
+                </div>
+                <SectionDiff
+                  originalContent={suggestion.originalContent}
+                  newContent={suggestion.newContent}
+                  suggestion={suggestion}
+                  documentId={suggestion.documentId}
+                  sectionId={suggestion.sectionId}
+                  section={section}
+                />
               </div>
             ) : suggestion.type === 'new_section' ? (
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedContent')}</h3>
-                <Link 
-                  to={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}&scrollTo=new-suggestion-${suggestionId}`}
-                  className="block"
-                >
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg hover:border-green-400 hover:shadow-md transition-all cursor-pointer">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-slate-700">{t('proposedContent')}</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#new-suggestion-${suggestionId}`);
+                      setTimeout(() => {
+                        const element = document.getElementById(`new-suggestion-${suggestionId}`);
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }, 300);
+                    }}
+                    className="h-7 px-2 text-xs"
+                  >
+                    <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
+                    {isRTL ? 'חזרה למסמך' : 'Back to Document'}
+                  </Button>
+                </div>
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <TranslatableContent
+                    content={suggestion.newContent}
+                    entity={suggestion}
+                    entityType="Suggestion"
+                    onUpdate={(updated) => {
+                      queryClient.setQueryData(['suggestion', suggestionId], updated);
+                    }}
+                    className="prose prose-sm max-w-none"
+                  />
+                </div>
+              </div>
+            ) : suggestion.type === 'edit_section' && isContentStillCurrent ? (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-slate-700">{t('proposedContent')}</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);
+                      setTimeout(() => {
+                        const element = document.getElementById(`section-${suggestion.sectionId}`);
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }, 300);
+                    }}
+                    className="h-7 px-2 text-xs"
+                  >
+                    <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
+                    {isRTL ? 'חזרה למסמך' : 'Back to Document'}
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <TranslatableContent
                       content={suggestion.newContent}
                       entity={suggestion}
@@ -835,28 +897,6 @@ export default function SuggestionDetail() {
                       className="prose prose-sm max-w-none"
                     />
                   </div>
-                </Link>
-              </div>
-            ) : suggestion.type === 'edit_section' && isContentStillCurrent ? (
-              <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedContent')}</h3>
-                <div className="space-y-2">
-                  <Link 
-                    to={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}&scrollTo=${suggestion.sectionId}`}
-                    className="block"
-                  >
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
-                      <TranslatableContent
-                        content={suggestion.newContent}
-                        entity={suggestion}
-                        entityType="Suggestion"
-                        onUpdate={(updated) => {
-                          queryClient.setQueryData(['suggestion', suggestionId], updated);
-                        }}
-                        className="prose prose-sm max-w-none"
-                      />
-                    </div>
-                  </Link>
                   {user && (
                     <Button
                       variant="outline"
@@ -872,23 +912,37 @@ export default function SuggestionDetail() {
               </div>
             ) : (
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedContent')}</h3>
-                <Link 
-                  to={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}&scrollTo=${suggestion.sectionId}`}
-                  className="block"
-                >
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg hover:border-blue-400 hover:shadow-md transition-all cursor-pointer">
-                    <TranslatableContent
-                      content={suggestion.newContent}
-                      entity={suggestion}
-                      entityType="Suggestion"
-                      onUpdate={(updated) => {
-                        queryClient.setQueryData(['suggestion', suggestionId], updated);
-                      }}
-                      className="prose prose-sm max-w-none"
-                    />
-                  </div>
-                </Link>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-slate-700">{t('proposedContent')}</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);
+                      setTimeout(() => {
+                        const element = document.getElementById(`section-${suggestion.sectionId}`);
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }, 300);
+                    }}
+                    className="h-7 px-2 text-xs"
+                  >
+                    <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
+                    {isRTL ? 'חזרה למסמך' : 'Back to Document'}
+                  </Button>
+                </div>
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <TranslatableContent
+                    content={suggestion.newContent}
+                    entity={suggestion}
+                    entityType="Suggestion"
+                    onUpdate={(updated) => {
+                      queryClient.setQueryData(['suggestion', suggestionId], updated);
+                    }}
+                    className="prose prose-sm max-w-none"
+                  />
+                </div>
               </div>
             )}
 
