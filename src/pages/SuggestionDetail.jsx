@@ -299,9 +299,10 @@ export default function SuggestionDetail() {
       const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
       
       if (shouldAccept && updatedSuggestion.status === 'pending') {
-        const accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
+        const actuallyAccepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
         
-        if (accepted) {
+        // רק אם ההצעה באמת התקבלה (actuallyAccepted === true) - נחזיר accepted: true
+        if (actuallyAccepted) {
           if (!userVote && vote === 'pro' && document?.gamificationEnabled) {
             base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
             base44.entities.PointsTransaction.create({
@@ -396,12 +397,14 @@ export default function SuggestionDetail() {
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
       queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
       
-      if (data?.accepted) {
+      // רק אם ההצעה באמת התקבלה (data.accepted === true) - נרענן את כל הנתונים ונציג הודעת הצלחה
+      if (data?.accepted === true) {
         // רענון כל הנתונים הרלוונטיים כשההצעה התקבלה
         queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
         queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
         queryClient.invalidateQueries({ queryKey: ['allVersions'] });
         queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
+        queryClient.invalidateQueries({ queryKey: ['allDocumentSuggestions', document?.id] });
       }
     },
   });
