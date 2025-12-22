@@ -26,38 +26,20 @@ export default function SectionHistory() {
 
   const { data: section, isLoading: sectionLoading } = useQuery({
     queryKey: ['section', sectionId],
-    queryFn: async () => {
-      const sections = await base44.entities.Section.filter({ id: sectionId });
-      return sections && sections.length > 0 ? sections[0] : null;
-    },
+    queryFn: () => base44.entities.Section.filter({ id: sectionId }).then(s => s[0]),
     enabled: !!sectionId,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
-    staleTime: 5000,
   });
 
   const { data: document } = useQuery({
     queryKey: ['document', section?.documentId],
-    queryFn: async () => {
-      const docs = await base44.entities.Document.filter({ id: section.documentId });
-      return docs && docs.length > 0 ? docs[0] : null;
-    },
+    queryFn: () => base44.entities.Document.filter({ id: section.documentId }).then(d => d[0]),
     enabled: !!section?.documentId,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
-    staleTime: 5000,
   });
 
   const { data: topic } = useQuery({
     queryKey: ['topic', section?.topicId],
-    queryFn: async () => {
-      const topics = await base44.entities.Topic.filter({ id: section.topicId });
-      return topics && topics.length > 0 ? topics[0] : null;
-    },
+    queryFn: () => base44.entities.Topic.filter({ id: section.topicId }).then(t => t[0]),
     enabled: !!section?.topicId,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
-    staleTime: 5000,
   });
 
   const { data: versions, isLoading: versionsLoading } = useQuery({
@@ -65,9 +47,6 @@ export default function SectionHistory() {
     queryFn: () => base44.entities.DocumentVersion.filter({ sectionId }, '-version'),
     initialData: [],
     enabled: !!sectionId,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
-    staleTime: 5000,
   });
 
   const { data: user } = useQuery({
@@ -403,14 +382,8 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
   
   const { data: suggestion } = useQuery({
     queryKey: ['suggestion', suggestionId],
-    queryFn: async () => {
-      const suggestions = await base44.entities.Suggestion.filter({ id: suggestionId });
-      return suggestions && suggestions.length > 0 ? suggestions[0] : null;
-    },
+    queryFn: () => base44.entities.Suggestion.filter({ id: suggestionId }).then(s => s[0]),
     enabled: !!suggestionId,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
-    staleTime: 5000,
   });
 
   const { data: comments } = useQuery({
