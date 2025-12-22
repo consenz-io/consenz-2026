@@ -287,8 +287,7 @@ export default function SectionDiff({
       )}
       
       <div 
-        className="prose prose-sm max-w-none cursor-pointer hover:bg-slate-100 rounded-lg p-2 -m-2 transition-colors"
-        onClick={handleCardClick}
+        className="prose prose-sm max-w-none rounded-lg p-2 -m-2"
       >
         {isTranslating ? (
           <div className="flex items-center justify-center py-4 gap-2 text-slate-500">
