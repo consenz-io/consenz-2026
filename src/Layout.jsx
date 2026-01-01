@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages, ArrowUp } from "lucide-react";
+import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages, ArrowUp, Users } from "lucide-react";
 import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
 import { Toaster } from "sonner";
 import {
@@ -144,6 +144,11 @@ function LayoutContent({ children, currentPageName }) {
       title: t('myDocuments'),
       url: createPageUrl("MyDocuments"),
       icon: FileText,
+    },
+    {
+      title: language === 'he' ? 'קבוצות' : language === 'ar' ? 'مجموعات' : 'Groups',
+      url: createPageUrl("Groups"),
+      icon: Users,
     },
   ];
 
