@@ -325,10 +325,18 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
 
   const { data: users } = useQuery({
     queryKey: ['users'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: async () => {
+      // Try to get all users, but if permission denied, return empty array
+      // Public profiles will be used as fallback
+      try {
+        return await base44.entities.User.list();
+      } catch (err) {
+        console.warn('[CommentsSection] Cannot list users (permission denied), using public profiles only');
+        return [];
+      }
+    },
     initialData: [],
     retry: false,
-    throwOnError: false,
   });
 
   const { data: publicProfiles } = useQuery({
