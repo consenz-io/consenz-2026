@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, ThumbsUp, ThumbsDown, Languages, Loader2, Trash2, CheckCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, ThumbsUp, ThumbsDown, Languages, Loader2, Trash2, CheckCircle, Sparkles } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import DeleteSectionDialog from "./DeleteSectionDialog";
@@ -15,6 +15,7 @@ import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
 import DocumentTextContent from "./DocumentTextContent";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 export default function SectionCarousel({
   section,
@@ -64,6 +65,7 @@ export default function SectionCarousel({
   
   // מעקב אחרי אנימציות של הצעות מקובלות
   const [animationPhases, setAnimationPhases] = useState({});
+  const [recentlyUpdatedSections, setRecentlyUpdatedSections] = useState({});
   const prevSuggestionsStatusRef = React.useRef({});
   const hasAnimatedRef = React.useRef(new Set());
   
@@ -97,29 +99,44 @@ export default function SectionCarousel({
           setCurrentSuggestionId(sug.id);
         }
         
-        setAnimationPhases(prev => ({ ...prev, [sug.id]: 'celebrating' }));
+        // שלב 0: הכרזה (1 שניה)
+        setAnimationPhases(prev => ({ ...prev, [sug.id]: 'announcing' }));
         
-        // שלב 1: חגיגה (3 שניות)
         setTimeout(() => {
-          console.log('[EDIT ANIMATION] Transitioning to white for suggestion:', sug.id);
+          console.log('[EDIT ANIMATION] Starting celebration for suggestion:', sug.id);
+          setAnimationPhases(prev => ({ ...prev, [sug.id]: 'celebrating' }));
+        }, 1000);
+        
+        // שלב 1: חגיגה (2.5 שניות)
+        setTimeout(() => {
+          console.log('[EDIT ANIMATION] Transitioning to normal for suggestion:', sug.id);
           setAnimationPhases(prev => ({ ...prev, [sug.id]: 'transitioning' }));
-        }, 3000);
+        }, 3500);
         
-        // שלב 2: דהייה והעלמה (אחרי עוד 2 שניות - סה"כ 5 שניות)
+        // שלב 2: מעבר הדרגתי לרגיל (1.5 שניות - סה"כ 5 שניות)
         setTimeout(() => {
-          console.log('[EDIT ANIMATION] Fading out suggestion:', sug.id);
-          setAnimationPhases(prev => ({ ...prev, [sug.id]: 'fading' }));
+        console.log('[EDIT ANIMATION] Completed, showing as updated section:', sug.id);
+        setAnimationPhases(prev => ({ ...prev, [sug.id]: 'completed' }));
+        // סימון הסעיף כעדכן לאחרונה
+        setRecentlyUpdatedSections(prev => ({ ...prev, [section.id]: Date.now() }));
+        // חוזרים לתצוגת הסעיף הנוכחי - עכשיו הוא מעודכן
+        setCurrentSuggestionId('current');
+        // הצגת toast notification
+        toast.success('הסעיף עודכן בהצלחה! ✓', {
+          duration: 4000,
+        });
+        // רענון הסעיפים כדי לקבל את השינוי
+        queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
         }, 5000);
         
-        // שלב 3: העלמה סופית (אחרי עוד 1 שניה - סה"כ 6 שניות)
+        // שלב 3: הסרת badge "עודכן עכשיו" (אחרי 15 שניות מהתחלה)
         setTimeout(() => {
-          console.log('[EDIT ANIMATION] Hiding suggestion:', sug.id);
-          setAnimationPhases(prev => ({ ...prev, [sug.id]: 'hidden' }));
-          // חוזרים לתצוגת הסעיף הנוכחי אחרי שהאנימציה הסתיימה
-          setCurrentSuggestionId('current');
-          // רענון הסעיפים כדי לקבל את השינוי
-          queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
-        }, 6000);
+          setRecentlyUpdatedSections(prev => {
+            const updated = { ...prev };
+            delete updated[section.id];
+            return updated;
+          });
+        }, 16000);
       }
       
       prevSuggestionsStatusRef.current[sug.id] = sug.status;
@@ -345,7 +362,7 @@ export default function SectionCarousel({
       </div>
 
       {/* כפתורי דפדוף - רק אם לא באנימציה */}
-      {allViews.length > 1 && !['celebrating', 'transitioning', 'fading'].includes(animationPhases[currentView?.data?.id]) && (
+      {allViews.length > 1 && !['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView?.data?.id]) && (
         <div className="flex items-center justify-between mb-4 pb-4 border-b-2 border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 p-3 rounded-lg shadow-sm">
           <Button
             variant="outline"
@@ -395,6 +412,17 @@ export default function SectionCarousel({
         {!currentView ? null : currentView.type === 'current' ? (
           // תצוגת תוכן נוכחי
           <>
+            {recentlyUpdatedSections[section.id] && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="mb-3 inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg text-sm font-medium text-green-700"
+              >
+                <Sparkles className="w-4 h-4" />
+                עודכן עכשיו ✓
+              </motion.div>
+            )}
             <TranslatableContent
               content={section.content}
               entity={section}
@@ -434,7 +462,32 @@ export default function SectionCarousel({
             {(() => {
               const animationPhase = animationPhases[currentView.data.id] || 'none';
               
-              // שלב החגיגה - מסגרת ירוקה ואייקון (3 שניות)
+              // שלב ההכרזה - הודעה גדולה (1 שניה)
+              if (animationPhase === 'announcing') {
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="relative overflow-hidden rounded-lg p-8 text-center"
+                    style={{
+                      background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(220 252 231) 100%)',
+                      border: '2px solid rgb(34 197 94)',
+                    }}
+                  >
+                    <motion.div
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.2, duration: 0.4 }}
+                      className="text-2xl font-bold text-green-700"
+                    >
+                      🎉 ההצעה עברה את סף התמיכה!
+                    </motion.div>
+                  </motion.div>
+                );
+              }
+              
+              // שלב החגיגה - מסגרת ירוקה ואייקון (2.5 שניות)
               if (animationPhase === 'celebrating') {
                 return (
                   <motion.div
@@ -480,41 +533,23 @@ export default function SectionCarousel({
                 );
               }
               
-              // שלב המעבר - מעבר הדרגתי למראה של סעיף רגיל (2 שניות)
+              // שלב המעבר - מעבר הדרגתי למראה של סעיף רגיל (1.5 שניות)
               if (animationPhase === 'transitioning') {
                 return (
-                  <div 
-                    className="relative overflow-hidden rounded-lg p-4 transition-all duration-[2000ms] ease-out"
-                    style={{
-                      background: 'rgb(255 255 255)',
-                      border: '1px solid rgb(226 232 240)',
+                  <motion.div
+                    initial={{ 
+                      background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(220 252 231) 100%)',
+                      borderColor: 'rgb(34 197 94)',
                     }}
+                    animate={{ 
+                      background: 'rgb(255 255 255)',
+                      borderColor: 'rgb(226 232 240)',
+                    }}
+                    transition={{ duration: 1.5, ease: "easeInOut" }}
+                    className="relative overflow-hidden rounded-lg p-4 border-2"
                   >
                     <div className="prose prose-sm max-w-none">
                       <DocumentTextContent content={currentView.data.newContent} className="text-slate-700" />
-                    </div>
-                  </div>
-                );
-              }
-              
-              // שלב הדהייה - דהייה חלקה (1 שניה)
-              if (animationPhase === 'fading') {
-                return (
-                  <motion.div
-                    initial={{ opacity: 1 }}
-                    animate={{ opacity: 0 }}
-                    transition={{ duration: 1 }}
-                  >
-                    <div 
-                      className="relative overflow-hidden rounded-lg p-4"
-                      style={{
-                        background: 'rgb(255 255 255)',
-                        border: '1px solid rgb(226 232 240)',
-                      }}
-                    >
-                      <div className="prose prose-sm max-w-none">
-                        <DocumentTextContent content={currentView.data.newContent} className="text-slate-700" />
-                      </div>
                     </div>
                   </motion.div>
                 );
@@ -563,7 +598,7 @@ export default function SectionCarousel({
             })()}
 
             {/* כפתורי הצבעה והערות - רק אם לא באנימציה */}
-            {!['celebrating', 'transitioning', 'fading'].includes(animationPhases[currentView.data.id]) && (
+            {!['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView.data.id]) && (
               <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap">
                 {document?.votingButtonsEnabled ? (
                   <>
@@ -659,7 +694,7 @@ export default function SectionCarousel({
             )}
 
             {/* תגובות להצעה - רק אם לא באנימציה */}
-            {currentView?.data?.id && !['celebrating', 'transitioning', 'fading'].includes(animationPhases[currentView.data.id]) && (
+            {currentView?.data?.id && !['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView.data.id]) && (
               <>
                 <div className="mt-3">
                   <Button
