@@ -17,16 +17,7 @@ if (typeof window !== 'undefined') {
   }, CACHE_TTL);
 }
 
-async function getCachedUsers() {
-  const cacheKey = 'all_users';
-  const cached = userCache.get(cacheKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data;
-  }
-  const users = await base44.entities.User.list();
-  userCache.set(cacheKey, { data: users, timestamp: Date.now() });
-  return users;
-}
+
 
 async function getCachedPublicProfiles() {
   const cacheKey = 'public_profiles';
