@@ -193,7 +193,7 @@ async function batchCreateNotifications(notifications) {
 }
 
 /**
- * יצירת התראה למשתמש + הוספה ל-EmailDigest במקביל
+ * Create notification for user + add to EmailDigest in parallel
  */
 export async function createNotification({
   userId,
@@ -259,7 +259,7 @@ export async function createNotification({
 }
 
 /**
- * יצירת התראה על הצבעה חדשה
+ * Create notification for new vote on suggestion
  */
 export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName, currentUser = null }) {
   try {
@@ -315,7 +315,7 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
 }
 
 /**
- * יצירת התראה על שינוי סטטוס הצעה
+ * Create notification for suggestion status change
  */
 export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
   try {
@@ -345,7 +345,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     
     const suggestionTitle = suggestion.title || 'הצעה ללא כותרת';
     
-    // 1. יוצר ההצעה - שליפה ישירה מה-DB
+    // 1. Suggestion creator - direct fetch from DB
     console.log('[NOTIFICATION] Looking for suggestion creator:', suggestion.created_by);
     const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
     console.log('[NOTIFICATION] Found users:', suggestionCreatorList?.length || 0, suggestionCreatorList?.map(u => u.email));
@@ -378,7 +378,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
       return;
     }
     
-    // 2. אם התקבלה - יוצר המסמך, מנהלים, ומצביעי pro
+    // 2. If accepted - document creator, admins, and pro voters
     if (newStatus === 'accepted') {
       const [adminIds, proVotes, publicProfiles] = await Promise.all([
         getDocumentAdmins(suggestion.documentId),
@@ -386,7 +386,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
         getCachedPublicProfiles()
       ]);
       
-      // שלוף רק משתמשים רלוונטיים במקום כולם
+      // Fetch only relevant users instead of all
       const relevantUserIds = [...new Set([
         ...adminIds,
         ...proVotes.map(v => v.userId)
@@ -472,7 +472,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
 }
 
 /**
- * יצירת התראה על הצעה חדשה במסמך - לכל העוקבים אחרי המסמך
+ * Create notification for new suggestion in document - for all document followers
  * ✅ FIXED: Uses DocumentFollow entity for notifications
  * ✅ FIXED: Auto-follows users on first interaction
  */
@@ -481,7 +481,7 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
 }
 
 /**
- * יצירת התראה על הצעה חדשה לעריכת כותרת נושא במסמך - לכל העוקבים אחרי המסמך
+ * Create notification for new topic title edit suggestion in document - for all document followers
  */
 export async function notifyNewTopicEditSuggestion({ topicEditSuggestion, document: doc, currentUser }) {
   return _notifyNewSuggestion({ 
@@ -493,7 +493,7 @@ export async function notifyNewTopicEditSuggestion({ topicEditSuggestion, docume
   });
 }
 
-// פונקציית עזר משותפת
+// Shared helper function
 async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, relatedEntityType, topicId = null }) {
   try {
     // Validate required data
@@ -531,7 +531,7 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
     console.log('[NOTIFY NEW SUGGESTION] Document Title:', doc.title);
     console.log('[NOTIFY NEW SUGGESTION] Current User:', currentUser.email, '/', currentUser.full_name);
     
-    // ===== FIXED: Removed getCachedUsers() from initial fetch =====
+    // ===== Fetch data from database =====
     console.log('[NOTIFY NEW SUGGESTION] Fetching data from database...');
     const [publicProfiles, allSuggestions, allArguments, sections, adminIds] = await Promise.all([
       getCachedPublicProfiles(),
@@ -564,7 +564,7 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
     console.log('[NOTIFY NEW SUGGESTION] - Total votes:', allVotes.length);
     console.log('[NOTIFY NEW SUGGESTION] - Total comments:', allComments.length);
 
-    // ===== Auto-follow current user if this is their first interaction =====
+    // ===== Auto-follow current user on first interaction =====
     console.log('[NOTIFY NEW SUGGESTION] ===== AUTO-FOLLOW CHECK =====');
     try {
       const existingFollow = await base44.entities.DocumentFollow.filter({
@@ -588,7 +588,7 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
       // Don't throw - this shouldn't block notifications
     }
     
-    // ===== Get followers of the document =====
+    // ===== Fetch document followers =====
     console.log('[NOTIFY NEW SUGGESTION] ===== FETCHING DOCUMENT FOLLOWERS =====');
     const followers = await base44.entities.DocumentFollow.filter({ documentId: doc.id });
     console.log('[NOTIFY NEW SUGGESTION] Found', followers.length, 'followers');
@@ -609,7 +609,7 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
       return;
     }
     
-    // ===== Fetch follower user data =====
+    // ===== Fetch follower users =====
     console.log('[NOTIFY NEW SUGGESTION] ===== FETCHING FOLLOWER USER DATA =====');
     const users = await base44.entities.User.filter({ 
       id: { $in: followerUserIds } 
@@ -693,7 +693,7 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
 }
 
 /**
- * יצירת התראה על תגובה חדשה - ליוצר ההצעה ולכל המגיבים
+ * Create notification for new comment - for suggestion creator and all commenters
  */
 export async function notifyNewComment({ comment, targetEntity, targetEntityType, parentComment = null, currentUser = null }) {
   try {
@@ -726,14 +726,14 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
       actionUrl = createPageUrl("SectionHistory") + `?id=${targetEntity.id}&commentId=${comment.id}`;
     }
     
-    // 1. מחבר התגובה האב (אם זו תגובה לתגובה) - בעדיפות ראשונה!
+    // 1. Parent comment author (if this is a reply) - FIRST PRIORITY!
     let parentCommentAuthorEmail = null;
     if (parentComment?.created_by && parentComment.created_by !== comment.created_by) {
       parentCommentAuthorEmail = parentComment.created_by;
       notifiedEmails.add(parentCommentAuthorEmail);
     }
     
-    // 2. יוצר ההצעה/סעיף
+    // 2. Suggestion/section creator
     let ownerEmail = targetEntityType === 'suggestion' ? targetEntity.created_by : null;
     if (targetEntityType === 'section' && targetEntity.lastEditedBy) {
       // Need to fetch user by ID to get email
@@ -747,7 +747,7 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
       notifiedEmails.add(ownerEmail);
     }
     
-    // 3. כל המגיבים הקודמים
+    // 3. All previous commenters
     const commentersEmails = [...new Set(allComments
       .filter(c => c.id !== comment.id && c.created_by)
       .map(c => c.created_by)
@@ -835,7 +835,7 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
 }
 
 /**
- * יצירת התראה על תגובה חדשה בדיון כללי של מסמך
+ * Create notification for new comment in document general discussion
  */
 export async function notifyNewDocumentComment({ comment, document: doc, parentComment = null, currentUser = null }) {
   try {

@@ -1,8 +1,8 @@
 import { base44 } from "@/api/base44Client";
 
 /**
- * מחשב את מספר התורמים הייחודיים למסמך (גרסה אסינכרונית)
- * כולל: יוצר המסמך, יוצרי הצעות, מצביעים, כותבי טיעונים וכותבי תגובות
+ * Calculate unique contributors count for document (async version)
+ * Includes: document creator, suggestion creators, voters, argument writers, and commenters
  */
 export async function calculateDocumentContributors(documentId) {
   try {
@@ -30,7 +30,7 @@ export async function calculateDocumentContributors(documentId) {
       if (s.created_by) uniqueEmails.add(s.created_by);
     });
     
-    // 3. Voters - גם לפי userId וגם לפי created_by
+    // 3. Voters - both by userId and created_by
     const suggestionIds = new Set(suggestions.map(s => s.id));
     const userIdToEmail = {};
     publicProfiles.forEach(p => { userIdToEmail[p.userId] = p.email; });
@@ -106,8 +106,8 @@ export async function calculateDocumentContributors(documentId) {
 }
 
 /**
- * חישוב סינכרוני של תורמים מנתונים שכבר נטענו
- * משמש לתצוגה בזמן אמת בקאונטרים
+ * Synchronous calculation of contributors from already loaded data
+ * Used for real-time display in counters
  */
 export function calculateContributorsFromData({
   document,
@@ -128,7 +128,7 @@ export function calculateContributorsFromData({
     if (s.created_by) uniqueEmails.add(s.created_by);
   });
   
-  // 3. Voters - גם לפי userId וגם לפי created_by
+  // 3. Voters - both by userId and created_by
   const suggestionIds = new Set(suggestions.map(s => s.id));
   const userIdToEmail = {};
   allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
