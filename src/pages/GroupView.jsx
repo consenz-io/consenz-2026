@@ -102,13 +102,24 @@ export default function GroupView() {
       if (adminProfiles.length === 0) return;
 
       const userName = currentUser?.full_name || currentUser?.email || 'משתמש';
+      
+      // Create join request
+      await base44.entities.GroupJoinRequest.create({
+        groupId: group.id,
+        userId: currentUser.id,
+        userEmail: currentUser.email,
+        userName: userName,
+        status: 'pending'
+      });
+
+      const manageUrl = `${window.location.origin}${createPageUrl("GroupView")}?id=${group.id}`;
       const subject = language === 'he' 
         ? `בקשת הצטרפות לקבוצה: ${group?.name}`
         : `Request to join group: ${group?.name}`;
       
       const body = language === 'he'
-        ? `שלום,\n\n${userName} מבקש/ת להצטרף לקבוצה "${group?.name}".\n\nאימייל המשתמש: ${currentUser.email}\n\nנא לשקול את הבקשה.\n\nתודה!`
-        : `Hello,\n\n${userName} would like to join the group "${group?.name}".\n\nUser email: ${currentUser.email}\n\nPlease consider this request.\n\nThank you!`;
+        ? `שלום,\n\n${userName} מבקש/ת להצטרף לקבוצה "${group?.name}".\n\nאימייל המשתמש: ${currentUser.email}\n\nכדי לאשר או לדחות את הבקשה, היכנס לעמוד ניהול החברים:\n${manageUrl}\n\nתודה!`
+        : `Hello,\n\n${userName} would like to join the group "${group?.name}".\n\nUser email: ${currentUser.email}\n\nTo approve or reject this request, go to the member management page:\n${manageUrl}\n\nThank you!`;
 
       await Promise.all(
         adminProfiles.map(admin =>
