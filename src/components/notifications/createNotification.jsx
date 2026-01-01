@@ -303,6 +303,10 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
     
     const userLang = suggestionCreator.preferredLanguage || 'he';
     
+    // Fetch document for context
+    const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
+    const doc = docs[0];
+    
     await createNotification({
       userId: suggestionCreator.id,
       type: 'vote_on_suggestion',
@@ -310,7 +314,9 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
       message: translate('notifVoteMessage', userLang, { name: displayName, title: suggestion.title || 'הצעה' }),
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
-      actionUrl: createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`
+      actionUrl: createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`,
+      documentId: suggestion.documentId,
+      documentTitle: doc?.title
     });
   } catch (error) {
     console.error('[NOTIFICATION ERROR] notifyVoteOnSuggestion failed:', error);
