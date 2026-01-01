@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import FloatingNotificationBell from "@/components/notifications/FloatingNotificationBell";
 import { AccessibilityAnnouncer } from "@/components/AccessibilityAnnouncer";
+import { AccessibilityToolbar } from "@/components/AccessibilityToolbar";
 
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
@@ -345,6 +346,7 @@ function LayoutContent({ children, currentPageName }) {
               )}
 
               <FloatingNotificationBell />
+              <AccessibilityToolbar />
               <AccessibilityAnnouncer />
               </div>
               </SidebarProvider>
