@@ -46,6 +46,12 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose }) {
     m => m.userId === currentUser?.id && m.role === 'admin'
   );
 
+  const { data: group } = useQuery({
+    queryKey: ['group', groupId],
+    queryFn: () => base44.entities.Group.filter({ id: groupId }).then(groups => groups[0]),
+    enabled: !!groupId,
+  });
+
   const inviteMemberMutation = useMutation({
     mutationFn: async (email) => {
       const trimmedEmail = email.trim().toLowerCase();
@@ -75,6 +81,24 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose }) {
         userId: user.id,
         role: 'member',
       });
+
+      // Send email notification
+      try {
+        const groupName = group?.name || 'קבוצה';
+        const adminName = currentUser?.full_name || 'מנהל';
+        
+        await base44.integrations.Core.SendEmail({
+          to: trimmedEmail,
+          subject: language === 'he' 
+            ? `נוספת לקבוצה: ${groupName}`
+            : `You were added to group: ${groupName}`,
+          body: language === 'he'
+            ? `שלום ${user.full_name},\n\n${adminName} הוסיף אותך לקבוצה "${groupName}".\n\nכעת תוכל לראות ולהשתתף במסמכים של הקבוצה.\n\nבברכה,\nצוות Consenz`
+            : `Hello ${user.full_name},\n\n${adminName} added you to the group "${groupName}".\n\nYou can now view and participate in the group's documents.\n\nBest regards,\nConsenz Team`
+        });
+      } catch (emailError) {
+        console.error('Failed to send email:', emailError);
+      }
 
       return user;
     },
