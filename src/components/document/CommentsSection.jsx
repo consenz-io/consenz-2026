@@ -503,6 +503,8 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
           placeholder={replyTo ? t('writeReply') : t('addComment')}
           className="min-h-[80px]"
           dir="auto"
+          aria-label={replyTo ? t('writeReply') : t('addComment')}
+          aria-required="true"
           onFocus={() => {
             if (!user) {
               base44.auth.redirectToLogin(window.location.href);

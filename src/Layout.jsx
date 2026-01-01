@@ -22,12 +22,14 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import FloatingNotificationBell from "@/components/notifications/FloatingNotificationBell";
+import { AccessibilityAnnouncer } from "@/components/AccessibilityAnnouncer";
 
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
   const queryClient = useQueryClient();
   const { language, setLanguage, t, isRTL } = useLanguage();
   const [showScrollTop, setShowScrollTop] = React.useState(false);
+  const mainContentRef = React.useRef(null);
   
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -68,6 +70,12 @@ function LayoutContent({ children, currentPageName }) {
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const skipToMainContent = (e) => {
+    e.preventDefault();
+    mainContentRef.current?.focus();
+    mainContentRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   React.useEffect(() => {
@@ -140,8 +148,18 @@ function LayoutContent({ children, currentPageName }) {
 
   return (
     <SidebarProvider>
+      {/* Skip to main content link for keyboard users */}
+      <a
+        href="#main-content"
+        onClick={skipToMainContent}
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-blue-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg"
+        style={{ position: 'absolute' }}
+      >
+        {isRTL ? 'דלג לתוכן המרכזי' : 'Skip to main content'}
+      </a>
+      
       <div className={`min-h-screen flex w-full max-w-full bg-gradient-to-br from-slate-50 to-blue-50 overflow-x-hidden ${isRTL ? 'flex-row-reverse' : ''}`} style={{ maxWidth: '100vw' }}>
-        <Sidebar className={isRTL ? "border-l border-slate-200" : "border-r border-slate-200"}>
+        <Sidebar className={isRTL ? "border-l border-slate-200" : "border-r border-slate-200"} role="navigation" aria-label={isRTL ? 'תפריט ניווט ראשי' : 'Main navigation'}>
           <SidebarHeader className="border-b border-slate-200 p-4">
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -192,6 +210,7 @@ function LayoutContent({ children, currentPageName }) {
                       value={language}
                       onChange={(e) => setLanguage(e.target.value)}
                       className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm font-medium bg-white cursor-pointer"
+                      aria-label={isRTL ? 'בחירת שפה' : 'Select language'}
                     >
                       <option value="en">English</option>
                       <option value="he">עברית</option>
@@ -256,8 +275,9 @@ function LayoutContent({ children, currentPageName }) {
                   size="sm"
                   onClick={handleLogout}
                   className="w-full"
+                  aria-label={isRTL ? 'התנתקות מהמערכת' : 'Logout from system'}
                 >
-                  <LogOut className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  <LogOut className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} aria-hidden="true" />
                   {t('logout')}
                 </Button>
               </div>
@@ -265,6 +285,7 @@ function LayoutContent({ children, currentPageName }) {
               <Button
                 onClick={() => base44.auth.redirectToLogin()}
                 className="w-full"
+                aria-label={isRTL ? 'כניסה למערכת' : 'Sign in to system'}
               >
                 {t('signIn')}
               </Button>
@@ -272,20 +293,31 @@ function LayoutContent({ children, currentPageName }) {
           </SidebarFooter>
         </Sidebar>
 
-        <main className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden touch-auto">
-          <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-30">
+        <main 
+          className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden touch-auto"
+          id="main-content"
+          ref={mainContentRef}
+          tabIndex={-1}
+          role="main"
+          aria-label={isRTL ? 'תוכן ראשי' : 'Main content'}
+        >
+          <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-30" role="banner">
             <div className="flex items-center justify-between gap-2 px-2 py-2 md:px-6 md:py-4">
               <div className="flex items-center gap-2 md:gap-4">
-                <SidebarTrigger className="md:hidden hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200 touch-manipulation" />
+                <SidebarTrigger 
+                  className="md:hidden hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200 touch-manipulation"
+                  aria-label={isRTL ? 'פתיחת תפריט ניווט' : 'Open navigation menu'}
+                />
                 <h1 className="text-base md:text-xl font-bold text-slate-900 md:hidden truncate">Consenz</h1>
               </div>
               <div className="flex items-center gap-2 md:gap-3">
                 <div className="relative touch-manipulation">
-                  <Languages className="absolute left-1.5 md:left-2 top-1/2 -translate-y-1/2 w-3 h-3 md:w-4 md:h-4 text-slate-500 pointer-events-none" />
+                  <Languages className="absolute left-1.5 md:left-2 top-1/2 -translate-y-1/2 w-3 h-3 md:w-4 md:h-4 text-slate-500 pointer-events-none" aria-hidden="true" />
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
                     className="pl-6 md:pl-7 pr-1.5 md:pr-2 py-1.5 md:py-2 border border-slate-300 rounded-lg text-xs md:text-sm font-medium bg-white cursor-pointer min-w-[70px] md:min-w-[90px] touch-manipulation"
+                    aria-label={isRTL ? 'בחירת שפה' : 'Select language'}
                   >
                     <option value="en">EN</option>
                     <option value="he">עב</option>
@@ -305,17 +337,19 @@ function LayoutContent({ children, currentPageName }) {
             <button
               onClick={scrollToTop}
               className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50"
-              aria-label="Scroll to top"
+              aria-label={isRTL ? 'גלילה לראש העמוד' : 'Scroll to top'}
+              title={isRTL ? 'גלילה לראש העמוד' : 'Scroll to top'}
             >
-              <ArrowUp className="w-5 h-5" />
+              <ArrowUp className="w-5 h-5" aria-hidden="true" />
               </button>
               )}
 
               <FloatingNotificationBell />
+              <AccessibilityAnnouncer />
               </div>
               </SidebarProvider>
-          );
-          }
+              );
+              }
 
 export default function Layout({ children, currentPageName }) {
   return (
