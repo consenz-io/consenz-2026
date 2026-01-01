@@ -17,6 +17,7 @@ import DocumentTextContent from "./DocumentTextContent";
 import SectionCarousel from "./SectionCarousel";
 import NewSectionSuggestionCard from "./NewSectionSuggestionCard";
 import EditTopicModal from "./EditTopicModal";
+import TopicTitleCarousel from "./TopicTitleCarousel";
 
 import { useLanguage } from "@/components/LanguageContext";
 import { checkSuggestionConsensus, autoAcceptSuggestion, autoAcceptTopicEditSuggestion, checkTopicEditConsensus } from "./suggestionAutoAccept";
@@ -1052,16 +1053,27 @@ Return ONLY the translated text:`;
                               </div>
                             )}
                             
-                            {/* Title - flexible width */}
-                            <CardTitle className={`text-lg md:text-2xl break-words flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
-                              {(() => {
-                                const translatedTitle = topic.translations?.[language]?.title;
-                                if (showTranslatedTopics[topic.id] && typeof translatedTitle === 'string') {
-                                  return translatedTitle;
-                                }
-                                return topic.title;
-                              })()}
-                            </CardTitle>
+                            {/* Title with carousel for suggestions */}
+                            <div className="flex-1 min-w-0">
+                              <TopicTitleCarousel
+                                topic={topic}
+                                topicEditSuggestions={getTopicEditSuggestions(topic.id)}
+                                document={document}
+                                user={user}
+                                getUserTopicVote={getUserTopicVote}
+                                voteTopicEditMutation={voteTopicEditMutation}
+                                getUserName={getUserName}
+                                isAdmin={isAdmin}
+                                users={users}
+                                publicProfiles={publicProfiles}
+                                showTranslatedTopics={showTranslatedTopics}
+                                setShowTranslatedTopics={setShowTranslatedTopics}
+                                translateTopicMutation={translateTopicMutation}
+                                setEditingTopic={setEditingTopic}
+                                language={language}
+                                isRTL={isRTL}
+                              />
+                            </div>
                             
                             {/* Action buttons - fixed on the side */}
                             <div className={`flex items-center gap-1 flex-shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -1137,103 +1149,6 @@ Return ONLY the translated text:`;
                           </div>
                         </CardHeader>
             <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
-              {/* Topic Edit Suggestions */}
-              {getTopicEditSuggestions(topic.id).map((suggestion) => {
-                const userVote = getUserTopicVote(suggestion.id);
-                const delta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
-                
-                // חישוב threshold דינמי - זהה לחישוב של הצעות סעיפים
-                const consensuses = document.consensuses || [];
-                const totalUsers = document.totalUsersInteracted || 1;
-                let threshold;
-                if (consensuses.length > 0) {
-                  const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-                  threshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
-                } else {
-                  threshold = Math.max(2, document.threshold || 2);
-                }
-                const votesNeeded = Math.max(0, threshold - delta);
-
-                return (
-                  <div key={suggestion.id} className="bg-amber-50 border-2 border-amber-300 rounded-lg p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <Badge className="bg-amber-500 text-white mb-2">
-                          הצעת עריכה לכותרת
-                        </Badge>
-                        <div className="space-y-2">
-                          <div>
-                            <span className="text-sm text-slate-600">כותרת מוצעת:</span>
-                            <p className="font-semibold text-slate-900">{suggestion.newTitle}</p>
-                          </div>
-                          {suggestion.explanation && typeof suggestion.explanation === 'string' && (
-                            <div>
-                              <span className="text-sm text-slate-600">הסבר:</span>
-                              <p className="text-sm text-slate-700">{suggestion.explanation}</p>
-                            </div>
-                          )}
-                          <div className="text-xs text-slate-500">
-                            {t('by')} {getUserName(suggestion.created_by)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Voting */}
-                    {document.votingButtonsEnabled && (
-                      <div className="flex items-center gap-3 pt-3 border-t border-amber-200">
-                        <Button
-                          size="sm"
-                          variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
-                          onClick={() => {
-                            if (!user) {
-                              base44.auth.redirectToLogin(window.location.href);
-                              return;
-                            }
-                            voteTopicEditMutation.mutate({ 
-                              suggestionId: suggestion.id, 
-                              vote: 'pro',
-                              currentVote: userVote,
-                            });
-                          }}
-                          disabled={voteTopicEditMutation.isPending}
-                          className={userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}
-                        >
-                          <ThumbsUp className="w-4 h-4 mr-1" />
-                          {suggestion.proVotes || 0}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant={userVote?.vote === 'con' ? 'default' : 'outline'}
-                          onClick={() => {
-                            if (!user) {
-                              base44.auth.redirectToLogin(window.location.href);
-                              return;
-                            }
-                            voteTopicEditMutation.mutate({ 
-                              suggestionId: suggestion.id, 
-                              vote: 'con',
-                              currentVote: userVote
-                            });
-                          }}
-                          disabled={voteTopicEditMutation.isPending}
-                          className={userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}
-                        >
-                          <ThumbsDown className="w-4 h-4 mr-1" />
-                          {suggestion.conVotes || 0}
-                        </Button>
-                        <div className="text-sm text-slate-600">
-                          {votesNeeded > 0 ? (
-                            <span>נדרשים עוד {votesNeeded} תומכים</span>
-                          ) : (
-                            <span className="text-green-600 font-semibold">✓ עבר את סף הקונסנזוס</span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
 
               {topicSections.length === 0 ? (
                 <>
