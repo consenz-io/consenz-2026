@@ -37,6 +37,13 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose }) {
     enabled: !!groupId,
   });
 
+  const { data: joinRequests = [] } = useQuery({
+    queryKey: ['joinRequests', groupId],
+    queryFn: () => base44.entities.GroupJoinRequest.filter({ groupId, status: 'pending' }),
+    enabled: !!groupId && isOpen,
+    initialData: [],
+  });
+
   const { data: publicProfiles = [] } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
@@ -135,6 +142,34 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose }) {
     },
   });
 
+  const handleJoinRequestMutation = useMutation({
+    mutationFn: async ({ requestId, approved, userId }) => {
+      if (approved) {
+        await base44.entities.GroupMember.create({
+          groupId,
+          userId,
+          role: 'member',
+        });
+      }
+      await base44.entities.GroupJoinRequest.update(requestId, {
+        status: approved ? 'approved' : 'rejected'
+      });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['groupMembers', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['joinRequests', groupId] });
+      const message = variables.approved 
+        ? (language === 'he' ? 'הבקשה אושרה והמשתמש נוסף לקבוצה' : 'Request approved and user added')
+        : (language === 'he' ? 'הבקשה נדחתה' : 'Request rejected');
+      setSuccess(message);
+      setTimeout(() => setSuccess(null), 3000);
+    },
+    onError: () => {
+      setError(language === 'he' ? 'שגיאה בטיפול בבקשה' : 'Error handling request');
+      setTimeout(() => setError(null), 5000);
+    },
+  });
+
   const handleInvite = (e) => {
     e.preventDefault();
     if (!inviteEmail.trim()) return;
@@ -172,6 +207,57 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose }) {
             <CheckCircle className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800">{success}</AlertDescription>
           </Alert>
+        )}
+
+        {joinRequests.length > 0 && (
+          <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <h3 className="font-semibold text-sm text-blue-900">
+              {language === 'he' ? 'בקשות הצטרפות ממתינות' : 'Pending Join Requests'}
+            </h3>
+            <div className="space-y-2">
+              {joinRequests.map((request) => (
+                <div key={request.id} className="flex items-center justify-between p-3 bg-white rounded border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                      {request.userName?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{request.userName}</p>
+                      <p className="text-xs text-slate-500">{request.userEmail}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                      onClick={() => handleJoinRequestMutation.mutate({ 
+                        requestId: request.id, 
+                        approved: true,
+                        userId: request.userId 
+                      })}
+                      disabled={handleJoinRequestMutation.isPending}
+                    >
+                      {language === 'he' ? 'אשר' : 'Approve'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                      onClick={() => handleJoinRequestMutation.mutate({ 
+                        requestId: request.id, 
+                        approved: false,
+                        userId: request.userId 
+                      })}
+                      disabled={handleJoinRequestMutation.isPending}
+                    >
+                      {language === 'he' ? 'דחה' : 'Reject'}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         <form onSubmit={handleInvite} className="space-y-4 border-b pb-4">
