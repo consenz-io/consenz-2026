@@ -364,6 +364,11 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
       console.log('[NOTIFICATION] Found creator:', suggestionCreator.email, 'ID:', suggestionCreator.id);
       notifiedUserIds.add(suggestionCreator.id);
       const userLang = suggestionCreator.preferredLanguage || 'he';
+      
+      // Fetch document for context
+      const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
+      const doc = docs[0];
+      
       notifications.push({
         userId: suggestionCreator.id,
         type: newStatus === 'accepted' ? 'suggestion_accepted' : 'suggestion_rejected',
@@ -371,7 +376,9 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
         message: translate(statusKey.messageKey, userLang, { title: suggestionTitle }),
         relatedEntityId: suggestion.id,
         relatedEntityType: 'suggestion',
-        actionUrl
+        actionUrl,
+        documentId: suggestion.documentId,
+        documentTitle: doc?.title
       });
       console.log('[NOTIFICATION] Added notification for suggestion creator:', suggestionCreator.email);
     } else {
@@ -402,6 +409,8 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
       if (docCreator && !notifiedUserIds.has(docCreator.id)) {
         notifiedUserIds.add(docCreator.id);
         const userLang = docCreator.preferredLanguage || 'he';
+        const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
+        const doc = docs[0];
         notifications.push({
           userId: docCreator.id,
           type: 'suggestion_accepted',
@@ -409,9 +418,14 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
           message: translate('notifAcceptedMessage', userLang, { title: suggestionTitle }),
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
-          actionUrl
+          actionUrl,
+          documentId: suggestion.documentId,
+          documentTitle: doc?.title
         });
       }
+      
+      const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
+      const doc = docs[0];
       
       for (const adminId of adminIds) {
         if (notifiedUserIds.has(adminId)) continue;
@@ -425,7 +439,9 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
           message: translate('notifAcceptedMessage', userLang, { title: suggestionTitle }),
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
-          actionUrl
+          actionUrl,
+          documentId: suggestion.documentId,
+          documentTitle: doc?.title
         });
       }
       
@@ -441,7 +457,9 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
           message: translate('notifAcceptedVoterMessage', userLang, { title: suggestionTitle }),
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
-          actionUrl
+          actionUrl,
+          documentId: suggestion.documentId,
+          documentTitle: doc?.title
         });
       }
     }
@@ -689,7 +707,9 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
         message: notifMessage,
         relatedEntityId: suggestion.id,
         relatedEntityType: 'suggestion',
-        actionUrl
+        actionUrl,
+        documentId: doc.id,
+        documentTitle: doc.title
       });
       successfulNotifications++;
       
