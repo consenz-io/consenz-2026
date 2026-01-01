@@ -234,12 +234,12 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose }) {
                         {member.role === 'admin' ? (
                           <>
                             <ShieldOff className="w-4 h-4 mr-1" />
-                            {language === 'he' ? 'הורד' : 'Demote'}
+                            {language === 'he' ? 'יוזר' : 'User'}
                           </>
                         ) : (
                           <>
                             <Shield className="w-4 h-4 mr-1" />
-                            {language === 'he' ? 'העלה' : 'Promote'}
+                            {language === 'he' ? 'אדמין' : 'Admin'}
                           </>
                         )}
                       </Button>
