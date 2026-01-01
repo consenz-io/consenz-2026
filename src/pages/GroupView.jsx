@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Users, Lock, Globe, FileText, Plus, Settings, UserPlus, 
-  AlertCircle, Trash2 
+  AlertCircle, Trash2, Mail 
 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "@/components/PageHeader";
@@ -119,17 +119,85 @@ export default function GroupView() {
     );
   }
 
+  const requestAccessMutation = useMutation({
+    mutationFn: async () => {
+      const admins = groupMembers.filter(m => m.role === 'admin');
+      const adminProfiles = admins.map(admin => 
+        publicProfiles.find(p => p.userId === admin.userId)
+      ).filter(Boolean);
+
+      if (adminProfiles.length === 0) return;
+
+      const userName = currentUser?.full_name || currentUser?.email || 'משתמש';
+      const subject = language === 'he' 
+        ? `בקשת הצטרפות לקבוצה: ${group.name}`
+        : `Request to join group: ${group.name}`;
+      
+      const body = language === 'he'
+        ? `שלום,\n\n${userName} מבקש/ת להצטרף לקבוצה "${group.name}".\n\nאימייל המשתמש: ${currentUser.email}\n\nנא לשקול את הבקשה.\n\nתודה!`
+        : `Hello,\n\n${userName} would like to join the group "${group.name}".\n\nUser email: ${currentUser.email}\n\nPlease consider this request.\n\nThank you!`;
+
+      // Send email to all admins
+      await Promise.all(
+        adminProfiles.map(admin =>
+          base44.integrations.Core.SendEmail({
+            to: admin.email,
+            subject,
+            body,
+          })
+        )
+      );
+    },
+  });
+
   // Check access
   if (group.status === 'private' && !isMember) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto space-y-4">
           <Alert>
             <Lock className="h-4 w-4" />
             <AlertDescription>
               {language === 'he' ? 'קבוצה פרטית - נדרשת חברות' : 'Private group - membership required'}
             </AlertDescription>
           </Alert>
+          
+          {currentUser && (
+            <Card className="bg-white">
+              <CardHeader>
+                <CardTitle className="text-lg">
+                  {language === 'he' ? 'מעוניין להצטרף?' : 'Want to join?'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-slate-600 text-sm">
+                  {language === 'he' 
+                    ? 'שלח בקשה לאדמיני הקבוצה והם יוכלו להוסיף אותך כחבר'
+                    : 'Send a request to the group admins and they can add you as a member'}
+                </p>
+                <Button
+                  onClick={() => requestAccessMutation.mutate()}
+                  disabled={requestAccessMutation.isPending || requestAccessMutation.isSuccess}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600"
+                >
+                  <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {requestAccessMutation.isSuccess 
+                    ? (language === 'he' ? 'הבקשה נשלחה' : 'Request sent')
+                    : (language === 'he' ? 'שלח בקשה להצטרפות' : 'Request to join')
+                  }
+                </Button>
+                {requestAccessMutation.isSuccess && (
+                  <Alert className="bg-green-50 border-green-200">
+                    <AlertDescription className="text-green-800">
+                      {language === 'he' 
+                        ? 'הבקשה נשלחה בהצלחה לאדמיני הקבוצה'
+                        : 'Request sent successfully to group admins'}
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     );
