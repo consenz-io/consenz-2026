@@ -202,7 +202,7 @@ async function batchCreateNotifications(notifications) {
 }
 
 /**
- * יצירת התראה למשתמש
+ * יצירת התראה למשתמש + הוספה ל-EmailDigest במקביל
  */
 export async function createNotification({
   userId,
@@ -211,7 +211,9 @@ export async function createNotification({
   message,
   relatedEntityId,
   relatedEntityType,
-  actionUrl
+  actionUrl,
+  documentId = null,
+  documentTitle = null
 }) {
   try {
     if (!userId) {
@@ -228,7 +230,8 @@ export async function createNotification({
       console.warn('[NOTIFICATION] No valid actionUrl provided:', { type, relatedEntityType, relatedEntityId });
     }
     
-    const notification = await base44.entities.Notification.create({
+    // Create notification - don't wait for it
+    const notificationPromise = base44.entities.Notification.create({
       userId,
       type,
       title,
@@ -238,6 +241,23 @@ export async function createNotification({
       actionUrl: validActionUrl,
       read: false
     });
+    
+    // Add to email digest in parallel - don't wait for it
+    const { addToEmailDigest } = await import('./addToEmailDigest');
+    const digestPromise = addToEmailDigest({
+      userId,
+      notificationType: type,
+      title,
+      message,
+      actionUrl: validActionUrl,
+      relatedEntityType,
+      relatedEntityId,
+      documentId,
+      documentTitle
+    });
+    
+    // Wait for both to complete
+    const [notification] = await Promise.all([notificationPromise, digestPromise]);
     
     return notification;
   } catch (error) {
