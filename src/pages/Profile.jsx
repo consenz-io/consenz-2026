@@ -39,11 +39,19 @@ export default function Profile() {
     enabled: !!viewUserId,
   });
 
-  // Try to get full User data if viewing your own profile or if you're an admin
+  // Try to get full User data only if viewing your own profile
   const { data: viewUser, isLoading: viewUserLoading } = useQuery({
     queryKey: ['viewUser', viewUserId],
-    queryFn: () => base44.entities.User.filter({ id: viewUserId }).then(users => users[0]),
-    enabled: !!viewUserId && (!currentUser || viewUserId === currentUser.id),
+    queryFn: async () => {
+      try {
+        const users = await base44.entities.User.filter({ id: viewUserId });
+        return users[0];
+      } catch (error) {
+        // Permission denied - user is not allowed to view this User record
+        return null;
+      }
+    },
+    enabled: !!viewUserId && !!currentUser && viewUserId === currentUser.id,
     retry: false,
   });
 
