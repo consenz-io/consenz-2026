@@ -93,17 +93,37 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
       
       // Send notifications
       try {
-        const { notifyNewSuggestion } = await import('@/components/notifications/createNotification');
-        await notifyNewSuggestion({
-          suggestion: { 
-            ...suggestion, 
-            type: 'edit_topic',
-            title: `הצעת עריכה לכותרת: ${topic.title}`,
-            created_by: user.email
-          },
-          document,
-          currentUser: user
-        });
+        const { createNotification } = await import('@/components/notifications/createNotification');
+        const { createPageUrl } = await import('@/utils');
+        
+        // Get followers and send notifications with proper actionUrl
+        const followers = await base44.entities.DocumentFollow.filter({ documentId: document.id });
+        const followerUserIds = followers.map(f => f.userId).filter(id => id !== user.id);
+        
+        if (followerUserIds.length > 0) {
+          const followerUsers = await base44.entities.UserPublicProfile.filter({ 
+            userId: { $in: followerUserIds } 
+          });
+          
+          const actionUrl = `${createPageUrl("DocumentView")}?id=${document.id}#topic-${topic.id}`;
+          const suggestionTypeText = 'הצעת עריכה לכותרת נושא';
+          
+          await Promise.all(
+            followerUsers.map(followerProfile =>
+              createNotification({
+                userId: followerProfile.userId,
+                type: 'new_suggestion_in_followed_document',
+                title: 'הצעה חדשה במסמך',
+                message: `${user.full_name} פרסם/ה ${suggestionTypeText} במסמך "${document.title}"`,
+                relatedEntityId: suggestion.id,
+                relatedEntityType: 'topic_edit_suggestion',
+                actionUrl,
+                documentId: document.id,
+                documentTitle: document.title
+              }).catch(err => console.error('[EDIT TOPIC] Error creating notification:', err))
+            )
+          );
+        }
       } catch (notifError) {
         console.error('[EDIT TOPIC] Error sending notifications:', notifError);
       }

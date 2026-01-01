@@ -359,6 +359,11 @@ export default function DocumentView() {
         const element = window.document.querySelector(hash);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // Add highlight effect
+          element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
+          setTimeout(() => {
+            element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
+          }, 2000);
         }
       }, 300);
     }

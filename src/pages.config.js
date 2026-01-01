@@ -5,6 +5,7 @@ import DocumentCleanView from './pages/DocumentCleanView';
 import DocumentComments from './pages/DocumentComments';
 import DocumentVersions from './pages/DocumentVersions';
 import DocumentView from './pages/DocumentView';
+import EmailSettings from './pages/EmailSettings';
 import Home from './pages/Home';
 import LearnMore from './pages/LearnMore';
 import MyDocuments from './pages/MyDocuments';
@@ -12,7 +13,6 @@ import Profile from './pages/Profile';
 import SectionHistory from './pages/SectionHistory';
 import SuggestionDetail from './pages/SuggestionDetail';
 import UnderstandingConsensus from './pages/UnderstandingConsensus';
-import EmailSettings from './pages/EmailSettings';
 import __Layout from './Layout.jsx';
 
 
@@ -24,6 +24,7 @@ export const PAGES = {
     "DocumentComments": DocumentComments,
     "DocumentVersions": DocumentVersions,
     "DocumentView": DocumentView,
+    "EmailSettings": EmailSettings,
     "Home": Home,
     "LearnMore": LearnMore,
     "MyDocuments": MyDocuments,
@@ -31,7 +32,6 @@ export const PAGES = {
     "SectionHistory": SectionHistory,
     "SuggestionDetail": SuggestionDetail,
     "UnderstandingConsensus": UnderstandingConsensus,
-    "EmailSettings": EmailSettings,
 }
 
 export const pagesConfig = {
