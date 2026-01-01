@@ -7,12 +7,12 @@ import { base44 } from "@/api/base44Client";
 export async function calculateDocumentContributors(documentId) {
   try {
     // Fetch all data in parallel
-    const [documents, suggestions, sections, allVotes, allUsers, allArguments, allComments, followers] = await Promise.all([
+    const [documents, suggestions, sections, allVotes, publicProfiles, allArguments, allComments, followers] = await Promise.all([
       base44.entities.Document.filter({ id: documentId }),
       base44.entities.Suggestion.filter({ documentId }),
       base44.entities.Section.filter({ documentId }),
       base44.entities.Vote.list(),
-      base44.entities.User.list(),
+      base44.entities.UserPublicProfile.list(),
       base44.entities.Argument.list(),
       base44.entities.Comment.list(),
       base44.entities.DocumentFollow.filter({ documentId })
@@ -33,7 +33,7 @@ export async function calculateDocumentContributors(documentId) {
     // 3. Voters - גם לפי userId וגם לפי created_by
     const suggestionIds = new Set(suggestions.map(s => s.id));
     const userIdToEmail = {};
-    allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
+    publicProfiles.forEach(p => { userIdToEmail[p.userId] = p.email; });
     
     allVotes.forEach(v => {
       if (suggestionIds.has(v.suggestionId)) {
@@ -79,20 +79,20 @@ export async function calculateDocumentContributors(documentId) {
     
     // Auto-follow all contributors
     const followerUserIds = new Set(followers.map(f => f.userId));
-    const usersToAutoFollow = allUsers.filter(u => 
-      uniqueEmails.has(u.email) && !followerUserIds.has(u.id)
+    const profilesToAutoFollow = publicProfiles.filter(p => 
+      uniqueEmails.has(p.email) && !followerUserIds.has(p.userId)
     );
     
-    if (usersToAutoFollow.length > 0) {
-      console.log('[AUTO-FOLLOW] Auto-following', usersToAutoFollow.length, 'contributors');
+    if (profilesToAutoFollow.length > 0) {
+      console.log('[AUTO-FOLLOW] Auto-following', profilesToAutoFollow.length, 'contributors');
       await Promise.all(
-        usersToAutoFollow.map(user =>
+        profilesToAutoFollow.map(profile =>
           base44.entities.DocumentFollow.create({
             documentId,
-            userId: user.id,
+            userId: profile.userId,
             followedAt: new Date().toISOString()
           }).catch(err => {
-            console.error('[AUTO-FOLLOW] Error auto-following user:', user.email, err);
+            console.error('[AUTO-FOLLOW] Error auto-following user:', profile.email, err);
           })
         )
       );
