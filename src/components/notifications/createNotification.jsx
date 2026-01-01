@@ -582,9 +582,17 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     console.log('[NOTIFY NEW SUGGESTION] ===== FETCHING DOCUMENT FOLLOWERS =====');
     const followers = await base44.entities.DocumentFollow.filter({ documentId: doc.id });
     console.log('[NOTIFY NEW SUGGESTION] Found', followers.length, 'followers');
+    console.log('[NOTIFY NEW SUGGESTION] Current user ID:', currentUser.id);
+    console.log('[NOTIFY NEW SUGGESTION] All follower user IDs:', followers.map(f => f.userId));
     
-    const followerUserIds = followers.map(f => f.userId).filter(id => id !== currentUser.id);
-    console.log('[NOTIFY NEW SUGGESTION] Follower user IDs (excluding current user):', followerUserIds.length);
+    const followerUserIds = followers.map(f => f.userId).filter(id => {
+      const shouldInclude = id !== currentUser.id;
+      if (!shouldInclude) {
+        console.log('[NOTIFY NEW SUGGESTION] Excluding current user from followers:', id);
+      }
+      return shouldInclude;
+    });
+    console.log('[NOTIFY NEW SUGGESTION] Follower user IDs (excluding current user):', followerUserIds.length, followerUserIds);
     
     if (followerUserIds.length === 0) {
       console.log('[NOTIFY NEW SUGGESTION] ===== NO FOLLOWERS TO NOTIFY =====');
