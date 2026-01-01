@@ -9,9 +9,10 @@ import Home from './pages/Home';
 import LearnMore from './pages/LearnMore';
 import MyDocuments from './pages/MyDocuments';
 import Profile from './pages/Profile';
+import SectionHistory from './pages/SectionHistory';
 import SuggestionDetail from './pages/SuggestionDetail';
 import UnderstandingConsensus from './pages/UnderstandingConsensus';
-import SectionHistory from './pages/SectionHistory';
+import EmailSettings from './pages/EmailSettings';
 import __Layout from './Layout.jsx';
 
 
@@ -27,9 +28,10 @@ export const PAGES = {
     "LearnMore": LearnMore,
     "MyDocuments": MyDocuments,
     "Profile": Profile,
+    "SectionHistory": SectionHistory,
     "SuggestionDetail": SuggestionDetail,
     "UnderstandingConsensus": UnderstandingConsensus,
-    "SectionHistory": SectionHistory,
+    "EmailSettings": EmailSettings,
 }
 
 export const pagesConfig = {

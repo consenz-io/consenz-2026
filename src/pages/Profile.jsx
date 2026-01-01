@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Mail, Shield, Sparkles, FileText, CheckCircle, AlertCircle, Edit2, Save, X, Linkedin, Twitter, Facebook, Instagram, Globe, ArrowRight, MessageSquare, ThumbsUp } from "lucide-react";
+import { User, Mail, Shield, Sparkles, FileText, CheckCircle, AlertCircle, Edit2, Save, X, Linkedin, Twitter, Facebook, Instagram, Globe, ArrowRight, MessageSquare, ThumbsUp, Bell } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
@@ -323,6 +323,21 @@ export default function Profile() {
                       </Badge>
                     </div>
                   </div>
+
+                  {isOwnProfile && (
+                    <div>
+                      <Label className="flex items-center gap-2">
+                        <Bell className="w-4 h-4" />
+                        {language === 'he' ? 'הגדרות התראות' : 'Notification Settings'}
+                      </Label>
+                      <Link to={createPageUrl("EmailSettings")}>
+                        <Button variant="outline" size="sm" className="mt-2 w-full">
+                          <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                          {language === 'he' ? 'נהל עדכונים במייל' : 'Manage Email Digest'}
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
 
