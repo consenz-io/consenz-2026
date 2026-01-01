@@ -93,34 +93,28 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
       
       // Send notifications
       try {
-        const { createNotification } = await import('@/components/notifications/createNotification');
-        const { createPageUrl } = await import('@/utils');
-        
-        // Get followers and send notifications with proper actionUrl
         const followers = await base44.entities.DocumentFollow.filter({ documentId: document.id });
         const followerUserIds = followers.map(f => f.userId).filter(id => id !== user.id);
         
         if (followerUserIds.length > 0) {
-          const followerUsers = await base44.entities.UserPublicProfile.filter({ 
-            userId: { $in: followerUserIds } 
-          });
-          
-          const actionUrl = `${createPageUrl("DocumentView")}?id=${document.id}#topic-${topic.id}`;
+          const actionUrl = `/DocumentView?id=${document.id}#topic-${topic.id}`;
           const suggestionTypeText = 'הצעת עריכה לכותרת נושא';
           
+          const notifications = followerUserIds.map(userId => ({
+            userId,
+            type: 'new_suggestion_in_followed_document',
+            title: 'הצעה חדשה במסמך',
+            message: `${user.full_name} פרסם/ה ${suggestionTypeText} במסמך "${document.title}"`,
+            relatedEntityId: suggestion.id,
+            relatedEntityType: 'topic_edit_suggestion',
+            actionUrl,
+            read: false
+          }));
+          
           await Promise.all(
-            followerUsers.map(followerProfile =>
-              createNotification({
-                userId: followerProfile.userId,
-                type: 'new_suggestion_in_followed_document',
-                title: 'הצעה חדשה במסמך',
-                message: `${user.full_name} פרסם/ה ${suggestionTypeText} במסמך "${document.title}"`,
-                relatedEntityId: suggestion.id,
-                relatedEntityType: 'topic_edit_suggestion',
-                actionUrl,
-                documentId: document.id,
-                documentTitle: document.title
-              }).catch(err => console.error('[EDIT TOPIC] Error creating notification:', err))
+            notifications.map(notif => 
+              base44.entities.Notification.create(notif)
+                .catch(err => console.error('[EDIT TOPIC] Error creating notification:', err))
             )
           );
         }
