@@ -13,6 +13,9 @@ import Profile from './pages/Profile';
 import SectionHistory from './pages/SectionHistory';
 import SuggestionDetail from './pages/SuggestionDetail';
 import UnderstandingConsensus from './pages/UnderstandingConsensus';
+import Groups from './pages/Groups';
+import CreateGroup from './pages/CreateGroup';
+import GroupView from './pages/GroupView';
 import __Layout from './Layout.jsx';
 
 
@@ -32,6 +35,9 @@ export const PAGES = {
     "SectionHistory": SectionHistory,
     "SuggestionDetail": SuggestionDetail,
     "UnderstandingConsensus": UnderstandingConsensus,
+    "Groups": Groups,
+    "CreateGroup": CreateGroup,
+    "GroupView": GroupView,
 }
 
 export const pagesConfig = {
