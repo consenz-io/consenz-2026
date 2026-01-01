@@ -6,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, TrendingUp, Users, Clock, ArrowRight, ArrowLeft, Languages, Loader2 } from "lucide-react";
+import { FileText, TrendingUp, Users, Clock, ArrowRight, ArrowLeft, Languages, Loader2, Lock, Globe } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import { calculateContributorsFromData } from "@/components/document/calculateContributors";
@@ -27,6 +27,18 @@ export default function Home() {
   const [translatingDoc, setTranslatingDoc] = useState(null);
   const [showTranslated, setShowTranslated] = useState({});
   const [showContributorsModal, setShowContributorsModal] = useState(false);
+  const { data: groups, isLoading: groupsLoading } = useQuery({
+    queryKey: ['groups'],
+    queryFn: () => base44.entities.Group.list('-created_date', 20),
+    initialData: [],
+  });
+
+  const { data: groupMembers = [] } = useQuery({
+    queryKey: ['groupMembers'],
+    queryFn: () => base44.entities.GroupMember.list(),
+    initialData: [],
+  });
+
   const { data: documents, isLoading } = useQuery({
     queryKey: ['publicDocuments'],
     queryFn: () => base44.entities.Document.list('-created_date', 20),
@@ -353,16 +365,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Recent Documents */}
+      {/* Recent Groups */}
       <section id="recent-documents-section" className="max-w-7xl mx-auto px-6 py-16">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h2 className="text-3xl font-bold text-slate-900">{t('recentDocuments')}</h2>
-            <p className="text-slate-600 mt-2">{t('browseContribute')}</p>
+            <h2 className="text-3xl font-bold text-slate-900">
+              {language === 'he' ? 'קבוצות פעילות' : language === 'ar' ? 'مجموعات نشطة' : 'Active Groups'}
+            </h2>
+            <p className="text-slate-600 mt-2">
+              {language === 'he' ? 'הצטרפו לקבוצות ושתפו פעולה על מסמכים משותפים' : 'Join groups and collaborate on shared documents'}
+            </p>
           </div>
         </div>
 
-        {isLoading ? (
+        {groupsLoading ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
               <Card key={i} className="bg-white border-slate-200">
@@ -377,115 +393,86 @@ export default function Home() {
               </Card>
             ))}
           </div>
-        ) : documents.length === 0 ? (
+        ) : groups.length === 0 ? (
           <Card className="bg-white border-slate-200">
             <CardContent className="p-12 text-center">
-              <FileText className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('noDocumentsYet')}</h3>
-              <p className="text-slate-600 mb-4">{t('beFirstToCreate')}</p>
+              <Users className="w-16 h-16 mx-auto mb-4 text-slate-300" />
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                {language === 'he' ? 'אין קבוצות עדיין' : 'No groups yet'}
+              </h3>
+              <p className="text-slate-600 mb-4">
+                {language === 'he' ? 'היו הראשונים ליצור קבוצה' : 'Be the first to create a group'}
+              </p>
               {user && (
-                <Link to={createPageUrl("CreateDocument")}>
-                  <Button>{t('newDocument')}</Button>
+                <Link to={createPageUrl("CreateGroup")}>
+                  <Button>{language === 'he' ? 'צור קבוצה' : 'Create Group'}</Button>
                 </Link>
               )}
             </CardContent>
           </Card>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {documents.map((doc) => {
-              // זיהוי אוטומטי של שפה אם לא מוגדרת
-              const detectedLanguage = doc.originalLanguage || detectLanguage(doc.title);
-              const needsTranslation = detectedLanguage && detectedLanguage !== language;
-              const translatedTitle = doc.translations?.[language]?.title;
-              const hasTranslation = typeof translatedTitle === 'string' && translatedTitle;
-              const displayTitle = showTranslated[doc.id] && hasTranslation 
-                ? translatedTitle 
-                : doc.title;
-
-              const creatorProfile = publicProfiles.find(p => p.email === doc.created_by);
-              const creatorName = creatorProfile?.fullName || 'User';
+            {groups.map((group) => {
+              const groupDocs = documents.filter(d => d.groupId === group.id);
+              const members = groupMembers.filter(m => m.groupId === group.id);
+              const isAdmin = members.some(m => m.userId === user?.id && m.role === 'admin');
 
               return (
-                <Card key={doc.id} className="bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-200 h-full">
-                  <CardHeader>
-                    <div className={`flex items-start justify-between gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <Link to={`${createPageUrl("DocumentView")}?id=${doc.id}`} className="flex-1 min-w-0">
-                        <CardTitle className="text-lg break-words">{displayTitle}</CardTitle>
-                      </Link>
-                      <div className={`flex items-center gap-2 shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        {needsTranslation && (
-                          translatingDoc === doc.id ? (
-                            <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                          ) : !hasTranslation ? (
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                translateDocumentMutation.mutate(doc);
-                              }}
-                              className="p-1 hover:bg-blue-50 rounded transition-colors"
-                              title={t('translate')}
-                            >
-                              <Languages className="w-4 h-4 text-blue-600" />
-                            </button>
+                <Link key={group.id} to={`${createPageUrl("GroupView")}?id=${group.id}`}>
+                  <Card className="bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-200 h-full">
+                    <CardHeader>
+                      <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="text-lg break-words">{group.name}</CardTitle>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {group.status === 'private' ? (
+                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                              {language === 'he' ? 'פרטי' : 'Private'}
+                            </Badge>
                           ) : (
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setShowTranslated(prev => ({ ...prev, [doc.id]: !prev[doc.id] }));
-                              }}
-                              className="p-1 hover:bg-slate-100 rounded transition-colors"
-                              title={showTranslated[doc.id] ? t('showOriginal') : t('showTranslation')}
-                            >
-                              <Languages className={`w-4 h-4 ${showTranslated[doc.id] ? 'text-slate-600' : 'text-blue-600'}`} />
-                            </button>
-                          )
-                        )}
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                              {language === 'he' ? 'ציבורי' : 'Public'}
+                            </Badge>
+                          )}
+                          {isAdmin && (
+                            <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+                              {language === 'he' ? 'מנהל' : 'Admin'}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <Link to={`${createPageUrl("DocumentView")}?id=${doc.id}`}>
+                    </CardHeader>
                     <CardContent>
-                      <div className="space-y-3">
+                      {group.description && (
+                        <p className="text-sm text-slate-600 mb-3 line-clamp-2">{group.description}</p>
+                      )}
+                      <div className="space-y-2">
                         <div className="flex items-center gap-2 text-sm text-slate-600">
-                          <Users className="w-4 h-4" />
-                          <span>{getDocumentContributors(doc)} {t('contributors')}</span>
+                          <FileText className="w-4 h-4" />
+                          <span>{groupDocs.length} {language === 'he' ? 'מסמכים' : 'documents'}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
-                          <TrendingUp className="w-4 h-4" />
-                          <span>
-                            {(() => {
-                              if (!acceptedSuggestions || !doc || !doc.id) return '0';
-                              const docSuggestions = acceptedSuggestions.filter(s => s && s.documentId === doc.id);
-                              if (docSuggestions.length === 0) return '0';
-                              const avg = docSuggestions.reduce((sum, s) => {
-                                const total = (s.proVotes || 0) + (s.conVotes || 0);
-                                return sum + (total > 0 ? (s.proVotes / total) : 0);
-                              }, 0) / docSuggestions.length;
-                              return (avg * 100).toFixed(0);
-                            })()}% {t('consensus')}
-                          </span>
+                          <Users className="w-4 h-4" />
+                          <span>{members.length} {language === 'he' ? 'חברים' : 'members'}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <Clock className="w-4 h-4" />
-                          <span>{new Date(doc.created_date).toLocaleDateString()}</span>
+                          <span>{new Date(group.created_date).toLocaleDateString()}</span>
                         </div>
                       </div>
                     </CardContent>
-                  </Link>
-                </Card>
+                  </Card>
+                </Link>
               );
             })}
           </div>
         )}
 
-        {/* Create New Document Button */}
-        {user && documents.length > 0 && (
+        {/* Create New Group Button */}
+        {user && groups.length > 0 && (
           <div className="flex justify-center mt-12">
-            <Link to={createPageUrl("CreateDocument")}>
+            <Link to={createPageUrl("CreateGroup")}>
               <Button variant="outline" size="lg" className="border-blue-300 text-blue-700 hover:bg-blue-50">
-                {t('newDocument')}
+                {language === 'he' ? 'צור קבוצה חדשה' : 'Create New Group'}
               </Button>
             </Link>
           </div>
