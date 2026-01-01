@@ -27,10 +27,10 @@ export async function checkSuggestionConsensus(suggestion, document) {
   const conVotes = suggestion.conVotes || 0;
   
   // חישוב דינמי של מספר המשתתפים
-  const [suggestions, allVotes, allUsers, allArguments, allComments, sections] = await Promise.all([
+  const [suggestions, allVotes, publicProfiles, allArguments, allComments, sections] = await Promise.all([
     base44.entities.Suggestion.filter({ documentId: document.id }),
     base44.entities.Vote.list(),
-    base44.entities.User.list(),
+    base44.entities.UserPublicProfile.list(),
     base44.entities.Argument.list(),
     base44.entities.Comment.list(),
     base44.entities.Section.filter({ documentId: document.id })
@@ -40,7 +40,7 @@ export async function checkSuggestionConsensus(suggestion, document) {
     document,
     suggestions,
     allVotes,
-    allUsers,
+    allUsers: publicProfiles,
     allArguments,
     allComments,
     sections
@@ -555,10 +555,10 @@ export async function checkTopicEditConsensus(suggestion, document) {
   const conVotes = suggestion.conVotes || 0;
   
   // חישוב דינמי של מספר המשתתפים
-  const [suggestions, allVotes, allUsers, allArguments, allComments, sections] = await Promise.all([
+  const [suggestions, allVotes, publicProfiles, allArguments, allComments, sections] = await Promise.all([
     base44.entities.Suggestion.filter({ documentId: document.id }),
     base44.entities.Vote.list(),
-    base44.entities.User.list(),
+    base44.entities.UserPublicProfile.list(),
     base44.entities.Argument.list(),
     base44.entities.Comment.list(),
     base44.entities.Section.filter({ documentId: document.id })
@@ -568,7 +568,7 @@ export async function checkTopicEditConsensus(suggestion, document) {
     document,
     suggestions,
     allVotes,
-    allUsers,
+    allUsers: publicProfiles,
     allArguments,
     allComments,
     sections
