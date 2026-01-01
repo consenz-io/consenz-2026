@@ -23,6 +23,7 @@ import { TranslationProvider } from "../components/document/TranslationContext";
 import TranslateAllButton from "../components/document/TranslateAllButton";
 import DocumentAgreementModal from "../components/document/DocumentAgreementModal";
 import SignersListModal from "../components/document/SignersListModal";
+import FollowDocumentButton from "../components/document/FollowDocumentButton";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -704,31 +705,33 @@ export default function DocumentView() {
             </div>
 
           <div className="flex gap-2 md:gap-3 flex-wrap justify-center">
-            <TranslateAllButton 
-              document={document} 
-              topics={topics} 
-              sections={sections} 
-            />
+              <FollowDocumentButton documentId={documentId} user={user} />
 
-            <Link to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`} className="flex-shrink-0">
-              <Button variant="outline" size="sm" className="text-xs md:text-sm px-3 md:px-4 h-8 md:h-9">
-                <FileText className={`w-4 h-4 ${isRTL ? 'ml-1.5 md:ml-2' : 'mr-1.5 md:mr-2'}`} />
-                <span>{t('cleanView')}</span>
-              </Button>
-            </Link>
-            {isAdmin && (
-              <Link 
-                to={`${createPageUrl("DocumentAdmin")}?id=${documentId}`} 
-                className="flex-shrink-0"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <TranslateAllButton 
+                document={document} 
+                topics={topics} 
+                sections={sections} 
+              />
+
+              <Link to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`} className="flex-shrink-0">
                 <Button variant="outline" size="sm" className="text-xs md:text-sm px-3 md:px-4 h-8 md:h-9">
-                  <Settings className={`w-4 h-4 ${isRTL ? 'ml-1.5 md:ml-2' : 'mr-1.5 md:mr-2'}`} />
-                  <span>{t('admin')}</span>
+                  <FileText className={`w-4 h-4 ${isRTL ? 'ml-1.5 md:ml-2' : 'mr-1.5 md:mr-2'}`} />
+                  <span>{t('cleanView')}</span>
                 </Button>
               </Link>
-            )}
-          </div>
+              {isAdmin && (
+                <Link 
+                  to={`${createPageUrl("DocumentAdmin")}?id=${documentId}`} 
+                  className="flex-shrink-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Button variant="outline" size="sm" className="text-xs md:text-sm px-3 md:px-4 h-8 md:h-9">
+                    <Settings className={`w-4 h-4 ${isRTL ? 'ml-1.5 md:ml-2' : 'mr-1.5 md:mr-2'}`} />
+                    <span>{t('admin')}</span>
+                  </Button>
+                </Link>
+              )}
+            </div>
         </div>
 
         <div className="grid grid-cols-3 gap-3 md:gap-4 w-full max-w-full">
