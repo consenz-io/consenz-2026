@@ -211,7 +211,7 @@ Return ONLY the translated HTML:`;
           content: data.newContent,
           version: maxVersion + 1,
           changeType: "direct_edit",
-          changeDescription: data.explanation || "עריכה ישירה של אדמין"
+          changeDescription: data.explanation || "Admin direct edit"
         });
         
         return { isDirectEdit: true };
@@ -239,12 +239,12 @@ Return ONLY the translated HTML:`;
         topicTitle = newTopicName.trim();
         newTopicTitle = newTopicName.trim();
         targetTopicId = null; // Will be created when suggestion is accepted
-        // קביעת המיקום של הנושא החדש
+        // Determine position for new topic
         if (editingSection?.topicOrder !== undefined && editingSection.topicOrder !== null) {
-          // הוסף אחרי הנושא הנוכחי
+          // Add after current topic
           newTopicOrder = editingSection.topicOrder + 1;
         } else {
-          // ברירת מחדל - בסוף
+          // Default - at the end
           const maxOrder = topics.length > 0 ? Math.max(...topics.map(t => t.order)) : -1;
           newTopicOrder = maxOrder + 1;
         }
@@ -425,7 +425,7 @@ Return ONLY the translated HTML:`;
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isDirectEdit ? 'עריכה ישירה' : (isNewSection ? t('suggestNewSection') : t('suggestEditSection'))}
+            {isDirectEdit ? 'Direct Edit' : (isNewSection ? t('suggestNewSection') : t('suggestEditSection'))}
           </DialogTitle>
         </DialogHeader>
 
