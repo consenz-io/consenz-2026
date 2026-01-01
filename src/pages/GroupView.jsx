@@ -92,6 +92,36 @@ export default function GroupView() {
     },
   });
 
+  const requestAccessMutation = useMutation({
+    mutationFn: async () => {
+      const admins = groupMembers.filter(m => m.role === 'admin');
+      const adminProfiles = admins.map(admin => 
+        publicProfiles.find(p => p.userId === admin.userId)
+      ).filter(Boolean);
+
+      if (adminProfiles.length === 0) return;
+
+      const userName = currentUser?.full_name || currentUser?.email || 'משתמש';
+      const subject = language === 'he' 
+        ? `בקשת הצטרפות לקבוצה: ${group?.name}`
+        : `Request to join group: ${group?.name}`;
+      
+      const body = language === 'he'
+        ? `שלום,\n\n${userName} מבקש/ת להצטרף לקבוצה "${group?.name}".\n\nאימייל המשתמש: ${currentUser.email}\n\nנא לשקול את הבקשה.\n\nתודה!`
+        : `Hello,\n\n${userName} would like to join the group "${group?.name}".\n\nUser email: ${currentUser.email}\n\nPlease consider this request.\n\nThank you!`;
+
+      await Promise.all(
+        adminProfiles.map(admin =>
+          base44.integrations.Core.SendEmail({
+            to: admin.email,
+            subject,
+            body,
+          })
+        )
+      );
+    },
+  });
+
   if (groupLoading || membersLoading || documentsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
@@ -118,37 +148,6 @@ export default function GroupView() {
       </div>
     );
   }
-
-  const requestAccessMutation = useMutation({
-    mutationFn: async () => {
-      const admins = groupMembers.filter(m => m.role === 'admin');
-      const adminProfiles = admins.map(admin => 
-        publicProfiles.find(p => p.userId === admin.userId)
-      ).filter(Boolean);
-
-      if (adminProfiles.length === 0) return;
-
-      const userName = currentUser?.full_name || currentUser?.email || 'משתמש';
-      const subject = language === 'he' 
-        ? `בקשת הצטרפות לקבוצה: ${group.name}`
-        : `Request to join group: ${group.name}`;
-      
-      const body = language === 'he'
-        ? `שלום,\n\n${userName} מבקש/ת להצטרף לקבוצה "${group.name}".\n\nאימייל המשתמש: ${currentUser.email}\n\nנא לשקול את הבקשה.\n\nתודה!`
-        : `Hello,\n\n${userName} would like to join the group "${group.name}".\n\nUser email: ${currentUser.email}\n\nPlease consider this request.\n\nThank you!`;
-
-      // Send email to all admins
-      await Promise.all(
-        adminProfiles.map(admin =>
-          base44.integrations.Core.SendEmail({
-            to: admin.email,
-            subject,
-            body,
-          })
-        )
-      );
-    },
-  });
 
   // Check access
   if (group.status === 'private' && !isMember) {
