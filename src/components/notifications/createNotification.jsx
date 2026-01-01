@@ -726,7 +726,14 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
       actionUrl = createPageUrl("SectionHistory") + `?id=${targetEntity.id}&commentId=${comment.id}`;
     }
     
-    // 1. יוצר ההצעה/סעיף
+    // 1. מחבר התגובה האב (אם זו תגובה לתגובה) - בעדיפות ראשונה!
+    let parentCommentAuthorEmail = null;
+    if (parentComment?.created_by && parentComment.created_by !== comment.created_by) {
+      parentCommentAuthorEmail = parentComment.created_by;
+      notifiedEmails.add(parentCommentAuthorEmail);
+    }
+    
+    // 2. יוצר ההצעה/סעיף
     let ownerEmail = targetEntityType === 'suggestion' ? targetEntity.created_by : null;
     if (targetEntityType === 'section' && targetEntity.lastEditedBy) {
       // Need to fetch user by ID to get email
@@ -740,7 +747,7 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
       notifiedEmails.add(ownerEmail);
     }
     
-    // 2. כל המגיבים הקודמים
+    // 3. כל המגיבים הקודמים
     const commentersEmails = [...new Set(allComments
       .filter(c => c.id !== comment.id && c.created_by)
       .map(c => c.created_by)
@@ -771,8 +778,23 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
       }
     });
     
-    // Owner notification
-    if (ownerEmail && emailToUser[ownerEmail]) {
+    // 1. Parent comment author notification (reply) - FIRST PRIORITY
+    if (parentCommentAuthorEmail && emailToUser[parentCommentAuthorEmail]) {
+      const parentAuthor = emailToUser[parentCommentAuthorEmail];
+      const userLang = parentAuthor.preferredLanguage || 'he';
+      notifications.push({
+        userId: parentAuthor.id,
+        type: 'comment_reply',
+        title: translate('notifReplyTitle', userLang),
+        message: translate('notifReplyMessage', userLang, { name: commenterName }),
+        relatedEntityId: targetEntity.id,
+        relatedEntityType: targetEntityType,
+        actionUrl
+      });
+    }
+    
+    // 2. Owner notification (if not already notified as parent comment author)
+    if (ownerEmail && emailToUser[ownerEmail] && ownerEmail !== parentCommentAuthorEmail) {
       const owner = emailToUser[ownerEmail];
       const userLang = owner.preferredLanguage || 'he';
       const messageKey = targetEntityType === 'suggestion' ? 'notifCommentMessageSuggestion' : 'notifCommentMessageSection';
@@ -787,9 +809,9 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
       });
     }
     
-    // Previous commenters notifications
+    // 3. Previous commenters notifications (excluding owner and parent comment author)
     commentersEmails.forEach(email => {
-      if (email !== ownerEmail && emailToUser[email]) {
+      if (email !== ownerEmail && email !== parentCommentAuthorEmail && emailToUser[email]) {
         const user = emailToUser[email];
         const userLang = user.preferredLanguage || 'he';
         notifications.push({
