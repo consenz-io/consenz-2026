@@ -302,7 +302,7 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
       userId: suggestionCreator.id,
       type: 'vote_on_suggestion',
       title: translate('notifVoteTitle', userLang),
-      message: translate('notifVoteMessage', userLang, { name: displayName, title: suggestion.title || 'הצעה' }),
+      message: translate('notifVoteMessage', userLang, { name: displayName, title: suggestion.title || 'Suggestion' }),
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
       actionUrl: createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`,
@@ -343,7 +343,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
       return;
     }
     
-    const suggestionTitle = suggestion.title || 'הצעה ללא כותרת';
+    const suggestionTitle = suggestion.title || 'Untitled suggestion';
     
     // 1. Suggestion creator - direct fetch from DB
     console.log('[NOTIFICATION] Looking for suggestion creator:', suggestion.created_by);
@@ -633,10 +633,10 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
     console.log('[NOTIFY NEW SUGGESTION] Action URL:', actionUrl);
     
     const suggestionTypeText = relatedEntityType === 'topic_edit_suggestion'
-      ? 'הצעת עריכה לכותרת נושא'
+      ? 'topic title edit suggestion'
       : suggestion.type === 'new_section' 
-      ? 'הצעה לסעיף חדש' 
-      : 'הצעת עריכה לסעיף';
+      ? 'new section suggestion' 
+      : 'section edit suggestion';
 
     let successfulNotifications = 0;
     let failedNotifications = 0;
@@ -650,7 +650,7 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
       
       const userLang = user.preferredLanguage || 'he';
       const notifTitle = translate('notifNewSuggestionTitle', userLang);
-      const notifMessage = `${currentUser.full_name} פרסם/ה ${suggestionTypeText} במסמך "${doc.title}"`;
+      const notifMessage = `${currentUser.full_name} published a ${suggestionTypeText} in document "${doc.title}"`;
       
       notifications.push({
         userId: user.id,
