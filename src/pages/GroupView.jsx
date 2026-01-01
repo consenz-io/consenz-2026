@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "@/components/PageHeader";
+import ManageMembersDialog from "@/components/group/ManageMembersDialog";
 
 export default function GroupView() {
   const { t, isRTL, language } = useLanguage();
@@ -21,6 +22,7 @@ export default function GroupView() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const groupId = searchParams.get('id');
+  const [showManageMembers, setShowManageMembers] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -176,6 +178,15 @@ export default function GroupView() {
           </div>
 
           <div className="flex gap-2">
+            {isAdmin && (
+              <Button
+                variant="outline"
+                onClick={() => setShowManageMembers(true)}
+              >
+                <Settings className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {language === 'he' ? 'ניהול חברים' : 'Manage Members'}
+              </Button>
+            )}
             {currentUser && !isMember && group.status === 'public' && (
               <Button
                 onClick={() => joinGroupMutation.mutate()}
@@ -279,6 +290,12 @@ export default function GroupView() {
             </Card>
           </div>
         </div>
+
+        <ManageMembersDialog
+          groupId={groupId}
+          isOpen={showManageMembers}
+          onClose={() => setShowManageMembers(false)}
+        />
       </div>
     </div>
   );
