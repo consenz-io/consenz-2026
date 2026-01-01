@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,8 @@ const detectLanguage = (text) => {
 export default function CreateDocument() {
   const { t, isRTL, language } = useLanguage();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const groupId = searchParams.get('groupId');
   const queryClient = useQueryClient();
   const [error, setError] = useState(null);
   const [creationMode, setCreationMode] = useState("manual");
@@ -55,6 +57,7 @@ export default function CreateDocument() {
     privacy: "public_view_open_participation",
     votingButtonsEnabled: true,
     defaultSuggestionLifetimeHours: 72,
+    groupId: groupId || null,
   });
 
   const [topics, setTopics] = useState([{ title: "", sections: [{ content: "" }] }]);
@@ -298,6 +301,7 @@ Return JSON with title, topics array (each with title and sections array with co
         totalUsersInteracted: 0,
         threshold: 0,
         originalLanguage: language,
+        groupId: data.groupId || null,
       });
 
       await base44.entities.DocumentAdmin.create({
