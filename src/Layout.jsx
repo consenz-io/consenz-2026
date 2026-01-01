@@ -146,7 +146,7 @@ function LayoutContent({ children, currentPageName }) {
       icon: FileText,
     },
     {
-      title: language === 'he' ? 'קבוצות' : language === 'ar' ? 'مجموعات' : 'Groups',
+      title: language === 'he' ? 'הקבוצות שלי' : language === 'ar' ? 'مجموعاتي' : 'My Groups',
       url: createPageUrl("Groups"),
       icon: Users,
     },
