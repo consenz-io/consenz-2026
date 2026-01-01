@@ -768,7 +768,7 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
     // Get commenter for name
     const commenterUsers = await base44.entities.User.filter({ email: comment.created_by });
     const commenter = commenterUsers[0] || { email: comment.created_by, full_name: comment.created_by.split('@')[0] };
-    const commenterName = commenter.full_name || commenter.email?.split('@')[0] || 'משתמש';
+    const commenterName = commenter.full_name || commenter.email?.split('@')[0] || 'User';
     
     // ===== Build notifications =====
     const emailToUser = {};
@@ -902,7 +902,7 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
     // Get commenter for name
     const commenterUsers = await base44.entities.User.filter({ email: comment.created_by });
     const commenter = commenterUsers[0] || { email: comment.created_by, full_name: comment.created_by.split('@')[0] };
-    const commenterName = commenter.full_name || commenter.email?.split('@')[0] || 'משתמש';
+    const commenterName = commenter.full_name || commenter.email?.split('@')[0] || 'User';
     
     // ===== Build notifications =====
     const emailToUser = {};
