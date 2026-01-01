@@ -95,28 +95,12 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
       Promise.all([
         (async () => {
           try {
-            const followers = await base44.entities.DocumentFollow.filter({ documentId: document.id });
-            const followerUserIds = followers.map(f => f.userId).filter(id => id !== user.id);
-            
-            if (followerUserIds.length > 0) {
-              const actionUrl = `/DocumentView?id=${document.id}#topic-${topic.id}`;
-              const suggestionTypeText = 'הצעת עריכה לכותרת נושא';
-              
-              await Promise.all(
-                followerUserIds.map(userId =>
-                  base44.entities.Notification.create({
-                    userId,
-                    type: 'new_suggestion_in_followed_document',
-                    title: 'הצעה חדשה במסמך',
-                    message: `${user.full_name} פרסם/ה ${suggestionTypeText} במסמך "${document.title}"`,
-                    relatedEntityId: suggestion.id,
-                    relatedEntityType: 'topic_edit_suggestion',
-                    actionUrl,
-                    read: false
-                  }).catch(err => console.error('[EDIT TOPIC] Notification error:', err))
-                )
-              );
-            }
+            const { notifyNewTopicEditSuggestion } = await import('@/components/notifications/createNotification');
+            await notifyNewTopicEditSuggestion({
+              topicEditSuggestion: suggestion,
+              document,
+              currentUser: user
+            });
           } catch (err) {
             console.error('[EDIT TOPIC] Error sending notifications:', err);
           }

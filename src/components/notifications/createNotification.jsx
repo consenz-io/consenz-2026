@@ -477,6 +477,24 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
  * ✅ FIXED: Auto-follows users on first interaction
  */
 export async function notifyNewSuggestion({ suggestion, document: doc, currentUser }) {
+  return _notifyNewSuggestion({ suggestion, document: doc, currentUser, relatedEntityType: 'suggestion' });
+}
+
+/**
+ * יצירת התראה על הצעה חדשה לעריכת כותרת נושא במסמך - לכל העוקבים אחרי המסמך
+ */
+export async function notifyNewTopicEditSuggestion({ topicEditSuggestion, document: doc, currentUser }) {
+  return _notifyNewSuggestion({ 
+    suggestion: topicEditSuggestion, 
+    document: doc, 
+    currentUser, 
+    relatedEntityType: 'topic_edit_suggestion',
+    topicId: topicEditSuggestion.topicId
+  });
+}
+
+// פונקציית עזר משותפת
+async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, relatedEntityType, topicId = null }) {
   try {
     // Validate required data
     if (!suggestion?.id) {
@@ -507,7 +525,8 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     
     console.log('[NOTIFY NEW SUGGESTION] ===== STARTING NOTIFICATION PROCESS =====');
     console.log('[NOTIFY NEW SUGGESTION] Suggestion ID:', suggestion.id);
-    console.log('[NOTIFY NEW SUGGESTION] Suggestion Type:', suggestion.type);
+    console.log('[NOTIFY NEW SUGGESTION] Related Entity Type:', relatedEntityType);
+    console.log('[NOTIFY NEW SUGGESTION] Topic ID:', topicId || 'N/A');
     console.log('[NOTIFY NEW SUGGESTION] Document ID:', doc.id);
     console.log('[NOTIFY NEW SUGGESTION] Document Title:', doc.title);
     console.log('[NOTIFY NEW SUGGESTION] Current User:', currentUser.email, '/', currentUser.full_name);
@@ -601,14 +620,23 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     // ===== Build notifications =====
     console.log('[NOTIFY NEW SUGGESTION] ===== BUILDING NOTIFICATIONS =====');
     const notifications = [];
-    const actionUrl = createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
+    
+    // Build action URL based on entity type
+    let actionUrl;
+    if (relatedEntityType === 'topic_edit_suggestion' && topicId) {
+      // For topic edit suggestions, navigate to document view with hash to topic
+      actionUrl = `${createPageUrl("DocumentView")}?id=${doc.id}#topic-${topicId}`;
+    } else {
+      // For regular suggestions, use suggestion detail page
+      actionUrl = createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
+    }
     console.log('[NOTIFY NEW SUGGESTION] Action URL:', actionUrl);
     
-    const suggestionTypeText = suggestion.type === 'new_section' 
+    const suggestionTypeText = relatedEntityType === 'topic_edit_suggestion'
+      ? 'הצעת עריכה לכותרת נושא'
+      : suggestion.type === 'new_section' 
       ? 'הצעה לסעיף חדש' 
-      : suggestion.type === 'edit_section'
-      ? 'הצעת עריכה לסעיף'
-      : 'הצעת עריכה לכותרת נושא';
+      : 'הצעת עריכה לסעיף';
 
     let successfulNotifications = 0;
     let failedNotifications = 0;
@@ -630,7 +658,7 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
         title: notifTitle,
         message: notifMessage,
         relatedEntityId: suggestion.id,
-        relatedEntityType: 'suggestion',
+        relatedEntityType: relatedEntityType,
         actionUrl,
         documentId: doc.id,
         documentTitle: doc.title
