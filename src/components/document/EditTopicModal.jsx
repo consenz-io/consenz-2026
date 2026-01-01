@@ -72,7 +72,7 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
       const timerEndsAt = new Date();
       timerEndsAt.setHours(timerEndsAt.getHours() + (document.defaultSuggestionLifetimeHours || 72));
 
-      await base44.entities.TopicEditSuggestion.create({
+      const suggestion = await base44.entities.TopicEditSuggestion.create({
         documentId: document.id,
         topicId: topic.id,
         originalTitle: topic.title,
@@ -89,6 +89,23 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
         await base44.auth.updateMe({
           suggestionsCreated: currentSuggestionsCreated + 1
         });
+      }
+      
+      // Send notifications
+      try {
+        const { notifyNewSuggestion } = await import('@/components/notifications/createNotification');
+        await notifyNewSuggestion({
+          suggestion: { 
+            ...suggestion, 
+            type: 'edit_topic',
+            title: `הצעת עריכה לכותרת: ${topic.title}`,
+            created_by: user.email
+          },
+          document,
+          currentUser: user
+        });
+      } catch (notifError) {
+        console.error('[EDIT TOPIC] Error sending notifications:', notifError);
       }
     },
     onSuccess: () => {

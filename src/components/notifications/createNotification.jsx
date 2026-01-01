@@ -481,8 +481,9 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
 }
 
 /**
- * יצירת התראה על הצעה חדשה במסמך - לכל המשתתפים
- * ✅ FIXED: Uses User.filter() instead of User.list() to avoid permission errors
+ * יצירת התראה על הצעה חדשה במסמך - לכל העוקבים אחרי המסמך
+ * ✅ FIXED: Uses DocumentFollow entity for notifications
+ * ✅ FIXED: Auto-follows users on first interaction
  */
 export async function notifyNewSuggestion({ suggestion, document: doc, currentUser }) {
   try {
@@ -553,123 +554,50 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     console.log('[NOTIFY NEW SUGGESTION] - Total votes:', allVotes.length);
     console.log('[NOTIFY NEW SUGGESTION] - Total comments:', allComments.length);
 
-    // ===== Calculate participant emails =====
-    console.log('[NOTIFY NEW SUGGESTION] ===== CALCULATING PARTICIPANTS =====');
-    const participantEmails = new Set();
-    
-    // Document creator
-    if (doc.created_by) {
-      console.log('[NOTIFY NEW SUGGESTION] Adding document creator:', doc.created_by);
-      participantEmails.add(doc.created_by);
-    }
-    
-    // Suggestion creators
-    console.log('[NOTIFY NEW SUGGESTION] Processing suggestion creators...');
-    allSuggestions.forEach(s => {
-      if (s.created_by) {
-        participantEmails.add(s.created_by);
-      }
-    });
-    console.log('[NOTIFY NEW SUGGESTION] - Added', allSuggestions.filter(s => s.created_by).length, 'suggestion creators');
-    
-    // ===== FIXED: Fetch admin users to get their emails =====
-    console.log('[NOTIFY NEW SUGGESTION] Processing document admins...');
-    let adminUsers = [];
-    if (adminIds.length > 0) {
-      adminUsers = await base44.entities.User.filter({ id: { $in: adminIds } });
-      adminUsers.forEach(admin => {
-        if (admin.email) {
-          participantEmails.add(admin.email);
-        }
+    // ===== Auto-follow current user if this is their first interaction =====
+    console.log('[NOTIFY NEW SUGGESTION] ===== AUTO-FOLLOW CHECK =====');
+    try {
+      const existingFollow = await base44.entities.DocumentFollow.filter({
+        documentId: doc.id,
+        userId: currentUser.id
       });
-      console.log('[NOTIFY NEW SUGGESTION] - Added', adminUsers.length, 'document admins');
+      
+      if (existingFollow.length === 0) {
+        console.log('[NOTIFY NEW SUGGESTION] Creating auto-follow for user:', currentUser.email);
+        await base44.entities.DocumentFollow.create({
+          documentId: doc.id,
+          userId: currentUser.id,
+          followedAt: new Date().toISOString()
+        });
+        console.log('[NOTIFY NEW SUGGESTION] Auto-follow created successfully');
+      } else {
+        console.log('[NOTIFY NEW SUGGESTION] User already following document');
+      }
+    } catch (followError) {
+      console.error('[NOTIFY NEW SUGGESTION] Error with auto-follow:', followError);
+      // Don't throw - this shouldn't block notifications
     }
     
-    // ===== FIXED: Fetch voter users to get their emails =====
-    console.log('[NOTIFY NEW SUGGESTION] Processing voters...');
-    const votesInDoc = allVotes.filter(v => suggestionIds.includes(v.suggestionId));
-    console.log('[NOTIFY NEW SUGGESTION] - Votes in document:', votesInDoc.length);
+    // ===== Get followers of the document =====
+    console.log('[NOTIFY NEW SUGGESTION] ===== FETCHING DOCUMENT FOLLOWERS =====');
+    const followers = await base44.entities.DocumentFollow.filter({ documentId: doc.id });
+    console.log('[NOTIFY NEW SUGGESTION] Found', followers.length, 'followers');
     
-    const voterIds = [...new Set(votesInDoc.map(v => v.userId))];
-    let voterUsers = [];
-    if (voterIds.length > 0) {
-      voterUsers = await base44.entities.User.filter({ id: { $in: voterIds } });
-      voterUsers.forEach(voter => {
-        if (voter.email) {
-          participantEmails.add(voter.email);
-        }
-      });
-      console.log('[NOTIFY NEW SUGGESTION] - Added', voterUsers.length, 'voters');
-    }
+    const followerUserIds = followers.map(f => f.userId).filter(id => id !== currentUser.id);
+    console.log('[NOTIFY NEW SUGGESTION] Follower user IDs (excluding current user):', followerUserIds.length);
     
-    // Argument authors
-    console.log('[NOTIFY NEW SUGGESTION] Processing argument authors...');
-    const argumentsInDoc = allArguments.filter(arg => suggestionIds.includes(arg.suggestionId));
-    argumentsInDoc.forEach(arg => {
-      if (arg.created_by) {
-        participantEmails.add(arg.created_by);
-      }
-    });
-    console.log('[NOTIFY NEW SUGGESTION] - Added', argumentsInDoc.filter(a => a.created_by).length, 'argument authors');
-    
-    // Commenters
-    console.log('[NOTIFY NEW SUGGESTION] Processing commenters...');
-    const sectionIds = sections.map(s => s.id);
-    const relevantComments = allComments.filter(c => 
-      (c.rootEntityType === 'suggestion' && suggestionIds.includes(c.rootEntityId)) ||
-      (c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)) ||
-      (c.rootEntityType === 'document' && c.rootEntityId === doc.id)
-    );
-    relevantComments.forEach(c => {
-      if (c.created_by) {
-        participantEmails.add(c.created_by);
-      }
-    });
-    console.log('[NOTIFY NEW SUGGESTION] - Added', relevantComments.filter(c => c.created_by).length, 'commenters');
-    
-    // Section editors
-    console.log('[NOTIFY NEW SUGGESTION] Processing section editors...');
-    sections.forEach(s => {
-      if (s.created_by) {
-        participantEmails.add(s.created_by);
-      }
-    });
-    console.log('[NOTIFY NEW SUGGESTION] - Added', sections.filter(s => s.created_by).length, 'section editors');
-
-    console.log('[NOTIFY NEW SUGGESTION] Total unique participants (before filtering):', participantEmails.size);
-    
-    // Remove current user
-    participantEmails.delete(currentUser.email);
-
-    console.log('[NOTIFY NEW SUGGESTION] ===== FINAL PARTICIPANTS =====');
-    console.log('[NOTIFY NEW SUGGESTION] Total participants to notify:', participantEmails.size);
-    console.log('[NOTIFY NEW SUGGESTION] Participant emails:', Array.from(participantEmails));
-    
-    if (participantEmails.size === 0) {
-      console.log('[NOTIFY NEW SUGGESTION] ===== NO PARTICIPANTS TO NOTIFY =====');
-      console.log('[NOTIFY NEW SUGGESTION] This might be the first activity in the document');
+    if (followerUserIds.length === 0) {
+      console.log('[NOTIFY NEW SUGGESTION] ===== NO FOLLOWERS TO NOTIFY =====');
       return;
     }
-
-    // ===== FIXED: Fetch participant users using User.filter() instead of cache =====
-    console.log('[NOTIFY NEW SUGGESTION] ===== FETCHING PARTICIPANT USER DATA =====');
-    const participantEmailsArray = Array.from(participantEmails);
-    console.log('[NOTIFY NEW SUGGESTION] Fetching users for', participantEmailsArray.length, 'emails...');
     
+    // ===== Fetch follower user data =====
+    console.log('[NOTIFY NEW SUGGESTION] ===== FETCHING FOLLOWER USER DATA =====');
     const users = await base44.entities.User.filter({ 
-      email: { $in: participantEmailsArray } 
+      id: { $in: followerUserIds } 
     });
     
-    console.log('[NOTIFY NEW SUGGESTION] Fetched', users.length, 'users');
-
-    // Build email to user mapping
-    const emailToUser = {};
-    users.forEach(u => { 
-      if (u.email && u.id) {
-        emailToUser[u.email] = u;
-      }
-    });
-    console.log('[NOTIFY NEW SUGGESTION] Email to user mapping size:', Object.keys(emailToUser).length);
+    console.log('[NOTIFY NEW SUGGESTION] Fetched', users.length, 'follower users');
     
     // ===== Build notifications =====
     console.log('[NOTIFY NEW SUGGESTION] ===== BUILDING NOTIFICATIONS =====');
@@ -677,21 +605,18 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
     const actionUrl = createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
     console.log('[NOTIFY NEW SUGGESTION] Action URL:', actionUrl);
     
-    const suggestionTypeText = suggestion.type === 'new_section' ? 'הצעה לסעיף חדש' : 'הצעת עריכה';
+    const suggestionTypeText = suggestion.type === 'new_section' 
+      ? 'הצעה לסעיף חדש' 
+      : suggestion.type === 'edit_section'
+      ? 'הצעת עריכה לסעיף'
+      : 'הצעת עריכה לכותרת נושא';
 
     let successfulNotifications = 0;
     let failedNotifications = 0;
     
-    for (const email of participantEmails) {
-      const user = emailToUser[email];
-      if (!user) {
-        console.error('[NOTIFY NEW SUGGESTION] ERROR: User not found for email:', email);
-        failedNotifications++;
-        continue;
-      }
-      
+    for (const user of users) {
       if (!user.id) {
-        console.error('[NOTIFY NEW SUGGESTION] ERROR: User has no ID:', email);
+        console.error('[NOTIFY NEW SUGGESTION] ERROR: User has no ID:', user.email);
         failedNotifications++;
         continue;
       }
@@ -702,7 +627,7 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
       
       notifications.push({
         userId: user.id,
-        type: 'new_suggestion',
+        type: 'new_suggestion_in_followed_document',
         title: notifTitle,
         message: notifMessage,
         relatedEntityId: suggestion.id,
@@ -713,7 +638,7 @@ export async function notifyNewSuggestion({ suggestion, document: doc, currentUs
       });
       successfulNotifications++;
       
-      console.log('[NOTIFY NEW SUGGESTION] Created notification for:', email, '/', user.full_name || user.email);
+      console.log('[NOTIFY NEW SUGGESTION] Created notification for:', user.email, '/', user.full_name || user.email);
     }
 
     console.log('[NOTIFY NEW SUGGESTION] ===== NOTIFICATION SUMMARY =====');
