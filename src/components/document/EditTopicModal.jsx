@@ -91,36 +91,37 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
         });
       }
       
-      // Send notifications
-      try {
-        const followers = await base44.entities.DocumentFollow.filter({ documentId: document.id });
-        const followerUserIds = followers.map(f => f.userId).filter(id => id !== user.id);
-        
-        if (followerUserIds.length > 0) {
-          const actionUrl = `/DocumentView?id=${document.id}#topic-${topic.id}`;
-          const suggestionTypeText = 'הצעת עריכה לכותרת נושא';
-          
-          const notifications = followerUserIds.map(userId => ({
-            userId,
-            type: 'new_suggestion_in_followed_document',
-            title: 'הצעה חדשה במסמך',
-            message: `${user.full_name} פרסם/ה ${suggestionTypeText} במסמך "${document.title}"`,
-            relatedEntityId: suggestion.id,
-            relatedEntityType: 'topic_edit_suggestion',
-            actionUrl,
-            read: false
-          }));
-          
-          await Promise.all(
-            notifications.map(notif => 
-              base44.entities.Notification.create(notif)
-                .catch(err => console.error('[EDIT TOPIC] Error creating notification:', err))
-            )
-          );
-        }
-      } catch (notifError) {
-        console.error('[EDIT TOPIC] Error sending notifications:', notifError);
-      }
+      // Send notifications in background - don't block UI
+      Promise.all([
+        (async () => {
+          try {
+            const followers = await base44.entities.DocumentFollow.filter({ documentId: document.id });
+            const followerUserIds = followers.map(f => f.userId).filter(id => id !== user.id);
+            
+            if (followerUserIds.length > 0) {
+              const actionUrl = `/DocumentView?id=${document.id}#topic-${topic.id}`;
+              const suggestionTypeText = 'הצעת עריכה לכותרת נושא';
+              
+              await Promise.all(
+                followerUserIds.map(userId =>
+                  base44.entities.Notification.create({
+                    userId,
+                    type: 'new_suggestion_in_followed_document',
+                    title: 'הצעה חדשה במסמך',
+                    message: `${user.full_name} פרסם/ה ${suggestionTypeText} במסמך "${document.title}"`,
+                    relatedEntityId: suggestion.id,
+                    relatedEntityType: 'topic_edit_suggestion',
+                    actionUrl,
+                    read: false
+                  }).catch(err => console.error('[EDIT TOPIC] Notification error:', err))
+                )
+              );
+            }
+          } catch (err) {
+            console.error('[EDIT TOPIC] Error sending notifications:', err);
+          }
+        })()
+      ]).catch(() => {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions'] });
