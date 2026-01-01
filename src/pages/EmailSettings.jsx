@@ -226,16 +226,16 @@ export default function EmailSettings() {
               {notificationTypes.map((type) => (
                 <div 
                   key={type.id}
-                  className="flex items-start gap-3 p-3 border rounded-lg hover:bg-slate-50 transition-colors"
+                  className={`flex items-start gap-3 p-3 border rounded-lg hover:bg-slate-50 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}
                 >
                   <Switch
                     checked={selectedTypes.includes(type.id)}
                     onCheckedChange={() => toggleType(type.id)}
-                    className="mt-1"
+                    className="mt-1 shrink-0"
                   />
                   <div className="flex-1">
-                    <div className="font-medium">{type.title}</div>
-                    <div className="text-sm text-slate-500 mt-1">{type.description}</div>
+                    <div className={`font-medium ${isRTL ? 'text-right' : ''}`}>{type.title}</div>
+                    <div className={`text-sm text-slate-500 mt-1 ${isRTL ? 'text-right' : ''}`}>{type.description}</div>
                   </div>
                 </div>
               ))}
