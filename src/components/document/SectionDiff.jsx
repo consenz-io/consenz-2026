@@ -55,6 +55,9 @@ export default function SectionDiff({
   
   // Check if suggestion was written in a different language than original
   const isCrossLanguageSuggestion = originalSourceLang !== modifiedSourceLang;
+  
+  // Don't show diff when languages don't match and not translated
+  const shouldHideDiff = isCrossLanguageSuggestion && !showTranslated;
 
   // Auto-translate if user's language differs from content
   useEffect(() => {
@@ -286,6 +289,15 @@ export default function SectionDiff({
         </div>
       )}
       
+      {shouldHideDiff && (
+        <Alert className="mb-3 bg-amber-50 border-amber-200">
+          <Info className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="text-amber-800 text-sm">
+            {t('crossLanguageSuggestionAlert', { language: languageLabels[modifiedSourceLang] || modifiedSourceLang })}
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div 
         className="prose prose-sm max-w-none rounded-lg p-2 -m-2"
       >
@@ -294,7 +306,7 @@ export default function SectionDiff({
             <Loader2 className="w-4 h-4 animate-spin" />
             <span className="text-sm">{t('translating')}</span>
           </div>
-        ) : !showDiff ? (
+        ) : !showDiff || shouldHideDiff ? (
           <div style={contentStyle} dangerouslySetInnerHTML={{ __html: displayNew }} />
         ) : diffMode === DIFF_MODES.INLINE ? (
           renderInlineDiff()
