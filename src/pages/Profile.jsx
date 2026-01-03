@@ -25,6 +25,7 @@ export default function Profile() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [showPointsHistory, setShowPointsHistory] = useState(false);
+  const [showAcceptedSuggestions, setShowAcceptedSuggestions] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -100,6 +101,10 @@ export default function Profile() {
     enabled: !!user?.id,
     initialData: [],
   });
+
+  const acceptedSuggestions = React.useMemo(() => {
+    return userSuggestions.filter(s => s.status === 'accepted');
+  }, [userSuggestions]);
 
   const [formData, setFormData] = useState({
     full_name: user?.full_name || "",
@@ -539,13 +544,19 @@ export default function Profile() {
                   <p className="text-xl font-bold text-slate-900">{user.points || 1000}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-                <FileText className="w-6 h-6 text-green-600" />
+              <div 
+                className="flex items-center gap-3 p-4 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
+                onClick={() => setShowAcceptedSuggestions(!showAcceptedSuggestions)}
+              >
+                <CheckCircle className="w-6 h-6 text-green-600" />
                 <div>
                   <p className="text-sm text-slate-500">
-                    {isOwnProfile ? t('suggestionsPublishedByMe') : t('suggestionsPublishedBy', { name: user.full_name })}
+                    {isOwnProfile 
+                      ? (language === 'he' ? 'הצעות שהתקבלו' : language === 'ar' ? 'مقترحات مقبولة' : 'Accepted suggestions')
+                      : (language === 'he' ? `הצעות שהתקבלו של ${user.full_name}` : `${user.full_name}'s accepted suggestions`)
+                    }
                   </p>
-                  <p className="text-xl font-bold text-slate-900">{user.suggestionsCreated || 0}</p>
+                  <p className="text-xl font-bold text-slate-900">{acceptedSuggestions.length}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-lg">
@@ -604,6 +615,45 @@ export default function Profile() {
                         </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {showAcceptedSuggestions && acceptedSuggestions.length > 0 && (
+              <div className="border-t pt-4">
+                <h3 className="text-lg font-semibold text-slate-900 mb-3">
+                  {language === 'he' ? 'הצעות שהתקבלו' : language === 'ar' ? 'مقترحات مقبولة' : 'Accepted Suggestions'}
+                </h3>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {acceptedSuggestions.map((suggestion) => (
+                    <Link 
+                      key={suggestion.id}
+                      to={`${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`}
+                      className="block p-4 rounded-lg border-2 bg-green-50 border-green-200 hover:border-green-300 transition-all hover:shadow-md"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="outline" className="text-xs font-semibold bg-green-100 text-green-800 border-green-300">
+                              {t('accepted')}
+                            </Badge>
+                            <span className="text-xs text-slate-500">
+                              {new Date(suggestion.created_date).toLocaleDateString(
+                                language === 'en' ? 'en-US' : language === 'ar' ? 'ar-EG' : 'he-IL', 
+                                { year: 'numeric', month: 'short', day: 'numeric' }
+                              )}
+                            </span>
+                          </div>
+                          <p className="text-sm font-medium text-slate-900 mb-1">{suggestion.title}</p>
+                          <div className="flex items-center gap-3 text-xs text-slate-600">
+                            <span>{suggestion.proVotes || 0} {t('pro')}</span>
+                            <span>{suggestion.conVotes || 0} {t('con')}</span>
+                          </div>
+                        </div>
+                        <ArrowRight className={`w-4 h-4 text-slate-400 shrink-0 ${isRTL ? 'rotate-180' : ''}`} />
+                      </div>
+                    </Link>
                   ))}
                 </div>
               </div>
