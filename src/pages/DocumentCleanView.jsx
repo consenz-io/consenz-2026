@@ -35,21 +35,6 @@ export default function DocumentCleanView() {
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
   const [openSectionHistoryId, setOpenSectionHistoryId] = useState(null);
   const [showDiffForSections, setShowDiffForSections] = useState({});
-  
-  // Initialize showDiffForSections with true for all sections when viewing history
-  React.useEffect(() => {
-    if (currentVersionIndex > 0 && sections.length > 0) {
-      const initialState = {};
-      sections.forEach(section => {
-        if (showDiffForSections[section.id] === undefined) {
-          initialState[section.id] = true;
-        }
-      });
-      if (Object.keys(initialState).length > 0) {
-        setShowDiffForSections(prev => ({ ...prev, ...initialState }));
-      }
-    }
-  }, [currentVersionIndex, sections]);
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
   const scrollToSuggestionId = searchParams.get('scrollToSuggestion');
@@ -225,6 +210,21 @@ export default function DocumentCleanView() {
       setCurrentVersionIndex(0);
     }
   }, [versionGroups.length, currentVersionIndex]);
+
+  // Initialize showDiffForSections with true for all sections when viewing history
+  React.useEffect(() => {
+    if (currentVersionIndex > 0 && sections && sections.length > 0) {
+      const initialState = {};
+      sections.forEach(section => {
+        if (showDiffForSections[section.id] === undefined) {
+          initialState[section.id] = true;
+        }
+      });
+      if (Object.keys(initialState).length > 0) {
+        setShowDiffForSections(prev => ({ ...prev, ...initialState }));
+      }
+    }
+  }, [currentVersionIndex, sections, showDiffForSections]);
 
   // גלילה אוטומטית לסעיף שהשתנה או נוצר
   React.useEffect(() => {
