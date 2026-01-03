@@ -111,12 +111,7 @@ export default function DocumentCleanView() {
 
   // Build document snapshots - each suggestion acceptance creates one snapshot
   const versionGroups = React.useMemo(() => {
-    if (!allVersions.length && !sections.length) return [];
-    
-    // Sort all versions by version number descending (newest first)
-    const sortedVersions = [...allVersions].sort((a, b) => (b.version || 0) - (a.version || 0));
-    
-    // Build snapshots - start from current state and work backwards
+    // Always start with current snapshot if we have sections
     const snapshots = [];
     
     // Current state snapshot
@@ -132,6 +127,14 @@ export default function DocumentCleanView() {
       currentSnapshot.existingSections.add(s.id);
     });
     snapshots.push(currentSnapshot);
+    
+    // If no versions, return just current snapshot
+    if (!allVersions || allVersions.length === 0) {
+      return snapshots;
+    }
+    
+    // Sort all versions by version number descending (newest first)
+    const sortedVersions = [...allVersions].sort((a, b) => (b.version || 0) - (a.version || 0));
     
     // Track section states as we go backwards
     let currentSectionContents = { ...currentSnapshot.sectionContents };
@@ -197,8 +200,15 @@ export default function DocumentCleanView() {
     return snapshots;
   }, [allVersions, sections]);
 
-  const currentSnapshot = versionGroups[currentVersionIndex];
+  const currentSnapshot = versionGroups[currentVersionIndex] || versionGroups[0];
   const newerSnapshot = currentVersionIndex > 0 ? versionGroups[currentVersionIndex - 1] : null;
+  
+  // Reset version index if it's out of bounds
+  React.useEffect(() => {
+    if (currentVersionIndex >= versionGroups.length && versionGroups.length > 0) {
+      setCurrentVersionIndex(0);
+    }
+  }, [versionGroups.length, currentVersionIndex]);
 
   // גלילה אוטומטית לסעיף שהשתנה או נוצר
   React.useEffect(() => {
