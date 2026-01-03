@@ -219,7 +219,7 @@ export default function DocumentView() {
       setTimeout(() => {
         const element = window.document.getElementById(`suggestion-${suggestion.id}`);
         if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
           setTimeout(() => {
             element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
@@ -230,7 +230,7 @@ export default function DocumentView() {
           setTimeout(() => {
             const retryElement = window.document.getElementById(`suggestion-${suggestion.id}`);
             if (retryElement) {
-              retryElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
+              retryElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
               retryElement.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
               setTimeout(() => {
                 retryElement.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
@@ -246,7 +246,7 @@ export default function DocumentView() {
       setTimeout(() => {
         const element = window.document.getElementById(elementId);
         if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
           setTimeout(() => {
             element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
