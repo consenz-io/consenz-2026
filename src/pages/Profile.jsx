@@ -533,7 +533,7 @@ export default function Profile() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 p-3 md:p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div 
                 className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
                 onClick={() => setShowPointsHistory(!showPointsHistory)}
@@ -557,15 +557,6 @@ export default function Profile() {
                     }
                   </p>
                   <p className="text-xl font-bold text-slate-900">{acceptedSuggestions.length}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-lg">
-                <MessageSquare className="w-6 h-6 text-orange-600" />
-                <div>
-                  <p className="text-sm text-slate-500">
-                    {isOwnProfile ? t('commentsPublishedByMe') : t('commentsPublishedBy', { name: user.full_name })}
-                  </p>
-                  <p className="text-xl font-bold text-slate-900">{userComments.length || 0}</p>
                 </div>
               </div>
             </div>
