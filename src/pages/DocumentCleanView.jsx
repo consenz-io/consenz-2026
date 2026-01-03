@@ -201,7 +201,7 @@ export default function DocumentCleanView() {
   }, [allVersions, sections]);
 
   const currentSnapshot = versionGroups[currentVersionIndex] || versionGroups[0];
-  const newerSnapshot = currentVersionIndex > 0 ? versionGroups[currentVersionIndex - 1] : null;
+  const olderSnapshot = currentVersionIndex < versionGroups.length - 1 ? versionGroups[currentVersionIndex + 1] : null;
   
   // Reset version index if it's out of bounds
   React.useEffect(() => {
@@ -214,23 +214,23 @@ export default function DocumentCleanView() {
   React.useEffect(() => {
     if (currentVersionIndex > 0 && currentSnapshot) {
       setTimeout(() => {
-        // Find the first section that has visible changes
+        // Find the first section that has visible changes compared to older version
         let targetSectionId = null;
         
-        // Priority 1: New section created
+        // Priority 1: New section created in this version
         if (currentSnapshot.isNewSection && currentSnapshot.newSectionId) {
           targetSectionId = currentSnapshot.newSectionId;
         } 
-        // Priority 2: Section with direct changes
+        // Priority 2: Section with direct changes in this version
         else if (currentSnapshot.changedSectionId) {
           targetSectionId = currentSnapshot.changedSectionId;
         }
-        // Priority 3: Find first section with content differences
-        else if (newerSnapshot) {
+        // Priority 3: Find first section with content differences compared to older version
+        else if (olderSnapshot) {
           for (const section of sections) {
-            const displayedContent = currentSnapshot?.sectionContents?.[section.id];
-            const newerContent = newerSnapshot?.sectionContents?.[section.id];
-            if (displayedContent && newerContent && displayedContent !== newerContent) {
+            const currentContent = currentSnapshot?.sectionContents?.[section.id];
+            const olderContent = olderSnapshot?.sectionContents?.[section.id];
+            if (currentContent && olderContent && currentContent !== olderContent) {
               targetSectionId = section.id;
               break;
             }
@@ -256,7 +256,7 @@ export default function DocumentCleanView() {
         }
       }, 150);
     }
-  }, [currentVersionIndex, currentSnapshot, newerSnapshot, sections]);
+  }, [currentVersionIndex, currentSnapshot, olderSnapshot, sections]);
 
   if (docLoading || topicsLoading || sectionsLoading || versionsLoading) {
     return (
@@ -596,8 +596,8 @@ ${text}`;
                         // Get content from the current snapshot
                         const displayedContent = currentSnapshot?.sectionContents?.[section.id] || section.content;
                         
-                        // Get content from the newer snapshot (for diff)
-                        const newerContent = newerSnapshot?.sectionContents?.[section.id];
+                        // Get content from the older snapshot (for diff) - to show what changed in THIS version
+                        const olderContent = olderSnapshot?.sectionContents?.[section.id];
                         
                         // Check if this section was newly created in THIS snapshot (current view)
                         const isNewlyCreatedSection = isViewingHistory && 
@@ -648,14 +648,14 @@ ${text}`;
                                  </div>
                                 ) : (
                                 <>
-                                  {isViewingHistory && newerContent && newerContent !== displayedContent ? (
+                                  {isViewingHistory && olderContent && olderContent !== displayedContent ? (
                                     <div id={`change-${section.id}`} className="border-l-4 border-blue-400 pl-3 py-2 bg-blue-50/30 rounded">
                                       <Badge className="mb-2 bg-blue-100 text-blue-800 text-xs">
                                         {language === 'he' ? 'השוואה' : language === 'ar' ? 'مقارنة' : 'Comparison'}
                                       </Badge>
                                       <InlineDiff
-                                        originalContent={displayedContent}
-                                        newContent={newerContent}
+                                        originalContent={olderContent}
+                                        newContent={displayedContent}
                                       />
                                     </div>
                                   ) : (
