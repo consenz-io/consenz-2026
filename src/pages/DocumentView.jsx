@@ -889,7 +889,7 @@ export default function DocumentView() {
       />
 
       {/* Floating navigation for suggestions */}
-      {pendingSuggestions.length > 0 && showSuggestionNav && (
+      {pendingSuggestions.length > 0 && showSuggestionNav && showScrollTop && (
         <div className="fixed bottom-6 right-20 z-40 flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-3 py-2 border border-slate-200">
           <Button
             size="sm"
