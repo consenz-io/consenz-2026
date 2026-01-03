@@ -157,7 +157,20 @@ export default function CreateGroup() {
                         {language === 'he' ? 'קבוצה פרטית' : language === 'ar' ? 'مجموعة خاصة' : 'Private Group'}
                       </div>
                       <p className="text-sm text-slate-500">
-                        {language === 'he' ? 'רק חברי הקבוצה יכולים לראות אותה' : 'Only group members can see it'}
+                        {language === 'he' ? 'כולם יכולים לראות, דרושה אישור להצטרפות' : 'Everyone can see, approval required to join'}
+                      </p>
+                    </Label>
+                  </div>
+
+                  <div className="flex items-start space-x-3 space-x-reverse p-4 border rounded-lg hover:bg-slate-50 cursor-pointer">
+                    <RadioGroupItem value="hidden" id="hidden" />
+                    <Label htmlFor="hidden" className="flex-1 cursor-pointer">
+                      <div className="flex items-center gap-2 font-semibold mb-1">
+                        <Lock className="w-4 h-4" />
+                        {language === 'he' ? 'קבוצה חסויה' : language === 'ar' ? 'مجموعة مخفية' : 'Hidden Group'}
+                      </div>
+                      <p className="text-sm text-slate-500">
+                        {language === 'he' ? 'רק חברי הקבוצה ומנהלי המערכת יכולים לראות' : 'Only members and system admins can see'}
                       </p>
                     </Label>
                   </div>
