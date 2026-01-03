@@ -155,7 +155,7 @@ async function getDocumentCreator(documentId, users, publicProfiles, docList = n
   }
 }
 
-// Batch create notifications for efficiency
+// Batch create notifications for efficiency with rate limit protection
 async function batchCreateNotifications(notifications) {
   if (!notifications || notifications.length === 0) {
     console.log('[BATCH NOTIFICATIONS] No notifications to create');
@@ -165,19 +165,36 @@ async function batchCreateNotifications(notifications) {
   console.log('[BATCH NOTIFICATIONS] Creating', notifications.length, 'notifications...');
   
   try {
-    // Create all notifications in parallel
-    const results = await Promise.all(notifications.map((n, index) => 
-      base44.entities.Notification.create({ ...n, read: false })
-        .then(result => {
-          console.log('[BATCH NOTIFICATIONS] Successfully created notification', index + 1, '/', notifications.length);
-          return result;
-        })
-        .catch(err => {
-          console.error('[BATCH NOTIFICATIONS] Failed to create notification', index + 1, ':', err);
-          console.error('[BATCH NOTIFICATIONS] Failed notification data:', JSON.stringify(n, null, 2));
-          return null;
-        })
-    ));
+    // Process in smaller batches with delays to avoid rate limits
+    const BATCH_SIZE = 5;
+    const DELAY_BETWEEN_BATCHES = 1000; // 1 second
+    
+    const results = [];
+    
+    for (let i = 0; i < notifications.length; i += BATCH_SIZE) {
+      const batch = notifications.slice(i, i + BATCH_SIZE);
+      console.log('[BATCH NOTIFICATIONS] Processing batch', Math.floor(i / BATCH_SIZE) + 1, 'of', Math.ceil(notifications.length / BATCH_SIZE));
+      
+      // Add delay between batches (except first)
+      if (i > 0) {
+        await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
+      }
+      
+      const batchResults = await Promise.all(batch.map((n, index) => 
+        base44.entities.Notification.create({ ...n, read: false })
+          .then(result => {
+            console.log('[BATCH NOTIFICATIONS] Successfully created notification', i + index + 1, '/', notifications.length);
+            return result;
+          })
+          .catch(err => {
+            console.error('[BATCH NOTIFICATIONS] Failed to create notification', i + index + 1, ':', err);
+            console.error('[BATCH NOTIFICATIONS] Failed notification data:', JSON.stringify(n, null, 2));
+            return null;
+          })
+      ));
+      
+      results.push(...batchResults);
+    }
     
     const successful = results.filter(r => r !== null).length;
     const failed = results.length - successful;
