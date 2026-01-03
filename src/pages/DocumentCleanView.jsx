@@ -650,13 +650,51 @@ ${text}`;
                                 <>
                                   {isViewingHistory && olderContent && olderContent !== displayedContent ? (
                                     <div id={`change-${section.id}`} className="border-l-4 border-blue-400 pl-3 py-2 bg-blue-50/30 rounded">
-                                      <Badge className="mb-2 bg-blue-100 text-blue-800 text-xs">
-                                        {language === 'he' ? 'השוואה' : language === 'ar' ? 'مقارنة' : 'Comparison'}
-                                      </Badge>
-                                      <InlineDiff
-                                        originalContent={olderContent}
-                                        newContent={displayedContent}
-                                      />
+                                      <div className="flex items-center justify-between mb-2">
+                                        <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                          {language === 'he' ? 'השוואה' : language === 'ar' ? 'مقارنة' : 'Comparison'}
+                                        </Badge>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => setShowDiffForSections(prev => ({
+                                            ...prev,
+                                            [section.id]: !prev[section.id]
+                                          }))}
+                                          className="h-7 px-2 text-xs"
+                                        >
+                                          {showDiffForSections[section.id] ? (
+                                            <>
+                                              <EyeOff className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                              {t('hideChanges')}
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Eye className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                              {t('showDiff')}
+                                            </>
+                                          )}
+                                        </Button>
+                                      </div>
+                                      {showDiffForSections[section.id] ? (
+                                        <InlineDiff
+                                          originalContent={olderContent}
+                                          newContent={displayedContent}
+                                        />
+                                      ) : (
+                                        <div
+                                          className="prose prose-sm max-w-none text-slate-700"
+                                          style={{ 
+                                            direction: isRTL ? 'rtl' : 'ltr', 
+                                            textAlign: isRTL ? 'right' : 'left',
+                                            fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                            fontSize: "1.125rem",
+                                            lineHeight: "1.8",
+                                            letterSpacing: "0.01em"
+                                          }}
+                                          dangerouslySetInnerHTML={{ __html: displayedContent }}
+                                        />
+                                      )}
                                     </div>
                                   ) : (
                                     <div 
