@@ -35,6 +35,21 @@ export default function DocumentCleanView() {
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
   const [openSectionHistoryId, setOpenSectionHistoryId] = useState(null);
   const [showDiffForSections, setShowDiffForSections] = useState({});
+  
+  // Initialize showDiffForSections with true for all sections when viewing history
+  React.useEffect(() => {
+    if (currentVersionIndex > 0 && sections.length > 0) {
+      const initialState = {};
+      sections.forEach(section => {
+        if (showDiffForSections[section.id] === undefined) {
+          initialState[section.id] = true;
+        }
+      });
+      if (Object.keys(initialState).length > 0) {
+        setShowDiffForSections(prev => ({ ...prev, ...initialState }));
+      }
+    }
+  }, [currentVersionIndex, sections]);
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
   const scrollToSuggestionId = searchParams.get('scrollToSuggestion');
@@ -615,8 +630,7 @@ ${text}`;
                         return (
                           <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
                             <div 
-                              className="flex gap-2 md:gap-4 group cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors"
-                              onClick={() => setOpenSectionHistoryId(section.id)}
+                              className="flex gap-2 md:gap-4 group p-2 rounded-lg transition-colors"
                             >
                                 <span className="text-slate-500 font-medium min-w-[1.5rem] md:min-w-[2rem] text-sm md:text-base">
                                   {topicIndex + 1}.{sectionIndex + 1}
@@ -655,27 +669,43 @@ ${text}`;
                                         <Badge className="bg-blue-100 text-blue-800 text-xs">
                                           {language === 'he' ? 'השוואה' : language === 'ar' ? 'مقارنة' : 'Comparison'}
                                         </Badge>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => setShowDiffForSections(prev => ({
-                                            ...prev,
-                                            [section.id]: !prev[section.id]
-                                          }))}
-                                          className="h-7 px-2 text-xs"
-                                        >
-                                          {showDiffForSections[section.id] ? (
-                                            <>
-                                              <EyeOff className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                              {t('hideChanges')}
-                                            </>
-                                          ) : (
-                                            <>
-                                              <Eye className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                              {t('showDiff')}
-                                            </>
-                                          )}
-                                        </Button>
+                                        <div className="flex items-center gap-2">
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setShowDiffForSections(prev => ({
+                                                ...prev,
+                                                [section.id]: !prev[section.id]
+                                              }));
+                                            }}
+                                            className="h-7 px-2 text-xs"
+                                          >
+                                            {showDiffForSections[section.id] ? (
+                                              <>
+                                                <EyeOff className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                {t('hideChanges')}
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Eye className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                {t('showDiff')}
+                                              </>
+                                            )}
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setOpenSectionHistoryId(section.id);
+                                            }}
+                                            className="h-7 px-2 text-xs"
+                                          >
+                                            {language === 'he' ? 'היסטוריית סעיף' : language === 'ar' ? 'تاريخ القسم' : 'Section History'}
+                                          </Button>
+                                        </div>
                                       </div>
                                       {showDiffForSections[section.id] ? (
                                         <InlineDiff
