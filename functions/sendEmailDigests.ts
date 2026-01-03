@@ -36,6 +36,9 @@ Deno.serve(async (req) => {
     let emailsSent = 0;
     const errors = [];
 
+    // Helper function to delay between emails to avoid rate limiting
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
     // Send digest email to each user
     for (const [userId, digests] of Object.entries(digestsByUser)) {
       try {
@@ -43,6 +46,11 @@ Deno.serve(async (req) => {
         if (!user || !user.email) {
           errors.push(`User ${userId} not found or has no email`);
           continue;
+        }
+        
+        // Add 2 second delay between emails to avoid rate limiting
+        if (emailsSent > 0) {
+          await delay(2000);
         }
 
         // Group by document for better organization
@@ -114,7 +122,19 @@ Deno.serve(async (req) => {
 
         emailsSent++;
       } catch (error) {
-        errors.push(`Failed to send digest to user ${userId}: ${error.message}`);
+        // Check if it's a rate limit error
+        if (error.message.includes('Rate limit') || error.message.includes('rate limit')) {
+          errors.push(`Rate limit hit for user ${userId}, will retry in next run`);
+          // Don't mark as sent so it will be retried
+        } else {
+          errors.push(`Failed to send digest to user ${userId}: ${error.message}`);
+          // Mark as sent even on error to avoid infinite retries
+          for (const digest of digests) {
+            await base44.asServiceRole.entities.EmailDigest.update(digest.id, {
+              isIncludedInDigest: true
+            }).catch(() => {});
+          }
+        }
       }
     }
 
