@@ -412,7 +412,17 @@ export default function Home() {
           </Card>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {groups.map((group) => {
+            {groups.filter(group => {
+              // Filter out hidden groups unless user is member, creator, or system admin
+              if (group.status === 'hidden') {
+                if (!user) return false;
+                const isMember = groupMembers.some(m => m.groupId === group.id && m.userId === user.id);
+                const isCreator = group.created_by === user.email;
+                const isSystemAdmin = user.role === 'admin';
+                return isMember || isCreator || isSystemAdmin;
+              }
+              return true;
+            }).map((group) => {
               const groupDocs = documents.filter(d => d.groupId === group.id);
               const members = groupMembers.filter(m => m.groupId === group.id);
               const isAdmin = members.some(m => m.userId === user?.id && m.role === 'admin');
@@ -426,10 +436,17 @@ export default function Home() {
                         <div className="flex items-center gap-1 shrink-0">
                           {group.status === 'private' ? (
                             <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                              <Lock className="w-3 h-3 mr-1" />
                               {language === 'he' ? 'פרטי' : 'Private'}
+                            </Badge>
+                          ) : group.status === 'hidden' ? (
+                            <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-300">
+                              <Lock className="w-3 h-3 mr-1" />
+                              {language === 'he' ? 'חסוי' : 'Hidden'}
                             </Badge>
                           ) : (
                             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                              <Globe className="w-3 h-3 mr-1" />
                               {language === 'he' ? 'ציבורי' : 'Public'}
                             </Badge>
                           )}
