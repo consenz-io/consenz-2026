@@ -23,6 +23,7 @@ import { createPageUrl } from "@/utils";
 import InsufficientPointsDialog from "../InsufficientPointsDialog";
 import PointsCostConfirmDialog from "../PointsCostConfirmDialog";
 import { ensureUserPublicProfile } from "../ensureUserPublicProfile";
+import InlineDiff from "./InlineDiff";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -101,6 +102,7 @@ export default function CreateSuggestionModal({
   const [showInsufficientPointsDialog, setShowInsufficientPointsDialog] = useState(false);
   const [showPointsConfirm, setShowPointsConfirm] = useState(false);
   const [pendingFormData, setPendingFormData] = useState(null);
+  const [showDiff, setShowDiff] = useState(false);
   
   const currentUser = user;
   
@@ -504,12 +506,32 @@ Return ONLY the translated HTML:`;
           )}
 
             <div>
-            <Label htmlFor="content">
-              {isNewSection ? t('sectionContent') : t('proposedChanges')}
-            </Label>
+            <div className="flex items-center justify-between mb-2">
+              <Label htmlFor="content">
+                {isNewSection ? t('sectionContent') : t('proposedChanges')}
+              </Label>
+              {!isNewSection && existingSection && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowDiff(!showDiff)}
+                  className="h-8"
+                >
+                  {showDiff ? t('hideChanges') : t('showDiff')}
+                </Button>
+              )}
+            </div>
             {isLoadingTranslation ? (
               <div className="border border-slate-200 rounded-lg p-4 bg-slate-50 text-center text-slate-500">
                 {t('translating')}
+              </div>
+            ) : showDiff && !isNewSection && existingSection ? (
+              <div className="border border-slate-300 rounded-lg p-4 bg-white max-h-96 overflow-y-auto">
+                <InlineDiff 
+                  originalContent={existingSection.content}
+                  newContent={formData.newContent}
+                />
               </div>
             ) : (
               <Textarea
