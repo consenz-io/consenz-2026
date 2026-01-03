@@ -574,12 +574,6 @@ export default function DocumentView() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onSelect={() => setShowCreateSuggestion(true)}>
-                  <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {t('newSuggestion')}
-                </DropdownMenuItem>
-                
-                <DropdownMenuSeparator />
                 
                 <DropdownMenuItem asChild>
                   <div onClick={() => {
