@@ -59,6 +59,7 @@ export default function DocumentView() {
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
   const [targetSuggestionId, setTargetSuggestionId] = useState(null);
   const [showSuggestionNav, setShowSuggestionNav] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
@@ -406,6 +407,16 @@ export default function DocumentView() {
       setOpenSuggestionId(openSuggestionFromUrl);
     }
   }, [openSuggestionFromUrl]);
+
+  // Track scroll position for showing floating buttons
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleEditSection = (section, isDirectEdit = false) => {
     setEditingSection(isDirectEdit ? { ...section, isDirectEdit: true } : section);
