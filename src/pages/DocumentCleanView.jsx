@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Printer, Globe, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Printer, Globe, Loader2, ChevronLeft, ChevronRight, Eye, EyeOff } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
@@ -34,6 +34,7 @@ export default function DocumentCleanView() {
   const [translatingAll, setTranslatingAll] = useState(false);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
   const [openSectionHistoryId, setOpenSectionHistoryId] = useState(null);
+  const [showDiffForSections, setShowDiffForSections] = useState({});
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
   const scrollToSuggestionId = searchParams.get('scrollToSuggestion');
