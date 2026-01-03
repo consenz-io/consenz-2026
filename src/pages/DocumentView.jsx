@@ -782,7 +782,8 @@ export default function DocumentView() {
 
         <div className="grid grid-cols-3 gap-3 md:gap-4 w-full max-w-full">
           <div 
-            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1"
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-blue-400 hover:shadow-lg transition-all"
+            onClick={() => setShowContributorsModal(true)}
           >
             <Users className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
             <div className="text-base md:text-xl font-bold text-slate-900">{contributorsCount}</div>

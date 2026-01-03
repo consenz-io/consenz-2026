@@ -2,6 +2,7 @@ import AdminSyncProfiles from './pages/AdminSyncProfiles';
 import CreateDocument from './pages/CreateDocument';
 import CreateGroup from './pages/CreateGroup';
 import DocumentAdmin from './pages/DocumentAdmin';
+import DocumentCleanView from './pages/DocumentCleanView';
 import DocumentComments from './pages/DocumentComments';
 import DocumentVersions from './pages/DocumentVersions';
 import DocumentView from './pages/DocumentView';
@@ -15,7 +16,6 @@ import Profile from './pages/Profile';
 import SectionHistory from './pages/SectionHistory';
 import SuggestionDetail from './pages/SuggestionDetail';
 import UnderstandingConsensus from './pages/UnderstandingConsensus';
-import DocumentCleanView from './pages/DocumentCleanView';
 import __Layout from './Layout.jsx';
 
 
@@ -24,6 +24,7 @@ export const PAGES = {
     "CreateDocument": CreateDocument,
     "CreateGroup": CreateGroup,
     "DocumentAdmin": DocumentAdmin,
+    "DocumentCleanView": DocumentCleanView,
     "DocumentComments": DocumentComments,
     "DocumentVersions": DocumentVersions,
     "DocumentView": DocumentView,
@@ -37,7 +38,6 @@ export const PAGES = {
     "SectionHistory": SectionHistory,
     "SuggestionDetail": SuggestionDetail,
     "UnderstandingConsensus": UnderstandingConsensus,
-    "DocumentCleanView": DocumentCleanView,
 }
 
 export const pagesConfig = {
