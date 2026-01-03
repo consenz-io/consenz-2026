@@ -1,5 +1,6 @@
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
+import { showBrowserNotification } from './browserNotifications';
 
 // Cache for users and public profiles to reduce API calls
 const userCache = new Map();
@@ -249,6 +250,13 @@ export async function createNotification({
     
     // Wait for both to complete
     const [notification] = await Promise.all([notificationPromise, digestPromise]);
+    
+    // Show browser notification
+    showBrowserNotification({
+      title,
+      body: message,
+      actionUrl: validActionUrl
+    });
     
     return notification;
   } catch (error) {

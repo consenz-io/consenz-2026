@@ -4,6 +4,7 @@ import { createPageUrl } from "@/utils";
 import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages, ArrowUp, Users } from "lucide-react";
 import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
 import { Toaster } from "sonner";
+import { initBrowserNotifications } from "@/components/notifications/browserNotifications";
 import {
   Sidebar,
   SidebarContent,
@@ -67,6 +68,11 @@ function LayoutContent({ children, currentPageName }) {
     
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Initialize browser notifications on mount
+  React.useEffect(() => {
+    initBrowserNotifications();
   }, []);
 
   const scrollToTop = () => {
