@@ -617,21 +617,33 @@ ${text}`;
                                    />
                                  </div>
                                 ) : (
-                                 <>
-                                   <div 
-                                     className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none"
-                                     style={{ 
-                                       fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
-                                       fontSize: "1.125rem",
-                                       lineHeight: "1.8",
-                                       letterSpacing: "0.01em"
-                                     }}
-                                     dangerouslySetInnerHTML={{ 
-                                       __html: showTranslatedSections[section.id] 
-                                         ? (translatedSections[section.id] || section.translations?.[language] || displayedContent)
-                                         : displayedContent 
-                                     }}
-                                   />
+                                <>
+                                  {isViewingHistory && newerContent && newerContent !== displayedContent ? (
+                                    <div className="border-l-4 border-blue-400 pl-3 py-2 bg-blue-50/30 rounded">
+                                      <Badge className="mb-2 bg-blue-100 text-blue-800 text-xs">
+                                        {language === 'he' ? 'השוואה' : language === 'ar' ? 'مقارنة' : 'Comparison'}
+                                      </Badge>
+                                      <InlineDiff
+                                        originalContent={displayedContent}
+                                        newContent={newerContent}
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div 
+                                      className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none"
+                                      style={{ 
+                                        fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                        fontSize: "1.125rem",
+                                        lineHeight: "1.8",
+                                        letterSpacing: "0.01em"
+                                      }}
+                                      dangerouslySetInnerHTML={{ 
+                                        __html: showTranslatedSections[section.id] 
+                                          ? (translatedSections[section.id] || section.translations?.[language] || displayedContent)
+                                          : displayedContent 
+                                      }}
+                                    />
+                                  )}
                                     {(section.originalLanguage || detectLanguage(section.content)) !== language && (
                                       <Button
                                         variant="ghost"
