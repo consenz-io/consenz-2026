@@ -202,11 +202,8 @@ export default function DocumentCleanView() {
 
   // גלילה אוטומטית לסעיף שהשתנה או נוצר
   React.useEffect(() => {
-    setTimeout(() => {
-      if (currentVersionIndex === 0) {
-        // When returning to current version, scroll to top
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      } else if (currentSnapshot) {
+    if (currentVersionIndex > 0 && currentSnapshot) {
+      setTimeout(() => {
         let targetSectionId = null;
         
         // Check if a new section was created in this snapshot
@@ -227,8 +224,8 @@ export default function DocumentCleanView() {
             }, 2000);
           }
         }
-      }
-    }, 150);
+      }, 150);
+    }
   }, [currentVersionIndex, currentSnapshot]);
 
   if (docLoading || topicsLoading || sectionsLoading || versionsLoading) {
