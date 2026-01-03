@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle, ChevronLeft, ChevronRight, MoreVertical, Bell } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/components/LanguageContext";
 import ReactQuill from "react-quill";
 
@@ -709,33 +710,62 @@ export default function DocumentView() {
               )}
             </div>
 
-          <div className="flex gap-2 md:gap-3 flex-wrap justify-center">
-              <FollowDocumentButton documentId={documentId} user={user} />
-
-              <TranslateAllButton 
-                document={document} 
-                topics={topics} 
-                sections={sections} 
-              />
-
-              <Link to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`} className="flex-shrink-0">
-                <Button variant="outline" size="sm" className="text-xs md:text-sm px-3 md:px-4 h-8 md:h-9">
-                  <FileText className={`w-4 h-4 ${isRTL ? 'ml-1.5 md:ml-2' : 'mr-1.5 md:mr-2'}`} />
-                  <span>{t('cleanView')}</span>
-                </Button>
-              </Link>
-              {isAdmin && (
-                <Link 
-                  to={`${createPageUrl("DocumentAdmin")}?id=${documentId}`} 
-                  className="flex-shrink-0"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Button variant="outline" size="sm" className="text-xs md:text-sm px-3 md:px-4 h-8 md:h-9">
-                    <Settings className={`w-4 h-4 ${isRTL ? 'ml-1.5 md:ml-2' : 'mr-1.5 md:mr-2'}`} />
-                    <span>{t('admin')}</span>
+          <div className="flex justify-center">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="text-xs md:text-sm px-4 h-9">
+                    <MoreVertical className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {language === 'he' ? 'תפריט' : language === 'ar' ? 'القائمة' : 'Menu'}
                   </Button>
-                </Link>
-              )}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="center" className="w-56">
+                  <DropdownMenuItem onSelect={() => setShowCreateSuggestion(true)}>
+                    <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {t('newSuggestion')}
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem onSelect={() => setShowSignersListModal(true)}>
+                    <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} ${userHasAgreed ? 'text-emerald-600' : ''}`} />
+                    {language === 'he' ? 'חתומים' : language === 'ar' ? 'الموقعون' : 'Signers'} ({documentAgreements.length})
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem onSelect={() => setShowDescriptionComments(!showDescriptionComments)}>
+                    <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {t('documentDiscussion')}
+                    {documentComments.length > 0 && ` (${documentComments.length})`}
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem asChild>
+                    <Link to={`${createPageUrl("DocumentComments")}?id=${documentId}`} className="flex items-center">
+                      <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {t('sectionComments')} ({sectionCommentsCount})
+                    </Link>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem asChild>
+                    <Link to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`} className="flex items-center">
+                      <FileText className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {t('cleanView')}
+                    </Link>
+                  </DropdownMenuItem>
+                  
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link to={`${createPageUrl("DocumentAdmin")}?id=${documentId}`} className="flex items-center">
+                          <Settings className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                          {t('admin')}
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
         </div>
 
@@ -749,7 +779,7 @@ export default function DocumentView() {
             <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('contributors')}</div>
           </div>
           <div 
-            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 cursor-pointer hover:border-indigo-400 transition-all flex flex-col items-center justify-center gap-1"
+            className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-400 rounded-lg p-2 md:p-3 cursor-pointer hover:border-indigo-600 hover:shadow-lg transition-all flex flex-col items-center justify-center gap-1 relative overflow-hidden"
             onClick={() => {
               if (pendingSuggestions.length > 0) {
                 setShowSuggestionNav(true);
@@ -757,9 +787,17 @@ export default function DocumentView() {
               }
             }}
           >
-            <MessageSquare className="w-4 h-4 md:w-6 md:h-6 text-indigo-600" />
-            <div className="text-base md:text-xl font-bold text-slate-900">{pendingSuggestions.length}</div>
-            <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{language === 'he' ? 'הצעות פתוחות' : language === 'ar' ? 'مقترحات مفتوحة' : 'Open Suggestions'}</div>
+            {pendingSuggestions.length > 0 && (
+              <div className="absolute top-1 right-1">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+                </span>
+              </div>
+            )}
+            <MessageSquare className="w-5 h-5 md:w-7 md:h-7 text-indigo-600" />
+            <div className="text-lg md:text-2xl font-bold text-indigo-900">{pendingSuggestions.length}</div>
+            <div className="text-[10px] md:text-sm text-indigo-700 text-center leading-tight font-medium">{language === 'he' ? 'הצעות פתוחות' : language === 'ar' ? 'مقترحات مفتوحة' : 'Open Suggestions'}</div>
           </div>
           <Link 
             to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
