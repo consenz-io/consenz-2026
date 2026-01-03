@@ -13,9 +13,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { 
   UserPlus, Shield, ShieldOff, Trash2, Mail, 
-  AlertCircle, CheckCircle 
+  AlertCircle, CheckCircle, Lock, Globe 
 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
@@ -170,6 +171,22 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose }) {
     },
   });
 
+  const updateGroupStatusMutation = useMutation({
+    mutationFn: async (newStatus) => {
+      await base44.entities.Group.update(groupId, { status: newStatus });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['group', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      setSuccess(language === 'he' ? 'הגדרות הקבוצה עודכנו בהצלחה' : 'Group settings updated successfully');
+      setTimeout(() => setSuccess(null), 3000);
+    },
+    onError: () => {
+      setError(language === 'he' ? 'שגיאה בעדכון הגדרות הקבוצה' : 'Error updating group settings');
+      setTimeout(() => setError(null), 5000);
+    },
+  });
+
   const handleInvite = (e) => {
     e.preventDefault();
     if (!inviteEmail.trim()) return;
@@ -186,12 +203,12 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose }) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="w-5 h-5" />
-            {language === 'he' ? 'ניהול חברי הקבוצה' : 'Manage Group Members'}
+            {language === 'he' ? 'ניהול הקבוצה' : 'Manage Group'}
           </DialogTitle>
           <DialogDescription>
             {language === 'he' 
-              ? 'הוסף חברים חדשים, הגדר אדמינים והסר חברים מהקבוצה'
-              : 'Add new members, set admins, and remove members from the group'}
+              ? 'נהל את הגדרות הקבוצה, הוסף חברים חדשים והגדר אדמינים'
+              : 'Manage group settings, add new members and set admins'}
           </DialogDescription>
         </DialogHeader>
 
@@ -208,6 +225,58 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose }) {
             <AlertDescription className="text-green-800">{success}</AlertDescription>
           </Alert>
         )}
+
+        <div className="space-y-3 border-b pb-4">
+          <h3 className="font-semibold text-sm text-slate-700">
+            {language === 'he' ? 'הגדרות קבוצה' : 'Group Settings'}
+          </h3>
+          <div className="space-y-2">
+            <Label>{language === 'he' ? 'פרטיות הקבוצה' : 'Group Privacy'}</Label>
+            <RadioGroup
+              value={group?.status || 'public'}
+              onValueChange={(value) => updateGroupStatusMutation.mutate(value)}
+            >
+              <div className="flex items-start space-x-3 space-x-reverse p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
+                <RadioGroupItem value="public" id="public-manage" />
+                <Label htmlFor="public-manage" className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2 font-medium mb-1">
+                    <Globe className="w-4 h-4" />
+                    {language === 'he' ? 'ציבורי' : 'Public'}
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    {language === 'he' ? 'כולם יכולים לראות ולהצטרף' : 'Everyone can see and join'}
+                  </p>
+                </Label>
+              </div>
+
+              <div className="flex items-start space-x-3 space-x-reverse p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
+                <RadioGroupItem value="private" id="private-manage" />
+                <Label htmlFor="private-manage" className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2 font-medium mb-1">
+                    <Lock className="w-4 h-4" />
+                    {language === 'he' ? 'פרטי' : 'Private'}
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    {language === 'he' ? 'כולם יכולים לראות, דרושה אישור' : 'Everyone can see, approval required'}
+                  </p>
+                </Label>
+              </div>
+
+              <div className="flex items-start space-x-3 space-x-reverse p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
+                <RadioGroupItem value="hidden" id="hidden-manage" />
+                <Label htmlFor="hidden-manage" className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2 font-medium mb-1">
+                    <Lock className="w-4 h-4" />
+                    {language === 'he' ? 'חסוי' : 'Hidden'}
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    {language === 'he' ? 'רק חברים ומנהלי מערכת' : 'Only members and system admins'}
+                  </p>
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+        </div>
 
         {joinRequests.length > 0 && (
           <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">

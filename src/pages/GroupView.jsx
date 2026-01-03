@@ -288,7 +288,7 @@ export default function GroupView() {
                 onClick={() => setShowManageMembers(true)}
               >
                 <Settings className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                {language === 'he' ? 'ניהול חברים' : 'Manage Members'}
+                {language === 'he' ? 'ניהול' : 'Manage'}
               </Button>
             )}
             {currentUser && !isMember && group.status === 'public' && (
