@@ -56,12 +56,17 @@ export default function SectionDiff({
   // Check if suggestion was written in a different language than original
   const isCrossLanguageSuggestion = originalSourceLang !== modifiedSourceLang;
 
-  // Auto-translate if user's language differs from content
+  // Auto-translate if user's language differs from content - always
   useEffect(() => {
-    if (needsTranslation && !translationResult && !isTranslating) {
-      handleSmartTranslate();
+    if (needsTranslation && !isTranslating) {
+      // Check if we need fresh translation
+      if (!translationResult || 
+          translationResult.sourceLanguages?.original !== originalSourceLang ||
+          translationResult.sourceLanguages?.modified !== modifiedSourceLang) {
+        handleSmartTranslate();
+      }
     }
-  }, [language]);
+  }, [needsTranslation, originalSourceLang, modifiedSourceLang, language]);
   
   const handleSmartTranslate = async () => {
     if (isTranslating) return;
