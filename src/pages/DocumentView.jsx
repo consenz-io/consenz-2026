@@ -210,16 +210,16 @@ export default function DocumentView() {
   const scrollToSuggestion = (index) => {
     const suggestion = pendingSuggestions[index];
     if (!suggestion) return;
-    
+
     // אם זו הצעה לעריכת סעיף - צריך לגלול לסעיף ולהעביר את הקרוסלה
     if (suggestion.type === 'edit_section') {
       setTargetSuggestionId(suggestion.id);
-      
+
       // המתן רגע קצר שהקרוסלה תעדכן את ה-ID שלה, ואז גלול
       setTimeout(() => {
         const element = window.document.getElementById(`suggestion-${suggestion.id}`);
         if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.scrollIntoView({ behavior: 'smooth', block: 'end' });
           element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
           setTimeout(() => {
             element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
@@ -230,7 +230,7 @@ export default function DocumentView() {
           setTimeout(() => {
             const retryElement = window.document.getElementById(`suggestion-${suggestion.id}`);
             if (retryElement) {
-              retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              retryElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
               retryElement.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
               setTimeout(() => {
                 retryElement.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
@@ -246,7 +246,7 @@ export default function DocumentView() {
       setTimeout(() => {
         const element = window.document.getElementById(elementId);
         if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.scrollIntoView({ behavior: 'smooth', block: 'end' });
           element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
           setTimeout(() => {
             element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
