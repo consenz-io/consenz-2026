@@ -47,6 +47,17 @@ export default function Groups() {
     const isMember = groupMembers.some(
       m => m.groupId === group.id && m.userId === currentUser.id
     );
+    
+    // For private groups, show to all but require membership to join
+    if (group.status === 'private') return true;
+    
+    // For hidden groups, show only to members, group creator, or system admin
+    if (group.status === 'hidden') {
+      const isAdmin = currentUser.role === 'admin';
+      const isCreator = group.created_by === currentUser.email;
+      return isMember || isAdmin || isCreator;
+    }
+    
     return isMember;
   });
 
@@ -128,12 +139,19 @@ export default function Groups() {
                       <Badge variant="outline" className={
                         group.status === 'private' 
                           ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : group.status === 'hidden'
+                          ? 'bg-slate-100 text-slate-700 border-slate-300'
                           : 'bg-blue-50 text-blue-700 border-blue-200'
                       }>
                         {group.status === 'private' ? (
                           <>
                             <Lock className="w-3 h-3 mr-1" />
                             {language === 'he' ? 'פרטי' : language === 'ar' ? 'خاص' : 'Private'}
+                          </>
+                        ) : group.status === 'hidden' ? (
+                          <>
+                            <Lock className="w-3 h-3 mr-1" />
+                            {language === 'he' ? 'חסוי' : language === 'ar' ? 'مخفي' : 'Hidden'}
                           </>
                         ) : (
                           <>

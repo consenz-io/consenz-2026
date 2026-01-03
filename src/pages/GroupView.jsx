@@ -160,7 +160,26 @@ export default function GroupView() {
     );
   }
 
-  // Check access
+  // Check access for private and hidden groups
+  const isCreator = currentUser && group.created_by === currentUser.email;
+  const isSystemAdmin = currentUser && currentUser.role === 'admin';
+  const canViewHidden = isMember || isCreator || isSystemAdmin;
+  
+  if (group.status === 'hidden' && !canViewHidden) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+        <div className="max-w-6xl mx-auto">
+          <Alert>
+            <Lock className="h-4 w-4" />
+            <AlertDescription>
+              {language === 'he' ? 'קבוצה חסויה - אינה זמינה' : 'Hidden group - not available'}
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
+  
   if (group.status === 'private' && !isMember) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
@@ -229,12 +248,19 @@ export default function GroupView() {
               <Badge variant="outline" className={
                 group.status === 'private' 
                   ? 'bg-amber-50 text-amber-700 border-amber-200'
+                  : group.status === 'hidden'
+                  ? 'bg-slate-100 text-slate-700 border-slate-300'
                   : 'bg-blue-50 text-blue-700 border-blue-200'
               }>
                 {group.status === 'private' ? (
                   <>
                     <Lock className="w-3 h-3 mr-1" />
                     {language === 'he' ? 'פרטי' : 'Private'}
+                  </>
+                ) : group.status === 'hidden' ? (
+                  <>
+                    <Lock className="w-3 h-3 mr-1" />
+                    {language === 'he' ? 'חסוי' : 'Hidden'}
                   </>
                 ) : (
                   <>
