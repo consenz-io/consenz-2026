@@ -111,14 +111,24 @@ export default function SectionDiff({
     ? translationResult.modified 
     : newContent;
   
+  // Check if both contents are in the same language for diff display
+  const canShowDiff = useMemo(() => {
+    // If translated - both are in same language
+    if (showTranslated && hasTranslation) return true;
+    
+    // If not translated - check if original languages match
+    return originalSourceLang === modifiedSourceLang;
+  }, [showTranslated, hasTranslation, originalSourceLang, modifiedSourceLang]);
+  
   // Compute diff with memoization
   const diff = useMemo(() => {
+    if (!canShowDiff) return [];
     const oldText = extractText(displayOriginal);
     const newText = extractText(displayNew);
     const oldTokens = tokenize(oldText);
     const newTokens = tokenize(newText);
     return computeWordDiff(oldTokens, newTokens);
-  }, [displayOriginal, displayNew]);
+  }, [displayOriginal, displayNew, canShowDiff]);
   
   const navigate = useNavigate();
   
@@ -225,7 +235,7 @@ export default function SectionDiff({
       >
         <div className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</div>
         <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          {showDiff && (
+          {showDiff && canShowDiff && (
             <DiffModeSelector 
               mode={diffMode} 
               onModeChange={(newMode) => {
@@ -233,19 +243,21 @@ export default function SectionDiff({
               }}
             />
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowDiff(!showDiff);
-            }}
-            className={`h-7 px-2 gap-1 ${showDiff ? 'bg-blue-50 text-blue-600' : 'text-slate-600'} hover:bg-blue-50`}
-            title={showDiff ? t('cleanView') : t('showChangesView')}
-          >
-            {showDiff ? <FileText className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            <span className="text-xs hidden sm:inline">{showDiff ? t('hideChanges') : t('showDiff')}</span>
-          </Button>
+          {canShowDiff && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDiff(!showDiff);
+              }}
+              className={`h-7 px-2 gap-1 ${showDiff ? 'bg-blue-50 text-blue-600' : 'text-slate-600'} hover:bg-blue-50`}
+              title={showDiff ? t('cleanView') : t('showChangesView')}
+            >
+              {showDiff ? <FileText className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              <span className="text-xs hidden sm:inline">{showDiff ? t('hideChanges') : t('showDiff')}</span>
+            </Button>
+          )}
           {needsTranslation && (
             <Button
               variant="ghost"
@@ -269,6 +281,19 @@ export default function SectionDiff({
           )}
         </div>
       </div>
+      
+      {/* Cross-language warning */}
+      {isCrossLanguageSuggestion && !showTranslated && (
+        <Alert className="mb-3 bg-amber-50 border-amber-200">
+          <Info className="w-4 h-4 text-amber-600" />
+          <AlertDescription className="text-amber-800 text-xs">
+            {isRTL 
+              ? `הצעה זו נכתבה בשפה אחרת. תרגם כדי לראות תצוגת שינויים.`
+              : `This suggestion was written in a different language. Translate to see changes view.`
+            }
+          </AlertDescription>
+        </Alert>
+      )}
       
       {/* Translation indicator - clickable to toggle */}
       {showTranslated && hasTranslation && (
@@ -299,7 +324,7 @@ export default function SectionDiff({
             <Loader2 className="w-4 h-4 animate-spin" />
             <span className="text-sm">{t('translating')}</span>
           </div>
-        ) : !showDiff ? (
+        ) : !showDiff || !canShowDiff ? (
           <div style={contentStyle} dangerouslySetInnerHTML={{ __html: displayNew }} />
         ) : diffMode === DIFF_MODES.INLINE ? (
           renderInlineDiff()
