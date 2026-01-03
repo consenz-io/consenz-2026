@@ -39,8 +39,12 @@ Deno.serve(async (req) => {
     // Helper function to delay between emails to avoid rate limiting
     const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+    // Limit to max 10 emails per run to avoid rate limits
+    const MAX_EMAILS_PER_RUN = 10;
+    const userEntries = Object.entries(digestsByUser).slice(0, MAX_EMAILS_PER_RUN);
+
     // Send digest email to each user
-    for (const [userId, digests] of Object.entries(digestsByUser)) {
+    for (const [userId, digests] of userEntries) {
       try {
         const user = userMap[userId];
         if (!user || !user.email) {
@@ -48,9 +52,9 @@ Deno.serve(async (req) => {
           continue;
         }
         
-        // Add 2 second delay between emails to avoid rate limiting
+        // Add 3 second delay between emails to avoid rate limiting
         if (emailsSent > 0) {
-          await delay(2000);
+          await delay(3000);
         }
 
         // Group by document for better organization
@@ -142,7 +146,13 @@ Deno.serve(async (req) => {
       success: true,
       emailsSent,
       totalDigests: pendingDigests.length,
-      errors: errors.length > 0 ? errors : undefined
+      totalUsers: Object.keys(digestsByUser).length,
+      processedUsers: userEntries.length,
+      remainingUsers: Math.max(0, Object.keys(digestsByUser).length - MAX_EMAILS_PER_RUN),
+      errors: errors.length > 0 ? errors : undefined,
+      message: Object.keys(digestsByUser).length > MAX_EMAILS_PER_RUN 
+        ? `Sent ${emailsSent} emails. ${Object.keys(digestsByUser).length - MAX_EMAILS_PER_RUN} users remaining for next run.`
+        : `Sent all ${emailsSent} emails.`
     });
 
   } catch (error) {
