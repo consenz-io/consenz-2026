@@ -214,31 +214,49 @@ export default function DocumentCleanView() {
   React.useEffect(() => {
     if (currentVersionIndex > 0 && currentSnapshot) {
       setTimeout(() => {
+        // Find the first section that has visible changes
         let targetSectionId = null;
         
-        // Check if a new section was created in this snapshot
+        // Priority 1: New section created
         if (currentSnapshot.isNewSection && currentSnapshot.newSectionId) {
           targetSectionId = currentSnapshot.newSectionId;
-        } else if (currentSnapshot.changedSectionId) {
-          // Use the changed section ID from the snapshot
+        } 
+        // Priority 2: Section with direct changes
+        else if (currentSnapshot.changedSectionId) {
           targetSectionId = currentSnapshot.changedSectionId;
+        }
+        // Priority 3: Find first section with content differences
+        else if (newerSnapshot) {
+          for (const section of sections) {
+            const displayedContent = currentSnapshot?.sectionContents?.[section.id];
+            const newerContent = newerSnapshot?.sectionContents?.[section.id];
+            if (displayedContent && newerContent && displayedContent !== newerContent) {
+              targetSectionId = section.id;
+              break;
+            }
+          }
         }
 
         if (targetSectionId) {
-          // First try to scroll to the change content itself
+          // Always scroll to the change element (where diff is displayed)
           const changeElement = window.document.getElementById(`change-${targetSectionId}`);
-          const element = changeElement || window.document.getElementById(`section-${targetSectionId}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
+          if (changeElement) {
+            changeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            changeElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
             setTimeout(() => {
-              element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
+              changeElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
             }, 2000);
+          } else {
+            // Fallback to section container
+            const sectionElement = window.document.getElementById(`section-${targetSectionId}`);
+            if (sectionElement) {
+              sectionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
           }
         }
       }, 150);
     }
-  }, [currentVersionIndex, currentSnapshot]);
+  }, [currentVersionIndex, currentSnapshot, newerSnapshot, sections]);
 
   if (docLoading || topicsLoading || sectionsLoading || versionsLoading) {
     return (
