@@ -16,7 +16,8 @@ import "react-quill/dist/quill.snow.css";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Sparkles, ExternalLink } from "lucide-react";
+import { AlertCircle, Sparkles, ExternalLink, Eye, EyeOff } from "lucide-react";
+import InlineDiff from "./InlineDiff";
 import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
 import { createPageUrl } from "@/utils";
@@ -119,6 +120,7 @@ export default function CreateSuggestionModal({
 
   const [isCreatingNewTopic, setIsCreatingNewTopic] = useState(false);
   const [newTopicName, setNewTopicName] = useState("");
+  const [showDiff, setShowDiff] = useState(false);
 
   // Load translated content on mount
   React.useEffect(() => {
@@ -504,12 +506,42 @@ Return ONLY the translated HTML:`;
           )}
 
             <div>
-            <Label htmlFor="content">
-              {isNewSection ? t('sectionContent') : t('proposedChanges')}
-            </Label>
+            <div className="flex items-center justify-between mb-2">
+              <Label htmlFor="content">
+                {isNewSection ? t('sectionContent') : t('proposedChanges')}
+              </Label>
+              {!isNewSection && existingSection && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowDiff(!showDiff)}
+                  className="text-xs"
+                >
+                  {showDiff ? (
+                    <>
+                      <EyeOff className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                      {t('hideChanges')}
+                    </>
+                  ) : (
+                    <>
+                      <Eye className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                      {t('showDiff')}
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
             {isLoadingTranslation ? (
               <div className="border border-slate-200 rounded-lg p-4 bg-slate-50 text-center text-slate-500">
                 {t('translating')}
+              </div>
+            ) : showDiff && !isNewSection && existingSection ? (
+              <div className="border border-slate-200 rounded-lg p-4 bg-white">
+                <InlineDiff
+                  oldContent={existingSection.content}
+                  newContent={formData.newContent}
+                />
               </div>
             ) : (
               <Textarea
