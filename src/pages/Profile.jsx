@@ -614,7 +614,7 @@ export default function Profile() {
             {showAcceptedSuggestions && acceptedSuggestions.length > 0 && (
               <div className="border-t pt-4">
                 <h3 className="text-lg font-semibold text-slate-900 mb-3">
-                  {language === 'he' ? 'הצעות שהתקבלו' : language === 'ar' ? 'مقترحات مقبولة' : 'Accepted Suggestions'}
+                  {language === 'he' ? 'הצעות עריכה שהתקבלו' : language === 'ar' ? 'مقترحات مقبولة' : 'Accepted Suggestions'}
                 </h3>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {acceptedSuggestions.map((suggestion) => (
