@@ -239,9 +239,13 @@ function LayoutContent({ children, currentPageName }) {
                   {t('yourStats')}
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
-                  <div className="px-3 py-2 space-y-2">
+                  <div className="px-3 py-2 space-y-3">
+                    <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg border border-green-200">
+                      <span className="text-slate-700 font-medium text-sm">{t('acceptedSuggestions')}</span>
+                      <span className="font-bold text-xl text-green-600">{acceptedSuggestionsCount}</span>
+                    </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">{t('points')}</span>
+                      <span className="text-slate-600">{language === 'he' ? 'נקודות שצברתי' : language === 'ar' ? 'النقاط المكتسبة' : 'Points earned'}</span>
                       <span className="font-bold text-lg text-blue-600">{user.points || 1000}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
@@ -251,10 +255,6 @@ function LayoutContent({ children, currentPageName }) {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-600">{t('proVotesOnYourSuggestions')}</span>
                       <span className="font-semibold">{proVotesCount}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">{t('acceptedSuggestions')}</span>
-                      <span className="font-semibold text-green-600">{acceptedSuggestionsCount}</span>
                     </div>
                   </div>
                 </SidebarGroupContent>
