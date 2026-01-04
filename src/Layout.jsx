@@ -245,7 +245,7 @@ function LayoutContent({ children, currentPageName }) {
                       <span className="font-bold text-xl text-green-600">{acceptedSuggestionsCount}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">{language === 'he' ? 'נקודות שצברתי' : language === 'ar' ? 'النقاط المكتسبة' : 'Points earned'}</span>
+                      <span className="text-slate-600">{language === 'he' ? 'נקודות שצברת' : language === 'ar' ? 'النقاط المكتسبة' : 'Points earned'}</span>
                       <span className="font-bold text-lg text-blue-600">{user.points || 1000}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
