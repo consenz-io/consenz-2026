@@ -293,41 +293,78 @@ function LayoutContent({ children, currentPageName }) {
           </SidebarFooter>
         </Sidebar>
 
+        {/* Floating Top Bar */}
+        <header className="fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm z-40" role="banner">
+          <div className="flex items-center justify-between gap-3 px-3 md:px-6 py-2 md:py-3">
+            {/* Left side: Menu toggle + Logo */}
+            <div className="flex items-center gap-3">
+              <SidebarTrigger 
+                className="hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200"
+                aria-label={isRTL ? 'פתיחת/סגירת תפריט ניווט' : 'Toggle navigation menu'}
+              >
+                <Menu className="w-5 h-5 text-slate-700" />
+              </SidebarTrigger>
+              <Link to={createPageUrl("Home")} className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                  <FileText className="w-4 h-4 text-white" />
+                </div>
+                <h1 className="text-lg md:text-xl font-bold text-slate-900 hidden sm:block">Consenz</h1>
+              </Link>
+            </div>
+
+            {/* Right side: Language + Notifications + User */}
+            <div className="flex items-center gap-2 md:gap-4">
+              {/* Language selector */}
+              <div className="relative">
+                <Languages className={`absolute ${isRTL ? 'right-2' : 'left-2'} top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none`} aria-hidden="true" />
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className={`${isRTL ? 'pr-8 pl-2' : 'pl-8 pr-2'} py-1.5 border border-slate-300 rounded-lg text-sm font-medium bg-white cursor-pointer hover:border-slate-400 transition-colors`}
+                  aria-label={isRTL ? 'בחירת שפה' : 'Select language'}
+                >
+                  <option value="en">EN</option>
+                  <option value="he">עב</option>
+                  <option value="ar">عر</option>
+                </select>
+              </div>
+
+              {/* Notification Bell */}
+              {user && (
+                <FloatingNotificationBell />
+              )}
+
+              {/* User Avatar & Profile Link */}
+              {user ? (
+                <Link to={createPageUrl("Profile")} className="flex items-center gap-2 hover:bg-slate-100 p-1.5 rounded-lg transition-colors">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-md">
+                    <span className="text-white font-medium text-sm">
+                      {user.full_name?.charAt(0) || 'U'}
+                    </span>
+                  </div>
+                  <span className="text-sm font-medium text-slate-900 hidden md:block truncate max-w-[150px]">{user.full_name}</span>
+                </Link>
+              ) : (
+                <Button
+                  onClick={() => base44.auth.redirectToLogin()}
+                  size="sm"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600"
+                >
+                  {t('signIn')}
+                </Button>
+              )}
+            </div>
+          </div>
+        </header>
+
         <main 
-          className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden touch-auto"
+          className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden touch-auto pt-14 md:pt-16"
           id="main-content"
           ref={mainContentRef}
           tabIndex={-1}
           role="main"
           aria-label={isRTL ? 'תוכן ראשי' : 'Main content'}
         >
-          <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-30" role="banner">
-            <div className="flex items-center justify-between gap-2 px-2 py-2 md:px-6 md:py-4">
-              <div className="flex items-center gap-2 md:gap-4">
-                <SidebarTrigger 
-                  className="md:hidden hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200 touch-manipulation"
-                  aria-label={isRTL ? 'פתיחת תפריט ניווט' : 'Open navigation menu'}
-                />
-                <h1 className="text-base md:text-xl font-bold text-slate-900 md:hidden truncate">Consenz</h1>
-              </div>
-              <div className="flex items-center gap-2 md:gap-3">
-                <div className="relative touch-manipulation">
-                  <Languages className="absolute left-1.5 md:left-2 top-1/2 -translate-y-1/2 w-3 h-3 md:w-4 md:h-4 text-slate-500 pointer-events-none" aria-hidden="true" />
-                  <select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="pl-6 md:pl-7 pr-1.5 md:pr-2 py-1.5 md:py-2 border border-slate-300 rounded-lg text-xs md:text-sm font-medium bg-white cursor-pointer min-w-[70px] md:min-w-[90px] touch-manipulation"
-                    aria-label={isRTL ? 'בחירת שפה' : 'Select language'}
-                  >
-                    <option value="en">EN</option>
-                    <option value="he">עב</option>
-                    <option value="ar">عر</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </header>
-
           <div className="flex-1 overflow-auto max-w-full min-w-0">
             {children}
           </div>
