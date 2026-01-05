@@ -18,7 +18,6 @@ import {
   SidebarFooter,
   SidebarProvider,
   SidebarTrigger,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -27,13 +26,12 @@ import FloatingNotificationBell from "@/components/notifications/FloatingNotific
 import { AccessibilityAnnouncer } from "@/components/AccessibilityAnnouncer";
 import { AccessibilityToolbar } from "@/components/AccessibilityToolbar";
 
-function MainLayout({ children, currentPageName }) {
+function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
   const queryClient = useQueryClient();
   const { language, setLanguage, t, isRTL } = useLanguage();
   const [showScrollTop, setShowScrollTop] = React.useState(false);
   const mainContentRef = React.useRef(null);
-  const { open: sidebarOpen } = useSidebar();
   
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -161,7 +159,7 @@ function MainLayout({ children, currentPageName }) {
   ];
 
   return (
-    <>
+    <SidebarProvider>
       {/* Skip to main content link for keyboard users */}
       <a
         href="#main-content"
@@ -263,16 +261,6 @@ function MainLayout({ children, currentPageName }) {
               </SidebarGroup>
             )}
 
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
-                {language === 'he' ? 'כלים' : language === 'ar' ? 'أدوات' : 'Tools'}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <div className="px-3 py-2">
-                  <AccessibilityToolbar inline />
-                </div>
-              </SidebarGroupContent>
-            </SidebarGroup>
 
           </SidebarContent>
 
@@ -329,8 +317,8 @@ function MainLayout({ children, currentPageName }) {
             <div className="flex items-center justify-between gap-2 px-2 py-2 md:px-6 md:py-4">
               <div className="flex items-center gap-2 md:gap-4">
                 <SidebarTrigger 
-                  className="hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200 touch-manipulation"
-                  aria-label={isRTL ? (sidebarOpen ? 'סגירת תפריט ניווט' : 'פתיחת תפריט ניווט') : (sidebarOpen ? 'Close navigation menu' : 'Open navigation menu')}
+                  className="md:hidden hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200 touch-manipulation"
+                  aria-label={isRTL ? 'פתיחת תפריט ניווט' : 'Open navigation menu'}
                 />
                 <h1 className="text-base md:text-xl font-bold text-slate-900 md:hidden truncate">Consenz</h1>
               </div>
@@ -345,7 +333,7 @@ function MainLayout({ children, currentPageName }) {
                   >
                     <option value="en">EN</option>
                     <option value="he">עב</option>
-                    <option value="ar">עر</option>
+                    <option value="ar">عر</option>
                   </select>
                 </div>
               </div>
@@ -369,19 +357,12 @@ function MainLayout({ children, currentPageName }) {
               )}
 
               <FloatingNotificationBell />
+              <AccessibilityToolbar />
               <AccessibilityAnnouncer />
               </div>
-              </>
+              </SidebarProvider>
               );
               }
-
-function LayoutContent({ children, currentPageName }) {
-  return (
-    <SidebarProvider>
-      <MainLayout children={children} currentPageName={currentPageName} />
-    </SidebarProvider>
-  );
-}
 
 export default function Layout({ children, currentPageName }) {
   return (
