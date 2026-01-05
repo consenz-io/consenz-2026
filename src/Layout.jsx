@@ -27,7 +27,7 @@ import FloatingNotificationBell from "@/components/notifications/FloatingNotific
 import { AccessibilityAnnouncer } from "@/components/AccessibilityAnnouncer";
 import { AccessibilityToolbar } from "@/components/AccessibilityToolbar";
 
-function LayoutContent({ children, currentPageName }) {
+function MainLayout({ children, currentPageName }) {
   const location = useLocation();
   const queryClient = useQueryClient();
   const { language, setLanguage, t, isRTL } = useLanguage();
@@ -161,7 +161,7 @@ function LayoutContent({ children, currentPageName }) {
   ];
 
   return (
-    <SidebarProvider>
+    <>
       {/* Skip to main content link for keyboard users */}
       <a
         href="#main-content"
@@ -371,9 +371,17 @@ function LayoutContent({ children, currentPageName }) {
               <FloatingNotificationBell />
               <AccessibilityAnnouncer />
               </div>
-              </SidebarProvider>
+              </>
               );
               }
+
+function LayoutContent({ children, currentPageName }) {
+  return (
+    <SidebarProvider>
+      <MainLayout children={children} currentPageName={currentPageName} />
+    </SidebarProvider>
+  );
+}
 
 export default function Layout({ children, currentPageName }) {
   return (
