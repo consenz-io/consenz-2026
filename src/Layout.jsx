@@ -18,6 +18,7 @@ import {
   SidebarFooter,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ function LayoutContent({ children, currentPageName }) {
   const { language, setLanguage, t, isRTL } = useLanguage();
   const [showScrollTop, setShowScrollTop] = React.useState(false);
   const mainContentRef = React.useRef(null);
+  const { open: sidebarOpen } = useSidebar();
   
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -261,6 +263,16 @@ function LayoutContent({ children, currentPageName }) {
               </SidebarGroup>
             )}
 
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
+                {language === 'he' ? 'כלים' : language === 'ar' ? 'أدوات' : 'Tools'}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <div className="px-3 py-2">
+                  <AccessibilityToolbar inline />
+                </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
           </SidebarContent>
 
@@ -317,8 +329,8 @@ function LayoutContent({ children, currentPageName }) {
             <div className="flex items-center justify-between gap-2 px-2 py-2 md:px-6 md:py-4">
               <div className="flex items-center gap-2 md:gap-4">
                 <SidebarTrigger 
-                  className="md:hidden hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200 touch-manipulation"
-                  aria-label={isRTL ? 'פתיחת תפריט ניווט' : 'Open navigation menu'}
+                  className="hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200 touch-manipulation"
+                  aria-label={isRTL ? (sidebarOpen ? 'סגירת תפריט ניווט' : 'פתיחת תפריט ניווט') : (sidebarOpen ? 'Close navigation menu' : 'Open navigation menu')}
                 />
                 <h1 className="text-base md:text-xl font-bold text-slate-900 md:hidden truncate">Consenz</h1>
               </div>
@@ -333,7 +345,7 @@ function LayoutContent({ children, currentPageName }) {
                   >
                     <option value="en">EN</option>
                     <option value="he">עב</option>
-                    <option value="ar">عر</option>
+                    <option value="ar">עر</option>
                   </select>
                 </div>
               </div>
@@ -357,7 +369,6 @@ function LayoutContent({ children, currentPageName }) {
               )}
 
               <FloatingNotificationBell />
-              <AccessibilityToolbar />
               <AccessibilityAnnouncer />
               </div>
               </SidebarProvider>

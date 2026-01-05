@@ -8,7 +8,7 @@ import {
 import { Accessibility, Type, Contrast, Link as LinkIcon, Volume2, RotateCcw } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
 
-export function AccessibilityToolbar() {
+export function AccessibilityToolbar({ inline = false }) {
   const { t, isRTL } = useLanguage();
   const [fontSize, setFontSize] = useState(100);
   const [highContrast, setHighContrast] = useState(false);
@@ -90,27 +90,8 @@ export function AccessibilityToolbar() {
     }
   };
 
-  return (
-    <>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className="fixed top-20 left-4 z-50 rounded-full h-12 w-12 shadow-lg bg-white hover:bg-gray-100"
-            aria-label={isRTL ? 'סרגל נגישות' : 'Accessibility toolbar'}
-            title={isRTL ? 'סרגל נגישות' : 'Accessibility toolbar'}
-          >
-            <Accessibility className="h-5 w-5" aria-hidden="true" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent 
-          className="w-80" 
-          align="start"
-          role="dialog"
-          aria-label={isRTL ? 'אפשרויות נגישות' : 'Accessibility options'}
-        >
-          <div className="space-y-4">
+  const content = (
+    <div className="space-y-4">
             <div className="flex items-center justify-between border-b pb-2">
               <h3 className="font-semibold text-lg">
                 {isRTL ? 'נגישות' : 'Accessibility'}
@@ -213,6 +194,61 @@ export function AccessibilityToolbar() {
               }
             </div>
           </div>
+  );
+
+  if (inline) {
+    return (
+      <>
+        {content}
+        <style jsx global>{`
+        /* High Contrast Mode */
+        body.high-contrast-mode {
+          filter: contrast(1.5);
+        }
+
+        body.high-contrast-mode * {
+          border-color: currentColor !important;
+        }
+
+        /* Highlight Links Mode */
+        body.highlight-links-mode a {
+          background-color: yellow !important;
+          color: black !important;
+          text-decoration: underline !important;
+          font-weight: bold !important;
+          padding: 2px 4px !important;
+        }
+
+        body.highlight-links-mode button {
+          outline: 2px solid #3b82f6 !important;
+          outline-offset: 2px !important;
+        }
+      `}</style>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            className="fixed top-20 left-4 z-50 rounded-full h-12 w-12 shadow-lg bg-white hover:bg-gray-100"
+            aria-label={isRTL ? 'סרגל נגישות' : 'Accessibility toolbar'}
+            title={isRTL ? 'סרגל נגישות' : 'Accessibility toolbar'}
+          >
+            <Accessibility className="h-5 w-5" aria-hidden="true" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent 
+          className="w-80" 
+          align="start"
+          role="dialog"
+          aria-label={isRTL ? 'אפשרויות נגישות' : 'Accessibility options'}
+        >
+          {content}
         </PopoverContent>
       </Popover>
 
