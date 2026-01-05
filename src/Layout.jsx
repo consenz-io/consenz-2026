@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages, ArrowUp, Users } from "lucide-react";
+import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages, ArrowUp, Users, Menu, X } from "lucide-react";
 import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
 import { Toaster } from "sonner";
 import { initBrowserNotifications } from "@/components/notifications/browserNotifications";
@@ -212,23 +212,11 @@ function LayoutContent({ children, currentPageName }) {
 
             <SidebarGroup>
               <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
-                {t('language')}
+                {language === 'he' ? 'נגישות' : language === 'ar' ? 'إمكانية الوصول' : 'Accessibility'}
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <div className="px-3 py-2">
-                  <div className="relative">
-                    <Languages className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
-                    <select
-                      value={language}
-                      onChange={(e) => setLanguage(e.target.value)}
-                      className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm font-medium bg-white cursor-pointer"
-                      aria-label={isRTL ? 'בחירת שפה' : 'Select language'}
-                    >
-                      <option value="en">English</option>
-                      <option value="he">עברית</option>
-                      <option value="ar">العربية</option>
-                    </select>
-                  </div>
+                  <AccessibilityToolbar />
                 </div>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -348,7 +336,7 @@ function LayoutContent({ children, currentPageName }) {
           {showScrollTop && (
             <button
               onClick={scrollToTop}
-              className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50"
+              className={`fixed bottom-6 ${isRTL ? 'left-6' : 'right-6'} bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50`}
               aria-label={isRTL ? 'גלילה לראש העמוד' : 'Scroll to top'}
               title={isRTL ? 'גלילה לראש העמוד' : 'Scroll to top'}
             >
@@ -356,8 +344,6 @@ function LayoutContent({ children, currentPageName }) {
               </button>
               )}
 
-              <FloatingNotificationBell />
-              <AccessibilityToolbar />
               <AccessibilityAnnouncer />
               </div>
               </SidebarProvider>
