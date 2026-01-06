@@ -431,9 +431,6 @@ export default function Home() {
               const members = groupMembers.filter(m => m.groupId === group.id);
               const isAdmin = members.some(m => m.userId === user?.id && m.role === 'admin');
 
-              const groupDocs = documents.filter(d => d.groupId === group.id);
-              const members = groupMembers.filter(m => m.groupId === group.id);
-
               return (
                 <Link 
                   key={group.id} 
