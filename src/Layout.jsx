@@ -22,7 +22,6 @@ import {
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { QueryClientProvider } from "@/components/QueryClientProvider";
 import FloatingNotificationBell from "@/components/notifications/FloatingNotificationBell";
 import { AccessibilityAnnouncer } from "@/components/AccessibilityAnnouncer";
 import { AccessibilityToolbar } from "@/components/AccessibilityToolbar";
@@ -371,10 +370,8 @@ function LayoutContent({ children, currentPageName }) {
 
 export default function Layout({ children, currentPageName }) {
   return (
-    <QueryClientProvider>
-      <LanguageProvider>
-        <LayoutContent children={children} currentPageName={currentPageName} />
-      </LanguageProvider>
-    </QueryClientProvider>
+    <LanguageProvider>
+      <LayoutContent children={children} currentPageName={currentPageName} />
+    </LanguageProvider>
   );
 }

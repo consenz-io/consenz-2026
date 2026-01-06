@@ -61,6 +61,9 @@ export default function DocumentView() {
   const [showSuggestionNav, setShowSuggestionNav] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
+  // Polling interval for live sync (10 seconds for better responsiveness)
+  const SYNC_INTERVAL = 10000;
+
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
     queryFn: async () => {
@@ -68,10 +71,11 @@ export default function DocumentView() {
       return docs && docs.length > 0 ? docs[0] : null;
     },
     enabled: !!documentId,
-    staleTime: 30000,
-    gcTime: 60000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
+    staleTime: 5000,
   });
 
   const { data: topics, isLoading: topicsLoading } = useQuery({
@@ -79,10 +83,8 @@ export default function DocumentView() {
     queryFn: () => base44.entities.Topic.filter({ documentId }, 'order'),
     initialData: [],
     enabled: !!documentId,
-    staleTime: 30000,
-    gcTime: 60000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: sections, isLoading: sectionsLoading } = useQuery({
@@ -90,10 +92,8 @@ export default function DocumentView() {
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order'),
     initialData: [],
     enabled: !!documentId,
-    staleTime: 30000,
-    gcTime: 60000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: suggestions, isLoading: suggestionsLoading } = useQuery({
@@ -101,10 +101,8 @@ export default function DocumentView() {
     queryFn: () => base44.entities.Suggestion.filter({ documentId }, '-created_date'),
     initialData: [],
     enabled: !!documentId,
-    staleTime: 30000,
-    gcTime: 60000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: allVotes } = useQuery({
@@ -144,9 +142,8 @@ export default function DocumentView() {
     }),
     initialData: [],
     enabled: !!documentId,
-    staleTime: 30000,
-    gcTime: 60000,
-    refetchOnWindowFocus: false,
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
   });
 
   const { data: documentAgreements } = useQuery({
