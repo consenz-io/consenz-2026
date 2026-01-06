@@ -32,7 +32,10 @@ export default function GroupView() {
 
   const { data: group, isLoading: groupLoading } = useQuery({
     queryKey: ['group', groupId],
-    queryFn: () => base44.entities.Group.filter({ id: groupId }).then(groups => groups[0]),
+    queryFn: async () => {
+      const groups = await base44.entities.Group.filter({ id: groupId });
+      return groups && groups.length > 0 ? groups[0] : null;
+    },
     enabled: !!groupId,
   });
 
@@ -145,7 +148,7 @@ export default function GroupView() {
     );
   }
 
-  if (!group) {
+  if (!groupLoading && !group) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-6xl mx-auto">

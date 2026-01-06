@@ -64,9 +64,10 @@ export default function DocumentView() {
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
 
-  const { data: document, isLoading: docLoading } = useQuery({
+  const { data: document, isLoading: docLoading, error: docError } = useQuery({
     queryKey: ['document', documentId],
     queryFn: async () => {
+      if (!documentId) return null;
       const docs = await base44.entities.Document.filter({ id: documentId });
       return docs && docs.length > 0 ? docs[0] : null;
     },
@@ -538,7 +539,7 @@ export default function DocumentView() {
     );
   }
 
-  if (!document) {
+  if (!docLoading && !document) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6">
         <div className="max-w-6xl mx-auto text-center py-12 md:py-20">
