@@ -424,12 +424,20 @@ Return ONLY the translated HTML:`;
       />
       
       <Dialog open onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-labelledby="suggestion-modal-title" aria-describedby="suggestion-modal-description">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle id="suggestion-modal-title">
             {isDirectEdit ? 'Direct Edit' : (isNewSection ? t('suggestNewSection') : t('suggestEditSection'))}
           </DialogTitle>
         </DialogHeader>
+
+        <p id="suggestion-modal-description" className="sr-only">
+          {isDirectEdit 
+            ? 'Edit the section content directly as an administrator' 
+            : isNewSection 
+            ? 'Create a new section suggestion for the document' 
+            : 'Suggest changes to an existing section'}
+        </p>
 
         {error && (
           <Alert variant="destructive">

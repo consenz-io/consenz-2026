@@ -650,17 +650,17 @@ export default function Profile() {
               </div>
             )}
 
-            <Tabs defaultValue="comments" className="w-full" dir={isRTL ? 'rtl' : 'ltr'}>
+            <Tabs defaultValue="comments" className="w-full" dir={isRTL ? 'rtl' : 'ltr'} aria-label={language === 'he' ? 'פעילות משתמש' : 'User activity'}>
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="comments">
+                <TabsTrigger value="comments" aria-label={`${t('comments')} (${userComments.length})`}>
                   <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {t('comments')} ({userComments.length})
                 </TabsTrigger>
-                <TabsTrigger value="suggestions">
+                <TabsTrigger value="suggestions" aria-label={`${t('suggestions')} (${userSuggestions.length})`}>
                   <FileText className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {t('suggestions')} ({userSuggestions.length})
                 </TabsTrigger>
-                <TabsTrigger value="votes">
+                <TabsTrigger value="votes" aria-label={`${language === 'he' ? 'הצבעות' : 'Votes'} (${userVotes.length})`}>
                   <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {language === 'he' ? 'הצבעות' : language === 'ar' ? 'تصويتات' : 'Votes'} ({userVotes.length})
                 </TabsTrigger>

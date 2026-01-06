@@ -272,14 +272,14 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden" aria-labelledby="hero-heading">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-indigo-600/10 to-purple-600/10" />
         <div className="relative max-w-7xl mx-auto px-6 py-20 md:py-32">
           <div className="text-center space-y-6">
             <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-4 py-1">
               {t('democraticCollaboration')}
             </Badge>
-            <h1 className="font-bold leading-tight">
+            <h1 id="hero-heading" className="font-bold leading-tight">
               <span className="text-4xl md:text-6xl text-slate-900">{t('buildConsensusTitle')}</span>
               <br />
               <span className="text-2xl md:text-4xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
@@ -317,37 +317,41 @@ export default function Home() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-            <Card 
-              className="bg-white/80 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all"
+            <button
+              type="button"
+              className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all w-full text-left"
               onClick={() => {
                 const element = document.getElementById('recent-documents-section');
                 if (element) {
                   element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
               }}
+              aria-label={`${documents.length} ${t('activeDocuments')}. ${language === 'he' ? 'לחץ לגלילה למסמכים' : 'Click to scroll to documents'}`}
             >
-              <CardContent className="p-6 text-center">
-                <FileText className="w-8 h-8 mx-auto mb-3 text-blue-600" />
+              <div className="p-6 text-center">
+                <FileText className="w-8 h-8 mx-auto mb-3 text-blue-600" aria-hidden="true" />
                 <div className="text-3xl font-bold text-slate-900">{documents.length}</div>
                 <div className="text-sm text-slate-600">{t('activeDocuments')}</div>
-              </CardContent>
-            </Card>
-            <Card 
-              className="bg-white/80 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all"
+              </div>
+            </button>
+            <button
+              type="button"
+              className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all w-full text-left"
               onClick={() => setShowContributorsModal(true)}
+              aria-label={`${displayedUsers.length} ${t('collaborators')}. ${language === 'he' ? 'לחץ לצפייה ברשימה מלאה' : 'Click to view full list'}`}
             >
-              <CardContent className="p-6 text-center">
-                <Users className="w-8 h-8 mx-auto mb-3 text-indigo-600" />
+              <div className="p-6 text-center">
+                <Users className="w-8 h-8 mx-auto mb-3 text-indigo-600" aria-hidden="true" />
                 <div className="text-3xl font-bold text-slate-900 flex items-center justify-center min-h-[2.25rem]">
                   {publicProfilesLoading ? (
-                    <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
+                    <Loader2 className="w-8 h-8 animate-spin text-indigo-400" aria-label={language === 'he' ? 'טוען...' : 'Loading...'} />
                   ) : (
                     displayedUsers.length
                   )}
                 </div>
                 <div className="text-sm text-slate-600">{t('collaborators')}</div>
-              </CardContent>
-            </Card>
+              </div>
+            </button>
             <Link to={`${createPageUrl("LearnMore")}#consensus-calculation`}>
               <Card 
                 className="bg-white/80 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all"
@@ -366,10 +370,10 @@ export default function Home() {
       </section>
 
       {/* Recent Groups */}
-      <section id="recent-documents-section" className="max-w-7xl mx-auto px-6 py-16">
+      <section id="recent-documents-section" className="max-w-7xl mx-auto px-6 py-16" aria-labelledby="groups-heading">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h2 className="text-3xl font-bold text-slate-900">
+            <h2 id="groups-heading" className="text-3xl font-bold text-slate-900">
               {language === 'he' ? 'קבוצות פעילות' : language === 'ar' ? 'مجموعات نشطة' : 'Active Groups'}
             </h2>
             <p className="text-slate-600 mt-2">
@@ -427,8 +431,15 @@ export default function Home() {
               const members = groupMembers.filter(m => m.groupId === group.id);
               const isAdmin = members.some(m => m.userId === user?.id && m.role === 'admin');
 
+              const groupDocs = documents.filter(d => d.groupId === group.id);
+              const members = groupMembers.filter(m => m.groupId === group.id);
+
               return (
-                <Link key={group.id} to={`${createPageUrl("GroupView")}?id=${group.id}`}>
+                <Link 
+                  key={group.id} 
+                  to={`${createPageUrl("GroupView")}?id=${group.id}`}
+                  aria-label={`${group.name}. ${group.status === 'private' ? (language === 'he' ? 'פרטי' : 'Private') : group.status === 'hidden' ? (language === 'he' ? 'חסוי' : 'Hidden') : (language === 'he' ? 'ציבורי' : 'Public')}. ${groupDocs.length} ${language === 'he' ? 'מסמכים' : 'documents'}, ${members.length} ${language === 'he' ? 'חברים' : 'members'}`}
+                >
                   <Card className="bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-200 h-full">
                     <CardHeader>
                       <div className="flex items-start justify-between gap-2">
@@ -464,15 +475,15 @@ export default function Home() {
                       )}
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 text-sm text-slate-600">
-                          <FileText className="w-4 h-4" />
-                          <span>{groupDocs.length} {language === 'he' ? 'מסמכים' : 'documents'}</span>
+                          <FileText className="w-4 h-4" aria-hidden="true" />
+                          <span>{documents.filter(d => d.groupId === group.id).length} {language === 'he' ? 'מסמכים' : 'documents'}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
-                          <Users className="w-4 h-4" />
-                          <span>{members.length} {language === 'he' ? 'חברים' : 'members'}</span>
+                          <Users className="w-4 h-4" aria-hidden="true" />
+                          <span>{groupMembers.filter(m => m.groupId === group.id).length} {language === 'he' ? 'חברים' : 'members'}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
-                          <Clock className="w-4 h-4" />
+                          <Clock className="w-4 h-4" aria-hidden="true" />
                           <span>{new Date(group.created_date).toLocaleDateString()}</span>
                         </div>
                       </div>

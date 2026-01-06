@@ -172,7 +172,7 @@ export default function MyDocuments() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
-        <div>
+        <header>
           <h1 className="text-3xl font-bold text-slate-900">{t('myDocuments')}</h1>
           <p className="text-slate-600 mt-2">
             {language === 'ar' 
@@ -181,7 +181,7 @@ export default function MyDocuments() {
               ? `מסמכים שהשתתפת בהם (${myDocuments.length})`
               : `Documents you participated in (${myDocuments.length})`}
           </p>
-        </div>
+        </header>
 
         {myDocuments.length === 0 ? (
           <Card className="bg-white border-slate-200">
@@ -218,6 +218,7 @@ export default function MyDocuments() {
                         <Button
                           variant="ghost"
                           size="icon"
+                          type="button"
                           className="h-8 w-8"
                           onClick={(e) => {
                             e.preventDefault();
@@ -225,21 +226,22 @@ export default function MyDocuments() {
                             handleTranslateTitle(doc);
                           }}
                           disabled={translating[doc.id]}
+                          aria-label={translating[doc.id] ? (language === 'he' ? 'מתרגם...' : 'Translating...') : translatedTitles[doc.id] ? (language === 'he' ? 'הצג מקור' : 'Show original') : (language === 'he' ? 'תרגם כותרת' : 'Translate title')}
                         >
                           {translating[doc.id] ? (
-                            <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-600" aria-hidden="true" />
                           ) : (
-                            <Languages className={`w-4 h-4 ${translatedTitles[doc.id] ? 'text-green-600' : 'text-slate-400'}`} />
+                            <Languages className={`w-4 h-4 ${translatedTitles[doc.id] ? 'text-green-600' : 'text-slate-400'}`} aria-hidden="true" />
                           )}
                         </Button>
-                        <FileText className="w-5 h-5 text-blue-600" />
+                        <FileText className="w-5 h-5 text-blue-600" aria-hidden="true" />
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-4 space-y-4">
                       <div className="grid grid-cols-2 gap-3">
                         <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4 text-slate-400" />
+                          <Users className="w-4 h-4 text-slate-400" aria-hidden="true" />
                           <div className="text-sm">
                             <div className="font-semibold text-slate-700">
                               {getDocumentContributors(doc)}
@@ -248,7 +250,7 @@ export default function MyDocuments() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <TrendingUp className="w-4 h-4 text-slate-400" />
+                          <TrendingUp className="w-4 h-4 text-slate-400" aria-hidden="true" />
                           <div className="text-sm">
                             <div className="font-semibold text-slate-700">
                               {(() => {

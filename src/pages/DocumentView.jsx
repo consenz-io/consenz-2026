@@ -557,7 +557,7 @@ export default function DocumentView() {
       <div className="max-w-6xl mx-auto space-y-2 md:space-y-6 px-1 md:px-4 w-full max-w-full">
         <div className="flex flex-col gap-1.5 md:gap-4 w-full max-w-full">
           <div className={`flex items-center justify-between gap-1 w-full max-w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <h1 className="text-lg md:text-3xl font-bold text-slate-900 flex-1 min-w-0 break-words leading-tight max-w-full">
+            <h1 id="document-title" className="text-lg md:text-3xl font-bold text-slate-900 flex-1 min-w-0 break-words leading-tight max-w-full">
               {(() => {
                 const translatedTitle = document.translations?.[language]?.title;
                 if (showTranslated && typeof translatedTitle === 'string') {
@@ -575,19 +575,21 @@ export default function DocumentView() {
                     <Loader2 className="w-3.5 h-3.5 md:w-5 md:h-5 animate-spin text-blue-600" />
                   ) : !(typeof document.translations?.[language]?.title === 'string') ? (
                     <button
+                      type="button"
                       onClick={() => translateDocumentMutation.mutate()}
                       className="p-0.5 md:p-1.5 hover:bg-blue-50 rounded transition-colors"
-                      title={t('translate')}
+                      aria-label={t('translate')}
                     >
-                      <Languages className="w-3.5 h-3.5 md:w-5 md:h-5 text-blue-600" />
+                      <Languages className="w-3.5 h-3.5 md:w-5 md:h-5 text-blue-600" aria-hidden="true" />
                     </button>
                   ) : (
                     <button
+                      type="button"
                       onClick={() => setShowTranslated(!showTranslated)}
                       className="p-0.5 md:p-1.5 hover:bg-slate-100 rounded transition-colors"
-                      title={showTranslated ? t('showOriginal') : t('showTranslation')}
+                      aria-label={showTranslated ? t('showOriginal') : t('showTranslation')}
                     >
-                      <Languages className={`w-3.5 h-3.5 md:w-5 md:h-5 ${showTranslated ? 'text-slate-600' : 'text-blue-600'}`} />
+                      <Languages className={`w-3.5 h-3.5 md:w-5 md:h-5 ${showTranslated ? 'text-slate-600' : 'text-blue-600'}`} aria-hidden="true" />
                     </button>
                   )}
                 </div>
@@ -781,15 +783,18 @@ export default function DocumentView() {
         </div>
 
         <div className="grid grid-cols-3 gap-3 md:gap-4 w-full max-w-full">
-          <div 
+          <button
+            type="button"
             className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-blue-400 hover:shadow-lg transition-all"
             onClick={() => setShowContributorsModal(true)}
+            aria-label={`${contributorsCount} ${t('contributors')}. ${language === 'he' ? 'לחץ לצפייה ברשימה' : 'Click to view list'}`}
           >
-            <Users className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
+            <Users className="w-4 h-4 md:w-6 md:h-6 text-blue-600" aria-hidden="true" />
             <div className="text-base md:text-xl font-bold text-slate-900">{contributorsCount}</div>
             <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('contributors')}</div>
-          </div>
-          <div 
+          </button>
+          <button
+            type="button"
             className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-400 rounded-lg p-2 md:p-3 cursor-pointer hover:border-indigo-600 hover:shadow-lg transition-all flex flex-col items-center justify-center gap-1 relative overflow-hidden"
             onClick={() => {
               if (pendingSuggestions.length > 0) {
@@ -797,6 +802,7 @@ export default function DocumentView() {
                 scrollToSuggestion(currentSuggestionIndex);
               }
             }}
+            aria-label={`${pendingSuggestions.length} ${language === 'he' ? 'הצעות פתוחות' : 'open suggestions'}. ${pendingSuggestions.length > 0 ? (language === 'he' ? 'לחץ לניווט להצעות' : 'Click to navigate to suggestions') : ''}`}
           >
             {pendingSuggestions.length > 0 && (
               <div className="absolute top-1 right-1">
@@ -806,15 +812,21 @@ export default function DocumentView() {
                 </span>
               </div>
             )}
-            <MessageSquare className="w-5 h-5 md:w-7 md:h-7 text-indigo-600" />
+            <MessageSquare className="w-5 h-5 md:w-7 md:h-7 text-indigo-600" aria-hidden="true" />
             <div className="text-lg md:text-2xl font-bold text-indigo-900">{pendingSuggestions.length}</div>
             <div className="text-[10px] md:text-sm text-indigo-700 text-center leading-tight font-medium">{language === 'he' ? 'הצעות פתוחות' : language === 'ar' ? 'مقترحات مفتوحة' : 'Open Suggestions'}</div>
-          </div>
+          </button>
           <Link 
             to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
             className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-purple-400 transition-all"
+            aria-label={`${(() => {
+              const consensuses = document.consensuses || [];
+              if (consensuses.length === 0) return '0';
+              const avg = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
+              return (Math.min(100, avg * 100)).toFixed(0);
+            })()}% ${t('consensus')}. ${language === 'he' ? 'לחץ להסבר על הקונצנזוס' : 'Click to learn about consensus'}`}
           >
-            <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-purple-600" />
+            <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-purple-600" aria-hidden="true" />
             <div className="text-base md:text-xl font-bold text-slate-900">
               {(() => {
                 const consensuses = document.consensuses || [];
@@ -902,11 +914,15 @@ export default function DocumentView() {
 
       {/* Floating navigation for suggestions */}
       {pendingSuggestions.length > 0 && showSuggestionNav && showScrollTop && (
-        <div className="fixed bottom-6 right-20 z-40 flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-3 py-2 border border-slate-200">
+        <nav 
+          className="fixed bottom-6 right-20 z-40 flex items-center gap-2 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-3 py-2 border border-slate-200"
+          aria-label={language === 'he' ? 'ניווט בין הצעות' : 'Navigate between suggestions'}
+        >
           <Button
             size="sm"
             variant="default"
             className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg h-10 px-3"
+            aria-label={language === 'he' ? 'הצעה קודמת' : 'Previous suggestion'}
             onClick={() => {
               const newIndex = currentSuggestionIndex === 0 
                 ? pendingSuggestions.length - 1 
@@ -915,24 +931,25 @@ export default function DocumentView() {
               scrollToSuggestion(newIndex);
             }}
           >
-            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            {isRTL ? <ChevronRight className="w-4 h-4" aria-hidden="true" /> : <ChevronLeft className="w-4 h-4" aria-hidden="true" />}
           </Button>
-          <span className="text-sm font-medium text-slate-700 px-2">
+          <span className="text-sm font-medium text-slate-700 px-2" aria-live="polite" aria-atomic="true">
             {currentSuggestionIndex + 1} / {pendingSuggestions.length}
           </span>
           <Button
             size="sm"
             variant="default"
             className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg h-10 px-3"
+            aria-label={language === 'he' ? 'הצעה הבאה' : 'Next suggestion'}
             onClick={() => {
               const newIndex = (currentSuggestionIndex + 1) % pendingSuggestions.length;
               setCurrentSuggestionIndex(newIndex);
               scrollToSuggestion(newIndex);
             }}
           >
-            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            {isRTL ? <ChevronLeft className="w-4 h-4" aria-hidden="true" /> : <ChevronRight className="w-4 h-4" aria-hidden="true" />}
           </Button>
-        </div>
+        </nav>
       )}
       </div>
     </TranslationProvider>
