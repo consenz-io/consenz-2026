@@ -427,11 +427,50 @@ export default function Home() {
               const members = groupMembers.filter(m => m.groupId === group.id);
               const isAdmin = members.some(m => m.userId === user?.id && m.role === 'admin');
 
+              // Calculate total unique participants across all documents in this group
+              const groupParticipantsEmails = new Set();
+              groupDocs.forEach(doc => {
+                const docSuggestions = allSuggestions.filter(s => s.documentId === doc.id);
+                const suggestionIds = new Set(docSuggestions.map(s => s.id));
+                const docSections = allSections.filter(s => s.documentId === doc.id);
+                const sectionIds = new Set(docSections.map(s => s.id));
+                
+                // Voters
+                const userIdToEmail = {};
+                publicProfiles.forEach(p => { userIdToEmail[p.userId] = p.email; });
+                if (allUsers.length > 0) {
+                  allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
+                }
+                allVotes.forEach(v => {
+                  if (suggestionIds.has(v.suggestionId)) {
+                    if (userIdToEmail[v.userId]) groupParticipantsEmails.add(userIdToEmail[v.userId]);
+                    if (v.created_by) groupParticipantsEmails.add(v.created_by);
+                  }
+                });
+                
+                // Commenters
+                allComments.forEach(c => {
+                  if ((c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
+                      (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
+                      (c.rootEntityType === 'document' && c.rootEntityId === doc.id)) {
+                    if (c.created_by) groupParticipantsEmails.add(c.created_by);
+                  }
+                });
+                
+                // Signers
+                allAgreements.forEach(a => {
+                  if (a.documentId === doc.id && a.userEmail) {
+                    groupParticipantsEmails.add(a.userEmail);
+                  }
+                });
+              });
+              const groupParticipantsCount = Math.max(1, groupParticipantsEmails.size);
+
               return (
                 <Link 
                   key={group.id} 
                   to={`${createPageUrl("GroupView")}?id=${group.id}`}
-                  aria-label={`${group.name}. ${group.status === 'private' ? (language === 'he' ? 'פרטי' : 'Private') : group.status === 'hidden' ? (language === 'he' ? 'חסוי' : 'Hidden') : (language === 'he' ? 'ציבורי' : 'Public')}. ${groupDocs.length} ${language === 'he' ? 'מסמכים' : 'documents'}, ${members.length} ${language === 'he' ? 'חברים' : 'members'}`}
+                  aria-label={`${group.name}. ${group.status === 'private' ? (language === 'he' ? 'פרטי' : 'Private') : group.status === 'hidden' ? (language === 'he' ? 'חסוי' : 'Hidden') : (language === 'he' ? 'ציבורי' : 'Public')}. ${groupDocs.length} ${language === 'he' ? 'מסמכים' : 'documents'}, ${groupParticipantsCount} ${language === 'he' ? 'משתתפים' : 'participants'}`}
                 >
                   <Card className="bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-200 h-full">
                     <CardHeader>
@@ -473,7 +512,7 @@ export default function Home() {
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <Users className="w-4 h-4" aria-hidden="true" />
-                          <span>{members.length} {language === 'he' ? 'חברים' : 'members'}</span>
+                          <span>{groupParticipantsCount} {language === 'he' ? 'משתתפים' : 'participants'}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <Clock className="w-4 h-4" aria-hidden="true" />

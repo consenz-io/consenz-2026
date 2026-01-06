@@ -15,6 +15,7 @@ import {
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "@/components/PageHeader";
 import ManageMembersDialog from "@/components/group/ManageMembersDialog";
+import { calculateContributorsFromData } from "@/components/document/calculateContributors";
 
 export default function GroupView() {
   const { t, isRTL, language } = useLanguage();
@@ -53,6 +54,46 @@ export default function GroupView() {
   const { data: publicProfiles } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
+    initialData: [],
+  });
+
+  // Fetch data needed for participant count calculation
+  const { data: allSuggestions = [] } = useQuery({
+    queryKey: ['allSuggestions'],
+    queryFn: () => base44.entities.Suggestion.list(),
+    initialData: [],
+  });
+
+  const { data: allVotes = [] } = useQuery({
+    queryKey: ['allVotes'],
+    queryFn: () => base44.entities.Vote.list(),
+    initialData: [],
+  });
+
+  const { data: allComments = [] } = useQuery({
+    queryKey: ['allComments'],
+    queryFn: () => base44.entities.Comment.list(),
+    initialData: [],
+  });
+
+  const { data: allSections = [] } = useQuery({
+    queryKey: ['allSections'],
+    queryFn: () => base44.entities.Section.list(),
+    initialData: [],
+  });
+
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['allUsers'],
+    queryFn: () => base44.entities.User.list(),
+    initialData: [],
+    retry: false,
+    throwOnError: false,
+    enabled: !!currentUser && currentUser?.role === 'admin',
+  });
+
+  const { data: allAgreements = [] } = useQuery({
+    queryKey: ['allAgreements'],
+    queryFn: () => base44.entities.DocumentAgreement.list(),
     initialData: [],
   });
 
@@ -339,20 +380,40 @@ export default function GroupView() {
                   </p>
                 ) : (
                   <div className="space-y-3">
-                    {documents.map((doc) => (
-                      <Link
-                        key={doc.id}
-                        to={`${createPageUrl("DocumentView")}?id=${doc.id}`}
-                        className="block p-4 border rounded-lg hover:bg-slate-50 transition-colors"
-                      >
-                        <h3 className="font-semibold text-slate-900">{doc.title}</h3>
-                        {doc.description && (
-                          <p className="text-sm text-slate-500 mt-1 line-clamp-2" 
-                             dangerouslySetInnerHTML={{ __html: doc.description }} 
-                          />
-                        )}
-                      </Link>
-                    ))}
+                    {documents.map((doc) => {
+                      const participantsCount = calculateContributorsFromData({
+                        document: doc,
+                        suggestions: allSuggestions.filter(s => s.documentId === doc.id),
+                        allVotes,
+                        allUsers,
+                        allComments,
+                        sections: allSections.filter(s => s.documentId === doc.id),
+                        documentAgreements: allAgreements.filter(a => a.documentId === doc.id)
+                      });
+
+                      return (
+                        <Link
+                          key={doc.id}
+                          to={`${createPageUrl("DocumentView")}?id=${doc.id}`}
+                          className="block p-4 border rounded-lg hover:bg-slate-50 transition-colors"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-slate-900">{doc.title}</h3>
+                              {doc.description && (
+                                <p className="text-sm text-slate-500 mt-1 line-clamp-2" 
+                                   dangerouslySetInnerHTML={{ __html: doc.description }} 
+                                />
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 text-sm text-slate-600 shrink-0">
+                              <Users className="w-4 h-4" />
+                              <span>{participantsCount}</span>
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
