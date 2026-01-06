@@ -34,6 +34,10 @@ export default function GroupView() {
     queryKey: ['group', groupId],
     queryFn: () => base44.entities.Group.filter({ id: groupId }).then(groups => groups[0]),
     enabled: !!groupId,
+    staleTime: 30000,
+    gcTime: 60000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: groupMembers, isLoading: membersLoading } = useQuery({
@@ -41,6 +45,10 @@ export default function GroupView() {
     queryFn: () => base44.entities.GroupMember.filter({ groupId }),
     initialData: [],
     enabled: !!groupId,
+    staleTime: 30000,
+    gcTime: 60000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: documents, isLoading: documentsLoading } = useQuery({
@@ -48,6 +56,10 @@ export default function GroupView() {
     queryFn: () => base44.entities.Document.filter({ groupId }, '-created_date'),
     initialData: [],
     enabled: !!groupId,
+    staleTime: 30000,
+    gcTime: 60000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: publicProfiles } = useQuery({
