@@ -476,11 +476,11 @@ export default function Home() {
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <FileText className="w-4 h-4" aria-hidden="true" />
-                          <span>{documents.filter(d => d.groupId === group.id).length} {language === 'he' ? 'מסמכים' : 'documents'}</span>
+                          <span>{groupDocs.length} {language === 'he' ? 'מסמכים' : 'documents'}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <Users className="w-4 h-4" aria-hidden="true" />
-                          <span>{groupMembers.filter(m => m.groupId === group.id).length} {language === 'he' ? 'חברים' : 'members'}</span>
+                          <span>{members.length} {language === 'he' ? 'חברים' : 'members'}</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <Clock className="w-4 h-4" aria-hidden="true" />
