@@ -168,11 +168,11 @@ export default function DocumentView() {
       suggestions,
       allVotes,
       allUsers,
+      allArguments,
       allComments,
-      sections,
-      agreements: documentAgreements
+      sections
     });
-  }, [document, suggestions, allVotes, allUsers, allComments, sections, documentAgreements]);
+  }, [document, suggestions, allVotes, allUsers, allArguments, allComments, sections]);
 
   // Get pending suggestions ordered by section appearance
   const pendingSuggestions = React.useMemo(() => {

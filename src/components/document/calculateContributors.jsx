@@ -2,24 +2,35 @@ import { base44 } from "@/api/base44Client";
 
 /**
  * Calculate unique contributors count for document (async version)
- * Contributors: voters, commenters, and signers
+ * Includes: document creator, suggestion creators, voters, argument writers, and commenters
  */
 export async function calculateDocumentContributors(documentId) {
   try {
     // Fetch all data in parallel
-    const [suggestions, sections, allVotes, publicProfiles, allComments, followers, agreements] = await Promise.all([
+    const [documents, suggestions, sections, allVotes, publicProfiles, allArguments, allComments, followers] = await Promise.all([
+      base44.entities.Document.filter({ id: documentId }),
       base44.entities.Suggestion.filter({ documentId }),
       base44.entities.Section.filter({ documentId }),
       base44.entities.Vote.list(),
       base44.entities.UserPublicProfile.list(),
+      base44.entities.Argument.list(),
       base44.entities.Comment.list(),
-      base44.entities.DocumentFollow.filter({ documentId }),
-      base44.entities.DocumentAgreement.filter({ documentId })
+      base44.entities.DocumentFollow.filter({ documentId })
     ]);
 
     const uniqueEmails = new Set();
     
-    // 1. Voters - both by userId and created_by
+    // 1. Document creator
+    if (documents.length > 0 && documents[0].created_by) {
+      uniqueEmails.add(documents[0].created_by);
+    }
+    
+    // 2. Suggestion creators
+    suggestions.forEach(s => {
+      if (s.created_by) uniqueEmails.add(s.created_by);
+    });
+    
+    // 3. Voters - both by userId and created_by
     const suggestionIds = new Set(suggestions.map(s => s.id));
     const userIdToEmail = {};
     publicProfiles.forEach(p => { userIdToEmail[p.userId] = p.email; });
@@ -37,14 +48,21 @@ export async function calculateDocumentContributors(documentId) {
       }
     });
     
-    // 2. Commenters on suggestions
+    // 4. Argument writers
+    allArguments.forEach(arg => {
+      if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
+        uniqueEmails.add(arg.created_by);
+      }
+    });
+    
+    // 5. Commenters on suggestions
     allComments.forEach(c => {
       if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId) && c.created_by) {
         uniqueEmails.add(c.created_by);
       }
     });
     
-    // 3. Commenters on sections
+    // 6. Commenters on sections
     const sectionIds = new Set(sections.map(s => s.id));
     allComments.forEach(c => {
       if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId) && c.created_by) {
@@ -52,17 +70,10 @@ export async function calculateDocumentContributors(documentId) {
       }
     });
     
-    // 4. Commenters on document
+    // 7. Commenters on document
     allComments.forEach(c => {
       if (c.rootEntityType === 'document' && c.rootEntityId === documentId && c.created_by) {
         uniqueEmails.add(c.created_by);
-      }
-    });
-    
-    // 5. Signers
-    agreements.forEach(a => {
-      if (a.userEmail) {
-        uniqueEmails.add(a.userEmail);
       }
     });
     
@@ -97,20 +108,27 @@ export async function calculateDocumentContributors(documentId) {
 /**
  * Synchronous calculation of contributors from already loaded data
  * Used for real-time display in counters
- * Contributors: voters, commenters, and signers
  */
 export function calculateContributorsFromData({
   document,
   suggestions = [],
   allVotes = [],
   allUsers = [],
+  allArguments = [],
   allComments = [],
-  sections = [],
-  agreements = []
+  sections = []
 }) {
   const uniqueEmails = new Set();
   
-  // 1. Voters - both by userId and created_by
+  // 1. Document creator
+  if (document?.created_by) uniqueEmails.add(document.created_by);
+  
+  // 2. Suggestion creators
+  suggestions.forEach(s => {
+    if (s.created_by) uniqueEmails.add(s.created_by);
+  });
+  
+  // 3. Voters - both by userId and created_by
   const suggestionIds = new Set(suggestions.map(s => s.id));
   const userIdToEmail = {};
   allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
@@ -128,14 +146,21 @@ export function calculateContributorsFromData({
     }
   });
   
-  // 2. Commenters on suggestions
+  // 4. Argument writers
+  allArguments.forEach(arg => {
+    if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
+      uniqueEmails.add(arg.created_by);
+    }
+  });
+  
+  // 5. Commenters on suggestions
   allComments.forEach(c => {
     if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId) && c.created_by) {
       uniqueEmails.add(c.created_by);
     }
   });
   
-  // 3. Commenters on sections
+  // 6. Commenters on sections
   const sectionIds = new Set(sections.map(s => s.id));
   allComments.forEach(c => {
     if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId) && c.created_by) {
@@ -143,20 +168,11 @@ export function calculateContributorsFromData({
     }
   });
   
-  // 4. Commenters on document
+  // 7. Commenters on document
   if (document?.id) {
     allComments.forEach(c => {
       if (c.rootEntityType === 'document' && c.rootEntityId === document.id && c.created_by) {
         uniqueEmails.add(c.created_by);
-      }
-    });
-  }
-  
-  // 5. Signers
-  if (agreements) {
-    agreements.forEach(a => {
-      if (a.userEmail) {
-        uniqueEmails.add(a.userEmail);
       }
     });
   }

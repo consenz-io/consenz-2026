@@ -125,12 +125,6 @@ export default function Home() {
     initialData: [],
   });
 
-  const { data: allAgreements } = useQuery({
-    queryKey: ['allAgreements'],
-    queryFn: () => base44.entities.DocumentAgreement.list(),
-    initialData: [],
-  });
-
   // Calculate real contributors per document using shared logic
   const getDocumentContributors = (doc) => {
     return calculateContributorsFromData({
@@ -138,15 +132,25 @@ export default function Home() {
       suggestions: allSuggestions.filter(s => s.documentId === doc.id),
       allVotes,
       allUsers,
+      allArguments,
       allComments,
-      sections: allSections.filter(s => s.documentId === doc.id),
-      agreements: allAgreements.filter(a => a.documentId === doc.id)
+      sections: allSections.filter(s => s.documentId === doc.id)
     });
   };
 
   // Calculate unique contributors across all documents and build list
   const { totalUniqueContributors, contributorsList } = useMemo(() => {
     const uniqueEmails = new Set();
+    
+    // Document creators
+    documents.forEach(d => {
+      if (d.created_by) uniqueEmails.add(d.created_by);
+    });
+    
+    // Suggestion creators
+    allSuggestions.forEach(s => {
+      if (s.created_by) uniqueEmails.add(s.created_by);
+    });
     
     // Voters
     const userIdToEmail = {};
@@ -160,14 +164,14 @@ export default function Home() {
       if (userIdToEmail[v.userId]) uniqueEmails.add(userIdToEmail[v.userId]);
     });
     
+    // Argument writers
+    allArguments.forEach(arg => {
+      if (arg.created_by) uniqueEmails.add(arg.created_by);
+    });
+    
     // Commenters
     allComments.forEach(c => {
       if (c.created_by) uniqueEmails.add(c.created_by);
-    });
-    
-    // Signers
-    allAgreements.forEach(a => {
-      if (a.userEmail) uniqueEmails.add(a.userEmail);
     });
     
     // Build contributors list with names
@@ -199,7 +203,7 @@ export default function Home() {
       totalUniqueContributors: Math.max(1, uniqueEmails.size),
       contributorsList: list
     };
-  }, [allVotes, allUsers, publicProfiles, allComments, allAgreements]);
+  }, [documents, allSuggestions, allVotes, allUsers, publicProfiles, allArguments, allComments]);
 
   const calculateAverageConsensus = () => {
     if (!acceptedSuggestions || acceptedSuggestions.length === 0) return 0;

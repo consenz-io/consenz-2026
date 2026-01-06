@@ -92,13 +92,6 @@ export default function MyDocuments() {
     initialData: [],
   });
 
-  const { data: allAgreements } = useQuery({
-    queryKey: ['allAgreements'],
-    queryFn: () => base44.entities.DocumentAgreement.list(),
-    enabled: !!user?.id,
-    initialData: [],
-  });
-
   // Calculate real contributors per document using shared logic
   const getDocumentContributors = (doc) => {
     return calculateContributorsFromData({
@@ -106,9 +99,9 @@ export default function MyDocuments() {
       suggestions: allSuggestions.filter(s => s.documentId === doc.id),
       allVotes,
       allUsers,
+      allArguments,
       allComments,
-      sections: allSections.filter(s => s.documentId === doc.id),
-      agreements: allAgreements.filter(a => a.documentId === doc.id)
+      sections: allSections.filter(s => s.documentId === doc.id)
     });
   };
 
