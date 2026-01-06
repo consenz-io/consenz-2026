@@ -1,3 +1,4 @@
+css
 /* Screen reader only content - WCAG 2.1 AA Compliant */
 .sr-only {
   position: absolute;
@@ -45,8 +46,18 @@
 
 /* Focus visible styles - WCAG 2.1 2.4.7 */
 *:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 3px solid #3b82f6;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Enhanced focus for interactive elements */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid #3b82f6;
   outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
 }
 
 /* Ensure minimum touch target size of 44x44px for mobile - WCAG 2.1 2.5.5 */

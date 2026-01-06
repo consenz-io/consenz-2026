@@ -171,7 +171,7 @@ function LayoutContent({ children, currentPageName }) {
       </a>
       
       <div className={`min-h-screen flex w-full max-w-full bg-gradient-to-br from-slate-50 to-blue-50 overflow-x-hidden ${isRTL ? 'flex-row-reverse' : ''}`} style={{ maxWidth: '100vw' }}>
-        <Sidebar className={isRTL ? "border-l border-slate-200" : "border-r border-slate-200"} role="navigation" aria-label={isRTL ? 'תפריט ניווט ראשי' : 'Main navigation'}>
+        <Sidebar id="sidebar" className={isRTL ? "border-l border-slate-200" : "border-r border-slate-200"} role="navigation" aria-label={isRTL ? 'תפריט ניווט ראשי' : 'Main navigation'}>
           <SidebarHeader className="border-b border-slate-200 p-4">
             <div className="flex items-center gap-2">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -217,12 +217,13 @@ function LayoutContent({ children, currentPageName }) {
               <SidebarGroupContent>
                 <div className="px-3 py-2">
                   <div className="relative">
-                    <Languages className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                    <Languages className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" aria-hidden="true" />
                     <select
                       value={language}
                       onChange={(e) => setLanguage(e.target.value)}
                       className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm font-medium bg-white cursor-pointer"
                       aria-label={isRTL ? 'בחירת שפה' : 'Select language'}
+                      id="language-selector"
                     >
                       <option value="en">English</option>
                       <option value="he">עברית</option>
@@ -319,6 +320,8 @@ function LayoutContent({ children, currentPageName }) {
                 <SidebarTrigger 
                   className="md:hidden hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200 touch-manipulation"
                   aria-label={isRTL ? 'פתיחת תפריט ניווט' : 'Open navigation menu'}
+                  aria-expanded="false"
+                  aria-controls="sidebar"
                 />
                 <h1 className="text-base md:text-xl font-bold text-slate-900 md:hidden truncate">Consenz</h1>
               </div>
@@ -348,11 +351,12 @@ function LayoutContent({ children, currentPageName }) {
           {showScrollTop && (
             <button
               onClick={scrollToTop}
-              className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50"
+              type="button"
+              className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50 focus:ring-4 focus:ring-blue-300"
               aria-label={isRTL ? 'גלילה לראש העמוד' : 'Scroll to top'}
-              title={isRTL ? 'גלילה לראש העמוד' : 'Scroll to top'}
             >
               <ArrowUp className="w-5 h-5" aria-hidden="true" />
+              <span className="sr-only">{isRTL ? 'גלילה לראש העמוד' : 'Scroll to top'}</span>
               </button>
               )}
 
