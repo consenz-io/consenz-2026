@@ -22,12 +22,13 @@ const extractText = (html) => {
   return text;
 };
 
-// Tokenize text into words while preserving spaces
+// Tokenize text into words, treating punctuation as separate tokens
 const tokenize = (text) => {
   if (!text) return [];
-  // Split by word boundaries, keeping spaces as separate tokens
   const tokens = [];
-  const regex = /(\S+|\s+)/g;
+  // Match: word characters OR punctuation OR whitespace
+  // Punctuation is treated as separate tokens
+  const regex = /([א-תa-zA-Z0-9]+|[.,;:!?()״״׳׳""''\-–—]|\s+)/g;
   let match;
   while ((match = regex.exec(text)) !== null) {
     tokens.push(match[0]);
