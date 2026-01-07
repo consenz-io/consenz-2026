@@ -250,14 +250,14 @@ export default function NewSectionSuggestionCard({
           </div>
         )}
         
-        <div className="prose prose-sm max-w-none">
+        <div className="p-3 md:p-4 bg-white/80 rounded border border-amber-200">
           <TranslatableContent
             content={suggestion.newContent}
             entity={suggestion}
             entityType="Suggestion"
-            className="text-slate-700"
+            className="prose prose-sm max-w-none"
             renderContent={(content) => (
-              <div dangerouslySetInnerHTML={{ __html: content }} className="text-slate-800" />
+              <div dangerouslySetInnerHTML={{ __html: content }} />
             )}
           />
         </div>
