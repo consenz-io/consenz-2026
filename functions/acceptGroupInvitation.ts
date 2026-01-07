@@ -28,6 +28,11 @@ Deno.serve(async (req) => {
 
     const invitation = invitations[0];
 
+    // Check if invitation expired
+    if (invitation.expiresAt && new Date(invitation.expiresAt) < new Date()) {
+      return Response.json({ error: 'Invitation has expired' }, { status: 400 });
+    }
+
     // Verify email matches
     if (invitation.email.toLowerCase() !== user.email.toLowerCase()) {
       return Response.json({ 

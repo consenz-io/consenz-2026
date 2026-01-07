@@ -109,13 +109,19 @@ Deno.serve(async (req) => {
           </div>
         `;
 
-        // Send the email
-        await base44.asServiceRole.integrations.Core.SendEmail({
-          from_name: 'Consenz',
+        // Send email via external email function
+        const emailResponse = await base44.functions.invoke('sendExternalEmail', {
           to: user.email,
           subject: `סיכום שבועי - ${digests.length} עדכונים חדשים`,
-          body: emailBody
+          html: emailBody,
+          purpose: 'email_digest',
+          relatedEntityId: userId,
+          relatedEntityType: 'user'
         });
+
+        if (!emailResponse.data.success) {
+          throw new Error(emailResponse.data.error || 'Failed to send digest');
+        }
 
         // Mark all digests as sent
         for (const digest of digests) {
