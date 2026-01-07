@@ -794,10 +794,8 @@ export default function DocumentView() {
                             </>
                           );
                         } else {
-                          const tempDiv = document.createElement('div');
-                          tempDiv.innerHTML = currentDescription;
-                          const textContent = tempDiv.textContent || tempDiv.innerText || '';
-                          const hasLongContent = textContent.length > 600;
+                          const stripHtml = currentDescription.replace(/<[^>]*>/g, '');
+                          const hasLongContent = stripHtml.length > 600;
                           
                           return (
                             <>
