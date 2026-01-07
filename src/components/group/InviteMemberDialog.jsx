@@ -12,57 +12,58 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Mail, CheckCircle, AlertCircle } from "lucide-react";
+import { Mail, CheckCircle, AlertCircle, Link as LinkIcon, Copy } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
 export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose }) {
   const { t, isRTL, language } = useLanguage();
   const queryClient = useQueryClient();
-  const [email, setEmail] = useState("");
+  const [inviteToken, setInviteToken] = useState(null);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const inviteMutation = useMutation({
+  const generateInviteMutation = useMutation({
     mutationFn: async () => {
-      // Call backend function to send invitation with service role
-      await base44.functions.invoke('sendGroupInvitation', {
+      const currentUser = await base44.auth.me();
+      
+      // Generate unique token
+      const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      
+      // Create invitation record
+      await base44.entities.GroupInvitation.create({
         groupId,
-        email: email.toLowerCase(),
-        groupName
+        email: '',
+        invitedBy: currentUser.id,
+        token,
+        status: 'pending'
       });
+      
+      return token;
     },
-    onSuccess: () => {
-      setSuccess(true);
+    onSuccess: (token) => {
+      setInviteToken(token);
       setError(null);
-      setEmail("");
-      setTimeout(() => {
-        setSuccess(false);
-        onClose();
-      }, 2000);
       queryClient.invalidateQueries({ queryKey: ['groupInvitations', groupId] });
     },
     onError: (err) => {
-      setError(err.message || (language === 'he' ? 'שגיאה בשליחת ההזמנה' : 'Error sending invitation'));
-      setSuccess(false);
+      setError(err.message || (language === 'he' ? 'שגיאה ביצירת קישור' : 'Error creating link'));
     },
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError(null);
-    
-    if (!email || !email.includes('@')) {
-      setError(language === 'he' ? 'נא להזין כתובת אימייל תקינה' : 'Please enter a valid email address');
-      return;
-    }
-    
-    inviteMutation.mutate();
+  const inviteUrl = inviteToken 
+    ? `${window.location.origin}/login?groupInvite=${inviteToken}`
+    : '';
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(inviteUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleClose = () => {
-    setEmail("");
+    setInviteToken(null);
     setError(null);
-    setSuccess(false);
+    setCopied(false);
     onClose();
   };
 
@@ -75,59 +76,86 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">
-              {language === 'he' ? 'כתובת אימייל' : 'Email Address'}
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={language === 'he' ? 'name@example.com' : 'name@example.com'}
-              disabled={inviteMutation.isPending || success}
-              className={isRTL ? 'text-right' : 'text-left'}
-            />
-          </div>
+        <div className="space-y-4">
+          {!inviteToken ? (
+            <>
+              <p className="text-sm text-slate-600">
+                {language === 'he' 
+                  ? 'צור קישור הזמנה שתוכל לשתף עם אנשים. כל מי שנרשם דרך הקישור יתווסף אוטומטית לקבוצה.'
+                  : 'Create an invitation link to share with others. Anyone who signs up through this link will automatically be added to the group.'}
+              </p>
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
 
-          {success && (
-            <Alert className="bg-green-50 border-green-200">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-800">
-                {language === 'he' ? 'ההזמנה נשלחה בהצלחה!' : 'Invitation sent successfully!'}
-              </AlertDescription>
-            </Alert>
+              <Button
+                onClick={() => generateInviteMutation.mutate()}
+                disabled={generateInviteMutation.isPending}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600"
+              >
+                <LinkIcon className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {generateInviteMutation.isPending 
+                  ? (language === 'he' ? 'יוצר...' : 'Creating...') 
+                  : (language === 'he' ? 'צור קישור הזמנה' : 'Create Invitation Link')}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Alert className="bg-green-50 border-green-200">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  {language === 'he' ? 'קישור ההזמנה נוצר בהצלחה!' : 'Invitation link created successfully!'}
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-2">
+                <Label>
+                  {language === 'he' ? 'קישור ההזמנה' : 'Invitation Link'}
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={inviteUrl}
+                    readOnly
+                    className="flex-1"
+                    dir="ltr"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCopyLink}
+                  >
+                    {copied ? (
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-slate-500">
+                  {language === 'he' 
+                    ? 'העתק את הקישור ושלח אותו למי שתרצה להזמין'
+                    : 'Copy this link and send it to anyone you want to invite'}
+                </p>
+              </div>
+            </>
           )}
 
           <DialogFooter>
             <Button
               type="button"
-              variant="outline"
+              variant={inviteToken ? "default" : "outline"}
               onClick={handleClose}
-              disabled={inviteMutation.isPending}
             >
-              {language === 'he' ? 'ביטול' : 'Cancel'}
-            </Button>
-            <Button
-              type="submit"
-              disabled={inviteMutation.isPending || success}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600"
-            >
-              <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {inviteMutation.isPending 
-                ? (language === 'he' ? 'שולח...' : 'Sending...') 
-                : (language === 'he' ? 'שלח הזמנה' : 'Send Invitation')}
+              {inviteToken 
+                ? (language === 'he' ? 'סיום' : 'Done')
+                : (language === 'he' ? 'ביטול' : 'Cancel')}
             </Button>
           </DialogFooter>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
