@@ -784,7 +784,15 @@ export default function DocumentView() {
                                   <Button
                                     variant="link"
                                     size="sm"
-                                    onClick={() => setShowFullDescription(false)}
+                                    onClick={() => {
+                                      setShowFullDescription(false);
+                                      setTimeout(() => {
+                                        const titleElement = document.getElementById('document-title');
+                                        if (titleElement) {
+                                          titleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        }
+                                      }, 50);
+                                    }}
                                     className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800"
                                   >
                                     {language === 'he' ? 'הצג פחות' : language === 'ar' ? 'عرض أقل' : 'Show less'}
@@ -815,7 +823,19 @@ export default function DocumentView() {
                                 <Button
                                   variant="link"
                                   size="sm"
-                                  onClick={() => setShowFullDescription(!showFullDescription)}
+                                  onClick={() => {
+                                    if (showFullDescription) {
+                                      setShowFullDescription(false);
+                                      setTimeout(() => {
+                                        const titleElement = document.getElementById('document-title');
+                                        if (titleElement) {
+                                          titleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        }
+                                      }, 50);
+                                    } else {
+                                      setShowFullDescription(true);
+                                    }
+                                  }}
                                   className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800"
                                 >
                                   {showFullDescription 
