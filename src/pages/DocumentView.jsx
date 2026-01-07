@@ -787,7 +787,7 @@ export default function DocumentView() {
                                     onClick={() => {
                                       setShowFullDescription(false);
                                       setTimeout(() => {
-                                        const titleElement = document.getElementById('document-title');
+                                        const titleElement = window.document.getElementById('document-title');
                                         if (titleElement) {
                                           titleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                         }
@@ -827,7 +827,7 @@ export default function DocumentView() {
                                     if (showFullDescription) {
                                       setShowFullDescription(false);
                                       setTimeout(() => {
-                                        const titleElement = document.getElementById('document-title');
+                                        const titleElement = window.document.getElementById('document-title');
                                         if (titleElement) {
                                           titleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                         }
