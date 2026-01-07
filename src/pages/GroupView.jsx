@@ -15,6 +15,7 @@ import {
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "@/components/PageHeader";
 import ManageMembersDialog from "@/components/group/ManageMembersDialog";
+import InviteMemberDialog from "@/components/group/InviteMemberDialog";
 import { calculateContributorsFromData } from "@/components/document/calculateContributors";
 
 export default function GroupView() {
@@ -24,6 +25,7 @@ export default function GroupView() {
   const [searchParams] = useSearchParams();
   const groupId = searchParams.get('id');
   const [showManageMembers, setShowManageMembers] = useState(false);
+  const [showInviteMember, setShowInviteMember] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -423,10 +425,22 @@ export default function GroupView() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  {language === 'he' ? 'חברי הקבוצה' : 'Members'}
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    {language === 'he' ? 'חברי הקבוצה' : 'Members'}
+                  </CardTitle>
+                  {(isAdmin || isMember) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowInviteMember(true)}
+                    >
+                      <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {language === 'he' ? 'הזמן' : 'Invite'}
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -460,6 +474,13 @@ export default function GroupView() {
           groupId={groupId}
           isOpen={showManageMembers}
           onClose={() => setShowManageMembers(false)}
+        />
+
+        <InviteMemberDialog
+          groupId={groupId}
+          groupName={group.name}
+          isOpen={showInviteMember}
+          onClose={() => setShowInviteMember(false)}
         />
       </div>
     </div>
