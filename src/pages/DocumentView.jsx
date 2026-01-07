@@ -745,27 +745,77 @@ export default function DocumentView() {
                 <div className="relative group">
                   {document.description ? (
                     <>
-                      <div 
-                        className={`prose prose-sm max-w-none ${!showFullDescription ? 'line-clamp-3' : ''}`}
-                        dangerouslySetInnerHTML={{ 
-                          __html: showTranslatedDescription && typeof document.translations?.[language]?.description === 'string'
-                            ? document.translations[language].description
-                            : document.description
-                        }}
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                      />
-                      {document.description?.length > 200 && (
-                        <Button
-                          variant="link"
-                          size="sm"
-                          onClick={() => setShowFullDescription(!showFullDescription)}
-                          className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800"
-                        >
-                          {showFullDescription 
-                            ? (language === 'he' ? 'הצג פחות' : language === 'ar' ? 'عرض أقل' : 'Show less')
-                            : (language === 'he' ? 'קרא עוד' : language === 'ar' ? 'اقرأ المزيد' : 'Read more')}
-                        </Button>
-                      )}
+                      {(() => {
+                        const currentDescription = showTranslatedDescription && typeof document.translations?.[language]?.description === 'string'
+                          ? document.translations[language].description
+                          : document.description;
+                        
+                        const readMoreMarker = '<!-- READ_MORE -->';
+                        const hasMarker = currentDescription.includes(readMoreMarker);
+                        
+                        if (hasMarker) {
+                          const [beforeMarker, afterMarker] = currentDescription.split(readMoreMarker);
+                          
+                          return (
+                            <>
+                              <div 
+                                className="prose prose-sm max-w-none"
+                                dangerouslySetInnerHTML={{ __html: beforeMarker }}
+                                dir={isRTL ? 'rtl' : 'ltr'}
+                              />
+                              {!showFullDescription && (
+                                <Button
+                                  variant="link"
+                                  size="sm"
+                                  onClick={() => setShowFullDescription(true)}
+                                  className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800"
+                                >
+                                  {language === 'he' ? 'קרא עוד' : language === 'ar' ? 'اقرأ المزيد' : 'Read more'}
+                                </Button>
+                              )}
+                              {showFullDescription && (
+                                <>
+                                  <div 
+                                    className="prose prose-sm max-w-none"
+                                    dangerouslySetInnerHTML={{ __html: afterMarker }}
+                                    dir={isRTL ? 'rtl' : 'ltr'}
+                                  />
+                                  <Button
+                                    variant="link"
+                                    size="sm"
+                                    onClick={() => setShowFullDescription(false)}
+                                    className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800"
+                                  >
+                                    {language === 'he' ? 'הצג פחות' : language === 'ar' ? 'عرض أقل' : 'Show less'}
+                                  </Button>
+                                </>
+                              )}
+                            </>
+                          );
+                        } else {
+                          return (
+                            <>
+                              <div 
+                                className={`prose prose-sm max-w-none ${!showFullDescription ? 'line-clamp-10' : ''}`}
+                                dangerouslySetInnerHTML={{ __html: currentDescription }}
+                                dir={isRTL ? 'rtl' : 'ltr'}
+                              />
+                              {currentDescription.length > 500 && (
+                                <Button
+                                  variant="link"
+                                  size="sm"
+                                  onClick={() => setShowFullDescription(!showFullDescription)}
+                                  className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800"
+                                >
+                                  {showFullDescription 
+                                    ? (language === 'he' ? 'הצג פחות' : language === 'ar' ? 'عرض أقل' : 'Show less')
+                                    : (language === 'he' ? 'קרא עוד' : language === 'ar' ? 'اقرأ المزيد' : 'Read more')}
+                                </Button>
+                              )}
+                            </>
+                          );
+                        }
+                      })()}
                     </>
                   ) : (
                     <p className="text-slate-400 text-sm italic">{t('noDescription')}</p>
