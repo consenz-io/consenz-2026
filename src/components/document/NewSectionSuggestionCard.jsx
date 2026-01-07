@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, CheckCircle } from "lucide-react";
@@ -220,168 +220,165 @@ export default function NewSectionSuggestionCard({
   }
 
   return (
-    <Card 
+    <div 
       id={`suggestion-${suggestion.id}`}
-      className="bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-dashed border-amber-300 hover:border-amber-400 transition-all hover:shadow-lg scroll-mt-24"
+      className="group relative p-3 md:p-6 border-2 border-amber-300 rounded-lg hover:border-amber-400 transition-all bg-gradient-to-br from-amber-50 to-yellow-50 scroll-mt-24"
     >
-      <CardContent className="p-4 md:p-6">
-        <div className="flex items-start gap-3 mb-3">
+      {/* כותרת עם אינדיקטור של הצעה חדשה */}
+      <div className="flex items-center justify-between mb-3 md:mb-4">
+        <div className="flex items-center gap-2 md:gap-3">
           <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
             <Plus className="w-5 h-5 text-white" />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-3">
-              <span className="text-sm md:text-base font-semibold text-slate-900">
-                הצעה לסעיף חדש מאת {getUserName(suggestion.created_by)}
-              </span>
-            </div>
-            {suggestion.explanation && typeof suggestion.explanation === 'string' && (
-              <div className="text-xs md:text-sm mb-3 p-3 bg-amber-50 rounded border border-amber-200">
-                <div className="font-semibold text-slate-700 mb-1">הסבר:</div>
-                <TranslatableContent
-                  content={suggestion.explanation}
-                  entity={suggestion}
-                  entityType="Suggestion"
-                  className="text-slate-600 break-words"
-                />
-              </div>
-            )}
-            <div className="text-sm bg-white/80 p-4 rounded border border-amber-200 mb-3">
-              <div className="font-semibold text-slate-700 mb-2">תוכן מוצע:</div>
-              <div className="prose prose-sm max-w-none">
-                <TranslatableContent
-                  content={suggestion.newContent}
-                  entity={suggestion}
-                  entityType="Suggestion"
-                  className="text-slate-700"
-                  renderContent={(html) => <div dangerouslySetInnerHTML={{ __html: html }} />}
-                />
-              </div>
-            </div>
+          <div className="text-sm md:text-base font-semibold text-slate-900">
+            הצעה לסעיף חדש מאת {getUserName(suggestion.created_by)}
           </div>
         </div>
+      </div>
 
-        <div className={`flex items-center justify-between gap-3 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <div className="flex items-center gap-3 text-sm flex-wrap">
-            {doc?.votingButtonsEnabled ? (
-              <>
-                <Button
-                  variant={getUserVote(suggestion.id)?.vote === 'pro' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!user) {
-                      base44.auth.redirectToLogin(window.location.href);
-                      return;
-                    }
-                    voteMutation.mutate({
-                      suggestionId: suggestion.id,
-                      vote: 'pro',
-                      currentVote: getUserVote(suggestion.id)
-                    });
-                  }}
-                  disabled={voteMutation.isPending}
-                  className={`text-xs ${getUserVote(suggestion.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
-                >
-                  <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                  {suggestion.proVotes || 0}
-                </Button>
-                <Button
-                  variant={getUserVote(suggestion.id)?.vote === 'con' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!user) {
-                      base44.auth.redirectToLogin(window.location.href);
-                      return;
-                    }
-                    voteMutation.mutate({
-                      suggestionId: suggestion.id,
-                      vote: 'con',
-                      currentVote: getUserVote(suggestion.id)
-                    });
-                  }}
-                  disabled={voteMutation.isPending}
-                  className={`text-xs ${getUserVote(suggestion.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
-                >
-                  <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                  {suggestion.conVotes || 0}
-                </Button>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-1 text-green-600">
-                  <ThumbsUp className="w-4 h-4" />
-                  <span className="font-medium">{suggestion.proVotes || 0}</span>
-                </div>
-                <div className="flex items-center gap-1 text-red-600">
-                  <ThumbsDown className="w-4 h-4" />
-                  <span className="font-medium">{suggestion.conVotes || 0}</span>
-                </div>
-              </>
-            )}
-            <VotesNeededCounter 
-              suggestion={suggestion}
-              document={doc}
-              acceptedSuggestions={acceptedSuggestions}
+      {/* תוכן ההצעה */}
+      <div className="min-h-[100px]">
+        {suggestion.explanation && typeof suggestion.explanation === 'string' && (
+          <div className="mb-3 text-sm">
+            <TranslatableContent
+              content={suggestion.explanation}
+              entity={suggestion}
+              entityType="Suggestion"
+              className="text-slate-600"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="text-xs h-7 px-3"
+        )}
+        
+        <div className="prose prose-sm max-w-none">
+          <TranslatableContent
+            content={suggestion.newContent}
+            entity={suggestion}
+            entityType="Suggestion"
+            className="text-slate-800"
+            renderContent={(html) => <div dangerouslySetInnerHTML={{ __html: html }} />}
+          />
+        </div>
+      </div>
+
+      {/* כפתורי הצבעה והערות */}
+      <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap">
+        {doc?.votingButtonsEnabled ? (
+          <>
+            <Button
+              variant={getUserVote(suggestion.id)?.vote === 'pro' ? 'default' : 'outline'}
+              size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                onOpenSidebar && onOpenSidebar(suggestion.id);
+                if (!user) {
+                  base44.auth.redirectToLogin(window.location.href);
+                  return;
+                }
+                voteMutation.mutate({
+                  suggestionId: suggestion.id,
+                  vote: 'pro',
+                  currentVote: getUserVote(suggestion.id)
+                });
               }}
+              disabled={voteMutation.isPending}
+              className={`text-xs px-2 md:px-3 ${getUserVote(suggestion.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
             >
-              {t('viewDetails')}
+              <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              {suggestion.proVotes || 0}
             </Button>
-            {canDelete && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (confirm(t('confirmDeleteSuggestion'))) {
-                    deleteSuggestionMutation.mutate();
-                  }
-                }}
-                disabled={deleteSuggestionMutation.isPending}
-                className="text-xs h-7 px-3"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
+            <Button
+              variant={getUserVote(suggestion.id)?.vote === 'con' ? 'default' : 'outline'}
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!user) {
+                  base44.auth.redirectToLogin(window.location.href);
+                  return;
+                }
+                voteMutation.mutate({
+                  suggestionId: suggestion.id,
+                  vote: 'con',
+                  currentVote: getUserVote(suggestion.id)
+                });
+              }}
+              disabled={voteMutation.isPending}
+              className={`text-xs px-2 md:px-3 ${getUserVote(suggestion.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
+            >
+              <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              {suggestion.conVotes || 0}
+            </Button>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-1 text-green-600 text-xs md:text-sm">
+              <ThumbsUp className="w-3 h-3 md:w-4 md:h-4" />
+              <span className="font-medium">{suggestion.proVotes || 0}</span>
+            </div>
+            <div className="flex items-center gap-1 text-red-600 text-xs md:text-sm">
+              <ThumbsDown className="w-3 h-3 md:w-4 md:h-4" />
+              <span className="font-medium">{suggestion.conVotes || 0}</span>
+            </div>
+          </>
+        )}
+        <div className="flex-shrink-0">
+          <VotesNeededCounter 
+            suggestion={suggestion}
+            document={doc}
+            acceptedSuggestions={acceptedSuggestions}
+          />
         </div>
-
-        {/* תגובות */}
-        <div className="mt-3 pt-3 border-t border-amber-200">
+        <Button 
+          size="sm" 
+          variant="outline" 
+          className="text-[10px] md:text-xs h-7 md:h-8 px-2 md:px-3 flex-shrink-0"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenSidebar && onOpenSidebar(suggestion.id);
+          }}
+        >
+          {t('viewDetails')}
+        </Button>
+        {canDelete && (
           <Button
             variant="ghost"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              toggleComments && toggleComments(`suggestion-${suggestion.id}`);
+              if (confirm(t('confirmDeleteSuggestion'))) {
+                deleteSuggestionMutation.mutate();
+              }
             }}
-            className="h-7 text-xs px-2"
+            disabled={deleteSuggestionMutation.isPending}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 md:h-8 text-xs px-2"
           >
-            <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-            {t('comments')} ({getCommentsCount ? getCommentsCount('suggestion', suggestion.id) : 0})
+            <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
           </Button>
-        </div>
-        {showComments && showComments[`suggestion-${suggestion.id}`] && (
-          <div className="mt-4 pt-4 border-t border-amber-200">
-            <CommentsSection
-              entityType="suggestion"
-              entityId={suggestion.id}
-              user={user}
-            />
-          </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* תגובות */}
+      <div className="mt-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleComments && toggleComments(`suggestion-${suggestion.id}`);
+          }}
+          className="h-7 md:h-8 text-xs px-2"
+        >
+          <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+          {t('comments')} ({getCommentsCount ? getCommentsCount('suggestion', suggestion.id) : 0})
+        </Button>
+      </div>
+      {showComments && showComments[`suggestion-${suggestion.id}`] && (
+        <div className="mt-4 pt-4 border-t border-amber-200">
+          <CommentsSection
+            entityType="suggestion"
+            entityId={suggestion.id}
+            user={user}
+          />
+        </div>
+      )}
+    </div>
   );
 }
