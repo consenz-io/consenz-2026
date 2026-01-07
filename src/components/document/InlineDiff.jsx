@@ -22,85 +22,81 @@ const extractText = (html) => {
   return text;
 };
 
-// Tokenize text into words, treating punctuation as separate tokens
+// Split text into sentences or phrases, preserving punctuation
 const tokenize = (text) => {
   if (!text) return [];
   const tokens = [];
-  // Match: word characters OR punctuation OR whitespace
-  // Punctuation is treated as separate tokens
-  const regex = /([א-תa-zA-Z0-9]+|[.,;:!?()״״׳׳""''\-–—]|\s+)/g;
-  let match;
-  while ((match = regex.exec(text)) !== null) {
-    tokens.push(match[0]);
+  // Split by sentence boundaries (. ! ?) or line breaks, but keep them attached
+  const parts = text.split(/(?<=[.!?])\s+|(?<=\n)/);
+  
+  for (const part of parts) {
+    if (part.trim()) {
+      tokens.push(part);
+    }
   }
+  
   return tokens;
 };
 
-// Fast word-level diff
-const computeWordDiff = (oldTokens, newTokens) => {
-  const result = [];
-  let oldIdx = 0;
-  let newIdx = 0;
+// LCS-based diff to find longest common subsequences
+const computeLCS = (oldTokens, newTokens) => {
+  const m = oldTokens.length;
+  const n = newTokens.length;
+  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
   
-  while (newIdx < newTokens.length || oldIdx < oldTokens.length) {
-    if (oldIdx >= oldTokens.length) {
-      result.push({ type: 'added', value: newTokens[newIdx] });
-      newIdx++;
-      continue;
-    }
-    
-    if (newIdx >= newTokens.length) {
-      result.push({ type: 'removed', value: oldTokens[oldIdx] });
-      oldIdx++;
-      continue;
-    }
-    
-    if (oldTokens[oldIdx] === newTokens[newIdx]) {
-      result.push({ type: 'unchanged', value: oldTokens[oldIdx] });
-      oldIdx++;
-      newIdx++;
-      continue;
-    }
-    
-    // Look ahead for matches
-    const lookAhead = Math.min(15, Math.max(newTokens.length - newIdx, oldTokens.length - oldIdx));
-    let foundMatch = false;
-    
-    for (let i = 1; i <= lookAhead && !foundMatch; i++) {
-      if (oldIdx + i < oldTokens.length && oldTokens[oldIdx + i] === newTokens[newIdx]) {
-        for (let j = 0; j < i; j++) {
-          result.push({ type: 'removed', value: oldTokens[oldIdx + j] });
-        }
-        oldIdx += i;
-        foundMatch = true;
+  // Build LCS table
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (oldTokens[i - 1] === newTokens[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
       }
-    }
-    
-    if (!foundMatch) {
-      for (let i = 1; i <= lookAhead && !foundMatch; i++) {
-        if (newIdx + i < newTokens.length && newTokens[newIdx + i] === oldTokens[oldIdx]) {
-          for (let j = 0; j < i; j++) {
-            result.push({ type: 'added', value: newTokens[newIdx + j] });
-          }
-          newIdx += i;
-          foundMatch = true;
-        }
-      }
-    }
-    
-    if (!foundMatch) {
-      result.push({ type: 'removed', value: oldTokens[oldIdx] });
-      result.push({ type: 'added', value: newTokens[newIdx] });
-      oldIdx++;
-      newIdx++;
     }
   }
   
-  // Merge consecutive same-type tokens
+  return dp;
+};
+
+// Backtrack through LCS table to generate diff
+const generateDiff = (oldTokens, newTokens, dp) => {
+  const result = [];
+  let i = oldTokens.length;
+  let j = newTokens.length;
+  
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && oldTokens[i - 1] === newTokens[j - 1]) {
+      result.unshift({ type: 'unchanged', value: oldTokens[i - 1] });
+      i--;
+      j--;
+    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      result.unshift({ type: 'added', value: newTokens[j - 1] });
+      j--;
+    } else if (i > 0) {
+      result.unshift({ type: 'removed', value: oldTokens[i - 1] });
+      i--;
+    }
+  }
+  
+  return result;
+};
+
+// Main diff computation
+const computeWordDiff = (oldTokens, newTokens) => {
+  const dp = computeLCS(oldTokens, newTokens);
+  const diff = generateDiff(oldTokens, newTokens, dp);
+  
+  // Merge consecutive tokens of same type, adding space between different original tokens
   const merged = [];
-  for (const item of result) {
+  for (const item of diff) {
     if (merged.length > 0 && merged[merged.length - 1].type === item.type) {
-      merged[merged.length - 1].value += item.value;
+      // Add space if needed (don't add space before punctuation)
+      const lastChar = merged[merged.length - 1].value.slice(-1);
+      const firstChar = item.value[0];
+      const needsSpace = lastChar !== '\n' && firstChar !== '.' && firstChar !== ',' && 
+                         firstChar !== '!' && firstChar !== '?' && firstChar !== ')' &&
+                         lastChar !== '(' && !/\s/.test(lastChar);
+      merged[merged.length - 1].value += (needsSpace ? ' ' : '') + item.value;
     } else {
       merged.push({ ...item });
     }
