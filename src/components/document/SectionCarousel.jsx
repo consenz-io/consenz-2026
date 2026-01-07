@@ -563,6 +563,7 @@ export default function SectionCarousel({
                 >
                   {currentView.data.explanation && typeof currentView.data.explanation === 'string' && (
                     <div className="mb-3 text-sm">
+                      <div className="font-semibold text-slate-700 mb-1">הסבר:</div>
                       <TranslatableContent
                         content={currentView.data.explanation}
                         entity={currentView.data}

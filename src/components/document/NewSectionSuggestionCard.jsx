@@ -240,6 +240,7 @@ export default function NewSectionSuggestionCard({
       <div className="min-h-[100px]">
         {suggestion.explanation && typeof suggestion.explanation === 'string' && (
           <div className="mb-3 text-sm">
+            <div className="font-semibold text-slate-700 mb-1">הסבר:</div>
             <TranslatableContent
               content={suggestion.explanation}
               entity={suggestion}
@@ -254,8 +255,10 @@ export default function NewSectionSuggestionCard({
             content={suggestion.newContent}
             entity={suggestion}
             entityType="Suggestion"
-            className="text-slate-800"
-            renderContent={(html) => <div dangerouslySetInnerHTML={{ __html: html }} />}
+            className="text-slate-700"
+            renderContent={(content) => (
+              <div dangerouslySetInnerHTML={{ __html: content }} className="text-slate-800" />
+            )}
           />
         </div>
       </div>
