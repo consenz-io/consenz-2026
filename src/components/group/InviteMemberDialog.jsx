@@ -24,36 +24,11 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
 
   const inviteMutation = useMutation({
     mutationFn: async () => {
-      const currentUser = await base44.auth.me();
-      
-      // Generate unique token
-      const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
-      
-      // Create invitation record
-      await base44.entities.GroupInvitation.create({
+      // Call backend function to send invitation with service role
+      await base44.functions.invoke('sendGroupInvitation', {
         groupId,
         email: email.toLowerCase(),
-        invitedBy: currentUser.id,
-        token,
-        status: 'pending'
-      });
-
-      // Create signup URL with token
-      const signupUrl = `${window.location.origin}/login?groupInvite=${token}`;
-      
-      // Send invitation email
-      const subject = language === 'he' 
-        ? `הזמנה להצטרף לקבוצה: ${groupName}`
-        : `Invitation to join group: ${groupName}`;
-      
-      const body = language === 'he'
-        ? `שלום,\n\n${currentUser.full_name || currentUser.email} הזמין אותך להצטרף לקבוצה "${groupName}" בפלטפורמת Consenz.\n\nהקבוצה מאפשרת לך לשתף פעולה על מסמכים משותפים ולהשתתף בדיונים.\n\nכדי להצטרף, לחץ על הקישור הבא:\n${signupUrl}\n\nהקישור יכניס אותך ישירות לקבוצה לאחר ההרשמה.\n\nתודה!`
-        : `Hello,\n\n${currentUser.full_name || currentUser.email} invited you to join the group "${groupName}" on the Consenz platform.\n\nThis group allows you to collaborate on shared documents and participate in discussions.\n\nTo join, click the following link:\n${signupUrl}\n\nThe link will automatically add you to the group after you sign up.\n\nThank you!`;
-
-      await base44.integrations.Core.SendEmail({
-        to: email,
-        subject,
-        body,
+        groupName
       });
     },
     onSuccess: () => {
