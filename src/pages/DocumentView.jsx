@@ -60,6 +60,7 @@ export default function DocumentView() {
   const [targetSuggestionId, setTargetSuggestionId] = useState(null);
   const [showSuggestionNav, setShowSuggestionNav] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
@@ -743,15 +744,29 @@ export default function DocumentView() {
               ) : (
                 <div className="relative group">
                   {document.description ? (
-                    <div 
-                      className="prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ 
-                        __html: showTranslatedDescription && typeof document.translations?.[language]?.description === 'string'
-                          ? document.translations[language].description
-                          : document.description
-                      }}
-                      dir={isRTL ? 'rtl' : 'ltr'}
-                    />
+                    <>
+                      <div 
+                        className={`prose prose-sm max-w-none ${!showFullDescription ? 'line-clamp-3' : ''}`}
+                        dangerouslySetInnerHTML={{ 
+                          __html: showTranslatedDescription && typeof document.translations?.[language]?.description === 'string'
+                            ? document.translations[language].description
+                            : document.description
+                        }}
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                      />
+                      {document.description?.length > 200 && (
+                        <Button
+                          variant="link"
+                          size="sm"
+                          onClick={() => setShowFullDescription(!showFullDescription)}
+                          className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800"
+                        >
+                          {showFullDescription 
+                            ? (language === 'he' ? 'הצג פחות' : language === 'ar' ? 'عرض أقل' : 'Show less')
+                            : (language === 'he' ? 'קרא עוד' : language === 'ar' ? 'اقرأ المزيد' : 'Read more')}
+                        </Button>
+                      )}
+                    </>
                   ) : (
                     <p className="text-slate-400 text-sm italic">{t('noDescription')}</p>
                   )}
