@@ -754,7 +754,9 @@ export default function DocumentView() {
                         const hasMarker = currentDescription.includes(readMoreMarker);
                         
                         if (hasMarker) {
-                          const [beforeMarker, afterMarker] = currentDescription.split(readMoreMarker);
+                          const parts = currentDescription.split(readMoreMarker);
+                          const beforeMarker = parts[0];
+                          const afterMarker = parts.slice(1).join('');
                           
                           return (
                             <>
@@ -763,7 +765,7 @@ export default function DocumentView() {
                                 dangerouslySetInnerHTML={{ __html: beforeMarker }}
                                 dir={isRTL ? 'rtl' : 'ltr'}
                               />
-                              {!showFullDescription && (
+                              {!showFullDescription ? (
                                 <Button
                                   variant="link"
                                   size="sm"
@@ -772,8 +774,7 @@ export default function DocumentView() {
                                 >
                                   {language === 'he' ? 'קרא עוד' : language === 'ar' ? 'اقرأ المزيد' : 'Read more'}
                                 </Button>
-                              )}
-                              {showFullDescription && (
+                              ) : (
                                 <>
                                   <div 
                                     className="prose prose-sm max-w-none"
@@ -793,14 +794,26 @@ export default function DocumentView() {
                             </>
                           );
                         } else {
+                          const tempDiv = document.createElement('div');
+                          tempDiv.innerHTML = currentDescription;
+                          const textContent = tempDiv.textContent || tempDiv.innerText || '';
+                          const hasLongContent = textContent.length > 600;
+                          
                           return (
                             <>
                               <div 
-                                className={`prose prose-sm max-w-none ${!showFullDescription ? 'line-clamp-10' : ''}`}
-                                dangerouslySetInnerHTML={{ __html: currentDescription }}
+                                className="prose prose-sm max-w-none relative"
                                 dir={isRTL ? 'rtl' : 'ltr'}
-                              />
-                              {currentDescription.length > 500 && (
+                              >
+                                <div
+                                  className={!showFullDescription && hasLongContent ? 'max-h-[15rem] overflow-hidden relative' : ''}
+                                  dangerouslySetInnerHTML={{ __html: currentDescription }}
+                                />
+                                {!showFullDescription && hasLongContent && (
+                                  <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                                )}
+                              </div>
+                              {hasLongContent && (
                                 <Button
                                   variant="link"
                                   size="sm"
