@@ -21,6 +21,32 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
   const [inviteToken, setInviteToken] = useState(null);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [email, setEmail] = useState('');
+  const [inviteMode, setInviteMode] = useState('email'); // 'email' or 'link'
+
+  const sendEmailInviteMutation = useMutation({
+    mutationFn: async (emailAddress) => {
+      const response = await base44.functions.invoke('sendGroupInvitation', {
+        groupId,
+        email: emailAddress,
+        groupName
+      });
+      
+      if (!response.data.success) {
+        throw new Error(response.data.error || 'Failed to send invitation');
+      }
+      
+      return response.data;
+    },
+    onSuccess: () => {
+      setError(null);
+      setEmail('');
+      queryClient.invalidateQueries({ queryKey: ['groupInvitations', groupId] });
+    },
+    onError: (err) => {
+      setError(err.message || (language === 'he' ? 'שגיאה בשליחת ההזמנה' : 'Error sending invitation'));
+    },
+  });
 
   const generateInviteMutation = useMutation({
     mutationFn: async () => {
@@ -60,10 +86,20 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleSendEmail = () => {
+    if (!email || !email.includes('@')) {
+      setError(language === 'he' ? 'נא להזין כתובת אימייל תקינה' : 'Please enter a valid email address');
+      return;
+    }
+    sendEmailInviteMutation.mutate(email);
+  };
+
   const handleClose = () => {
     setInviteToken(null);
     setError(null);
     setCopied(false);
+    setEmail('');
+    setInviteMode('email');
     onClose();
   };
 
@@ -77,7 +113,85 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
         </DialogHeader>
 
         <div className="space-y-4">
-          {!inviteToken ? (
+          {/* Mode selector */}
+          <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
+            <button
+              type="button"
+              onClick={() => setInviteMode('email')}
+              className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                inviteMode === 'email'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Mail className={`w-4 h-4 inline ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {language === 'he' ? 'שליחה למייל' : 'Send by Email'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setInviteMode('link')}
+              className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                inviteMode === 'link'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <LinkIcon className={`w-4 h-4 inline ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {language === 'he' ? 'יצירת קישור' : 'Create Link'}
+            </button>
+          </div>
+
+          {inviteMode === 'email' ? (
+            <>
+              <p className="text-sm text-slate-600">
+                {language === 'he' 
+                  ? 'הזן כתובת אימייל ושלח הזמנה ישירה. ההזמנה תכלול קישור להצטרפות לקבוצה.'
+                  : 'Enter an email address to send a direct invitation. The invitation will include a link to join the group.'}
+              </p>
+
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {sendEmailInviteMutation.isSuccess && (
+                <Alert className="bg-green-50 border-green-200">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800">
+                    {language === 'he' ? 'ההזמנה נשלחה בהצלחה!' : 'Invitation sent successfully!'}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="email">
+                  {language === 'he' ? 'כתובת אימייל' : 'Email Address'}
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder={language === 'he' ? 'example@email.com' : 'example@email.com'}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={sendEmailInviteMutation.isPending}
+                  dir="ltr"
+                />
+              </div>
+
+              <Button
+                onClick={handleSendEmail}
+                disabled={sendEmailInviteMutation.isPending || !email}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600"
+              >
+                <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {sendEmailInviteMutation.isPending 
+                  ? (language === 'he' ? 'שולח...' : 'Sending...') 
+                  : (language === 'he' ? 'שלח הזמנה' : 'Send Invitation')}
+              </Button>
+            </>
+          ) : !inviteToken ? (
             <>
               <p className="text-sm text-slate-600">
                 {language === 'he' 
