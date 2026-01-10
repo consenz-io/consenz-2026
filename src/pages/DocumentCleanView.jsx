@@ -632,10 +632,7 @@ ${text}`;
                           currentSnapshot?.isNewSection && 
                           currentSnapshot?.newSectionId === section.id;
 
-                        // Check if this section was deleted in THIS snapshot (empty content)
-                        const isDeletedSection = isViewingHistory && 
-                          currentSnapshot?.changedSectionId === section.id && 
-                          currentSnapshot?.newContent === '';
+
 
                         // Check if this section changed between versions (content edit)
                         // Compare the snapshot's content with the newer version's content
