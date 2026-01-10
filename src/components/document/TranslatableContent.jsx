@@ -37,7 +37,8 @@ export default function TranslatableContent({
   renderContent = null,
   fieldName = null // Optional: specify which field is being translated (e.g., 'explanation', 'newContent')
 }) {
-  const { language, isRTL } = useLanguage();
+  const { language: rawLanguage, isRTL } = useLanguage();
+  const language = rawLanguage || 'he';
   const queryClient = useQueryClient();
   const translationContext = useDocumentTranslation();
   const globalShowTranslated = translationContext?.globalShowTranslated || false;
