@@ -123,9 +123,11 @@ export default function DeleteSectionSuggestionCard({
 
       {/* Section to be deleted */}
       <div className="mb-4 p-3 md:p-4 bg-white/80 rounded border border-red-200">
-        <div className="text-xs font-medium text-red-600 mb-2">{t('currentVersion')}:</div>
+        <div className="text-sm font-bold text-red-700 mb-2">
+          {language === 'he' ? 'סעיף שמוצע למחיקה:' : language === 'ar' ? 'القسم المقترح حذفه:' : 'Section to be deleted:'}
+        </div>
         <div 
-          className="prose prose-sm max-w-none text-slate-700 opacity-75"
+          className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
           dangerouslySetInnerHTML={{ __html: section?.content || suggestion.originalContent }}
         />
       </div>
