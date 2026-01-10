@@ -23,7 +23,8 @@ export default function DeleteSectionSuggestionCard({
   isAdmin,
   publicProfiles
 }) {
-  const { t, isRTL, language } = useLanguage();
+  const { t, isRTL, language: rawLanguage } = useLanguage();
+  const language = rawLanguage || 'he';
   const [showComments, setShowComments] = useState(false);
   const [animationPhase, setAnimationPhase] = useState(null);
   const [isEditingExplanation, setIsEditingExplanation] = useState(false);
