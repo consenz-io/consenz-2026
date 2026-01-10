@@ -224,7 +224,7 @@ Return ONLY the translated HTML:`;
       // Check if user has enough points (only if gamification is enabled)
       const currentPoints = currentUser.points || 1000;
       const gamificationEnabled = document.gamificationEnabled || false;
-      const pointsCost = isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
+      const pointsCost = isDeleteSection ? POINTS_COST_EDIT : isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
       
       if (gamificationEnabled && currentPoints < pointsCost) {
         throw new Error('INSUFFICIENT_POINTS');
@@ -400,7 +400,7 @@ Return ONLY the translated HTML:`;
     );
   }
 
-  const pointsCost = isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
+  const pointsCost = isDeleteSection ? POINTS_COST_EDIT : isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
 
   return (
     <>
