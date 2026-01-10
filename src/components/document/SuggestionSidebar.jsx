@@ -28,7 +28,7 @@ export default function SuggestionSidebar({
   user,
   isAdmin: parentIsAdmin
 }) {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const queryClient = useQueryClient();
   const [newArgument, setNewArgument] = useState({ type: null, content: "" });
   const [error, setError] = useState(null);
