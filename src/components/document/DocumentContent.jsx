@@ -144,8 +144,8 @@ export default function DocumentContent({
     });
 
     const checkAndAutoAccept = async () => {
-      // בדיקת הצעות סעיפים שעברו את הסף אבל לא התקבלו - רק עבור edit_section
-      const pendingSuggestions = suggestions.filter(s => s.status === 'pending' && s.type === 'edit_section');
+      // בדיקת הצעות סעיפים שעברו את הסף אבל לא התקבלו - עבור edit_section ו-delete_section
+      const pendingSuggestions = suggestions.filter(s => s.status === 'pending' && (s.type === 'edit_section' || s.type === 'delete_section'));
       for (const suggestion of pendingSuggestions) {
         const consensuses = document.consensuses || [];
         let threshold;

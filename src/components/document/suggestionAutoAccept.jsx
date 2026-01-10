@@ -377,6 +377,30 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
         })
       ]);
     } 
+    // טיפול בהצעה למחיקת סעיף
+    else if (freshSuggestion.type === 'delete_section' && freshSuggestion.sectionId) {
+      console.log('[AUTO-ACCEPT] Deleting section:', freshSuggestion.sectionId);
+      
+      // שמירת גרסה לפני מחיקה
+      const section = await base44.entities.Section.filter({ id: freshSuggestion.sectionId }).then(s => s[0]);
+      if (section) {
+        const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
+        const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
+        
+        await base44.entities.DocumentVersion.create({
+          documentId: freshSuggestion.documentId,
+          sectionId: section.id,
+          content: section.content,
+          changeDescription: `סעיף נמחק: ${freshSuggestion.title}`,
+          version: nextVersion,
+          changeType: 'suggestion_accepted',
+          suggestionId: freshSuggestion.id
+        });
+        
+        // מחיקת הסעיף
+        await base44.entities.Section.delete(section.id);
+      }
+    }
     // טיפול בהצעה לסעיף חדש
     else if (freshSuggestion.type === 'new_section') {
       let targetTopicId = freshSuggestion.topicId;
