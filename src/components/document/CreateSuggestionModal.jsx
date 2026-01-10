@@ -303,11 +303,12 @@ Return ONLY the translated HTML:`;
         }).catch(() => {}) : Promise.resolve()
       ]).catch(err => console.error('Background tasks error:', err));
 
-      // Send notifications synchronously to ensure they're sent before modal closes
+      // Send notifications in background - don't block on rate limit errors
       console.log('[CREATE SUGGESTION] Suggestion created:', suggestion.id, 'type:', suggestion.type);
       console.log('[CREATE SUGGESTION] Sending notifications...');
-      await sendNotificationsInBackground(document, suggestion, currentUser);
-      console.log('[CREATE SUGGESTION] Notifications sent');
+      sendNotificationsInBackground(document, suggestion, currentUser)
+        .then(() => console.log('[CREATE SUGGESTION] Notifications sent successfully'))
+        .catch(err => console.error('[CREATE SUGGESTION] Notification error (non-blocking):', err.message));
       
       // Update contributors in background
       updateContributorsInBackground(document.id);
