@@ -43,7 +43,8 @@ export default function DocumentContent({
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
   const [editingTopic, setEditingTopic] = useState(null);
   const queryClient = useQueryClient();
-  const { t, isRTL, language } = useLanguage();
+  const { t, isRTL, language: rawLanguage } = useLanguage();
+  const language = rawLanguage || 'he';
 
   const languageNames = {
     en: "English",
