@@ -256,9 +256,9 @@ export default function DeleteSectionSuggestionCard({
             className="mt-4 pt-4 border-t border-red-100"
           >
             <CommentsSection
-              rootEntityType="suggestion"
-              rootEntityId={suggestion.id}
-              currentUser={currentUser}
+              entityType="suggestion"
+              entityId={suggestion.id}
+              user={currentUser}
             />
           </motion.div>
         )}
