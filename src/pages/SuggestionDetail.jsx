@@ -573,9 +573,9 @@ export default function SuggestionDetail() {
 
   // useEffect ALWAYS runs - before any conditional returns
   React.useEffect(() => {
-    if (commentId && suggestionId && typeof window !== 'undefined') {
+    if (commentId && suggestionId && typeof window !== 'undefined' && typeof document !== 'undefined') {
       setTimeout(() => {
-        const commentElement = window.document.getElementById(`comment-${commentId}`);
+        const commentElement = document.getElementById(`comment-${commentId}`);
         if (commentElement) {
           commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
           commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
