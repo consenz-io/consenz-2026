@@ -490,7 +490,7 @@ Return ONLY the translated HTML:`;
             </div>
           )}
 
-          {isNewSection && !
+          {isNewSection && (
             <div className="space-y-2">
               <Label htmlFor="topic">{t('topic')}</Label>
               <div className="flex items-center gap-2 mb-2">
