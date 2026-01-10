@@ -337,7 +337,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
         return false;
       }
 
-      // שמירת גרסה עם התוכן הישן ועדכון הסעיף במקביל
+      // שמירת גרסה עם התוכן הישן ועדכון הסעיף
       let versions = [];
       try {
         versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
@@ -346,36 +346,42 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       }
       const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
       const newContentLanguage = detectLanguage(freshSuggestion.newContent || '');
-      
-      // הפעלת כל הפעולות במקביל
-      await Promise.all([
-        // שמירת גרסה עם התוכן הישן
-        base44.entities.DocumentVersion.create({
-          documentId: freshSuggestion.documentId,
-          sectionId: section.id,
-          content: section.content,
-          changeDescription: `לפני: ${freshSuggestion.title || 'הצעת עריכה'}`,
-          version: nextVersion,
-          changeType: 'suggestion_accepted',
-          suggestionId: freshSuggestion.id
-        }),
-        // עדכון הסעיף עם התוכן החדש
-        base44.entities.Section.update(section.id, {
-          content: freshSuggestion.newContent,
-          lastEditedBy: userId,
-          originalLanguage: newContentLanguage,
-        }),
-        // שמירת גרסה עם התוכן החדש
-        base44.entities.DocumentVersion.create({
-          documentId: freshSuggestion.documentId,
-          sectionId: section.id,
-          content: freshSuggestion.newContent,
-          changeDescription: freshSuggestion.title || 'הצעת עריכה',
-          version: nextVersion + 1,
-          changeType: 'suggestion_accepted',
-          suggestionId: freshSuggestion.id
-        })
-      ]);
+
+      console.log('[AUTO-ACCEPT EDIT] Creating versions for section edit:', {
+        sectionId: section.id,
+        nextVersion: nextVersion,
+        oldContent: section.content?.substring(0, 50),
+        newContent: freshSuggestion.newContent?.substring(0, 50)
+      });
+
+      // שמירת גרסה "לפני" עם התוכן הישן
+      await base44.entities.DocumentVersion.create({
+        documentId: freshSuggestion.documentId,
+        sectionId: section.id,
+        content: section.content,
+        changeDescription: `לפני: ${freshSuggestion.title || 'הצעת עריכה'}`,
+        version: nextVersion,
+        changeType: 'suggestion_accepted',
+        suggestionId: freshSuggestion.id
+      });
+
+      // עדכון הסעיף עם התוכן החדש
+      await base44.entities.Section.update(section.id, {
+        content: freshSuggestion.newContent,
+        lastEditedBy: userId,
+        originalLanguage: newContentLanguage,
+      });
+
+      // שמירת גרסה "אחרי" עם התוכן החדש
+      await base44.entities.DocumentVersion.create({
+        documentId: freshSuggestion.documentId,
+        sectionId: section.id,
+        content: freshSuggestion.newContent,
+        changeDescription: freshSuggestion.title || 'הצעת עריכה',
+        version: nextVersion + 1,
+        changeType: 'suggestion_accepted',
+        suggestionId: freshSuggestion.id
+      });
     } 
     // טיפול בהצעה למחיקת סעיף
     else if (freshSuggestion.type === 'delete_section' && freshSuggestion.sectionId) {
