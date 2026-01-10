@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Eye, ThumbsUp, ThumbsDown, MessageCircle, User } from "lucide-react";
+import { Trash2, Eye, ThumbsUp, ThumbsDown, MessageCircle, User, Edit2, Save, X } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/components/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
@@ -25,6 +26,8 @@ export default function DeleteSectionSuggestionCard({
   const { t, isRTL, language } = useLanguage();
   const [showComments, setShowComments] = useState(false);
   const [animationPhase, setAnimationPhase] = useState(null);
+  const [isEditingExplanation, setIsEditingExplanation] = useState(false);
+  const [editedExplanation, setEditedExplanation] = useState(suggestion.explanation || '');
   const queryClient = useQueryClient();
 
   const deleteSuggestionMutation = useMutation({
@@ -33,6 +36,18 @@ export default function DeleteSectionSuggestionCard({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+    }
+  });
+
+  const updateExplanationMutation = useMutation({
+    mutationFn: async (newExplanation) => {
+      await base44.entities.Suggestion.update(suggestion.id, {
+        explanation: newExplanation
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+      setIsEditingExplanation(false);
     }
   });
 
@@ -53,6 +68,7 @@ export default function DeleteSectionSuggestionCard({
   const creatorName = creatorProfile?.fullName || suggestion.created_by?.split('@')[0] || 'Unknown';
 
   const canDelete = isAdmin || currentUser?.email === suggestion.created_by;
+  const isCreator = currentUser?.email === suggestion.created_by;
 
   // Celebration animation
   if (animationPhase === 'celebrating') {
@@ -114,10 +130,54 @@ export default function DeleteSectionSuggestionCard({
       </div>
 
       {/* Explanation */}
-      {suggestion.explanation && (
-        <div className="mb-4 p-3 bg-white/60 rounded-lg border border-red-100">
+      {(suggestion.explanation || isEditingExplanation) && (
+        <div className="mb-4 p-3 bg-white/60 rounded-lg border border-red-100 group relative">
           <div className="text-sm font-bold text-slate-700 mb-1">{t('explanation')}:</div>
-          <p className="text-slate-700 whitespace-pre-wrap">{suggestion.explanation}</p>
+          {isEditingExplanation ? (
+            <div className="space-y-2">
+              <Textarea
+                value={editedExplanation}
+                onChange={(e) => setEditedExplanation(e.target.value)}
+                className="min-h-[100px]"
+                placeholder={t('explainChange')}
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => updateExplanationMutation.mutate(editedExplanation)}
+                  disabled={updateExplanationMutation.isPending}
+                >
+                  <Save className="w-4 h-4 mr-1" />
+                  {t('saveChanges')}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setIsEditingExplanation(false);
+                    setEditedExplanation(suggestion.explanation || '');
+                  }}
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  {t('cancel')}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="text-slate-700 whitespace-pre-wrap">{suggestion.explanation}</p>
+              {isCreator && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditingExplanation(true)}
+                  className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </Button>
+              )}
+            </>
+          )}
         </div>
       )}
 
