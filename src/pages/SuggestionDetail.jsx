@@ -904,9 +904,11 @@ export default function SuggestionDetail() {
                     onClick={() => {
                       navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#new-suggestion-${suggestionId}`);
                       setTimeout(() => {
-                        const element = document.getElementById(`new-suggestion-${suggestionId}`);
-                        if (element) {
-                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        if (typeof document !== 'undefined') {
+                          const element = document.getElementById(`new-suggestion-${suggestionId}`);
+                          if (element) {
+                            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                          }
                         }
                       }, 300);
                     }}
