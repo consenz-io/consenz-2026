@@ -24,7 +24,8 @@ const detectLanguage = (text) => {
 };
 
 export default function DocumentCleanView() {
-  const { t, isRTL, language } = useLanguage();
+  const { t, isRTL, language: rawLanguage } = useLanguage();
+  const language = rawLanguage || 'he';
   const queryClient = useQueryClient();
   const [translatedSections, setTranslatedSections] = useState({});
   const [translatedTopics, setTranslatedTopics] = useState({});
