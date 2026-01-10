@@ -40,7 +40,8 @@ export default function SectionCarousel({
   targetSuggestionId,
   publicProfiles
 }) {
-  const { t, isRTL, language = 'he' } = useLanguage();
+  const { t, isRTL, language: rawLanguage } = useLanguage();
+  const language = rawLanguage || 'he';
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
