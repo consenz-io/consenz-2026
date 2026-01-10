@@ -967,6 +967,7 @@ export default function DocumentView() {
           onSuggestionCreated={(suggestionId, sectionId, topicId) => {
             setNewlyCreatedSuggestion({ suggestionId, sectionId, topicId });
           }}
+          isDeletingSuggestion={editingSection?.isDeletingSuggestion}
         />
       )}
 
