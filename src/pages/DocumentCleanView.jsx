@@ -659,7 +659,7 @@ ${text}`;
                                         fontSize: "1.125rem",
                                         lineHeight: "1.8"
                                       }}
-                                      dangerouslySetInnerHTML={{ __html: currentSnapshot?.newSectionContent || newerContent }}
+                                      dangerouslySetInnerHTML={{ __html: currentSnapshot?.newSectionContent || displayedContent }}
                                     />
                                   </div>
                                 ) : isViewingHistory && hasChanged ? (
