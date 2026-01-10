@@ -86,7 +86,13 @@ Deno.serve(async (req) => {
     });
 
     if (!emailResponse.data.success) {
-      throw new Error(emailResponse.data.error || 'Failed to send invitation email');
+      const errorMsg = emailResponse.data.error || 'Failed to send invitation email';
+      if (errorMsg.includes('Rate limit')) {
+        throw new Error(language === 'he' 
+          ? `חריגה ממגבלת שליחת מיילים (100 לשעה). נסה שוב בעוד ${emailResponse.data.remainingTime || 60} דקות.`
+          : `Email rate limit exceeded (100/hour). Try again in ${emailResponse.data.remainingTime || 60} minutes.`);
+      }
+      throw new Error(errorMsg);
     }
 
     return Response.json({ 

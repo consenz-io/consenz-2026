@@ -15,16 +15,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields: to, subject, and html or text' }, { status: 400 });
     }
 
-    // Rate limiting: Check recent emails from this user (max 50 per hour)
+    // Rate limiting: Check recent emails from this user (max 100 per hour)
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const recentEmails = await base44.entities.EmailLog.filter({
       senderUserId: user.id,
       created_date: { $gte: oneHourAgo }
     });
 
-    if (recentEmails.length >= 50) {
+    if (recentEmails.length >= 100) {
       return Response.json({ 
-        error: 'Rate limit exceeded. Maximum 50 emails per hour.' 
+        error: 'Rate limit exceeded. Maximum 100 emails per hour.',
+        remainingTime: Math.ceil((new Date(recentEmails[0].created_date).getTime() + 60 * 60 * 1000 - Date.now()) / 60000)
       }, { status: 429 });
     }
 
