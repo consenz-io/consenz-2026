@@ -611,19 +611,23 @@ ${text}`;
                         const sectionExistsInSnapshot = currentSnapshot?.existingSections?.has(section.id) ?? 
                           currentSnapshot?.sectionContents?.hasOwnProperty(section.id);
 
-                        // Check if section was deleted (exists in older but not in current)
-                        const sectionExistsInOlder = olderSnapshot
-                          ? (olderSnapshot?.existingSections?.has(section.id) ?? olderSnapshot?.sectionContents?.hasOwnProperty(section.id) ?? false)
-                          : false;
-                        const wasDeleted = isViewingHistory && sectionExistsInOlder && !sectionExistsInSnapshot;
+                        // Check if section exists in the next (newer) snapshot
+                        // We need to look at the snapshot that's newer (lower index) than current
+                        const newerSnapshot = currentVersionIndex > 0 ? versionGroups[currentVersionIndex - 1] : null;
+                        const sectionExistsInNewer = newerSnapshot
+                          ? (newerSnapshot?.existingSections?.has(section.id) ?? newerSnapshot?.sectionContents?.hasOwnProperty(section.id) ?? false)
+                          : true; // Current snapshot (index 0) has all current sections
+
+                        // Section was deleted if it exists in current snapshot but not in newer (index 0)
+                        const wasDeleted = isViewingHistory && sectionExistsInSnapshot && !sectionExistsInNewer;
 
                         // If section doesn't exist in this historical snapshot and wasn't deleted, don't show it
-                        if (isViewingHistory && !sectionExistsInSnapshot && !wasDeleted && olderSnapshot) {
+                        if (isViewingHistory && !sectionExistsInSnapshot && !wasDeleted) {
                           return null;
                         }
-                        
-                        // Get content from the current snapshot
-                        const displayedContent = wasDeleted ? (olderContent || section.content) : (currentSnapshot?.sectionContents?.[section.id] || section.content);
+
+                        // Get content to display
+                        const displayedContent = currentSnapshot?.sectionContents?.[section.id] || section.content;
 
                         // Get content from the older snapshot (for diff) - to show what changed in THIS version
                         const olderContent = olderSnapshot?.sectionContents?.[section.id];
