@@ -253,7 +253,7 @@ const runBackgroundTasks = async (comment, entityType, entityId, parentComment) 
 };
 
 export default function CommentsSection({ entityType, entityId, user, sectionId }) {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   
