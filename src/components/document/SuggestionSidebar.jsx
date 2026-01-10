@@ -648,7 +648,17 @@ export default function SuggestionSidebar({
           )}
 
           {/* Content diff or proposed content */}
-          {suggestion.type === 'edit_section' && suggestion.originalContent ? (
+          {suggestion.type === 'delete_section' ? (
+            <div className="p-3 md:p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="text-sm font-bold text-red-700 mb-2">
+                {language === 'he' ? 'סעיף שמוצע למחיקה:' : language === 'ar' ? 'القسم المقترح حذفه:' : 'Section to be deleted:'}
+              </div>
+              <div 
+                className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
+                dangerouslySetInnerHTML={{ __html: suggestion.originalContent }}
+              />
+            </div>
+          ) : suggestion.type === 'edit_section' && suggestion.originalContent ? (
             <div>
               <SectionDiff
                 originalContent={suggestion.originalContent}

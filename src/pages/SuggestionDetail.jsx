@@ -739,8 +739,14 @@ export default function SuggestionDetail() {
                 <Badge variant="outline" className={`${getStatusColor(suggestion.status)} text-xs`}>
                   {t(suggestion.status)}
                 </Badge>
-                <Badge variant="outline" className="text-xs">
-                  {suggestion.type === 'new_section' ? t('newSection') : t('suggestionToEditSection')}
+                <Badge variant="outline" className={`text-xs ${
+                  suggestion.type === 'delete_section' ? 'bg-red-100 text-red-800 border-red-200' : ''
+                }`}>
+                  {suggestion.type === 'new_section' 
+                    ? t('newSection') 
+                    : suggestion.type === 'delete_section'
+                    ? (language === 'he' ? 'מחיקת סעיף' : language === 'ar' ? 'حذف قسم' : 'Delete Section')
+                    : t('suggestionToEditSection')}
                 </Badge>
 
                 <span className="text-xs text-slate-500">
@@ -821,7 +827,38 @@ export default function SuggestionDetail() {
 
 
 
-            {suggestion.type === 'edit_section' && suggestion.originalContent ? (
+            {suggestion.type === 'delete_section' ? (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-red-700">
+                    {language === 'he' ? 'סעיף שמוצע למחיקה' : language === 'ar' ? 'القسم المقترح حذفه' : 'Section to be deleted'}
+                  </h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);
+                      setTimeout(() => {
+                        const element = document.getElementById(`section-${suggestion.sectionId}`);
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }, 300);
+                    }}
+                    className="h-7 px-2 text-xs"
+                  >
+                    <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
+                    {isRTL ? 'חזרה למסמך' : 'Back to Document'}
+                  </Button>
+                </div>
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div 
+                    className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
+                    dangerouslySetInnerHTML={{ __html: suggestion.originalContent }}
+                  />
+                </div>
+              </div>
+            ) : suggestion.type === 'edit_section' && suggestion.originalContent ? (
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</h3>
