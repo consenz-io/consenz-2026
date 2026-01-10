@@ -256,7 +256,7 @@ export default function DocumentCleanView() {
           }
         }
 
-        if (targetSectionId) {
+        if (targetSectionId && typeof window !== 'undefined' && window.document) {
           // Always scroll to the change element (where diff is displayed)
           const changeElement = window.document.getElementById(`change-${targetSectionId}`);
           if (changeElement) {
