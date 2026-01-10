@@ -11,6 +11,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import InlineDiff from "@/components/document/InlineDiff";
 import PageHeader from "@/components/PageHeader";
 import SectionHistorySidebar from "@/components/document/SectionHistorySidebar";
+import SuggestionSidebar from "@/components/document/SuggestionSidebar";
 
 const detectLanguage = (text) => {
   if (!text) return 'en';
@@ -35,6 +36,7 @@ export default function DocumentCleanView() {
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
   const [openSectionHistoryId, setOpenSectionHistoryId] = useState(null);
   const [showDiffForSections, setShowDiffForSections] = useState({});
+  const [openSuggestionId, setOpenSuggestionId] = useState(null);
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
   const scrollToSuggestionId = searchParams.get('scrollToSuggestion');
@@ -642,7 +644,7 @@ ${text}`;
                                     className="bg-green-50 border-l-4 border-green-500 p-3 rounded cursor-pointer hover:bg-green-100 transition-colors"
                                     onClick={() => {
                                       if (currentSnapshot?.suggestionId) {
-                                        window.open(`${createPageUrl("SuggestionDetail")}?id=${currentSnapshot.suggestionId}`, '_blank');
+                                        setOpenSuggestionId(currentSnapshot.suggestionId);
                                       }
                                     }}
                                   >
@@ -665,7 +667,7 @@ ${text}`;
                                    className="border-l-4 border-amber-400 pl-3 py-2 bg-amber-50/50 rounded cursor-pointer hover:bg-amber-100 transition-colors"
                                    onClick={() => {
                                      if (currentSnapshot?.suggestionId) {
-                                       window.open(`${createPageUrl("SuggestionDetail")}?id=${currentSnapshot.suggestionId}`, '_blank');
+                                       setOpenSuggestionId(currentSnapshot.suggestionId);
                                      }
                                    }}
                                  >
@@ -840,6 +842,16 @@ ${text}`;
           sectionId={openSectionHistoryId}
           isOpen={true}
           onClose={() => setOpenSectionHistoryId(null)}
+        />
+      )}
+
+      {openSuggestionId && (
+        <SuggestionSidebar
+          suggestionId={openSuggestionId}
+          onClose={() => setOpenSuggestionId(null)}
+          document={document}
+          user={null}
+          isAdmin={false}
         />
       )}
     </div>
