@@ -637,7 +637,7 @@ ${text}`;
                         // Check if this section changed between versions (content edit)
                         // Compare the snapshot's content with the newer version's content
                         const hasChanged = isViewingHistory && 
-                          !isDeletedSection &&
+                          !wasDeleted &&
                           currentSnapshot?.changedSectionId === section.id && 
                           currentSnapshot?.newContent && 
                           currentSnapshot?.newContent !== '' &&
