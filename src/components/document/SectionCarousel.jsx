@@ -39,7 +39,7 @@ export default function SectionCarousel({
   onClearNewlyCreated,
   targetSuggestionId
 }) {
-  const { t, isRTL, language } = useLanguage();
+  const { t, isRTL, language = 'he' } = useLanguage();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
