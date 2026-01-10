@@ -24,7 +24,8 @@ import PageHeader from "../components/PageHeader";
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 
 export default function SuggestionDetail() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language: rawLanguage } = useLanguage();
+  const language = rawLanguage || 'he';
   const [searchParams] = useSearchParams();
   const suggestionId = searchParams.get('id');
   const commentId = searchParams.get('commentId');
