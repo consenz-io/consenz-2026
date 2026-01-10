@@ -368,7 +368,7 @@ Return ONLY the translated HTML:`;
     // Check if should show points confirmation dialog
     const gamificationEnabled = document.gamificationEnabled || false;
     const skipConfirm = localStorage.getItem('consenz_skip_points_confirm_suggestion') === 'true';
-    const pointsCost = isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
+    const pointsCost = isDeleteSection ? POINTS_COST_EDIT : isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
     
     if (gamificationEnabled && !skipConfirm) {
       const currentPoints = currentUser.points || 1000;

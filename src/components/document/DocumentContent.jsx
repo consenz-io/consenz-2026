@@ -16,6 +16,7 @@ import TranslatableContent from "./TranslatableContent";
 import DocumentTextContent from "./DocumentTextContent";
 import SectionCarousel from "./SectionCarousel";
 import NewSectionSuggestionCard from "./NewSectionSuggestionCard";
+import DeleteSectionSuggestionCard from "./DeleteSectionSuggestionCard";
 import EditTopicModal from "./EditTopicModal";
 import TopicTitleCarousel from "./TopicTitleCarousel";
 
@@ -699,7 +700,7 @@ Return ONLY the translated text:`;
   const getSuggestionsForSection = (sectionId) => {
     return suggestions.filter(s => 
       s.sectionId === sectionId && 
-      s.type === 'edit_section' && 
+      (s.type === 'edit_section' || s.type === 'delete_section') && 
       s.status === 'pending'
     );
   };
@@ -1181,7 +1182,9 @@ Return ONLY the translated text:`;
                       <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3 md:space-y-4">
                         {topicSections.map((section, index) => {
                   const newSectionSuggestions = getNewSectionSuggestionsForTopic(topic.id);
-                  const sectionSuggestions = getSuggestionsForSection(section.id);
+                  const allSectionSuggestions = getSuggestionsForSection(section.id);
+                  const sectionSuggestions = allSectionSuggestions.filter(s => s.type === 'edit_section');
+                  const deleteSuggestions = allSectionSuggestions.filter(s => s.type === 'delete_section');
                   
                   return (
                     <Draggable key={section.id} draggableId={section.id} index={index} isDragDisabled={!isAdmin}>
@@ -1290,6 +1293,25 @@ Return ONLY the translated text:`;
                               onClearNewlyCreated={onClearNewlyCreated}
                               targetSuggestionId={targetSuggestionId}
                             />
+                            
+                            {/* Delete suggestions for this section */}
+                            {deleteSuggestions.map((suggestion) => (
+                              <DeleteSectionSuggestionCard
+                                key={suggestion.id}
+                                suggestion={suggestion}
+                                section={section}
+                                document={document}
+                                onVote={(suggestion, vote) => voteMutation.mutate({
+                                  suggestionId: suggestion.id,
+                                  vote,
+                                  currentVote: getUserVote(suggestion.id)
+                                })}
+                                userVote={getUserVote(suggestion.id)}
+                                currentUser={user}
+                                isAdmin={isAdmin}
+                                publicProfiles={publicProfiles}
+                              />
+                            ))}
                           </div>
                             {/* Show suggestions after the last section */}
                             {index === topicSections.length - 1 && (
