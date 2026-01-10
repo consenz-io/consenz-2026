@@ -745,19 +745,13 @@ Return JSON with title, topics array (each with title and sections array with co
 
             <Card className="bg-white">
               <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>Topics & Sections</CardTitle>
-                    <CardDescription>
-                      {extractedStructure
-                        ? "Review and edit the extracted structure"
-                        : "Structure your document with topics and sections"}
-                    </CardDescription>
-                  </div>
-                  <Button type="button" onClick={addTopic} variant="outline" size="sm">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Topic
-                  </Button>
+                <div>
+                  <CardTitle>Topics & Sections</CardTitle>
+                  <CardDescription>
+                    {extractedStructure
+                      ? "Review and edit the extracted structure"
+                      : "Structure your document with topics and sections"}
+                  </CardDescription>
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -863,6 +857,11 @@ Return JSON with title, topics array (each with title and sections array with co
                     </Button>
                   </div>
                 ))}
+
+                <Button type="button" onClick={addTopic} variant="outline" size="sm">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Topic
+                </Button>
               </CardContent>
             </Card>
 
