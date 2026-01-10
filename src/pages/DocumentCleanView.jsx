@@ -606,13 +606,18 @@ ${text}`;
                       {topicSections.map((section, sectionIndex) => {
                         // מציאת תוכן הסעיף בגרסה המוצגת ובגרסה החדשה יותר
                         const isViewingHistory = currentVersionIndex > 0;
-                        
+
                         // Check if this section exists in the current snapshot
                         const sectionExistsInSnapshot = currentSnapshot?.existingSections?.has(section.id) ?? 
                           currentSnapshot?.sectionContents?.hasOwnProperty(section.id);
-                        
-                        // If section doesn't exist in this historical snapshot, don't show it
-                        if (isViewingHistory && !sectionExistsInSnapshot) {
+
+                        // Check if section was deleted (exists in older but not in current)
+                        const sectionExistsInOlder = olderSnapshot?.existingSections?.has(section.id) ?? 
+                          olderSnapshot?.sectionContents?.hasOwnProperty(section.id);
+                        const wasDeleted = isViewingHistory && sectionExistsInOlder && !sectionExistsInSnapshot;
+
+                        // If section doesn't exist in this historical snapshot and wasn't deleted, don't show it
+                        if (isViewingHistory && !sectionExistsInSnapshot && !wasDeleted) {
                           return null;
                         }
                         
