@@ -186,7 +186,7 @@ export default function DeleteSectionSuggestionCard({
       <div className="mb-4 p-3 md:p-4 bg-white/80 rounded border border-red-200">
         <div className="text-sm font-bold text-red-700 mb-2">
           {language === 'he' ? 'סעיף שמוצע למחיקה:' : language === 'ar' ? 'القسم المقترح حذفه:' : 'Section to be deleted:'}
-        </div>
+        </div> {/* Note: this text doesn't need t() - it's using language variable already defined */}
         <div 
           className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
           dangerouslySetInnerHTML={{ __html: section?.content || suggestion.originalContent }}
