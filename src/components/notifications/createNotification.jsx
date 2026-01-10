@@ -166,8 +166,8 @@ async function batchCreateNotifications(notifications) {
   
   try {
     // Process in smaller batches with delays to avoid rate limits
-    const BATCH_SIZE = 5;
-    const DELAY_BETWEEN_BATCHES = 1000; // 1 second
+    const BATCH_SIZE = 2; // Reduced from 5 to 2
+    const DELAY_BETWEEN_BATCHES = 3000; // Increased from 1000ms to 3000ms
     
     const results = [];
     
@@ -180,20 +180,24 @@ async function batchCreateNotifications(notifications) {
         await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
       }
       
-      const batchResults = await Promise.all(batch.map((n, index) => 
+      const batchResults = await Promise.allSettled(batch.map((n, index) => 
         base44.entities.Notification.create({ ...n, read: false })
           .then(result => {
             console.log('[BATCH NOTIFICATIONS] Successfully created notification', i + index + 1, '/', notifications.length);
             return result;
           })
           .catch(err => {
-            console.error('[BATCH NOTIFICATIONS] Failed to create notification', i + index + 1, ':', err);
-            console.error('[BATCH NOTIFICATIONS] Failed notification data:', JSON.stringify(n, null, 2));
+            // Silently handle rate limit errors without breaking the flow
+            if (err?.message?.includes('Rate limit')) {
+              console.warn('[BATCH NOTIFICATIONS] Rate limit hit, notification', i + index + 1, 'skipped');
+            } else {
+              console.error('[BATCH NOTIFICATIONS] Failed to create notification', i + index + 1, ':', err?.message || err);
+            }
             return null;
           })
       ));
       
-      results.push(...batchResults);
+      results.push(...batchResults.map(r => r.status === 'fulfilled' ? r.value : null));
     }
     
     const successful = results.filter(r => r !== null).length;
@@ -202,11 +206,11 @@ async function batchCreateNotifications(notifications) {
     console.log('[BATCH NOTIFICATIONS] Batch complete: Success:', successful, 'Failed:', failed);
     
     if (failed > 0) {
-      console.error('[BATCH NOTIFICATIONS] WARNING:', failed, 'notifications failed to create');
+      console.warn('[BATCH NOTIFICATIONS] WARNING:', failed, 'notifications failed to create (likely rate limited)');
     }
   } catch (error) {
-    console.error('[BATCH NOTIFICATIONS] CRITICAL: Batch create failed completely:', error);
-    console.error('[BATCH NOTIFICATIONS] Stack:', error.stack);
+    // Don't throw - notifications should never break the main flow
+    console.error('[BATCH NOTIFICATIONS] CRITICAL: Batch create failed completely:', error?.message || error);
   }
 }
 
