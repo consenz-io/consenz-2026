@@ -384,42 +384,55 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       });
     } 
     // טיפול בהצעה למחיקת סעיף
-    else if (freshSuggestion.type === 'delete_section' && freshSuggestion.sectionId) {
-      console.log('[AUTO-ACCEPT] Deleting section:', freshSuggestion.sectionId);
-      
-      // שמירת גרסאות לפני ואחרי המחיקה
-      const section = await base44.entities.Section.filter({ id: freshSuggestion.sectionId }).then(s => s[0]);
-      if (section) {
-        const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
-        const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
-        
-        await Promise.all([
-          // גרסה "לפני" - התוכן הקיים
-          base44.entities.DocumentVersion.create({
-            documentId: freshSuggestion.documentId,
-            sectionId: section.id,
-            content: section.content,
-            changeDescription: `לפני: ${freshSuggestion.title || 'מחיקת סעיף'}`,
-            version: nextVersion,
-            changeType: 'suggestion_accepted',
-            suggestionId: freshSuggestion.id
-          }),
-          // גרסה "אחרי" - סעיף נמחק (תוכן ריק)
-          base44.entities.DocumentVersion.create({
-            documentId: freshSuggestion.documentId,
-            sectionId: section.id,
-            content: '',
-            changeDescription: freshSuggestion.title || 'סעיף נמחק',
-            version: nextVersion + 1,
-            changeType: 'suggestion_accepted',
-            suggestionId: freshSuggestion.id
-          })
-        ]);
-        
-        // מחיקת הסעיף
-        await base44.entities.Section.delete(section.id);
-      }
-    }
+     else if (freshSuggestion.type === 'delete_section' && freshSuggestion.sectionId) {
+       console.log('[AUTO-ACCEPT DELETE] Deleting section:', freshSuggestion.sectionId);
+
+       // שמירת גרסאות לפני ואחרי המחיקה
+       const section = await base44.entities.Section.filter({ id: freshSuggestion.sectionId }).then(s => s[0]);
+       if (section) {
+         const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
+         const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
+
+         console.log('[AUTO-ACCEPT DELETE] Creating versions for section deletion:', {
+           sectionId: section.id,
+           nextVersion: nextVersion,
+           currentContent: section.content?.substring(0, 50)
+         });
+
+         // גרסה "לפני" - התוכן הקיים
+         await base44.entities.DocumentVersion.create({
+           documentId: freshSuggestion.documentId,
+           sectionId: section.id,
+           content: section.content,
+           changeDescription: `לפני: ${freshSuggestion.title || 'מחיקת סעיף'}`,
+           version: nextVersion,
+           changeType: 'suggestion_accepted',
+           suggestionId: freshSuggestion.id
+         });
+
+         console.log('[AUTO-ACCEPT DELETE] Created "before" version:', nextVersion);
+
+         // גרסה "אחרי" - סעיף נמחק (תוכן ריק)
+         await base44.entities.DocumentVersion.create({
+           documentId: freshSuggestion.documentId,
+           sectionId: section.id,
+           content: '',
+           changeDescription: freshSuggestion.title || 'סעיף נמחק',
+           version: nextVersion + 1,
+           changeType: 'suggestion_accepted',
+           suggestionId: freshSuggestion.id
+         });
+
+         console.log('[AUTO-ACCEPT DELETE] Created "after" version:', nextVersion + 1);
+
+         // מחיקת הסעיף
+         await base44.entities.Section.delete(section.id);
+
+         console.log('[AUTO-ACCEPT DELETE] Section deleted successfully');
+       } else {
+         console.error('[AUTO-ACCEPT DELETE] Section not found:', freshSuggestion.sectionId);
+       }
+     }
     // טיפול בהצעה לסעיף חדש
      else if (freshSuggestion.type === 'new_section') {
        console.log('[AUTO-ACCEPT NEW_SECTION] Creating new section with suggestion:', freshSuggestion.id);
