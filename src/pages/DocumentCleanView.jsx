@@ -637,9 +637,17 @@ ${text}`;
                                 </span>
                                 <div className="flex-1">
                                 {isViewingHistory && isNewlyCreatedSection ? (
-                                  <div id={`change-${section.id}`} className="bg-green-50 border-l-4 border-green-500 p-3 rounded">
+                                  <div 
+                                    id={`change-${section.id}`} 
+                                    className="bg-green-50 border-l-4 border-green-500 p-3 rounded cursor-pointer hover:bg-green-100 transition-colors"
+                                    onClick={() => {
+                                      if (currentSnapshot?.suggestionId) {
+                                        window.open(`${createPageUrl("SuggestionDetail")}?id=${currentSnapshot.suggestionId}`, '_blank');
+                                      }
+                                    }}
+                                  >
                                     <Badge className="mb-2 bg-green-100 text-green-800 text-xs">
-                                      {language === 'he' ? 'סעיף חדש' : language === 'ar' ? 'قسم جديد' : 'New Section'}
+                                      {language === 'he' ? 'סעיף חדש - לחץ לצפייה בדיון' : language === 'ar' ? 'قسم جديد - انقر لعرض النقاش' : 'New Section - Click to view discussion'}
                                     </Badge>
                                     <div 
                                       className="prose prose-sm max-w-none text-green-800"
@@ -652,9 +660,17 @@ ${text}`;
                                     />
                                   </div>
                                 ) : isViewingHistory && hasChanged ? (
-                                 <div id={`change-${section.id}`} className="border-l-4 border-amber-400 pl-3 py-2 bg-amber-50/50 rounded">
+                                 <div 
+                                   id={`change-${section.id}`} 
+                                   className="border-l-4 border-amber-400 pl-3 py-2 bg-amber-50/50 rounded cursor-pointer hover:bg-amber-100 transition-colors"
+                                   onClick={() => {
+                                     if (currentSnapshot?.suggestionId) {
+                                       window.open(`${createPageUrl("SuggestionDetail")}?id=${currentSnapshot.suggestionId}`, '_blank');
+                                     }
+                                   }}
+                                 >
                                    <Badge className="mb-2 bg-amber-100 text-amber-800 text-xs">
-                                     {language === 'he' ? 'שינוי' : language === 'ar' ? 'تغيير' : 'Change'}
+                                     {language === 'he' ? 'שינוי - לחץ לצפייה בדיון' : language === 'ar' ? 'تغيير - انقر لعرض النقاش' : 'Change - Click to view discussion'}
                                    </Badge>
                                    <InlineDiff
                                      originalContent={displayedContent}
