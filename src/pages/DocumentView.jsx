@@ -36,7 +36,8 @@ const detectLanguage = (text) => {
 };
 
 export default function DocumentView() {
-  const { t, isRTL, language = 'he' } = useLanguage();
+  const { t, isRTL, language: rawLanguage } = useLanguage();
+  const language = rawLanguage || 'he';
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
