@@ -392,8 +392,8 @@ export default function SectionCarousel({
                 }`}
               >
                 {currentView?.data?.type === 'delete_section' 
-                  ? (language === 'he' ? 'הצעה למחיקת הסעיף' : language === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion')
-                  : `${language === 'he' ? 'הצעת עריכה מאת' : language === 'ar' ? 'اقتراح تعديل بواسطة' : 'Edit suggestion by'} ${(() => {
+                  ? ((language || 'he') === 'he' ? 'הצעה למחיקת הסעיף' : (language || 'he') === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion')
+                  : `${(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح تعديل بواسطة' : 'Edit suggestion by'} ${(() => {
                       const email = currentView?.data?.created_by;
                       if (!email) return 'Unknown User';
                       const profile = publicProfiles?.find(p => p.email === email);
@@ -587,7 +587,7 @@ export default function SectionCarousel({
                   {currentView.data.type === 'delete_section' ? (
                     <div className="p-3 md:p-4 bg-red-50 rounded border border-red-200">
                       <div className="text-sm font-bold text-red-700 mb-2">
-                        {language === 'he' ? 'סעיף שמוצע למחיקה:' : language === 'ar' ? 'القسم المقترح حذفه:' : 'Section to be deleted:'}
+                        {(language || 'he') === 'he' ? 'סעיף שמוצע למחיקה:' : (language || 'he') === 'ar' ? 'القسم المقترح حذفه:' : 'Section to be deleted:'}
                       </div>
                       <div 
                         className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
@@ -785,10 +785,10 @@ export default function SectionCarousel({
               onEditSection({ ...section, isDeletingSuggestion: true });
             }}
             className="text-red-600 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
-            title={language === 'he' ? 'הצע מחיקת סעיף' : 'Suggest Section Deletion'}
+            title={(language || 'he') === 'he' ? 'הצע מחיקת סעיף' : 'Suggest Section Deletion'}
           >
             <Trash2 className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-            <span className="hidden md:inline">{language === 'he' ? 'הצע מחיקה' : 'Suggest Delete'}</span>
+            <span className="hidden md:inline">{(language || 'he') === 'he' ? 'הצע מחיקה' : 'Suggest Delete'}</span>
           </Button>
           {isAdmin && (
             <Button
@@ -799,7 +799,7 @@ export default function SectionCarousel({
               title={t('deleteSection')}
             >
               <Trash2 className="w-4 h-4" />
-              <span className="hidden md:inline text-xs">{language === 'he' ? 'מחק (מנהל)' : 'Delete (Admin)'}</span>
+              <span className="hidden md:inline text-xs">{(language || 'he') === 'he' ? 'מחק (מנהל)' : 'Delete (Admin)'}</span>
             </Button>
           )}
         </div>
