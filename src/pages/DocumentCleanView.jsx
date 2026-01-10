@@ -612,12 +612,13 @@ ${text}`;
                           currentSnapshot?.sectionContents?.hasOwnProperty(section.id);
 
                         // Check if section was deleted (exists in older but not in current)
-                        const sectionExistsInOlder = olderSnapshot?.existingSections?.has(section.id) ?? 
-                          olderSnapshot?.sectionContents?.hasOwnProperty(section.id);
+                        const sectionExistsInOlder = olderSnapshot
+                          ? (olderSnapshot?.existingSections?.has(section.id) ?? olderSnapshot?.sectionContents?.hasOwnProperty(section.id) ?? false)
+                          : false;
                         const wasDeleted = isViewingHistory && sectionExistsInOlder && !sectionExistsInSnapshot;
 
                         // If section doesn't exist in this historical snapshot and wasn't deleted, don't show it
-                        if (isViewingHistory && !sectionExistsInSnapshot && !wasDeleted) {
+                        if (isViewingHistory && !sectionExistsInSnapshot && !wasDeleted && olderSnapshot) {
                           return null;
                         }
                         
