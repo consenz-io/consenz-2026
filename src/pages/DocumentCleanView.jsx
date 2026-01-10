@@ -640,10 +640,14 @@ ${text}`;
                         // Check if this section changed between versions (content edit)
                         // Compare the snapshot's content with the newer version's content
                         const hasChanged = isViewingHistory && 
+                          !isDeletedSection &&
                           currentSnapshot?.changedSectionId === section.id && 
                           currentSnapshot?.newContent && 
                           currentSnapshot?.newContent !== '' &&
                           displayedContent !== currentSnapshot?.newContent;
+
+                        // For deleted sections, show them with old content
+                        const isDeletedSection = wasDeleted;
 
                         return (
                           <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
