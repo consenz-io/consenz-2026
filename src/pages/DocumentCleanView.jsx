@@ -195,6 +195,10 @@ export default function DocumentCleanView() {
         // This section didn't exist before, remove it
         delete currentSectionContents[afterVersion.sectionId];
         currentExistingSections.delete(afterVersion.sectionId);
+      } else if (afterVersion.content === '' && beforeVersion) {
+        // This is a section deletion (empty content in afterVersion)
+        delete currentSectionContents[afterVersion.sectionId];
+        currentExistingSections.delete(afterVersion.sectionId);
       } else if (beforeVersion) {
         // Section existed with different content
         currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
