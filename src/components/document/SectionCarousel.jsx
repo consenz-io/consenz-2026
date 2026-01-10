@@ -387,16 +387,8 @@ export default function SectionCarousel({
                 }`}
               >
                 {currentView?.data?.type === 'delete_section' 
-                  ? ((language || 'he') === 'he' ? 'הצעה למחיקת הסעיף' : (language || 'he') === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion')
-                  : `${(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح تعديل بواسطة' : 'Edit suggestion by'} ${(() => {
-                      const email = currentView?.data?.created_by;
-                      if (!email) return 'Unknown User';
-                      const profile = publicProfiles?.find(p => p.email === email);
-                      if (profile?.fullName) return profile.fullName;
-                      const user = users?.find(u => u.email === email);
-                      if (user?.full_name) return user.full_name;
-                      return email.split('@')[0] || 'Unknown User';
-                    })()}`
+                 ? ((language || 'he') === 'he' ? 'הצעה למחיקת הסעיף' : (language || 'he') === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion')
+                 : `${(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح تعديل بواسطة' : 'Edit suggestion by'} ${getUserName(currentView?.data?.created_by)}`
                 }
               </button>
             )}
