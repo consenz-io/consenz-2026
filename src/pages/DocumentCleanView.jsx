@@ -672,6 +672,29 @@ ${text}`;
                                       dangerouslySetInnerHTML={{ __html: currentSnapshot?.newSectionContent || displayedContent }}
                                     />
                                   </div>
+                                ) : isViewingHistory && isDeletedSection ? (
+                                  <div 
+                                    id={`change-${section.id}`} 
+                                    className="border-l-4 border-red-500 pl-3 py-2 bg-red-50 rounded cursor-pointer hover:bg-red-100 transition-colors"
+                                    onClick={() => {
+                                      if (currentSnapshot?.suggestionId) {
+                                        setOpenSuggestionId(currentSnapshot.suggestionId);
+                                      }
+                                    }}
+                                  >
+                                    <Badge className="mb-2 bg-red-100 text-red-800 text-xs">
+                                      {language === 'he' ? 'סעיף נמחק - לחץ לצפייה בדיון' : language === 'ar' ? 'تم حذف القسم - انقر لعرض النقاش' : 'Section Deleted - Click to view discussion'}
+                                    </Badge>
+                                    <div 
+                                      className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
+                                      style={{ 
+                                        fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                        fontSize: "1.125rem",
+                                        lineHeight: "1.8"
+                                      }}
+                                      dangerouslySetInnerHTML={{ __html: olderContent || displayedContent }}
+                                    />
+                                  </div>
                                 ) : isViewingHistory && hasChanged ? (
                                  <div 
                                    id={`change-${section.id}`} 
