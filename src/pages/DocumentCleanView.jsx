@@ -622,8 +622,8 @@ ${text}`;
                         }
                         
                         // Get content from the current snapshot
-                        const displayedContent = currentSnapshot?.sectionContents?.[section.id] || section.content;
-                        
+                        const displayedContent = wasDeleted ? (olderContent || section.content) : (currentSnapshot?.sectionContents?.[section.id] || section.content);
+
                         // Get content from the older snapshot (for diff) - to show what changed in THIS version
                         const olderContent = olderSnapshot?.sectionContents?.[section.id];
                         
