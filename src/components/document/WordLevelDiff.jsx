@@ -22,20 +22,11 @@ const extractText = (html) => {
   return text;
 };
 
-// Split text into sentences or phrases, preserving punctuation
+// Split text into individual words and punctuation
 const tokenize = (text) => {
   if (!text) return [];
-  const tokens = [];
-  // Split by sentence boundaries (. ! ?) or line breaks, but keep them attached
-  const parts = text.split(/(?<=[.!?])\s+|(?<=\n)/);
-  
-  for (const part of parts) {
-    if (part.trim()) {
-      tokens.push(part);
-    }
-  }
-  
-  return tokens;
+  // Split by whitespace but keep punctuation as separate tokens
+  return text.match(/\S+|\s+/g) || [];
 };
 
 // LCS-based diff to find longest common subsequences
@@ -86,17 +77,11 @@ const computeWordDiff = (oldTokens, newTokens) => {
   const dp = computeLCS(oldTokens, newTokens);
   const diff = generateDiff(oldTokens, newTokens, dp);
   
-  // Merge consecutive tokens of same type, adding space between different original tokens
+  // Merge consecutive tokens of same type
   const merged = [];
   for (const item of diff) {
     if (merged.length > 0 && merged[merged.length - 1].type === item.type) {
-      // Add space if needed (don't add space before punctuation)
-      const lastChar = merged[merged.length - 1].value.slice(-1);
-      const firstChar = item.value[0];
-      const needsSpace = lastChar !== '\n' && firstChar !== '.' && firstChar !== ',' && 
-                         firstChar !== '!' && firstChar !== '?' && firstChar !== ')' &&
-                         lastChar !== '(' && !/\s/.test(lastChar);
-      merged[merged.length - 1].value += (needsSpace ? ' ' : '') + item.value;
+      merged[merged.length - 1].value += item.value;
     } else {
       merged.push({ ...item });
     }
