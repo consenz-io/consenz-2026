@@ -363,7 +363,11 @@ export default function SectionCarousel({
 
       {/* כפתורי דפדוף - רק אם לא באנימציה */}
       {allViews.length > 1 && !['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView?.data?.id]) && (
-        <div className="flex items-center justify-between mb-4 pb-4 border-b-2 border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 p-3 rounded-lg shadow-sm">
+        <div className={`flex items-center justify-between mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm ${
+          currentView?.data?.type === 'delete_section' 
+            ? 'border-red-300 bg-gradient-to-r from-red-50 to-pink-50' 
+            : 'border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50'
+        }`}>
           <Button
             variant="outline"
             size="sm"
@@ -381,17 +385,24 @@ export default function SectionCarousel({
             ) : (
               <button 
                 onClick={() => setCurrentSuggestionId('current')}
-                className="text-sm font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer transition-colors"
+                className={`text-sm font-bold hover:underline cursor-pointer transition-colors ${
+                  currentView?.data?.type === 'delete_section' 
+                    ? 'text-red-700 hover:text-red-900' 
+                    : 'text-blue-700 hover:text-blue-900'
+                }`}
               >
-                הצעת עריכה מאת {(() => {
-                  const email = currentView?.data?.created_by;
-                  if (!email) return 'Unknown User';
-                  const profile = publicProfiles?.find(p => p.email === email);
-                  if (profile?.fullName) return profile.fullName;
-                  const user = users?.find(u => u.email === email);
-                  if (user?.full_name) return user.full_name;
-                  return email.split('@')[0] || 'Unknown User';
-                })()}
+                {currentView?.data?.type === 'delete_section' 
+                  ? (language === 'he' ? 'הצעה למחיקת הסעיף' : language === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion')
+                  : `${language === 'he' ? 'הצעת עריכה מאת' : language === 'ar' ? 'اقتراح تعديل بواسطة' : 'Edit suggestion by'} ${(() => {
+                      const email = currentView?.data?.created_by;
+                      if (!email) return 'Unknown User';
+                      const profile = publicProfiles?.find(p => p.email === email);
+                      if (profile?.fullName) return profile.fullName;
+                      const user = users?.find(u => u.email === email);
+                      if (user?.full_name) return user.full_name;
+                      return email.split('@')[0] || 'Unknown User';
+                    })()}`
+                }
               </button>
             )}
           </div>
@@ -573,7 +584,17 @@ export default function SectionCarousel({
                     </div>
                   )}
                   
-                  {currentView.data.originalContent ? (
+                  {currentView.data.type === 'delete_section' ? (
+                    <div className="p-3 md:p-4 bg-red-50 rounded border border-red-200">
+                      <div className="text-sm font-bold text-red-700 mb-2">
+                        {language === 'he' ? 'סעיף שמוצע למחיקה:' : language === 'ar' ? 'القسم المقترح حذفه:' : 'Section to be deleted:'}
+                      </div>
+                      <div 
+                        className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
+                        dangerouslySetInnerHTML={{ __html: currentView.data.originalContent }}
+                      />
+                    </div>
+                  ) : currentView.data.originalContent ? (
                     <div>
                       <SectionDiff
                         originalContent={currentView.data.originalContent}
