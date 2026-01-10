@@ -381,21 +381,34 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     else if (freshSuggestion.type === 'delete_section' && freshSuggestion.sectionId) {
       console.log('[AUTO-ACCEPT] Deleting section:', freshSuggestion.sectionId);
       
-      // שמירת גרסה לפני מחיקה
+      // שמירת גרסאות לפני ואחרי המחיקה
       const section = await base44.entities.Section.filter({ id: freshSuggestion.sectionId }).then(s => s[0]);
       if (section) {
         const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
         const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
         
-        await base44.entities.DocumentVersion.create({
-          documentId: freshSuggestion.documentId,
-          sectionId: section.id,
-          content: section.content,
-          changeDescription: `סעיף נמחק: ${freshSuggestion.title}`,
-          version: nextVersion,
-          changeType: 'suggestion_accepted',
-          suggestionId: freshSuggestion.id
-        });
+        await Promise.all([
+          // גרסה "לפני" - התוכן הקיים
+          base44.entities.DocumentVersion.create({
+            documentId: freshSuggestion.documentId,
+            sectionId: section.id,
+            content: section.content,
+            changeDescription: `לפני: ${freshSuggestion.title || 'מחיקת סעיף'}`,
+            version: nextVersion,
+            changeType: 'suggestion_accepted',
+            suggestionId: freshSuggestion.id
+          }),
+          // גרסה "אחרי" - סעיף נמחק (תוכן ריק)
+          base44.entities.DocumentVersion.create({
+            documentId: freshSuggestion.documentId,
+            sectionId: section.id,
+            content: '',
+            changeDescription: freshSuggestion.title || 'סעיף נמחק',
+            version: nextVersion + 1,
+            changeType: 'suggestion_accepted',
+            suggestionId: freshSuggestion.id
+          })
+        ]);
         
         // מחיקת הסעיף
         await base44.entities.Section.delete(section.id);
@@ -498,7 +511,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
         originalLanguage: newContentLanguage,
       });
       
-      // שמירת גרסה ראשונה
+      // שמירת גרסה ראשונה (רק גרסה אחת לסעיף חדש - ללא "לפני")
       await base44.entities.DocumentVersion.create({
         documentId: freshSuggestion.documentId,
         sectionId: newSection.id,
