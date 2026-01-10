@@ -37,7 +37,8 @@ export default function SectionCarousel({
   onOpenSuggestionSidebar,
   newlyCreatedSuggestionId,
   onClearNewlyCreated,
-  targetSuggestionId
+  targetSuggestionId,
+  publicProfiles
 }) {
   const { t, isRTL, language = 'he' } = useLanguage();
   const navigate = useNavigate();
@@ -585,14 +586,27 @@ export default function SectionCarousel({
                   )}
                   
                   {currentView.data.type === 'delete_section' ? (
-                    <div className="p-3 md:p-4 bg-red-50 rounded border border-red-200">
-                      <div className="text-sm font-bold text-red-700 mb-2">
-                        {(language || 'he') === 'he' ? 'סעיף שמוצע למחיקה:' : (language || 'he') === 'ar' ? 'القسم المقترح حذفه:' : 'Section to be deleted:'}
+                    <div>
+                      {currentView.data.explanation && (
+                        <div className="mb-3 p-3 bg-white/60 rounded-lg border border-red-100">
+                          <div className="text-sm font-bold text-slate-700 mb-1">{t('explanation')}:</div>
+                          <TranslatableContent
+                            content={currentView.data.explanation}
+                            entity={currentView.data}
+                            entityType="Suggestion"
+                            className="text-slate-700 text-sm whitespace-pre-wrap"
+                          />
+                        </div>
+                      )}
+                      <div className="p-3 md:p-4 bg-red-50 rounded border border-red-200">
+                        <div className="text-sm font-bold text-red-700 mb-2">
+                          {(language || 'he') === 'he' ? 'סעיף שמוצע למחיקה:' : (language || 'he') === 'ar' ? 'القسم المقترح حذفه:' : 'Section to be deleted:'}
+                        </div>
+                        <div 
+                          className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
+                          dangerouslySetInnerHTML={{ __html: currentView.data.originalContent }}
+                        />
                       </div>
-                      <div 
-                        className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
-                        dangerouslySetInnerHTML={{ __html: currentView.data.originalContent }}
-                      />
                     </div>
                   ) : currentView.data.originalContent ? (
                     <div>

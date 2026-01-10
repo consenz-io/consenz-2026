@@ -1181,10 +1181,8 @@ Return ONLY the translated text:`;
                     {(provided) => (
                       <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3 md:space-y-4">
                         {topicSections.map((section, index) => {
-                  const newSectionSuggestions = getNewSectionSuggestionsForTopic(topic.id);
-                  const allSectionSuggestions = getSuggestionsForSection(section.id);
-                  const sectionSuggestions = allSectionSuggestions.filter(s => s.type === 'edit_section');
-                  const deleteSuggestions = allSectionSuggestions.filter(s => s.type === 'delete_section');
+                        const newSectionSuggestions = getNewSectionSuggestionsForTopic(topic.id);
+                        const allSectionSuggestions = getSuggestionsForSection(section.id);
                   
                   return (
                     <Draggable key={section.id} draggableId={section.id} index={index} isDragDisabled={!isAdmin}>
@@ -1273,7 +1271,7 @@ Return ONLY the translated text:`;
                             )}
                             <SectionCarousel
                               section={section}
-                              pendingSuggestions={sectionSuggestions}
+                              pendingSuggestions={allSectionSuggestions}
                               document={document}
                               user={user}
                               onEditSection={onEditSection}
@@ -1292,26 +1290,8 @@ Return ONLY the translated text:`;
                               newlyCreatedSuggestionId={newlyCreatedSuggestion?.sectionId === section.id ? newlyCreatedSuggestion?.suggestionId : null}
                               onClearNewlyCreated={onClearNewlyCreated}
                               targetSuggestionId={targetSuggestionId}
+                              publicProfiles={publicProfiles}
                             />
-                            
-                            {/* Delete suggestions for this section */}
-                            {deleteSuggestions.map((suggestion) => (
-                              <DeleteSectionSuggestionCard
-                                key={suggestion.id}
-                                suggestion={suggestion}
-                                section={section}
-                                document={document}
-                                onVote={(suggestion, vote) => voteMutation.mutate({
-                                  suggestionId: suggestion.id,
-                                  vote,
-                                  currentVote: getUserVote(suggestion.id)
-                                })}
-                                userVote={getUserVote(suggestion.id)}
-                                currentUser={user}
-                                isAdmin={isAdmin}
-                                publicProfiles={publicProfiles}
-                              />
-                            ))}
                           </div>
                             {/* Show suggestions after the last section */}
                             {index === topicSections.length - 1 && (
