@@ -421,113 +421,119 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       }
     }
     // טיפול בהצעה לסעיף חדש
-    else if (freshSuggestion.type === 'new_section') {
-      let targetTopicId = freshSuggestion.topicId;
-      
-      // אם יש newTopicTitle - צור נושא חדש
-      if (!targetTopicId && freshSuggestion.newTopicTitle) {
-        console.log('[AUTO-ACCEPT] Creating new topic:', freshSuggestion.newTopicTitle);
-        
-        // מצא את ה-order הגבוה ביותר של נושאים קיימים
-        const existingTopics = await base44.entities.Topic.filter({ 
-          documentId: freshSuggestion.documentId 
-        }, 'order');
-        
-        // השתמש ב-newTopicOrder אם קיים, אחרת הוסף בסוף
-        let topicOrderToUse;
-        if (freshSuggestion.newTopicOrder !== undefined && freshSuggestion.newTopicOrder !== null) {
-          console.log('[AUTO-ACCEPT] Using specified newTopicOrder:', freshSuggestion.newTopicOrder);
-          topicOrderToUse = freshSuggestion.newTopicOrder;
-          
-          // הזז נושאים קיימים עם order גדול או שווה
-          const topicsToShift = existingTopics.filter(t => (t.order || 0) >= topicOrderToUse);
-          if (topicsToShift.length > 0) {
-            console.log('[AUTO-ACCEPT] Shifting', topicsToShift.length, 'topics to make room');
-            await Promise.all(
-              topicsToShift.map(topic => 
-                base44.entities.Topic.update(topic.id, { order: (topic.order || 0) + 1 })
-              )
-            );
-          }
-        } else {
-          const maxTopicOrder = existingTopics.length > 0 
-            ? Math.max(...existingTopics.map(t => t.order || 0)) 
-            : -1;
-          topicOrderToUse = maxTopicOrder + 1;
-          console.log('[AUTO-ACCEPT] No newTopicOrder specified, adding at end with order:', topicOrderToUse);
-        }
-        
-        // יצירת הנושא החדש
-        const newTopicLanguage = detectLanguage(freshSuggestion.newTopicTitle);
-        const newTopic = await base44.entities.Topic.create({
-          documentId: freshSuggestion.documentId,
-          title: freshSuggestion.newTopicTitle,
-          order: topicOrderToUse,
-          originalLanguage: newTopicLanguage
-        });
-        
-        targetTopicId = newTopic.id;
-        console.log('[AUTO-ACCEPT] Created new topic with ID:', targetTopicId, 'at order:', topicOrderToUse);
-      }
-      
-      if (!targetTopicId) {
-        console.error('[AUTO-ACCEPT] No topicId and no newTopicTitle for new_section suggestion');
-        return false;
-      }
-      
-      let allSections = [];
-      try {
-        allSections = await base44.entities.Section.filter({ 
-          documentId: freshSuggestion.documentId,
-          topicId: targetTopicId 
-        }, 'order');
-      } catch (err) {
-        console.error('[AUTO-ACCEPT] Error fetching sections:', err);
-      }
-      
-      let newOrder;
-      if (freshSuggestion.insertPosition !== undefined && freshSuggestion.insertPosition !== null) {
-        // הזחת סעיפים קיימים - מלמעלה למטה כדי למנוע התנגשויות
-        const sectionsToUpdate = allSections
-          .filter(s => (s.order || 0) >= freshSuggestion.insertPosition)
-          .sort((a, b) => (b.order || 0) - (a.order || 0)); // מלמעלה למטה
-        
-        // עדכון במקביל - כל סעיף מקבל order חדש שלא מתנגש
-        await Promise.all(
-          sectionsToUpdate.map(sec => 
-            base44.entities.Section.update(sec.id, { order: (sec.order || 0) + 1 })
-          )
-        );
-        
-        newOrder = freshSuggestion.insertPosition;
-      } else {
-        // הוספה בסוף
-        const maxOrder = allSections.length > 0 ? Math.max(...allSections.map(s => s.order || 0)) : -1;
-        newOrder = maxOrder + 1;
-      }
-      
-      // יצירת הסעיף החדש
-      const newContentLanguage = detectLanguage(freshSuggestion.newContent || '');
-      const newSection = await base44.entities.Section.create({
-        documentId: freshSuggestion.documentId,
-        topicId: targetTopicId,
-        content: freshSuggestion.newContent,
-        order: newOrder,
-        lastEditedBy: userId,
-        originalLanguage: newContentLanguage,
-      });
-      
-      // שמירת גרסה ראשונה (רק גרסה אחת לסעיף חדש - ללא "לפני")
-      await base44.entities.DocumentVersion.create({
-        documentId: freshSuggestion.documentId,
-        sectionId: newSection.id,
-        content: freshSuggestion.newContent,
-        changeDescription: freshSuggestion.title || 'סעיף חדש',
-        version: 1,
-        changeType: 'section_created',
-        suggestionId: freshSuggestion.id
-      });
-    }
+     else if (freshSuggestion.type === 'new_section') {
+       console.log('[AUTO-ACCEPT NEW_SECTION] Creating new section with suggestion:', freshSuggestion.id);
+
+       let targetTopicId = freshSuggestion.topicId;
+
+       // אם יש newTopicTitle - צור נושא חדש
+       if (!targetTopicId && freshSuggestion.newTopicTitle) {
+         console.log('[AUTO-ACCEPT] Creating new topic:', freshSuggestion.newTopicTitle);
+
+         // מצא את ה-order הגבוה ביותר של נושאים קיימים
+         const existingTopics = await base44.entities.Topic.filter({ 
+           documentId: freshSuggestion.documentId 
+         }, 'order');
+
+         // השתמש ב-newTopicOrder אם קיים, אחרת הוסף בסוף
+         let topicOrderToUse;
+         if (freshSuggestion.newTopicOrder !== undefined && freshSuggestion.newTopicOrder !== null) {
+           console.log('[AUTO-ACCEPT] Using specified newTopicOrder:', freshSuggestion.newTopicOrder);
+           topicOrderToUse = freshSuggestion.newTopicOrder;
+
+           // הזז נושאים קיימים עם order גדול או שווה
+           const topicsToShift = existingTopics.filter(t => (t.order || 0) >= topicOrderToUse);
+           if (topicsToShift.length > 0) {
+             console.log('[AUTO-ACCEPT] Shifting', topicsToShift.length, 'topics to make room');
+             await Promise.all(
+               topicsToShift.map(topic => 
+                 base44.entities.Topic.update(topic.id, { order: (topic.order || 0) + 1 })
+               )
+             );
+           }
+         } else {
+           const maxTopicOrder = existingTopics.length > 0 
+             ? Math.max(...existingTopics.map(t => t.order || 0)) 
+             : -1;
+           topicOrderToUse = maxTopicOrder + 1;
+           console.log('[AUTO-ACCEPT] No newTopicOrder specified, adding at end with order:', topicOrderToUse);
+         }
+
+         // יצירת הנושא החדש
+         const newTopicLanguage = detectLanguage(freshSuggestion.newTopicTitle);
+         const newTopic = await base44.entities.Topic.create({
+           documentId: freshSuggestion.documentId,
+           title: freshSuggestion.newTopicTitle,
+           order: topicOrderToUse,
+           originalLanguage: newTopicLanguage
+         });
+
+         targetTopicId = newTopic.id;
+         console.log('[AUTO-ACCEPT] Created new topic with ID:', targetTopicId, 'at order:', topicOrderToUse);
+       }
+
+       if (!targetTopicId) {
+         console.error('[AUTO-ACCEPT] No topicId and no newTopicTitle for new_section suggestion');
+         return false;
+       }
+
+       let allSections = [];
+       try {
+         allSections = await base44.entities.Section.filter({ 
+           documentId: freshSuggestion.documentId,
+           topicId: targetTopicId 
+         }, 'order');
+       } catch (err) {
+         console.error('[AUTO-ACCEPT] Error fetching sections:', err);
+       }
+
+       let newOrder;
+       if (freshSuggestion.insertPosition !== undefined && freshSuggestion.insertPosition !== null) {
+         // הזחת סעיפים קיימים - מלמעלה למטה כדי למנוע התנגשויות
+         const sectionsToUpdate = allSections
+           .filter(s => (s.order || 0) >= freshSuggestion.insertPosition)
+           .sort((a, b) => (b.order || 0) - (a.order || 0)); // מלמעלה למטה
+
+         // עדכון במקביל - כל סעיף מקבל order חדש שלא מתנגש
+         await Promise.all(
+           sectionsToUpdate.map(sec => 
+             base44.entities.Section.update(sec.id, { order: (sec.order || 0) + 1 })
+           )
+         );
+
+         newOrder = freshSuggestion.insertPosition;
+       } else {
+         // הוספה בסוף
+         const maxOrder = allSections.length > 0 ? Math.max(...allSections.map(s => s.order || 0)) : -1;
+         newOrder = maxOrder + 1;
+       }
+
+       // יצירת הסעיף החדש
+       const newContentLanguage = detectLanguage(freshSuggestion.newContent || '');
+       const newSection = await base44.entities.Section.create({
+         documentId: freshSuggestion.documentId,
+         topicId: targetTopicId,
+         content: freshSuggestion.newContent,
+         order: newOrder,
+         lastEditedBy: userId,
+         originalLanguage: newContentLanguage,
+       });
+
+       console.log('[AUTO-ACCEPT NEW_SECTION] Created new section with ID:', newSection.id);
+
+       // שמירת גרסה ראשונה (רק גרסה אחת לסעיף חדש - ללא "לפני")
+       await base44.entities.DocumentVersion.create({
+         documentId: freshSuggestion.documentId,
+         sectionId: newSection.id,
+         content: freshSuggestion.newContent,
+         changeDescription: freshSuggestion.title || 'סעיף חדש',
+         version: 1,
+         changeType: 'section_created',
+         suggestionId: freshSuggestion.id
+       });
+
+       console.log('[AUTO-ACCEPT NEW_SECTION] Created version 1 for new section');
+     }
     
     // עדכון סטטוס ההצעה רק אחרי שהסעיף נוצר בהצלחה
     console.log('[AUTO-ACCEPT] Section created successfully, updating suggestion status to accepted');
