@@ -44,12 +44,6 @@ export default function SectionCarousel({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  const { data: publicProfiles } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-    initialData: [],
-  });
-  
   // שליפת כל ההצעות של הסעיף (לא רק pending) כדי לעקוב אחרי שינויי סטטוס
   const { data: allSectionSuggestions = [] } = useQuery({
     queryKey: ['suggestions', document?.id],
