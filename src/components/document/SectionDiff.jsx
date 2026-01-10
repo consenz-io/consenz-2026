@@ -27,7 +27,8 @@ export default function SectionDiff({
   newVersion,
   section // Pass the section entity for cache
 }) {
-  const { t, language, isRTL } = useLanguage();
+  const { t, language: rawLanguage, isRTL } = useLanguage();
+  const language = rawLanguage || 'he';
   const [translationResult, setTranslationResult] = useState(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [showTranslated, setShowTranslated] = useState(false);
