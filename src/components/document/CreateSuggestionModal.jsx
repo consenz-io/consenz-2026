@@ -93,7 +93,8 @@ export default function CreateSuggestionModal({
   user, 
   onClose,
   isAdmin,
-  onSuggestionCreated
+  onSuggestionCreated,
+  isDeletingSuggestion
 }) {
   const queryClient = useQueryClient();
   const { t, isRTL, language } = useLanguage();
@@ -111,6 +112,7 @@ export default function CreateSuggestionModal({
   
   const isNewSection = editingSection?.isNew;
   const isDirectEdit = editingSection?.isDirectEdit || false;
+  const isDeleteSection = isDeletingSuggestion || false;
   const existingSection = !isNewSection ? sections.find(s => s.id === editingSection?.id) : null;
 
   const [formData, setFormData] = useState({
@@ -256,7 +258,9 @@ Return ONLY the translated HTML:`;
       }
 
       // Generate automatic title
-      const autoTitle = isNewSection 
+      const autoTitle = isDeleteSection
+        ? (language === 'he' ? `הצעה למחיקת סעיף ב-${topicTitle}` : `Delete section in ${topicTitle}`)
+        : isNewSection 
         ? t('newSectionIn', { topic: topicTitle })
         : t('editSectionIn', { topic: topicTitle });
 
@@ -268,9 +272,9 @@ Return ONLY the translated HTML:`;
         topicId: targetTopicId,
         newTopicTitle: newTopicTitle, // Save new topic title if creating one
         newTopicOrder: newTopicOrder, // Save new topic order if creating one
-        type: isNewSection ? 'new_section' : 'edit_section',
+        type: isDeleteSection ? 'delete_section' : isNewSection ? 'new_section' : 'edit_section',
         title: autoTitle,
-        newContent: data.newContent,
+        newContent: isDeleteSection ? '' : data.newContent,
         originalContent: isNewSection ? null : existingSection?.content,
         explanation: data.explanation,
         status: 'pending',
@@ -345,7 +349,7 @@ Return ONLY the translated HTML:`;
     e.preventDefault();
     setError(null);
 
-    if (!formData.newContent.trim()) {
+    if (!isDeleteSection && !formData.newContent.trim()) {
       setError(t('content'));
       return;
     }
@@ -427,7 +431,9 @@ Return ONLY the translated HTML:`;
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-labelledby="suggestion-modal-title" aria-describedby="suggestion-modal-description">
         <DialogHeader>
           <DialogTitle id="suggestion-modal-title">
-            {isDirectEdit ? 'Direct Edit' : (isNewSection ? t('suggestNewSection') : t('suggestEditSection'))}
+            {isDeleteSection 
+              ? (language === 'he' ? 'הצעה למחיקת סעיף' : 'Delete Section Suggestion')
+              : isDirectEdit ? 'Direct Edit' : (isNewSection ? t('suggestNewSection') : t('suggestEditSection'))}
           </DialogTitle>
         </DialogHeader>
 
@@ -472,7 +478,19 @@ Return ONLY the translated HTML:`;
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {isNewSection && (
+          {isDeleteSection && existingSection && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="text-sm font-medium text-red-800 mb-2">
+                {language === 'he' ? 'סעיף שיימחק:' : 'Section to be deleted:'}
+              </div>
+              <div 
+                className="prose prose-sm max-w-none text-slate-700"
+                dangerouslySetInnerHTML={{ __html: existingSection.content }}
+              />
+            </div>
+          )}
+
+          {isNewSection && !
             <div className="space-y-2">
               <Label htmlFor="topic">{t('topic')}</Label>
               <div className="flex items-center gap-2 mb-2">
@@ -513,6 +531,7 @@ Return ONLY the translated HTML:`;
             </div>
           )}
 
+          {!isDeleteSection && (
             <div>
             <div className="flex items-center justify-between mb-2">
               <Label htmlFor="content">
@@ -551,6 +570,7 @@ Return ONLY the translated HTML:`;
               />
             )}
           </div>
+          )}
 
           <div>
             <Label htmlFor="explanation">{t('explanation')}</Label>
