@@ -25,7 +25,8 @@ export default function NewSectionSuggestionCard({
   showComments,
   isAdmin
 }) {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language: rawLanguage } = useLanguage();
+  const language = rawLanguage || 'he';
   const queryClient = useQueryClient();
 
   const deleteSuggestionMutation = useMutation({
