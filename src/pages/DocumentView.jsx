@@ -213,8 +213,8 @@ export default function DocumentView() {
     const suggestion = pendingSuggestions[index];
     if (!suggestion) return;
 
-    // אם זו הצעה לעריכת סעיף - צריך לגלול לסעיף ולהעביר את הקרוסלה
-    if (suggestion.type === 'edit_section') {
+    // אם זו הצעה לעריכת סעיף או מחיקת סעיף - צריך לגלול לסעיף ולהעביר את הקרוסלה
+    if (suggestion.type === 'edit_section' || suggestion.type === 'delete_section') {
       setTargetSuggestionId(suggestion.id);
 
       // המתן רגע קצר שהקרוסלה תעדכן את ה-ID שלה, ואז גלול
