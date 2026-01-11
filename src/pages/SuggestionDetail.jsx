@@ -150,12 +150,12 @@ export default function SuggestionDetail() {
     enabled: !!suggestionId,
   });
 
-  const { data: comments } = useQuery({
-    queryKey: ['comments', suggestionId],
+  const { data: comments = [] } = useQuery({
+    queryKey: ['comments', 'suggestion', suggestionId],
     queryFn: () => base44.entities.Comment.filter({ 
       rootEntityType: 'suggestion',
       rootEntityId: suggestionId 
-    }, 'created_date'),
+    }),
     initialData: [],
     enabled: !!suggestionId,
   });
@@ -1244,7 +1244,7 @@ export default function SuggestionDetail() {
 
         <Card className="bg-white border-slate-200 w-full overflow-hidden">
           <CardHeader className="p-4 md:p-6">
-            <CardTitle className="text-base md:text-lg">{t('commentsOnSuggestion')}</CardTitle>
+            <CardTitle className="text-base md:text-lg">{t('commentsOnSuggestion')} ({comments.filter(c => !c.parentCommentId).length})</CardTitle>
           </CardHeader>
           <CardContent className="p-3 md:p-6 overflow-x-hidden">
             <CommentsSection
