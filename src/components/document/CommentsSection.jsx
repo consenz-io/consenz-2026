@@ -268,7 +268,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     queryFn: () => base44.entities.Comment.filter({ 
       rootEntityType: entityType, 
       rootEntityId: entityId 
-    }, '-created_date'),
+    }, 'created_date'),
     initialData: [],
     enabled: !!entityType && !!entityId,
   });
@@ -278,7 +278,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     queryFn: () => base44.entities.Comment.filter({ 
       rootEntityType: 'section', 
       rootEntityId: sectionId 
-    }, '-created_date'),
+    }, 'created_date'),
     initialData: [],
     enabled: !!sectionId && entityType === 'suggestion',
   });
@@ -298,7 +298,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
       // Fetch replies for each parent ID in parallel - much more efficient than loading all 500 comments
       const repliesArrays = await Promise.all(
         allParentIds.map(parentId => 
-          base44.entities.Comment.filter({ parentCommentId: parentId })
+          base44.entities.Comment.filter({ parentCommentId: parentId }, 'created_date')
         )
       );
       return repliesArrays.flat();
@@ -318,7 +318,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId 
     const newReplies = repliesComments.filter(r => !existingIds.has(r.id));
     baseComments = [...baseComments, ...newReplies];
     
-    return baseComments.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+    return baseComments.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
   }, [suggestionComments, sectionComments, repliesComments, entityType, sectionId]);
 
   const isLoading = suggestionCommentsLoading || (entityType === 'suggestion' && sectionId && sectionCommentsLoading) || repliesLoading;

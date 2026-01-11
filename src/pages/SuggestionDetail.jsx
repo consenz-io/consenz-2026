@@ -154,7 +154,7 @@ export default function SuggestionDetail() {
     queryFn: () => base44.entities.Comment.filter({ 
       rootEntityType: 'suggestion',
       rootEntityId: suggestionId 
-    }, '-created_date'),
+    }, 'created_date'),
     initialData: [],
     enabled: !!suggestionId,
   });
