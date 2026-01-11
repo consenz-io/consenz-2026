@@ -213,6 +213,7 @@ export default function DocumentView() {
   const scrollToSuggestion = (index) => {
     const suggestion = pendingSuggestions[index];
     if (!suggestion) return;
+    if (typeof window === 'undefined' || typeof document === 'undefined' || !document.getElementById) return;
 
     // אם זו הצעה לעריכת סעיף או מחיקת סעיף - צריך לגלול לסעיף ולהעביר את הקרוסלה
     if (suggestion.type === 'edit_section' || suggestion.type === 'delete_section') {
@@ -220,7 +221,7 @@ export default function DocumentView() {
 
       // המתן רגע קצר שהקרוסלה תעדכן את ה-ID שלה, ואז גלול
       setTimeout(() => {
-        const element = window.document.getElementById(`suggestion-${suggestion.id}`);
+        const element = document.getElementById(`suggestion-${suggestion.id}`);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
@@ -231,7 +232,7 @@ export default function DocumentView() {
         } else {
           // אם לא מצאנו עדיין, נסה שוב אחרי delay נוסף
           setTimeout(() => {
-            const retryElement = window.document.getElementById(`suggestion-${suggestion.id}`);
+            const retryElement = document.getElementById(`suggestion-${suggestion.id}`);
             if (retryElement) {
               retryElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
               retryElement.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
@@ -247,7 +248,7 @@ export default function DocumentView() {
       // הצעה לסעיף חדש - גלילה רגילה
       const elementId = `suggestion-${suggestion.id}`;
       setTimeout(() => {
-        const element = window.document.getElementById(elementId);
+        const element = document.getElementById(elementId);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
@@ -346,17 +347,17 @@ export default function DocumentView() {
   }, [document]);
 
   useEffect(() => {
-    if (scrollToSectionId) {
+    if (scrollToSectionId && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
       setTimeout(() => {
         // Try both section-X and new-suggestion-X patterns
-        let element = window.document.getElementById(scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-') 
+        let element = document.getElementById(scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-') 
           ? scrollToSectionId 
           : `section-${scrollToSectionId}`
         );
         
         // If not found, try the alternative pattern
         if (!element && scrollToSectionId.startsWith('new-suggestion-')) {
-          element = window.document.getElementById(scrollToSectionId);
+          element = document.getElementById(scrollToSectionId);
         }
         
         if (element) {
@@ -368,7 +369,7 @@ export default function DocumentView() {
         } else {
           // Retry after a longer delay if suggestions haven't loaded yet
           setTimeout(() => {
-            const retryElement = window.document.getElementById(scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-') 
+            const retryElement = document.getElementById(scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-') 
               ? scrollToSectionId 
               : `section-${scrollToSectionId}`
             );
@@ -387,10 +388,11 @@ export default function DocumentView() {
 
   // Scroll to topic from URL hash
   useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined' || !document.querySelector) return;
     const hash = window.location.hash;
     if (hash && topics.length > 0) {
       setTimeout(() => {
-        const element = window.document.querySelector(hash);
+        const element = document.querySelector(hash);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           // Add highlight effect
@@ -783,20 +785,22 @@ export default function DocumentView() {
                                     dir={isRTL ? 'rtl' : 'ltr'}
                                   />
                                   <Button
-                                    variant="link"
-                                    size="sm"
-                                    onClick={() => {
-                                      setShowFullDescription(false);
-                                      setTimeout(() => {
-                                        const titleElement = window.document.getElementById('document-title');
-                                        if (titleElement) {
-                                          titleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                        }
-                                      }, 50);
-                                    }}
-                                    className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800"
+                                   variant="link"
+                                   size="sm"
+                                   onClick={() => {
+                                     setShowFullDescription(false);
+                                     setTimeout(() => {
+                                       if (typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
+                                         const titleElement = document.getElementById('document-title');
+                                         if (titleElement) {
+                                           titleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                         }
+                                       }
+                                     }, 50);
+                                   }}
+                                   className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800"
                                   >
-                                    {language === 'he' ? 'הצג פחות' : language === 'ar' ? 'عرض أقل' : 'Show less'}
+                                   {language === 'he' ? 'הצג פחות' : language === 'ar' ? 'عرض أقل' : 'Show less'}
                                   </Button>
                                 </>
                               )}
@@ -825,17 +829,19 @@ export default function DocumentView() {
                                   variant="link"
                                   size="sm"
                                   onClick={() => {
-                                    if (showFullDescription) {
-                                      setShowFullDescription(false);
-                                      setTimeout(() => {
-                                        const titleElement = window.document.getElementById('document-title');
-                                        if (titleElement) {
-                                          titleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                        }
-                                      }, 50);
-                                    } else {
-                                      setShowFullDescription(true);
-                                    }
+                                   if (showFullDescription) {
+                                     setShowFullDescription(false);
+                                     setTimeout(() => {
+                                       if (typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
+                                         const titleElement = document.getElementById('document-title');
+                                         if (titleElement) {
+                                           titleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                         }
+                                       }
+                                     }, 50);
+                                   } else {
+                                     setShowFullDescription(true);
+                                   }
                                   }}
                                   className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800"
                                 >
