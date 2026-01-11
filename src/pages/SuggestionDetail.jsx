@@ -160,6 +160,21 @@ export default function SuggestionDetail() {
     enabled: !!suggestionId,
   });
 
+  const { data: sectionComments = [] } = useQuery({
+    queryKey: ['comments', 'section', suggestion?.sectionId],
+    queryFn: () => base44.entities.Comment.filter({ 
+      rootEntityType: 'section',
+      rootEntityId: suggestion.sectionId 
+    }),
+    initialData: [],
+    enabled: !!suggestion?.sectionId,
+  });
+
+  const totalCommentsCount = React.useMemo(() => {
+    return comments.filter(c => !c.parentCommentId).length + 
+           sectionComments.filter(c => !c.parentCommentId).length;
+  }, [comments, sectionComments]);
+
   const { data: sectionVersions } = useQuery({
     queryKey: ['sectionVersions', suggestion?.sectionId],
     queryFn: () => base44.entities.DocumentVersion.filter({ 
@@ -1244,7 +1259,7 @@ export default function SuggestionDetail() {
 
         <Card className="bg-white border-slate-200 w-full overflow-hidden">
           <CardHeader className="p-4 md:p-6">
-            <CardTitle className="text-base md:text-lg">{t('commentsOnSuggestion')} ({comments.filter(c => !c.parentCommentId).length})</CardTitle>
+            <CardTitle className="text-base md:text-lg">{t('commentsOnSuggestion')} ({totalCommentsCount})</CardTitle>
           </CardHeader>
           <CardContent className="p-3 md:p-6 overflow-x-hidden">
             <CommentsSection
