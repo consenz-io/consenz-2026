@@ -294,9 +294,11 @@ export default function Home() {
                   size="lg" 
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                   onClick={() => {
-                    const element = document.getElementById('recent-documents-section');
-                    if (element) {
-                      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    if (typeof window !== 'undefined' && window.document) {
+                      const element = window.document.getElementById('recent-documents-section');
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }
                     }
                   }}
                 >
@@ -317,9 +319,11 @@ export default function Home() {
               type="button"
               className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all w-full text-left"
               onClick={() => {
-                const element = document.getElementById('recent-documents-section');
-                if (element) {
-                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (typeof window !== 'undefined' && window.document) {
+                  const element = window.document.getElementById('recent-documents-section');
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }
                 }
               }}
               aria-label={`${documents.length} ${t('activeDocuments')}. ${language === 'he' ? 'לחץ לגלילה למסמכים' : 'Click to scroll to documents'}`}
