@@ -98,17 +98,20 @@ export default function SectionHistory() {
       // Open the section comments
       setShowComments(prev => ({ ...prev, [`section-${sectionId}`]: true }));
       
-      // Give time for comments to render then scroll
-      setTimeout(() => {
-        const commentElement = window.document.getElementById(`comment-${commentId}`);
-        if (commentElement) {
-          commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-          setTimeout(() => {
-            commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
-          }, 3000);
-        }
-      }, 500);
+      // Wait for comments to load first
+      if (sectionComments && sectionComments.length > 0) {
+        // Give time for comments to render then scroll
+        setTimeout(() => {
+          const commentElement = window.document.getElementById(`comment-${commentId}`);
+          if (commentElement) {
+            commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+            setTimeout(() => {
+              commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+            }, 3000);
+          }
+        }, 500);
+      }
     }
   }, [commentId, sectionId, sectionComments]);
 
