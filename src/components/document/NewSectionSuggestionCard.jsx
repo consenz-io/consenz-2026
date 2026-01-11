@@ -45,10 +45,13 @@ export default function NewSectionSuggestionCard({
 
   // Truncate content for preview
   const getContentPreview = (html) => {
-    const div = window.document.createElement('div');
-    div.innerHTML = html;
-    const text = div.textContent || div.innerText || '';
-    return text.length > 150 ? text.substring(0, 150) + '...' : text;
+    if (typeof window !== 'undefined' && window.document) {
+      const div = window.document.createElement('div');
+      div.innerHTML = html;
+      const text = div.textContent || div.innerText || '';
+      return text.length > 150 ? text.substring(0, 150) + '...' : text;
+    }
+    return html;
   };
 
   // מעקב אחרי שינוי סטטוס להצגת אנימציה - רק פעם אחת
