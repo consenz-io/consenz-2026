@@ -130,20 +130,6 @@ export default function SectionDiff({
     const newTokens = tokenize(newText);
     return computeWordDiff(oldTokens, newTokens);
   }, [displayOriginal, displayNew, canShowDiff]);
-  
-  const navigate = useNavigate();
-  
-  const handleCardClick = () => {
-    if (documentId && sectionId && typeof window !== 'undefined' && window.document) {
-      navigate(`${createPageUrl("DocumentView")}?id=${documentId}#section-${sectionId}`);
-      setTimeout(() => {
-        const element = window.document.getElementById(`section-${sectionId}`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      }, 300);
-    }
-  };
 
   const contentStyle = {
     direction: isRTL ? 'rtl' : 'ltr',
