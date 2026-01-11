@@ -578,10 +578,10 @@ export default function SuggestionDetail() {
 
   // useEffect to scroll to comment from notification
   React.useEffect(() => {
-    if (commentId && comments && comments.length > 0 && typeof window !== 'undefined') {
+    if (commentId && comments && comments.length > 0 && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
       // Wait a bit to ensure DOM is fully rendered
       const scrollTimer = setTimeout(() => {
-        const commentElement = window.document.getElementById(`comment-${commentId}`);
+        const commentElement = document.getElementById(`comment-${commentId}`);
         if (commentElement) {
           // Scroll to comment
           commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
