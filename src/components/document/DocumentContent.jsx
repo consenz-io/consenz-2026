@@ -450,46 +450,44 @@ export default function DocumentContent({
       }
       const shouldAccept = freshSuggestion.status === 'pending' && (newProVotes - newConVotes) >= threshold;
       
-      // אם ההצעה צריכה להתקבל - מפעילים את האישור מיידית
+      // אם ההצעה צריכה להתקבל - מפעילים את האישור וממתינים לתוצאה
       if (shouldAccept) {
         // מסמנים בקאש שההצעה התקבלה למנוע כפילויות
         hasCheckedRef.current.add(`${suggestionId}-accepted`);
         
-        // מפעילים את האישור מיד - לא מחכים אבל מעדכנים UI מהר
-        autoAcceptSuggestion({ ...freshSuggestion, proVotes: newProVotes, conVotes: newConVotes }, user.id, document)
-          .then(accepted => {
-            if (accepted) {
-              // רענון הסעיפים אחרי 7 שניות (אחרי שהאנימציה נעלמה לגמרי)
-              setTimeout(() => {
-                Promise.all([
-                  queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
-                  queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
-                  queryClient.invalidateQueries({ queryKey: ['versions', document?.id] })
-                ]);
-              }, 7000);
-              
-              // רענון הצעות והמסמך מיד (כדי שהאנימציה תתחיל)
-              queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
-              queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
-              queryClient.invalidateQueries({ queryKey: ['topics', document?.id] });
-              
-              // טיפול בנקודות ברקע - לא חוסם
-              if (!serverVote && vote === 'pro' && document.gamificationEnabled) {
-                base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
-                base44.entities.PointsTransaction.create({
-                  userId: user.id,
-                  amount: 50,
-                  action: 'vote_influenced_acceptance',
-                  description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${suggestion.title}`,
-                  relatedEntityId: suggestion.id,
-                  relatedEntityType: 'suggestion'
-                }).catch(() => {});
-              }
-            }
-          })
-          .catch(err => console.error('[AUTO-ACCEPT ERROR]', err));
+        // מפעילים את האישור ומחכים לתוצאה האמיתית
+        const accepted = await autoAcceptSuggestion({ ...freshSuggestion, proVotes: newProVotes, conVotes: newConVotes }, user.id, document);
         
-        return { accepted: true, newProVotes, newConVotes };
+        if (accepted) {
+          // רענון הסעיפים אחרי 7 שניות (אחרי שהאנימציה נעלמה לגמרי)
+          setTimeout(() => {
+            Promise.all([
+              queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
+              queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
+              queryClient.invalidateQueries({ queryKey: ['versions', document?.id] })
+            ]);
+          }, 7000);
+          
+          // רענון הצעות והמסמך מיד (כדי שהאנימציה תתחיל)
+          queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
+          queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
+          queryClient.invalidateQueries({ queryKey: ['topics', document?.id] });
+          
+          // טיפול בנקודות ברקע - לא חוסם
+          if (!serverVote && vote === 'pro' && document.gamificationEnabled) {
+            base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
+            base44.entities.PointsTransaction.create({
+              userId: user.id,
+              amount: 50,
+              action: 'vote_influenced_acceptance',
+              description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${suggestion.title}`,
+              relatedEntityId: suggestion.id,
+              relatedEntityType: 'suggestion'
+            }).catch(() => {});
+          }
+          
+          return { accepted: true, newProVotes, newConVotes };
+        }
       }
       
       return { accepted: false, newProVotes, newConVotes };
