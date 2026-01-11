@@ -109,7 +109,7 @@ export default function SectionCarousel({
           setAnimationPhases(prev => ({ ...prev, [sug.id]: 'transitioning' }));
         }, 3500);
         
-        // שלב 2: מעבר הדרגתי לרגיל (1.5 שניות - סה"כ 5 שניות)
+        // שלב 2: מיד חזרה לסעיף עם תוכן מעודכן
         setTimeout(() => {
         console.log('[EDIT ANIMATION] Completed, showing as updated section:', sug.id);
         setAnimationPhases(prev => ({ ...prev, [sug.id]: 'completed' }));
@@ -117,22 +117,18 @@ export default function SectionCarousel({
         setRecentlyUpdatedSections(prev => ({ ...prev, [section.id]: Date.now() }));
         // חוזרים לתצוגת הסעיף הנוכחי - עכשיו הוא מעודכן
         setCurrentSuggestionId('current');
-        // הצגת toast notification
-        toast.success('הסעיף עודכן בהצלחה! ✓', {
-          duration: 4000,
-        });
         // רענון הסעיפים כדי לקבל את השינוי
         queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
-        }, 5000);
+        }, 1000);
         
-        // שלב 3: הסרת badge "עודכן עכשיו" (אחרי 15 שניות מהתחלה)
+        // שלב 3: הסרת badge "עודכן עכשיו" (אחרי 10 שניות מהתחלה)
         setTimeout(() => {
           setRecentlyUpdatedSections(prev => {
             const updated = { ...prev };
             delete updated[section.id];
             return updated;
           });
-        }, 16000);
+        }, 10000);
       }
       
       prevSuggestionsStatusRef.current[sug.id] = sug.status;
