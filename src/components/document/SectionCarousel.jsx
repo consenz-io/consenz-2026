@@ -449,7 +449,7 @@ export default function SectionCarousel({
                   entityType="section"
                   entityId={section.id}
                   user={user}
-                  relatedSuggestionIds={sortedSuggestions.map(s => s.id)}
+                  relatedSuggestionIds={[...sortedSuggestions.map(s => s.id), ...(allSectionSuggestions || []).map(s => s.id)]}
                 />
               </div>
             )}
