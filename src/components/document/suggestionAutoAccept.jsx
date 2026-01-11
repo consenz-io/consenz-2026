@@ -417,11 +417,11 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
 
       console.log('[AUTO-ACCEPT DELETE] Created "before" version:', nextVersion);
 
-      // גרסה "אחרי" - סעיף נמחק (שומר את התוכן המקורי עם תיאור של מחיקה)
+      // גרסה "אחרי" - סעיף נמחק (תוכן ריק כדי לסמן מחיקה)
       await base44.entities.DocumentVersion.create({
         documentId: freshSuggestion.documentId,
         sectionId: section.id,
-        content: section.content, // שומר את התוכן המקורי כדי שניתן יהיה לראות מה נמחק
+        content: '', // תוכן ריק כדי לסמן שהסעיף נמחק
         changeDescription: freshSuggestion.title || 'סעיף נמחק',
         version: nextVersion + 1,
         changeType: 'suggestion_accepted',
