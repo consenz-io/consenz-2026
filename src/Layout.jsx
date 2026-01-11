@@ -40,22 +40,25 @@ function LayoutContent({ children, currentPageName }) {
     staleTime: 0,
   });
 
-  const { data: userSuggestions } = useQuery({
+  const { data: userSuggestions = [] } = useQuery({
     queryKey: ['userSuggestions', user?.email],
     queryFn: () => base44.entities.Suggestion.filter({ created_by: user.email }),
     enabled: !!user?.email,
     initialData: [],
   });
 
-  const { data: userVotes } = useQuery({
+  const { data: userVotes = [] } = useQuery({
     queryKey: ['userProVotes', user?.id],
     queryFn: () => base44.entities.Vote.filter({ userId: user.id, vote: 'pro' }),
     enabled: !!user?.id,
     initialData: [],
   });
 
-  const acceptedSuggestionsCount = userSuggestions.filter(s => s.status === 'accepted').length;
-  const proVotesCount = userVotes.length;
+  const acceptedSuggestionsCount = React.useMemo(() => 
+    userSuggestions.filter(s => s.status === 'accepted').length, 
+    [userSuggestions]
+  );
+  const proVotesCount = React.useMemo(() => userVotes.length, [userVotes]);
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
