@@ -545,7 +545,7 @@ export default function DocumentContent({
       }
       const willBeAccepted = suggestion?.status === 'pending' && (newProVotes - newConVotes) >= threshold;
       
-      // עדכון אופטימיסטי של ההצעות
+      // עדכון אופטימיסטי של ההצעות - רק ספירת הצבעות, לא סטטוס!
       queryClient.setQueryData(['suggestions', document?.id], (old) => {
         if (!old) return old;
         return old.map(s => {
@@ -554,21 +554,10 @@ export default function DocumentContent({
           return { 
             ...s, 
             proVotes: newProVotes, 
-            conVotes: newConVotes,
-            // אם ההצעה תתקבל, מעדכנים את הסטטוס מיידית
-            status: willBeAccepted ? 'accepted' : s.status
+            conVotes: newConVotes
           };
         });
       });
-      
-      // אם ההצעה תתקבל, מציגים הודעה אחרי שניה (כדי שהאנימציה תתחיל קודם)
-      if (willBeAccepted) {
-        setTimeout(() => {
-          toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', {
-            duration: 4000,
-          });
-        }, 1000);
-      }
       
       // עדכון אופטימיסטי של ההצבעות - מטפל רק בהצעה הספציפית
       queryClient.setQueryData(['userVotes', document?.id, user?.id], (old) => {
@@ -617,6 +606,13 @@ export default function DocumentContent({
               status: data.accepted ? 'accepted' : s.status
             };
           });
+        });
+      }
+      
+      // הצגת toast רק כשההצעה באמת התקבלה על ידי השרת
+      if (data?.accepted) {
+        toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', {
+          duration: 4000,
         });
       }
       
