@@ -22,6 +22,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import { notifyVoteOnSuggestion, notifySuggestionStatusChange } from "../components/notifications/createNotification";
 import PageHeader from "../components/PageHeader";
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
+import { toast } from "sonner";
 
 export default function SuggestionDetail() {
   const { t, isRTL, language: rawLanguage } = useLanguage();
@@ -397,9 +398,13 @@ export default function SuggestionDetail() {
       // תמיד רענן את ההצעה כדי לקבל את הסטטוס האמיתי מהשרת
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
       queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
-      
+
       // רק אם ההצעה באמת התקבלה (data.accepted === true) - נרענן את כל הנתונים ונציג הודעת הצלחה
       if (data?.accepted === true) {
+        // הצגת הודעת טוסט
+        toast.success(isRTL ? 'ההצעה התקבלה! ✓' : 'Suggestion accepted! ✓', {
+          duration: 4000,
+        });
         // רענון כל הנתונים הרלוונטיים כשההצעה התקבלה
         queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
         queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
