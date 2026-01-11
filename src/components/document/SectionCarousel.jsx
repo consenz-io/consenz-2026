@@ -464,6 +464,7 @@ export default function SectionCarousel({
                   entityId={section.id}
                   user={user}
                   relatedSuggestionIds={(allSectionSuggestions || []).map(s => s.id)}
+                  key={`section-${section.id}-all-comments`}
                 />
               </div>
             )}
