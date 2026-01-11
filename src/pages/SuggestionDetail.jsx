@@ -840,7 +840,7 @@ export default function SuggestionDetail() {
                     onClick={() => {
                       navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);
                       setTimeout(() => {
-                        if (typeof document !== 'undefined') {
+                        if (typeof window !== 'undefined' && typeof document !== 'undefined') {
                           const element = document.getElementById(`section-${suggestion.sectionId}`);
                           if (element) {
                             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -871,7 +871,7 @@ export default function SuggestionDetail() {
                     onClick={() => {
                       navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);
                       setTimeout(() => {
-                        if (typeof document !== 'undefined') {
+                        if (typeof window !== 'undefined' && typeof document !== 'undefined') {
                           const element = document.getElementById(`section-${suggestion.sectionId}`);
                           if (element) {
                             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
