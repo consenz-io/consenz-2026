@@ -576,7 +576,8 @@ export default function SuggestionDetail() {
     if (commentId && suggestionId && typeof window !== 'undefined' && typeof document !== 'undefined') {
       // Wait for comments to load first
       if (comments && comments.length > 0) {
-        setTimeout(() => {
+        // Try multiple times with increasing delays to ensure DOM is ready
+        const scrollToComment = () => {
           if (typeof document !== 'undefined' && document.getElementById) {
             const commentElement = document.getElementById(`comment-${commentId}`);
             if (commentElement) {
@@ -585,9 +586,22 @@ export default function SuggestionDetail() {
               setTimeout(() => {
                 commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
               }, 3000);
+              return true;
             }
           }
-        }, 500);
+          return false;
+        };
+        
+        // Try immediately
+        if (!scrollToComment()) {
+          // Try after 300ms
+          setTimeout(() => {
+            if (!scrollToComment()) {
+              // Final try after 800ms
+              setTimeout(scrollToComment, 800);
+            }
+          }, 300);
+        }
       }
     }
   }, [commentId, suggestionId, comments]);
