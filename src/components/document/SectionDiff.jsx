@@ -134,10 +134,10 @@ export default function SectionDiff({
   const navigate = useNavigate();
   
   const handleCardClick = () => {
-    if (documentId && sectionId) {
+    if (documentId && sectionId && typeof window !== 'undefined' && window.document) {
       navigate(`${createPageUrl("DocumentView")}?id=${documentId}#section-${sectionId}`);
       setTimeout(() => {
-        const element = document.getElementById(`section-${sectionId}`);
+        const element = window.document.getElementById(`section-${sectionId}`);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
