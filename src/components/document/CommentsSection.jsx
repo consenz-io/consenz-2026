@@ -252,7 +252,7 @@ const runBackgroundTasks = async (comment, entityType, entityId, parentComment) 
   }
 };
 
-export default function CommentsSection({ entityType, entityId, user, sectionId, relatedSuggestionIds = [] }) {
+export default function CommentsSection({ entityType, entityId, user, sectionId, relatedSuggestionIds = [], includeRelatedComments = false }) {
   const { t, isRTL, language } = useLanguage();
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
@@ -280,7 +280,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
       rootEntityId: sectionId 
     }, 'created_date'),
     initialData: [],
-    enabled: !!sectionId && entityType === 'suggestion',
+    enabled: !!sectionId && (entityType === 'suggestion' || includeRelatedComments),
   });
 
   // When showing section comments, also load comments from related suggestions
