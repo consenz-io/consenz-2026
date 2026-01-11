@@ -94,7 +94,7 @@ export default function SectionHistory() {
 
   // If there's a commentId in URL, open comments and scroll to it
   React.useEffect(() => {
-    if (commentId && sectionId && typeof window !== 'undefined') {
+    if (commentId && sectionId && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
       // Open the section comments
       setShowComments(prev => ({ ...prev, [`section-${sectionId}`]: true }));
       
@@ -102,7 +102,7 @@ export default function SectionHistory() {
       if (sectionComments && sectionComments.length > 0) {
         // Give time for comments to render then scroll
         setTimeout(() => {
-          const commentElement = window.document.getElementById(`comment-${commentId}`);
+          const commentElement = document.getElementById(`comment-${commentId}`);
           if (commentElement) {
             commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
