@@ -1247,6 +1247,7 @@ export default function SuggestionDetail() {
               entityId={suggestionId}
               user={user}
               sectionId={suggestion?.sectionId}
+              relatedSuggestionIds={[]}
             />
           </CardContent>
         </Card>
