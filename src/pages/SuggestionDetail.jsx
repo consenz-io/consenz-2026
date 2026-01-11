@@ -1268,6 +1268,7 @@ export default function SuggestionDetail() {
               user={user}
               sectionId={suggestion?.sectionId}
               relatedSuggestionIds={[]}
+              includeRelatedComments={true}
             />
           </CardContent>
         </Card>
