@@ -384,55 +384,57 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       });
     } 
     // טיפול בהצעה למחיקת סעיף
-     else if (freshSuggestion.type === 'delete_section' && freshSuggestion.sectionId) {
-       console.log('[AUTO-ACCEPT DELETE] Deleting section:', freshSuggestion.sectionId);
+    else if (freshSuggestion.type === 'delete_section' && freshSuggestion.sectionId) {
+      console.log('[AUTO-ACCEPT DELETE] Starting section deletion process for:', freshSuggestion.sectionId);
 
-       // שמירת גרסאות לפני ואחרי המחיקה
-       const section = await base44.entities.Section.filter({ id: freshSuggestion.sectionId }).then(s => s[0]);
-       if (section) {
-         const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
-         const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
+      // שמירת גרסאות לפני ואחרי המחיקה
+      const section = await base44.entities.Section.filter({ id: freshSuggestion.sectionId }).then(s => s[0]);
+      if (!section) {
+        console.error('[AUTO-ACCEPT DELETE] Section not found:', freshSuggestion.sectionId);
+        return false;
+      }
 
-         console.log('[AUTO-ACCEPT DELETE] Creating versions for section deletion:', {
-           sectionId: section.id,
-           nextVersion: nextVersion,
-           currentContent: section.content?.substring(0, 50)
-         });
+      const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
+      const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
 
-         // גרסה "לפני" - התוכן הקיים
-         await base44.entities.DocumentVersion.create({
-           documentId: freshSuggestion.documentId,
-           sectionId: section.id,
-           content: section.content,
-           changeDescription: `לפני: ${freshSuggestion.title || 'מחיקת סעיף'}`,
-           version: nextVersion,
-           changeType: 'suggestion_accepted',
-           suggestionId: freshSuggestion.id
-         });
+      console.log('[AUTO-ACCEPT DELETE] Creating versions for section deletion:', {
+        sectionId: section.id,
+        nextVersion: nextVersion,
+        topicId: section.topicId,
+        currentContent: section.content?.substring(0, 50)
+      });
 
-         console.log('[AUTO-ACCEPT DELETE] Created "before" version:', nextVersion);
+      // גרסה "לפני" - התוכן הקיים
+      await base44.entities.DocumentVersion.create({
+        documentId: freshSuggestion.documentId,
+        sectionId: section.id,
+        content: section.content,
+        changeDescription: `לפני: ${freshSuggestion.title || 'מחיקת סעיף'}`,
+        version: nextVersion,
+        changeType: 'suggestion_accepted',
+        suggestionId: freshSuggestion.id
+      });
 
-         // גרסה "אחרי" - סעיף נמחק (שומר את התוכן המקורי עם סימון למחיקה)
-         await base44.entities.DocumentVersion.create({
-           documentId: freshSuggestion.documentId,
-           sectionId: section.id,
-           content: section.content, // שומר את התוכן המקורי, לא ריק
-           changeDescription: freshSuggestion.title || 'סעיף נמחק',
-           version: nextVersion + 1,
-           changeType: 'suggestion_accepted',
-           suggestionId: freshSuggestion.id
-         });
+      console.log('[AUTO-ACCEPT DELETE] Created "before" version:', nextVersion);
 
-         console.log('[AUTO-ACCEPT DELETE] Created "after" version:', nextVersion + 1);
+      // גרסה "אחרי" - סעיף נמחק (שומר את התוכן המקורי עם תיאור של מחיקה)
+      await base44.entities.DocumentVersion.create({
+        documentId: freshSuggestion.documentId,
+        sectionId: section.id,
+        content: section.content, // שומר את התוכן המקורי כדי שניתן יהיה לראות מה נמחק
+        changeDescription: freshSuggestion.title || 'סעיף נמחק',
+        version: nextVersion + 1,
+        changeType: 'suggestion_accepted',
+        suggestionId: freshSuggestion.id
+      });
 
-         // מחיקת הסעיף
-         await base44.entities.Section.delete(section.id);
+      console.log('[AUTO-ACCEPT DELETE] Created "after" version:', nextVersion + 1);
 
-         console.log('[AUTO-ACCEPT DELETE] Section deleted successfully');
-       } else {
-         console.error('[AUTO-ACCEPT DELETE] Section not found:', freshSuggestion.sectionId);
-       }
-     }
+      // מחיקת הסעיף בפועל
+      await base44.entities.Section.delete(section.id);
+
+      console.log('[AUTO-ACCEPT DELETE] ✅ Section deleted successfully');
+    }
     // טיפול בהצעה לסעיף חדש
      else if (freshSuggestion.type === 'new_section') {
        console.log('[AUTO-ACCEPT NEW_SECTION] Creating new section with suggestion:', freshSuggestion.id);
