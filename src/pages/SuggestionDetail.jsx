@@ -574,16 +574,19 @@ export default function SuggestionDetail() {
   // useEffect ALWAYS runs - before any conditional returns
   React.useEffect(() => {
     if (commentId && suggestionId && typeof window !== 'undefined' && typeof document !== 'undefined') {
-      setTimeout(() => {
-        const commentElement = document.getElementById(`comment-${commentId}`);
-        if (commentElement) {
-          commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-          setTimeout(() => {
-            commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
-          }, 3000);
-        }
-      }, 500);
+      // Wait for comments to load first
+      if (comments && comments.length > 0) {
+        setTimeout(() => {
+          const commentElement = document.getElementById(`comment-${commentId}`);
+          if (commentElement) {
+            commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+            setTimeout(() => {
+              commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+            }, 3000);
+          }
+        }, 500);
+      }
     }
   }, [commentId, suggestionId, comments]);
 
