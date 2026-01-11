@@ -577,13 +577,15 @@ export default function SuggestionDetail() {
       // Wait for comments to load first
       if (comments && comments.length > 0) {
         setTimeout(() => {
-          const commentElement = document.getElementById(`comment-${commentId}`);
-          if (commentElement) {
-            commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-            setTimeout(() => {
-              commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
-            }, 3000);
+          if (typeof document !== 'undefined' && document.getElementById) {
+            const commentElement = document.getElementById(`comment-${commentId}`);
+            if (commentElement) {
+              commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+              setTimeout(() => {
+                commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+              }, 3000);
+            }
           }
         }, 500);
       }
