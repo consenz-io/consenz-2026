@@ -101,21 +101,19 @@ export default function DocumentContent({
 
   // Scroll to newly created suggestion
   React.useEffect(() => {
-    if (newlyCreatedSuggestion?.suggestionId) {
+    if (newlyCreatedSuggestion?.suggestionId && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
       const { suggestionId } = newlyCreatedSuggestion;
       
       const scrollToElement = () => {
-        if (typeof window !== 'undefined' && window.document) {
-          const element = window.document.getElementById(`suggestion-${suggestionId}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            element.classList.add('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
-            setTimeout(() => {
-              element.classList.remove('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
-              onClearNewlyCreated();
-            }, 3000);
-            return true;
-          }
+        const element = document.getElementById(`suggestion-${suggestionId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
+          setTimeout(() => {
+            element.classList.remove('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
+            onClearNewlyCreated();
+          }, 3000);
+          return true;
         }
         return false;
       };
