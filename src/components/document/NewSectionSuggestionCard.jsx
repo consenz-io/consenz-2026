@@ -45,8 +45,8 @@ export default function NewSectionSuggestionCard({
 
   // Truncate content for preview
   const getContentPreview = (html) => {
-    if (typeof window !== 'undefined' && window.document) {
-      const div = window.document.createElement('div');
+    if (typeof window !== 'undefined' && typeof document !== 'undefined' && document.createElement) {
+      const div = document.createElement('div');
       div.innerHTML = html;
       const text = div.textContent || div.innerText || '';
       return text.length > 150 ? text.substring(0, 150) + '...' : text;
