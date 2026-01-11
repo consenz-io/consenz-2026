@@ -445,37 +445,12 @@ export default function SectionCarousel({
             </div>
             {showComments[`section-${section.id}`] && (
               <div className="mt-4 pt-4 border-t border-slate-200">
-                <div className="space-y-6">
-                  <CommentsSection
-                    entityType="section"
-                    entityId={section.id}
-                    user={user}
-                  />
-                  
-                  {/* תגובות מהצעות שקשורות לסעיף זה */}
-                  {sortedSuggestions.length > 0 && (
-                    <div className="pt-4 border-t border-slate-200">
-                      <h4 className="text-sm font-semibold text-slate-700 mb-3">
-                        {language === 'he' ? 'תגובות על הצעות לסעיף זה' : language === 'ar' ? 'تعليقات على مقترحات هذا القسم' : 'Comments on suggestions for this section'}
-                      </h4>
-                      <div className="space-y-4">
-                        {sortedSuggestions.map(suggestion => (
-                          <div key={suggestion.id} className="pl-4 border-l-2 border-blue-200">
-                            <div className="text-xs text-slate-500 mb-2">
-                              {language === 'he' ? 'הצעה מאת' : language === 'ar' ? 'اقتراح من' : 'Suggestion by'} {getUserName(suggestion.created_by)}
-                            </div>
-                            <CommentsSection
-                              entityType="suggestion"
-                              entityId={suggestion.id}
-                              user={user}
-                              sectionId={section.id}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <CommentsSection
+                  entityType="section"
+                  entityId={section.id}
+                  user={user}
+                  relatedSuggestionIds={sortedSuggestions.map(s => s.id)}
+                />
               </div>
             )}
           </>
