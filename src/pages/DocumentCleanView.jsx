@@ -731,10 +731,18 @@ ${text}`;
                                 ) : (
                                 <>
                                   {isViewingHistory && olderContent && olderContent !== displayedContent ? (
-                                    <div id={`change-${section.id}`} className="border-l-4 border-blue-400 pl-3 py-2 bg-blue-50/30 rounded">
+                                    <div 
+                                      id={`change-${section.id}`} 
+                                      className="border-l-4 border-blue-400 pl-3 py-2 bg-blue-50/30 rounded cursor-pointer hover:bg-blue-100 transition-colors"
+                                      onClick={() => {
+                                        if (currentSnapshot?.suggestionId) {
+                                          setOpenSuggestionId(currentSnapshot.suggestionId);
+                                        }
+                                      }}
+                                    >
                                       <div className="flex items-center justify-between mb-2">
                                         <Badge className="bg-blue-100 text-blue-800 text-xs">
-                                          {language === 'he' ? 'השוואה' : language === 'ar' ? 'مقارنة' : 'Comparison'}
+                                          {language === 'he' ? 'השוואה - לחץ לצפייה בדיון' : language === 'ar' ? 'مقارنة - انقر لعرض النقاش' : 'Comparison - Click to view discussion'}
                                         </Badge>
                                         <div className="flex items-center gap-2">
                                           <Button
