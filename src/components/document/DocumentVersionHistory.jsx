@@ -243,7 +243,11 @@ export default function DocumentVersionHistory({
 
   // סינון כפילויות - שומרים רק גרסאות עם תוכן שונה מהגרסה הקודמת
   const sortedVersions = [...versions]
-    .sort((a, b) => b.version - a.version)
+    .sort((a, b) => {
+      const dateA = new Date(a.created_date || 0).getTime();
+      const dateB = new Date(b.created_date || 0).getTime();
+      return dateB - dateA;
+    })
     .filter((version, index, arr) => {
       // הגרסה האחרונה תמיד נשארת
       if (index === arr.length - 1) return true;
