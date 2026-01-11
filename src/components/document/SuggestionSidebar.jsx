@@ -903,6 +903,7 @@ export default function SuggestionSidebar({
               entityId={suggestionId}
               user={user}
               sectionId={suggestion?.sectionId}
+              relatedSuggestionIds={[]}
             />
           </div>
         </div>
