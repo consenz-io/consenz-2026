@@ -323,6 +323,16 @@ export default function SectionCarousel({
 
   const currentSuggestionDisplayId = currentView?.type === 'suggestion' ? `suggestion-${currentView.data.id}` : `section-${section.id}`;
 
+  // Scroll to target section when needed (only in browser)
+  React.useEffect(() => {
+    if (targetSuggestionId && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
+      const targetElement = document.getElementById(`suggestion-${targetSuggestionId}`);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [targetSuggestionId]);
+
   return (
     <div id={currentSuggestionDisplayId} className="group relative p-3 md:p-6 border-2 border-slate-300 rounded-lg hover:border-blue-400 hover:shadow-md transition-all bg-gradient-to-br from-white to-slate-50/30">
       {/* כותרת סעיף עם אינדיקטור */}
