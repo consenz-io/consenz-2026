@@ -573,47 +573,24 @@ export default function SuggestionDetail() {
 
   // useEffect to scroll to comment from notification
   React.useEffect(() => {
-    if (commentId && typeof window !== 'undefined' && typeof document !== 'undefined') {
-      // Wait for comments section to be rendered
-      const scrollToComment = () => {
-        if (typeof document !== 'undefined' && document.getElementById) {
-          const commentElement = document.getElementById(`comment-${commentId}`);
-          if (commentElement) {
-            // Scroll to comment
-            setTimeout(() => {
-              commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              // Highlight the comment
-              commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-              setTimeout(() => {
-                commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
-              }, 3000);
-            }, 100);
-            return true;
-          }
+    if (commentId && comments && comments.length > 0 && typeof window !== 'undefined' && typeof document !== 'undefined') {
+      // Wait a bit to ensure DOM is fully rendered
+      const scrollTimer = setTimeout(() => {
+        const commentElement = document.getElementById(`comment-${commentId}`);
+        if (commentElement) {
+          // Scroll to comment
+          commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Highlight the comment
+          commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+          setTimeout(() => {
+            commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+          }, 3000);
         }
-        return false;
-      };
-        
-      // Try with multiple attempts
-      let attempts = 0;
-      const maxAttempts = 10;
-      const tryScroll = () => {
-        attempts++;
-        if (scrollToComment()) {
-          console.log('[SCROLL] Successfully scrolled to comment after', attempts, 'attempts');
-          return;
-        }
-        if (attempts < maxAttempts) {
-          setTimeout(tryScroll, 300);
-        } else {
-          console.warn('[SCROLL] Failed to find comment element after', maxAttempts, 'attempts');
-        }
-      };
+      }, 1000);
       
-      // Start trying after a short delay to let the page render
-      setTimeout(tryScroll, 500);
+      return () => clearTimeout(scrollTimer);
     }
-  }, [commentId]);
+  }, [commentId, comments]);
 
   // useMemo ALWAYS runs - before any conditional returns
   const isContentStillCurrent = React.useMemo(() => {
