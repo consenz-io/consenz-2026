@@ -264,9 +264,9 @@ export default function DocumentCleanView() {
           }
         }
 
-        if (targetSectionId && typeof window !== 'undefined' && window.document) {
+        if (targetSectionId && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
           // Always scroll to the change element (where diff is displayed)
-          const changeElement = window.document.getElementById(`change-${targetSectionId}`);
+          const changeElement = document.getElementById(`change-${targetSectionId}`);
           if (changeElement) {
             changeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             changeElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
@@ -275,7 +275,7 @@ export default function DocumentCleanView() {
             }, 2000);
           } else {
             // Fallback to section container
-            const sectionElement = window.document.getElementById(`section-${targetSectionId}`);
+            const sectionElement = document.getElementById(`section-${targetSectionId}`);
             if (sectionElement) {
               sectionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
