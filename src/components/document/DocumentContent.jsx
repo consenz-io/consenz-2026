@@ -105,15 +105,17 @@ export default function DocumentContent({
       const { suggestionId } = newlyCreatedSuggestion;
       
       const scrollToElement = () => {
-        const element = window.document.getElementById(`suggestion-${suggestionId}`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          element.classList.add('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
-          setTimeout(() => {
-            element.classList.remove('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
-            onClearNewlyCreated();
-          }, 3000);
-          return true;
+        if (typeof window !== 'undefined' && window.document) {
+          const element = window.document.getElementById(`suggestion-${suggestionId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.classList.add('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
+            setTimeout(() => {
+              element.classList.remove('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
+              onClearNewlyCreated();
+            }, 3000);
+            return true;
+          }
         }
         return false;
       };
