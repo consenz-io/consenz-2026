@@ -904,6 +904,7 @@ export default function SuggestionSidebar({
               user={user}
               sectionId={suggestion?.sectionId}
               relatedSuggestionIds={[]}
+              includeRelatedComments={true}
             />
           </div>
         </div>

@@ -536,6 +536,13 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
 
        console.log('[AUTO-ACCEPT NEW_SECTION] Created new section with ID:', newSection.id);
 
+       // Update the suggestion with the newly created section's ID
+       await base44.entities.Suggestion.update(freshSuggestion.id, {
+         sectionId: newSection.id
+       });
+
+       console.log('[AUTO-ACCEPT NEW_SECTION] Updated suggestion', freshSuggestion.id, 'with new sectionId:', newSection.id);
+
        // שמירת גרסה ראשונה (רק גרסה אחת לסעיף חדש - ללא "לפני")
        await base44.entities.DocumentVersion.create({
          documentId: freshSuggestion.documentId,
