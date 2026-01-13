@@ -326,7 +326,7 @@ export default function CommentsSection({ suggestionId, user }) {
         ? comments.find(c => c.id === data.parentCommentId) 
         : null;
       
-      runBackgroundTasks(comment, entityType, entityId, parentComment);
+      runBackgroundTasks(comment, suggestionId, parentComment);
       
       return comment;
     },
