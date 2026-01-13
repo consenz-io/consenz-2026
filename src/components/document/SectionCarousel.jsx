@@ -443,44 +443,15 @@ export default function SectionCarousel({
               <div className="text-[10px] md:text-xs text-slate-400">
                 {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString('en-GB')}
               </div>
-              {(() => {
-                const sectionCommentsCount = useMemo(() => 
-                  getCommentsCount('section', section.id),
-                  [section.id, getCommentsCount]
-                );
-                const allSuggestionIds = useMemo(() =>
-                  (allSectionSuggestions || []).map(s => s.id),
-                  [allSectionSuggestions]
-                );
-                const suggestionsCommentsCount = useMemo(() =>
-                  allSuggestionIds.reduce((sum, sugId) => 
-                    sum + getCommentsCount('suggestion', sugId), 0
-                  ),
-                  [allSuggestionIds, getCommentsCount]
-                );
-                const totalComments = useMemo(() =>
-                  sectionCommentsCount + suggestionsCommentsCount,
-                  [sectionCommentsCount, suggestionsCommentsCount]
-                );
-
-                return (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      if (!showComments[`section-${section.id}`]) {
-                        toggleComments(`section-${section.id}`);
-                      } else {
-                        toggleComments(`section-${section.id}`);
-                      }
-                    }}
-                    className="text-slate-600 hover:text-blue-600 h-7 md:h-8 text-xs px-2"
-                  >
-                    <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                    {t('comments')} ({totalComments})
-                  </Button>
-                );
-              })()}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => toggleComments(`section-${section.id}`)}
+                className="text-slate-600 hover:text-blue-600 h-7 md:h-8 text-xs px-2"
+              >
+                <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                {t('comments')} (0)
+              </Button>
             </div>
             {showComments[`section-${section.id}`] && (
               <div className="mt-4 pt-4 border-t border-slate-200">
@@ -766,7 +737,7 @@ export default function SectionCarousel({
                     className="h-7 md:h-8 text-xs px-2"
                   >
                     <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                    {t('comments')} ({useMemo(() => getCommentsCount('suggestion', currentView.data.id), [currentView.data.id, getCommentsCount])})
+                    {t('comments')} (0)
                   </Button>
                 </div>
                 {showComments[`suggestion-${currentView.data.id}`] && (
