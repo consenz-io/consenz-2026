@@ -89,21 +89,9 @@ export default function Home() {
     });
   }, [user, allUsers, publicProfiles]);
 
-  const { data: allArguments } = useQuery({
-    queryKey: ['allArguments'],
-    queryFn: () => base44.entities.Argument.list(),
-    initialData: [],
-  });
-
   const { data: allComments } = useQuery({
     queryKey: ['allComments'],
     queryFn: () => base44.entities.Comment.list(),
-    initialData: [],
-  });
-
-  const { data: allSections } = useQuery({
-    queryKey: ['allSections'],
-    queryFn: () => base44.entities.Section.list(),
     initialData: [],
   });
 
@@ -113,21 +101,12 @@ export default function Home() {
     initialData: [],
   });
 
-  // Calculate real contributors per document using shared logic
-  const getDocumentContributors = (doc) => {
-    return calculateContributorsFromData({
-      document: doc,
-      suggestions: allSuggestions.filter(s => s.documentId === doc.id),
-      allVotes,
-      allUsers,
-      allComments,
-      sections: allSections.filter(s => s.documentId === doc.id),
-      documentAgreements: allAgreements.filter(a => a.documentId === doc.id)
-    });
-  };
+  const { data: allSections } = useQuery({
+    queryKey: ['allSections'],
+    queryFn: () => base44.entities.Section.list(),
+    initialData: [],
+  });
 
-  // Calculate unique participants across all documents and build list
-  // CRITERIA: Only users who voted, commented, or signed documents
   const { totalUniqueContributors, contributorsList } = useMemo(() => {
     const uniqueEmails = new Set();
     
@@ -183,21 +162,7 @@ export default function Home() {
     };
   }, [allVotes, allUsers, publicProfiles, allComments, allAgreements]);
 
-  const calculateAverageConsensus = () => {
-    if (!acceptedSuggestions || acceptedSuggestions.length === 0) return 0;
-    
-    const consensusScores = acceptedSuggestions
-      .filter(s => s && typeof s.proVotes === 'number' && typeof s.conVotes === 'number')
-      .map(s => {
-        const total = s.proVotes + s.conVotes;
-        return total > 0 ? (s.proVotes / total) : 0;
-      });
-    
-    if (consensusScores.length === 0) return 0;
-    
-    const sum = consensusScores.reduce((acc, score) => acc + score, 0);
-    return (sum / consensusScores.length * 100).toFixed(0);
-  };
+
 
   const languagePrompts = {
     en: "English",
