@@ -58,9 +58,9 @@ export default function SectionDiff({
     // If translated - both are in same language
     if (showTranslated && hasTranslation) return true;
     
-    // If not translated - check if original languages match
-    return originalSourceLang === modifiedSourceLang;
-  }, [showTranslated, hasTranslation, originalSourceLang, modifiedSourceLang]);
+    // If not translated - always allow diff (assumes same language or user will translate)
+    return true;
+  }, [showTranslated, hasTranslation]);
   
   // Compute diff with memoization
   const diff = useMemo(() => {
