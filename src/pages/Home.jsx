@@ -66,6 +66,12 @@ export default function Home() {
     initialData: [],
   });
 
+  const { data: allSuggestions } = useQuery({
+    queryKey: ['allSuggestions'],
+    queryFn: () => base44.entities.Suggestion.list(),
+    initialData: [],
+  });
+
   const { data: allUsers = [] } = useQuery({
     queryKey: ['allUsers'],
     queryFn: () => base44.entities.User.list('-created_date'),
