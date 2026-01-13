@@ -125,29 +125,17 @@ export default function SuggestionSidebar({
   });
 
   const { data: suggestionComments = [] } = useQuery({
-    queryKey: ['comments', 'suggestion', suggestionId],
+    queryKey: ['comments', 'suggestionId', suggestionId],
     queryFn: () => base44.entities.Comment.filter({ 
-      rootEntityType: 'suggestion',
-      rootEntityId: suggestionId 
+      suggestionId: suggestionId 
     }),
     initialData: [],
     enabled: !!suggestionId,
   });
 
-  const { data: sectionComments = [] } = useQuery({
-    queryKey: ['comments', 'section', suggestion?.sectionId],
-    queryFn: () => base44.entities.Comment.filter({ 
-      rootEntityType: 'section',
-      rootEntityId: suggestion.sectionId 
-    }),
-    initialData: [],
-    enabled: !!suggestion?.sectionId,
-  });
-
   const totalCommentsCount = React.useMemo(() => {
-    return suggestionComments.filter(c => !c.parentCommentId).length + 
-           sectionComments.filter(c => !c.parentCommentId).length;
-  }, [suggestionComments, sectionComments]);
+    return suggestionComments.filter(c => !c.parentCommentId).length;
+  }, [suggestionComments]);
 
   const getUserName = (email) => {
     // Try public profile first (accessible to everyone)
