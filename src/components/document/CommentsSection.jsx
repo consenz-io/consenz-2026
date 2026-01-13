@@ -273,20 +273,18 @@ export default function CommentsSection({ entityType, entityId, user }) {
       
       // If this is a section, also fetch comments from the suggestion that created it
       if (entityType === 'section') {
-        const creatorSuggestions = await base44.entities.Suggestion.filter({ sectionId: entityId });
-        const suggestionComments = [];
+        // Find the suggestion that created this section using DocumentVersion
+        const versions = await base44.entities.DocumentVersion.filter({ sectionId: entityId });
+        const creationVersion = versions.find(v => v.changeType === 'section_created' && v.suggestionId);
         
-        for (const sugg of creatorSuggestions) {
-          if (sugg.type === 'new_section') {
-            const comments = await base44.entities.Comment.filter({
-              rootEntityType: 'suggestion',
-              rootEntityId: sugg.id
-            }, 'created_date');
-            suggestionComments.push(...comments);
-          }
+        if (creationVersion?.suggestionId) {
+          const suggestionComments = await base44.entities.Comment.filter({
+            rootEntityType: 'suggestion',
+            rootEntityId: creationVersion.suggestionId
+          }, 'created_date');
+          
+          return [...directComments, ...suggestionComments];
         }
-        
-        return [...directComments, ...suggestionComments];
       }
       
       return directComments;
