@@ -51,6 +51,15 @@ export default function Home() {
     retry: false,
   });
 
+  const { data: platformStats = {} } = useQuery({
+    queryKey: ['platformStats'],
+    queryFn: async () => {
+      const stats = await base44.entities.PlatformStatistics.list();
+      return stats[0] || { activeDocumentsCount: 0, registeredUsersCount: 0, averageConsensus: 0 };
+    },
+    initialData: { activeDocumentsCount: 0, registeredUsersCount: 0, averageConsensus: 0 },
+  });
+
   const { data: allVotes } = useQuery({
     queryKey: ['allVotes'],
     queryFn: () => base44.entities.Vote.list(),
