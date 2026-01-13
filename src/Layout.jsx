@@ -308,9 +308,9 @@ function LayoutContent({ children, currentPageName }) {
                         <p className="font-medium text-slate-900 text-sm truncate">{user.full_name}</p>
                         <p className="text-xs text-slate-500 truncate">{user.email}</p>
                       </div>
-                      </div>
-                      </Link>
-                      </div>
+                    </div>
+                  </Link>
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
