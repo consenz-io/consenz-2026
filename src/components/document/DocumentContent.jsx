@@ -240,18 +240,19 @@ export default function DocumentContent({
   }, []);
 
   const { data: userVotes } = useQuery({
-    queryKey: ['userVotes', document?.id, user?.id],
+    queryKey: ['userVotes', document?.id, user?.id, suggestions.map(s => s.id).join(',')],
     queryFn: async () => {
-      if (!user?.id) return [];
-      const allVotes = await base44.entities.Vote.filter({ userId: user.id });
-      // מחזיר רק הצבעות על הצעות במסמך הזה, וממפה לפי suggestionId
-      const relevantVotes = allVotes.filter(v => 
-        suggestions.some(s => s.id === v.suggestionId)
-      );
-      // מסיר כפילויות - שומר רק את ההצבעה האחרונה לכל הצעה
+      if (!user?.id || suggestions.length === 0) return [];
+      // Server-side filtering with $in operator - fetch only relevant votes
+      const suggestionIds = suggestions.map(s => s.id);
+      const votes = await base44.entities.Vote.filter({ 
+        userId: user.id,
+        suggestionId: { $in: suggestionIds }
+      });
+      // Remove duplicates - keep only latest vote per suggestion
       const uniqueVotes = [];
       const seenSuggestionIds = new Set();
-      for (const vote of relevantVotes.reverse()) {
+      for (const vote of votes.reverse()) {
         if (!seenSuggestionIds.has(vote.suggestionId)) {
           seenSuggestionIds.add(vote.suggestionId);
           uniqueVotes.push(vote);
@@ -261,7 +262,7 @@ export default function DocumentContent({
     },
     enabled: !!user?.id && suggestions.length > 0,
     initialData: [],
-    staleTime: 0, // תמיד רענן כשיש שינוי
+    staleTime: 0,
     refetchInterval: SYNC_INTERVAL,
     refetchIntervalInBackground: false,
   });
