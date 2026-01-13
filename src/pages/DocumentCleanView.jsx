@@ -239,20 +239,16 @@ export default function DocumentCleanView() {
 
   // אוטומטיות גלילה לסעיף שהשתנה או נוצר
   React.useEffect(() => {
-    if (currentVersionIndex > 0 && currentSnapshot && typeof window !== 'undefined' && typeof document !== 'undefined') {
+    if (currentVersionIndex > 0 && currentSnapshot && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
       const scrollWithRetry = (attemptCount = 0) => {
-        // Find the first section that has visible changes compared to older version
         let targetSectionId = null;
         
-        // Priority 1: New section created in this version
         if (currentSnapshot.isNewSection && currentSnapshot.newSectionId) {
           targetSectionId = currentSnapshot.newSectionId;
         } 
-        // Priority 2: Section with direct changes in this version
         else if (currentSnapshot.changedSectionId) {
           targetSectionId = currentSnapshot.changedSectionId;
         }
-        // Priority 3: Find first section with content differences compared to older version
         else if (olderSnapshot) {
           for (const section of sections) {
             const currentContent = currentSnapshot?.sectionContents?.[section.id];
@@ -265,7 +261,6 @@ export default function DocumentCleanView() {
         }
 
         if (targetSectionId) {
-          // Always scroll to the change element (where diff is displayed)
           const changeElement = document.getElementById(`change-${targetSectionId}`);
           if (changeElement && changeElement.offsetParent !== null) {
             try {
@@ -274,18 +269,16 @@ export default function DocumentCleanView() {
               setTimeout(() => {
                 changeElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
               }, 2000);
-              return; // Success, exit
+              return;
             } catch (e) {
               console.error('Scroll error:', e);
             }
           } else if (attemptCount < 5) {
-            // Retry up to 5 times with increasing delays
             setTimeout(() => scrollWithRetry(attemptCount + 1), 200 + (100 * attemptCount));
           }
         }
       };
 
-      // Initial delay to ensure DOM is ready
       setTimeout(() => scrollWithRetry(), 300);
     }
   }, [currentVersionIndex, currentSnapshot, olderSnapshot, sections]);
