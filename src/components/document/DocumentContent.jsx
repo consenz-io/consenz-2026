@@ -101,19 +101,23 @@ export default function DocumentContent({
 
   // Scroll to newly created suggestion
   React.useEffect(() => {
-    if (newlyCreatedSuggestion?.suggestionId && typeof window !== 'undefined' && window.document?.getElementById) {
+    if (newlyCreatedSuggestion?.suggestionId && typeof window !== 'undefined') {
       const { suggestionId } = newlyCreatedSuggestion;
       
       const scrollToElement = () => {
-        const element = window.document.getElementById(`suggestion-${suggestionId}`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          element.classList.add('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
-          setTimeout(() => {
-            element.classList.remove('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
-            onClearNewlyCreated();
-          }, 3000);
-          return true;
+        try {
+          const element = window.document?.getElementById(`suggestion-${suggestionId}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            element.classList.add('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
+            setTimeout(() => {
+              element.classList.remove('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
+              onClearNewlyCreated();
+            }, 3000);
+            return true;
+          }
+        } catch (e) {
+          console.warn('Could not scroll to element:', e);
         }
         return false;
       };
