@@ -1,8 +1,8 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import NotificationBell from "./NotificationBell.jsx";
-import NotificationErrorBoundary from "./NotificationErrorBoundary.jsx";
+import NotificationBell from "./NotificationBell";
+import NotificationErrorBoundary from "./NotificationErrorBoundary";
 
 export default function FloatingNotificationBell() {
   const { data: user } = useQuery({
@@ -14,7 +14,7 @@ export default function FloatingNotificationBell() {
   if (!user) return null;
 
   return (
-    <div className="fixed bottom-24 right-6 z-40">
+    <div className="fixed bottom-24 left-6 z-50">
       <NotificationErrorBoundary>
         <div className="bg-white rounded-full shadow-lg p-2 hover:shadow-xl transition-all duration-300 hover:scale-110">
           <NotificationBell user={user} />

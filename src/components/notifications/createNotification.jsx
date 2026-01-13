@@ -303,8 +303,7 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
     
     // Ensure voter has public profile
     if (currentUser) {
-      const { ensureUserPublicProfile } = await import('../ensureUserPublicProfile');
-      await ensureUserPublicProfile(currentUser);
+      await ensureUserPublicProfileForInteraction(currentUser);
     }
     
     // Fetch suggestion creator directly
@@ -735,8 +734,7 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
     
     // Ensure commenter has public profile
     if (currentUser) {
-      const { ensureUserPublicProfile } = await import('../ensureUserPublicProfile');
-      await ensureUserPublicProfile(currentUser);
+      await ensureUserPublicProfileForInteraction(currentUser);
     }
     
     const [publicProfiles, allComments] = await Promise.all([
@@ -869,19 +867,17 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
  * Create notification for new comment in document general discussion
  */
 export async function notifyNewDocumentComment({ comment, document: doc, parentComment = null, currentUser = null }) {
-   try {
-     // Validate required data
-     if (!comment?.id || !comment?.created_by || !doc?.id) {
-       console.error('[NOTIFICATION ERROR] Missing required data for document comment notification:', { comment, doc });
-       return;
-     }
-
-     // Ensure commenter has public profile
-     if (currentUser) {
-       const ensureModule = await import('../ensureUserPublicProfile');
-       const { ensureUserPublicProfile } = ensureModule;
-       await ensureUserPublicProfile(currentUser);
-     }
+  try {
+    // Validate required data
+    if (!comment?.id || !comment?.created_by || !doc?.id) {
+      console.error('[NOTIFICATION ERROR] Missing required data for document comment notification:', { comment, doc });
+      return;
+    }
+    
+    // Ensure commenter has public profile
+    if (currentUser) {
+      await ensureUserPublicProfileForInteraction(currentUser);
+    }
     
     const [publicProfiles, adminIds, allDocumentComments] = await Promise.all([
       getCachedPublicProfiles(),
