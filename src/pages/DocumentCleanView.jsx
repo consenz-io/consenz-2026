@@ -655,6 +655,7 @@ ${text}`;
 
                         return (
                           <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
+                            <div id={`change-${section.id}`} className="hidden"></div>
                             <div 
                               className="flex gap-2 md:gap-4 group p-2 rounded-lg transition-colors"
                             >
