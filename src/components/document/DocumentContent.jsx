@@ -234,23 +234,9 @@ export default function DocumentContent({
     checkAndAutoAccept();
   }, [topicEditSuggestions, document, user, queryClient, suggestions]);
 
-  const { data: sectionComments } = useQuery({
-    queryKey: ['sectionComments', document?.id],
-    queryFn: () => base44.entities.Comment.filter({ rootEntityType: 'section' }),
-    initialData: [],
-    enabled: !!document?.id,
-  });
-
-  const { data: suggestionComments } = useQuery({
-    queryKey: ['suggestionComments', document?.id],
-    queryFn: () => base44.entities.Comment.filter({ rootEntityType: 'suggestion' }),
-    initialData: [],
-    enabled: !!document?.id,
-  });
-
+  // Don't fetch comments globally - let CommentsSection fetch on demand
   const getCommentsCount = (entityType, entityId) => {
-    const comments = entityType === 'section' ? sectionComments : suggestionComments;
-    return comments.filter(c => c.rootEntityId === entityId).length;
+    return 0; // Placeholder until CommentsSection loads actual count
   };
 
   const { data: userVotes } = useQuery({
