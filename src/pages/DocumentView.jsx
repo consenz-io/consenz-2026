@@ -89,9 +89,18 @@ export default function DocumentView() {
     refetchIntervalInBackground: false,
   });
 
+  // Load accepted suggestions as "sections" - they serve the same purpose when accepted
   const { data: sections, isLoading: sectionsLoading } = useQuery({
     queryKey: ['sections', documentId],
-    queryFn: () => base44.entities.Section.filter({ documentId }, 'order'),
+    queryFn: async () => {
+      // Get all accepted suggestions that are functioning as sections
+      const acceptedSuggestions = await base44.entities.Suggestion.filter({ 
+        documentId, 
+        status: 'accepted',
+        type: ['new_section', 'edit_section']
+      }, 'order');
+      return acceptedSuggestions;
+    },
     initialData: [],
     enabled: !!documentId,
     refetchInterval: SYNC_INTERVAL,
