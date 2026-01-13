@@ -766,7 +766,7 @@ export default function SectionCarousel({
                     className="h-7 md:h-8 text-xs px-2"
                   >
                     <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                    {t('comments')} ({getCommentsCount('suggestion', currentView.data.id)})
+                    {t('comments')} ({useMemo(() => getCommentsCount('suggestion', currentView.data.id), [currentView.data.id, getCommentsCount])})
                   </Button>
                 </div>
                 {showComments[`suggestion-${currentView.data.id}`] && (
