@@ -222,30 +222,28 @@ export default function DocumentView() {
   const scrollToSuggestion = React.useCallback((index) => {
     const suggestion = pendingSuggestions[index];
     if (!suggestion) return;
-    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    if (typeof window === 'undefined' || !window.document || !window.document.querySelectorAll) return;
 
     setTargetSuggestionId(suggestion.id);
 
-    // Pass the index to SectionCarousel which will scroll directly
     const scrollWithRetry = (attemptCount = 0) => {
-      const carousels = document.querySelectorAll('[role="region"]');
-      let targetCarousel = null;
+      try {
+        const carousels = window.document.querySelectorAll('[class*="carousel"]');
+        let targetCarousel = null;
 
-      // Find carousel containing the suggestion by checking nearby elements
-      carousels.forEach(carousel => {
-        const cards = carousel.querySelectorAll('[class*="group"]');
-        cards.forEach(card => {
-          // Check if this card is for our suggestion
-          if (card.textContent.includes(suggestion.created_by)) {
+        carousels.forEach(carousel => {
+          if (carousel.textContent.includes(suggestion.title)) {
             targetCarousel = carousel;
           }
         });
-      });
 
-      if (targetCarousel) {
-        targetCarousel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      } else if (attemptCount < 3) {
-        setTimeout(() => scrollWithRetry(attemptCount + 1), 400);
+        if (targetCarousel) {
+          targetCarousel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (attemptCount < 3) {
+          setTimeout(() => scrollWithRetry(attemptCount + 1), 400);
+        }
+      } catch (e) {
+        console.error('Scroll error:', e);
       }
     };
 
