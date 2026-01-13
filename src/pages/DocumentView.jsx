@@ -347,17 +347,17 @@ export default function DocumentView() {
   }, [document]);
 
   useEffect(() => {
-    if (scrollToSectionId && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
+    if (scrollToSectionId && typeof window !== 'undefined' && window.document && window.document.getElementById) {
       setTimeout(() => {
         // Try both section-X and new-suggestion-X patterns
-        let element = document.getElementById(scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-') 
+        let element = window.document.getElementById(scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-') 
           ? scrollToSectionId 
           : `section-${scrollToSectionId}`
         );
         
         // If not found, try the alternative pattern
         if (!element && scrollToSectionId.startsWith('new-suggestion-')) {
-          element = document.getElementById(scrollToSectionId);
+          element = window.document.getElementById(scrollToSectionId);
         }
         
         if (element) {
@@ -369,7 +369,7 @@ export default function DocumentView() {
         } else {
           // Retry after a longer delay if suggestions haven't loaded yet
           setTimeout(() => {
-            const retryElement = document.getElementById(scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-') 
+            const retryElement = window.document.getElementById(scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-') 
               ? scrollToSectionId 
               : `section-${scrollToSectionId}`
             );
@@ -388,11 +388,11 @@ export default function DocumentView() {
 
   // Scroll to topic from URL hash
   useEffect(() => {
-    if (typeof window === 'undefined' || typeof document === 'undefined' || !document.querySelector) return;
+    if (typeof window === 'undefined' || !window.document || !window.document.querySelector) return;
     const hash = window.location.hash;
     if (hash && topics.length > 0) {
       setTimeout(() => {
-        const element = document.querySelector(hash);
+        const element = window.document.querySelector(hash);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           // Add highlight effect
@@ -785,20 +785,20 @@ export default function DocumentView() {
                                     dir={isRTL ? 'rtl' : 'ltr'}
                                   />
                                   <Button
-                                   variant="link"
-                                   size="sm"
-                                   onClick={() => {
-                                     setShowFullDescription(false);
-                                     setTimeout(() => {
-                                       if (typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
-                                         const titleElement = document.getElementById('document-title');
-                                         if (titleElement) {
-                                           titleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                         }
-                                       }
-                                     }, 50);
-                                   }}
-                                   className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800"
+                                  variant="link"
+                                  size="sm"
+                                  onClick={() => {
+                                    setShowFullDescription(false);
+                                    setTimeout(() => {
+                                      if (typeof window !== 'undefined' && window.document && window.document.getElementById) {
+                                        const titleElement = window.document.getElementById('document-title');
+                                        if (titleElement) {
+                                          titleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        }
+                                      }
+                                    }, 50);
+                                  }}
+                                  className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800"
                                   >
                                    {language === 'he' ? 'הצג פחות' : language === 'ar' ? 'عرض أقل' : 'Show less'}
                                   </Button>
@@ -832,8 +832,8 @@ export default function DocumentView() {
                                    if (showFullDescription) {
                                      setShowFullDescription(false);
                                      setTimeout(() => {
-                                       if (typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
-                                         const titleElement = document.getElementById('document-title');
+                                       if (typeof window !== 'undefined' && window.document && window.document.getElementById) {
+                                         const titleElement = window.document.getElementById('document-title');
                                          if (titleElement) {
                                            titleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                          }
