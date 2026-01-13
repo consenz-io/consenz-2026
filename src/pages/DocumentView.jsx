@@ -136,6 +136,7 @@ export default function DocumentView() {
     queryFn: () => base44.entities.Argument.list(),
     initialData: [],
     staleTime: 30000,
+    enabled: false, // Disabled - using targeted queries instead
   });
 
   const { data: allComments } = useQuery({
@@ -143,6 +144,7 @@ export default function DocumentView() {
     queryFn: () => base44.entities.Comment.list(),
     initialData: [],
     staleTime: 30000,
+    enabled: false, // Disabled - using targeted queries instead
   });
 
   const { data: documentComments } = useQuery({
