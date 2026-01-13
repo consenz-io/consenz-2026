@@ -247,8 +247,8 @@ export default function DocumentCleanView() {
 
   // גלילה אוטומטית לסעיף שהשתנה או נוצר
   React.useEffect(() => {
-    if (currentVersionIndex > 0 && currentSnapshot && typeof window !== 'undefined') {
-      setTimeout(() => {
+    if (currentVersionIndex > 0 && currentSnapshot && typeof window !== 'undefined' && window.document) {
+      const scrollTimer = setTimeout(() => {
         // Find the first section that has visible changes compared to older version
         let targetSectionId = null;
         
@@ -276,7 +276,7 @@ export default function DocumentCleanView() {
           }
         }
 
-        if (targetSectionId) {
+        if (targetSectionId && window.document.getElementById) {
           // Always scroll to the change element (where diff is displayed)
           const changeElement = window.document.getElementById(`change-${targetSectionId}`);
           if (changeElement) {
@@ -294,6 +294,8 @@ export default function DocumentCleanView() {
           }
         }
       }, 300);
+      
+      return () => clearTimeout(scrollTimer);
     }
   }, [currentVersionIndex, currentSnapshot, olderSnapshot, sections]);
 
