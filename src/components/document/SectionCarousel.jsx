@@ -45,13 +45,11 @@ export default function SectionCarousel({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  // שליפת כל ההצעות של הסעיף (לא רק pending) כדי לעקוב אחרי שינויי סטטוס
-  const { data: allSectionSuggestions = [] } = useQuery({
-    queryKey: ['suggestions', document?.id],
-    enabled: false,
-    select: (data) => data?.filter(s => s.sectionId === section.id && s.type === 'edit_section') || [],
-    staleTime: 0,
-  });
+  // Filter section suggestions from the parent suggestions list
+  const allSectionSuggestions = React.useMemo(() => 
+    pendingSuggestions.filter(s => s.sectionId === section.id && (s.type === 'edit_section' || s.type === 'delete_section')) || [],
+    [pendingSuggestions, section.id]
+  );
   
   // שומר את ה-ID של ההצעה הנוכחית במקום index
   const [currentSuggestionId, setCurrentSuggestionId] = useState(null);
