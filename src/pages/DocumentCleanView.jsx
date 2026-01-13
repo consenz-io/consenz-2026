@@ -801,6 +801,7 @@ ${text}`;
                                           dangerouslySetInnerHTML={{ __html: displayedContent }}
                                         />
                                       )}
+                                      </div>
                                     </div>
                                   ) : (
                                     <div 
