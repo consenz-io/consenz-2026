@@ -247,7 +247,7 @@ export default function DocumentCleanView() {
 
   // גלילה אוטומטית לסעיף שהשתנה או נוצר
   React.useEffect(() => {
-    if (currentVersionIndex > 0 && currentSnapshot) {
+    if (currentVersionIndex > 0 && currentSnapshot && typeof window !== 'undefined') {
       setTimeout(() => {
         // Find the first section that has visible changes compared to older version
         let targetSectionId = null;
@@ -260,7 +260,11 @@ export default function DocumentCleanView() {
         else if (currentSnapshot.changedSectionId) {
           targetSectionId = currentSnapshot.changedSectionId;
         }
-        // Priority 3: Find first section with content differences compared to older version
+        // Priority 3: Deleted section
+        else if (currentSnapshot.isDeleted && currentSnapshot.deletedSectionId) {
+          targetSectionId = currentSnapshot.deletedSectionId;
+        }
+        // Priority 4: Find first section with content differences compared to older version
         else if (olderSnapshot) {
           for (const section of sections) {
             const currentContent = currentSnapshot?.sectionContents?.[section.id];
@@ -272,9 +276,9 @@ export default function DocumentCleanView() {
           }
         }
 
-        if (targetSectionId && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
+        if (targetSectionId) {
           // Always scroll to the change element (where diff is displayed)
-          const changeElement = document.getElementById(`change-${targetSectionId}`);
+          const changeElement = window.document.getElementById(`change-${targetSectionId}`);
           if (changeElement) {
             changeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             changeElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
@@ -283,13 +287,13 @@ export default function DocumentCleanView() {
             }, 2000);
           } else {
             // Fallback to section container
-            const sectionElement = document.getElementById(`section-${targetSectionId}`);
+            const sectionElement = window.document.getElementById(`section-${targetSectionId}`);
             if (sectionElement) {
               sectionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
           }
         }
-      }, 150);
+      }, 300);
     }
   }, [currentVersionIndex, currentSnapshot, olderSnapshot, sections]);
 
