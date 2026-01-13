@@ -51,19 +51,6 @@ export default function Home() {
     retry: false,
   });
 
-  const { data: acceptedSuggestions } = useQuery({
-    queryKey: ['acceptedSuggestions'],
-    queryFn: () => base44.entities.Suggestion.filter({ status: 'accepted' }),
-    initialData: [],
-  });
-
-  // Fetch all data needed for accurate contributor count
-  const { data: allSuggestions } = useQuery({
-    queryKey: ['allSuggestions'],
-    queryFn: () => base44.entities.Suggestion.list(),
-    initialData: [],
-  });
-
   const { data: allVotes } = useQuery({
     queryKey: ['allVotes'],
     queryFn: () => base44.entities.Vote.list(),
@@ -76,7 +63,7 @@ export default function Home() {
     initialData: [],
     retry: false,
     throwOnError: false,
-    enabled: !!user && user?.role === 'admin', // Fetch only for confirmed admins
+    enabled: !!user && user?.role === 'admin',
   });
 
   const { data: publicProfiles = [], isLoading: publicProfilesLoading } = useQuery({
@@ -84,20 +71,15 @@ export default function Home() {
     queryFn: () => base44.entities.UserPublicProfile.list(),
     initialData: [],
     staleTime: 60000,
-    // Always fetch - it's public data available to everyone
   });
 
-  // Use allUsers for admins (matches System User Management), publicProfiles for everyone else
   const displayedUsers = React.useMemo(() => {
-    // For admins with loaded users data
     if (user?.role === 'admin' && allUsers.length > 0) {
       return allUsers;
     }
-    // For everyone else (including non-logged-in users), use publicProfiles
     if (!publicProfiles || publicProfiles.length === 0) {
       return [];
     }
-    // Remove duplicates from publicProfiles by userId
     const seen = new Set();
     return publicProfiles.filter(p => {
       if (!p || !p.userId) return false;
