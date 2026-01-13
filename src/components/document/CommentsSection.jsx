@@ -265,10 +265,32 @@ export default function CommentsSection({ entityType, entityId, user }) {
 
   const { data: rootComments, isLoading: rootCommentsLoading } = useQuery({
     queryKey: ['comments', entityType, entityId],
-    queryFn: () => base44.entities.Comment.filter({ 
-      rootEntityType: entityType, 
-      rootEntityId: entityId 
-    }, 'created_date'),
+    queryFn: async () => {
+      const directComments = await base44.entities.Comment.filter({ 
+        rootEntityType: entityType, 
+        rootEntityId: entityId 
+      }, 'created_date');
+      
+      // If this is a section, also fetch comments from the suggestion that created it
+      if (entityType === 'section') {
+        const creatorSuggestions = await base44.entities.Suggestion.filter({ sectionId: entityId });
+        const suggestionComments = [];
+        
+        for (const sugg of creatorSuggestions) {
+          if (sugg.type === 'new_section') {
+            const comments = await base44.entities.Comment.filter({
+              rootEntityType: 'suggestion',
+              rootEntityId: sugg.id
+            }, 'created_date');
+            suggestionComments.push(...comments);
+          }
+        }
+        
+        return [...directComments, ...suggestionComments];
+      }
+      
+      return directComments;
+    },
     initialData: [],
     enabled: !!entityType && !!entityId,
   });
