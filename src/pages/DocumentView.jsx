@@ -222,25 +222,30 @@ export default function DocumentView() {
   const scrollToSuggestion = (index) => {
     const suggestion = pendingSuggestions[index];
     if (!suggestion) return;
-    if (typeof window === 'undefined' || typeof document === 'undefined' || !document.querySelector) return;
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
     const elementId = `suggestion-${suggestion.id}`;
+    setTargetSuggestionId(suggestion.id);
+    
     const scrollWithRetry = (attemptCount = 0) => {
-      const element = document.querySelector(`[id="${elementId}"]`);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
-        setTimeout(() => {
-          element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
-        }, 2000);
-      } else if (attemptCount < 3) {
-        // Retry up to 3 times with increasing delays
-        setTimeout(() => scrollWithRetry(attemptCount + 1), 100 * (attemptCount + 1));
+      const element = document.getElementById(elementId);
+      if (element && element.offsetParent !== null) { // Check element is visible
+        try {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
+          setTimeout(() => {
+            element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
+          }, 2000);
+        } catch (e) {
+          console.error('Scroll error:', e);
+        }
+      } else if (attemptCount < 5) {
+        setTimeout(() => scrollWithRetry(attemptCount + 1), 200 + (100 * attemptCount));
       }
     };
 
-    setTargetSuggestionId(suggestion.id);
-    scrollWithRetry();
+    // Initial delay to ensure DOM is ready
+    setTimeout(() => scrollWithRetry(), 300);
   };
 
   const { data: user } = useQuery({
