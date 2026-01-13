@@ -303,7 +303,8 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
     
     // Ensure voter has public profile
     if (currentUser) {
-      await ensureUserPublicProfileForInteraction(currentUser);
+      const { ensureUserPublicProfile } = await import('../ensureUserPublicProfile');
+      await ensureUserPublicProfile(currentUser);
     }
     
     // Fetch suggestion creator directly
