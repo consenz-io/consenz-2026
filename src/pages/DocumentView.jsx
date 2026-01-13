@@ -219,7 +219,7 @@ export default function DocumentView() {
       });
   }, [suggestions, sections, topics]);
 
-  const scrollToSuggestion = (index) => {
+  const scrollToSuggestion = React.useCallback((index) => {
     const suggestion = pendingSuggestions[index];
     if (!suggestion) return;
     if (typeof window === 'undefined' || typeof document === 'undefined' || !document.getElementById) return;
@@ -245,7 +245,7 @@ export default function DocumentView() {
     };
 
     setTimeout(() => scrollWithRetry(), 300);
-  };
+  }, [pendingSuggestions]);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
