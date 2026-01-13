@@ -462,9 +462,7 @@ export default function SectionCarousel({
                   entityType="section"
                   entityId={section.id}
                   user={user}
-                  relatedSuggestionIds={suggestions.filter(s => s.sectionId === section.id).map(s => s.id)}
-                  includeRelatedComments={true}
-                  key={`section-${section.id}-all-comments`}
+                  key={`section-${section.id}-comments`}
                 />
               </div>
             )}
@@ -750,8 +748,6 @@ export default function SectionCarousel({
                       entityType="suggestion"
                       entityId={currentView.data.id}
                       user={user}
-                      sectionId={currentView.data.sectionId || null}
-                      includeRelatedComments={true}
                     />
                   </div>
                 )}
