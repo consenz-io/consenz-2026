@@ -216,34 +216,16 @@ const CommentItem = memo(({
 });
 
 // Background tasks - fire and forget
-const runBackgroundTasks = async (comment, entityType, entityId, parentComment) => {
+const runBackgroundTasks = async (comment, suggestionId, parentComment) => {
   try {
-    const { notifyNewComment, notifyNewDocumentComment } = await import("../notifications/createNotification");
+    const { notifyNewComment } = await import("../notifications/createNotification");
     const { calculateDocumentContributors } = await import('./calculateContributors');
     
-    let docId;
-    
-    if (entityType === 'suggestion') {
-      const suggestions = await base44.entities.Suggestion.filter({ id: entityId });
-      if (suggestions.length > 0) {
-        docId = suggestions[0].documentId;
-        notifyNewComment({ comment, targetEntity: suggestions[0], targetEntityType: 'suggestion', parentComment });
-      }
-    } else if (entityType === 'section') {
-      const sections = await base44.entities.Section.filter({ id: entityId });
-      if (sections.length > 0) {
-        docId = sections[0].documentId;
-        notifyNewComment({ comment, targetEntity: sections[0], targetEntityType: 'section', parentComment });
-      }
-    } else if (entityType === 'document') {
-      const docs = await base44.entities.Document.filter({ id: entityId });
-      if (docs.length > 0) {
-        docId = entityId;
-        notifyNewDocumentComment({ comment, document: docs[0], parentComment });
-      }
-    }
-    
-    if (docId) {
+    const suggestions = await base44.entities.Suggestion.filter({ id: suggestionId });
+    if (suggestions.length > 0) {
+      const docId = suggestions[0].documentId;
+      notifyNewComment({ comment, targetEntity: suggestions[0], targetEntityType: 'suggestion', parentComment });
+      
       const count = await calculateDocumentContributors(docId);
       await base44.entities.Document.update(docId, { totalUsersInteracted: count });
     }
