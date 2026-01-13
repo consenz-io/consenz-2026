@@ -370,6 +370,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
         content: freshSuggestion.newContent,
         lastEditedBy: userId,
         originalLanguage: newContentLanguage,
+        originatingSuggestionId: freshSuggestion.id
       });
 
       // שמירת גרסה "אחרי" עם התוכן החדש
@@ -532,6 +533,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
          order: newOrder,
          lastEditedBy: userId,
          originalLanguage: newContentLanguage,
+         originatingSuggestionId: freshSuggestion.id
        });
 
        console.log('[AUTO-ACCEPT NEW_SECTION] Created new section with ID:', newSection.id);
