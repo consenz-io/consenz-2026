@@ -309,7 +309,7 @@ export default function CommentsSection({ suggestionId, user }) {
     return baseComments.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
   }, [suggestionComments, legacyComments, sectionOriginComments, repliesComments, suggestionId, sectionData?.originatingSuggestionId]);
 
-  const isLoading = (suggestionId ? suggestionCommentsLoading : (sectionData?.originatingSuggestionId ? sectionOriginCommentsLoading : legacyCommentsLoading)) || repliesLoading;
+  const isLoading = suggestionCommentsLoading || repliesLoading;
 
   const { data: users } = useQuery({
     queryKey: ['users'],
