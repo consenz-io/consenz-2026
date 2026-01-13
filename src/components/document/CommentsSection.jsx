@@ -314,15 +314,20 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
   });
 
   const allParentIds = React.useMemo(() => {
-    const ids = [...suggestionComments.map(c => c.id)];
-    if (entityType === 'suggestion' && sectionId) {
-      ids.push(...sectionComments.map(c => c.id));
+    let allComments = [];
+    if (suggestionId) {
+      allComments = suggestionComments;
+    } else {
+      allComments = [...legacyComments];
+      if (entityType === 'suggestion' && sectionId) {
+        allComments.push(...sectionComments);
+      }
+      if (entityType === 'section' && relatedSuggestionsComments.length > 0) {
+        allComments.push(...relatedSuggestionsComments);
+      }
     }
-    if (entityType === 'section' && relatedSuggestionsComments.length > 0) {
-      ids.push(...relatedSuggestionsComments.map(c => c.id));
-    }
-    return ids;
-  }, [suggestionComments, sectionComments, relatedSuggestionsComments, entityType, sectionId]);
+    return allComments.map(c => c.id);
+  }, [suggestionComments, legacyComments, sectionComments, relatedSuggestionsComments, suggestionId, entityType, sectionId]);
 
   const { data: repliesComments, isLoading: repliesLoading } = useQuery({
     queryKey: ['replies', allParentIds],
@@ -341,14 +346,17 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
   });
 
   const comments = React.useMemo(() => {
-    let baseComments = [...suggestionComments];
-    
-    if (entityType === 'suggestion' && sectionId && sectionComments.length > 0) {
-      baseComments = [...baseComments, ...sectionComments];
-    }
-    
-    if (entityType === 'section' && relatedSuggestionsComments.length > 0) {
-      baseComments = [...baseComments, ...relatedSuggestionsComments];
+    let baseComments = [];
+    if (suggestionId) {
+      baseComments = [...suggestionComments];
+    } else {
+      baseComments = [...legacyComments];
+      if (entityType === 'suggestion' && sectionId && sectionComments.length > 0) {
+        baseComments = [...baseComments, ...sectionComments];
+      }
+      if (entityType === 'section' && relatedSuggestionsComments.length > 0) {
+        baseComments = [...baseComments, ...relatedSuggestionsComments];
+      }
     }
     
     const existingIds = new Set(baseComments.map(c => c.id));
@@ -356,9 +364,9 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
     baseComments = [...baseComments, ...newReplies];
     
     return baseComments.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-  }, [suggestionComments, sectionComments, relatedSuggestionsComments, repliesComments, entityType, sectionId]);
+  }, [suggestionComments, legacyComments, sectionComments, relatedSuggestionsComments, repliesComments, suggestionId, entityType, sectionId]);
 
-  const isLoading = suggestionCommentsLoading || (entityType === 'suggestion' && sectionId && sectionCommentsLoading) || (entityType === 'section' && relatedSuggestionsCommentsLoading) || repliesLoading;
+  const isLoading = (suggestionId ? suggestionCommentsLoading : legacyCommentsLoading) || (entityType === 'suggestion' && sectionId && sectionCommentsLoading) || (entityType === 'section' && relatedSuggestionsCommentsLoading) || repliesLoading;
 
   const { data: users } = useQuery({
     queryKey: ['users'],
