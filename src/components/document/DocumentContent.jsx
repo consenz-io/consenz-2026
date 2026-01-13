@@ -1496,8 +1496,8 @@ Return ONLY the translated text:`;
             )}
           </div>
         )}
-      </Droppable>
-    </DragDropContext>
-    </>
-  );
-}
+        </Droppable>
+        </DragDropContext>
+        </>
+        );
+        }
