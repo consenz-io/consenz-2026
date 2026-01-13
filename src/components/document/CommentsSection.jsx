@@ -349,7 +349,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
     return baseComments.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
   }, [suggestionComments, legacyComments, sectionOriginComments, repliesComments, suggestionId, sectionData?.originatingSuggestionId]);
 
-  const isLoading = (suggestionId ? suggestionCommentsLoading : legacyCommentsLoading) || (entityType === 'suggestion' && sectionId && sectionCommentsLoading) || (entityType === 'section' && relatedSuggestionsCommentsLoading) || repliesLoading;
+  const isLoading = (suggestionId ? suggestionCommentsLoading : (sectionData?.originatingSuggestionId ? sectionOriginCommentsLoading : legacyCommentsLoading)) || repliesLoading;
 
   const { data: users } = useQuery({
     queryKey: ['users'],
