@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Languages, Loader2, Eye, FileText, Check, Info } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
-import { getDiffInLanguage, detectLanguage } from "./SmartDiffTranslationService";
 import DiffModeSelector, { DIFF_MODES, useDiffMode } from "./DiffModeSelector";
 import { extractText, tokenize, computeWordDiff } from "./InlineDiff";
+import { useSectionDiffTranslation } from "./hooks/useSectionDiffTranslation";
 
 const languageLabels = {
   en: "English",
@@ -25,92 +25,33 @@ export default function SectionDiff({
   suggestion,
   originalVersion,
   newVersion,
-  section // Pass the section entity for cache
+  section
 }) {
-  const { t, language: rawLanguage, isRTL } = useLanguage();
-  const language = rawLanguage || 'he';
-  const [translationResult, setTranslationResult] = useState(null);
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [showTranslated, setShowTranslated] = useState(false);
+  const { t, isRTL } = useLanguage();
+  const language = useLanguage().language || 'he';
   const [showDiff, setShowDiff] = useState(true);
   const [diffMode, setDiffMode] = useDiffMode();
   
-  // Reset state when suggestion changes
-  useEffect(() => {
-    setTranslationResult(null);
-    setShowTranslated(false);
-    setIsTranslating(false);
-  }, [suggestion?.id, sectionId, originalContent, newContent]);
-  
-  // Detect source languages
-  const originalSourceLang = originalVersion?.originalLanguage || 
-                              section?.originalLanguage || 
-                              detectLanguage(originalContent || '');
-  const modifiedSourceLang = newVersion?.originalLanguage || 
-                              suggestion?.createdByLanguage ||
-                              suggestion?.originalLanguage || 
-                              detectLanguage(newContent || '');
-  
-  const needsTranslation = originalSourceLang !== language || modifiedSourceLang !== language;
-  const hasTranslation = translationResult?.original && translationResult?.modified;
-  
-  // Check if suggestion was written in a different language than original
-  const isCrossLanguageSuggestion = originalSourceLang !== modifiedSourceLang;
-
-  // Auto-translate if user's language differs from content - always
-  useEffect(() => {
-    if (needsTranslation && !isTranslating) {
-      // Check if we need fresh translation
-      if (!translationResult || 
-          translationResult.sourceLanguages?.original !== originalSourceLang ||
-          translationResult.sourceLanguages?.modified !== modifiedSourceLang) {
-        handleSmartTranslate();
-      }
-    }
-  }, [needsTranslation, originalSourceLang, modifiedSourceLang, language]);
-  
-  const handleSmartTranslate = async () => {
-    if (isTranslating) return;
-    
-    setIsTranslating(true);
-    try {
-      const result = await getDiffInLanguage({
-        originalContent,
-        modifiedContent: newContent,
-        originalEntity: originalVersion || section,
-        originalEntityType: originalVersion ? 'DocumentVersion' : 'Section',
-        modifiedEntity: suggestion || newVersion,
-        modifiedEntityType: suggestion ? 'Suggestion' : 'DocumentVersion',
-        targetLanguage: language,
-        originalFieldName: 'content',
-        modifiedFieldName: suggestion ? 'newContent' : 'content'
-      });
-      
-      setTranslationResult(result);
-      setShowTranslated(true);
-    } catch (error) {
-      console.error('Smart translation error:', error);
-    } finally {
-      setIsTranslating(false);
-    }
-  };
-
-  const handleToggleTranslation = async () => {
-    if (!showTranslated && needsTranslation) {
-      if (!hasTranslation) {
-        await handleSmartTranslate();
-        return;
-      }
-    }
-    setShowTranslated(!showTranslated);
-  };
-
-  const displayOriginal = showTranslated && translationResult?.original 
-    ? translationResult.original 
-    : originalContent;
-  const displayNew = showTranslated && translationResult?.modified 
-    ? translationResult.modified 
-    : newContent;
+  const {
+    translationResult,
+    isTranslating,
+    showTranslated,
+    setShowTranslated,
+    needsTranslation,
+    hasTranslation,
+    isCrossLanguageSuggestion,
+    handleToggleTranslation,
+    displayOriginal,
+    displayNew
+  } = useSectionDiffTranslation({
+    originalContent,
+    newContent,
+    section,
+    suggestion,
+    language,
+    originalVersion,
+    newVersion
+  });
   
   // Check if both contents are in the same language for diff display
   const canShowDiff = useMemo(() => {
