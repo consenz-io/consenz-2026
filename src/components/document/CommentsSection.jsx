@@ -291,23 +291,13 @@ export default function CommentsSection({ suggestionId, user }) {
   });
 
   const comments = React.useMemo(() => {
-    let baseComments = [];
-    if (suggestionId) {
-      baseComments = [...suggestionComments];
-    } else if (sectionData?.originatingSuggestionId) {
-      // If section has originatingSuggestionId, show comments from that suggestion
-      baseComments = [...sectionOriginComments];
-    } else {
-      // Fallback to legacy
-      baseComments = [...legacyComments];
-    }
-    
+    const baseComments = [...suggestionComments];
     const existingIds = new Set(baseComments.map(c => c.id));
     const newReplies = repliesComments.filter(r => !existingIds.has(r.id));
-    baseComments = [...baseComments, ...newReplies];
-    
-    return baseComments.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-  }, [suggestionComments, legacyComments, sectionOriginComments, repliesComments, suggestionId, sectionData?.originatingSuggestionId]);
+    const allComments = [...baseComments, ...newReplies];
+
+    return allComments.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+  }, [suggestionComments, repliesComments]);
 
   const isLoading = suggestionCommentsLoading || repliesLoading;
 
