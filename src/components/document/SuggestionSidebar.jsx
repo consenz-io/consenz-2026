@@ -901,6 +901,7 @@ export default function SuggestionSidebar({
             <CommentsSection
               entityType="suggestion"
               entityId={suggestionId}
+              suggestionId={suggestionId}
               user={user}
               sectionId={suggestion?.sectionId}
               relatedSuggestionIds={[]}
