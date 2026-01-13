@@ -112,7 +112,7 @@ export default function DocumentView() {
     queryKey: ['allVotes'],
     queryFn: () => base44.entities.Vote.list(),
     initialData: [],
-    enabled: !!documentId,
+    enabled: false, // Disabled - avoid rate limit, use targeted queries instead
     staleTime: 30000,
   });
 
@@ -120,6 +120,7 @@ export default function DocumentView() {
     queryKey: ['allUsers'],
     queryFn: () => base44.entities.User.list(),
     initialData: [],
+    enabled: false, // Disabled - avoid rate limit, use targeted queries instead
     staleTime: 60000,
   });
 
