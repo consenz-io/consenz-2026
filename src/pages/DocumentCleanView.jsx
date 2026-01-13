@@ -803,8 +803,6 @@ ${text}`;
                                       )}
                                       </div>
                                       ) : (
-                                      <>
-                                  ) : (
                                     <div 
                                       className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none"
                                       style={{ 
