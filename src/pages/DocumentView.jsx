@@ -222,51 +222,25 @@ export default function DocumentView() {
   const scrollToSuggestion = (index) => {
     const suggestion = pendingSuggestions[index];
     if (!suggestion) return;
-    if (typeof window === 'undefined' || typeof document === 'undefined' || !document.getElementById) return;
+    if (typeof window === 'undefined' || typeof document === 'undefined' || !document.querySelector) return;
 
-    // אם זו הצעה לעריכת סעיף או מחיקת סעיף - צריך לגלול לסעיף ולהעביר את הקרוסלה
-    if (suggestion.type === 'edit_section' || suggestion.type === 'delete_section') {
-      setTargetSuggestionId(suggestion.id);
+    const elementId = `suggestion-${suggestion.id}`;
+    const scrollWithRetry = (attemptCount = 0) => {
+      const element = document.querySelector(`[id="${elementId}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
+        setTimeout(() => {
+          element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
+        }, 2000);
+      } else if (attemptCount < 3) {
+        // Retry up to 3 times with increasing delays
+        setTimeout(() => scrollWithRetry(attemptCount + 1), 100 * (attemptCount + 1));
+      }
+    };
 
-      // המתן רגע קצר שהקרוסלה תעדכן את ה-ID שלה, ואז גלול
-      setTimeout(() => {
-        const element = document.getElementById(`suggestion-${suggestion.id}`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
-          setTimeout(() => {
-            element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
-            setTargetSuggestionId(null);
-          }, 2000);
-        } else {
-          // אם לא מצאנו עדיין, נסה שוב אחרי delay נוסף
-          setTimeout(() => {
-            const retryElement = document.getElementById(`suggestion-${suggestion.id}`);
-            if (retryElement) {
-              retryElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              retryElement.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
-              setTimeout(() => {
-                retryElement.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
-                setTargetSuggestionId(null);
-              }, 2000);
-            }
-          }, 300);
-        }
-      }, 200);
-    } else {
-      // הצעה לסעיף חדש - גלילה רגילה
-      const elementId = `suggestion-${suggestion.id}`;
-      setTimeout(() => {
-        const element = document.getElementById(elementId);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
-          setTimeout(() => {
-            element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
-          }, 2000);
-        }
-      }, 100);
-    }
+    setTargetSuggestionId(suggestion.id);
+    scrollWithRetry();
   };
 
   const { data: user } = useQuery({
