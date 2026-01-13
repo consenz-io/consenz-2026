@@ -222,14 +222,14 @@ export default function DocumentView() {
   const scrollToSuggestion = (index) => {
     const suggestion = pendingSuggestions[index];
     if (!suggestion) return;
-    if (typeof window === 'undefined' || typeof document === 'undefined') return;
+    if (typeof window === 'undefined' || typeof document === 'undefined' || !document.getElementById) return;
 
     const elementId = `suggestion-${suggestion.id}`;
     setTargetSuggestionId(suggestion.id);
     
     const scrollWithRetry = (attemptCount = 0) => {
       const element = document.getElementById(elementId);
-      if (element && element.offsetParent !== null) { // Check element is visible
+      if (element && element.offsetParent !== null) {
         try {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
@@ -244,7 +244,6 @@ export default function DocumentView() {
       }
     };
 
-    // Initial delay to ensure DOM is ready
     setTimeout(() => scrollWithRetry(), 300);
   };
 
