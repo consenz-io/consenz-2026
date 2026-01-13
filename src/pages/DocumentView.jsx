@@ -221,40 +221,31 @@ export default function DocumentView() {
 
   const scrollToSuggestion = React.useCallback((index) => {
     const suggestion = pendingSuggestions[index];
-    if (!suggestion || !document) return;
+    if (!suggestion) return;
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
     setTargetSuggestionId(suggestion.id);
 
-    // Find the suggestion card in DocumentContent by looking for the section carousel containing it
+    // Pass the index to SectionCarousel which will scroll directly
     const scrollWithRetry = (attemptCount = 0) => {
-      // Look for the suggestion card by searching through the page
-      const allSectionCarousels = document.querySelectorAll('[id^="suggestion-"]');
-      let foundElement = null;
+      const carousels = document.querySelectorAll('[role="region"]');
+      let targetCarousel = null;
 
-      // Check all carousels for the suggestion we need
-      allSectionCarousels.forEach(el => {
-        if (el.textContent && el.textContent.includes(suggestion.id)) {
-          foundElement = el;
-        }
+      // Find carousel containing the suggestion by checking nearby elements
+      carousels.forEach(carousel => {
+        const cards = carousel.querySelectorAll('[class*="group"]');
+        cards.forEach(card => {
+          // Check if this card is for our suggestion
+          if (card.textContent.includes(suggestion.created_by)) {
+            targetCarousel = carousel;
+          }
+        });
       });
 
-      if (!foundElement) {
-        // Fallback: try to find any element with the suggestion ID
-        foundElement = document.querySelector(`div[class*="carousel"]`);
-      }
-
-      if (foundElement) {
-        // Scroll to the section carousel that contains this suggestion
-        window.scrollTo({ 
-          top: foundElement.getBoundingClientRect().top + window.scrollY - 100,
-          behavior: 'smooth'
-        });
-        foundElement.classList.add('ring-4', 'ring-blue-500');
-        setTimeout(() => {
-          foundElement.classList.remove('ring-4', 'ring-blue-500');
-        }, 2000);
-      } else if (attemptCount < 5) {
-        setTimeout(() => scrollWithRetry(attemptCount + 1), 300);
+      if (targetCarousel) {
+        targetCarousel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else if (attemptCount < 3) {
+        setTimeout(() => scrollWithRetry(attemptCount + 1), 400);
       }
     };
 
