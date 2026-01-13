@@ -252,7 +252,7 @@ const runBackgroundTasks = async (comment, entityType, entityId, parentComment) 
   }
 };
 
-export default function CommentsSection({ entityType, entityId, user, sectionId, relatedSuggestionIds = [], includeRelatedComments = false }) {
+export default function CommentsSection({ entityType, entityId, user, sectionId, relatedSuggestionIds = [], includeRelatedComments = false, suggestionId = null }) {
   const { t, isRTL, language } = useLanguage();
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
@@ -263,14 +263,25 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
   const [error, setError] = useState(null);
   const queryClient = useQueryClient();
 
+  // Primary: Load comments by suggestion ID (new way)
   const { data: suggestionComments, isLoading: suggestionCommentsLoading } = useQuery({
+    queryKey: ['comments', 'suggestionId', suggestionId],
+    queryFn: () => base44.entities.Comment.filter({ 
+      suggestionId: suggestionId 
+    }, 'created_date'),
+    initialData: [],
+    enabled: !!suggestionId,
+  });
+
+  // Fallback: Load comments by rootEntityType/rootEntityId (legacy way)
+  const { data: legacyComments, isLoading: legacyCommentsLoading } = useQuery({
     queryKey: ['comments', entityType, entityId],
     queryFn: () => base44.entities.Comment.filter({ 
       rootEntityType: entityType, 
       rootEntityId: entityId 
     }, 'created_date'),
     initialData: [],
-    enabled: !!entityType && !!entityId,
+    enabled: !!entityType && !!entityId && !suggestionId,
   });
 
   const { data: sectionComments, isLoading: sectionCommentsLoading } = useQuery({
@@ -280,7 +291,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
       rootEntityId: sectionId 
     }, 'created_date'),
     initialData: [],
-    enabled: !!sectionId && (entityType === 'suggestion' || includeRelatedComments),
+    enabled: !!sectionId && entityType === 'suggestion' && !suggestionId,
   });
 
   // When showing section comments, also load comments from related suggestions
@@ -290,10 +301,9 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
       if (!relatedSuggestionIds || relatedSuggestionIds.length === 0) return [];
       // Fetch comments for all related suggestions in parallel
       const commentsArrays = await Promise.all(
-        relatedSuggestionIds.map(suggestionId => 
+        relatedSuggestionIds.map(sugg => 
           base44.entities.Comment.filter({ 
-            rootEntityType: 'suggestion',
-            rootEntityId: suggestionId 
+            suggestionId: sugg
           }, 'created_date')
         )
       );
