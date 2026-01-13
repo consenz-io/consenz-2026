@@ -164,11 +164,11 @@ export default function DocumentView() {
     enabled: !!documentId,
   });
 
-  // Count all section comments for this document
+  // Count all comments on accepted suggestions (which function as sections)
   const sectionCommentsCount = React.useMemo(() => {
     const sectionIds = sections.map(s => s.id);
     return allComments.filter(c => 
-      c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)
+      c.suggestionId && sectionIds.includes(c.suggestionId)
     ).length;
   }, [allComments, sections]);
 
