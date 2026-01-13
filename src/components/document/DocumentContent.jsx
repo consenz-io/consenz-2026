@@ -1187,7 +1187,7 @@ Return ONLY the translated text:`;
                           {...provided.draggableProps}
                           className={snapshot.isDragging ? 'opacity-70' : ''}
                         >
-                          <React.Fragment>
+                          <div>
                             {/* Show new section suggestions that should appear before this section */}
                             {newSectionSuggestions
                               .filter(s => {
@@ -1359,10 +1359,10 @@ Return ONLY the translated text:`;
                                 </div>
                               </>
                             )}
-                          </React.Fragment>
-                        </div>
-                      )}
-                    </Draggable>
+                          </div>
+                          </div>
+                          )}
+                          </Draggable>
                     );
                     })}
                     {provided.placeholder}
