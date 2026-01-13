@@ -257,10 +257,9 @@ export default function CommentsSection({ suggestionId, user }) {
     }, [suggestionComments]);
 
   const { data: repliesComments, isLoading: repliesLoading } = useQuery({
-    queryKey: ['replies', allParentIds],
+    queryKey: ['replies', suggestionId, allParentIds],
     queryFn: async () => {
       if (allParentIds.length === 0) return [];
-      // Fetch replies for each parent ID in parallel - much more efficient than loading all 500 comments
       const repliesArrays = await Promise.all(
         allParentIds.map(parentId => 
           base44.entities.Comment.filter({ parentCommentId: parentId }, 'created_date')
