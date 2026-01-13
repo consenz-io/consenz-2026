@@ -239,7 +239,7 @@ export default function DocumentCleanView() {
 
   // אוטומטיות גלילה לסעיף שהשתנה או נוצר
   React.useEffect(() => {
-    if (currentVersionIndex > 0 && currentSnapshot && typeof window !== 'undefined' && typeof document !== 'undefined' && document.querySelector) {
+    if (currentVersionIndex > 0 && currentSnapshot && typeof window !== 'undefined' && typeof document !== 'undefined') {
       const scrollWithRetry = (attemptCount = 0) => {
         // Find the first section that has visible changes compared to older version
         let targetSectionId = null;
@@ -266,22 +266,27 @@ export default function DocumentCleanView() {
 
         if (targetSectionId) {
           // Always scroll to the change element (where diff is displayed)
-          const changeElement = document.querySelector(`[id="change-${targetSectionId}"]`);
-          if (changeElement) {
-            changeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            changeElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
-            setTimeout(() => {
-              changeElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
-            }, 2000);
-            return; // Success, exit
-          } else if (attemptCount < 3) {
-            // Retry up to 3 times with increasing delays
-            setTimeout(() => scrollWithRetry(attemptCount + 1), 100 * (attemptCount + 1));
+          const changeElement = document.getElementById(`change-${targetSectionId}`);
+          if (changeElement && changeElement.offsetParent !== null) {
+            try {
+              changeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              changeElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
+              setTimeout(() => {
+                changeElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
+              }, 2000);
+              return; // Success, exit
+            } catch (e) {
+              console.error('Scroll error:', e);
+            }
+          } else if (attemptCount < 5) {
+            // Retry up to 5 times with increasing delays
+            setTimeout(() => scrollWithRetry(attemptCount + 1), 200 + (100 * attemptCount));
           }
         }
       };
 
-      scrollWithRetry();
+      // Initial delay to ensure DOM is ready
+      setTimeout(() => scrollWithRetry(), 300);
     }
   }, [currentVersionIndex, currentSnapshot, olderSnapshot, sections]);
 
