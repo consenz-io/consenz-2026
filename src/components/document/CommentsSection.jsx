@@ -304,17 +304,15 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
     let allComments = [];
     if (suggestionId) {
       allComments = suggestionComments;
+    } else if (sectionData?.originatingSuggestionId) {
+      // If section has originatingSuggestionId, get comments from that suggestion
+      allComments = sectionOriginComments;
     } else {
+      // Fallback to legacy
       allComments = [...legacyComments];
-      if (entityType === 'suggestion' && sectionId) {
-        allComments.push(...sectionComments);
-      }
-      if (entityType === 'section' && relatedSuggestionsComments.length > 0) {
-        allComments.push(...relatedSuggestionsComments);
-      }
     }
     return allComments.map(c => c.id);
-  }, [suggestionComments, legacyComments, sectionComments, relatedSuggestionsComments, suggestionId, entityType, sectionId]);
+  }, [suggestionComments, legacyComments, sectionOriginComments, sectionData?.originatingSuggestionId, suggestionId]);
 
   const { data: repliesComments, isLoading: repliesLoading } = useQuery({
     queryKey: ['replies', allParentIds],
