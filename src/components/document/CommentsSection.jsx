@@ -353,20 +353,19 @@ export default function CommentsSection({ suggestionId, user }) {
       
       await queryClient.cancelQueries({ queryKey: ['comments', entityType, entityId] });
       
-      const previousComments = queryClient.getQueryData(['comments', entityType, entityId]);
-      
+      const previousComments = queryClient.getQueryData(['comments', 'suggestionId', suggestionId]);
+
       const tempComment = {
         id: `temp-${Date.now()}`,
-        rootEntityType: entityType,
-        rootEntityId: entityId,
+        suggestionId: suggestionId,
         parentCommentId: data.parentCommentId || null,
         content: data.content,
         created_date: new Date().toISOString(),
         created_by: user.email,
         _isOptimistic: true
       };
-      
-      queryClient.setQueryData(['comments', entityType, entityId], (old = []) => {
+
+      queryClient.setQueryData(['comments', 'suggestionId', suggestionId], (old = []) => {
         return [tempComment, ...old];
       });
       
