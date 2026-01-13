@@ -404,9 +404,7 @@ export default function CommentsSection({ suggestionId, user }) {
     }
 
     createCommentMutation.mutate({
-      rootEntityType: entityType,
-      rootEntityId: entityId,
-      suggestionId: suggestionId || null,
+      suggestionId: suggestionId,
       parentCommentId: replyTo?.id || null,
       content: newComment.trim(),
     });
