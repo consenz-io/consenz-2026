@@ -326,11 +326,11 @@ export default function Home() {
                   }
                 }
               }}
-              aria-label={`${documents.length} ${t('activeDocuments')}. ${language === 'he' ? 'לחץ לגלילה למסמכים' : 'Click to scroll to documents'}`}
+              aria-label={`${platformStats.activeDocumentsCount} ${t('activeDocuments')}. ${language === 'he' ? 'לחץ לגלילה למסמכים' : 'Click to scroll to documents'}`}
             >
               <div className="p-6 text-center">
                 <FileText className="w-8 h-8 mx-auto mb-3 text-blue-600" aria-hidden="true" />
-                <div className="text-3xl font-bold text-slate-900">{documents.length}</div>
+                <div className="text-3xl font-bold text-slate-900">{platformStats.activeDocumentsCount}</div>
                 <div className="text-sm text-slate-600">{t('activeDocuments')}</div>
               </div>
             </button>
@@ -359,7 +359,7 @@ export default function Home() {
                 <CardContent className="p-6 text-center">
                   <TrendingUp className="w-8 h-8 mx-auto mb-3 text-purple-600" />
                   <div className="text-3xl font-bold text-slate-900">
-                    {calculateAverageConsensus()}%
+                    {platformStats.averageConsensus}%
                   </div>
                   <div className="text-sm text-slate-600">{t('avgConsensus')}</div>
                 </CardContent>
