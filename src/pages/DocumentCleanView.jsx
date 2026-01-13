@@ -803,7 +803,7 @@ ${text}`;
                                       )}
                                       </div>
                                       ) : (
-                                    <div 
+                                      <div 
                                       className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none"
                                       style={{ 
                                         fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
@@ -816,8 +816,8 @@ ${text}`;
                                           ? (translatedSections[section.id] || section.translations?.[language] || displayedContent)
                                           : displayedContent 
                                       }}
-                                    />
-                                  )}
+                                      />
+                                      )}
                                     {(section.originalLanguage || detectLanguage(section.content)) !== language && (
                                       <Button
                                         variant="ghost"
