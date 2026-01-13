@@ -887,13 +887,8 @@ export default function SuggestionSidebar({
               {t('commentsOnSuggestion')} ({totalCommentsCount})
             </h4>
             <CommentsSection
-              entityType="suggestion"
-              entityId={suggestionId}
               suggestionId={suggestionId}
               user={user}
-              sectionId={suggestion?.sectionId}
-              relatedSuggestionIds={[]}
-              includeRelatedComments={true}
             />
           </div>
         </div>
