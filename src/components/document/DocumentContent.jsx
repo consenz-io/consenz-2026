@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -235,9 +235,9 @@ export default function DocumentContent({
   }, [topicEditSuggestions, document, user, queryClient, suggestions]);
 
   // Don't fetch comments globally - let CommentsSection fetch on demand
-  const getCommentsCount = (entityType, entityId) => {
+  const getCommentsCount = useCallback((entityType, entityId) => {
     return 0; // Placeholder until CommentsSection loads actual count
-  };
+  }, []);
 
   const { data: userVotes } = useQuery({
     queryKey: ['userVotes', document?.id, user?.id],
