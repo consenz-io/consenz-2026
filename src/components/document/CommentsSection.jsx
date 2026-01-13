@@ -271,19 +271,38 @@ export default function CommentsSection({ entityType, entityId, user }) {
         rootEntityId: entityId 
       }, 'created_date');
       
-      // If this is a section, also fetch comments from the suggestion that created it
+      // If this is a section, also fetch comments from the suggestion that created/edited it
       if (entityType === 'section') {
-        // Find the suggestion that created this section using DocumentVersion
-        const versions = await base44.entities.DocumentVersion.filter({ sectionId: entityId });
-        const creationVersion = versions.find(v => v.changeType === 'section_created' && v.suggestionId);
+        // Find suggestions that reference this section
+        const relatedSuggestions = await base44.entities.Suggestion.filter({ sectionId: entityId });
         
-        if (creationVersion?.suggestionId) {
-          const suggestionComments = await base44.entities.Comment.filter({
-            rootEntityType: 'suggestion',
-            rootEntityId: creationVersion.suggestionId
+        if (relatedSuggestions.length > 0) {
+          // Fetch comments from all related suggestions
+          const suggestionCommentsArrays = await Promise.all(
+            relatedSuggestions.map(sugg =>
+              base44.entities.Comment.filter({
+                rootEntityType: 'suggestion',
+                rootEntityId: sugg.id
+              }, 'created_date')
+            )
+          );
+          
+          const allSuggestionComments = suggestionCommentsArrays.flat();
+          return [...directComments, ...allSuggestionComments];
+        }
+      }
+      
+      // If this is a suggestion, check if it was accepted and has a section - show section comments too
+      if (entityType === 'suggestion') {
+        const suggestion = await base44.entities.Suggestion.filter({ id: entityId }).then(s => s[0]);
+        
+        if (suggestion?.sectionId && suggestion.status === 'accepted') {
+          const sectionComments = await base44.entities.Comment.filter({
+            rootEntityType: 'section',
+            rootEntityId: suggestion.sectionId
           }, 'created_date');
           
-          return [...directComments, ...suggestionComments];
+          return [...directComments, ...sectionComments];
         }
       }
       
