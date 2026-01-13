@@ -926,6 +926,11 @@ export default function DocumentView() {
           </Link>
         </div>
 
+        {/* Hidden elements for global suggestion scrolling */}
+        {pendingSuggestions.map(s => (
+          <div key={`hidden-${s.id}`} id={`suggestion-${s.id}`} style={{ display: 'none' }} />
+        ))}
+
         <DocumentContent
             document={document}
             topics={topics}
