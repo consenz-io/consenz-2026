@@ -237,10 +237,10 @@ export default function DocumentCleanView() {
     }
   }, [currentVersionIndex, sections, showDiffForSections]);
 
-  // גלילה אוטומטית לסעיף שהשתנה או נוצר
+  // אוטומטיות גלילה לסעיף שהשתנה או נוצר
   React.useEffect(() => {
-    if (currentVersionIndex > 0 && currentSnapshot) {
-      setTimeout(() => {
+    if (currentVersionIndex > 0 && currentSnapshot && typeof window !== 'undefined' && typeof document !== 'undefined' && document.querySelector) {
+      const scrollWithRetry = (attemptCount = 0) => {
         // Find the first section that has visible changes compared to older version
         let targetSectionId = null;
         
@@ -264,24 +264,24 @@ export default function DocumentCleanView() {
           }
         }
 
-        if (targetSectionId && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
+        if (targetSectionId) {
           // Always scroll to the change element (where diff is displayed)
-          const changeElement = document.getElementById(`change-${targetSectionId}`);
+          const changeElement = document.querySelector(`[id="change-${targetSectionId}"]`);
           if (changeElement) {
             changeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             changeElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
             setTimeout(() => {
               changeElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
             }, 2000);
-          } else {
-            // Fallback to section container
-            const sectionElement = document.getElementById(`section-${targetSectionId}`);
-            if (sectionElement) {
-              sectionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+            return; // Success, exit
+          } else if (attemptCount < 3) {
+            // Retry up to 3 times with increasing delays
+            setTimeout(() => scrollWithRetry(attemptCount + 1), 100 * (attemptCount + 1));
           }
         }
-      }, 150);
+      };
+
+      scrollWithRetry();
     }
   }, [currentVersionIndex, currentSnapshot, olderSnapshot, sections]);
 
