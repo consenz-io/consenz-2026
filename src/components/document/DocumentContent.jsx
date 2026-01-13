@@ -257,10 +257,29 @@ export default function DocumentContent({
         relatedSuggestionIds.includes(c.rootEntityId)
       ).length;
       return directSectionComments + relatedSuggestionsComments;
-    } else {
-      // עבור הצעה - רק תגובות ישירות על ההצעה
-      return suggestionComments.filter(c => c.rootEntityId === entityId).length;
+    } else if (entityType === 'suggestion') {
+      // עבור הצעה - תגובות על ההצעה + תגובות על הצעות אחרות לאותו סעיף + תגובות על הסעיף
+      const directSuggestionComments = suggestionComments.filter(c => c.rootEntityId === entityId).length;
+      const suggestion = suggestions.find(s => s.id === entityId);
+      
+      if (suggestion?.sectionId) {
+        // תגובות על הסעיף
+        const sectionCommentsCount = sectionComments.filter(c => c.rootEntityId === suggestion.sectionId).length;
+        
+        // תגובות על הצעות אחרות לאותו סעיף
+        const relatedSuggestionIds = suggestions
+          .filter(s => s.sectionId === suggestion.sectionId && s.id !== entityId)
+          .map(s => s.id);
+        const relatedSuggestionsComments = suggestionComments.filter(c => 
+          relatedSuggestionIds.includes(c.rootEntityId)
+        ).length;
+        
+        return directSuggestionComments + sectionCommentsCount + relatedSuggestionsComments;
+      }
+      
+      return directSuggestionComments;
     }
+    return 0;
   };
 
   const { data: userVotes } = useQuery({
