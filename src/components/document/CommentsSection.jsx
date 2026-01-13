@@ -252,67 +252,27 @@ const runBackgroundTasks = async (comment, entityType, entityId, parentComment) 
   }
 };
 
-export default function CommentsSection({ entityType, entityId, user, sectionId, relatedSuggestionIds = [], includeRelatedComments = false, suggestionId = null }) {
-  const { t, isRTL, language } = useLanguage();
-  const [newComment, setNewComment] = useState("");
-  const [replyTo, setReplyTo] = useState(null);
-  
-  // FIX: Removed editContent from parent state to prevent re-renders on every keystroke
-  const [editingComment, setEditingComment] = useState(null); 
-  
-  const [error, setError] = useState(null);
-  const queryClient = useQueryClient();
+export default function CommentsSection({ suggestionId, user }) {
+    const { t, isRTL, language } = useLanguage();
+    const [newComment, setNewComment] = useState("");
+    const [replyTo, setReplyTo] = useState(null);
+    const [editingComment, setEditingComment] = useState(null); 
+    const [error, setError] = useState(null);
+    const queryClient = useQueryClient();
 
-  // Primary: Load comments by suggestion ID (new way)
-  const { data: suggestionComments, isLoading: suggestionCommentsLoading } = useQuery({
-    queryKey: ['comments', 'suggestionId', suggestionId],
-    queryFn: () => base44.entities.Comment.filter({ 
-      suggestionId: suggestionId 
-    }, 'created_date'),
-    initialData: [],
-    enabled: !!suggestionId,
-  });
+    // Load comments by suggestion ID
+    const { data: suggestionComments, isLoading: suggestionCommentsLoading } = useQuery({
+      queryKey: ['comments', 'suggestionId', suggestionId],
+      queryFn: () => base44.entities.Comment.filter({ 
+        suggestionId: suggestionId 
+      }, 'created_date'),
+      initialData: [],
+      enabled: !!suggestionId,
+    });
 
-  // Fallback: Load comments by rootEntityType/rootEntityId (legacy way) - only if no suggestionId
-  const { data: legacyComments, isLoading: legacyCommentsLoading } = useQuery({
-    queryKey: ['comments', entityType, entityId],
-    queryFn: () => base44.entities.Comment.filter({ 
-      rootEntityType: entityType, 
-      rootEntityId: entityId 
-    }, 'created_date'),
-    initialData: [],
-    enabled: !!entityType && !!entityId && !suggestionId,
-  });
-
-  // If showing section in document, check if it has originatingSuggestionId to find related comments
-  const { data: sectionData } = useQuery({
-    queryKey: ['section', sectionId],
-    queryFn: () => base44.entities.Section.filter({ id: sectionId }).then(s => s[0]),
-    enabled: !!sectionId && entityType === 'suggestion',
-  });
-
-  const { data: sectionOriginComments, isLoading: sectionOriginCommentsLoading } = useQuery({
-    queryKey: ['comments', 'sectionOrigin', sectionData?.originatingSuggestionId],
-    queryFn: () => base44.entities.Comment.filter({ 
-      suggestionId: sectionData.originatingSuggestionId
-    }, 'created_date'),
-    initialData: [],
-    enabled: !!sectionData?.originatingSuggestionId,
-  });
-
-  const allParentIds = React.useMemo(() => {
-    let allComments = [];
-    if (suggestionId) {
-      allComments = suggestionComments;
-    } else if (sectionData?.originatingSuggestionId) {
-      // If section has originatingSuggestionId, get comments from that suggestion
-      allComments = sectionOriginComments;
-    } else {
-      // Fallback to legacy
-      allComments = [...legacyComments];
-    }
-    return allComments.map(c => c.id);
-  }, [suggestionComments, legacyComments, sectionOriginComments, sectionData?.originatingSuggestionId, suggestionId]);
+    const allParentIds = React.useMemo(() => {
+      return suggestionComments.map(c => c.id);
+    }, [suggestionComments]);
 
   const { data: repliesComments, isLoading: repliesLoading } = useQuery({
     queryKey: ['replies', allParentIds],
