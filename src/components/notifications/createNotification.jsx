@@ -735,7 +735,8 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
     
     // Ensure commenter has public profile
     if (currentUser) {
-      await ensureUserPublicProfileForInteraction(currentUser);
+      const { ensureUserPublicProfile } = await import('../ensureUserPublicProfile');
+      await ensureUserPublicProfile(currentUser);
     }
     
     const [publicProfiles, allComments] = await Promise.all([
@@ -877,7 +878,8 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
     
     // Ensure commenter has public profile
     if (currentUser) {
-      await ensureUserPublicProfileForInteraction(currentUser);
+      const { ensureUserPublicProfile } = await import('../ensureUserPublicProfile');
+      await ensureUserPublicProfile(currentUser);
     }
     
     const [publicProfiles, adminIds, allDocumentComments] = await Promise.all([
