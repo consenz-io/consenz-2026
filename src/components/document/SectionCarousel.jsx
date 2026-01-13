@@ -38,8 +38,7 @@ export default function SectionCarousel({
   newlyCreatedSuggestionId,
   onClearNewlyCreated,
   targetSuggestionId,
-  publicProfiles,
-  suggestions
+  publicProfiles
 }) {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
@@ -326,14 +325,10 @@ export default function SectionCarousel({
 
   // Scroll to target section when needed (only in browser)
   React.useEffect(() => {
-    if (targetSuggestionId && typeof window !== 'undefined') {
-      try {
-        const targetElement = window.document.getElementById(`suggestion-${targetSuggestionId}`);
-        if (targetElement) {
-          targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-      } catch (e) {
-        console.warn('Could not scroll to target:', e);
+    if (targetSuggestionId && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
+      const targetElement = document.getElementById(`suggestion-${targetSuggestionId}`);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
   }, [targetSuggestionId]);
@@ -457,7 +452,15 @@ export default function SectionCarousel({
                 className="text-slate-600 hover:text-blue-600 h-7 md:h-8 text-xs px-2"
               >
                 <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                {t('comments')} ({getCommentsCount('section', section.id)})
+                {t('comments')} ({(() => {
+                  // Count all comments from section AND all related suggestions
+                  const sectionCommentsCount = getCommentsCount('section', section.id);
+                  const allSuggestionIds = (allSectionSuggestions || []).map(s => s.id);
+                  const suggestionsCommentsCount = allSuggestionIds.reduce((sum, sugId) => 
+                    sum + getCommentsCount('suggestion', sugId), 0
+                  );
+                  return sectionCommentsCount + suggestionsCommentsCount;
+                })()})
               </Button>
             </div>
             {showComments[`section-${section.id}`] && (
@@ -466,7 +469,8 @@ export default function SectionCarousel({
                   entityType="section"
                   entityId={section.id}
                   user={user}
-                  key={`section-${section.id}-comments`}
+                  relatedSuggestionIds={(allSectionSuggestions || []).map(s => s.id)}
+                  key={`section-${section.id}-all-comments`}
                 />
               </div>
             )}
@@ -752,6 +756,7 @@ export default function SectionCarousel({
                       entityType="suggestion"
                       entityId={currentView.data.id}
                       user={user}
+                      sectionId={section?.id}
                     />
                   </div>
                 )}

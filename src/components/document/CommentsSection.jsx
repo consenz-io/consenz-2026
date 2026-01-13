@@ -252,7 +252,7 @@ const runBackgroundTasks = async (comment, entityType, entityId, parentComment) 
   }
 };
 
-export default function CommentsSection({ entityType, entityId, user }) {
+export default function CommentsSection({ entityType, entityId, user, sectionId, relatedSuggestionIds = [], includeRelatedComments = false }) {
   const { t, isRTL, language } = useLanguage();
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
@@ -263,86 +263,56 @@ export default function CommentsSection({ entityType, entityId, user }) {
   const [error, setError] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: rootComments, isLoading: rootCommentsLoading } = useQuery({
+  const { data: suggestionComments, isLoading: suggestionCommentsLoading } = useQuery({
     queryKey: ['comments', entityType, entityId],
-    queryFn: async () => {
-      const directComments = await base44.entities.Comment.filter({ 
-        rootEntityType: entityType, 
-        rootEntityId: entityId 
-      }, 'created_date');
-      
-      // If this is a section, also fetch comments from suggestions that reference this section
-      if (entityType === 'section') {
-        const relatedSuggestions = await base44.entities.Suggestion.filter({ sectionId: entityId });
-        
-        if (relatedSuggestions.length > 0) {
-          const suggestionCommentsArrays = await Promise.all(
-            relatedSuggestions.map(sugg =>
-              base44.entities.Comment.filter({
-                rootEntityType: 'suggestion',
-                rootEntityId: sugg.id
-              }, 'created_date')
-            )
-          );
-          
-          const allSuggestionComments = suggestionCommentsArrays.flat();
-          return [...directComments, ...allSuggestionComments];
-        }
-      }
-      
-      // If this is a suggestion, also show comments from other suggestions related to the same section
-      if (entityType === 'suggestion') {
-        const suggestion = await base44.entities.Suggestion.filter({ id: entityId }).then(s => s[0]);
-        
-        if (suggestion?.sectionId) {
-          // Get all suggestions for this section
-          const relatedSuggestions = await base44.entities.Suggestion.filter({ sectionId: suggestion.sectionId });
-          
-          // Get comments from all related suggestions (excluding the current one to avoid duplicates)
-          const otherSuggestionIds = relatedSuggestions
-            .filter(s => s.id !== entityId)
-            .map(s => s.id);
-          
-          if (otherSuggestionIds.length > 0) {
-            const otherCommentsArrays = await Promise.all(
-              otherSuggestionIds.map(suggId =>
-                base44.entities.Comment.filter({
-                  rootEntityType: 'suggestion',
-                  rootEntityId: suggId
-                }, 'created_date')
-              )
-            );
-            
-            const allOtherComments = otherCommentsArrays.flat();
-            
-            // Also get section comments
-            const sectionComments = await base44.entities.Comment.filter({
-              rootEntityType: 'section',
-              rootEntityId: suggestion.sectionId
-            }, 'created_date');
-            
-            return [...directComments, ...allOtherComments, ...sectionComments];
-          }
-          
-          // If no other suggestions, just get section comments
-          const sectionComments = await base44.entities.Comment.filter({
-            rootEntityType: 'section',
-            rootEntityId: suggestion.sectionId
-          }, 'created_date');
-          
-          return [...directComments, ...sectionComments];
-        }
-      }
-      
-      return directComments;
-    },
+    queryFn: () => base44.entities.Comment.filter({ 
+      rootEntityType: entityType, 
+      rootEntityId: entityId 
+    }, 'created_date'),
     initialData: [],
     enabled: !!entityType && !!entityId,
   });
 
+  const { data: sectionComments, isLoading: sectionCommentsLoading } = useQuery({
+    queryKey: ['comments', 'section', sectionId],
+    queryFn: () => base44.entities.Comment.filter({ 
+      rootEntityType: 'section', 
+      rootEntityId: sectionId 
+    }, 'created_date'),
+    initialData: [],
+    enabled: !!sectionId && (entityType === 'suggestion' || includeRelatedComments),
+  });
+
+  // When showing section comments, also load comments from related suggestions
+  const { data: relatedSuggestionsComments, isLoading: relatedSuggestionsCommentsLoading } = useQuery({
+    queryKey: ['comments', 'relatedSuggestions', relatedSuggestionIds],
+    queryFn: async () => {
+      if (!relatedSuggestionIds || relatedSuggestionIds.length === 0) return [];
+      // Fetch comments for all related suggestions in parallel
+      const commentsArrays = await Promise.all(
+        relatedSuggestionIds.map(suggestionId => 
+          base44.entities.Comment.filter({ 
+            rootEntityType: 'suggestion',
+            rootEntityId: suggestionId 
+          }, 'created_date')
+        )
+      );
+      return commentsArrays.flat();
+    },
+    initialData: [],
+    enabled: relatedSuggestionIds.length > 0 && entityType === 'section',
+  });
+
   const allParentIds = React.useMemo(() => {
-    return rootComments.map(c => c.id);
-  }, [rootComments]);
+    const ids = [...suggestionComments.map(c => c.id)];
+    if (entityType === 'suggestion' && sectionId) {
+      ids.push(...sectionComments.map(c => c.id));
+    }
+    if (entityType === 'section' && relatedSuggestionsComments.length > 0) {
+      ids.push(...relatedSuggestionsComments.map(c => c.id));
+    }
+    return ids;
+  }, [suggestionComments, sectionComments, relatedSuggestionsComments, entityType, sectionId]);
 
   const { data: repliesComments, isLoading: repliesLoading } = useQuery({
     queryKey: ['replies', allParentIds],
@@ -361,15 +331,24 @@ export default function CommentsSection({ entityType, entityId, user }) {
   });
 
   const comments = React.useMemo(() => {
-    const baseComments = [...rootComments];
+    let baseComments = [...suggestionComments];
+    
+    if (entityType === 'suggestion' && sectionId && sectionComments.length > 0) {
+      baseComments = [...baseComments, ...sectionComments];
+    }
+    
+    if (entityType === 'section' && relatedSuggestionsComments.length > 0) {
+      baseComments = [...baseComments, ...relatedSuggestionsComments];
+    }
+    
     const existingIds = new Set(baseComments.map(c => c.id));
     const newReplies = repliesComments.filter(r => !existingIds.has(r.id));
-    const allComments = [...baseComments, ...newReplies];
+    baseComments = [...baseComments, ...newReplies];
     
-    return allComments.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-  }, [rootComments, repliesComments]);
+    return baseComments.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+  }, [suggestionComments, sectionComments, relatedSuggestionsComments, repliesComments, entityType, sectionId]);
 
-  const isLoading = rootCommentsLoading || repliesLoading;
+  const isLoading = suggestionCommentsLoading || (entityType === 'suggestion' && sectionId && sectionCommentsLoading) || (entityType === 'section' && relatedSuggestionsCommentsLoading) || repliesLoading;
 
   const { data: users } = useQuery({
     queryKey: ['users'],

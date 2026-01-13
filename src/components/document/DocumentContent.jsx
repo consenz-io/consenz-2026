@@ -101,23 +101,19 @@ export default function DocumentContent({
 
   // Scroll to newly created suggestion
   React.useEffect(() => {
-    if (newlyCreatedSuggestion?.suggestionId && typeof globalThis !== 'undefined' && globalThis.document) {
+    if (newlyCreatedSuggestion?.suggestionId && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
       const { suggestionId } = newlyCreatedSuggestion;
       
       const scrollToElement = () => {
-        try {
-          const element = globalThis.document.getElementById(`suggestion-${suggestionId}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            element.classList.add('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
-            setTimeout(() => {
-              element.classList.remove('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
-              onClearNewlyCreated();
-            }, 3000);
-            return true;
-          }
-        } catch (e) {
-          console.warn('Could not scroll to element:', e);
+        const element = document.getElementById(`suggestion-${suggestionId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.classList.add('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
+          setTimeout(() => {
+            element.classList.remove('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
+            onClearNewlyCreated();
+          }, 3000);
+          return true;
         }
         return false;
       };
@@ -253,37 +249,8 @@ export default function DocumentContent({
   });
 
   const getCommentsCount = (entityType, entityId) => {
-    if (entityType === 'section') {
-      // עבור סעיף - כולל תגובות על הסעיף + תגובות על כל ההצעות הקשורות אליו
-      const directSectionComments = sectionComments.filter(c => c.rootEntityId === entityId).length;
-      const relatedSuggestionIds = suggestions.filter(s => s.sectionId === entityId).map(s => s.id);
-      const relatedSuggestionsComments = suggestionComments.filter(c => 
-        relatedSuggestionIds.includes(c.rootEntityId)
-      ).length;
-      return directSectionComments + relatedSuggestionsComments;
-    } else if (entityType === 'suggestion') {
-      // עבור הצעה - תגובות על ההצעה + תגובות על הצעות אחרות לאותו סעיף + תגובות על הסעיף
-      const directSuggestionComments = suggestionComments.filter(c => c.rootEntityId === entityId).length;
-      const suggestion = suggestions.find(s => s.id === entityId);
-      
-      if (suggestion?.sectionId) {
-        // תגובות על הסעיף
-        const sectionCommentsCount = sectionComments.filter(c => c.rootEntityId === suggestion.sectionId).length;
-        
-        // תגובות על הצעות אחרות לאותו סעיף
-        const relatedSuggestionIds = suggestions
-          .filter(s => s.sectionId === suggestion.sectionId && s.id !== entityId)
-          .map(s => s.id);
-        const relatedSuggestionsComments = suggestionComments.filter(c => 
-          relatedSuggestionIds.includes(c.rootEntityId)
-        ).length;
-        
-        return directSuggestionComments + sectionCommentsCount + relatedSuggestionsComments;
-      }
-      
-      return directSuggestionComments;
-    }
-    return 0;
+    const comments = entityType === 'section' ? sectionComments : suggestionComments;
+    return comments.filter(c => c.rootEntityId === entityId).length;
   };
 
   const { data: userVotes } = useQuery({
@@ -1319,7 +1286,6 @@ Return ONLY the translated text:`;
                               onClearNewlyCreated={onClearNewlyCreated}
                               targetSuggestionId={targetSuggestionId}
                               publicProfiles={publicProfiles}
-                              suggestions={suggestions}
                             />
                           </div>
                             {/* Show suggestions after the last section */}
@@ -1496,8 +1462,8 @@ Return ONLY the translated text:`;
             )}
           </div>
         )}
-        </Droppable>
-        </DragDropContext>
-        </>
-        );
-        }
+      </Droppable>
+    </DragDropContext>
+    </>
+  );
+}

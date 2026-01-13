@@ -1266,7 +1266,7 @@ export default function SuggestionDetail() {
               entityType="suggestion"
               entityId={suggestionId}
               user={user}
-              sectionId={suggestion?.sectionId || null}
+              sectionId={suggestion?.sectionId}
               relatedSuggestionIds={[]}
               includeRelatedComments={true}
             />

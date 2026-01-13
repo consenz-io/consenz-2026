@@ -192,13 +192,6 @@ export default function DocumentCleanView() {
         snapshotAfterChange.newSectionContent = afterVersion.content;
       }
       
-      // Mark if this is a deletion
-      if (afterVersion.content === '' && beforeVersion) {
-        snapshotAfterChange.isDeleted = true;
-        snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
-        snapshotAfterChange.deletedSectionContent = beforeVersion.content;
-      }
-      
       snapshots.push(snapshotAfterChange);
       
       // Now update state for the OLDER version (before this change)
@@ -207,10 +200,9 @@ export default function DocumentCleanView() {
         delete currentSectionContents[afterVersion.sectionId];
         currentExistingSections.delete(afterVersion.sectionId);
       } else if (afterVersion.content === '' && beforeVersion) {
-        // This is a section deletion - section existed BEFORE deletion
-        // So add it back with its previous content
-        currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
-        currentExistingSections.add(afterVersion.sectionId);
+        // This is a section deletion (empty content in afterVersion)
+        delete currentSectionContents[afterVersion.sectionId];
+        currentExistingSections.delete(afterVersion.sectionId);
       } else if (beforeVersion) {
         // Section existed with different content
         currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
@@ -247,8 +239,8 @@ export default function DocumentCleanView() {
 
   // גלילה אוטומטית לסעיף שהשתנה או נוצר
   React.useEffect(() => {
-    if (currentVersionIndex > 0 && currentSnapshot && typeof window !== 'undefined' && window.document) {
-      const scrollTimer = setTimeout(() => {
+    if (currentVersionIndex > 0 && currentSnapshot) {
+      setTimeout(() => {
         // Find the first section that has visible changes compared to older version
         let targetSectionId = null;
         
@@ -260,11 +252,7 @@ export default function DocumentCleanView() {
         else if (currentSnapshot.changedSectionId) {
           targetSectionId = currentSnapshot.changedSectionId;
         }
-        // Priority 3: Deleted section
-        else if (currentSnapshot.isDeleted && currentSnapshot.deletedSectionId) {
-          targetSectionId = currentSnapshot.deletedSectionId;
-        }
-        // Priority 4: Find first section with content differences compared to older version
+        // Priority 3: Find first section with content differences compared to older version
         else if (olderSnapshot) {
           for (const section of sections) {
             const currentContent = currentSnapshot?.sectionContents?.[section.id];
@@ -276,9 +264,9 @@ export default function DocumentCleanView() {
           }
         }
 
-        if (targetSectionId && window.document.getElementById) {
+        if (targetSectionId && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
           // Always scroll to the change element (where diff is displayed)
-          const changeElement = window.document.getElementById(`change-${targetSectionId}`);
+          const changeElement = document.getElementById(`change-${targetSectionId}`);
           if (changeElement) {
             changeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             changeElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
@@ -287,15 +275,13 @@ export default function DocumentCleanView() {
             }, 2000);
           } else {
             // Fallback to section container
-            const sectionElement = window.document.getElementById(`section-${targetSectionId}`);
+            const sectionElement = document.getElementById(`section-${targetSectionId}`);
             if (sectionElement) {
               sectionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
           }
         }
-      }, 300);
-      
-      return () => clearTimeout(scrollTimer);
+      }, 150);
     }
   }, [currentVersionIndex, currentSnapshot, olderSnapshot, sections]);
 
@@ -629,8 +615,18 @@ ${text}`;
                         const sectionExistsInSnapshot = currentSnapshot?.existingSections?.has(section.id) ?? 
                           currentSnapshot?.sectionContents?.hasOwnProperty(section.id);
 
-                        // If section doesn't exist in this historical snapshot, don't show it
-                        if (isViewingHistory && !sectionExistsInSnapshot) {
+                        // Check if section exists in the next (newer) snapshot
+                        // We need to look at the snapshot that's newer (lower index) than current
+                        const newerSnapshot = currentVersionIndex > 0 ? versionGroups[currentVersionIndex - 1] : null;
+                        const sectionExistsInNewer = newerSnapshot
+                          ? (newerSnapshot?.existingSections?.has(section.id) ?? newerSnapshot?.sectionContents?.hasOwnProperty(section.id) ?? false)
+                          : true; // Current snapshot (index 0) has all current sections
+
+                        // Section was deleted if it exists in current snapshot but not in newer (index 0)
+                        const wasDeleted = isViewingHistory && sectionExistsInSnapshot && !sectionExistsInNewer;
+
+                        // If section doesn't exist in this historical snapshot and wasn't deleted, don't show it
+                        if (isViewingHistory && !sectionExistsInSnapshot && !wasDeleted) {
                           return null;
                         }
 
@@ -644,22 +640,20 @@ ${text}`;
                         const isNewlyCreatedSection = isViewingHistory && 
                           currentSnapshot?.isNewSection && 
                           currentSnapshot?.newSectionId === section.id;
-                        
-                        // Check if this section was deleted in THIS snapshot
-                        const isDeletedSection = isViewingHistory &&
-                          currentSnapshot?.isDeleted &&
-                          currentSnapshot?.deletedSectionId === section.id;
 
 
 
                         // Check if this section changed between versions (content edit)
                         // Compare the snapshot's content with the newer version's content
                         const hasChanged = isViewingHistory && 
-                          !isDeletedSection &&
+                          !wasDeleted &&
                           currentSnapshot?.changedSectionId === section.id && 
                           currentSnapshot?.newContent && 
                           currentSnapshot?.newContent !== '' &&
                           displayedContent !== currentSnapshot?.newContent;
+
+                        // For deleted sections, show them with old content
+                        const isDeletedSection = wasDeleted;
 
                         return (
                           <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
@@ -670,30 +664,7 @@ ${text}`;
                                   {topicIndex + 1}.{sectionIndex + 1}
                                 </span>
                                 <div className="flex-1">
-                                {isDeletedSection ? (
-                                 <div 
-                                   id={`change-${section.id}`} 
-                                   className="border-l-4 border-red-500 pl-3 py-2 bg-red-50 rounded cursor-pointer hover:bg-red-100 transition-colors"
-                                   onClick={() => {
-                                     if (currentSnapshot?.suggestionId) {
-                                       setOpenSuggestionId(currentSnapshot.suggestionId);
-                                     }
-                                   }}
-                                 >
-                                   <Badge className="mb-2 bg-red-100 text-red-800 text-xs">
-                                     {language === 'he' ? 'סעיף נמחק - לחץ לצפייה בדיון' : language === 'ar' ? 'تم حذف القسم - انقر لعرض النقاش' : 'Section Deleted - Click to view discussion'}
-                                   </Badge>
-                                   <div 
-                                     className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
-                                     style={{ 
-                                       fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
-                                       fontSize: "1.125rem",
-                                       lineHeight: "1.8"
-                                     }}
-                                     dangerouslySetInnerHTML={{ __html: currentSnapshot?.deletedSectionContent || displayedContent }}
-                                   />
-                                 </div>
-                                ) : isViewingHistory && isNewlyCreatedSection ? (
+                                {isViewingHistory && isNewlyCreatedSection ? (
                                   <div 
                                     id={`change-${section.id}`} 
                                     className="bg-green-50 border-l-4 border-green-500 p-3 rounded cursor-pointer hover:bg-green-100 transition-colors"
@@ -716,6 +687,29 @@ ${text}`;
                                       dangerouslySetInnerHTML={{ __html: currentSnapshot?.newSectionContent || displayedContent }}
                                     />
                                   </div>
+                                ) : isViewingHistory && isDeletedSection ? (
+                                 <div 
+                                   id={`change-${section.id}`} 
+                                   className="border-l-4 border-red-500 pl-3 py-2 bg-red-50 rounded cursor-pointer hover:bg-red-100 transition-colors"
+                                   onClick={() => {
+                                     if (currentSnapshot?.suggestionId) {
+                                       setOpenSuggestionId(currentSnapshot.suggestionId);
+                                     }
+                                   }}
+                                 >
+                                   <Badge className="mb-2 bg-red-100 text-red-800 text-xs">
+                                     {language === 'he' ? 'סעיף נמחק - לחץ לצפייה בדיון' : language === 'ar' ? 'تم حذف القسم - انقر لعرض النقاش' : 'Section Deleted - Click to view discussion'}
+                                   </Badge>
+                                   <div 
+                                     className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
+                                     style={{ 
+                                       fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                       fontSize: "1.125rem",
+                                       lineHeight: "1.8"
+                                     }}
+                                     dangerouslySetInnerHTML={{ __html: displayedContent }}
+                                   />
+                                 </div>
                                 ) : isViewingHistory && hasChanged ? (
                                  <div 
                                    id={`change-${section.id}`} 
