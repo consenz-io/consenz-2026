@@ -333,7 +333,7 @@ export default function CommentsSection({ suggestionId, user }) {
     onMutate: async (data) => {
       if (!user?.email) return { previousComments: null };
       
-      await queryClient.cancelQueries({ queryKey: ['comments', entityType, entityId] });
+      await queryClient.cancelQueries({ queryKey: ['comments', 'suggestionId', suggestionId] });
       
       const previousComments = queryClient.getQueryData(['comments', 'suggestionId', suggestionId]);
 
