@@ -221,30 +221,44 @@ export default function DocumentView() {
 
   const scrollToSuggestion = React.useCallback((index) => {
     const suggestion = pendingSuggestions[index];
-    if (!suggestion) return;
-    if (typeof window === 'undefined' || typeof document === 'undefined' || !document.getElementById) return;
+    if (!suggestion || !document) return;
 
-    const elementId = `suggestion-${suggestion.id}`;
     setTargetSuggestionId(suggestion.id);
-    
+
+    // Find the suggestion card in DocumentContent by looking for the section carousel containing it
     const scrollWithRetry = (attemptCount = 0) => {
-      const element = document.getElementById(elementId);
-      if (element && element.offsetParent !== null) {
-        try {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
-          setTimeout(() => {
-            element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
-          }, 2000);
-        } catch (e) {
-          console.error('Scroll error:', e);
+      // Look for the suggestion card by searching through the page
+      const allSectionCarousels = document.querySelectorAll('[id^="suggestion-"]');
+      let foundElement = null;
+
+      // Check all carousels for the suggestion we need
+      allSectionCarousels.forEach(el => {
+        if (el.textContent && el.textContent.includes(suggestion.id)) {
+          foundElement = el;
         }
+      });
+
+      if (!foundElement) {
+        // Fallback: try to find any element with the suggestion ID
+        foundElement = document.querySelector(`div[class*="carousel"]`);
+      }
+
+      if (foundElement) {
+        // Scroll to the section carousel that contains this suggestion
+        window.scrollTo({ 
+          top: foundElement.getBoundingClientRect().top + window.scrollY - 100,
+          behavior: 'smooth'
+        });
+        foundElement.classList.add('ring-4', 'ring-blue-500');
+        setTimeout(() => {
+          foundElement.classList.remove('ring-4', 'ring-blue-500');
+        }, 2000);
       } else if (attemptCount < 5) {
-        setTimeout(() => scrollWithRetry(attemptCount + 1), 200 + (100 * attemptCount));
+        setTimeout(() => scrollWithRetry(attemptCount + 1), 300);
       }
     };
 
-    setTimeout(() => scrollWithRetry(), 300);
+    setTimeout(() => scrollWithRetry(), 100);
   }, [pendingSuggestions]);
 
   const { data: user } = useQuery({
