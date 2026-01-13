@@ -101,12 +101,12 @@ export default function DocumentContent({
 
   // Scroll to newly created suggestion
   React.useEffect(() => {
-    if (newlyCreatedSuggestion?.suggestionId && typeof window !== 'undefined') {
+    if (newlyCreatedSuggestion?.suggestionId && typeof globalThis !== 'undefined' && globalThis.document) {
       const { suggestionId } = newlyCreatedSuggestion;
       
       const scrollToElement = () => {
         try {
-          const element = window.document?.getElementById(`suggestion-${suggestionId}`);
+          const element = globalThis.document.getElementById(`suggestion-${suggestionId}`);
           if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'center' });
             element.classList.add('ring-4', 'ring-green-500', 'ring-offset-4', 'bg-green-50');
