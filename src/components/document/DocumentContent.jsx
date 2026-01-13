@@ -249,8 +249,18 @@ export default function DocumentContent({
   });
 
   const getCommentsCount = (entityType, entityId) => {
-    const comments = entityType === 'section' ? sectionComments : suggestionComments;
-    return comments.filter(c => c.rootEntityId === entityId).length;
+    if (entityType === 'section') {
+      // עבור סעיף - כולל תגובות על הסעיף + תגובות על כל ההצעות הקשורות אליו
+      const directSectionComments = sectionComments.filter(c => c.rootEntityId === entityId).length;
+      const relatedSuggestionIds = suggestions.filter(s => s.sectionId === entityId).map(s => s.id);
+      const relatedSuggestionsComments = suggestionComments.filter(c => 
+        relatedSuggestionIds.includes(c.rootEntityId)
+      ).length;
+      return directSectionComments + relatedSuggestionsComments;
+    } else {
+      // עבור הצעה - רק תגובות ישירות על ההצעה
+      return suggestionComments.filter(c => c.rootEntityId === entityId).length;
+    }
   };
 
   const { data: userVotes } = useQuery({

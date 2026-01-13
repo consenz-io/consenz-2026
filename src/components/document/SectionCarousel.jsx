@@ -741,11 +741,7 @@ export default function SectionCarousel({
                     className="h-7 md:h-8 text-xs px-2"
                   >
                     <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                    {t('comments')} ({(() => {
-                      const directComments = getCommentsCount('suggestion', currentView.data.id);
-                      const sectionComments = currentView.data.sectionId ? getCommentsCount('section', currentView.data.sectionId) : 0;
-                      return directComments + sectionComments;
-                    })()})
+                    {t('comments')} ({getCommentsCount('suggestion', currentView.data.id)})
                   </Button>
                 </div>
                 {showComments[`suggestion-${currentView.data.id}`] && (
