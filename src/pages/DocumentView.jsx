@@ -898,7 +898,8 @@ export default function DocumentView() {
           </button>
           <button
             type="button"
-            className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-400 rounded-lg p-2 md:p-3 cursor-pointer hover:border-indigo-600 hover:shadow-lg transition-all flex flex-col items-center justify-center gap-1 relative overflow-hidden"
+            className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-400 rounded-lg p-2 md:p-3 hover:border-indigo-600 hover:shadow-lg transition-all flex flex-col items-center justify-center gap-1 relative overflow-hidden"
+            style={{ cursor: pendingSuggestions.length > 0 ? 'pointer' : 'default' }}
             onClick={() => {
               if (pendingSuggestions.length > 0) {
                 setShowSuggestionNav(true);
