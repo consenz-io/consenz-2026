@@ -357,12 +357,12 @@ export default function CommentsSection({ suggestionId, user }) {
       return { previousComments };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['comments', entityType, entityId] });
+      queryClient.invalidateQueries({ queryKey: ['comments', 'suggestionId', suggestionId] });
       setError(null);
     },
     onError: (err, variables, context) => {
       if (context?.previousComments) {
-        queryClient.setQueryData(['comments', entityType, entityId], context.previousComments);
+        queryClient.setQueryData(['comments', 'suggestionId', suggestionId], context.previousComments);
       }
       setError(err.message || "Failed to post comment");
     },
