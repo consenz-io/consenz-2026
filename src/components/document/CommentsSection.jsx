@@ -334,14 +334,12 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
     let baseComments = [];
     if (suggestionId) {
       baseComments = [...suggestionComments];
+    } else if (sectionData?.originatingSuggestionId) {
+      // If section has originatingSuggestionId, show comments from that suggestion
+      baseComments = [...sectionOriginComments];
     } else {
+      // Fallback to legacy
       baseComments = [...legacyComments];
-      if (entityType === 'suggestion' && sectionId && sectionComments.length > 0) {
-        baseComments = [...baseComments, ...sectionComments];
-      }
-      if (entityType === 'section' && relatedSuggestionsComments.length > 0) {
-        baseComments = [...baseComments, ...relatedSuggestionsComments];
-      }
     }
     
     const existingIds = new Set(baseComments.map(c => c.id));
@@ -349,7 +347,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
     baseComments = [...baseComments, ...newReplies];
     
     return baseComments.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-  }, [suggestionComments, legacyComments, sectionComments, relatedSuggestionsComments, repliesComments, suggestionId, entityType, sectionId]);
+  }, [suggestionComments, legacyComments, sectionOriginComments, repliesComments, suggestionId, sectionData?.originatingSuggestionId]);
 
   const isLoading = (suggestionId ? suggestionCommentsLoading : legacyCommentsLoading) || (entityType === 'suggestion' && sectionId && sectionCommentsLoading) || (entityType === 'section' && relatedSuggestionsCommentsLoading) || repliesLoading;
 
