@@ -1,8 +1,8 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import NotificationBell from "./NotificationBell";
-import NotificationErrorBoundary from "./NotificationErrorBoundary";
+import NotificationBell from "./NotificationBell.jsx";
+import NotificationErrorBoundary from "./NotificationErrorBoundary.jsx";
 
 export default function FloatingNotificationBell() {
   const { data: user } = useQuery({
