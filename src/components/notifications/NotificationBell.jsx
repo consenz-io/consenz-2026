@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "@/components/LanguageContext";
+import { useLanguage } from "@/components/LanguageContext.jsx";
 
 export default function NotificationBell({ user }) {
   const { t, isRTL } = useLanguage();
