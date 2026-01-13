@@ -902,7 +902,8 @@ export default function DocumentView() {
             onClick={() => {
               if (pendingSuggestions.length > 0) {
                 setShowSuggestionNav(true);
-                scrollToSuggestion(currentSuggestionIndex);
+                setCurrentSuggestionIndex(0);
+                setTimeout(() => scrollToSuggestion(0), 100);
               }
             }}
             aria-label={`${pendingSuggestions.length} ${language === 'he' ? 'הצעות פתוחות' : 'open suggestions'}. ${pendingSuggestions.length > 0 ? (language === 'he' ? 'לחץ לניווט להצעות' : 'Click to navigate to suggestions') : ''}`}
