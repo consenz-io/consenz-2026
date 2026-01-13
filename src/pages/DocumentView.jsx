@@ -882,11 +882,7 @@ export default function DocumentView() {
 
               {showDescriptionComments && (
                 <div className="mt-4 pt-4 border-t border-slate-200">
-                  <CommentsSection
-                    entityType="document"
-                    entityId={documentId}
-                    user={user}
-                  />
+                  {/* Removed document comments for now - focus on suggestion comments */}
                 </div>
               )}
             </div>
