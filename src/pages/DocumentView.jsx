@@ -213,7 +213,7 @@ export default function DocumentView() {
   const scrollToSuggestion = (index) => {
     const suggestion = pendingSuggestions[index];
     if (!suggestion) return;
-    if (typeof window === 'undefined' || typeof document === 'undefined' || !document.getElementById) return;
+    if (typeof window === 'undefined' || typeof window.document === 'undefined' || !window.document.getElementById) return;
 
     // אם זו הצעה לעריכת סעיף או מחיקת סעיף - צריך לגלול לסעיף ולהעביר את הקרוסלה
     if (suggestion.type === 'edit_section' || suggestion.type === 'delete_section') {
@@ -221,7 +221,7 @@ export default function DocumentView() {
 
       // המתן רגע קצר שהקרוסלה תעדכן את ה-ID שלה, ואז גלול
       setTimeout(() => {
-        const element = document.getElementById(`suggestion-${suggestion.id}`);
+        const element = window.document.getElementById(`suggestion-${suggestion.id}`);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
@@ -232,7 +232,7 @@ export default function DocumentView() {
         } else {
           // אם לא מצאנו עדיין, נסה שוב אחרי delay נוסף
           setTimeout(() => {
-            const retryElement = document.getElementById(`suggestion-${suggestion.id}`);
+            const retryElement = window.document.getElementById(`suggestion-${suggestion.id}`);
             if (retryElement) {
               retryElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
               retryElement.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
@@ -248,7 +248,7 @@ export default function DocumentView() {
       // הצעה לסעיף חדש - גלילה רגילה
       const elementId = `suggestion-${suggestion.id}`;
       setTimeout(() => {
-        const element = document.getElementById(elementId);
+        const element = window.document.getElementById(elementId);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
