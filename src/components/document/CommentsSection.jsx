@@ -567,9 +567,9 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
               editingComment={editingComment}
               setEditingComment={setEditingComment}
               updateCommentMutation={updateCommentMutation}
-              setReplyTo={setReplyTo}
               deleteCommentMutation={deleteCommentMutation}
               allComments={comments}
+              createCommentMutation={createCommentMutation}
               t={t}
             />
           ))
