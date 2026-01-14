@@ -194,6 +194,65 @@ const CommentItem = memo(({
           </div>
         </div>
       </Card>
+
+      {/* Reply input form - shown below this comment when replyTo is set to this comment */}
+      {replyTo?.id === comment.id && !isReply && (
+       <div className="mt-2 p-3 bg-blue-50 rounded-lg space-y-2 border border-blue-200">
+         <div className="flex items-center gap-2 text-sm text-slate-600">
+           <Reply className="w-4 h-4" />
+           <span>{t('replyingTo')} {(() => {
+             const profile = publicProfiles?.find(p => p.email === comment.created_by);
+             if (profile?.fullName) return profile.fullName;
+             const userObj = users?.find(u => u.email === comment.created_by);
+             if (userObj?.full_name) return userObj.full_name;
+             return 'User';
+           })()}</span>
+         </div>
+         <Textarea
+           value={newComment}
+           onChange={(e) => setNewComment(e.target.value)}
+           placeholder={t('writeReply')}
+           className="min-h-[60px]"
+           dir="auto"
+           aria-label={t('writeReply')}
+           autoFocus
+         />
+         <div className="flex gap-2 justify-end">
+           <Button
+             type="button"
+             variant="outline"
+             size="sm"
+             onClick={() => {
+               setReplyTo(null);
+               setNewComment("");
+             }}
+             className="h-7 text-xs"
+           >
+             {t('cancel')}
+           </Button>
+           <Button
+             type="button"
+             size="sm"
+             disabled={!newComment.trim() || createCommentMutation.isPending}
+             onClick={() => {
+               if (newComment.trim()) {
+                 createCommentMutation.mutate({
+                   rootEntityType: comment.rootEntityType,
+                   rootEntityId: comment.rootEntityId,
+                   parentCommentId: comment.id,
+                   content: newComment.trim(),
+                 });
+               }
+             }}
+             className="h-7 text-xs"
+           >
+             <Send className="w-3 h-3 mr-1" />
+             {t('postComment')}
+           </Button>
+         </div>
+       </div>
+      )}
+
       {replies.length > 0 && (
         <div className="mt-2 space-y-2">
           {replies.map(reply => (
