@@ -268,7 +268,7 @@ Return ONLY the translated HTML:`;
       
       const suggestion = await base44.entities.Suggestion.create({
         documentId: document.id,
-        sectionId: isNewSection ? null : editingSection.id,
+        sectionId: isNewSection ? null : (existingSection?.id || editingSection?.id || null),
         topicId: targetTopicId,
         newTopicTitle: newTopicTitle, // Save new topic title if creating one
         newTopicOrder: newTopicOrder, // Save new topic order if creating one
