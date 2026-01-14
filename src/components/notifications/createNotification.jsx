@@ -2,6 +2,12 @@ import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { showBrowserNotification } from './browserNotifications';
 
+// Helper function - stub for now, user interaction profile is already handled in CommentsSection
+async function ensureUserPublicProfileForInteraction(user) {
+  // This is handled by CommentsSection, so we don't need to do anything here
+  return;
+}
+
 // Cache for users and public profiles to reduce API calls
 const userCache = new Map();
 const CACHE_TTL = 60000; // 1 minute
