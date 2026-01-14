@@ -724,36 +724,36 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
 /**
  * Create notification for new comment - for suggestion creator and all commenters
  */
-export async function notifyNewComment({ comment, targetEntity, targetEntityType, parentComment = null, currentUser = null }) {
-  try {
-    // Validate required data
-    if (!comment?.id || !comment?.created_by || !targetEntity?.id || !targetEntityType) {
-      console.error('[NOTIFICATION ERROR] Missing required data for comment notification:', { comment, targetEntity, targetEntityType });
-      return;
-    }
-    
-    // Ensure commenter has public profile
-    if (currentUser) {
-      await ensureUserPublicProfileForInteraction(currentUser);
-    }
-    
-    const [publicProfiles, allComments] = await Promise.all([
-      getCachedPublicProfiles(),
-      base44.entities.Comment.filter({ rootEntityType: targetEntityType, rootEntityId: targetEntity.id })
-    ]);
-    
-    const notifiedEmails = new Set();
-    notifiedEmails.add(comment.created_by);
-    const notifications = [];
-    
-    // ===== Collect all emails that need notifications =====
-    
-    let actionUrl;
-    if (targetEntityType === 'suggestion') {
-      actionUrl = createPageUrl("SuggestionDetail") + `?id=${targetEntity.id}&commentId=${comment.id}`;
-    } else if (targetEntityType === 'section') {
-      actionUrl = createPageUrl("SectionHistory") + `?id=${targetEntity.id}&commentId=${comment.id}`;
-    }
+export async function notifyNewComment({ comment, targetEntity, targetEntityType, parentComment = null, currentUser = null, documentId = null, documentTitle = null }) {
+   try {
+     // Validate required data
+     if (!comment?.id || !comment?.created_by || !targetEntity?.id || !targetEntityType) {
+       console.error('[NOTIFICATION ERROR] Missing required data for comment notification:', { comment, targetEntity, targetEntityType });
+       return;
+     }
+
+     // Ensure commenter has public profile
+     if (currentUser) {
+       await ensureUserPublicProfileForInteraction(currentUser);
+     }
+
+     const [publicProfiles, allComments] = await Promise.all([
+       getCachedPublicProfiles(),
+       base44.entities.Comment.filter({ rootEntityType: targetEntityType, rootEntityId: targetEntity.id })
+     ]);
+
+     const notifiedEmails = new Set();
+     notifiedEmails.add(comment.created_by);
+     const notifications = [];
+
+     // ===== Collect all emails that need notifications =====
+
+     let actionUrl;
+     if (targetEntityType === 'suggestion') {
+       actionUrl = createPageUrl("SuggestionDetail") + `?id=${targetEntity.id}&scrollToComment=${comment.id}`;
+     } else if (targetEntityType === 'section') {
+       actionUrl = createPageUrl("SectionHistory") + `?id=${targetEntity.id}&scrollToComment=${comment.id}`;
+     }
     
     // 1. Parent comment author (if this is a reply) - FIRST PRIORITY!
     let parentCommentAuthorEmail = null;
