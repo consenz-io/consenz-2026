@@ -162,16 +162,16 @@ export async function notifySuggestionAccepted({ suggestion, document: doc }) {
 
 /**
  * RULE 3: New comment on suggestion or section
- * Send to: Entity creator + all previous commenters + parent comment author (if reply)
+ * Send to: Entity creator + all previous commenters + parent comment author + siblings (if reply)
  */
-export async function notifyNewComment({ comment, targetEntity, targetEntityType, currentUser, parentComment = null }) {
+export async function notifyNewComment({ comment, targetEntity, targetEntityType, currentUser, parentComment = null, document = null }) {
   if (!comment?.id || !targetEntity?.id || !targetEntityType || !currentUser?.id) return;
 
   try {
     const notifyEmails = new Set();
 
     // Priority 1: If replying to a comment, notify the parent comment author + all replies to it
-    if (parentComment?.created_by && parentComment.created_by !== comment.created_by) {
+    if (parentComment?.created_by && parentComment.created_by !== currentUser.email) {
       notifyEmails.add(parentComment.created_by);
       
       // Also notify all previous replies to the parent comment
@@ -179,7 +179,7 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
         parentCommentId: parentComment.id
       });
       parentReplies.forEach(reply => {
-        if (reply.created_by && reply.created_by !== comment.created_by) {
+        if (reply.created_by && reply.created_by !== currentUser.email) {
           notifyEmails.add(reply.created_by);
         }
       });
@@ -189,17 +189,18 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
     if (targetEntityType === 'suggestion' && targetEntity.created_by) {
       notifyEmails.add(targetEntity.created_by);
     } else if (targetEntityType === 'section' && targetEntity.lastEditedBy) {
-      const owner = await base44.entities.User.filter({ id: targetEntity.lastEditedBy });
-      if (owner[0]?.email) notifyEmails.add(owner[0].email);
+      // Get user email correctly
+      const ownerResult = await base44.entities.User.filter({ id: targetEntity.lastEditedBy });
+      if (ownerResult[0]?.email) notifyEmails.add(ownerResult[0].email);
     }
 
-    // Previous commenters
-    const comments = await base44.entities.Comment.filter({
+    // Previous commenters on this entity
+    const allComments = await base44.entities.Comment.filter({
       rootEntityType: targetEntityType,
       rootEntityId: targetEntity.id
     });
-    comments.forEach(c => {
-      if (c.created_by && c.created_by !== comment.created_by) {
+    allComments.forEach(c => {
+      if (c.created_by && c.created_by !== currentUser.email) {
         notifyEmails.add(c.created_by);
       }
     });
@@ -226,7 +227,9 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
           relatedEntityType: targetEntityType,
           actionUrl: targetEntityType === 'suggestion'
             ? `${createPageUrl("SuggestionDetail")}?id=${targetEntity.id}`
-            : `${createPageUrl("SectionHistory")}?id=${targetEntity.id}`
+            : `${createPageUrl("SectionHistory")}?id=${targetEntity.id}`,
+          documentId: document?.id,
+          documentTitle: document?.title
         })
       )
     );
