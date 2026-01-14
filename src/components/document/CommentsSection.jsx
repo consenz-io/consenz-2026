@@ -527,7 +527,6 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
     createCommentMutation.mutate({
       rootEntityType: entityType,
       rootEntityId: entityId,
-      parentCommentId: replyTo?.id || null,
       content: newComment.trim(),
     });
   };
