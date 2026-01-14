@@ -614,7 +614,8 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     console.error('[AUTO-ACCEPT] Stack trace:', error.stack);
     console.error('[AUTO-ACCEPT] Suggestion ID:', suggestion.id);
     console.error('[AUTO-ACCEPT] Suggestion type:', freshSuggestion?.type);
-    return false;
+    // Throw the error instead of returning false so voteMutation can handle it properly
+    throw error;
   }
 }
 

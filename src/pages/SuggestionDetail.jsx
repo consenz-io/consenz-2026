@@ -351,25 +351,30 @@ export default function SuggestionDetail() {
 
       // בדיקת קונסנזוס רק אם ההצעה עדיין ממתינה
       if (freshSuggestion.status === 'pending') {
-        const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
-        
-        if (shouldAccept) {
-          const actuallyAccepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
+        try {
+          const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
           
-          if (actuallyAccepted) {
-            if (!serverVote && vote === 'pro' && document?.gamificationEnabled) {
-              base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
-              base44.entities.PointsTransaction.create({
-                userId: user.id,
-                amount: 50,
-                action: 'vote_influenced_acceptance',
-                description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${updatedSuggestion.title}`,
-                relatedEntityId: updatedSuggestion.id,
-                relatedEntityType: 'suggestion'
-              }).catch(() => {});
+          if (shouldAccept) {
+            const actuallyAccepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
+            
+            if (actuallyAccepted) {
+              if (!serverVote && vote === 'pro' && document?.gamificationEnabled) {
+                base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
+                base44.entities.PointsTransaction.create({
+                  userId: user.id,
+                  amount: 50,
+                  action: 'vote_influenced_acceptance',
+                  description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${updatedSuggestion.title}`,
+                  relatedEntityId: updatedSuggestion.id,
+                  relatedEntityType: 'suggestion'
+                }).catch(() => {});
+              }
+              return { accepted: true, newProVotes, newConVotes };
             }
-            return { accepted: true, newProVotes, newConVotes };
           }
+        } catch (autoAcceptError) {
+          console.error('[VOTE MUTATION] Auto-accept error:', autoAcceptError);
+          throw new Error('שגיאה באישור אוטומטי: ' + autoAcceptError.message);
         }
       }
       

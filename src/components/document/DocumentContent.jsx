@@ -172,7 +172,7 @@ export default function DocumentContent({
               toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', {
                 duration: 4000,
               });
-              
+
               setTimeout(() => {
                 Promise.all([
                   queryClient.invalidateQueries({ queryKey: ['sections', document.id] }),
@@ -180,14 +180,17 @@ export default function DocumentContent({
                   queryClient.invalidateQueries({ queryKey: ['versions', document.id] })
                 ]);
               }, 7000);
-              
+
               queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
               queryClient.invalidateQueries({ queryKey: ['document', document.id] });
               queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
             }
           } catch (err) {
             console.error('[AUTO-ACCEPT SECTION] Error:', err);
+            console.error('[AUTO-ACCEPT SECTION] Error message:', err.message);
+            console.error('[AUTO-ACCEPT SECTION] Error stack:', err.stack);
             hasCheckedRef.current.delete(`${suggestion.id}-accepted`);
+            toast.error('שגיאה באישור ההצעה: ' + err.message);
           }
         }
       }
