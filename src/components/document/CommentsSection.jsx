@@ -22,15 +22,13 @@ const CommentItem = memo(({
   editingComment,
   setEditingComment,
   updateCommentMutation,
+  setReplyTo,
   deleteCommentMutation,
   allComments,
-  createCommentMutation,
   t
 }) => {
   // Always call hooks in the same order, regardless of conditions
   const [localEditContent, setLocalEditContent] = useState(comment.content);
-  const [replyingToThis, setReplyingToThis] = useState(false);
-  const [replyContent, setReplyContent] = useState("");
   
   // Always run useEffect
   useEffect(() => {
@@ -144,21 +142,23 @@ const CommentItem = memo(({
                   renderContent={(text) => <span>{text}</span>}
                 />
                 <div className="flex gap-2 mt-2">
-                   <Button
-                     variant="ghost"
-                     size="sm"
-                     onClick={() => {
-                       if (!user) {
-                         base44.auth.redirectToLogin(window.location.href);
-                         return;
-                       }
-                       setReplyingToThis(!replyingToThis);
-                     }}
-                     className="h-7 text-xs"
-                   >
-                     <Reply className="w-3 h-3 mr-1" />
-                     {t('reply')}
-                   </Button>
+                  {!isReply && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        if (!user) {
+                          base44.auth.redirectToLogin(window.location.href);
+                          return;
+                        }
+                        setReplyTo(comment);
+                      }}
+                      className="h-7 text-xs"
+                    >
+                      <Reply className="w-3 h-3 mr-1" />
+                      {t('reply')}
+                    </Button>
+                  )}
                   {user && user.email === comment.created_by && (
                     <>
                       <Button
@@ -207,67 +207,13 @@ const CommentItem = memo(({
               deleteCommentMutation={deleteCommentMutation}
               allComments={allComments}
               t={t}
-              />
-              ))}
-              </div>
-              )}
-              {replyingToThis && user && (
-              <div className="ml-8 mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-xs text-slate-600 mb-2">{t('replyingTo')} {(() => {
-              const profile = publicProfiles?.find(p => p.email === comment.created_by);
-              if (profile?.fullName) return profile.fullName;
-              const u = users?.find(u => u.email === comment.created_by);
-              if (u?.full_name) return u.full_name;
-              return 'User';
-              })()}</p>
-              <div className="space-y-2">
-              <Textarea
-              value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
-              placeholder={t('writeReply')}
-              className="min-h-[60px] text-sm"
-              dir="auto"
-              autoFocus
-              />
-              <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setReplyingToThis(false);
-                  setReplyContent("");
-                }}
-                className="h-7 text-xs"
-              >
-                {t('cancel')}
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => {
-                  if (replyContent.trim()) {
-                    createCommentMutation.mutate({
-                      rootEntityType: comment.rootEntityType,
-                      rootEntityId: comment.rootEntityId,
-                      parentCommentId: comment.id,
-                      content: replyContent.trim(),
-                    });
-                    setReplyContent("");
-                    setReplyingToThis(false);
-                  }
-                }}
-                disabled={!replyContent.trim() || createCommentMutation.isPending}
-                className="h-7 text-xs"
-              >
-                <Send className="w-3 h-3 mr-1" />
-                {t('postComment')}
-              </Button>
-              </div>
-              </div>
-              </div>
-              )}
-              </div>
-              );
-              });
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
 
 // Background tasks - fire and forget
 const runBackgroundTasks = async (comment, entityType, entityId, parentComment) => {
@@ -309,6 +255,7 @@ const runBackgroundTasks = async (comment, entityType, entityId, parentComment) 
 export default function CommentsSection({ entityType, entityId, user, sectionId, relatedSuggestionIds = [], includeRelatedComments = false }) {
   const { t, isRTL, language } = useLanguage();
   const [newComment, setNewComment] = useState("");
+  const [replyTo, setReplyTo] = useState(null);
   
   // FIX: Removed editContent from parent state to prevent re-renders on every keystroke
   const [editingComment, setEditingComment] = useState(null); 
@@ -473,6 +420,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
       });
       
       setNewComment("");
+      setReplyTo(null);
       
       return { previousComments };
     },
@@ -526,6 +474,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
     createCommentMutation.mutate({
       rootEntityType: entityType,
       rootEntityId: entityId,
+      parentCommentId: replyTo?.id || null,
       content: newComment.trim(),
     });
   };
@@ -564,9 +513,9 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
               editingComment={editingComment}
               setEditingComment={setEditingComment}
               updateCommentMutation={updateCommentMutation}
+              setReplyTo={setReplyTo}
               deleteCommentMutation={deleteCommentMutation}
               allComments={comments}
-              createCommentMutation={createCommentMutation}
               t={t}
             />
           ))
@@ -581,13 +530,34 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
         }
         handleSubmit(e);
       }} className="space-y-2 mt-6 pt-6 border-t border-slate-200">
+        {replyTo && (
+          <div className="flex items-center gap-2 text-sm text-slate-600 bg-blue-50 p-2 rounded">
+            <Reply className="w-4 h-4" />
+            <span>{t('replyingTo')} {(() => {
+              const profile = publicProfiles?.find(p => p.email === replyTo.created_by);
+              if (profile?.fullName) return profile.fullName;
+              const user = users?.find(u => u.email === replyTo.created_by);
+              if (user?.full_name) return user.full_name;
+              return 'User';
+            })()}</span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setReplyTo(null)}
+              className="mr-auto h-6"
+            >
+              {t('cancel')}
+            </Button>
+          </div>
+        )}
         <Textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
-          placeholder={t('addComment')}
+          placeholder={replyTo ? t('writeReply') : t('addComment')}
           className="min-h-[80px]"
           dir="auto"
-          aria-label={t('addComment')}
+          aria-label={replyTo ? t('writeReply') : t('addComment')}
           aria-required="true"
           onFocus={() => {
             if (!user) {
