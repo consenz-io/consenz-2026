@@ -235,6 +235,49 @@ export default function DocumentCleanView() {
   const currentSnapshot = versionGroups[currentVersionIndex] || versionGroups[0];
   const olderSnapshot = currentVersionIndex < versionGroups.length - 1 ? versionGroups[currentVersionIndex + 1] : null;
   
+  // Build a complete list of all sections including deleted ones from versions
+  const allSectionsMap = React.useMemo(() => {
+    const sectionMap = new Map();
+    
+    // Add current sections
+    sections.forEach(s => {
+      sectionMap.set(s.id, s);
+    });
+    
+    // Add sections from versions that might be deleted now
+    allVersions.forEach(v => {
+      if (v.sectionId && !sectionMap.has(v.sectionId)) {
+        // Find the topic for this section from versions
+        const relatedVersions = allVersions.filter(ver => ver.sectionId === v.sectionId);
+        if (relatedVersions.length > 0) {
+          // Try to get topic info
+          const latestVersion = relatedVersions.sort((a, b) => (b.version || 0) - (a.version || 0))[0];
+          
+          // Find the topic by checking current sections or create a placeholder
+          let topicId = null;
+          const currentSection = sections.find(s => s.id === v.sectionId);
+          if (currentSection) {
+            topicId = currentSection.topicId;
+          } else {
+            // Try to infer from other versions or default to first topic
+            const sectionWithTopic = sections.find(s => s.topicId);
+            topicId = sectionWithTopic?.topicId || topics[0]?.id;
+          }
+          
+          sectionMap.set(v.sectionId, {
+            id: v.sectionId,
+            content: latestVersion.content,
+            topicId: topicId,
+            order: 999, // Put deleted sections at end
+            isDeleted: true // Mark as deleted
+          });
+        }
+      }
+    });
+    
+    return sectionMap;
+  }, [sections, allVersions, topics]);
+  
   // Reset version index if it's out of bounds
   React.useEffect(() => {
     if (currentVersionIndex >= versionGroups.length && versionGroups.length > 0) {
