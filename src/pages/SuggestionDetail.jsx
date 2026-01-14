@@ -834,7 +834,7 @@ export default function SuggestionDetail() {
             {(suggestion.explanation || (user && user.email === suggestion.created_by)) && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className={`text-sm font-semibold text-slate-700 ${isRTL ? 'mr-auto' : 'ml-0'}`}>{t('explanation')}</h3>
+                    <h3 className="text-sm font-semibold text-slate-700">{t('explanation')}</h3>
                     {user && user.email === suggestion.created_by && !isEditingExplanation && (
                       <Button
                         variant="ghost"
