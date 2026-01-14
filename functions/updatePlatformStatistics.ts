@@ -28,24 +28,18 @@ Deno.serve(async (req) => {
         const allUsers = await base44.asServiceRole.entities.User.list();
         const registeredUsersCount = allUsers.length;
 
-        // Calculate average consensus from accepted suggestions in active documents only
-        const activeDocumentIds = activeDocuments.map(d => d.id);
-        const acceptedSuggestions = await base44.asServiceRole.entities.Suggestion.filter({ status: 'accepted' });
-        const relevantSuggestions = acceptedSuggestions.filter(s => activeDocumentIds.includes(s.documentId));
+        // Calculate average consensus from avgSuggestionConsensus of active documents
+        const documentsWithConsensus = activeDocuments.filter(d => 
+            d.avgSuggestionConsensus !== undefined && 
+            d.avgSuggestionConsensus !== null &&
+            d.avgSuggestionConsensus > 0
+        );
         
-        let totalConsensusScore = 0;
-        let validSuggestionsCount = 0;
-
-        for (const s of relevantSuggestions) {
-            if (typeof s.proVotes === 'number' && typeof s.conVotes === 'number') {
-                const totalVotes = s.proVotes + s.conVotes;
-                if (totalVotes > 0) {
-                    totalConsensusScore += (s.proVotes / totalVotes);
-                    validSuggestionsCount++;
-                }
-            }
+        let averageConsensus = 50; // Default 50%
+        if (documentsWithConsensus.length > 0) {
+            const totalConsensus = documentsWithConsensus.reduce((sum, d) => sum + (d.avgSuggestionConsensus * 100), 0);
+            averageConsensus = totalConsensus / documentsWithConsensus.length;
         }
-        const averageConsensus = validSuggestionsCount > 0 ? (totalConsensusScore / validSuggestionsCount) * 100 : 0;
 
         // Fetch or create the PlatformStatistics entity
         const existingStats = await base44.asServiceRole.entities.PlatformStatistics.list();
