@@ -581,34 +581,13 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
         }
         handleSubmit(e);
       }} className="space-y-2 mt-6 pt-6 border-t border-slate-200">
-        {replyTo && (
-          <div className="flex items-center gap-2 text-sm text-slate-600 bg-blue-50 p-2 rounded">
-            <Reply className="w-4 h-4" />
-            <span>{t('replyingTo')} {(() => {
-              const profile = publicProfiles?.find(p => p.email === replyTo.created_by);
-              if (profile?.fullName) return profile.fullName;
-              const user = users?.find(u => u.email === replyTo.created_by);
-              if (user?.full_name) return user.full_name;
-              return 'User';
-            })()}</span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setReplyTo(null)}
-              className="mr-auto h-6"
-            >
-              {t('cancel')}
-            </Button>
-          </div>
-        )}
         <Textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
-          placeholder={replyTo ? t('writeReply') : t('addComment')}
+          placeholder={t('addComment')}
           className="min-h-[80px]"
           dir="auto"
-          aria-label={replyTo ? t('writeReply') : t('addComment')}
+          aria-label={t('addComment')}
           aria-required="true"
           onFocus={() => {
             if (!user) {
