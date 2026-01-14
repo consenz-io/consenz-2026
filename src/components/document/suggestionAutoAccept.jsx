@@ -171,8 +171,28 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
   // סעיפים חדשים, עריכות ישירות ושינויי כותרות לא נספרים במד הקונצנזוס
   const shouldUpdateConsensusMeter = freshSuggestion.type === 'edit_section';
   
+  // חישוב דינמי של מספר המשתתפים
+  const [allSuggestions, allVotes, publicProfiles, allArguments, allComments, sections] = await Promise.all([
+    base44.entities.Suggestion.filter({ documentId: document.id }),
+    base44.entities.Vote.list(),
+    base44.entities.UserPublicProfile.list(),
+    base44.entities.Argument.list(),
+    base44.entities.Comment.list(),
+    base44.entities.Section.filter({ documentId: document.id })
+  ]);
+  
+  const totalUsers = calculateContributorsFromData({
+    document,
+    suggestions: allSuggestions,
+    allVotes,
+    allUsers: publicProfiles,
+    allArguments,
+    allComments,
+    sections
+  }) || 1;
+  
   // שמירת מספר המשתתפים בזמן הקבלה של ההצעה הזו
-  const participantsAtAcceptance = document.totalUsersInteracted || 1;
+  const participantsAtAcceptance = totalUsers;
   
   let updatedConsensuses = document.consensuses || [];
   let newThreshold = document.threshold || 2;
