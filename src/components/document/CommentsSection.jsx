@@ -473,7 +473,6 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
       });
       
       setNewComment("");
-      setReplyTo(null);
       
       return { previousComments };
     },
