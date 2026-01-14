@@ -987,19 +987,21 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
     emailsArray.forEach(email => {
       // Skip if already notified as parent commenter or doc creator
       if (email === parentComment?.created_by || email === doc.created_by) return;
-      
+
       const user = emailToUser[email];
       if (!user) return;
-      
+
       const userLang = user.preferredLanguage || 'he';
       notifications.push({
         userId: user.id,
         type: 'document_comment',
         title: translate('notifDocumentCommentTitle', userLang),
         message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: doc.title }),
-        relatedEntityId: doc.id,
-        relatedEntityType: 'document',
-        actionUrl
+        relatedEntityId: comment.id,
+        relatedEntityType: 'comment',
+        actionUrl: actionUrl + `#comment-${comment.id}`,
+        documentId: doc.id,
+        documentTitle: doc.title
       });
     });
     
