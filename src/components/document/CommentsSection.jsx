@@ -195,6 +195,46 @@ const CommentItem = memo(({
           </div>
         </div>
       </Card>
+      {replyTo?.id === comment.id && (
+        <div className="mt-3 ml-0 pt-3 border-t border-slate-200">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleReplySubmit(e, replyTo);
+          }} className="space-y-2">
+            <Textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder={t('writeReply')}
+              className="min-h-[60px] text-sm"
+              dir="auto"
+              aria-label={t('writeReply')}
+              aria-required="true"
+              autoFocus
+            />
+            <div className="flex gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setReplyTo(null)}
+                className="h-7 text-xs"
+              >
+                {t('cancel')}
+              </Button>
+              <Button
+                type="submit"
+                disabled={!newComment.trim() || createCommentMutation.isPending}
+                size="sm"
+                className="h-7 text-xs"
+              >
+                <Send className="w-3 h-3 mr-1" />
+                {t('postComment')}
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {replies.length > 0 && (
         <div className="mt-2 space-y-2">
           {replies.map(reply => (
@@ -212,6 +252,11 @@ const CommentItem = memo(({
               deleteCommentMutation={deleteCommentMutation}
               allComments={allComments}
               t={t}
+              replyTo={replyTo}
+              newComment={newComment}
+              setNewComment={setNewComment}
+              createCommentMutation={createCommentMutation}
+              handleReplySubmit={handleReplySubmit}
             />
           ))}
         </div>
