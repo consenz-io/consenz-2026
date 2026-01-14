@@ -589,14 +589,15 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     
     // שליחת התראה ונקודות - בדיקה שיש created_by
     if (freshSuggestion.created_by) {
-      try {
-        console.log('[AUTO ACCEPT] Sending notification for suggestion:', freshSuggestion.id, 'created_by:', freshSuggestion.created_by);
-        await notifySuggestionStatusChange({ suggestion: freshSuggestion, newStatus: 'accepted' });
-        console.log('[AUTO ACCEPT] Notification sent successfully');
-      } catch (notifError) {
-        console.error('[AUTO ACCEPT NOTIFICATION ERROR]', notifError);
-        console.error('[AUTO ACCEPT NOTIFICATION ERROR] Stack:', notifError.stack);
-      }
+      console.log('[AUTO ACCEPT] Sending notification for suggestion:', freshSuggestion.id, 'created_by:', freshSuggestion.created_by);
+      // Run in background - don't block main flow
+      notifySuggestionStatusChange({ suggestion: freshSuggestion, newStatus: 'accepted' })
+        .then(() => console.log('[AUTO ACCEPT] Notification sent successfully'))
+        .catch(notifError => {
+          console.error('[AUTO ACCEPT NOTIFICATION ERROR]', notifError);
+          console.error('[AUTO ACCEPT NOTIFICATION ERROR] Message:', notifError.message);
+          console.error('[AUTO ACCEPT NOTIFICATION ERROR] Stack:', notifError.stack);
+        });
     } else {
       console.warn('[AUTO ACCEPT] No created_by for suggestion:', freshSuggestion.id, '- skipping notification');
     }
