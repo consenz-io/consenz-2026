@@ -434,7 +434,9 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
         changeDescription: `לפני: ${freshSuggestion.title || 'מחיקת סעיף'}`,
         version: nextVersion,
         changeType: 'suggestion_accepted',
-        suggestionId: freshSuggestion.id
+        suggestionId: freshSuggestion.id,
+        originalLanguage: section.originalLanguage || 'he',
+        translations: section.translations || {}
       });
 
       console.log('[AUTO-ACCEPT DELETE] Created "before" version:', nextVersion);
@@ -447,7 +449,9 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
         changeDescription: freshSuggestion.title || 'סעיף נמחק',
         version: nextVersion + 1,
         changeType: 'suggestion_accepted',
-        suggestionId: freshSuggestion.id
+        suggestionId: freshSuggestion.id,
+        originalLanguage: section.originalLanguage || 'he',
+        translations: section.translations || {}
       });
 
       console.log('[AUTO-ACCEPT DELETE] Created "after" version:', nextVersion + 1);
