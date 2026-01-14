@@ -875,8 +875,7 @@ ${text}`;
                               </div>
                           </div>
                         );
-                      })
-                      .filter(Boolean)}
+                        })}
                     </div>
                   )}
                 </div>
