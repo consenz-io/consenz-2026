@@ -836,7 +836,9 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
         message: translate(messageKey, userLang, { name: commenterName }),
         relatedEntityId: targetEntity.id,
         relatedEntityType: targetEntityType,
-        actionUrl
+        actionUrl,
+        documentId,
+        documentTitle
       });
     }
     
