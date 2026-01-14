@@ -170,9 +170,19 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
   try {
     const notifyEmails = new Set();
 
-    // Priority 1: If replying to a comment, notify the parent comment author
+    // Priority 1: If replying to a comment, notify the parent comment author + all replies to it
     if (parentComment?.created_by && parentComment.created_by !== comment.created_by) {
       notifyEmails.add(parentComment.created_by);
+      
+      // Also notify all previous replies to the parent comment
+      const parentReplies = await base44.entities.Comment.filter({
+        parentCommentId: parentComment.id
+      });
+      parentReplies.forEach(reply => {
+        if (reply.created_by && reply.created_by !== comment.created_by) {
+          notifyEmails.add(reply.created_by);
+        }
+      });
     }
 
     // Entity creator/owner
