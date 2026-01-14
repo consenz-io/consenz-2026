@@ -32,6 +32,7 @@ Deno.serve(async (req) => {
 
         // Count registered users
         const allUsers = await base44.asServiceRole.entities.User.list();
+        await delay(200);
         const registeredUsersCount = allUsers.length;
 
         // Calculate average consensus from avgSuggestionConsensus of active documents
