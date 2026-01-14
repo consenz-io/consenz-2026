@@ -207,13 +207,67 @@ const CommentItem = memo(({
               deleteCommentMutation={deleteCommentMutation}
               allComments={allComments}
               t={t}
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-});
+              />
+              ))}
+              </div>
+              )}
+              {replyingToThis && user && (
+              <div className="ml-8 mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-xs text-slate-600 mb-2">{t('replyingTo')} {(() => {
+              const profile = publicProfiles?.find(p => p.email === comment.created_by);
+              if (profile?.fullName) return profile.fullName;
+              const u = users?.find(u => u.email === comment.created_by);
+              if (u?.full_name) return u.full_name;
+              return 'User';
+              })()}</p>
+              <div className="space-y-2">
+              <Textarea
+              value={replyContent}
+              onChange={(e) => setReplyContent(e.target.value)}
+              placeholder={t('writeReply')}
+              className="min-h-[60px] text-sm"
+              dir="auto"
+              autoFocus
+              />
+              <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setReplyingToThis(false);
+                  setReplyContent("");
+                }}
+                className="h-7 text-xs"
+              >
+                {t('cancel')}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  if (replyContent.trim()) {
+                    createCommentMutation.mutate({
+                      rootEntityType: comment.rootEntityType,
+                      rootEntityId: comment.rootEntityId,
+                      parentCommentId: comment.id,
+                      content: replyContent.trim(),
+                    });
+                    setReplyContent("");
+                    setReplyingToThis(false);
+                  }
+                }}
+                disabled={!replyContent.trim() || createCommentMutation.isPending}
+                className="h-7 text-xs"
+              >
+                <Send className="w-3 h-3 mr-1" />
+                {t('postComment')}
+              </Button>
+              </div>
+              </div>
+              </div>
+              )}
+              </div>
+              );
+              });
 
 // Background tasks - fire and forget
 const runBackgroundTasks = async (comment, entityType, entityId, parentComment) => {
