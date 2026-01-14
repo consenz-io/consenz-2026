@@ -212,18 +212,29 @@ export default function SectionDiff({
     </div>
   );
   
+  const handleCardClick = (e) => {
+    // Don't navigate if clicked on a button or control
+    if (e.target.closest('button, a, [role="button"]')) {
+      return;
+    }
+    
+    if (suggestion?.id && typeof window !== 'undefined') {
+      // Open suggestion sidebar instead of navigation
+      const event = new CustomEvent('openSuggestionSidebar', {
+        detail: { suggestionId: suggestion.id }
+      });
+      window.dispatchEvent(event);
+    }
+  };
+
   return (
-    <Link 
-      to={suggestion?.id ? `${createPageUrl("DocumentVersions")}?id=${documentId}&suggestionId=${suggestion.id}` : `${createPageUrl("SectionHistory")}?id=${sectionId}`}
-      className="block"
+    <Card 
+      className="p-4 bg-slate-50 border-slate-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
+      onClick={handleCardClick}
     >
-      <Card 
-        className="p-4 bg-slate-50 border-slate-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
+      <div 
+        className="flex items-center justify-between mb-3 flex-wrap gap-2"
       >
-        <div 
-          className="flex items-center justify-between mb-3 flex-wrap gap-2"
-          onClick={(e) => e.stopPropagation()}
-        >
           <div className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</div>
         <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
           {showDiff && canShowDiff && (
@@ -275,7 +286,7 @@ export default function SectionDiff({
       
       {/* Cross-language warning */}
       {isCrossLanguageSuggestion && !showTranslated && (
-        <Alert className="mb-3 bg-amber-50 border-amber-200">
+        <Alert className="mb-3 bg-amber-50 border-amber-200" onClick={(e) => e.stopPropagation()}>
           <Info className="w-4 h-4 text-amber-600" />
           <AlertDescription className="text-amber-800 text-xs">
             {isRTL 
@@ -290,7 +301,6 @@ export default function SectionDiff({
       {showTranslated && hasTranslation && (
         <div 
           className="flex items-center gap-2 mb-2 flex-wrap"
-          onClick={(e) => e.stopPropagation()}
         >
           <Badge 
             variant="outline" 
@@ -309,6 +319,7 @@ export default function SectionDiff({
       
       <div 
         className="prose prose-sm max-w-none rounded-lg p-2 -m-2"
+        onClick={(e) => e.stopPropagation()}
       >
         {isTranslating ? (
           <div className="flex items-center justify-center py-4 gap-2 text-slate-500">
@@ -325,7 +336,6 @@ export default function SectionDiff({
           renderSideBySideDiff()
         )}
       </div>
-      </Card>
-    </Link>
+    </Card>
   );
 }
