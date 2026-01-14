@@ -10,11 +10,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Users, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Users, Loader2, Search } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
 export default function ContributorsModal({ isOpen, onClose, documentId }) {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   // Fetch all data in parallel with caching
   const { data: document } = useQuery({
@@ -125,11 +127,12 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     });
 
     // Build contributors list from UserPublicProfile entity (accessible to all)
-    const contributorsList = [];
+    // Use Map to avoid duplicates by userId
+    const contributorsMap = new Map();
     
     publicProfiles.forEach(profile => {
-      if (contributorEmails.has(profile.email)) {
-        contributorsList.push({
+      if (contributorEmails.has(profile.email) && profile.userId) {
+        contributorsMap.set(profile.userId, {
           id: profile.userId,
           email: profile.email,
           full_name: profile.fullName || 'User',
@@ -138,47 +141,79 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       }
     });
     
+    const contributorsList = Array.from(contributorsMap.values());
+    
     return { contributors: contributorsList, loading: false };
   }, [document, suggestions, sections, publicProfiles, allVotes, allComments, allArguments, documentId]);
 
+  const filteredContributors = useMemo(() => {
+    if (!searchQuery || !contributors) return contributors || [];
+    const query = searchQuery.toLowerCase();
+    return contributors.filter(c => {
+      const name = c.full_name || '';
+      const email = c.email || '';
+      return name.toLowerCase().includes(query) || email.toLowerCase().includes(query);
+    });
+  }, [contributors, searchQuery]);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-md max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Users className="w-5 h-5 text-blue-600" />
             {t('contributors')} ({contributors.length})
           </DialogTitle>
         </DialogHeader>
 
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <div className="px-1">
+          <div className="flex items-center gap-2 mb-2">
+            <Search className="w-4 h-4 text-slate-400" />
+            <Input
+              placeholder={isRTL ? "חיפוש לפי שם..." : "Search by name..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1"
+            />
           </div>
-        ) : contributors.length === 0 ? (
-          <div className="text-center py-8 text-slate-500">
-            {t('noContributors')}
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {contributors.map((user) => (
-              <Link
-                key={user.id}
-                to={`${createPageUrl("Profile")}?userId=${user.id}`}
-                className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg hover:bg-slate-50 transition-colors"
-              >
-                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-medium text-sm md:text-base">
-                    {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm md:text-base text-slate-900 truncate">
-                    {user.full_name || 'User'}
-                  </p>
-                </div>
-              </Link>
-            ))}
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+          ) : filteredContributors.length === 0 ? (
+            <div className="text-center py-8 text-slate-500">
+              {searchQuery ? (isRTL ? 'לא נמצאו תוצאות' : 'No results found') : t('noContributors')}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredContributors.map((user) => (
+                <Link
+                  key={user.id}
+                  to={`${createPageUrl("Profile")}?userId=${user.id}`}
+                  className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg hover:bg-slate-50 transition-colors"
+                >
+                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-medium text-sm md:text-base">
+                      {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm md:text-base text-slate-900 truncate">
+                      {user.full_name || 'User'}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {filteredContributors.length > 0 && searchQuery && (
+          <div className="text-sm text-slate-600 text-center pt-2 border-t">
+            {filteredContributors.length} {isRTL ? 'מתוך' : 'of'} {contributors?.length || 0}
           </div>
         )}
       </DialogContent>
