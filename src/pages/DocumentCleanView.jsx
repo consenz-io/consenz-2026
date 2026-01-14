@@ -118,13 +118,21 @@ export default function DocumentCleanView() {
     // Always start with current snapshot if we have sections
     const snapshots = [];
     
+    // Collect all section IDs that ever existed (from sections + versions)
+    const allSectionIds = new Set();
+    sections.forEach(s => allSectionIds.add(s.id));
+    allVersions.forEach(v => {
+      if (v.sectionId) allSectionIds.add(v.sectionId);
+    });
+    
     // Current state snapshot
     const currentSnapshot = {
       version: 'current',
       label: 'נוכחית',
       timestamp: new Date().toISOString(),
       sectionContents: {},
-      existingSections: new Set()
+      existingSections: new Set(),
+      allSectionIds: allSectionIds
     };
     sections.forEach(s => {
       currentSnapshot.sectionContents[s.id] = s.content;
@@ -182,7 +190,8 @@ export default function DocumentCleanView() {
         sectionContents: { ...currentSectionContents },
         existingSections: new Set(currentExistingSections),
         changedSectionId: afterVersion.sectionId,
-        newContent: afterVersion.content
+        newContent: afterVersion.content,
+        allSectionIds: allSectionIds
       };
       
       // Mark if this is a new section creation
@@ -197,6 +206,9 @@ export default function DocumentCleanView() {
         snapshotAfterChange.isDeleted = true;
         snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
         snapshotAfterChange.deletedSectionContent = beforeVersion.content;
+        // Keep the deleted section in sectionContents so it can be displayed
+        snapshotAfterChange.sectionContents[afterVersion.sectionId] = beforeVersion.content;
+        snapshotAfterChange.existingSections.add(afterVersion.sectionId);
       }
       
       snapshots.push(snapshotAfterChange);
@@ -615,7 +627,17 @@ ${text}`;
                     <p className="text-slate-500 italic pr-2 md:pr-4">{t('noSectionsYet')}</p>
                   ) : (
                     <div className="space-y-4 md:space-y-6">
-                      {topicSections.map((section, sectionIndex) => {
+                      {/* Show all sections that ever existed in this topic */}
+                      {Array.from(currentSnapshot?.allSectionIds || [])
+                        .map(sectionId => sections.find(s => s.id === sectionId) || { 
+                          id: sectionId, 
+                          topicId: topic.id,
+                          content: currentSnapshot?.sectionContents?.[sectionId] || '',
+                          order: 999 // Put deleted sections at the end if we don't know their order
+                        })
+                        .filter(section => section.topicId === topic.id)
+                        .sort((a, b) => (a.order || 0) - (b.order || 0))
+                        .map((section, sectionIndex) => {
                         // מציאת תוכן הסעיף בגרסה המוצגת ובגרסה החדשה יותר
                         const isViewingHistory = currentVersionIndex > 0;
 
@@ -860,7 +882,8 @@ ${text}`;
                               </div>
                           </div>
                         );
-                      })}
+                      })
+                      .filter(Boolean)}
                     </div>
                   )}
                 </div>
