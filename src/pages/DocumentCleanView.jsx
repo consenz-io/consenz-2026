@@ -575,9 +575,13 @@ ${text}`;
                 .filter(section => {
                   if (!isViewingHistory) return true;
                   
+                  // Always show sections that exist in snapshot OR were deleted in this snapshot
                   const sectionExistsInSnapshot = currentSnapshot?.existingSections?.has(section.id) ?? 
                     currentSnapshot?.sectionContents?.hasOwnProperty(section.id);
-                  return sectionExistsInSnapshot;
+                  const isDeletedInThisSnapshot = currentSnapshot?.isDeleted && 
+                    currentSnapshot?.deletedSectionId === section.id;
+                  
+                  return sectionExistsInSnapshot || isDeletedInThisSnapshot;
                 })
                 .sort((a, b) => (a.order || 0) - (b.order || 0));
               
