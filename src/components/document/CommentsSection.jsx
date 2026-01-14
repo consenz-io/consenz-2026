@@ -513,7 +513,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
     },
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e, parentComment = null) => {
     e.preventDefault();
     if (!newComment.trim()) return;
     if (!user || !user.id || !user.email) {
@@ -524,7 +524,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
     createCommentMutation.mutate({
       rootEntityType: entityType,
       rootEntityId: entityId,
-      parentCommentId: replyTo?.id || null,
+      parentCommentId: parentComment?.id || replyTo?.id || null,
       content: newComment.trim(),
     });
   };
