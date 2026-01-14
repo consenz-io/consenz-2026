@@ -444,26 +444,42 @@ export default function GroupView() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {groupMembers.map((member) => {
-                    const profile = publicProfiles.find(p => p.userId === member.userId);
-                    return (
-                      <div key={member.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                            {profile?.fullName?.charAt(0)?.toUpperCase() || 'U'}
+                  {(() => {
+                    // Get all section contributors from group documents
+                    const sectionContributors = allSections
+                      .filter(section => documents.some(doc => doc.id === section.documentId))
+                      .map(section => section.lastEditedBy || section.created_by_id)
+                      .filter(Boolean);
+                    
+                    // Get unique user IDs
+                    const uniqueUserIds = [...new Set([
+                      ...groupMembers.map(m => m.userId),
+                      ...sectionContributors
+                    ])];
+                    
+                    return uniqueUserIds.map((userId) => {
+                      const profile = publicProfiles.find(p => p.userId === userId);
+                      const member = groupMembers.find(m => m.userId === userId);
+                      
+                      return (
+                        <div key={userId} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                              {profile?.fullName?.charAt(0)?.toUpperCase() || 'U'}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-slate-900">{profile?.fullName || userId}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium text-slate-900">{profile?.fullName || member.userId}</p>
-                          </div>
+                          {member?.role === 'admin' && (
+                            <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
+                              {language === 'he' ? 'מנהל' : 'Admin'}
+                            </Badge>
+                          )}
                         </div>
-                        {member.role === 'admin' && (
-                          <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200">
-                            {language === 'he' ? 'מנהל' : 'Admin'}
-                          </Badge>
-                        )}
-                      </div>
-                    );
-                  })}
+                      );
+                    });
+                  })()}
                 </div>
               </CardContent>
             </Card>
