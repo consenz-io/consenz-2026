@@ -339,6 +339,8 @@ export default function DocumentContent({
     mutationFn: async ({ suggestionId, vote, currentVote, willBeAccepted }) => {
       if (!user) throw new Error("יש להתחבר כדי להצביע");
 
+      console.log('[VOTE MUTATION] Starting vote for suggestion:', suggestionId, 'vote:', vote);
+
       // מניעת הצבעות כפולות על אותה הצעה
       if (votingInProgressRef.current.has(suggestionId)) {
         console.log('[VOTE] Already voting on this suggestion, ignoring');
@@ -348,6 +350,7 @@ export default function DocumentContent({
 
       try {
         const suggestion = suggestions.find(s => s.id === suggestionId);
+        console.log('[VOTE MUTATION] Found suggestion:', suggestion?.type, 'status:', suggestion?.status);
         
         // שלב 1: קריאת המצב העדכני מהשרת (source of truth)
         const [freshVotes, freshSuggestions] = await Promise.all([
@@ -357,6 +360,16 @@ export default function DocumentContent({
         
         const serverVote = freshVotes[0]; // ההצבעה האמיתית מהשרת
         const freshSuggestion = freshSuggestions[0];
+        
+        console.log('[VOTE MUTATION] Fresh data from server:', {
+          suggestionId,
+          type: freshSuggestion?.type,
+          status: freshSuggestion?.status,
+          proVotes: freshSuggestion?.proVotes,
+          conVotes: freshSuggestion?.conVotes,
+          hasServerVote: !!serverVote,
+          serverVoteValue: serverVote?.vote
+        });
         
         if (!freshSuggestion) {
           throw new Error("ההצעה לא נמצאה");
