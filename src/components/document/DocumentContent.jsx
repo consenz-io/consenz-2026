@@ -339,8 +339,6 @@ export default function DocumentContent({
     mutationFn: async ({ suggestionId, vote, currentVote, willBeAccepted }) => {
       if (!user) throw new Error("יש להתחבר כדי להצביע");
 
-      console.log('[VOTE MUTATION] Starting vote for suggestion:', suggestionId, 'vote:', vote);
-
       // מניעת הצבעות כפולות על אותה הצעה
       if (votingInProgressRef.current.has(suggestionId)) {
         console.log('[VOTE] Already voting on this suggestion, ignoring');
@@ -350,7 +348,6 @@ export default function DocumentContent({
 
       try {
         const suggestion = suggestions.find(s => s.id === suggestionId);
-        console.log('[VOTE MUTATION] Found suggestion:', suggestion?.type, 'status:', suggestion?.status);
         
         // שלב 1: קריאת המצב העדכני מהשרת (source of truth)
         const [freshVotes, freshSuggestions] = await Promise.all([
@@ -360,16 +357,6 @@ export default function DocumentContent({
         
         const serverVote = freshVotes[0]; // ההצבעה האמיתית מהשרת
         const freshSuggestion = freshSuggestions[0];
-        
-        console.log('[VOTE MUTATION] Fresh data from server:', {
-          suggestionId,
-          type: freshSuggestion?.type,
-          status: freshSuggestion?.status,
-          proVotes: freshSuggestion?.proVotes,
-          conVotes: freshSuggestion?.conVotes,
-          hasServerVote: !!serverVote,
-          serverVoteValue: serverVote?.vote
-        });
         
         if (!freshSuggestion) {
           throw new Error("ההצעה לא נמצאה");
@@ -441,20 +428,11 @@ export default function DocumentContent({
           }
         }
         
-        console.log('[VOTE MUTATION] Updating suggestion with new vote counts:', {
-          suggestionId,
-          newProVotes,
-          newConVotes,
-          pointsAction
-        });
-
         // שלב 3: עדכון ההצעה עם הערכים החדשים
         await base44.entities.Suggestion.update(suggestionId, {
           proVotes: newProVotes,
           conVotes: newConVotes
         });
-        
-        console.log('[VOTE MUTATION] Successfully updated suggestion vote counts');
         
         // טיפול בנקודות ברקע - לא חוסם את ה-UI
         handlePointsInBackground(pointsAction, suggestion, vote, serverVote);
@@ -470,25 +448,13 @@ export default function DocumentContent({
       }
       const shouldAccept = freshSuggestion.status === 'pending' && (newProVotes - newConVotes) >= threshold;
       
-      console.log('[VOTE MUTATION] Checking if should auto-accept:', {
-        suggestionType: freshSuggestion.type,
-        status: freshSuggestion.status,
-        delta: newProVotes - newConVotes,
-        threshold,
-        shouldAccept
-      });
-      
       // אם ההצעה צריכה להתקבל - מפעילים את האישור וממתינים לתוצאה
       if (shouldAccept) {
         // מסמנים בקאש שההצעה התקבלה למנוע כפילויות
         hasCheckedRef.current.add(`${suggestionId}-accepted`);
         
-        console.log('[VOTE MUTATION] Starting auto-accept process...');
-        
         // מפעילים את האישור ומחכים לתוצאה האמיתית
         const accepted = await autoAcceptSuggestion({ ...freshSuggestion, proVotes: newProVotes, conVotes: newConVotes }, user.id, document);
-        
-        console.log('[VOTE MUTATION] Auto-accept result:', accepted);
         
         if (accepted) {
           // רענון הסעיפים אחרי 7 שניות (אחרי שהאנימציה נעלמה לגמרי)
@@ -520,15 +486,10 @@ export default function DocumentContent({
           
           return { accepted: true, newProVotes, newConVotes };
         }
-      } else {
-        console.log('[VOTE MUTATION] Not auto-accepting - threshold not met or not pending');
       }
       
       return { accepted: false, newProVotes, newConVotes };
       } catch (err) {
-        console.error('[VOTE MUTATION] Error in vote process:', err);
-        console.error('[VOTE MUTATION] Error message:', err.message);
-        console.error('[VOTE MUTATION] Error stack:', err.stack);
         throw err;
       } finally {
         // מסירים מהרשימה אחרי שהפעולה הסתיימה
