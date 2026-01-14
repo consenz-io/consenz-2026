@@ -4,12 +4,18 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         
+        // Helper function to add delay
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+        
         // Count active documents (documents in public groups OR public standalone documents)
         const allGroups = await base44.asServiceRole.entities.Group.list();
+        await delay(200); // Small delay to avoid rate limit
+        
         const publicGroups = allGroups.filter(g => g.status === 'public');
         const publicGroupIds = publicGroups.map(g => g.id);
         
         const allDocuments = await base44.asServiceRole.entities.Document.list();
+        await delay(200);
         
         const activeDocuments = allDocuments.filter(doc => {
             // Include if in a public group
