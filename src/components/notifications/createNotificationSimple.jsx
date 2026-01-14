@@ -162,13 +162,18 @@ export async function notifySuggestionAccepted({ suggestion, document: doc }) {
 
 /**
  * RULE 3: New comment on suggestion or section
- * Send to: Entity creator + all previous commenters
+ * Send to: Entity creator + all previous commenters + parent comment author (if reply)
  */
-export async function notifyNewComment({ comment, targetEntity, targetEntityType, currentUser }) {
+export async function notifyNewComment({ comment, targetEntity, targetEntityType, currentUser, parentComment = null }) {
   if (!comment?.id || !targetEntity?.id || !targetEntityType || !currentUser?.id) return;
 
   try {
     const notifyEmails = new Set();
+
+    // Priority 1: If replying to a comment, notify the parent comment author
+    if (parentComment?.created_by && parentComment.created_by !== comment.created_by) {
+      notifyEmails.add(parentComment.created_by);
+    }
 
     // Entity creator/owner
     if (targetEntityType === 'suggestion' && targetEntity.created_by) {
