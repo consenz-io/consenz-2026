@@ -203,7 +203,7 @@ export default function DocumentContent({
           hasCheckedRef.current.add(checkKey);
 
           try {
-            const { shouldAccept, threshold } = checkTopicEditConsensus(topicSuggestion, document);
+            const { shouldAccept, threshold } = await checkTopicEditConsensus(topicSuggestion, document);
 
             if (shouldAccept) {
               console.log('[AUTO-ACCEPT TOPIC] Auto-accepting topic suggestion:', topicSuggestion.id);
