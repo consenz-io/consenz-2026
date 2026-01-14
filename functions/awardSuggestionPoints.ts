@@ -29,13 +29,18 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'Gamification not enabled' });
     }
 
-    // Get all users to find creator
-    const allUsers = await base44.asServiceRole.listUsers();
-    const suggestionCreator = allUsers.find(u => u.email === suggestion.created_by);
-
-    if (!suggestionCreator) {
-      return Response.json({ error: 'Suggestion creator not found' }, { status: 404 });
+    // Get creator user ID from created_by_id field
+    const creatorId = suggestion.created_by_id;
+    if (!creatorId) {
+      return Response.json({ error: 'No creator ID found' }, { status: 404 });
     }
+
+    // Get current user points
+    const usersList = await base44.asServiceRole.entities.User.filter({ id: creatorId });
+    if (usersList.length === 0) {
+      return Response.json({ error: 'User not found' }, { status: 404 });
+    }
+    const currentUser = usersList[0];
 
     // Award points based on action
     let pointsAmount = 0;
@@ -51,12 +56,12 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid action' }, { status: 400 });
     }
 
-    const newPoints = (suggestionCreator.points || 1000) + pointsAmount;
+    const newPoints = (currentUser.points || 1000) + pointsAmount;
 
     await Promise.all([
-      base44.asServiceRole.updateUser(suggestionCreator.id, { points: newPoints }),
+      base44.asServiceRole.entities.User.update(creatorId, { points: newPoints }),
       base44.entities.PointsTransaction.create({
-        userId: suggestionCreator.id,
+        userId: creatorId,
         amount: pointsAmount,
         action,
         description,
