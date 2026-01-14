@@ -628,19 +628,18 @@ ${text}`;
                   ) : (
                     <div className="space-y-4 md:space-y-6">
                       {topicSections
+                        .filter(section => {
+                          const isViewingHistory = currentVersionIndex > 0;
+                          if (!isViewingHistory) return true;
+                          
+                          const sectionExistsInSnapshot = currentSnapshot?.existingSections?.has(section.id) ?? 
+                            currentSnapshot?.sectionContents?.hasOwnProperty(section.id);
+                          return sectionExistsInSnapshot;
+                        })
                         .sort((a, b) => (a.order || 0) - (b.order || 0))
                         .map((section, sectionIndex) => {
                         // מציאת תוכן הסעיף בגרסה המוצגת ובגרסה החדשה יותר
                         const isViewingHistory = currentVersionIndex > 0;
-
-                        // Check if this section exists in the current snapshot
-                        const sectionExistsInSnapshot = currentSnapshot?.existingSections?.has(section.id) ?? 
-                          currentSnapshot?.sectionContents?.hasOwnProperty(section.id);
-
-                        // If section doesn't exist in this historical snapshot, don't show it
-                        if (isViewingHistory && !sectionExistsInSnapshot) {
-                          return null;
-                        }
 
                         // Get content to display
                         const displayedContent = currentSnapshot?.sectionContents?.[section.id] || section.content;
