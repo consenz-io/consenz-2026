@@ -89,7 +89,6 @@ export default function DocumentView() {
     refetchIntervalInBackground: false,
   });
 
-  // Load actual sections
   const { data: sections, isLoading: sectionsLoading } = useQuery({
     queryKey: ['sections', documentId],
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order'),
@@ -112,7 +111,7 @@ export default function DocumentView() {
     queryKey: ['allVotes'],
     queryFn: () => base44.entities.Vote.list(),
     initialData: [],
-    enabled: false, // Disabled - avoid rate limit, use targeted queries instead
+    enabled: !!documentId,
     staleTime: 30000,
   });
 
@@ -120,7 +119,6 @@ export default function DocumentView() {
     queryKey: ['allUsers'],
     queryFn: () => base44.entities.User.list(),
     initialData: [],
-    enabled: false, // Disabled - avoid rate limit, use targeted queries instead
     staleTime: 60000,
   });
 
@@ -129,7 +127,6 @@ export default function DocumentView() {
     queryFn: () => base44.entities.Argument.list(),
     initialData: [],
     staleTime: 30000,
-    enabled: false, // Disabled - using targeted queries instead
   });
 
   const { data: allComments } = useQuery({
@@ -137,7 +134,6 @@ export default function DocumentView() {
     queryFn: () => base44.entities.Comment.list(),
     initialData: [],
     staleTime: 30000,
-    enabled: false, // Disabled - using targeted queries instead
   });
 
   const { data: documentComments } = useQuery({
@@ -159,11 +155,11 @@ export default function DocumentView() {
     enabled: !!documentId,
   });
 
-  // Count all comments on accepted suggestions (which function as sections)
+  // Count all section comments for this document
   const sectionCommentsCount = React.useMemo(() => {
     const sectionIds = sections.map(s => s.id);
     return allComments.filter(c => 
-      c.suggestionId && sectionIds.includes(c.suggestionId)
+      c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)
     ).length;
   }, [allComments, sections]);
 
@@ -214,36 +210,55 @@ export default function DocumentView() {
       });
   }, [suggestions, sections, topics]);
 
-  const scrollToSuggestion = React.useCallback((index) => {
+  const scrollToSuggestion = (index) => {
     const suggestion = pendingSuggestions[index];
     if (!suggestion) return;
-    if (typeof window === 'undefined' || !window.document || !window.document.querySelectorAll) return;
+    if (typeof window === 'undefined' || typeof window.document === 'undefined' || !window.document.getElementById) return;
 
-    setTargetSuggestionId(suggestion.id);
+    // אם זו הצעה לעריכת סעיף או מחיקת סעיף - צריך לגלול לסעיף ולהעביר את הקרוסלה
+    if (suggestion.type === 'edit_section' || suggestion.type === 'delete_section') {
+      setTargetSuggestionId(suggestion.id);
 
-    const scrollWithRetry = (attemptCount = 0) => {
-      try {
-        const carousels = window.document.querySelectorAll('[class*="carousel"]');
-        let targetCarousel = null;
-
-        carousels.forEach(carousel => {
-          if (carousel.textContent.includes(suggestion.title)) {
-            targetCarousel = carousel;
-          }
-        });
-
-        if (targetCarousel) {
-          targetCarousel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } else if (attemptCount < 3) {
-          setTimeout(() => scrollWithRetry(attemptCount + 1), 400);
+      // המתן רגע קצר שהקרוסלה תעדכן את ה-ID שלה, ואז גלול
+      setTimeout(() => {
+        const element = window.document.getElementById(`suggestion-${suggestion.id}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
+          setTimeout(() => {
+            element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
+            setTargetSuggestionId(null);
+          }, 2000);
+        } else {
+          // אם לא מצאנו עדיין, נסה שוב אחרי delay נוסף
+          setTimeout(() => {
+            const retryElement = window.document.getElementById(`suggestion-${suggestion.id}`);
+            if (retryElement) {
+              retryElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              retryElement.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
+              setTimeout(() => {
+                retryElement.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
+                setTargetSuggestionId(null);
+              }, 2000);
+            }
+          }, 300);
         }
-      } catch (e) {
-        console.error('Scroll error:', e);
-      }
-    };
-
-    setTimeout(() => scrollWithRetry(), 100);
-  }, [pendingSuggestions]);
+      }, 200);
+    } else {
+      // הצעה לסעיף חדש - גלילה רגילה
+      const elementId = `suggestion-${suggestion.id}`;
+      setTimeout(() => {
+        const element = window.document.getElementById(elementId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
+          setTimeout(() => {
+            element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
+          }, 2000);
+        }
+      }, 100);
+    }
+  };
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -858,7 +873,11 @@ export default function DocumentView() {
 
               {showDescriptionComments && (
                 <div className="mt-4 pt-4 border-t border-slate-200">
-                  {/* Removed document comments for now - focus on suggestion comments */}
+                  <CommentsSection
+                    entityType="document"
+                    entityId={documentId}
+                    user={user}
+                  />
                 </div>
               )}
             </div>
@@ -883,8 +902,7 @@ export default function DocumentView() {
             onClick={() => {
               if (pendingSuggestions.length > 0) {
                 setShowSuggestionNav(true);
-                setCurrentSuggestionIndex(0);
-                setTimeout(() => scrollToSuggestion(0), 100);
+                scrollToSuggestion(currentSuggestionIndex);
               }
             }}
             aria-label={`${pendingSuggestions.length} ${language === 'he' ? 'הצעות פתוחות' : 'open suggestions'}. ${pendingSuggestions.length > 0 ? (language === 'he' ? 'לחץ לניווט להצעות' : 'Click to navigate to suggestions') : ''}`}
@@ -923,8 +941,6 @@ export default function DocumentView() {
             <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('consensus')}</div>
           </Link>
         </div>
-
-
 
         <DocumentContent
             document={document}

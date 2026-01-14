@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -234,25 +234,38 @@ export default function DocumentContent({
     checkAndAutoAccept();
   }, [topicEditSuggestions, document, user, queryClient, suggestions]);
 
-  // Don't fetch comments globally - let CommentsSection fetch on demand
-  const getCommentsCount = useCallback((entityType, entityId) => {
-    return 0; // Placeholder until CommentsSection loads actual count
-  }, []);
+  const { data: sectionComments } = useQuery({
+    queryKey: ['sectionComments', document?.id],
+    queryFn: () => base44.entities.Comment.filter({ rootEntityType: 'section' }),
+    initialData: [],
+    enabled: !!document?.id,
+  });
+
+  const { data: suggestionComments } = useQuery({
+    queryKey: ['suggestionComments', document?.id],
+    queryFn: () => base44.entities.Comment.filter({ rootEntityType: 'suggestion' }),
+    initialData: [],
+    enabled: !!document?.id,
+  });
+
+  const getCommentsCount = (entityType, entityId) => {
+    const comments = entityType === 'section' ? sectionComments : suggestionComments;
+    return comments.filter(c => c.rootEntityId === entityId).length;
+  };
 
   const { data: userVotes } = useQuery({
-    queryKey: ['userVotes', document?.id, user?.id, suggestions.map(s => s.id).join(',')],
+    queryKey: ['userVotes', document?.id, user?.id],
     queryFn: async () => {
-      if (!user?.id || suggestions.length === 0) return [];
-      // Server-side filtering with $in operator - fetch only relevant votes
-      const suggestionIds = suggestions.map(s => s.id);
-      const votes = await base44.entities.Vote.filter({ 
-        userId: user.id,
-        suggestionId: { $in: suggestionIds }
-      });
-      // Remove duplicates - keep only latest vote per suggestion
+      if (!user?.id) return [];
+      const allVotes = await base44.entities.Vote.filter({ userId: user.id });
+      // מחזיר רק הצבעות על הצעות במסמך הזה, וממפה לפי suggestionId
+      const relevantVotes = allVotes.filter(v => 
+        suggestions.some(s => s.id === v.suggestionId)
+      );
+      // מסיר כפילויות - שומר רק את ההצבעה האחרונה לכל הצעה
       const uniqueVotes = [];
       const seenSuggestionIds = new Set();
-      for (const vote of votes.reverse()) {
+      for (const vote of relevantVotes.reverse()) {
         if (!seenSuggestionIds.has(vote.suggestionId)) {
           seenSuggestionIds.add(vote.suggestionId);
           uniqueVotes.push(vote);
@@ -262,7 +275,7 @@ export default function DocumentContent({
     },
     enabled: !!user?.id && suggestions.length > 0,
     initialData: [],
-    staleTime: 0,
+    staleTime: 0, // תמיד רענן כשיש שינוי
     refetchInterval: SYNC_INTERVAL,
     refetchIntervalInBackground: false,
   });
@@ -1174,7 +1187,7 @@ Return ONLY the translated text:`;
                           {...provided.draggableProps}
                           className={snapshot.isDragging ? 'opacity-70' : ''}
                         >
-                          <div>
+                          <React.Fragment>
                             {/* Show new section suggestions that should appear before this section */}
                             {newSectionSuggestions
                               .filter(s => {
@@ -1346,10 +1359,10 @@ Return ONLY the translated text:`;
                                 </div>
                               </>
                             )}
-                          </div>
-                          </div>
-                          )}
-                          </Draggable>
+                          </React.Fragment>
+                        </div>
+                      )}
+                    </Draggable>
                     );
                     })}
                     {provided.placeholder}

@@ -51,24 +51,22 @@ export default function Home() {
     retry: false,
   });
 
-  const { data: platformStats = {} } = useQuery({
-    queryKey: ['platformStats'],
-    queryFn: async () => {
-      const stats = await base44.entities.PlatformStatistics.list();
-      return stats[0] || { activeDocumentsCount: 0, registeredUsersCount: 0, averageConsensus: 0 };
-    },
-    initialData: { activeDocumentsCount: 0, registeredUsersCount: 0, averageConsensus: 0 },
+  const { data: acceptedSuggestions } = useQuery({
+    queryKey: ['acceptedSuggestions'],
+    queryFn: () => base44.entities.Suggestion.filter({ status: 'accepted' }),
+    initialData: [],
+  });
+
+  // Fetch all data needed for accurate contributor count
+  const { data: allSuggestions } = useQuery({
+    queryKey: ['allSuggestions'],
+    queryFn: () => base44.entities.Suggestion.list(),
+    initialData: [],
   });
 
   const { data: allVotes } = useQuery({
     queryKey: ['allVotes'],
     queryFn: () => base44.entities.Vote.list(),
-    initialData: [],
-  });
-
-  const { data: allSuggestions } = useQuery({
-    queryKey: ['allSuggestions'],
-    queryFn: () => base44.entities.Suggestion.list(),
     initialData: [],
   });
 
@@ -78,7 +76,7 @@ export default function Home() {
     initialData: [],
     retry: false,
     throwOnError: false,
-    enabled: !!user && user?.role === 'admin',
+    enabled: !!user && user?.role === 'admin', // Fetch only for confirmed admins
   });
 
   const { data: publicProfiles = [], isLoading: publicProfilesLoading } = useQuery({
@@ -86,15 +84,20 @@ export default function Home() {
     queryFn: () => base44.entities.UserPublicProfile.list(),
     initialData: [],
     staleTime: 60000,
+    // Always fetch - it's public data available to everyone
   });
 
+  // Use allUsers for admins (matches System User Management), publicProfiles for everyone else
   const displayedUsers = React.useMemo(() => {
+    // For admins with loaded users data
     if (user?.role === 'admin' && allUsers.length > 0) {
       return allUsers;
     }
+    // For everyone else (including non-logged-in users), use publicProfiles
     if (!publicProfiles || publicProfiles.length === 0) {
       return [];
     }
+    // Remove duplicates from publicProfiles by userId
     const seen = new Set();
     return publicProfiles.filter(p => {
       if (!p || !p.userId) return false;
@@ -104,15 +107,15 @@ export default function Home() {
     });
   }, [user, allUsers, publicProfiles]);
 
-  const { data: allComments } = useQuery({
-    queryKey: ['allComments'],
-    queryFn: () => base44.entities.Comment.list(),
+  const { data: allArguments } = useQuery({
+    queryKey: ['allArguments'],
+    queryFn: () => base44.entities.Argument.list(),
     initialData: [],
   });
 
-  const { data: allAgreements = [] } = useQuery({
-    queryKey: ['allAgreements'],
-    queryFn: () => base44.entities.DocumentAgreement.list(),
+  const { data: allComments } = useQuery({
+    queryKey: ['allComments'],
+    queryFn: () => base44.entities.Comment.list(),
     initialData: [],
   });
 
@@ -122,6 +125,27 @@ export default function Home() {
     initialData: [],
   });
 
+  const { data: allAgreements = [] } = useQuery({
+    queryKey: ['allAgreements'],
+    queryFn: () => base44.entities.DocumentAgreement.list(),
+    initialData: [],
+  });
+
+  // Calculate real contributors per document using shared logic
+  const getDocumentContributors = (doc) => {
+    return calculateContributorsFromData({
+      document: doc,
+      suggestions: allSuggestions.filter(s => s.documentId === doc.id),
+      allVotes,
+      allUsers,
+      allComments,
+      sections: allSections.filter(s => s.documentId === doc.id),
+      documentAgreements: allAgreements.filter(a => a.documentId === doc.id)
+    });
+  };
+
+  // Calculate unique participants across all documents and build list
+  // CRITERIA: Only users who voted, commented, or signed documents
   const { totalUniqueContributors, contributorsList } = useMemo(() => {
     const uniqueEmails = new Set();
     
@@ -177,7 +201,21 @@ export default function Home() {
     };
   }, [allVotes, allUsers, publicProfiles, allComments, allAgreements]);
 
-
+  const calculateAverageConsensus = () => {
+    if (!acceptedSuggestions || acceptedSuggestions.length === 0) return 0;
+    
+    const consensusScores = acceptedSuggestions
+      .filter(s => s && typeof s.proVotes === 'number' && typeof s.conVotes === 'number')
+      .map(s => {
+        const total = s.proVotes + s.conVotes;
+        return total > 0 ? (s.proVotes / total) : 0;
+      });
+    
+    if (consensusScores.length === 0) return 0;
+    
+    const sum = consensusScores.reduce((acc, score) => acc + score, 0);
+    return (sum / consensusScores.length * 100).toFixed(0);
+  };
 
   const languagePrompts = {
     en: "English",
@@ -288,11 +326,11 @@ export default function Home() {
                   }
                 }
               }}
-              aria-label={`${platformStats.activeDocumentsCount} ${t('activeDocuments')}. ${language === 'he' ? 'לחץ לגלילה למסמכים' : 'Click to scroll to documents'}`}
+              aria-label={`${documents.length} ${t('activeDocuments')}. ${language === 'he' ? 'לחץ לגלילה למסמכים' : 'Click to scroll to documents'}`}
             >
               <div className="p-6 text-center">
                 <FileText className="w-8 h-8 mx-auto mb-3 text-blue-600" aria-hidden="true" />
-                <div className="text-3xl font-bold text-slate-900">{platformStats.activeDocumentsCount}</div>
+                <div className="text-3xl font-bold text-slate-900">{documents.length}</div>
                 <div className="text-sm text-slate-600">{t('activeDocuments')}</div>
               </div>
             </button>
@@ -321,7 +359,7 @@ export default function Home() {
                 <CardContent className="p-6 text-center">
                   <TrendingUp className="w-8 h-8 mx-auto mb-3 text-purple-600" />
                   <div className="text-3xl font-bold text-slate-900">
-                    {platformStats.averageConsensus}%
+                    {calculateAverageConsensus()}%
                   </div>
                   <div className="text-sm text-slate-600">{t('avgConsensus')}</div>
                 </CardContent>

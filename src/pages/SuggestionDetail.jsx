@@ -927,10 +927,10 @@ export default function SuggestionDetail() {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}`);
+                      navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#new-suggestion-${suggestionId}`);
                       setTimeout(() => {
-                        if (typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
-                          const element = document.getElementById(`suggestion-${suggestionId}`);
+                        if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+                          const element = document.getElementById(`new-suggestion-${suggestionId}`);
                           if (element) {
                             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                           }
@@ -1266,7 +1266,7 @@ export default function SuggestionDetail() {
               entityType="suggestion"
               entityId={suggestionId}
               user={user}
-              sectionId={suggestion?.sectionId}
+              sectionId={suggestion?.sectionId || null}
               relatedSuggestionIds={[]}
               includeRelatedComments={true}
             />

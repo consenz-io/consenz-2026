@@ -125,17 +125,29 @@ export default function SuggestionSidebar({
   });
 
   const { data: suggestionComments = [] } = useQuery({
-    queryKey: ['comments', 'suggestionId', suggestionId],
+    queryKey: ['comments', 'suggestion', suggestionId],
     queryFn: () => base44.entities.Comment.filter({ 
-      suggestionId: suggestionId 
+      rootEntityType: 'suggestion',
+      rootEntityId: suggestionId 
     }),
     initialData: [],
     enabled: !!suggestionId,
   });
 
+  const { data: sectionComments = [] } = useQuery({
+    queryKey: ['comments', 'section', suggestion?.sectionId],
+    queryFn: () => base44.entities.Comment.filter({ 
+      rootEntityType: 'section',
+      rootEntityId: suggestion.sectionId 
+    }),
+    initialData: [],
+    enabled: !!suggestion?.sectionId,
+  });
+
   const totalCommentsCount = React.useMemo(() => {
-    return suggestionComments.filter(c => !c.parentCommentId).length;
-  }, [suggestionComments]);
+    return suggestionComments.filter(c => !c.parentCommentId).length + 
+           sectionComments.filter(c => !c.parentCommentId).length;
+  }, [suggestionComments, sectionComments]);
 
   const getUserName = (email) => {
     // Try public profile first (accessible to everyone)
@@ -887,8 +899,12 @@ export default function SuggestionSidebar({
               {t('commentsOnSuggestion')} ({totalCommentsCount})
             </h4>
             <CommentsSection
-              suggestionId={suggestionId}
+              entityType="suggestion"
+              entityId={suggestionId}
               user={user}
+              sectionId={suggestion?.sectionId}
+              relatedSuggestionIds={[]}
+              includeRelatedComments={true}
             />
           </div>
         </div>

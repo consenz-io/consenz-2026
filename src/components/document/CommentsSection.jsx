@@ -216,16 +216,34 @@ const CommentItem = memo(({
 });
 
 // Background tasks - fire and forget
-const runBackgroundTasks = async (comment, suggestionId, parentComment) => {
+const runBackgroundTasks = async (comment, entityType, entityId, parentComment) => {
   try {
-    const { notifyNewComment } = await import("../notifications/createNotification");
+    const { notifyNewComment, notifyNewDocumentComment } = await import("../notifications/createNotification");
     const { calculateDocumentContributors } = await import('./calculateContributors');
     
-    const suggestions = await base44.entities.Suggestion.filter({ id: suggestionId });
-    if (suggestions.length > 0) {
-      const docId = suggestions[0].documentId;
-      notifyNewComment({ comment, targetEntity: suggestions[0], targetEntityType: 'suggestion', parentComment });
-      
+    let docId;
+    
+    if (entityType === 'suggestion') {
+      const suggestions = await base44.entities.Suggestion.filter({ id: entityId });
+      if (suggestions.length > 0) {
+        docId = suggestions[0].documentId;
+        notifyNewComment({ comment, targetEntity: suggestions[0], targetEntityType: 'suggestion', parentComment });
+      }
+    } else if (entityType === 'section') {
+      const sections = await base44.entities.Section.filter({ id: entityId });
+      if (sections.length > 0) {
+        docId = sections[0].documentId;
+        notifyNewComment({ comment, targetEntity: sections[0], targetEntityType: 'section', parentComment });
+      }
+    } else if (entityType === 'document') {
+      const docs = await base44.entities.Document.filter({ id: entityId });
+      if (docs.length > 0) {
+        docId = entityId;
+        notifyNewDocumentComment({ comment, document: docs[0], parentComment });
+      }
+    }
+    
+    if (docId) {
       const count = await calculateDocumentContributors(docId);
       await base44.entities.Document.update(docId, { totalUsersInteracted: count });
     }
@@ -234,32 +252,73 @@ const runBackgroundTasks = async (comment, suggestionId, parentComment) => {
   }
 };
 
-export default function CommentsSection({ suggestionId, user }) {
-    const { t, isRTL, language } = useLanguage();
-    const [newComment, setNewComment] = useState("");
-    const [replyTo, setReplyTo] = useState(null);
-    const [editingComment, setEditingComment] = useState(null); 
-    const [error, setError] = useState(null);
-    const queryClient = useQueryClient();
+export default function CommentsSection({ entityType, entityId, user, sectionId, relatedSuggestionIds = [], includeRelatedComments = false }) {
+  const { t, isRTL, language } = useLanguage();
+  const [newComment, setNewComment] = useState("");
+  const [replyTo, setReplyTo] = useState(null);
+  
+  // FIX: Removed editContent from parent state to prevent re-renders on every keystroke
+  const [editingComment, setEditingComment] = useState(null); 
+  
+  const [error, setError] = useState(null);
+  const queryClient = useQueryClient();
 
-    // Load comments by suggestion ID
-    const { data: suggestionComments, isLoading: suggestionCommentsLoading } = useQuery({
-      queryKey: ['comments', 'suggestionId', suggestionId],
-      queryFn: () => base44.entities.Comment.filter({ 
-        suggestionId: suggestionId 
-      }, 'created_date'),
-      initialData: [],
-      enabled: !!suggestionId,
-    });
+  const { data: suggestionComments, isLoading: suggestionCommentsLoading } = useQuery({
+    queryKey: ['comments', entityType, entityId],
+    queryFn: () => base44.entities.Comment.filter({ 
+      rootEntityType: entityType, 
+      rootEntityId: entityId 
+    }, 'created_date'),
+    initialData: [],
+    enabled: !!entityType && !!entityId,
+  });
 
-    const allParentIds = React.useMemo(() => {
-      return suggestionComments.map(c => c.id);
-    }, [suggestionComments]);
+  const { data: sectionComments, isLoading: sectionCommentsLoading } = useQuery({
+    queryKey: ['comments', 'section', sectionId],
+    queryFn: () => base44.entities.Comment.filter({ 
+      rootEntityType: 'section', 
+      rootEntityId: sectionId 
+    }, 'created_date'),
+    initialData: [],
+    enabled: !!sectionId && (entityType === 'suggestion' || includeRelatedComments),
+  });
+
+  // When showing section comments, also load comments from related suggestions
+  const { data: relatedSuggestionsComments, isLoading: relatedSuggestionsCommentsLoading } = useQuery({
+    queryKey: ['comments', 'relatedSuggestions', relatedSuggestionIds],
+    queryFn: async () => {
+      if (!relatedSuggestionIds || relatedSuggestionIds.length === 0) return [];
+      // Fetch comments for all related suggestions in parallel
+      const commentsArrays = await Promise.all(
+        relatedSuggestionIds.map(suggestionId => 
+          base44.entities.Comment.filter({ 
+            rootEntityType: 'suggestion',
+            rootEntityId: suggestionId 
+          }, 'created_date')
+        )
+      );
+      return commentsArrays.flat();
+    },
+    initialData: [],
+    enabled: relatedSuggestionIds.length > 0 && entityType === 'section',
+  });
+
+  const allParentIds = React.useMemo(() => {
+    const ids = [...suggestionComments.map(c => c.id)];
+    if (entityType === 'suggestion' && sectionId) {
+      ids.push(...sectionComments.map(c => c.id));
+    }
+    if (entityType === 'section' && relatedSuggestionsComments.length > 0) {
+      ids.push(...relatedSuggestionsComments.map(c => c.id));
+    }
+    return ids;
+  }, [suggestionComments, sectionComments, relatedSuggestionsComments, entityType, sectionId]);
 
   const { data: repliesComments, isLoading: repliesLoading } = useQuery({
-    queryKey: ['replies', suggestionId, allParentIds],
+    queryKey: ['replies', allParentIds],
     queryFn: async () => {
       if (allParentIds.length === 0) return [];
+      // Fetch replies for each parent ID in parallel - much more efficient than loading all 500 comments
       const repliesArrays = await Promise.all(
         allParentIds.map(parentId => 
           base44.entities.Comment.filter({ parentCommentId: parentId }, 'created_date')
@@ -272,15 +331,24 @@ export default function CommentsSection({ suggestionId, user }) {
   });
 
   const comments = React.useMemo(() => {
-    const baseComments = [...suggestionComments];
+    let baseComments = [...suggestionComments];
+    
+    if (entityType === 'suggestion' && sectionId && sectionComments.length > 0) {
+      baseComments = [...baseComments, ...sectionComments];
+    }
+    
+    if (entityType === 'section' && relatedSuggestionsComments.length > 0) {
+      baseComments = [...baseComments, ...relatedSuggestionsComments];
+    }
+    
     const existingIds = new Set(baseComments.map(c => c.id));
     const newReplies = repliesComments.filter(r => !existingIds.has(r.id));
-    const allComments = [...baseComments, ...newReplies];
+    baseComments = [...baseComments, ...newReplies];
+    
+    return baseComments.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+  }, [suggestionComments, sectionComments, relatedSuggestionsComments, repliesComments, entityType, sectionId]);
 
-    return allComments.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-  }, [suggestionComments, repliesComments]);
-
-  const isLoading = suggestionCommentsLoading || repliesLoading;
+  const isLoading = suggestionCommentsLoading || (entityType === 'suggestion' && sectionId && sectionCommentsLoading) || (entityType === 'section' && relatedSuggestionsCommentsLoading) || repliesLoading;
 
   const { data: users } = useQuery({
     queryKey: ['users'],
@@ -325,28 +393,29 @@ export default function CommentsSection({ suggestionId, user }) {
         ? comments.find(c => c.id === data.parentCommentId) 
         : null;
       
-      runBackgroundTasks(comment, suggestionId, parentComment);
+      runBackgroundTasks(comment, entityType, entityId, parentComment);
       
       return comment;
     },
     onMutate: async (data) => {
       if (!user?.email) return { previousComments: null };
       
-      await queryClient.cancelQueries({ queryKey: ['comments', 'suggestionId', suggestionId] });
+      await queryClient.cancelQueries({ queryKey: ['comments', entityType, entityId] });
       
-      const previousComments = queryClient.getQueryData(['comments', 'suggestionId', suggestionId]);
-
+      const previousComments = queryClient.getQueryData(['comments', entityType, entityId]);
+      
       const tempComment = {
         id: `temp-${Date.now()}`,
-        suggestionId: suggestionId,
+        rootEntityType: entityType,
+        rootEntityId: entityId,
         parentCommentId: data.parentCommentId || null,
         content: data.content,
         created_date: new Date().toISOString(),
         created_by: user.email,
         _isOptimistic: true
       };
-
-      queryClient.setQueryData(['comments', 'suggestionId', suggestionId], (old = []) => {
+      
+      queryClient.setQueryData(['comments', entityType, entityId], (old = []) => {
         return [tempComment, ...old];
       });
       
@@ -356,12 +425,12 @@ export default function CommentsSection({ suggestionId, user }) {
       return { previousComments };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['comments', 'suggestionId', suggestionId] });
+      queryClient.invalidateQueries({ queryKey: ['comments', entityType, entityId] });
       setError(null);
     },
     onError: (err, variables, context) => {
       if (context?.previousComments) {
-        queryClient.setQueryData(['comments', 'suggestionId', suggestionId], context.previousComments);
+        queryClient.setQueryData(['comments', entityType, entityId], context.previousComments);
       }
       setError(err.message || "Failed to post comment");
     },
@@ -403,7 +472,8 @@ export default function CommentsSection({ suggestionId, user }) {
     }
 
     createCommentMutation.mutate({
-      suggestionId: suggestionId,
+      rootEntityType: entityType,
+      rootEntityId: entityId,
       parentCommentId: replyTo?.id || null,
       content: newComment.trim(),
     });

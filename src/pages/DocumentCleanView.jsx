@@ -192,6 +192,13 @@ export default function DocumentCleanView() {
         snapshotAfterChange.newSectionContent = afterVersion.content;
       }
       
+      // Mark if this is a deletion
+      if (afterVersion.content === '' && beforeVersion) {
+        snapshotAfterChange.isDeleted = true;
+        snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
+        snapshotAfterChange.deletedSectionContent = beforeVersion.content;
+      }
+      
       snapshots.push(snapshotAfterChange);
       
       // Now update state for the OLDER version (before this change)
@@ -200,9 +207,10 @@ export default function DocumentCleanView() {
         delete currentSectionContents[afterVersion.sectionId];
         currentExistingSections.delete(afterVersion.sectionId);
       } else if (afterVersion.content === '' && beforeVersion) {
-        // This is a section deletion (empty content in afterVersion)
-        delete currentSectionContents[afterVersion.sectionId];
-        currentExistingSections.delete(afterVersion.sectionId);
+        // This is a section deletion - section existed BEFORE deletion
+        // So add it back with its previous content
+        currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
+        currentExistingSections.add(afterVersion.sectionId);
       } else if (beforeVersion) {
         // Section existed with different content
         currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
@@ -237,18 +245,22 @@ export default function DocumentCleanView() {
     }
   }, [currentVersionIndex, sections, showDiffForSections]);
 
-  // אוטומטיות גלילה לסעיף שהשתנה או נוצר
+  // גלילה אוטומטית לסעיף שהשתנה או נוצר
   React.useEffect(() => {
-    if (currentVersionIndex > 0 && currentSnapshot && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
-      const scrollWithRetry = (attemptCount = 0) => {
+    if (currentVersionIndex > 0 && currentSnapshot) {
+      setTimeout(() => {
+        // Find the first section that has visible changes compared to older version
         let targetSectionId = null;
         
+        // Priority 1: New section created in this version
         if (currentSnapshot.isNewSection && currentSnapshot.newSectionId) {
           targetSectionId = currentSnapshot.newSectionId;
         } 
+        // Priority 2: Section with direct changes in this version
         else if (currentSnapshot.changedSectionId) {
           targetSectionId = currentSnapshot.changedSectionId;
         }
+        // Priority 3: Find first section with content differences compared to older version
         else if (olderSnapshot) {
           for (const section of sections) {
             const currentContent = currentSnapshot?.sectionContents?.[section.id];
@@ -260,26 +272,24 @@ export default function DocumentCleanView() {
           }
         }
 
-        if (targetSectionId) {
+        if (targetSectionId && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
+          // Always scroll to the change element (where diff is displayed)
           const changeElement = document.getElementById(`change-${targetSectionId}`);
-          if (changeElement && changeElement.offsetParent !== null) {
-            try {
-              changeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              changeElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
-              setTimeout(() => {
-                changeElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
-              }, 2000);
-              return;
-            } catch (e) {
-              console.error('Scroll error:', e);
+          if (changeElement) {
+            changeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            changeElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
+            setTimeout(() => {
+              changeElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
+            }, 2000);
+          } else {
+            // Fallback to section container
+            const sectionElement = document.getElementById(`section-${targetSectionId}`);
+            if (sectionElement) {
+              sectionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
-          } else if (attemptCount < 5) {
-            setTimeout(() => scrollWithRetry(attemptCount + 1), 200 + (100 * attemptCount));
           }
         }
-      };
-
-      setTimeout(() => scrollWithRetry(), 300);
+      }, 150);
     }
   }, [currentVersionIndex, currentSnapshot, olderSnapshot, sections]);
 
@@ -613,18 +623,8 @@ ${text}`;
                         const sectionExistsInSnapshot = currentSnapshot?.existingSections?.has(section.id) ?? 
                           currentSnapshot?.sectionContents?.hasOwnProperty(section.id);
 
-                        // Check if section exists in the next (newer) snapshot
-                        // We need to look at the snapshot that's newer (lower index) than current
-                        const newerSnapshot = currentVersionIndex > 0 ? versionGroups[currentVersionIndex - 1] : null;
-                        const sectionExistsInNewer = newerSnapshot
-                          ? (newerSnapshot?.existingSections?.has(section.id) ?? newerSnapshot?.sectionContents?.hasOwnProperty(section.id) ?? false)
-                          : true; // Current snapshot (index 0) has all current sections
-
-                        // Section was deleted if it exists in current snapshot but not in newer (index 0)
-                        const wasDeleted = isViewingHistory && sectionExistsInSnapshot && !sectionExistsInNewer;
-
-                        // If section doesn't exist in this historical snapshot and wasn't deleted, don't show it
-                        if (isViewingHistory && !sectionExistsInSnapshot && !wasDeleted) {
+                        // If section doesn't exist in this historical snapshot, don't show it
+                        if (isViewingHistory && !sectionExistsInSnapshot) {
                           return null;
                         }
 
@@ -638,24 +638,25 @@ ${text}`;
                         const isNewlyCreatedSection = isViewingHistory && 
                           currentSnapshot?.isNewSection && 
                           currentSnapshot?.newSectionId === section.id;
+                        
+                        // Check if this section was deleted in THIS snapshot
+                        const isDeletedSection = isViewingHistory &&
+                          currentSnapshot?.isDeleted &&
+                          currentSnapshot?.deletedSectionId === section.id;
 
 
 
                         // Check if this section changed between versions (content edit)
                         // Compare the snapshot's content with the newer version's content
                         const hasChanged = isViewingHistory && 
-                          !wasDeleted &&
+                          !isDeletedSection &&
                           currentSnapshot?.changedSectionId === section.id && 
                           currentSnapshot?.newContent && 
                           currentSnapshot?.newContent !== '' &&
                           displayedContent !== currentSnapshot?.newContent;
 
-                        // For deleted sections, show them with old content
-                        const isDeletedSection = wasDeleted;
-
                         return (
                           <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
-                            <div id={`change-${section.id}`} className="hidden"></div>
                             <div 
                               className="flex gap-2 md:gap-4 group p-2 rounded-lg transition-colors"
                             >
@@ -663,7 +664,30 @@ ${text}`;
                                   {topicIndex + 1}.{sectionIndex + 1}
                                 </span>
                                 <div className="flex-1">
-                                {isViewingHistory && isNewlyCreatedSection ? (
+                                {isDeletedSection ? (
+                                 <div 
+                                   id={`change-${section.id}`} 
+                                   className="border-l-4 border-red-500 pl-3 py-2 bg-red-50 rounded cursor-pointer hover:bg-red-100 transition-colors"
+                                   onClick={() => {
+                                     if (currentSnapshot?.suggestionId) {
+                                       setOpenSuggestionId(currentSnapshot.suggestionId);
+                                     }
+                                   }}
+                                 >
+                                   <Badge className="mb-2 bg-red-100 text-red-800 text-xs">
+                                     {language === 'he' ? 'סעיף נמחק - לחץ לצפייה בדיון' : language === 'ar' ? 'تم حذف القسم - انقر لعرض النقاش' : 'Section Deleted - Click to view discussion'}
+                                   </Badge>
+                                   <div 
+                                     className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
+                                     style={{ 
+                                       fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                       fontSize: "1.125rem",
+                                       lineHeight: "1.8"
+                                     }}
+                                     dangerouslySetInnerHTML={{ __html: currentSnapshot?.deletedSectionContent || displayedContent }}
+                                   />
+                                 </div>
+                                ) : isViewingHistory && isNewlyCreatedSection ? (
                                   <div 
                                     id={`change-${section.id}`} 
                                     className="bg-green-50 border-l-4 border-green-500 p-3 rounded cursor-pointer hover:bg-green-100 transition-colors"
@@ -686,29 +710,6 @@ ${text}`;
                                       dangerouslySetInnerHTML={{ __html: currentSnapshot?.newSectionContent || displayedContent }}
                                     />
                                   </div>
-                                ) : isViewingHistory && isDeletedSection ? (
-                                 <div 
-                                   id={`change-${section.id}`} 
-                                   className="border-l-4 border-red-500 pl-3 py-2 bg-red-50 rounded cursor-pointer hover:bg-red-100 transition-colors"
-                                   onClick={() => {
-                                     if (currentSnapshot?.suggestionId) {
-                                       setOpenSuggestionId(currentSnapshot.suggestionId);
-                                     }
-                                   }}
-                                 >
-                                   <Badge className="mb-2 bg-red-100 text-red-800 text-xs">
-                                     {language === 'he' ? 'סעיף נמחק - לחץ לצפייה בדיון' : language === 'ar' ? 'تم حذف القسم - انقر لعرض النقاش' : 'Section Deleted - Click to view discussion'}
-                                   </Badge>
-                                   <div 
-                                     className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
-                                     style={{ 
-                                       fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
-                                       fontSize: "1.125rem",
-                                       lineHeight: "1.8"
-                                     }}
-                                     dangerouslySetInnerHTML={{ __html: displayedContent }}
-                                   />
-                                 </div>
                                 ) : isViewingHistory && hasChanged ? (
                                  <div 
                                    id={`change-${section.id}`} 
@@ -728,95 +729,95 @@ ${text}`;
                                    />
                                  </div>
                                 ) : (
-                                  <>
-                                    {isViewingHistory && olderContent && olderContent !== displayedContent ? (
-                                      <div 
-                                        id={`change-${section.id}`} 
-                                        className="border-l-4 border-blue-400 pl-3 py-2 bg-blue-50/30 rounded cursor-pointer hover:bg-blue-100 transition-colors"
-                                        onClick={() => {
-                                          if (currentSnapshot?.suggestionId) {
-                                            setOpenSuggestionId(currentSnapshot.suggestionId);
-                                          }
-                                        }}
-                                      >
-                                        <div className="flex items-center justify-between mb-2">
-                                          <Badge className="bg-blue-100 text-blue-800 text-xs">
-                                            {language === 'he' ? 'השוואה - לחץ לצפייה בדיון' : language === 'ar' ? 'مقارنة - انقر لعرض النقاش' : 'Comparison - Click to view discussion'}
-                                          </Badge>
-                                          <div className="flex items-center gap-2">
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setShowDiffForSections(prev => ({
-                                                  ...prev,
-                                                  [section.id]: !prev[section.id]
-                                                }));
-                                              }}
-                                              className="h-7 px-2 text-xs"
-                                            >
-                                              {showDiffForSections[section.id] ? (
-                                                <>
-                                                  <EyeOff className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                                  {t('hideChanges')}
-                                                </>
-                                              ) : (
-                                                <>
-                                                  <Eye className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                                  {t('showDiff')}
-                                                </>
-                                              )}
-                                            </Button>
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setOpenSectionHistoryId(section.id);
-                                              }}
-                                              className="h-7 px-2 text-xs"
-                                            >
-                                              {language === 'he' ? 'היסטוריית סעיף' : language === 'ar' ? 'تاريخ القسم' : 'Section History'}
-                                            </Button>
-                                          </div>
-                                        </div>
-                                        {showDiffForSections[section.id] ? (
-                                          <InlineDiff
-                                            originalContent={olderContent}
-                                            newContent={displayedContent}
-                                          />
-                                        ) : (
-                                          <div
-                                            className="prose prose-sm max-w-none text-slate-700"
-                                            style={{ 
-                                              direction: isRTL ? 'rtl' : 'ltr', 
-                                              textAlign: isRTL ? 'right' : 'left',
-                                              fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
-                                              fontSize: "1.125rem",
-                                              lineHeight: "1.8",
-                                              letterSpacing: "0.01em"
+                                <>
+                                  {isViewingHistory && olderContent && olderContent !== displayedContent ? (
+                                    <div 
+                                      id={`change-${section.id}`} 
+                                      className="border-l-4 border-blue-400 pl-3 py-2 bg-blue-50/30 rounded cursor-pointer hover:bg-blue-100 transition-colors"
+                                      onClick={() => {
+                                        if (currentSnapshot?.suggestionId) {
+                                          setOpenSuggestionId(currentSnapshot.suggestionId);
+                                        }
+                                      }}
+                                    >
+                                      <div className="flex items-center justify-between mb-2">
+                                        <Badge className="bg-blue-100 text-blue-800 text-xs">
+                                          {language === 'he' ? 'השוואה - לחץ לצפייה בדיון' : language === 'ar' ? 'مقارنة - انقر لعرض النقاش' : 'Comparison - Click to view discussion'}
+                                        </Badge>
+                                        <div className="flex items-center gap-2">
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setShowDiffForSections(prev => ({
+                                                ...prev,
+                                                [section.id]: !prev[section.id]
+                                              }));
                                             }}
-                                            dangerouslySetInnerHTML={{ __html: displayedContent }}
-                                          />
-                                        )}
+                                            className="h-7 px-2 text-xs"
+                                          >
+                                            {showDiffForSections[section.id] ? (
+                                              <>
+                                                <EyeOff className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                {t('hideChanges')}
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Eye className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                {t('showDiff')}
+                                              </>
+                                            )}
+                                          </Button>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setOpenSectionHistoryId(section.id);
+                                            }}
+                                            className="h-7 px-2 text-xs"
+                                          >
+                                            {language === 'he' ? 'היסטוריית סעיף' : language === 'ar' ? 'تاريخ القسم' : 'Section History'}
+                                          </Button>
+                                        </div>
                                       </div>
-                                    ) : (
-                                      <div 
-                                        className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none"
-                                        style={{ 
-                                          fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
-                                          fontSize: "1.125rem",
-                                          lineHeight: "1.8",
-                                          letterSpacing: "0.01em"
-                                        }}
-                                        dangerouslySetInnerHTML={{ 
-                                          __html: showTranslatedSections[section.id] 
-                                            ? (translatedSections[section.id] || section.translations?.[language] || displayedContent)
-                                            : displayedContent 
-                                        }}
-                                      />
-                                    )}
+                                      {showDiffForSections[section.id] ? (
+                                        <InlineDiff
+                                          originalContent={olderContent}
+                                          newContent={displayedContent}
+                                        />
+                                      ) : (
+                                        <div
+                                          className="prose prose-sm max-w-none text-slate-700"
+                                          style={{ 
+                                            direction: isRTL ? 'rtl' : 'ltr', 
+                                            textAlign: isRTL ? 'right' : 'left',
+                                            fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                            fontSize: "1.125rem",
+                                            lineHeight: "1.8",
+                                            letterSpacing: "0.01em"
+                                          }}
+                                          dangerouslySetInnerHTML={{ __html: displayedContent }}
+                                        />
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <div 
+                                      className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none"
+                                      style={{ 
+                                        fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                        fontSize: "1.125rem",
+                                        lineHeight: "1.8",
+                                        letterSpacing: "0.01em"
+                                      }}
+                                      dangerouslySetInnerHTML={{ 
+                                        __html: showTranslatedSections[section.id] 
+                                          ? (translatedSections[section.id] || section.translations?.[language] || displayedContent)
+                                          : displayedContent 
+                                      }}
+                                    />
+                                  )}
                                     {(section.originalLanguage || detectLanguage(section.content)) !== language && (
                                       <Button
                                         variant="ghost"

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -45,11 +45,13 @@ export default function SectionCarousel({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  // Filter section suggestions from the parent suggestions list
-  const allSectionSuggestions = React.useMemo(() => 
-    pendingSuggestions.filter(s => s.sectionId === section.id && (s.type === 'edit_section' || s.type === 'delete_section')) || [],
-    [pendingSuggestions, section.id]
-  );
+  // שליפת כל ההצעות של הסעיף (לא רק pending) כדי לעקוב אחרי שינויי סטטוס
+  const { data: allSectionSuggestions = [] } = useQuery({
+    queryKey: ['suggestions', document?.id],
+    enabled: false,
+    select: (data) => data?.filter(s => s.sectionId === section.id && s.type === 'edit_section') || [],
+    staleTime: 0,
+  });
   
   // שומר את ה-ID של ההצעה הנוכחית במקום index
   const [currentSuggestionId, setCurrentSuggestionId] = useState(null);
@@ -332,12 +334,6 @@ export default function SectionCarousel({
   }, [targetSuggestionId]);
 
   return (
-    <>
-      {/* Render IDs for all suggestions to enable scrolling */}
-      {sortedSuggestions.map(s => (
-        <div key={`hidden-${s.id}`} id={`suggestion-${s.id}`} style={{ display: 'none' }} />
-      ))}
-      
     <div id={currentSuggestionDisplayId} className="group relative p-3 md:p-6 border-2 border-slate-300 rounded-lg hover:border-blue-400 hover:shadow-md transition-all bg-gradient-to-br from-white to-slate-50/30">
       {/* כותרת סעיף עם אינדיקטור */}
       <div className="flex items-center justify-between mb-3 md:mb-4">
@@ -446,11 +442,25 @@ export default function SectionCarousel({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => toggleComments(`section-${section.id}`)}
+                onClick={() => {
+                  if (!showComments[`section-${section.id}`]) {
+                    toggleComments(`section-${section.id}`);
+                  } else {
+                    toggleComments(`section-${section.id}`);
+                  }
+                }}
                 className="text-slate-600 hover:text-blue-600 h-7 md:h-8 text-xs px-2"
               >
                 <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                {t('comments')} (0)
+                {t('comments')} ({(() => {
+                  // Count all comments from section AND all related suggestions
+                  const sectionCommentsCount = getCommentsCount('section', section.id);
+                  const allSuggestionIds = (allSectionSuggestions || []).map(s => s.id);
+                  const suggestionsCommentsCount = allSuggestionIds.reduce((sum, sugId) => 
+                    sum + getCommentsCount('suggestion', sugId), 0
+                  );
+                  return sectionCommentsCount + suggestionsCommentsCount;
+                })()})
               </Button>
             </div>
             {showComments[`section-${section.id}`] && (
@@ -737,7 +747,7 @@ export default function SectionCarousel({
                     className="h-7 md:h-8 text-xs px-2"
                   >
                     <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                    {t('comments')} (0)
+                    {t('comments')} ({getCommentsCount('suggestion', currentView.data.id)})
                   </Button>
                 </div>
                 {showComments[`suggestion-${currentView.data.id}`] && (
@@ -829,6 +839,5 @@ export default function SectionCarousel({
         onClose={() => setShowHistorySidebar(false)}
       />
     </div>
-    </>
   );
 }
