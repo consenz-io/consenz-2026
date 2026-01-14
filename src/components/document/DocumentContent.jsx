@@ -101,7 +101,7 @@ export default function DocumentContent({
 
   // Scroll to newly created suggestion
   React.useEffect(() => {
-    if (newlyCreatedSuggestion?.suggestionId && typeof window !== 'undefined' && window.document) {
+    if (newlyCreatedSuggestion?.suggestionId && typeof window !== 'undefined') {
       const { suggestionId } = newlyCreatedSuggestion;
       
       const scrollToElement = () => {
