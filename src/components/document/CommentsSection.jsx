@@ -309,7 +309,6 @@ const runBackgroundTasks = async (comment, entityType, entityId, parentComment) 
 export default function CommentsSection({ entityType, entityId, user, sectionId, relatedSuggestionIds = [], includeRelatedComments = false }) {
   const { t, isRTL, language } = useLanguage();
   const [newComment, setNewComment] = useState("");
-  const [replyTo, setReplyTo] = useState(null);
   
   // FIX: Removed editContent from parent state to prevent re-renders on every keystroke
   const [editingComment, setEditingComment] = useState(null); 
