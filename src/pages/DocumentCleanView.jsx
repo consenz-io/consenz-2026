@@ -612,11 +612,14 @@ ${text}`;
             topics.map((topic, topicIndex) => {
               const isViewingHistory = currentVersionIndex > 0;
               
-              // Filter sections for this topic
-              const topicSections = sections
+              // Filter sections for this topic using the complete sections map
+              const topicSections = Array.from(allSectionsMap.values())
                 .filter(s => s.topicId === topic.id)
                 .filter(section => {
-                  if (!isViewingHistory) return true;
+                  if (!isViewingHistory) {
+                    // In current view, only show non-deleted sections
+                    return !section.isDeleted;
+                  }
                   
                   // Always show sections that exist in snapshot OR were deleted in this snapshot
                   const sectionExistsInSnapshot = currentSnapshot?.existingSections?.has(section.id) ?? 
