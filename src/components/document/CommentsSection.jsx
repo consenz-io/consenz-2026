@@ -484,10 +484,10 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
       await ensureUserPublicProfile(user);
       
       const parentComment = data.parentCommentId 
-        ? comments.find(c => c.id === data.parentCommentId) 
-        : null;
-      
-      runBackgroundTasks(comment, entityType, entityId, parentComment);
+         ? comments.find(c => c.id === data.parentCommentId) 
+         : null;
+
+       runBackgroundTasks(comment, entityType, entityId, parentComment, user);
       
       return comment;
     },
