@@ -49,7 +49,7 @@ export default function SectionCarousel({
   const { data: allSectionSuggestions = [] } = useQuery({
     queryKey: ['suggestions', document?.id],
     enabled: false,
-    select: (data) => data?.filter(s => s.sectionId === section.id && s.type === 'edit_section') || [],
+    select: (data) => data?.filter(s => s.sectionId === section.id && (s.type === 'edit_section' || s.type === 'delete_section')) || [],
     staleTime: 0,
   });
   
