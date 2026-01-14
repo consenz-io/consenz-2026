@@ -211,6 +211,10 @@ const CommentItem = memo(({
               deleteCommentMutation={deleteCommentMutation}
               allComments={allComments}
               t={t}
+              replyTo={replyTo}
+              newComment={newComment}
+              setNewComment={setNewComment}
+              createCommentMutation={createCommentMutation}
             />
           ))}
         </div>
