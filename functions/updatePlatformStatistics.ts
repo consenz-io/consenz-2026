@@ -29,16 +29,15 @@ Deno.serve(async (req) => {
         const registeredUsersCount = allUsers.length;
 
         // Calculate average consensus from avgSuggestionConsensus of active documents
-        const documentsWithConsensus = activeDocuments.filter(d => 
-            d.avgSuggestionConsensus !== undefined && 
-            d.avgSuggestionConsensus !== null &&
-            d.avgSuggestionConsensus > 0
-        );
-        
         let averageConsensus = 50; // Default 50%
-        if (documentsWithConsensus.length > 0) {
-            const totalConsensus = documentsWithConsensus.reduce((sum, d) => sum + (d.avgSuggestionConsensus * 100), 0);
-            averageConsensus = totalConsensus / documentsWithConsensus.length;
+        if (activeDocuments.length > 0) {
+            const totalConsensus = activeDocuments.reduce((sum, d) => {
+                const consensus = d.avgSuggestionConsensus !== undefined && d.avgSuggestionConsensus !== null 
+                    ? d.avgSuggestionConsensus 
+                    : 0.5; // Default to 0.5 (50%) if not set
+                return sum + (consensus * 100);
+            }, 0);
+            averageConsensus = totalConsensus / activeDocuments.length;
         }
 
         // Fetch or create the PlatformStatistics entity
