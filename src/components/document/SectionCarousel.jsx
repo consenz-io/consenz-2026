@@ -325,8 +325,8 @@ export default function SectionCarousel({
 
   // Scroll to target section when needed (only in browser)
   React.useEffect(() => {
-    if (targetSuggestionId && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
-      const targetElement = document.getElementById(`suggestion-${targetSuggestionId}`);
+    if (targetSuggestionId && typeof window !== 'undefined' && window.document) {
+      const targetElement = window.document.getElementById(`suggestion-${targetSuggestionId}`);
       if (targetElement) {
         targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
