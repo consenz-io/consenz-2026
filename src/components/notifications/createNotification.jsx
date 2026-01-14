@@ -975,9 +975,11 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
         type: 'document_comment',
         title: translate('notifDocumentCommentTitle', userLang),
         message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: doc.title }),
-        relatedEntityId: doc.id,
-        relatedEntityType: 'document',
-        actionUrl
+        relatedEntityId: comment.id,
+        relatedEntityType: 'comment',
+        actionUrl: actionUrl + `#comment-${comment.id}`,
+        documentId: doc.id,
+        documentTitle: doc.title
       });
     }
     
