@@ -631,10 +631,10 @@ export default function SuggestionDetail() {
 
   // useEffect to scroll to comment from notification
   React.useEffect(() => {
-    if (commentId && comments && comments.length > 0 && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
+    if (commentId && comments && comments.length > 0 && typeof window !== 'undefined') {
       // Wait a bit to ensure DOM is fully rendered
       const scrollTimer = setTimeout(() => {
-        const commentElement = document.getElementById(`comment-${commentId}`);
+        const commentElement = window.document.getElementById(`comment-${commentId}`);
         if (commentElement) {
           // Scroll to comment
           commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -934,8 +934,8 @@ export default function SuggestionDetail() {
                     onClick={() => {
                       navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);
                       setTimeout(() => {
-                        if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-                          const element = document.getElementById(`section-${suggestion.sectionId}`);
+                        if (typeof window !== 'undefined') {
+                          const element = window.document.getElementById(`section-${suggestion.sectionId}`);
                           if (element) {
                             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                           }
@@ -967,8 +967,8 @@ export default function SuggestionDetail() {
                     onClick={() => {
                       navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#new-suggestion-${suggestionId}`);
                       setTimeout(() => {
-                        if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-                          const element = document.getElementById(`new-suggestion-${suggestionId}`);
+                        if (typeof window !== 'undefined') {
+                          const element = window.document.getElementById(`new-suggestion-${suggestionId}`);
                           if (element) {
                             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                           }
@@ -1003,8 +1003,8 @@ export default function SuggestionDetail() {
                     onClick={() => {
                       navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);
                       setTimeout(() => {
-                        if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-                          const element = document.getElementById(`section-${suggestion.sectionId}`);
+                        if (typeof window !== 'undefined') {
+                          const element = window.document.getElementById(`section-${suggestion.sectionId}`);
                           if (element) {
                             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                           }
@@ -1052,8 +1052,8 @@ export default function SuggestionDetail() {
                     onClick={() => {
                       navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);
                       setTimeout(() => {
-                        if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-                          const element = document.getElementById(`section-${suggestion.sectionId}`);
+                        if (typeof window !== 'undefined') {
+                          const element = window.document.getElementById(`section-${suggestion.sectionId}`);
                           if (element) {
                             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                           }
