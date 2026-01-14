@@ -22,13 +22,15 @@ const CommentItem = memo(({
   editingComment,
   setEditingComment,
   updateCommentMutation,
-  setReplyTo,
   deleteCommentMutation,
   allComments,
+  createCommentMutation,
   t
 }) => {
   // Always call hooks in the same order, regardless of conditions
   const [localEditContent, setLocalEditContent] = useState(comment.content);
+  const [replyingToThis, setReplyingToThis] = useState(false);
+  const [replyContent, setReplyContent] = useState("");
   
   // Always run useEffect
   useEffect(() => {
