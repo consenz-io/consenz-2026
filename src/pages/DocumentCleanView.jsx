@@ -567,7 +567,19 @@ ${text}`;
             <p className="text-slate-500 text-center py-8">{t('noTopicsYet')}</p>
           ) : (
             topics.map((topic, topicIndex) => {
-              const topicSections = sections.filter(s => s.topicId === topic.id);
+              const isViewingHistory = currentVersionIndex > 0;
+              
+              // Filter sections for this topic
+              const topicSections = sections
+                .filter(s => s.topicId === topic.id)
+                .filter(section => {
+                  if (!isViewingHistory) return true;
+                  
+                  const sectionExistsInSnapshot = currentSnapshot?.existingSections?.has(section.id) ?? 
+                    currentSnapshot?.sectionContents?.hasOwnProperty(section.id);
+                  return sectionExistsInSnapshot;
+                })
+                .sort((a, b) => (a.order || 0) - (b.order || 0));
               
               // Don't show topics without sections in clean view
               if (topicSections.length === 0) {
