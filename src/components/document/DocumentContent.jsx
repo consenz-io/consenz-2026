@@ -58,8 +58,8 @@ export default function DocumentContent({
     ar: "Arabic"
   };
 
-  // Polling interval for live sync (10 seconds for better responsiveness)
-  const SYNC_INTERVAL = 10000;
+  // Polling interval for live sync (30 seconds to avoid rate limits)
+  const SYNC_INTERVAL = 30000;
   
   const { data: users } = useQuery({
     queryKey: ['users'],
@@ -133,16 +133,18 @@ export default function DocumentContent({
     }
   }, [newlyCreatedSuggestion, onClearNewlyCreated, suggestions, topics]);
 
+  // Auto-accept runs only when vote counts change - not on every render
+  const lastCheckRef = React.useRef(Date.now());
+  
   React.useEffect(() => {
     if (!document || !suggestions) return;
 
-    // בדיקה אם יש הצעות שהתקבלו שעדיין לא הצגנו עליהן toast (רק אם לא הצגנו כבר מה-optimistic update)
-    suggestions.forEach(suggestion => {
-      if (suggestion.status === 'accepted' && !shownAcceptedToastsRef.current.has(suggestion.id)) {
-        shownAcceptedToastsRef.current.add(suggestion.id);
-        // לא מציגים toast כאן - זה יגיע מה-optimistic update
-      }
-    });
+    // Throttle checks to max once per 5 seconds to avoid rate limits
+    const now = Date.now();
+    if (now - lastCheckRef.current < 5000) {
+      return;
+    }
+    lastCheckRef.current = now;
 
     const checkAndAutoAccept = async () => {
       // בדיקת הצעות סעיפים שעברו את הסף אבל לא התקבלו - עבור edit_section ו-delete_section
@@ -167,12 +169,10 @@ export default function DocumentContent({
             const acceptingUserId = user?.id || suggestion.created_by;
             const accepted = await autoAcceptSuggestion(suggestion, acceptingUserId, document);
             if (accepted) {
-              // הצגת הודעה
               toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', {
                 duration: 4000,
               });
               
-              // רענון הסעיפים אחרי 7 שניות (אחרי שהאנימציה נעלמה לגמרי)
               setTimeout(() => {
                 Promise.all([
                   queryClient.invalidateQueries({ queryKey: ['sections', document.id] }),
@@ -181,7 +181,6 @@ export default function DocumentContent({
                 ]);
               }, 7000);
               
-              // רענון הצעות והמסמך מיד (כדי שהאנימציה תתחיל)
               queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
               queryClient.invalidateQueries({ queryKey: ['document', document.id] });
               queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
@@ -210,7 +209,6 @@ export default function DocumentContent({
               const acceptingUserId = user?.id || topicSuggestion.created_by;
               const accepted = await autoAcceptTopicEditSuggestion(topicSuggestion, acceptingUserId, document);
               if (accepted) {
-                // רענון מיידי במקביל
                 Promise.all([
                   queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
                   queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
@@ -225,7 +223,6 @@ export default function DocumentContent({
         }
       }
 
-      // ניקוי תקופתי
       if (hasCheckedRef.current.size > 100) {
         hasCheckedRef.current.clear();
       }
