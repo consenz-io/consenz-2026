@@ -25,12 +25,7 @@ const CommentItem = memo(({
   setReplyTo,
   deleteCommentMutation,
   allComments,
-  t,
-  replyTo,
-  newComment,
-  setNewComment,
-  createCommentMutation,
-  handleReplySubmit
+  t
 }) => {
   // Always call hooks in the same order, regardless of conditions
   const [localEditContent, setLocalEditContent] = useState(comment.content);
@@ -195,46 +190,6 @@ const CommentItem = memo(({
           </div>
         </div>
       </Card>
-      {replyTo?.id === comment.id && (
-        <div className="mt-3 ml-0 pt-3 border-t border-slate-200">
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            handleReplySubmit(e, replyTo);
-          }} className="space-y-2">
-            <Textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder={t('writeReply')}
-              className="min-h-[60px] text-sm"
-              dir="auto"
-              aria-label={t('writeReply')}
-              aria-required="true"
-              autoFocus
-            />
-            <div className="flex gap-2 justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setReplyTo(null)}
-                className="h-7 text-xs"
-              >
-                {t('cancel')}
-              </Button>
-              <Button
-                type="submit"
-                disabled={!newComment.trim() || createCommentMutation.isPending}
-                size="sm"
-                className="h-7 text-xs"
-              >
-                <Send className="w-3 h-3 mr-1" />
-                {t('postComment')}
-              </Button>
-            </div>
-          </form>
-        </div>
-      )}
-
       {replies.length > 0 && (
         <div className="mt-2 space-y-2">
           {replies.map(reply => (
@@ -252,11 +207,6 @@ const CommentItem = memo(({
               deleteCommentMutation={deleteCommentMutation}
               allComments={allComments}
               t={t}
-              replyTo={replyTo}
-              newComment={newComment}
-              setNewComment={setNewComment}
-              createCommentMutation={createCommentMutation}
-              handleReplySubmit={handleReplySubmit}
             />
           ))}
         </div>
@@ -513,7 +463,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
     },
   });
 
-  const handleSubmit = (e, parentComment = null) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
     if (!user || !user.id || !user.email) {
@@ -524,7 +474,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
     createCommentMutation.mutate({
       rootEntityType: entityType,
       rootEntityId: entityId,
-      parentCommentId: parentComment?.id || replyTo?.id || null,
+      parentCommentId: replyTo?.id || null,
       content: newComment.trim(),
     });
   };
@@ -567,51 +517,65 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
               deleteCommentMutation={deleteCommentMutation}
               allComments={comments}
               t={t}
-              replyTo={replyTo}
-              newComment={newComment}
-              setNewComment={setNewComment}
-              createCommentMutation={createCommentMutation}
-              handleReplySubmit={handleSubmit}
             />
           ))
         )}
       </div>
 
-      {!replyTo && (
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          if (!user) {
-            base44.auth.redirectToLogin(window.location.href);
-            return;
-          }
-          handleSubmit(e);
-        }} className="space-y-2 mt-6 pt-6 border-t border-slate-200">
-          <Textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder={t('addComment')}
-            className="min-h-[80px]"
-            dir="auto"
-            aria-label={t('addComment')}
-            aria-required="true"
-            onFocus={() => {
-              if (!user) {
-                base44.auth.redirectToLogin(window.location.href);
-              }
-            }}
-          />
-          <div className="flex justify-end">
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        if (!user) {
+          base44.auth.redirectToLogin(window.location.href);
+          return;
+        }
+        handleSubmit(e);
+      }} className="space-y-2 mt-6 pt-6 border-t border-slate-200">
+        {replyTo && (
+          <div className="flex items-center gap-2 text-sm text-slate-600 bg-blue-50 p-2 rounded">
+            <Reply className="w-4 h-4" />
+            <span>{t('replyingTo')} {(() => {
+              const profile = publicProfiles?.find(p => p.email === replyTo.created_by);
+              if (profile?.fullName) return profile.fullName;
+              const user = users?.find(u => u.email === replyTo.created_by);
+              if (user?.full_name) return user.full_name;
+              return 'User';
+            })()}</span>
             <Button
-              type="submit"
-              disabled={!newComment.trim() || createCommentMutation.isPending}
+              type="button"
+              variant="ghost"
               size="sm"
+              onClick={() => setReplyTo(null)}
+              className="mr-auto h-6"
             >
-              <Send className="w-4 h-4 mr-2" />
-              {t('postComment')}
+              {t('cancel')}
             </Button>
           </div>
-        </form>
-      )}
+        )}
+        <Textarea
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          placeholder={replyTo ? t('writeReply') : t('addComment')}
+          className="min-h-[80px]"
+          dir="auto"
+          aria-label={replyTo ? t('writeReply') : t('addComment')}
+          aria-required="true"
+          onFocus={() => {
+            if (!user) {
+              base44.auth.redirectToLogin(window.location.href);
+            }
+          }}
+        />
+        <div className="flex justify-end">
+          <Button
+            type="submit"
+            disabled={!newComment.trim() || createCommentMutation.isPending}
+            size="sm"
+          >
+            <Send className="w-4 h-4 mr-2" />
+            {t('postComment')}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }
