@@ -627,15 +627,18 @@ ${text}`;
                     <p className="text-slate-500 italic pr-2 md:pr-4">{t('noSectionsYet')}</p>
                   ) : (
                     <div className="space-y-4 md:space-y-6">
-                      {/* Show all sections that ever existed in this topic */}
-                      {Array.from(currentSnapshot?.allSectionIds || [])
-                        .map(sectionId => sections.find(s => s.id === sectionId) || { 
-                          id: sectionId, 
-                          topicId: topic.id,
-                          content: currentSnapshot?.sectionContents?.[sectionId] || '',
-                          order: 999 // Put deleted sections at the end if we don't know their order
-                        })
-                        .filter(section => section.topicId === topic.id)
+                      {/* Show all sections that ever existed in this topic (only in history view) or current sections (in current view) */}
+                      {(currentVersionIndex === 0 
+                        ? topicSections // Current version - show only existing sections
+                        : Array.from(currentSnapshot?.allSectionIds || [])
+                            .map(sectionId => sections.find(s => s.id === sectionId) || { 
+                              id: sectionId, 
+                              topicId: topic.id,
+                              content: currentSnapshot?.sectionContents?.[sectionId] || '',
+                              order: 999
+                            })
+                            .filter(section => section.topicId === topic.id)
+                      )
                         .sort((a, b) => (a.order || 0) - (b.order || 0))
                         .map((section, sectionIndex) => {
                         // מציאת תוכן הסעיף בגרסה המוצגת ובגרסה החדשה יותר
