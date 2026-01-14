@@ -854,7 +854,9 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
           message: translate('notifCommentOnDiscussion', userLang, { name: commenterName }),
           relatedEntityId: targetEntity.id,
           relatedEntityType: targetEntityType,
-          actionUrl
+          actionUrl,
+          documentId,
+          documentTitle
         });
       }
     });
