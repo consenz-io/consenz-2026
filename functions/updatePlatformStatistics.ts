@@ -27,12 +27,15 @@ Deno.serve(async (req) => {
         const allUsers = await base44.asServiceRole.entities.User.list();
         const registeredUsersCount = allUsers.length;
 
-        // Calculate average consensus
+        // Calculate average consensus from accepted suggestions in active documents only
+        const activeDocumentIds = activeDocuments.map(d => d.id);
         const acceptedSuggestions = await base44.asServiceRole.entities.Suggestion.filter({ status: 'accepted' });
+        const relevantSuggestions = acceptedSuggestions.filter(s => activeDocumentIds.includes(s.documentId));
+        
         let totalConsensusScore = 0;
         let validSuggestionsCount = 0;
 
-        for (const s of acceptedSuggestions) {
+        for (const s of relevantSuggestions) {
             if (typeof s.proVotes === 'number' && typeof s.conVotes === 'number') {
                 const totalVotes = s.proVotes + s.conVotes;
                 if (totalVotes > 0) {
