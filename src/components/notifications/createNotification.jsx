@@ -816,9 +816,11 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
         type: 'comment_reply',
         title: translate('notifReplyTitle', userLang),
         message: translate('notifReplyMessage', userLang, { name: commenterName }),
-        relatedEntityId: targetEntity.id,
-        relatedEntityType: targetEntityType,
-        actionUrl
+        relatedEntityId: comment.id,
+        relatedEntityType: 'comment',
+        actionUrl,
+        documentId,
+        documentTitle
       });
     }
     
