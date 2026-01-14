@@ -6,15 +6,10 @@ Deno.serve(async (req) => {
         
         // Count active documents (documents in public groups OR public standalone documents)
         const allGroups = await base44.asServiceRole.entities.Group.list();
-        const publicGroups = allGroups.filter(g => g.privacy === 'public');
+        const publicGroups = allGroups.filter(g => g.status === 'public');
         const publicGroupIds = publicGroups.map(g => g.id);
         
-        console.log('Total groups:', allGroups.length);
-        console.log('Public groups:', publicGroups.length);
-        console.log('Public group IDs:', publicGroupIds);
-        
         const allDocuments = await base44.asServiceRole.entities.Document.list();
-        console.log('Total documents:', allDocuments.length);
         
         const activeDocuments = allDocuments.filter(doc => {
             // Include if in a public group
@@ -27,7 +22,6 @@ Deno.serve(async (req) => {
             }
             return false;
         });
-        console.log('Active documents:', activeDocuments.length);
         const activeDocumentsCount = activeDocuments.length;
 
         // Count registered users
