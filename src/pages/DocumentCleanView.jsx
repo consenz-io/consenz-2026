@@ -639,17 +639,7 @@ ${text}`;
                     <p className="text-slate-500 italic pr-2 md:pr-4">{t('noSectionsYet')}</p>
                   ) : (
                     <div className="space-y-4 md:space-y-6">
-                      {topicSections
-                        .filter(section => {
-                          const isViewingHistory = currentVersionIndex > 0;
-                          if (!isViewingHistory) return true;
-                          
-                          const sectionExistsInSnapshot = currentSnapshot?.existingSections?.has(section.id) ?? 
-                            currentSnapshot?.sectionContents?.hasOwnProperty(section.id);
-                          return sectionExistsInSnapshot;
-                        })
-                        .sort((a, b) => (a.order || 0) - (b.order || 0))
-                        .map((section, sectionIndex) => {
+                      {topicSections.map((section, sectionIndex) => {
                         // מציאת תוכן הסעיף בגרסה המוצגת ובגרסה החדשה יותר
                         const isViewingHistory = currentVersionIndex > 0;
 
