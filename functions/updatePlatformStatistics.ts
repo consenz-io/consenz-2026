@@ -4,11 +4,24 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
         
-        // Count active documents (public documents)
-        const publicDocuments = await base44.asServiceRole.entities.Document.filter({
-            privacy: { "$in": ["public_view_open_participation", "public_view_closed_participation"] }
+        // Count active documents (documents in public groups OR public standalone documents)
+        const allGroups = await base44.asServiceRole.entities.Group.list();
+        const publicGroups = allGroups.filter(g => g.privacy === 'public');
+        const publicGroupIds = publicGroups.map(g => g.id);
+        
+        const allDocuments = await base44.asServiceRole.entities.Document.list();
+        const activeDocuments = allDocuments.filter(doc => {
+            // Include if in a public group
+            if (doc.groupId && publicGroupIds.includes(doc.groupId)) {
+                return true;
+            }
+            // Include if standalone and public
+            if (!doc.groupId && (doc.privacy === 'public_view_open_participation' || doc.privacy === 'public_view_closed_participation')) {
+                return true;
+            }
+            return false;
         });
-        const activeDocumentsCount = publicDocuments.length;
+        const activeDocumentsCount = activeDocuments.length;
 
         // Count registered users
         const allUsers = await base44.asServiceRole.entities.User.list();
