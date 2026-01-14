@@ -167,12 +167,8 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
   console.log('[AUTO-ACCEPT] ✅ Threshold met! Proceeding with auto-acceptance...');
   console.log('[AUTO-ACCEPT] - Consensus (delta):', consensus);
   
-  // עדכון מד הקונצנזוס רק עבור עריכות סעיפים קיימים (לא סעיפים חדשים)
-  // סעיפים חדשים, עריכות ישירות ושינויי כותרות לא נספרים במד הקונצנזוס
-  const shouldUpdateConsensusMeter = freshSuggestion.type === 'edit_section';
-  
   // חישוב דינמי של מספר המשתתפים
-  const [allSuggestions, allVotes, publicProfiles, allArguments, allComments, sections] = await Promise.all([
+  const [allSuggestions, allVotes, publicProfiles, allArguments, allComments, allSections] = await Promise.all([
     base44.entities.Suggestion.filter({ documentId: document.id }),
     base44.entities.Vote.list(),
     base44.entities.UserPublicProfile.list(),
@@ -188,8 +184,14 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     allUsers: publicProfiles,
     allArguments,
     allComments,
-    sections
+    sections: allSections
   }) || 1;
+  
+  console.log('[AUTO-ACCEPT] Calculated totalUsers:', totalUsers);
+  
+  // עדכון מד הקונצנזוס רק עבור עריכות סעיפים קיימים (לא סעיפים חדשים)
+  // סעיפים חדשים, עריכות ישירות ושינויי כותרות לא נספרים במד הקונצנזוס
+  const shouldUpdateConsensusMeter = freshSuggestion.type === 'edit_section';
   
   // שמירת מספר המשתתפים בזמן הקבלה של ההצעה הזו
   const participantsAtAcceptance = totalUsers;
