@@ -682,9 +682,11 @@ ${text}`;
                             <div 
                               className="flex gap-2 md:gap-4 group p-2 rounded-lg transition-colors"
                             >
-                                <span className="text-slate-500 font-medium min-w-[1.5rem] md:min-w-[2rem] text-sm md:text-base">
-                                  {topicIndex + 1}.{sectionIndex + 1}
-                                </span>
+                                {!isDeletedSection && (
+                                  <span className="text-slate-500 font-medium min-w-[1.5rem] md:min-w-[2rem] text-sm md:text-base">
+                                    {topicIndex + 1}.{sectionIndex + 1}
+                                  </span>
+                                )}
                                 <div className="flex-1">
                                 {isDeletedSection ? (
                                  <div 
