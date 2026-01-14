@@ -610,27 +610,29 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     const gamificationEnabled = document?.gamificationEnabled || false;
     if (gamificationEnabled && freshSuggestion.created_by) {
       try {
-        const suggestionCreatorList = await base44.entities.User.filter({ email: freshSuggestion.created_by });
-        if (suggestionCreatorList.length > 0) {
-          const creatorId = suggestionCreatorList[0].id;
-          const freshUser = await base44.entities.User.filter({ id: creatorId }).then(u => u[0]);
-          if (freshUser) {
-            const newPoints = (freshUser.points || 1000) + 200;
-            await Promise.all([
-              base44.entities.User.update(freshUser.id, { points: newPoints }),
-              base44.entities.PointsTransaction.create({
-                userId: creatorId,
-                amount: 200,
-                action: 'suggestion_accepted',
-                description: `ההצעה שלך התקבלה: ${freshSuggestion.title || 'הצעה'}`,
-                relatedEntityId: freshSuggestion.id,
-                relatedEntityType: 'suggestion'
-              })
-            ]);
-          }
+        // Get all users to find the creator by email
+        const allUsers = await base44.asServiceRole.listUsers();
+        const suggestionCreator = allUsers.find(u => u.email === freshSuggestion.created_by);
+        
+        if (suggestionCreator) {
+          const newPoints = (suggestionCreator.points || 1000) + 200;
+          await Promise.all([
+            base44.asServiceRole.updateUser(suggestionCreator.id, { points: newPoints }),
+            base44.entities.PointsTransaction.create({
+              userId: suggestionCreator.id,
+              amount: 200,
+              action: 'suggestion_accepted',
+              description: `ההצעה שלך התקבלה: ${freshSuggestion.title || 'הצעה'}`,
+              relatedEntityId: freshSuggestion.id,
+              relatedEntityType: 'suggestion'
+            })
+          ]);
+          console.log('[POINTS] ✅ Awarded 200 points to suggestion creator:', suggestionCreator.email);
+        } else {
+          console.warn('[POINTS] ⚠️ Could not find user with email:', freshSuggestion.created_by);
         }
       } catch (pointsError) {
-        console.error('[POINTS DEBUG] Error awarding points:', pointsError);
+        console.error('[POINTS DEBUG] ❌ Error awarding points:', pointsError);
       }
     }
     
@@ -756,23 +758,26 @@ export async function autoAcceptTopicEditSuggestion(suggestion, userId, document
   });
 
   // Award points to creator
-  if (document.gamificationEnabled) {
-    const suggestionCreatorList = await base44.entities.User.filter({ email: freshSuggestion.created_by });
-    if (suggestionCreatorList.length > 0) {
-      const suggestionCreator = suggestionCreatorList[0];
-      const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
-      if (freshUser) {
-        const newPoints = (freshUser.points || 1000) + 100;
-        await base44.entities.User.update(freshUser.id, { points: newPoints });
-        
-        await base44.entities.PointsTransaction.create({
-          userId: suggestionCreator.id,
-          amount: 100,
-          action: 'suggestion_accepted',
-          description: `הצעתך לעריכת כותרת נושא התקבלה: ${freshSuggestion.newTitle}`,
-          relatedEntityType: 'topic'
-        });
+  if (document.gamificationEnabled && freshSuggestion.created_by) {
+    try {
+      const allUsers = await base44.asServiceRole.listUsers();
+      const suggestionCreator = allUsers.find(u => u.email === freshSuggestion.created_by);
+      
+      if (suggestionCreator) {
+        const newPoints = (suggestionCreator.points || 1000) + 100;
+        await Promise.all([
+          base44.asServiceRole.updateUser(suggestionCreator.id, { points: newPoints }),
+          base44.entities.PointsTransaction.create({
+            userId: suggestionCreator.id,
+            amount: 100,
+            action: 'suggestion_accepted',
+            description: `הצעתך לעריכת כותרת נושא התקבלה: ${freshSuggestion.newTitle}`,
+            relatedEntityType: 'topic'
+          })
+        ]);
       }
+    } catch (pointsError) {
+      console.error('[POINTS DEBUG] Error awarding points for topic edit:', pointsError);
     }
   }
 

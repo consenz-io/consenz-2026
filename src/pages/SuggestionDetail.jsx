@@ -235,19 +235,26 @@ export default function SuggestionDetail() {
       }
       
       if (pointsChange !== 0) {
-        const suggestionCreatorList = await base44.entities.User.filter({ email: suggestionData.created_by });
-        if (suggestionCreatorList.length > 0) {
-          const suggestionCreator = suggestionCreatorList[0];
-          const newPoints = Math.max(0, (suggestionCreator.points || 1000) + pointsChange);
-          await base44.entities.User.update(suggestionCreator.id, { points: newPoints });
-          await base44.entities.PointsTransaction.create({
-            userId: suggestionCreator.id,
-            amount: pointsChange,
-            action: pointsChange > 0 ? 'vote_received' : 'vote_canceled',
-            description,
-            relatedEntityId: suggestionData.id,
-            relatedEntityType: 'suggestion'
-          });
+        try {
+          const allUsers = await base44.asServiceRole.listUsers();
+          const suggestionCreator = allUsers.find(u => u.email === suggestionData.created_by);
+          
+          if (suggestionCreator) {
+            const newPoints = Math.max(0, (suggestionCreator.points || 1000) + pointsChange);
+            await Promise.all([
+              base44.asServiceRole.updateUser(suggestionCreator.id, { points: newPoints }),
+              base44.entities.PointsTransaction.create({
+                userId: suggestionCreator.id,
+                amount: pointsChange,
+                action: pointsChange > 0 ? 'vote_received' : 'vote_canceled',
+                description,
+                relatedEntityId: suggestionData.id,
+                relatedEntityType: 'suggestion'
+              })
+            ]);
+          }
+        } catch (err) {
+          console.error('[POINTS] Error updating vote points:', err);
         }
       }
     } catch (err) {
