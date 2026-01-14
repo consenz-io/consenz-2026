@@ -571,82 +571,64 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
           </div>
         ) : (
           topLevelComments.map(comment => (
-            <CommentItem 
-              key={comment.id} 
-              comment={comment}
-              users={users}
-              publicProfiles={publicProfiles}
-              user={user}
-              editingComment={editingComment}
-              setEditingComment={setEditingComment}
-              updateCommentMutation={updateCommentMutation}
-              setReplyTo={setReplyTo}
-              deleteCommentMutation={deleteCommentMutation}
-              allComments={comments}
-              t={t}
-              replyTo={replyTo}
-              newComment={newComment}
-              setNewComment={setNewComment}
-              createCommentMutation={createCommentMutation}
-            />
-          ))
+             <CommentItem 
+               key={comment.id} 
+               comment={comment}
+               users={users}
+               publicProfiles={publicProfiles}
+               user={user}
+               editingComment={editingComment}
+               setEditingComment={setEditingComment}
+               updateCommentMutation={updateCommentMutation}
+               setReplyTo={setReplyTo}
+               deleteCommentMutation={deleteCommentMutation}
+               allComments={comments}
+               t={t}
+               replyTo={replyTo}
+               newComment={newComment}
+               setNewComment={setNewComment}
+               createCommentMutation={createCommentMutation}
+             />
+           ))
         )}
       </div>
 
-      <form onSubmit={(e) => {
-        e.preventDefault();
-        if (!user) {
-          base44.auth.redirectToLogin(window.location.href);
-          return;
-        }
-        handleSubmit(e);
-      }} className="space-y-2 mt-6 pt-6 border-t border-slate-200">
-        {replyTo && (
-          <div className="flex items-center gap-2 text-sm text-slate-600 bg-blue-50 p-2 rounded">
-            <Reply className="w-4 h-4" />
-            <span>{t('replyingTo')} {(() => {
-              const profile = publicProfiles?.find(p => p.email === replyTo.created_by);
-              if (profile?.fullName) return profile.fullName;
-              const user = users?.find(u => u.email === replyTo.created_by);
-              if (user?.full_name) return user.full_name;
-              return 'User';
-            })()}</span>
+      {/* Form for new top-level comments only */}
+      {!replyTo && (
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          if (!user) {
+            base44.auth.redirectToLogin(window.location.href);
+            return;
+          }
+          handleSubmit(e);
+        }} className="space-y-2 mt-6 pt-6 border-t border-slate-200">
+          <Textarea
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder={t('addComment')}
+            className="min-h-[80px]"
+            dir="auto"
+            aria-label={t('addComment')}
+            aria-required="true"
+            onFocus={() => {
+              if (!user) {
+                base44.auth.redirectToLogin(window.location.href);
+              }
+            }}
+          />
+          <div className="flex justify-end">
             <Button
-              type="button"
-              variant="ghost"
+              type="submit"
+              disabled={!newComment.trim() || createCommentMutation.isPending}
               size="sm"
-              onClick={() => setReplyTo(null)}
-              className="mr-auto h-6"
             >
-              {t('cancel')}
+              <Send className="w-4 h-4 mr-2" />
+              {t('postComment')}
             </Button>
           </div>
-        )}
-        <Textarea
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          placeholder={replyTo ? t('writeReply') : t('addComment')}
-          className="min-h-[80px]"
-          dir="auto"
-          aria-label={replyTo ? t('writeReply') : t('addComment')}
-          aria-required="true"
-          onFocus={() => {
-            if (!user) {
-              base44.auth.redirectToLogin(window.location.href);
-            }
-          }}
-        />
-        <div className="flex justify-end">
-          <Button
-            type="submit"
-            disabled={!newComment.trim() || createCommentMutation.isPending}
-            size="sm"
-          >
-            <Send className="w-4 h-4 mr-2" />
-            {t('postComment')}
-          </Button>
-        </div>
-      </form>
+        </form>
+      )}
     </div>
   );
 }
