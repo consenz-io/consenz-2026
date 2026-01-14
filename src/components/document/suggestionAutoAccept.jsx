@@ -695,7 +695,7 @@ export async function autoAcceptTopicEditSuggestion(suggestion, userId, document
   }
 
   // וידוא שעדיין עומדים בתנאי הקונצנזוס לפי הנתונים העדכניים
-  const { shouldAccept, consensus } = checkTopicEditConsensus(freshSuggestion, document);
+  const { shouldAccept, consensus } = await checkTopicEditConsensus(freshSuggestion, document);
 
   if (!shouldAccept) {
     console.log('[AUTO-ACCEPT TOPIC] Suggestion no longer meets threshold, skipping');
