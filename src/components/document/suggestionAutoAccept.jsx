@@ -167,15 +167,27 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
   console.log('[AUTO-ACCEPT] ✅ Threshold met! Proceeding with auto-acceptance...');
   console.log('[AUTO-ACCEPT] - Consensus (delta):', consensus);
   
-  // חישוב דינמי של מספר המשתתפים
-  const [allSuggestions, allVotes, publicProfiles, allArguments, allComments, allSections] = await Promise.all([
+  // חישוב דינמי של מספר המשתתפים - רק שאילתות לפי מסמך
+  const [allSuggestions, documentVotes, publicProfiles, documentArguments, documentComments, allSections] = await Promise.all([
     base44.entities.Suggestion.filter({ documentId: document.id }),
-    base44.entities.Vote.list(),
+    base44.asServiceRole.entities.Vote.list(),
     base44.entities.UserPublicProfile.list(),
-    base44.entities.Argument.list(),
-    base44.entities.Comment.list(),
+    base44.asServiceRole.entities.Argument.list(),
+    base44.asServiceRole.entities.Comment.list(),
     base44.entities.Section.filter({ documentId: document.id })
   ]);
+  
+  // סינון לפי מסמך
+  const suggestionIds = allSuggestions.map(s => s.id);
+  const sectionIds = allSections.map(s => s.id);
+  
+  const allVotes = documentVotes.filter(v => suggestionIds.includes(v.suggestionId));
+  const allArguments = documentArguments.filter(a => suggestionIds.includes(a.suggestionId));
+  const allComments = documentComments.filter(c => 
+    (c.rootEntityType === 'suggestion' && suggestionIds.includes(c.rootEntityId)) ||
+    (c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)) ||
+    (c.rootEntityType === 'document' && c.rootEntityId === document.id)
+  );
   
   const totalUsers = calculateContributorsFromData({
     document,
@@ -234,17 +246,12 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     console.log('[CONSENSUS METER SKIP] Not updating consensus meter for new_section type');
   }
   
-  // עדכון threshold לכל ההצעות הממתינות - במקביל
+  // עדכון threshold לכל ההצעות הממתינות - אופטימיזציה
   console.log('[THRESHOLD UPDATE] Starting threshold update');
   console.log('[THRESHOLD UPDATE] New threshold:', newThreshold);
-  console.log('[THRESHOLD UPDATE] Document ID:', document.id);
-  console.log('[THRESHOLD UPDATE] Accepted suggestion type:', freshSuggestion.type);
-  console.log('[THRESHOLD UPDATE] Accepted suggestion sectionId:', freshSuggestion.sectionId);
   
-  const pendingSuggestions = await base44.entities.Suggestion.filter({
-    documentId: document.id,
-    status: 'pending'
-  });
+  // שימוש ב-allSuggestions שכבר שלפנו במקום שאילתה נוספת
+  const pendingSuggestions = allSuggestions.filter(s => s.status === 'pending' && s.id !== freshSuggestion.id);
   
   console.log('[THRESHOLD UPDATE] Found pending suggestions:', pendingSuggestions.length);
   console.log('[THRESHOLD UPDATE] Pending suggestions:', pendingSuggestions.map(s => ({
@@ -306,28 +313,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     
     console.log('[THRESHOLD UPDATE] Finished updating all suggestions');
     
-    // אחרי העדכון, בדוק מה המצב של ההצעות האחרות
-    const updatedSuggestions = await base44.entities.Suggestion.filter({
-      documentId: document.id,
-      status: 'pending'
-    });
-    
-    console.log('[THRESHOLD UPDATE] After update - pending suggestions status:');
-    updatedSuggestions
-      .filter(s => s.type === 'edit_section' && s.sectionId === freshSuggestion.sectionId)
-      .forEach(s => {
-        const delta = (s.proVotes || 0) - (s.conVotes || 0);
-        console.log('[THRESHOLD UPDATE] - Suggestion AFTER reset:', {
-          id: s.id,
-          title: s.title,
-          proVotes: s.proVotes,
-          conVotes: s.conVotes,
-          delta: delta,
-          threshold: s.threshold,
-          wouldAutoAcceptWithOneVote: delta >= (s.threshold || newThreshold),
-          originalContentPreview: s.originalContent?.substring(0, 80)
-        });
-      });
+    console.log('[THRESHOLD UPDATE] Finished updating all suggestions - skipping refetch for performance');
   } else {
     console.log('[THRESHOLD UPDATE] Not an edit_section or no sectionId, updating threshold only for all');
     // אם זו לא הצעת עריכה, רק עדכן threshold

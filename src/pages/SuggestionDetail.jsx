@@ -62,11 +62,10 @@ export default function SuggestionDetail() {
 
   const { data: allDocumentSuggestions } = useQuery({
     queryKey: ['allDocumentSuggestions', suggestion?.documentId],
-    queryFn: () => base44.entities.Suggestion.filter({ documentId: suggestion.documentId }),
+    queryFn: () => base44.entities.Suggestion.filter({ documentId: suggestion.documentId, status: 'accepted' }),
     enabled: !!suggestion?.documentId,
     initialData: [],
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
+    staleTime: 60000, // Cache for 1 minute - accepted suggestions don't change often
   });
 
   const { data: document } = useQuery({
@@ -184,16 +183,25 @@ export default function SuggestionDetail() {
     enabled: !!suggestion?.sectionId && suggestion?.type === 'edit_section',
   });
 
-  const { data: users } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => base44.entities.User.list(),
-    initialData: [],
-  });
-
   const { data: publicProfiles } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
     initialData: [],
+    staleTime: 300000, // Cache for 5 minutes
+  });
+
+  const { data: users } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      try {
+        return await base44.entities.User.list();
+      } catch {
+        return [];
+      }
+    },
+    initialData: [],
+    retry: false,
+    staleTime: 300000, // Cache for 5 minutes
   });
 
   const { data: topics } = useQuery({
@@ -267,14 +275,10 @@ export default function SuggestionDetail() {
       if (!user) throw new Error(t('mustBeLoggedInToVote'));
       if (!suggestion) throw new Error('Suggestion not found');
 
-      // שלב 1: קריאת המצב העדכני מהשרת
-      const [freshVotes, freshSuggestions] = await Promise.all([
-        base44.entities.Vote.filter({ suggestionId, userId: user.id }),
-        base44.entities.Suggestion.filter({ id: suggestionId })
-      ]);
-      
-      const serverVote = freshVotes[0];
-      const freshSuggestion = freshSuggestions[0];
+      // שלב 1: קריאת המצב העדכני מהשרת (רק אם צריך)
+      const freshVote = userVote; // Use cached vote - no need to refetch
+      const freshSuggestion = suggestion; // Use cached suggestion - no need to refetch
+      const serverVote = freshVote;
       
       if (!freshSuggestion) {
         throw new Error('Suggestion not found');
@@ -304,37 +308,15 @@ export default function SuggestionDetail() {
           pointsAction = 'change';
         }
       } else {
-        // בדיקה כפולה לפני יצירת הצבעה חדשה
-        const doubleCheck = await base44.entities.Vote.filter({ suggestionId, userId: user.id });
-        if (doubleCheck.length > 0) {
-          const existingVote = doubleCheck[0];
-          if (existingVote.vote !== vote) {
-            await base44.entities.Vote.update(existingVote.id, { vote });
-            if (vote === 'pro') {
-              newProVotes += 1;
-              newConVotes = Math.max(0, newConVotes - 1);
-            } else {
-              newConVotes += 1;
-              newProVotes = Math.max(0, newProVotes - 1);
-            }
-            pointsAction = 'change';
-          } else {
-            await base44.entities.Vote.delete(existingVote.id);
-            if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
-            else newConVotes = Math.max(0, newConVotes - 1);
-            pointsAction = 'cancel';
-          }
-        } else {
-          // באמת הצבעה חדשה
-          await base44.entities.Vote.create({
-            suggestionId,
-            userId: user.id,
-            vote
-          });
-          if (vote === 'pro') newProVotes += 1;
-          else newConVotes += 1;
-          pointsAction = 'new';
-        }
+        // הצבעה חדשה
+        await base44.entities.Vote.create({
+          suggestionId,
+          userId: user.id,
+          vote
+        });
+        if (vote === 'pro') newProVotes += 1;
+        else newConVotes += 1;
+        pointsAction = 'new';
       }
       
       // עדכון ההצעה
