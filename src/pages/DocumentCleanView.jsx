@@ -302,7 +302,7 @@ export default function DocumentCleanView() {
 
   // גלילה אוטומטית לסעיף שהשתנה או נוצר
   React.useEffect(() => {
-    if (currentVersionIndex > 0 && currentSnapshot) {
+    if (currentVersionIndex > 0 && currentSnapshot && typeof window !== 'undefined') {
       const scrollTimer = setTimeout(() => {
         let targetSectionId = null;
 
@@ -315,14 +315,16 @@ export default function DocumentCleanView() {
           targetSectionId = currentSnapshot.changedSectionId;
         }
 
-        if (targetSectionId) {
-          const changeElement = document.getElementById(`change-${targetSectionId}`);
+        if (targetSectionId && typeof window.document?.getElementById === 'function') {
+          const changeElement = window.document.getElementById(`change-${targetSectionId}`);
           if (changeElement) {
             changeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             changeElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
             
             const highlightTimer = setTimeout(() => {
-              changeElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
+              if (changeElement) {
+                changeElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
+              }
             }, 2000);
             
             return () => clearTimeout(highlightTimer);
