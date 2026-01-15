@@ -171,8 +171,7 @@ export default function SuggestionDetail() {
   });
 
   const totalCommentsCount = React.useMemo(() => {
-    return comments.filter(c => !c.parentCommentId).length + 
-           sectionComments.filter(c => !c.parentCommentId).length;
+    return comments.length + sectionComments.length;
   }, [comments, sectionComments]);
 
   const { data: sectionVersions } = useQuery({
