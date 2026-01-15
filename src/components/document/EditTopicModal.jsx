@@ -12,6 +12,7 @@ import { AlertCircle, Sparkles } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import PointsCostConfirmDialog from "../PointsCostConfirmDialog";
 import InsufficientPointsDialog from "../InsufficientPointsDialog";
+import { createDocumentEvent } from "./createDocumentEvent";
 
 export default function EditTopicModal({ isOpen, onClose, topic, document, user, isAdmin }) {
   const { t, isRTL } = useLanguage();
@@ -40,6 +41,23 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
     mutationFn: async () => {
       await base44.entities.Topic.update(topic.id, {
         title: newTitle.trim()
+      });
+      
+      // Create document event
+      await createDocumentEvent({
+        documentId: document.id,
+        eventType: 'topic_updated',
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.full_name || user.email,
+        relatedEntityId: topic.id,
+        relatedEntityType: 'topic',
+        summary: `${user.full_name || user.email} עדכן/ה את כותרת הנושא: "${topic.title}" ← "${newTitle.trim()}"`,
+        details: {
+          oldTitle: topic.title,
+          newTitle: newTitle.trim(),
+          directEdit: true
+        }
       });
     },
     onSuccess: () => {
@@ -103,6 +121,29 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
             });
           } catch (err) {
             console.error('[EDIT TOPIC] Error sending notifications:', err);
+          }
+        })(),
+        (async () => {
+          try {
+            const { createDocumentEvent } = await import('./createDocumentEvent');
+            await createDocumentEvent({
+              documentId: document.id,
+              eventType: 'suggestion_created',
+              userId: user.id,
+              userEmail: user.email,
+              userName: user.full_name || user.email,
+              relatedEntityId: suggestion.id,
+              relatedEntityType: 'suggestion',
+              summary: `${user.full_name || user.email} הציע/ה לשנות את כותרת הנושא: "${topic.title}" ← "${newTitle.trim()}"`,
+              details: {
+                suggestionType: 'topic_edit',
+                oldTitle: topic.title,
+                newTitle: newTitle.trim(),
+                topicId: topic.id
+              }
+            });
+          } catch (err) {
+            console.error('[EDIT TOPIC] Error creating document event:', err);
           }
         })()
       ]).catch(() => {});
