@@ -234,48 +234,112 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     console.log('[CONSENSUS METER SKIP] Not updating consensus meter for new_section type');
   }
   
-  // עדכון threshold לכל ההצעות הממתינות - ברקע ללא המתנה
-  console.log('[THRESHOLD UPDATE] Starting threshold update (background)');
+  // עדכון threshold לכל ההצעות הממתינות - במקביל
+  console.log('[THRESHOLD UPDATE] Starting threshold update');
+  console.log('[THRESHOLD UPDATE] New threshold:', newThreshold);
+  console.log('[THRESHOLD UPDATE] Document ID:', document.id);
+  console.log('[THRESHOLD UPDATE] Accepted suggestion type:', freshSuggestion.type);
+  console.log('[THRESHOLD UPDATE] Accepted suggestion sectionId:', freshSuggestion.sectionId);
   
-  // ריצה ברקע ללא חסימה של התהליך העיקרי
-  (async () => {
-    try {
-      const pendingSuggestions = await base44.entities.Suggestion.filter({
-        documentId: document.id,
-        status: 'pending'
+  const pendingSuggestions = await base44.entities.Suggestion.filter({
+    documentId: document.id,
+    status: 'pending'
+  });
+  
+  console.log('[THRESHOLD UPDATE] Found pending suggestions:', pendingSuggestions.length);
+  console.log('[THRESHOLD UPDATE] Pending suggestions:', pendingSuggestions.map(s => ({
+    id: s.id,
+    type: s.type,
+    sectionId: s.sectionId,
+    title: s.title,
+    proVotes: s.proVotes,
+    conVotes: s.conVotes,
+    originalContentPreview: s.originalContent?.substring(0, 50)
+  })));
+  
+  // עדכון במקביל - threshold וגם originalContent להצעות לאותו סעיף
+  if (freshSuggestion.type === 'edit_section' && freshSuggestion.sectionId) {
+    console.log('[THRESHOLD UPDATE] This is an edit_section suggestion, checking for other suggestions to same section');
+    
+    // מצא הצעות אחרות לאותו סעיף
+    const otherSuggestionsToSameSection = pendingSuggestions.filter(
+      pendingSugg => 
+        pendingSugg.id !== suggestion.id && 
+        pendingSugg.type === 'edit_section' && 
+        pendingSugg.sectionId === freshSuggestion.sectionId
+    );
+    
+    console.log('[THRESHOLD UPDATE] Found other suggestions to same section:', otherSuggestionsToSameSection.length);
+    otherSuggestionsToSameSection.forEach(s => {
+      console.log('[THRESHOLD UPDATE] - Suggestion BEFORE reset:', {
+        id: s.id,
+        title: s.title,
+        proVotes: s.proVotes,
+        conVotes: s.conVotes,
+        delta: (s.proVotes || 0) - (s.conVotes || 0),
+        currentThreshold: s.threshold,
+        newThreshold: newThreshold,
+        oldOriginalContentPreview: s.originalContent?.substring(0, 80),
+        newOriginalContentPreview: freshSuggestion.newContent?.substring(0, 80)
       });
-      
-      console.log('[THRESHOLD UPDATE] Found pending suggestions:', pendingSuggestions.length);
-      
-      // עדכון במקביל מהיר ללא לוג מיותר
-      if (freshSuggestion.type === 'edit_section' && freshSuggestion.sectionId) {
-        await Promise.all(
-          pendingSuggestions
-            .filter(pendingSugg => pendingSugg.id !== suggestion.id)
-            .map(pendingSugg => {
-              if (pendingSugg.type === 'edit_section' && pendingSugg.sectionId === freshSuggestion.sectionId) {
-                return base44.entities.Suggestion.update(pendingSugg.id, { 
-                  threshold: newThreshold,
-                  originalContent: freshSuggestion.newContent
-                });
-              }
-              return base44.entities.Suggestion.update(pendingSugg.id, { threshold: newThreshold });
-            })
-        );
-      } else {
-        await Promise.all(
-          pendingSuggestions
-            .filter(pendingSugg => pendingSugg.id !== suggestion.id)
-            .map(pendingSugg => 
-              base44.entities.Suggestion.update(pendingSugg.id, { threshold: newThreshold })
-            )
-        );
-      }
-      console.log('[THRESHOLD UPDATE] Finished updating all suggestions');
-    } catch (err) {
-      console.error('[THRESHOLD UPDATE ERROR]', err);
-    }
-  })();
+    });
+    
+    // עדכן הצעות
+    await Promise.all(
+      pendingSuggestions
+        .filter(pendingSugg => pendingSugg.id !== suggestion.id)
+        .map(pendingSugg => {
+          // אם זו הצעה לאותו סעיף, עדכן originalContent ו-threshold (אבל לא מאפסים הצבעות)
+          if (pendingSugg.type === 'edit_section' && pendingSugg.sectionId === freshSuggestion.sectionId) {
+            console.log('[THRESHOLD UPDATE] 🔄 Updating suggestion', pendingSugg.id, 'because section content changed');
+            console.log('[THRESHOLD UPDATE] - Keeping existing votes:', pendingSugg.proVotes, 'pro /', pendingSugg.conVotes, 'con');
+            return base44.entities.Suggestion.update(pendingSugg.id, { 
+              threshold: newThreshold,
+              originalContent: freshSuggestion.newContent // התוכן החדש של הסעיף
+            });
+          }
+          // אחרת, רק עדכן את ה-threshold
+          console.log('[THRESHOLD UPDATE] Updating suggestion', pendingSugg.id, 'with new threshold only');
+          return base44.entities.Suggestion.update(pendingSugg.id, { threshold: newThreshold });
+        })
+    );
+    
+    console.log('[THRESHOLD UPDATE] Finished updating all suggestions');
+    
+    // אחרי העדכון, בדוק מה המצב של ההצעות האחרות
+    const updatedSuggestions = await base44.entities.Suggestion.filter({
+      documentId: document.id,
+      status: 'pending'
+    });
+    
+    console.log('[THRESHOLD UPDATE] After update - pending suggestions status:');
+    updatedSuggestions
+      .filter(s => s.type === 'edit_section' && s.sectionId === freshSuggestion.sectionId)
+      .forEach(s => {
+        const delta = (s.proVotes || 0) - (s.conVotes || 0);
+        console.log('[THRESHOLD UPDATE] - Suggestion AFTER reset:', {
+          id: s.id,
+          title: s.title,
+          proVotes: s.proVotes,
+          conVotes: s.conVotes,
+          delta: delta,
+          threshold: s.threshold,
+          wouldAutoAcceptWithOneVote: delta >= (s.threshold || newThreshold),
+          originalContentPreview: s.originalContent?.substring(0, 80)
+        });
+      });
+  } else {
+    console.log('[THRESHOLD UPDATE] Not an edit_section or no sectionId, updating threshold only for all');
+    // אם זו לא הצעת עריכה, רק עדכן threshold
+    await Promise.all(
+      pendingSuggestions
+        .filter(pendingSugg => pendingSugg.id !== suggestion.id)
+        .map(pendingSugg => 
+          base44.entities.Suggestion.update(pendingSugg.id, { threshold: newThreshold })
+        )
+    );
+    console.log('[THRESHOLD UPDATE] Finished updating all suggestions');
+  }
   
   try {
     console.log('[AUTO-ACCEPT] Starting section creation/update...');
@@ -519,26 +583,43 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
        console.log('[AUTO-ACCEPT NEW_SECTION] Created version 1 for new section');
      }
     
-    // עדכון סטטוס ההצעה - CRITICAL PATH
-    console.log('[AUTO-ACCEPT] Updating suggestion status to accepted');
+    // עדכון סטטוס ההצעה רק אחרי שהסעיף נוצר בהצלחה
+    console.log('[AUTO-ACCEPT] Section created successfully, updating suggestion status to accepted');
     await base44.entities.Suggestion.update(suggestion.id, { 
       status: 'accepted',
       suggestionConsensus: consensus,
       participantsAtAcceptance: participantsAtAcceptance
     });
     
-    // התראות ונקודות ברקע - NO BLOCKING
+    // שליחת התראה ונקודות - בדיקה שיש created_by
     if (freshSuggestion.created_by) {
-      // נוטיפיקציות + נקודות במקביל ללא המתנה
-      Promise.all([
-        notifySuggestionStatusChange({ suggestion: freshSuggestion, newStatus: 'accepted' }),
-        document?.gamificationEnabled 
-          ? base44.functions.invoke('awardSuggestionPoints', {
-              suggestionId: freshSuggestion.id,
-              action: 'suggestion_accepted'
-            }).catch(err => console.error('[POINTS ERROR]', err))
-          : Promise.resolve()
-      ]).catch(err => console.error('[BACKGROUND TASKS ERROR]', err));
+      console.log('[AUTO ACCEPT] Sending notification for suggestion:', freshSuggestion.id, 'created_by:', freshSuggestion.created_by);
+      // Run in background - don't block main flow
+      notifySuggestionStatusChange({ suggestion: freshSuggestion, newStatus: 'accepted' })
+        .then(() => console.log('[AUTO ACCEPT] Notification sent successfully'))
+        .catch(notifError => {
+          console.error('[AUTO ACCEPT NOTIFICATION ERROR]', notifError);
+          console.error('[AUTO ACCEPT NOTIFICATION ERROR] Message:', notifError.message);
+          console.error('[AUTO ACCEPT NOTIFICATION ERROR] Stack:', notifError.stack);
+        });
+    } else {
+      console.warn('[AUTO ACCEPT] No created_by for suggestion:', freshSuggestion.id, '- skipping notification');
+    }
+    
+    // Award 200 points to suggestion creator when accepted (only if gamification enabled)
+    const gamificationEnabled = document?.gamificationEnabled || false;
+    if (gamificationEnabled && freshSuggestion.created_by) {
+      console.log('[POINTS] 🎯 Attempting to award 200 points to suggestion creator:', freshSuggestion.created_by);
+      try {
+        const response = await base44.functions.invoke('awardSuggestionPoints', {
+          suggestionId: freshSuggestion.id,
+          action: 'suggestion_accepted'
+        });
+        console.log('[POINTS] ✅ Points awarded successfully:', response.data);
+      } catch (pointsError) {
+        console.error('[POINTS DEBUG] ❌ Error awarding points:', pointsError);
+        console.error('[POINTS DEBUG] Error details:', pointsError.message);
+      }
     }
     
     return true;
