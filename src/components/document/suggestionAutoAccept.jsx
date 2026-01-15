@@ -1,5 +1,6 @@
 import { base44 } from "@/api/base44Client";
 import { notifySuggestionStatusChange } from "../notifications/createNotification";
+import { createDocumentEvent } from "./createDocumentEvent";
 import { calculateContributorsFromData } from "./calculateContributors";
 
 const detectLanguage = (text) => {

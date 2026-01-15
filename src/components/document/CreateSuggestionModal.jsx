@@ -23,6 +23,7 @@ import { createPageUrl } from "@/utils";
 import InsufficientPointsDialog from "../InsufficientPointsDialog";
 import PointsCostConfirmDialog from "../PointsCostConfirmDialog";
 import { ensureUserPublicProfile } from "../ensureUserPublicProfile";
+import { createDocumentEvent } from "./createDocumentEvent";
 import InlineDiff from "./InlineDiff";
 
 const detectLanguage = (text) => {

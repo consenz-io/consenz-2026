@@ -286,6 +286,7 @@ const CommentItem = memo(({
 const runBackgroundTasks = async (comment, entityType, entityId, parentComment, currentUser) => {
   try {
     const { notifyNewComment } = await import("../notifications/createNotificationSimple");
+  const { createDocumentEvent } = await import("./createDocumentEvent");
     const { calculateDocumentContributors } = await import('./calculateContributors');
     
     let docId;
