@@ -221,24 +221,30 @@ export default function SuggestionSidebar({
         else newConVotes += 1;
       }
 
+      // עדכון ספירת הצבעות בלבד - FAST
       const updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, {
         proVotes: newProVotes,
         conVotes: newConVotes
       });
 
-      // עדכון מספר המשתתפים ברקע - לא חוסם
+      // בדיקת קונצנזוס + AUTO ACCEPT במקביל לעדכון רקע - NO BLOCKING
+      const consensusPromise = checkSuggestionConsensus(updatedSuggestion, doc);
+      
+      // עדכון מספר המשתתפים ברקע - לא חוסם כלל
       import('./calculateContributors').then(({ calculateDocumentContributors }) => {
         calculateDocumentContributors(suggestion.documentId).then(count => {
           base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count });
         });
       }).catch(() => {});
 
-      const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, doc);
+      // רק עכשיו נחכה לתוצאת הקונצנזוס
+      const { shouldAccept } = await consensusPromise;
+      
       if (shouldAccept && suggestion.status === 'pending') {
-        const accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, doc);
-        if (accepted) {
-          return { accepted: true };
-        }
+        // AUTO ACCEPT מיידי ללא המתנה - רענון יבוא מהשרת
+        autoAcceptSuggestion(updatedSuggestion, user.id, doc)
+          .catch(err => console.error('[AUTO ACCEPT ERROR]', err));
+        return { accepted: true };
       }
       return { accepted: false };
     },
@@ -307,18 +313,23 @@ export default function SuggestionSidebar({
     },
     onSuccess: (data) => {
       const doc = document || parentDocument;
-      // תמיד רענן את ההצעה כדי לקבל את הסטטוס האמיתי מהשרת
-      queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
-      queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
       
       if (data?.accepted) {
-        // רענון כל הנתונים הרלוונטיים כשההצעה התקבלה
-        queryClient.invalidateQueries({ queryKey: ['sections', doc?.id] });
-        queryClient.invalidateQueries({ queryKey: ['suggestions', doc?.id] });
-        queryClient.invalidateQueries({ queryKey: ['allDocumentSuggestions', doc?.id] });
-        queryClient.invalidateQueries({ queryKey: ['allVersions'] });
-        queryClient.invalidateQueries({ queryKey: ['document', doc?.id] });
-        queryClient.invalidateQueries({ queryKey: ['publicDocuments'] });
+        // רענון אגרסיבי ומיידי של כל הנתונים כשההצעה מתקבלת
+        Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] }),
+          queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] }),
+          queryClient.invalidateQueries({ queryKey: ['sections', doc?.id] }),
+          queryClient.invalidateQueries({ queryKey: ['suggestions', doc?.id] }),
+          queryClient.invalidateQueries({ queryKey: ['allDocumentSuggestions', doc?.id] }),
+          queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
+          queryClient.invalidateQueries({ queryKey: ['document', doc?.id] }),
+          queryClient.invalidateQueries({ queryKey: ['publicDocuments'] })
+        ]);
+      } else {
+        // רק רענון הכרחי אם לא התקבלה
+        queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
+        queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
       }
     },
   });
