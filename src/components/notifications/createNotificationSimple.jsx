@@ -214,10 +214,10 @@ export async function notifySuggestionAccepted({ suggestion, document: doc }) {
 }
 
 /**
- * RULE 3: New comment on suggestion or section
+ * RULE 3: New comment on suggestion, section, or document
  * Send to: Entity creator + all previous commenters + parent comment author + siblings (if reply)
  */
-export async function notifyNewComment({ comment, targetEntity, targetEntityType, currentUser, parentComment = null, document = null }) {
+export async function notifyNewComment({ comment, targetEntity, targetEntityType, currentUser, parentComment = null, documentId = null, documentTitle = null }) {
   console.log('[notifyNewComment] START - comment:', comment?.id, 'entity:', targetEntity?.id, 'type:', targetEntityType);
   
   if (!comment?.id || !targetEntity?.id || !targetEntityType || !currentUser?.id) {
@@ -260,6 +260,13 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
       }
     } else if (targetEntityType === 'section' && targetEntity.lastEditedBy && targetEntity.lastEditedBy !== currentUser.id) {
       notifyUserIds.add(targetEntity.lastEditedBy);
+    } else if (targetEntityType === 'document' && targetEntity.created_by) {
+      const creatorProfiles = await base44.entities.UserPublicProfile.filter({ 
+        email: targetEntity.created_by 
+      });
+      if (creatorProfiles[0]?.userId && creatorProfiles[0].userId !== currentUser.id) {
+        notifyUserIds.add(creatorProfiles[0].userId);
+      }
     }
 
     // Previous commenters on this entity
@@ -290,14 +297,16 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
         userId,
         type: 'new_comment',
         title: translate('newComment', 'he'),
-        message: `${creatorName} הגיב/ה על ${targetEntityType === 'suggestion' ? 'הצעה' : 'סעיף'}`,
+        message: `${creatorName} הגיב/ה על ${targetEntityType === 'suggestion' ? 'הצעה' : targetEntityType === 'section' ? 'סעיף' : 'מסמך'}`,
         relatedEntityId: targetEntity.id,
         relatedEntityType: targetEntityType,
         actionUrl: targetEntityType === 'suggestion'
-          ? `${createPageUrl("SuggestionDetail")}?id=${targetEntity.id}`
-          : `${createPageUrl("SectionHistory")}?id=${targetEntity.id}`,
-        documentId: document?.id,
-        documentTitle: document?.title
+          ? `${createPageUrl("SuggestionDetail")}?id=${targetEntity.id}#comment-${comment.id}`
+          : targetEntityType === 'section'
+          ? `${createPageUrl("SectionHistory")}?id=${targetEntity.id}#comment-${comment.id}`
+          : `${createPageUrl("DocumentView")}?id=${targetEntity.id}#comment-${comment.id}`,
+        documentId: documentId || targetEntity.documentId,
+        documentTitle: documentTitle || targetEntity.title
       })
     );
     

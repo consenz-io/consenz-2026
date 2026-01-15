@@ -285,7 +285,7 @@ const CommentItem = memo(({
 // Background tasks - fire and forget
 const runBackgroundTasks = async (comment, entityType, entityId, parentComment, currentUser) => {
   try {
-    const { notifyNewComment, notifyNewDocumentComment } = await import("../notifications/createNotification");
+    const { notifyNewComment } = await import("../notifications/createNotificationSimple");
     const { calculateDocumentContributors } = await import('./calculateContributors');
     
     let docId;
@@ -328,11 +328,15 @@ const runBackgroundTasks = async (comment, entityType, entityId, parentComment, 
       if (docs.length > 0) {
         docId = entityId;
         documentTitle = docs[0]?.title;
-        notifyNewDocumentComment({ 
+        // For document comments, use the same notifyNewComment with document as targetEntity
+        notifyNewComment({ 
           comment, 
-          document: docs[0], 
+          targetEntity: docs[0],
+          targetEntityType: 'document',
           parentComment,
-          currentUser
+          currentUser,
+          documentId: docId,
+          documentTitle
         });
       }
     }
