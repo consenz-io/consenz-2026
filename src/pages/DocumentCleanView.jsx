@@ -303,50 +303,36 @@ export default function DocumentCleanView() {
   // גלילה אוטומטית לסעיף שהשתנה או נוצר
   React.useEffect(() => {
     if (currentVersionIndex > 0 && currentSnapshot) {
-      setTimeout(() => {
-        // Find the first section that has visible changes compared to older version
+      const scrollTimer = setTimeout(() => {
         let targetSectionId = null;
-        
-        // Priority 1: New section created in this version
-        if (currentSnapshot.isNewSection && currentSnapshot.newSectionId) {
+
+        // Priority: deleted > new > edited
+        if (currentSnapshot.isDeleted && currentSnapshot.deletedSectionId) {
+          targetSectionId = currentSnapshot.deletedSectionId;
+        } else if (currentSnapshot.isNewSection && currentSnapshot.newSectionId) {
           targetSectionId = currentSnapshot.newSectionId;
-        } 
-        // Priority 2: Section with direct changes in this version
-        else if (currentSnapshot.changedSectionId) {
+        } else if (currentSnapshot.changedSectionId) {
           targetSectionId = currentSnapshot.changedSectionId;
         }
-        // Priority 3: Find first section with content differences compared to older version
-        else if (olderSnapshot) {
-          for (const section of sections) {
-            const currentContent = currentSnapshot?.sectionContents?.[section.id];
-            const olderContent = olderSnapshot?.sectionContents?.[section.id];
-            if (currentContent && olderContent && currentContent !== olderContent) {
-              targetSectionId = section.id;
-              break;
-            }
-          }
-        }
 
-        if (targetSectionId && typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
-          // Always scroll to the change element (where diff is displayed)
+        if (targetSectionId) {
           const changeElement = document.getElementById(`change-${targetSectionId}`);
           if (changeElement) {
             changeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             changeElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
-            setTimeout(() => {
+            
+            const highlightTimer = setTimeout(() => {
               changeElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
             }, 2000);
-          } else {
-            // Fallback to section container
-            const sectionElement = document.getElementById(`section-${targetSectionId}`);
-            if (sectionElement) {
-              sectionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+            
+            return () => clearTimeout(highlightTimer);
           }
         }
       }, 150);
+
+      return () => clearTimeout(scrollTimer);
     }
-  }, [currentVersionIndex, currentSnapshot, olderSnapshot, sections]);
+  }, [currentVersionIndex, currentSnapshot]);
 
   if (docLoading || topicsLoading || sectionsLoading || versionsLoading) {
     return (
