@@ -26,15 +26,27 @@ export async function checkSuggestionConsensus(suggestion, document) {
   const proVotes = suggestion.proVotes || 0;
   const conVotes = suggestion.conVotes || 0;
   
-  // חישוב דינמי של מספר המשתתפים
-  const [suggestions, allVotes, publicProfiles, allArguments, allComments, sections] = await Promise.all([
+  // חישוב דינמי של מספר המשתתפים - רק שאילתות לפי מסמך
+  const [suggestions, documentVotes, publicProfiles, documentArguments, documentComments, sections] = await Promise.all([
     base44.entities.Suggestion.filter({ documentId: document.id }),
-    base44.entities.Vote.list(),
+    base44.asServiceRole.entities.Vote.list(),
     base44.entities.UserPublicProfile.list(),
-    base44.entities.Argument.list(),
-    base44.entities.Comment.list(),
+    base44.asServiceRole.entities.Argument.list(),
+    base44.asServiceRole.entities.Comment.list(),
     base44.entities.Section.filter({ documentId: document.id })
   ]);
+  
+  // סינון לפי מסמך - רק הצבעות/טיעונים/תגובות שקשורות למסמך הזה
+  const suggestionIds = suggestions.map(s => s.id);
+  const sectionIds = sections.map(s => s.id);
+  
+  const allVotes = documentVotes.filter(v => suggestionIds.includes(v.suggestionId));
+  const allArguments = documentArguments.filter(a => suggestionIds.includes(a.suggestionId));
+  const allComments = documentComments.filter(c => 
+    (c.rootEntityType === 'suggestion' && suggestionIds.includes(c.rootEntityId)) ||
+    (c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)) ||
+    (c.rootEntityType === 'document' && c.rootEntityId === document.id)
+  );
   
   const totalUsers = calculateContributorsFromData({
     document,
@@ -627,15 +639,27 @@ export async function checkTopicEditConsensus(suggestion, document) {
   const proVotes = suggestion.proVotes || 0;
   const conVotes = suggestion.conVotes || 0;
   
-  // חישוב דינמי של מספר המשתתפים
-  const [suggestions, allVotes, publicProfiles, allArguments, allComments, sections] = await Promise.all([
+  // חישוב דינמי של מספר המשתתפים - רק שאילתות לפי מסמך
+  const [suggestions, documentVotes, publicProfiles, documentArguments, documentComments, sections] = await Promise.all([
     base44.entities.Suggestion.filter({ documentId: document.id }),
-    base44.entities.Vote.list(),
+    base44.asServiceRole.entities.Vote.list(),
     base44.entities.UserPublicProfile.list(),
-    base44.entities.Argument.list(),
-    base44.entities.Comment.list(),
+    base44.asServiceRole.entities.Argument.list(),
+    base44.asServiceRole.entities.Comment.list(),
     base44.entities.Section.filter({ documentId: document.id })
   ]);
+  
+  // סינון לפי מסמך
+  const suggestionIds = suggestions.map(s => s.id);
+  const sectionIds = sections.map(s => s.id);
+  
+  const allVotes = documentVotes.filter(v => suggestionIds.includes(v.suggestionId));
+  const allArguments = documentArguments.filter(a => suggestionIds.includes(a.suggestionId));
+  const allComments = documentComments.filter(c => 
+    (c.rootEntityType === 'suggestion' && suggestionIds.includes(c.rootEntityId)) ||
+    (c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)) ||
+    (c.rootEntityType === 'document' && c.rootEntityId === document.id)
+  );
   
   const totalUsers = calculateContributorsFromData({
     document,
