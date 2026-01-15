@@ -603,6 +603,31 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
           console.error('[AUTO ACCEPT NOTIFICATION ERROR] Message:', notifError.message);
           console.error('[AUTO ACCEPT NOTIFICATION ERROR] Stack:', notifError.stack);
         });
+      
+      // Create document event
+      try {
+        const userProfiles = await base44.entities.UserPublicProfile.filter({ email: freshSuggestion.created_by });
+        const profile = userProfiles[0];
+        if (profile) {
+          await createDocumentEvent({
+            documentId: freshSuggestion.documentId,
+            eventType: 'suggestion_accepted',
+            userId: profile.userId,
+            userEmail: profile.email,
+            userName: profile.fullName,
+            relatedEntityId: freshSuggestion.id,
+            relatedEntityType: 'suggestion',
+            summary: `ההצעה "${freshSuggestion.title}" התקבלה אוטומטית`,
+            details: {
+              suggestionTitle: freshSuggestion.title,
+              suggestionType: freshSuggestion.type,
+              autoAccepted: true
+            }
+          });
+        }
+      } catch (err) {
+        console.error('[AUTO ACCEPT] Failed to create document event:', err);
+      }
     } else {
       console.warn('[AUTO ACCEPT] No created_by for suggestion:', freshSuggestion.id, '- skipping notification');
     }
