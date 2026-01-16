@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle, ChevronLeft, ChevronRight, MoreVertical, Bell, BellOff, Clock } from "lucide-react";
+import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle, ChevronLeft, ChevronRight, MoreVertical, Bell, BellOff } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/components/LanguageContext";
@@ -25,7 +25,6 @@ import TranslateAllButton from "../components/document/TranslateAllButton";
 import DocumentAgreementModal from "../components/document/DocumentAgreementModal";
 import SignersListModal from "../components/document/SignersListModal";
 import FollowDocumentButton from "../components/document/FollowDocumentButton";
-import DocumentActivityLog from "../components/document/DocumentActivityLog";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -63,7 +62,6 @@ export default function DocumentView() {
   const [showSuggestionNav, setShowSuggestionNav] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const [showActivityLog, setShowActivityLog] = useState(false);
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
@@ -651,11 +649,6 @@ export default function DocumentView() {
                 
                 <DropdownMenuSeparator />
                 
-                <DropdownMenuItem onSelect={() => setShowActivityLog(true)}>
-                  <Clock className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {language === 'he' ? 'יומן אירועים' : language === 'ar' ? 'سجل الأحداث' : 'Activity Log'}
-                </DropdownMenuItem>
-                
                 <DropdownMenuItem asChild>
                   <Link to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`} className="flex items-center">
                     <FileText className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
@@ -1021,12 +1014,6 @@ export default function DocumentView() {
         }}
         onRemoveSignature={() => removeSignatureMutation.mutate()}
         isRemoving={removeSignatureMutation.isPending}
-      />
-
-      <DocumentActivityLog
-        documentId={documentId}
-        isOpen={showActivityLog}
-        onClose={() => setShowActivityLog(false)}
       />
 
       {/* Floating navigation for suggestions */}

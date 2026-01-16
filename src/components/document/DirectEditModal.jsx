@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { useLanguage } from "@/components/LanguageContext";
-import { createDocumentEvent } from "./createDocumentEvent";
 
 export default function DirectEditModal({ section, onClose }) {
   const { t } = useLanguage();
@@ -53,22 +52,6 @@ export default function DirectEditModal({ section, onClose }) {
         version: maxVersion + 2,
         changeType: "direct_edit",
         changeDescription: changeDescription || "עריכה ישירה של אדמין"
-      });
-      
-      // Create document event
-      await createDocumentEvent({
-        documentId: section.documentId,
-        eventType: 'section_updated',
-        userId: user.id,
-        userEmail: user.email,
-        userName: user.full_name || user.email,
-        relatedEntityId: section.id,
-        relatedEntityType: 'section',
-        summary: `${user.full_name || user.email} ערך/ה סעיף ישירות${changeDescription ? ': ' + changeDescription : ''}`,
-        details: {
-          changeDescription: changeDescription || 'עריכה ישירה של אדמין',
-          sectionId: section.id
-        }
       });
     },
     onSuccess: () => {

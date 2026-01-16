@@ -286,7 +286,6 @@ const CommentItem = memo(({
 const runBackgroundTasks = async (comment, entityType, entityId, parentComment, currentUser) => {
   try {
     const { notifyNewComment } = await import("../notifications/createNotificationSimple");
-    const { createDocumentEvent } = await import("./createDocumentEvent");
     const { calculateDocumentContributors } = await import('./calculateContributors');
     
     let docId;
@@ -345,26 +344,6 @@ const runBackgroundTasks = async (comment, entityType, entityId, parentComment, 
     if (docId) {
       const count = await calculateDocumentContributors(docId);
       await base44.entities.Document.update(docId, { totalUsersInteracted: count });
-      
-      // Create document event
-      const commentPreview = comment.content.replace(/<[^>]*>/g, '').substring(0, 50);
-      const entityTypeText = entityType === 'suggestion' ? 'הצעה' : entityType === 'section' ? 'סעיף' : 'מסמך';
-      await createDocumentEvent({
-        documentId: docId,
-        eventType: 'comment_created',
-        userId: currentUser.id,
-        userEmail: currentUser.email,
-        userName: currentUser.full_name || currentUser.email,
-        relatedEntityId: comment.id,
-        relatedEntityType: 'comment',
-        summary: `${currentUser.full_name || currentUser.email} הגיב/ה על ${entityTypeText}${commentPreview ? ': "' + commentPreview + '..."' : ''}`,
-        details: {
-          commentContent: commentPreview,
-          entityType,
-          entityId,
-          isReply: !!parentComment
-        }
-      });
     }
   } catch (err) {
     console.error('[BACKGROUND TASKS ERROR]', err);

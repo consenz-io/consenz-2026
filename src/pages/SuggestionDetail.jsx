@@ -20,7 +20,6 @@ import TranslatableContent from "../components/document/TranslatableContent";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "../components/document/suggestionAutoAccept";
 import { useLanguage } from "@/components/LanguageContext";
 import { notifyVoteOnSuggestion, notifySuggestionStatusChange } from "../components/notifications/createNotification";
-import { createDocumentEvent } from "../components/document/createDocumentEvent";
 import PageHeader from "../components/PageHeader";
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 import { toast } from "sonner";
@@ -598,29 +597,6 @@ export default function SuggestionDetail() {
         await notifySuggestionStatusChange({ suggestion, newStatus: status });
       } catch (notifError) {
         console.error('[STATUS NOTIFICATION ERROR]', notifError);
-      }
-      
-      // Create document event
-      try {
-        await createDocumentEvent({
-          documentId: suggestion.documentId,
-          eventType: status === 'accepted' ? 'suggestion_accepted' : 'suggestion_rejected',
-          userId: user.id,
-          userEmail: user.email,
-          userName: user.full_name || user.email,
-          relatedEntityId: suggestion.id,
-          relatedEntityType: 'suggestion',
-          summary: status === 'accepted' 
-            ? `ההצעה "${suggestion.title}" התקבלה ע"י מנהל`
-            : `ההצעה "${suggestion.title}" נדחתה ע"י מנהל`,
-          details: {
-            suggestionTitle: suggestion.title,
-            suggestionType: suggestion.type,
-            adminAction: true
-          }
-        });
-      } catch (eventError) {
-        console.error('[DOCUMENT EVENT ERROR]', eventError);
       }
     },
     onSuccess: () => {
