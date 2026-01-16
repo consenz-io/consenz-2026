@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { Accessibility, Type, Contrast, Link as LinkIcon, Volume2, RotateCcw } from 'lucide-react';
+import { Type, Contrast, Link as LinkIcon, Volume2, RotateCcw } from 'lucide-react';
 import { useLanguage } from './LanguageContext';
 
-export function AccessibilityToolbar() {
+export function AccessibilityToolbarContent() {
   const { t, isRTL } = useLanguage();
   const [fontSize, setFontSize] = useState(100);
   const [highContrast, setHighContrast] = useState(false);
@@ -92,25 +87,7 @@ export function AccessibilityToolbar() {
 
   return (
     <>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            className="fixed top-20 left-4 z-50 rounded-full h-12 w-12 shadow-lg bg-white hover:bg-gray-100"
-            aria-label={isRTL ? 'סרגל נגישות' : 'Accessibility toolbar'}
-            title={isRTL ? 'סרגל נגישות' : 'Accessibility toolbar'}
-          >
-            <Accessibility className="h-5 w-5" aria-hidden="true" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent 
-          className="w-80" 
-          align="start"
-          role="dialog"
-          aria-label={isRTL ? 'אפשרויות נגישות' : 'Accessibility options'}
-        >
-          <div className="space-y-4">
+      <div className="space-y-4">
             <div className="flex items-center justify-between border-b pb-2">
               <h3 className="font-semibold text-lg">
                 {isRTL ? 'נגישות' : 'Accessibility'}
@@ -212,9 +189,7 @@ export function AccessibilityToolbar() {
                 : 'WCAG 2.1 Level AA Compliant'
               }
             </div>
-          </div>
-        </PopoverContent>
-      </Popover>
+            </div>
 
       <style jsx global>{`
         /* High Contrast Mode */

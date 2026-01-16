@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import FloatingNotificationBell from "@/components/notifications/FloatingNotificationBell";
 import { AccessibilityAnnouncer } from "@/components/AccessibilityAnnouncer";
-import { AccessibilityToolbar } from "@/components/AccessibilityToolbar";
+import { AccessibilityToolbarContent } from "@/components/AccessibilityToolbar";
 
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
@@ -290,8 +290,18 @@ function LayoutContent({ children, currentPageName }) {
               </SidebarGroup>
             )}
 
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
+                {language === 'he' ? 'נגישות' : language === 'ar' ? 'إمكانية الوصول' : 'Accessibility'}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <div className="px-3 py-2">
+                  <AccessibilityToolbarContent />
+                </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-          </SidebarContent>
+            </SidebarContent>
 
           <SidebarFooter className="border-t border-slate-200 p-4">
             {user ? (
@@ -389,7 +399,6 @@ function LayoutContent({ children, currentPageName }) {
               )}
 
               <FloatingNotificationBell />
-              <AccessibilityToolbar />
               <AccessibilityAnnouncer />
               </div>
               </SidebarProvider>
