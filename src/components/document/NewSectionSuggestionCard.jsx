@@ -286,10 +286,10 @@ export default function NewSectionSuggestionCard({
                   currentVote: getUserVote(suggestion.id)
                 });
               }}
-              disabled={voteMutation.isPending}
+              disabled={voteMutation.isPending && voteMutation.variables?.suggestionId === suggestion.id}
               className={`text-xs px-2 md:px-3 ${getUserVote(suggestion.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
             >
-              {voteMutation.isPending ? (
+              {voteMutation.isPending && voteMutation.variables?.suggestionId === suggestion.id ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
@@ -313,10 +313,10 @@ export default function NewSectionSuggestionCard({
                   currentVote: getUserVote(suggestion.id)
                 });
               }}
-              disabled={voteMutation.isPending}
+              disabled={voteMutation.isPending && voteMutation.variables?.suggestionId === suggestion.id}
               className={`text-xs px-2 md:px-3 ${getUserVote(suggestion.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
             >
-              {voteMutation.isPending ? (
+              {voteMutation.isPending && voteMutation.variables?.suggestionId === suggestion.id ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
