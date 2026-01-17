@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, CheckCircle } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, CheckCircle, Loader2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -289,7 +289,11 @@ export default function NewSectionSuggestionCard({
               disabled={voteMutation.isPending}
               className={`text-xs px-2 md:px-3 ${getUserVote(suggestion.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
             >
-              <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              {voteMutation.isPending ? (
+                <Loader2 className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'} animate-spin`} />
+              ) : (
+                <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              )}
               {suggestion.proVotes || 0}
             </Button>
             <Button
@@ -310,7 +314,11 @@ export default function NewSectionSuggestionCard({
               disabled={voteMutation.isPending}
               className={`text-xs px-2 md:px-3 ${getUserVote(suggestion.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
             >
-              <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              {voteMutation.isPending ? (
+                <Loader2 className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'} animate-spin`} />
+              ) : (
+                <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              )}
               {suggestion.conVotes || 0}
             </Button>
           </>
