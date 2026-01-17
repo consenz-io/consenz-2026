@@ -1129,11 +1129,13 @@ export default function SuggestionDetail() {
                     className={`flex-1 md:flex-initial text-xs md:text-sm ${userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
                   >
                     {voteMutation.isPending ? (
-                      <Loader2 className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'} animate-spin`} />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
+                      <>
+                        <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
+                        {t('votePro')}
+                      </>
                     )}
-                    {t('votePro')}
                   </Button>
                   <Button
                     variant={userVote?.vote === 'con' ? 'default' : 'outline'}
@@ -1148,11 +1150,13 @@ export default function SuggestionDetail() {
                     className={`flex-1 md:flex-initial text-xs md:text-sm ${userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
                   >
                     {voteMutation.isPending ? (
-                      <Loader2 className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'} animate-spin`} />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
+                      <>
+                        <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
+                        {t('voteCon')}
+                      </>
                     )}
-                    {t('voteCon')}
                   </Button>
                 </div>
               )}

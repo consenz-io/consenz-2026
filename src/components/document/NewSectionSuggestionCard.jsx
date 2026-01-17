@@ -290,11 +290,13 @@ export default function NewSectionSuggestionCard({
               className={`text-xs px-2 md:px-3 ${getUserVote(suggestion.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
             >
               {voteMutation.isPending ? (
-                <Loader2 className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'} animate-spin`} />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                <>
+                  <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                  {suggestion.proVotes || 0}
+                </>
               )}
-              {suggestion.proVotes || 0}
             </Button>
             <Button
               variant={getUserVote(suggestion.id)?.vote === 'con' ? 'default' : 'outline'}
@@ -315,11 +317,13 @@ export default function NewSectionSuggestionCard({
               className={`text-xs px-2 md:px-3 ${getUserVote(suggestion.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
             >
               {voteMutation.isPending ? (
-                <Loader2 className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'} animate-spin`} />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                <>
+                  <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                  {suggestion.conVotes || 0}
+                </>
               )}
-              {suggestion.conVotes || 0}
             </Button>
           </>
         ) : (
