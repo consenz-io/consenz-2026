@@ -38,8 +38,8 @@ export default function SuggestionDetail() {
   const [editedExplanation, setEditedExplanation] = useState("");
   const [showEditSectionModal, setShowEditSectionModal] = useState(false);
 
-  // Polling interval for live sync (30 seconds to avoid rate limits)
-  const SYNC_INTERVAL = 30000;
+  // Polling interval for live sync (60 seconds to avoid rate limits)
+  const SYNC_INTERVAL = 60000;
 
   const { data: suggestion, isLoading: suggestionLoading, error: suggestionError } = useQuery({
     queryKey: ['suggestion', suggestionId],
@@ -209,14 +209,17 @@ export default function SuggestionDetail() {
     initialData: [],
   });
 
-  // פונקציית עזר לטיפול בנקודות ברקע
+  // פונקציית עזר לטיפול בנקודות ברקע - עם דיליי כדי למנוע rate limit
   const handlePointsInBackground = async (suggestionData, action, vote, currentUserVote) => {
     if (!document?.gamificationEnabled || !suggestionData) return;
-    
+
+    // הוספת דיליי של 500ms כדי למנוע rate limit
+    await new Promise(resolve => setTimeout(resolve, 500));
+
     try {
       let pointsChange = 0;
       let description = '';
-      
+
       if (action === 'cancel' && vote === 'pro') {
         pointsChange = -10;
         description = `ביטול הצבעה בעד על ההצעה: ${suggestionData.title}`;
@@ -232,25 +235,24 @@ export default function SuggestionDetail() {
         pointsChange = 10;
         description = `קיבל הצבעה בעד על ההצעה: ${suggestionData.title}`;
       }
-      
+
       if (pointsChange !== 0) {
         try {
           const allUsers = await base44.asServiceRole.listUsers();
           const suggestionCreator = allUsers.find(u => u.email === suggestionData.created_by);
-          
+
           if (suggestionCreator) {
             const newPoints = Math.max(0, (suggestionCreator.points || 1000) + pointsChange);
-            await Promise.all([
-              base44.asServiceRole.updateUser(suggestionCreator.id, { points: newPoints }),
-              base44.entities.PointsTransaction.create({
-                userId: suggestionCreator.id,
-                amount: pointsChange,
-                action: pointsChange > 0 ? 'vote_received' : 'vote_canceled',
-                description,
-                relatedEntityId: suggestionData.id,
-                relatedEntityType: 'suggestion'
-              })
-            ]);
+            await base44.asServiceRole.updateUser(suggestionCreator.id, { points: newPoints });
+            await new Promise(resolve => setTimeout(resolve, 200));
+            await base44.entities.PointsTransaction.create({
+              userId: suggestionCreator.id,
+              amount: pointsChange,
+              action: pointsChange > 0 ? 'vote_received' : 'vote_canceled',
+              description,
+              relatedEntityId: suggestionData.id,
+              relatedEntityType: 'suggestion'
+            });
           }
         } catch (err) {
           console.error('[POINTS] Error updating vote points:', err);
@@ -344,16 +346,23 @@ export default function SuggestionDetail() {
       
       const updatedSuggestion = { ...freshSuggestion, proVotes: newProVotes, conVotes: newConVotes };
       
-      // טיפול בנקודות ברקע - לא חוסם
-      handlePointsInBackground(updatedSuggestion, pointsAction, vote, serverVote);
-      
-      // התראות ועדכון תורמים ברקע
-      notifyVoteOnSuggestion({ suggestion: updatedSuggestion, voterEmail: user.email }).catch(() => {});
-      import('../components/document/calculateContributors').then(({ calculateDocumentContributors }) => {
-        calculateDocumentContributors(updatedSuggestion.documentId).then(count => {
-          base44.entities.Document.update(updatedSuggestion.documentId, { totalUsersInteracted: count });
-        });
-      }).catch(() => {});
+      // טיפול בנקודות ברקע - עם דיליי למניעת rate limit
+      setTimeout(() => {
+        handlePointsInBackground(updatedSuggestion, pointsAction, vote, serverVote).catch(() => {});
+      }, 1000);
+
+      // התראות ועדכון תורמים ברקע - עם דיליי למניעת rate limit
+      setTimeout(() => {
+        notifyVoteOnSuggestion({ suggestion: updatedSuggestion, voterEmail: user.email }).catch(() => {});
+      }, 1500);
+
+      setTimeout(() => {
+        import('../components/document/calculateContributors').then(({ calculateDocumentContributors }) => {
+          calculateDocumentContributors(updatedSuggestion.documentId).then(count => {
+            base44.entities.Document.update(updatedSuggestion.documentId, { totalUsersInteracted: count }).catch(() => {});
+          }).catch(() => {});
+        }).catch(() => {});
+      }, 2000);
 
       // בדיקת קונסנזוס רק אם ההצעה עדיין ממתינה
       if (freshSuggestion.status === 'pending') {
