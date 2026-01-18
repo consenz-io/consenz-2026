@@ -5,6 +5,7 @@ import DocumentAdmin from './pages/DocumentAdmin';
 import DocumentCleanView from './pages/DocumentCleanView';
 import DocumentComments from './pages/DocumentComments';
 import DocumentVersions from './pages/DocumentVersions';
+import DocumentView from './pages/DocumentView';
 import EmailLogs from './pages/EmailLogs';
 import EmailSettings from './pages/EmailSettings';
 import GroupView from './pages/GroupView';
@@ -14,9 +15,8 @@ import LearnMore from './pages/LearnMore';
 import MyDocuments from './pages/MyDocuments';
 import Profile from './pages/Profile';
 import SectionHistory from './pages/SectionHistory';
-import UnderstandingConsensus from './pages/UnderstandingConsensus';
 import SuggestionDetail from './pages/SuggestionDetail';
-import DocumentView from './pages/DocumentView';
+import UnderstandingConsensus from './pages/UnderstandingConsensus';
 import __Layout from './Layout.jsx';
 
 
@@ -28,6 +28,7 @@ export const PAGES = {
     "DocumentCleanView": DocumentCleanView,
     "DocumentComments": DocumentComments,
     "DocumentVersions": DocumentVersions,
+    "DocumentView": DocumentView,
     "EmailLogs": EmailLogs,
     "EmailSettings": EmailSettings,
     "GroupView": GroupView,
@@ -37,9 +38,8 @@ export const PAGES = {
     "MyDocuments": MyDocuments,
     "Profile": Profile,
     "SectionHistory": SectionHistory,
-    "UnderstandingConsensus": UnderstandingConsensus,
     "SuggestionDetail": SuggestionDetail,
-    "DocumentView": DocumentView,
+    "UnderstandingConsensus": UnderstandingConsensus,
 }
 
 export const pagesConfig = {
