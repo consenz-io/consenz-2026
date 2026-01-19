@@ -215,20 +215,24 @@ export default function SuggestionSidebar({
         conVotes: newConVotes
       });
 
-      // עדכון מספר המשתתפים ברקע - לא חוסם
-      import('./calculateContributors').then(({ calculateDocumentContributors }) => {
-        calculateDocumentContributors(suggestion.documentId).then(count => {
-          base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count });
-        });
-      }).catch(() => {});
-
-      const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, doc);
-      if (shouldAccept && suggestion.status === 'pending') {
-        const accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, doc);
-        if (accepted) {
-          return { accepted: true };
+      // בדיקת קונסנזוס רק אם ההצעה עדיין ממתינה
+      if (suggestion.status === 'pending') {
+        const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, doc);
+        if (shouldAccept) {
+          const accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, doc);
+          if (accepted) {
+            return { accepted: true };
+          }
         }
       }
+      
+      // עדכון מספר המשתתפים ברקע - לא חוסם
+      import('./calculateContributors').then(({ calculateDocumentContributors }) => 
+        calculateDocumentContributors(suggestion.documentId).then(count => 
+          base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count })
+        )
+      ).catch(() => {});
+      
       return { accepted: false };
     },
     // Optimistic update - only for vote counts, NOT for status

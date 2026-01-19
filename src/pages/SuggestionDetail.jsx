@@ -199,12 +199,9 @@ export default function SuggestionDetail() {
     initialData: [],
   });
 
-  // פונקציית עזר לטיפול בנקודות ברקע - עם דיליי כדי למנוע rate limit
+  // פונקציית עזר לטיפול בנקודות ברקע - ללא דיליים
   const handlePointsInBackground = async (suggestionData, action, vote, currentUserVote) => {
     if (!document?.gamificationEnabled || !suggestionData) return;
-
-    // הוספת דיליי של 500ms כדי למנוע rate limit
-    await new Promise(resolve => setTimeout(resolve, 500));
 
     try {
       let pointsChange = 0;
@@ -234,7 +231,6 @@ export default function SuggestionDetail() {
           if (suggestionCreator) {
             const newPoints = Math.max(0, (suggestionCreator.points || 1000) + pointsChange);
             await base44.asServiceRole.updateUser(suggestionCreator.id, { points: newPoints });
-            await new Promise(resolve => setTimeout(resolve, 200));
             await base44.entities.PointsTransaction.create({
               userId: suggestionCreator.id,
               amount: pointsChange,
@@ -336,35 +332,18 @@ export default function SuggestionDetail() {
       
       const updatedSuggestion = { ...freshSuggestion, proVotes: newProVotes, conVotes: newConVotes };
       
-      // טיפול בנקודות ברקע - עם דיליי למניעת rate limit
-      setTimeout(() => {
-        handlePointsInBackground(updatedSuggestion, pointsAction, vote, serverVote).catch(() => {});
-      }, 1000);
-
-      // התראות ועדכון תורמים ברקע - עם דיליי למניעת rate limit
-      setTimeout(() => {
-        notifyVoteOnSuggestion({ suggestion: updatedSuggestion, voterEmail: user.email }).catch(() => {});
-      }, 1500);
-
-      setTimeout(() => {
-        import('../components/document/calculateContributors').then(({ calculateDocumentContributors }) => {
-          calculateDocumentContributors(updatedSuggestion.documentId).then(count => {
-            base44.entities.Document.update(updatedSuggestion.documentId, { totalUsersInteracted: count }).catch(() => {});
-          }).catch(() => {});
-        }).catch(() => {});
-      }, 2000);
-
       // בדיקת קונסנזוס רק אם ההצעה עדיין ממתינה
       if (freshSuggestion.status === 'pending') {
-        try {
-          const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
+        const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
+        
+        if (shouldAccept) {
+          const actuallyAccepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
           
-          if (shouldAccept) {
-            const actuallyAccepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
-            
-            if (actuallyAccepted) {
-              if (!serverVote && vote === 'pro' && document?.gamificationEnabled) {
-                base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
+          if (actuallyAccepted) {
+            // נקודות להצבעה שהשפיעה על קבלת ההצעה - ברקע
+            if (!serverVote && vote === 'pro' && document?.gamificationEnabled) {
+              Promise.all([
+                base44.auth.updateMe({ points: (user.points || 1000) + 50 }),
                 base44.entities.PointsTransaction.create({
                   userId: user.id,
                   amount: 50,
@@ -372,16 +351,24 @@ export default function SuggestionDetail() {
                   description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${updatedSuggestion.title}`,
                   relatedEntityId: updatedSuggestion.id,
                   relatedEntityType: 'suggestion'
-                }).catch(() => {});
-              }
-              return { accepted: true, newProVotes, newConVotes };
+                })
+              ]).catch(() => {});
             }
+            return { accepted: true, newProVotes, newConVotes };
           }
-        } catch (autoAcceptError) {
-          console.error('[VOTE MUTATION] Auto-accept error:', autoAcceptError);
-          throw new Error('שגיאה באישור אוטומטי: ' + autoAcceptError.message);
         }
       }
+      
+      // פעולות רקע - מופעלות ללא המתנה (fire and forget)
+      Promise.all([
+        handlePointsInBackground(updatedSuggestion, pointsAction, vote, serverVote),
+        notifyVoteOnSuggestion({ suggestion: updatedSuggestion, voterEmail: user.email }),
+        import('../components/document/calculateContributors').then(({ calculateDocumentContributors }) => 
+          calculateDocumentContributors(updatedSuggestion.documentId).then(count => 
+            base44.entities.Document.update(updatedSuggestion.documentId, { totalUsersInteracted: count })
+          )
+        )
+      ]).catch(() => {});
       
       return { accepted: false, newProVotes, newConVotes };
     },
