@@ -160,19 +160,9 @@ export default function SuggestionDetail() {
     enabled: !!suggestionId,
   });
 
-  const { data: sectionComments = [] } = useQuery({
-    queryKey: ['comments', 'section', suggestion?.sectionId],
-    queryFn: () => base44.entities.Comment.filter({ 
-      rootEntityType: 'section',
-      rootEntityId: suggestion.sectionId 
-    }),
-    initialData: [],
-    enabled: !!suggestion?.sectionId,
-  });
-
   const totalCommentsCount = React.useMemo(() => {
-    return comments.length + sectionComments.length;
-  }, [comments, sectionComments]);
+    return comments.length;
+  }, [comments]);
 
   const { data: sectionVersions } = useQuery({
     queryKey: ['sectionVersions', suggestion?.sectionId],
@@ -1324,9 +1314,6 @@ export default function SuggestionDetail() {
               entityType="suggestion"
               entityId={suggestionId}
               user={user}
-              sectionId={suggestion?.sectionId || null}
-              relatedSuggestionIds={[]}
-              includeRelatedComments={true}
             />
           </CardContent>
         </Card>

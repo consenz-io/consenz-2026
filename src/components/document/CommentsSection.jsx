@@ -578,7 +578,7 @@ export default function CommentsSection({ entityType, entityId, user, sectionId,
   };
 
   const topLevelComments = comments.filter(c => !c.parentCommentId);
-  const totalCommentsCount = topLevelComments.length;
+  const totalCommentsCount = comments.length;
 
   return (
     <div className="space-y-4">
