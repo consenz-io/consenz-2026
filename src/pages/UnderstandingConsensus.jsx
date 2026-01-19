@@ -199,24 +199,6 @@ export default function UnderstandingConsensus() {
           </CardContent>
         </Card>
 
-        {/* What this means - practical explanation */}
-        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 text-white border-0">
-          <CardContent className={`p-6 md:p-8 ${isRTL ? 'text-right' : ''}`}>
-            <h3 className={`text-xl font-bold mb-4 flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Scale className="w-6 h-6" />
-              {t('whatThisMeansTitle')}
-            </h3>
-            <p className="text-slate-300 leading-relaxed text-lg">
-              {t('thresholdMeaningDetailed', { threshold })}
-            </p>
-            <div className="mt-6 bg-white/10 rounded-lg p-4">
-              <p className="text-slate-200 text-sm">
-                <strong>{t('example')}:</strong> {t('thresholdExample', { threshold })}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* נוסחת החישוב */}
         <Card>
           <CardHeader>
@@ -403,6 +385,24 @@ export default function UnderstandingConsensus() {
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* What this means - practical explanation */}
+        <Card className="bg-gradient-to-br from-slate-800 to-slate-900 text-white border-0">
+          <CardContent className={`p-6 md:p-8 ${isRTL ? 'text-right' : ''}`}>
+            <h3 className={`text-xl font-bold mb-4 flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Scale className="w-6 h-6" />
+              {t('whatThisMeansTitle')}
+            </h3>
+            <p className="text-slate-300 leading-relaxed text-lg">
+              {t('thresholdMeaningDetailed', { threshold })}
+            </p>
+            <div className="mt-6 bg-white/10 rounded-lg p-4">
+              <p className="text-slate-200 text-sm">
+                <strong>{t('example')}:</strong> {t('thresholdExample', { threshold })}
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
