@@ -20,6 +20,7 @@ import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAuto
 import { useLanguage } from "@/components/LanguageContext";
 import { notifySuggestionStatusChange } from "../notifications/createNotification";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 export default function SuggestionSidebar({ 
   suggestionId, 
@@ -304,7 +305,13 @@ export default function SuggestionSidebar({
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
       queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
       
-      if (data?.accepted) {
+      // רק אם ההצעה באמת התקבלה (data.accepted === true) - נרענן את כל הנתונים ונציג הודעת הצלחה
+      if (data?.accepted === true) {
+        // הצגת הודעת טוסט
+        toast.success(isRTL ? 'ההצעה התקבלה! ✓' : 'Suggestion accepted! ✓', {
+          duration: 4000,
+        });
+        
         // רענון כל הנתונים הרלוונטיים כשההצעה התקבלה
         queryClient.invalidateQueries({ queryKey: ['sections', doc?.id] });
         queryClient.invalidateQueries({ queryKey: ['suggestions', doc?.id] });
