@@ -355,11 +355,11 @@ export default function SuggestionDetail() {
       }
       
       // פעולות רקע - fire-and-forget (לא חוסמות)
-      handlePointsInBackground(updatedSuggestion, pointsAction, vote, serverVote);
-      notifyVoteOnSuggestion({ suggestion: updatedSuggestion, voterEmail: user.email }).catch(() => {});
+      handlePointsInBackground(freshSuggestion, pointsAction, vote, serverVote);
+      notifyVoteOnSuggestion({ suggestion: freshSuggestion, voterEmail: user.email }).catch(() => {});
       import('../components/document/calculateContributors').then(({ calculateDocumentContributors }) => 
-        calculateDocumentContributors(updatedSuggestion.documentId).then(count => 
-          base44.entities.Document.update(updatedSuggestion.documentId, { totalUsersInteracted: count })
+        calculateDocumentContributors(freshSuggestion.documentId).then(count => 
+          base44.entities.Document.update(freshSuggestion.documentId, { totalUsersInteracted: count })
         )
       ).catch(() => {});
       
