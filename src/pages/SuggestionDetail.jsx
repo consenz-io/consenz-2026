@@ -337,35 +337,31 @@ export default function SuggestionDetail() {
           const actuallyAccepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
           
           if (actuallyAccepted) {
-            // נקודות להצבעה שהשפיעה על קבלת ההצעה - ברקע
+            // נקודות להצבעה שהשפיעה על קבלת ההצעה - fire-and-forget
             if (!serverVote && vote === 'pro' && document?.gamificationEnabled) {
-              Promise.all([
-                base44.auth.updateMe({ points: (user.points || 1000) + 50 }),
-                base44.entities.PointsTransaction.create({
-                  userId: user.id,
-                  amount: 50,
-                  action: 'vote_influenced_acceptance',
-                  description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${updatedSuggestion.title}`,
-                  relatedEntityId: updatedSuggestion.id,
-                  relatedEntityType: 'suggestion'
-                })
-              ]).catch(() => {});
+              base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
+              base44.entities.PointsTransaction.create({
+                userId: user.id,
+                amount: 50,
+                action: 'vote_influenced_acceptance',
+                description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${updatedSuggestion.title}`,
+                relatedEntityId: updatedSuggestion.id,
+                relatedEntityType: 'suggestion'
+              }).catch(() => {});
             }
             return { accepted: true, newProVotes, newConVotes };
           }
         }
       }
       
-      // פעולות רקע - מופעלות ללא המתנה (fire and forget)
-      Promise.all([
-        handlePointsInBackground(updatedSuggestion, pointsAction, vote, serverVote),
-        notifyVoteOnSuggestion({ suggestion: updatedSuggestion, voterEmail: user.email }),
-        import('../components/document/calculateContributors').then(({ calculateDocumentContributors }) => 
-          calculateDocumentContributors(updatedSuggestion.documentId).then(count => 
-            base44.entities.Document.update(updatedSuggestion.documentId, { totalUsersInteracted: count })
-          )
+      // פעולות רקע - fire-and-forget (לא חוסמות)
+      handlePointsInBackground(updatedSuggestion, pointsAction, vote, serverVote);
+      notifyVoteOnSuggestion({ suggestion: updatedSuggestion, voterEmail: user.email }).catch(() => {});
+      import('../components/document/calculateContributors').then(({ calculateDocumentContributors }) => 
+        calculateDocumentContributors(updatedSuggestion.documentId).then(count => 
+          base44.entities.Document.update(updatedSuggestion.documentId, { totalUsersInteracted: count })
         )
-      ]).catch(() => {});
+      ).catch(() => {});
       
       return { accepted: false, newProVotes, newConVotes };
     },
@@ -1111,7 +1107,11 @@ export default function SuggestionDetail() {
                     disabled={voteMutation.isPending}
                     className={`flex-1 md:flex-initial text-xs md:text-sm ${userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
                   >
-                    <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
+                    {voteMutation.isPending ? (
+                      <Loader2 className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'} animate-spin`} />
+                    ) : (
+                      <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
+                    )}
                     {t('votePro')}
                   </Button>
                   <Button
@@ -1126,7 +1126,11 @@ export default function SuggestionDetail() {
                     disabled={voteMutation.isPending}
                     className={`flex-1 md:flex-initial text-xs md:text-sm ${userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
                   >
-                    <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
+                    {voteMutation.isPending ? (
+                      <Loader2 className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'} animate-spin`} />
+                    ) : (
+                      <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
+                    )}
                     {t('voteCon')}
                   </Button>
                 </div>
@@ -1140,7 +1144,11 @@ export default function SuggestionDetail() {
                   disabled={updateStatusMutation.isPending}
                   className="bg-green-600 hover:bg-green-700 w-full md:w-auto text-xs md:text-sm"
                 >
-                  <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {updateStatusMutation.isPending ? (
+                    <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
+                  ) : (
+                    <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  )}
                   {t('acceptSuggestion')}
                 </Button>
                 <Button
@@ -1149,7 +1157,11 @@ export default function SuggestionDetail() {
                   variant="destructive"
                   className="w-full md:w-auto text-xs md:text-sm"
                 >
-                  <XCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {updateStatusMutation.isPending ? (
+                    <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
+                  ) : (
+                    <XCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  )}
                   {t('rejectSuggestion')}
                 </Button>
               </div>

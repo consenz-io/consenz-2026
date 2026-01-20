@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   X, ThumbsUp, ThumbsDown, MessageSquare, Clock, 
-  CheckCircle, XCircle, AlertCircle, Trash2, ExternalLink, Edit2, Save
+  CheckCircle, XCircle, AlertCircle, Trash2, ExternalLink, Edit2, Save, Loader2
 } from "lucide-react";
 import VotesNeededCounter from "./VotesNeededCounter";
 import CommentsSection from "./CommentsSection";
@@ -740,7 +740,11 @@ export default function SuggestionSidebar({
                 disabled={voteMutation.isPending}
                 className={`flex-1 ${userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
               >
-                <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {voteMutation.isPending ? (
+                  <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
+                ) : (
+                  <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                )}
                 {t('votePro')}
               </Button>
               <Button
@@ -749,7 +753,11 @@ export default function SuggestionSidebar({
                 disabled={voteMutation.isPending}
                 className={`flex-1 ${userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
               >
-                <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {voteMutation.isPending ? (
+                  <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
+                ) : (
+                  <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                )}
                 {t('voteCon')}
               </Button>
             </div>
@@ -763,7 +771,11 @@ export default function SuggestionSidebar({
                 disabled={updateStatusMutation.isPending}
                 className="flex-1 bg-green-600 hover:bg-green-700"
               >
-                <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {updateStatusMutation.isPending ? (
+                  <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
+                ) : (
+                  <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                )}
                 {t('acceptSuggestion')}
               </Button>
               <Button
@@ -772,7 +784,11 @@ export default function SuggestionSidebar({
                 variant="destructive"
                 className="flex-1"
               >
-                <XCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {updateStatusMutation.isPending ? (
+                  <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
+                ) : (
+                  <XCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                )}
                 {t('rejectSuggestion')}
               </Button>
             </div>
