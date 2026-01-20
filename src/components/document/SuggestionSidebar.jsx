@@ -176,6 +176,7 @@ export default function SuggestionSidebar({
 
       const doc = document || parentDocument;
       if (!doc || !doc.id) throw new Error('Document not found');
+      
       let newProVotes = suggestion.proVotes || 0;
       let newConVotes = suggestion.conVotes || 0;
       
@@ -203,18 +204,18 @@ export default function SuggestionSidebar({
           userId: user.id,
           vote
         });
-
-        // Ensure UserPublicProfile exists for display
-        await ensureUserPublicProfile(user);
         
         if (vote === 'pro') newProVotes += 1;
         else newConVotes += 1;
       }
 
-      const updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, {
+      // עדכון ההצעה
+      await base44.entities.Suggestion.update(suggestionId, {
         proVotes: newProVotes,
         conVotes: newConVotes
       });
+
+      const updatedSuggestion = { ...suggestion, proVotes: newProVotes, conVotes: newConVotes };
 
       // בדיקת קונסנזוס רק אם ההצעה עדיין ממתינה
       if (suggestion.status === 'pending') {
@@ -227,7 +228,8 @@ export default function SuggestionSidebar({
         }
       }
       
-      // עדכון מספר המשתתפים ברקע - לא חוסם
+      // פעולות רקע - fire-and-forget
+      ensureUserPublicProfile(user).catch(() => {});
       import('./calculateContributors').then(({ calculateDocumentContributors }) => 
         calculateDocumentContributors(suggestion.documentId).then(count => 
           base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count })

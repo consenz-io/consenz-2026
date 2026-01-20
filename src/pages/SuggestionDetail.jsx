@@ -251,33 +251,20 @@ export default function SuggestionDetail() {
       if (!user) throw new Error(t('mustBeLoggedInToVote'));
       if (!suggestion) throw new Error('Suggestion not found');
 
-      // שלב 1: קריאת המצב העדכני מהשרת
-      const [freshVotes, freshSuggestions] = await Promise.all([
-        base44.entities.Vote.filter({ suggestionId, userId: user.id }),
-        base44.entities.Suggestion.filter({ id: suggestionId })
-      ]);
-      
-      const serverVote = freshVotes[0];
-      const freshSuggestion = freshSuggestions[0];
-      
-      if (!freshSuggestion) {
-        throw new Error('Suggestion not found');
-      }
-      
-      let newProVotes = freshSuggestion.proVotes || 0;
-      let newConVotes = freshSuggestion.conVotes || 0;
+      let newProVotes = suggestion.proVotes || 0;
+      let newConVotes = suggestion.conVotes || 0;
       let pointsAction = null;
       
-      if (serverVote) {
-        if (serverVote.vote === vote) {
+      if (userVote) {
+        if (userVote.vote === vote) {
           // ביטול הצבעה
-          await base44.entities.Vote.delete(serverVote.id);
+          await base44.entities.Vote.delete(userVote.id);
           if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
           else newConVotes = Math.max(0, newConVotes - 1);
           pointsAction = 'cancel';
         } else {
           // שינוי כיוון הצבעה
-          await base44.entities.Vote.update(serverVote.id, { vote });
+          await base44.entities.Vote.update(userVote.id, { vote });
           if (vote === 'pro') {
             newProVotes += 1;
             newConVotes = Math.max(0, newConVotes - 1);
@@ -288,37 +275,15 @@ export default function SuggestionDetail() {
           pointsAction = 'change';
         }
       } else {
-        // בדיקה כפולה לפני יצירת הצבעה חדשה
-        const doubleCheck = await base44.entities.Vote.filter({ suggestionId, userId: user.id });
-        if (doubleCheck.length > 0) {
-          const existingVote = doubleCheck[0];
-          if (existingVote.vote !== vote) {
-            await base44.entities.Vote.update(existingVote.id, { vote });
-            if (vote === 'pro') {
-              newProVotes += 1;
-              newConVotes = Math.max(0, newConVotes - 1);
-            } else {
-              newConVotes += 1;
-              newProVotes = Math.max(0, newProVotes - 1);
-            }
-            pointsAction = 'change';
-          } else {
-            await base44.entities.Vote.delete(existingVote.id);
-            if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
-            else newConVotes = Math.max(0, newConVotes - 1);
-            pointsAction = 'cancel';
-          }
-        } else {
-          // באמת הצבעה חדשה
-          await base44.entities.Vote.create({
-            suggestionId,
-            userId: user.id,
-            vote
-          });
-          if (vote === 'pro') newProVotes += 1;
-          else newConVotes += 1;
-          pointsAction = 'new';
-        }
+        // הצבעה חדשה
+        await base44.entities.Vote.create({
+          suggestionId,
+          userId: user.id,
+          vote
+        });
+        if (vote === 'pro') newProVotes += 1;
+        else newConVotes += 1;
+        pointsAction = 'new';
       }
       
       // עדכון ההצעה
@@ -327,10 +292,10 @@ export default function SuggestionDetail() {
         conVotes: newConVotes
       });
       
-      const updatedSuggestion = { ...freshSuggestion, proVotes: newProVotes, conVotes: newConVotes };
+      const updatedSuggestion = { ...suggestion, proVotes: newProVotes, conVotes: newConVotes };
       
       // בדיקת קונסנזוס רק אם ההצעה עדיין ממתינה
-      if (freshSuggestion.status === 'pending') {
+      if (suggestion.status === 'pending') {
         const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
         
         if (shouldAccept) {
@@ -338,7 +303,7 @@ export default function SuggestionDetail() {
           
           if (actuallyAccepted) {
             // נקודות להצבעה שהשפיעה על קבלת ההצעה - fire-and-forget
-            if (!serverVote && vote === 'pro' && document?.gamificationEnabled) {
+            if (!userVote && vote === 'pro' && document?.gamificationEnabled) {
               base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
               base44.entities.PointsTransaction.create({
                 userId: user.id,
@@ -355,11 +320,11 @@ export default function SuggestionDetail() {
       }
       
       // פעולות רקע - fire-and-forget (לא חוסמות)
-      handlePointsInBackground(freshSuggestion, pointsAction, vote, serverVote);
-      notifyVoteOnSuggestion({ suggestion: freshSuggestion, voterEmail: user.email }).catch(() => {});
+      handlePointsInBackground(suggestion, pointsAction, vote, userVote);
+      notifyVoteOnSuggestion({ suggestion, voterEmail: user.email }).catch(() => {});
       import('../components/document/calculateContributors').then(({ calculateDocumentContributors }) => 
-        calculateDocumentContributors(freshSuggestion.documentId).then(count => 
-          base44.entities.Document.update(freshSuggestion.documentId, { totalUsersInteracted: count })
+        calculateDocumentContributors(suggestion.documentId).then(count => 
+          base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count })
         )
       ).catch(() => {});
       
