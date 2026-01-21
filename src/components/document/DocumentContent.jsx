@@ -552,18 +552,34 @@ export default function DocumentContent({
       toast.error('שגיאה בהצבעה, נסה שוב');
     },
     onSuccess: (data, variables, context) => {
-      // רענון מיידי במקביל
+      // עדכון הקאש עם הערכים האמיתיים מהשרת
+      if (data?.newProVotes !== undefined) {
+        queryClient.setQueryData(['suggestions', document?.id], (old) => {
+          if (!old) return old;
+          return old.map(s => {
+            if (s.id !== variables.suggestionId) return s;
+            return { 
+              ...s, 
+              proVotes: data.newProVotes, 
+              conVotes: data.newConVotes,
+              status: data.accepted ? 'accepted' : s.status
+            };
+          });
+        });
+      }
+      
+      // הצגת toast רק כשההצעה באמת התקבלה על ידי השרת
+      if (data?.accepted) {
+        toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', {
+          duration: 4000,
+        });
+      }
+      
+      // רענון מיידי במקביל - לא מחכים
       Promise.all([
         queryClient.invalidateQueries({ queryKey: ['userVotes', document?.id, user?.id] }),
         queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] })
       ]);
-      
-      // הצגת toast רק כשההצעה באמת התקבלה על ידי השרת
-      if (data?.accepted) {
-        toast.success(isRTL ? 'ההצעה התקבלה! ✓' : 'Suggestion accepted! ✓', {
-          duration: 4000,
-        });
-      }
     },
   });
 
