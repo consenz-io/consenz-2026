@@ -179,6 +179,7 @@ export default function SuggestionSidebar({
       
       let newProVotes = suggestion.proVotes || 0;
       let newConVotes = suggestion.conVotes || 0;
+      let voteAction = null;
       
       if (userVote) {
         if (userVote.vote === vote) {
@@ -186,6 +187,7 @@ export default function SuggestionSidebar({
           await base44.entities.Vote.delete(userVote.id);
           if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
           else newConVotes = Math.max(0, newConVotes - 1);
+          voteAction = 'delete';
         } else {
           // שינוי כיוון הצבעה
           await base44.entities.Vote.update(userVote.id, { vote });
@@ -196,6 +198,7 @@ export default function SuggestionSidebar({
             newConVotes += 1;
             newProVotes = Math.max(0, newProVotes - 1);
           }
+          voteAction = 'update';
         }
       } else {
         // הצבעה חדשה
@@ -207,6 +210,7 @@ export default function SuggestionSidebar({
         
         if (vote === 'pro') newProVotes += 1;
         else newConVotes += 1;
+        voteAction = 'create';
       }
 
       // עדכון ההצעה
@@ -218,25 +222,25 @@ export default function SuggestionSidebar({
       const updatedSuggestion = { ...suggestion, proVotes: newProVotes, conVotes: newConVotes };
 
       // בדיקת קונסנזוס רק אם ההצעה עדיין ממתינה
+      let accepted = false;
       if (suggestion.status === 'pending') {
         const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, doc);
         if (shouldAccept) {
-          const accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, doc);
-          if (accepted) {
-            return { accepted: true };
-          }
+          accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, doc);
         }
       }
       
-      // פעולות רקע - fire-and-forget
-      ensureUserPublicProfile(user).catch(() => {});
-      import('./calculateContributors').then(({ calculateDocumentContributors }) => 
-        calculateDocumentContributors(suggestion.documentId).then(count => 
-          base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count })
-        )
-      ).catch(() => {});
+      // פעולות רקע - fire-and-forget (רק עבור הצבעה חדשה)
+      if (voteAction === 'create') {
+        ensureUserPublicProfile(user).catch(() => {});
+        import('./calculateContributors').then(({ calculateDocumentContributors }) => 
+          calculateDocumentContributors(suggestion.documentId).then(count => 
+            base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count })
+          )
+        ).catch(() => {});
+      }
       
-      return { accepted: false };
+      return { accepted };
     },
     // Optimistic update - only for vote counts, NOT for status
     onMutate: async (vote) => {
