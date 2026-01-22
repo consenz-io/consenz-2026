@@ -15,8 +15,8 @@ import LearnMore from './pages/LearnMore';
 import MyDocuments from './pages/MyDocuments';
 import Profile from './pages/Profile';
 import SectionHistory from './pages/SectionHistory';
-import UnderstandingConsensus from './pages/UnderstandingConsensus';
 import SuggestionDetail from './pages/SuggestionDetail';
+import UnderstandingConsensus from './pages/UnderstandingConsensus';
 import __Layout from './Layout.jsx';
 
 
@@ -38,8 +38,8 @@ export const PAGES = {
     "MyDocuments": MyDocuments,
     "Profile": Profile,
     "SectionHistory": SectionHistory,
-    "UnderstandingConsensus": UnderstandingConsensus,
     "SuggestionDetail": SuggestionDetail,
+    "UnderstandingConsensus": UnderstandingConsensus,
 }
 
 export const pagesConfig = {
