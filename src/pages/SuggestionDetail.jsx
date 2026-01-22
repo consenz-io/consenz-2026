@@ -586,24 +586,33 @@ export default function SuggestionDetail() {
 
   // useEffect to scroll to comment from notification
   React.useEffect(() => {
-    if (commentId && comments && comments.length > 0 && typeof window !== 'undefined') {
-      // Wait a bit to ensure DOM is fully rendered
-      const scrollTimer = setTimeout(() => {
+    if (commentId && typeof window !== 'undefined') {
+      // Retry mechanism - try multiple times to find the comment
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      const tryScroll = () => {
+        attempts++;
         const commentElement = window.document.getElementById(`comment-${commentId}`);
+        
         if (commentElement) {
-          // Scroll to comment
+          // Found it - scroll and highlight
           commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          // Highlight the comment
-          commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+          commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
           setTimeout(() => {
             commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
           }, 3000);
+        } else if (attempts < maxAttempts) {
+          // Not found yet - try again
+          setTimeout(tryScroll, 500);
         }
-      }, 1000);
+      };
       
-      return () => clearTimeout(scrollTimer);
+      // Start trying after initial delay
+      const initialTimer = setTimeout(tryScroll, 800);
+      return () => clearTimeout(initialTimer);
     }
-  }, [commentId, comments]);
+  }, [commentId]);
 
   // useMemo ALWAYS runs - before any conditional returns
   const isContentStillCurrent = React.useMemo(() => {
