@@ -121,24 +121,17 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     return false;
   }
   
-  // שלב 1: קריאת המצב העדכני ביותר מהשרת - source of truth
-  console.log('[AUTO-ACCEPT] Step 1: Fetching fresh suggestion data from server...');
-  let freshSuggestion;
-  try {
-    const freshSuggestions = await base44.entities.Suggestion.filter({ id: suggestion.id });
-    freshSuggestion = freshSuggestions[0];
-    console.log('[AUTO-ACCEPT] Fresh suggestion data:', {
-      id: freshSuggestion?.id,
-      status: freshSuggestion?.status,
-      proVotes: freshSuggestion?.proVotes,
-      conVotes: freshSuggestion?.conVotes,
-      type: freshSuggestion?.type,
-      sectionId: freshSuggestion?.sectionId
-    });
-  } catch (err) {
-    console.error('[AUTO-ACCEPT] ❌ FAILED: Error fetching suggestion:', err);
-    return false;
-  }
+  // שלב 1: שימוש בנתונים שכבר קיימים (מועבר מהקומפוננט)
+  console.log('[AUTO-ACCEPT] Step 1: Using provided suggestion data...');
+  const freshSuggestion = suggestion;
+  console.log('[AUTO-ACCEPT] Suggestion data:', {
+    id: freshSuggestion?.id,
+    status: freshSuggestion?.status,
+    proVotes: freshSuggestion?.proVotes,
+    conVotes: freshSuggestion?.conVotes,
+    type: freshSuggestion?.type,
+    sectionId: freshSuggestion?.sectionId
+  });
   
   if (!freshSuggestion) {
     console.log('[AUTO-ACCEPT] ❌ FAILED: Suggestion not found:', suggestion.id);
