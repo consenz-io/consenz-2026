@@ -452,15 +452,7 @@ export default function SectionCarousel({
                 className="text-slate-600 hover:text-blue-600 h-7 md:h-8 text-xs px-2"
               >
                 <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                {t('comments')} ({(() => {
-                  // Count all comments from section AND all related suggestions
-                  const sectionCommentsCount = getCommentsCount('section', section.id);
-                  const allSuggestionIds = (allSectionSuggestions || []).map(s => s.id);
-                  const suggestionsCommentsCount = allSuggestionIds.reduce((sum, sugId) => 
-                    sum + getCommentsCount('suggestion', sugId), 0
-                  );
-                  return sectionCommentsCount + suggestionsCommentsCount;
-                })()})
+                {t('comments')} ({getCommentsCount('section', section.id)})
               </Button>
             </div>
             {showComments[`section-${section.id}`] && (
