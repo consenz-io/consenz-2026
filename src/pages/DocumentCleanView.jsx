@@ -229,8 +229,22 @@ export default function DocumentCleanView() {
       }
     });
     
+    // Add the ORIGINAL version (before any changes) as the last snapshot
+    if (Object.keys(currentSectionContents).length > 0) {
+      const originalSnapshot = {
+        version: 0,
+        label: 'גרסה מקורית',
+        timestamp: document?.created_date || new Date(0).toISOString(),
+        sectionContents: { ...currentSectionContents },
+        existingSections: new Set(currentExistingSections),
+        allSectionIds: allSectionIds,
+        isOriginal: true
+      };
+      snapshots.push(originalSnapshot);
+    }
+    
     return snapshots;
-  }, [allVersions, sections]);
+  }, [allVersions, sections, document]);
 
   const currentSnapshot = versionGroups[currentVersionIndex] || versionGroups[0];
   const olderSnapshot = currentVersionIndex < versionGroups.length - 1 ? versionGroups[currentVersionIndex + 1] : null;
