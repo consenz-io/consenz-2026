@@ -329,7 +329,7 @@ export default function DocumentCleanView() {
           targetSectionId = currentSnapshot.changedSectionId;
         }
 
-        if (targetSectionId && typeof window.document?.getElementById === 'function') {
+        if (targetSectionId && typeof window !== 'undefined' && window.document?.getElementById) {
           const changeElement = window.document.getElementById(`change-${targetSectionId}`);
           if (changeElement) {
             changeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
