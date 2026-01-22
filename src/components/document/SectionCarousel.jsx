@@ -379,9 +379,16 @@ export default function SectionCarousel({
 
           <div className="text-center">
             {isFirstView ? (
-              <p className="text-sm">
+              <button 
+                onClick={() => {
+                  if (sortedSuggestions.length > 0) {
+                    setCurrentSuggestionId(sortedSuggestions[0].id);
+                  }
+                }}
+                className="text-sm hover:opacity-80 cursor-pointer transition-opacity"
+              >
                 <span className="font-bold text-amber-700 text-lg">{sortedSuggestions.length}</span> <span className="font-bold text-slate-800">{t('editSuggestions')}</span>
-              </p>
+              </button>
             ) : (
               <button 
                 onClick={() => setCurrentSuggestionId('current')}
