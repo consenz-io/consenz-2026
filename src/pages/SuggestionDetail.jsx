@@ -593,11 +593,16 @@ export default function SuggestionDetail() {
         if (commentElement) {
           // Scroll to comment
           commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          // Highlight the comment
-          commentElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-          setTimeout(() => {
-            commentElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+          // Add highlight effect with animation
+          commentElement.style.transition = 'background-color 0.3s ease';
+          commentElement.style.backgroundColor = '#dbeafe'; // light blue
+          
+          // Remove highlight after 3 seconds
+          const highlightTimer = setTimeout(() => {
+            commentElement.style.backgroundColor = '';
           }, 3000);
+          
+          return () => clearTimeout(highlightTimer);
         }
       }, 1000);
       
