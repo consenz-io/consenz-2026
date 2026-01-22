@@ -301,10 +301,10 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
         relatedEntityId: targetEntity.id,
         relatedEntityType: targetEntityType,
         actionUrl: targetEntityType === 'suggestion'
-          ? `${createPageUrl("SuggestionDetail")}?id=${targetEntity.id}#comment-${comment.id}`
+          ? `${createPageUrl("SuggestionDetail")}?id=${targetEntity.id}&commentId=${comment.id}`
           : targetEntityType === 'section'
-          ? `${createPageUrl("SectionHistory")}?id=${targetEntity.id}#comment-${comment.id}`
-          : `${createPageUrl("DocumentView")}?id=${targetEntity.id}#comment-${comment.id}`,
+          ? `${createPageUrl("SectionHistory")}?id=${targetEntity.id}&commentId=${comment.id}`
+          : `${createPageUrl("DocumentView")}?id=${targetEntity.id}&commentId=${comment.id}`,
         documentId: documentId || targetEntity.documentId,
         documentTitle: documentTitle || targetEntity.title
       })
