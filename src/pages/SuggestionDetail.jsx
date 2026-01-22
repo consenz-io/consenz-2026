@@ -863,8 +863,8 @@ export default function SuggestionDetail() {
                     onClick={() => {
                       navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);
                       setTimeout(() => {
-                        if (typeof window !== 'undefined' && typeof document !== 'undefined') {
-                          const element = document.getElementById(`section-${suggestion.sectionId}`);
+                        if (typeof window !== 'undefined' && window.document?.getElementById) {
+                          const element = window.document.getElementById(`section-${suggestion.sectionId}`);
                           if (element) {
                             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                           }
