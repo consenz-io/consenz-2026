@@ -189,61 +189,55 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
   
   console.log('[AUTO-ACCEPT] Calculated totalUsers:', totalUsers);
   
-  // עדכון מד הקונצנזוס רק עבור עריכות סעיפים קיימים (לא סעיפים חדשים)
-  // סעיפים חדשים, עריכות ישירות ושינויי כותרות לא נספרים במד הקונצנזוס
-  const shouldUpdateConsensusMeter = freshSuggestion.type === 'edit_section';
+  // עדכון מד הקונצנזוס עבור כל סוגי ההצעות (edit_section, new_section, delete_section)
+  // כל הצעה שמתקבלת משפיעה על מד הקונצנזוס ועל רף התמיכה הדרוש
   
   // שמירת מספר המשתתפים בזמן הקבלה של ההצעה הזו
   const participantsAtAcceptance = totalUsers;
   
-  let updatedConsensuses = document.consensuses || [];
-  let newThreshold = document.threshold || 2;
+  // חישוב section_consensus_meter לפי האפיון:
+  // consensus = (delta + participants) / (2 * participants)
+  // כאשר delta = proVotes - conVotes
+  // זה מבטיח שהקונצנזוס מתחשב במספר המשתתפים ולא רק ביחס המצביעים
+  const delta = (freshSuggestion.proVotes || 0) - (freshSuggestion.conVotes || 0);
+  const sectionConsensus = (delta + participantsAtAcceptance) / (2 * participantsAtAcceptance);
+  // הבטחת גבולות 0-1 (למרות שהנוסחה אמורה להבטיח זאת)
+  const boundedSectionConsensus = Math.min(1, Math.max(0, sectionConsensus));
   
-  if (shouldUpdateConsensusMeter) {
-    // חישוב section_consensus_meter לפי האפיון המעודכן:
-    // consensus = (delta + participants) / (2 * participants)
-    // כאשר delta = proVotes - conVotes
-    // זה מבטיח שהקונצנזוס מתחשב במספר המשתתפים ולא רק ביחס המצביעים
-    const delta = (freshSuggestion.proVotes || 0) - (freshSuggestion.conVotes || 0);
-    const sectionConsensus = (delta + participantsAtAcceptance) / (2 * participantsAtAcceptance);
-    // הבטחת גבולות 0-1 (למרות שהנוסחה אמורה להבטיח זאת)
-    const boundedSectionConsensus = Math.min(1, Math.max(0, sectionConsensus));
-    
-    console.log('[CONSENSUS CALCULATION]', {
-      proVotes: freshSuggestion.proVotes,
-      conVotes: freshSuggestion.conVotes,
-      delta,
-      participantsAtAcceptance,
-      formula: `(${delta} + ${participantsAtAcceptance}) / (2 * ${participantsAtAcceptance})`,
-      rawConsensus: sectionConsensus,
-      boundedConsensus: boundedSectionConsensus
-    });
-    
-    // עדכון המסמך: הוספת sectionConsensus למערך consensuses ועדכון threshold
-    updatedConsensuses = [...updatedConsensuses, boundedSectionConsensus];
-    
-    // חישוב document_consensus_meter חדש - מגבילים כל ערך ל-1 מקסימום
-    const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / updatedConsensuses.length;
-    
-    // חישוב document_threshold חדש - עם מספר המשתתפים הנוכחי (מינימום 2)
-    newThreshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
-    
-    console.log('[CONSENSUS METER UPDATE]', {
-      sectionConsensus: boundedSectionConsensus,
-      updatedConsensuses,
-      consensusMeterAverage,
-      newThreshold,
-      participantsAtAcceptance
-    });
-    
-    // עדכון המסמך עם הערכים החדשים
-    await base44.entities.Document.update(document.id, {
-      consensuses: updatedConsensuses,
-      threshold: newThreshold
-    });
-  } else {
-    console.log('[CONSENSUS METER SKIP] Not updating consensus meter for new_section type');
-  }
+  console.log('[CONSENSUS CALCULATION]', {
+    suggestionType: freshSuggestion.type,
+    proVotes: freshSuggestion.proVotes,
+    conVotes: freshSuggestion.conVotes,
+    delta,
+    participantsAtAcceptance,
+    formula: `(${delta} + ${participantsAtAcceptance}) / (2 * ${participantsAtAcceptance})`,
+    rawConsensus: sectionConsensus,
+    boundedConsensus: boundedSectionConsensus
+  });
+  
+  // עדכון המסמך: הוספת sectionConsensus למערך consensuses ועדכון threshold
+  let updatedConsensuses = [...(document.consensuses || []), boundedSectionConsensus];
+  
+  // חישוב document_consensus_meter חדש - מגבילים כל ערך ל-1 מקסימום
+  const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / updatedConsensuses.length;
+  
+  // חישוב document_threshold חדש - עם מספר המשתתפים הנוכחי (מינימום 2)
+  const newThreshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
+  
+  console.log('[CONSENSUS METER UPDATE]', {
+    suggestionType: freshSuggestion.type,
+    sectionConsensus: boundedSectionConsensus,
+    updatedConsensuses,
+    consensusMeterAverage,
+    newThreshold,
+    participantsAtAcceptance
+  });
+  
+  // עדכון המסמך עם הערכים החדשים
+  await base44.entities.Document.update(document.id, {
+    consensuses: updatedConsensuses,
+    threshold: newThreshold
+  });
   
   // עדכון threshold לכל ההצעות הממתינות - במקביל
   console.log('[THRESHOLD UPDATE] Starting threshold update');
@@ -598,7 +592,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     console.log('[AUTO-ACCEPT] Section created successfully, updating suggestion status to accepted');
     await base44.entities.Suggestion.update(suggestion.id, { 
       status: 'accepted',
-      suggestionConsensus: shouldUpdateConsensusMeter ? boundedSectionConsensus : null,
+      suggestionConsensus: boundedSectionConsensus,
       participantsAtAcceptance: participantsAtAcceptance
     });
     
