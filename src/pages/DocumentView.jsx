@@ -785,22 +785,22 @@ export default function DocumentView() {
                                     dir={isRTL ? 'rtl' : 'ltr'}
                                   />
                                   <Button
-                                   variant="link"
-                                   size="sm"
-                                   onClick={() => {
-                                     setShowFullDescription(false);
-                                     setTimeout(() => {
-                                       if (typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
-                                         const titleElement = document.getElementById('document-title');
-                                         if (titleElement) {
-                                           titleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                         }
-                                       }
-                                     }, 50);
-                                   }}
-                                   className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800"
+                                  variant="link"
+                                  size="sm"
+                                  onClick={() => {
+                                    setShowFullDescription(false);
+                                    setTimeout(() => {
+                                      if (typeof window !== 'undefined' && window.document?.getElementById) {
+                                        const titleElement = window.document.getElementById('document-title');
+                                        if (titleElement) {
+                                          titleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        }
+                                      }
+                                    }, 50);
+                                  }}
+                                  className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800"
                                   >
-                                   {language === 'he' ? 'הצג פחות' : language === 'ar' ? 'عرض أقل' : 'Show less'}
+                                  {language === 'he' ? 'הצג פחות' : language === 'ar' ? 'عرض أقل' : 'Show less'}
                                   </Button>
                                 </>
                               )}
@@ -832,8 +832,8 @@ export default function DocumentView() {
                                    if (showFullDescription) {
                                      setShowFullDescription(false);
                                      setTimeout(() => {
-                                       if (typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById) {
-                                         const titleElement = document.getElementById('document-title');
+                                       if (typeof window !== 'undefined' && window.document?.getElementById) {
+                                         const titleElement = window.document.getElementById('document-title');
                                          if (titleElement) {
                                            titleElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                          }
