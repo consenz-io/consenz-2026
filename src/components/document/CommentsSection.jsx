@@ -146,23 +146,25 @@ const CommentItem = memo(({
                   renderContent={(text) => <span>{text}</span>}
                 />
                 <div className="flex gap-2 mt-2">
-                  {!isReply && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        if (!user) {
-                          base44.auth.redirectToLogin(window.location.href);
-                          return;
-                        }
-                        setReplyTo(comment);
-                      }}
-                      className="h-7 text-xs"
-                    >
-                      <Reply className="w-3 h-3 mr-1" />
-                      {t('reply')}
-                    </Button>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      if (!user) {
+                        base44.auth.redirectToLogin(window.location.href);
+                        return;
+                      }
+                      // For replies, reply to the parent instead to maintain 2-level hierarchy
+                      setReplyTo(isReply && comment.parentCommentId 
+                        ? allComments.find(c => c.id === comment.parentCommentId) || comment
+                        : comment
+                      );
+                    }}
+                    className="h-7 text-xs"
+                  >
+                    <Reply className="w-3 h-3 mr-1" />
+                    {t('reply')}
+                  </Button>
                   {user && user.email === comment.created_by && (
                     <>
                       <Button
