@@ -210,6 +210,26 @@ export default function DocumentCleanView() {
           return sum + Math.min(1, consensus);
         }, 0) / acceptedSuggestionsUpToHere.length;
 
+      // Create snapshot with AFTER state (including the new content)
+      const snapshotSectionContents = { ...currentSectionContents };
+      
+      // Update the content to AFTER state
+      if (afterVersion.changeType === 'section_created') {
+        // New section - add it with new content
+        snapshotSectionContents[afterVersion.sectionId] = afterVersion.content;
+      } else if (afterVersion.content === '' && beforeVersion) {
+        // Deletion - keep the old content for display
+        snapshotSectionContents[afterVersion.sectionId] = beforeVersion.content;
+      } else {
+        // Edit - use the new content
+        snapshotSectionContents[afterVersion.sectionId] = afterVersion.content;
+      }
+      
+      const snapshotExistingSections = new Set(currentExistingSections);
+      if (afterVersion.changeType === 'section_created' || (afterVersion.content === '' && beforeVersion)) {
+        snapshotExistingSections.add(afterVersion.sectionId);
+      }
+      
       // This snapshot shows the state RIGHT AFTER this change was applied
       const snapshotAfterChange = {
         version: afterVersion.version,
@@ -218,8 +238,8 @@ export default function DocumentCleanView() {
         changeDescription: afterVersion.changeDescription,
         changeType: afterVersion.changeType,
         suggestionId: afterVersion.suggestionId,
-        sectionContents: { ...currentSectionContents },
-        existingSections: new Set(currentExistingSections),
+        sectionContents: snapshotSectionContents,
+        existingSections: snapshotExistingSections,
         changedSectionId: afterVersion.sectionId,
         newContent: afterVersion.content,
         allSectionIds: allSectionIds,
@@ -244,9 +264,6 @@ export default function DocumentCleanView() {
         snapshotAfterChange.isDeleted = true;
         snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
         snapshotAfterChange.deletedSectionContent = beforeVersion.content;
-        // Keep the deleted section in sectionContents so it can be displayed
-        snapshotAfterChange.sectionContents[afterVersion.sectionId] = beforeVersion.content;
-        snapshotAfterChange.existingSections.add(afterVersion.sectionId);
       }
       
       snapshots.push(snapshotAfterChange);
