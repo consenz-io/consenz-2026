@@ -628,21 +628,24 @@ ${text}`;
       <div className="max-w-4xl mx-auto p-4 md:p-8 print:p-12">
         {/* Version Metadata */}
         {currentVersionIndex > 0 && currentSnapshot && currentSnapshot.suggestionId && (
-          <div className="mb-4 p-2 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg text-xs text-slate-700 w-full">
-            <div className="flex flex-wrap justify-between gap-x-4 gap-y-1">
-              <span>
+          <div className="mb-4 p-3 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg text-xs text-slate-700 w-full">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+              <span className="px-2 py-1 bg-white rounded border border-green-200">
                 <span className="font-semibold">{language === 'he' ? 'תמכו:' : language === 'ar' ? 'مؤيدون:' : 'Pro:'}</span>
                 {' '}<span className="text-green-600 font-bold">{currentSnapshot.proVotes || 0}</span>
               </span>
-              <span>
+              <span className="text-slate-300">|</span>
+              <span className="px-2 py-1 bg-white rounded border border-red-200">
                 <span className="font-semibold">{language === 'he' ? 'התנגדו:' : language === 'ar' ? 'معارضون:' : 'Con:'}</span>
                 {' '}<span className="text-red-600 font-bold">{currentSnapshot.conVotes || 0}</span>
               </span>
-              <span>
+              <span className="text-slate-300">|</span>
+              <span className="px-2 py-1 bg-white rounded border border-blue-200">
                 <span className="font-semibold">{language === 'he' ? 'משתתפים:' : language === 'ar' ? 'مشاركون:' : 'Participants:'}</span>
                 {' '}<span className="text-blue-600 font-bold">{currentSnapshot.participantsAtAcceptance || 0}</span>
               </span>
-              <span>
+              <span className="text-slate-300">|</span>
+              <span className="px-2 py-1 bg-white rounded border border-purple-200">
                 <span className="font-semibold">{language === 'he' ? 'קונצנזוס גרסה:' : language === 'ar' ? 'إجماع الإصدار:' : 'Version consensus:'}</span>
                 {' '}<span className="text-purple-600 font-bold">
                   {(() => {
@@ -652,10 +655,18 @@ ${text}`;
                   })()}%
                 </span>
               </span>
-              <span>
+              <span className="text-slate-300">|</span>
+              <span className="px-2 py-1 bg-white rounded border border-indigo-200">
                 <span className="font-semibold">{language === 'he' ? 'מד קונצנזוס מסמך:' : language === 'ar' ? 'مقياس إجماع الوثيقة:' : 'Doc consensus:'}</span>
                 {' '}<span className="text-indigo-600 font-bold">{((currentSnapshot.documentConsensusAtTime || 0) * 100).toFixed(0)}%</span>
               </span>
+              <Link 
+                to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
+                className="ml-auto p-1.5 hover:bg-blue-100 rounded-full transition-colors"
+                title={language === 'he' ? 'הסבר על הקונצנזוס' : language === 'ar' ? 'شرح الإجماع' : 'Explain consensus'}
+              >
+                <Info className="w-4 h-4 text-blue-600" />
+              </Link>
             </div>
           </div>
         )}
