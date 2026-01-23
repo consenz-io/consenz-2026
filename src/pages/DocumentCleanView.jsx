@@ -649,8 +649,11 @@ ${text}`;
                 <span className="font-semibold">{language === 'he' ? 'קונצנזוס גרסה:' : language === 'ar' ? 'إجماع الإصدار:' : 'Version consensus:'}</span>
                 {' '}<span className="text-purple-600 font-bold">
                   {(() => {
-                    const consensus = currentSnapshot.suggestionConsensus || 0;
-                    const percentage = consensus > 1 ? consensus : consensus * 100;
+                    const proVotes = currentSnapshot.proVotes || 0;
+                    const conVotes = currentSnapshot.conVotes || 0;
+                    const totalVotes = proVotes + conVotes;
+                    if (totalVotes === 0) return '0';
+                    const percentage = (proVotes / totalVotes) * 100;
                     return percentage.toFixed(0);
                   })()}%
                 </span>
