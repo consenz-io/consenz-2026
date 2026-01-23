@@ -165,63 +165,49 @@ async function getDocumentCreator(documentId, users, publicProfiles, docList = n
 async function batchCreateNotifications(notifications) {
   if (!notifications || notifications.length === 0) {
     console.log('[BATCH NOTIFICATIONS] No notifications to create');
-    return;
+    return { successful: 0, failed: 0 };
   }
   
   console.log('[BATCH NOTIFICATIONS] Creating', notifications.length, 'notifications...');
   
   try {
-    // Process in smaller batches with delays to avoid rate limits
-    const BATCH_SIZE = 2; // Reduced from 5 to 2
-    const DELAY_BETWEEN_BATCHES = 3000; // Increased from 1000ms to 3000ms
-    
+    // Create one at a time with delay to avoid rate limits completely
     const results = [];
     
-    for (let i = 0; i < notifications.length; i += BATCH_SIZE) {
-      const batch = notifications.slice(i, i + BATCH_SIZE);
-      console.log('[BATCH NOTIFICATIONS] Processing batch', Math.floor(i / BATCH_SIZE) + 1, 'of', Math.ceil(notifications.length / BATCH_SIZE));
-      
-      // Add delay between batches (except first)
+    for (let i = 0; i < notifications.length; i++) {
+      // Add delay before each notification (except first)
       if (i > 0) {
-        await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
+        await new Promise(resolve => setTimeout(resolve, 2000)); // 2 seconds between each
       }
       
-      const batchResults = await Promise.allSettled(batch.map((n, index) => 
-        base44.entities.Notification.create({ ...n, read: false })
-          .then(result => {
-            console.log('[BATCH NOTIFICATIONS] Successfully created notification', i + index + 1, '/', notifications.length);
-            return result;
-          })
-          .catch(err => {
-            // Silently handle rate limit errors without breaking the flow
-            if (err?.message?.includes('Rate limit')) {
-              console.warn('[BATCH NOTIFICATIONS] Rate limit hit, notification', i + index + 1, 'skipped');
-            } else {
-              console.error('[BATCH NOTIFICATIONS] Failed to create notification', i + index + 1, ':', err?.message || err);
-            }
-            return null;
-          })
-      ));
-      
-      results.push(...batchResults.map(r => r.status === 'fulfilled' ? r.value : null));
+      try {
+        const result = await base44.entities.Notification.create({ 
+          ...notifications[i], 
+          read: false 
+        });
+        console.log(`[BATCH NOTIFICATIONS] ✓ Created ${i + 1}/${notifications.length}`);
+        results.push(result);
+      } catch (err) {
+        console.error(`[BATCH NOTIFICATIONS] ✗ Failed ${i + 1}/${notifications.length}:`, err?.message || err);
+        results.push(null);
+      }
     }
     
     const successful = results.filter(r => r !== null).length;
     const failed = results.length - successful;
     
-    console.log('[BATCH NOTIFICATIONS] Batch complete: Success:', successful, 'Failed:', failed);
+    console.log('[BATCH NOTIFICATIONS] Complete: Success:', successful, 'Failed:', failed);
     
-    if (failed > 0) {
-      console.warn('[BATCH NOTIFICATIONS] WARNING:', failed, 'notifications failed to create (likely rate limited)');
-    }
+    return { successful, failed };
   } catch (error) {
-    // Don't throw - notifications should never break the main flow
-    console.error('[BATCH NOTIFICATIONS] CRITICAL: Batch create failed completely:', error?.message || error);
+    console.error('[BATCH NOTIFICATIONS] CRITICAL:', error?.message || error);
+    return { successful: 0, failed: notifications.length };
   }
 }
 
 /**
- * Create notification for user + add to EmailDigest in parallel
+ * Create single notification for user + add to EmailDigest + browser notification
+ * Used for individual notifications (not batch)
  */
 export async function createNotification({
   userId,
@@ -236,21 +222,21 @@ export async function createNotification({
 }) {
   try {
     if (!userId) {
-      console.warn('[NOTIFICATION] Missing userId, skipping notification');
+      console.warn('[NOTIFICATION] Missing userId, skipping');
       return null;
     }
     
-    // Validate and sanitize actionUrl
+    // Validate actionUrl
     const validActionUrl = (actionUrl && typeof actionUrl === 'string' && actionUrl.length > 0) 
       ? actionUrl 
       : null;
     
     if (!validActionUrl) {
-      console.warn('[NOTIFICATION] No valid actionUrl provided:', { type, relatedEntityType, relatedEntityId });
+      console.warn('[NOTIFICATION] Missing actionUrl for type:', type);
     }
     
-    // Create notification - don't wait for it
-    const notificationPromise = base44.entities.Notification.create({
+    // Create notification in DB
+    const notification = await base44.entities.Notification.create({
       userId,
       type,
       title,
@@ -261,9 +247,9 @@ export async function createNotification({
       read: false
     });
     
-    // Add to email digest in parallel - don't wait for it
+    // Add to email digest (don't wait - run in background)
     const { addToEmailDigest } = await import('./addToEmailDigest');
-    const digestPromise = addToEmailDigest({
+    addToEmailDigest({
       userId,
       notificationType: type,
       title,
@@ -273,12 +259,9 @@ export async function createNotification({
       relatedEntityId,
       documentId,
       documentTitle
-    });
+    }).catch(err => console.error('[EMAIL DIGEST] Error:', err));
     
-    // Wait for both to complete
-    const [notification] = await Promise.all([notificationPromise, digestPromise]);
-    
-    // Show browser notification
+    // Show browser notification (if page is not focused)
     showBrowserNotification({
       title,
       body: message,
@@ -287,8 +270,7 @@ export async function createNotification({
     
     return notification;
   } catch (error) {
-    console.error('[NOTIFICATION ERROR] Failed to create notification:', error);
-    // Don't throw - notifications should not block main flow
+    console.error('[NOTIFICATION] Create failed:', error?.message || error);
     return null;
   }
 }
@@ -299,53 +281,60 @@ export async function createNotification({
 export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName, currentUser = null }) {
   try {
     // Don't notify if voter is the suggestion creator
-    if (voterEmail === suggestion.created_by) return;
+    if (voterEmail === suggestion.created_by) {
+      console.log('[NOTIFY VOTE] Skipping - voter is creator');
+      return;
+    }
     
     // Validate required data
     if (!suggestion?.id || !suggestion?.created_by || !voterEmail) {
-      console.error('[NOTIFICATION ERROR] Missing required data for vote notification:', { suggestion, voterEmail });
+      console.error('[NOTIFY VOTE] Missing data:', { 
+        suggestionId: suggestion?.id, 
+        createdBy: suggestion?.created_by, 
+        voterEmail 
+      });
       return;
     }
     
-    // Ensure voter has public profile
-    if (currentUser) {
-      await ensureUserPublicProfileForInteraction(currentUser);
-    }
-    
-    // Fetch suggestion creator directly
-    const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
-    const suggestionCreator = suggestionCreatorList[0];
-    if (!suggestionCreator?.id) {
-      console.error('[NOTIFICATION ERROR] Suggestion creator not found:', suggestion.created_by);
+    // Fetch suggestion creator
+    const creatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+    if (!creatorList || creatorList.length === 0) {
+      console.error('[NOTIFY VOTE] Creator not found:', suggestion.created_by);
       return;
     }
     
-    // Get voter name if not provided
-    let displayName = voterName;
-    if (!displayName && voterEmail) {
-      const voterList = await base44.entities.User.filter({ email: voterEmail });
-      displayName = voterList[0]?.full_name || voterEmail.split('@')[0];
+    const creator = creatorList[0];
+    if (!creator.id) {
+      console.error('[NOTIFY VOTE] Creator missing ID');
+      return;
     }
     
-    const userLang = suggestionCreator.preferredLanguage || 'he';
+    // Get voter name
+    const displayName = voterName || (voterEmail ? voterEmail.split('@')[0] : 'Someone');
+    const userLang = creator.preferredLanguage || 'he';
     
-    // Fetch document for context
+    // Get document for context
     const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
     const doc = docs[0];
     
     await createNotification({
-      userId: suggestionCreator.id,
+      userId: creator.id,
       type: 'vote_on_suggestion',
       title: translate('notifVoteTitle', userLang),
-      message: translate('notifVoteMessage', userLang, { name: displayName, title: suggestion.title || 'Suggestion' }),
+      message: translate('notifVoteMessage', userLang, { 
+        name: displayName, 
+        title: suggestion.title || 'הצעה' 
+      }),
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
       actionUrl: createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`,
       documentId: suggestion.documentId,
       documentTitle: doc?.title
     });
+    
+    console.log('[NOTIFY VOTE] ✓ Sent to:', creator.email);
   } catch (error) {
-    console.error('[NOTIFICATION ERROR] notifyVoteOnSuggestion failed:', error);
+    console.error('[NOTIFY VOTE] Error:', error?.message || error);
   }
 }
 
@@ -491,13 +480,11 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     }
     
     if (notifications.length > 0) {
-      console.log('[NOTIFICATION] Creating', notifications.length, 'notifications for suggestion:', suggestion.id);
-      console.log('[NOTIFICATION] Notifications data:', JSON.stringify(notifications, null, 2));
-      await batchCreateNotifications(notifications);
-      console.log('[NOTIFICATION] Successfully created notifications');
+      console.log('[NOTIFY STATUS] Creating', notifications.length, 'notifications...');
+      const { successful, failed } = await batchCreateNotifications(notifications);
+      console.log(`[NOTIFY STATUS] ✓ Complete: ${successful} sent, ${failed} failed`);
     } else {
-      console.warn('[NOTIFICATION] No notifications to create for suggestion:', suggestion.id);
-      console.warn('[NOTIFICATION] notifiedUserIds:', Array.from(notifiedUserIds));
+      console.warn('[NOTIFY STATUS] No notifications to send');
     }
   } catch (error) {
     console.error('[NOTIFICATION ERROR] Failed to send notifications:', error);
@@ -709,11 +696,11 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
     console.log('[NOTIFY NEW SUGGESTION] Total notifications to send:', notifications.length);
     
     if (notifications.length > 0) {
-      console.log('[NOTIFY NEW SUGGESTION] Sending notifications to database...');
-      await batchCreateNotifications(notifications);
-      console.log('[NOTIFY NEW SUGGESTION] ===== NOTIFICATIONS SENT SUCCESSFULLY =====');
+      console.log('[NOTIFY NEW SUGGESTION] Sending', notifications.length, 'notifications...');
+      const { successful, failed } = await batchCreateNotifications(notifications);
+      console.log(`[NOTIFY NEW SUGGESTION] ✓ Complete: ${successful} sent, ${failed} failed`);
     } else {
-      console.error('[NOTIFY NEW SUGGESTION] ===== ERROR: NO NOTIFICATIONS TO SEND =====');
+      console.log('[NOTIFY NEW SUGGESTION] No notifications to send');
     }
   } catch (error) {
     console.error('[NOTIFICATION ERROR] ===== CRITICAL ERROR IN notifyNewSuggestion =====');
