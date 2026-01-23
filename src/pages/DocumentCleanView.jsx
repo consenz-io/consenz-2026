@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Printer, Globe, Loader2, ChevronLeft, ChevronRight, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Printer, Globe, Loader2, ChevronLeft, ChevronRight, Eye, EyeOff, Users, ThumbsUp, ThumbsDown, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
@@ -72,6 +72,13 @@ export default function DocumentCleanView() {
   const { data: topicEditSuggestions } = useQuery({
     queryKey: ['topicEditSuggestions', documentId],
     queryFn: () => base44.entities.TopicEditSuggestion.filter({ documentId, status: 'accepted' }, 'created_date'),
+    initialData: [],
+    enabled: !!documentId,
+  });
+
+  const { data: allSuggestions } = useQuery({
+    queryKey: ['allSuggestions', documentId],
+    queryFn: () => base44.entities.Suggestion.filter({ documentId }, '-created_date'),
     initialData: [],
     enabled: !!documentId,
   });
@@ -179,6 +186,9 @@ export default function DocumentCleanView() {
       const afterVersion = versionsForSuggestion[0];
       const beforeVersion = versionsForSuggestion[1];
       
+      // Get suggestion metadata for this version
+      const suggestion = allSuggestions.find(s => s.id === afterVersion.suggestionId);
+      
       // This snapshot shows the state RIGHT AFTER this change was applied
       const snapshotAfterChange = {
         version: afterVersion.version,
@@ -191,7 +201,12 @@ export default function DocumentCleanView() {
         existingSections: new Set(currentExistingSections),
         changedSectionId: afterVersion.sectionId,
         newContent: afterVersion.content,
-        allSectionIds: allSectionIds
+        allSectionIds: allSectionIds,
+        // Metadata from suggestion
+        proVotes: suggestion?.proVotes || 0,
+        conVotes: suggestion?.conVotes || 0,
+        participantsAtAcceptance: suggestion?.participantsAtAcceptance,
+        suggestionConsensus: suggestion?.suggestionConsensus,
       };
       
       // Mark if this is a new section creation
@@ -557,28 +572,55 @@ ${text}`;
               <div className="bg-white/95 backdrop-blur-sm border-2 border-slate-300 rounded-full shadow-lg px-4 py-2">
                 <div className={`flex items-center gap-3`}>
                   <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentVersionIndex(Math.min(currentVersionIndex + 1, versionGroups.length - 1))}
-                    disabled={currentVersionIndex >= versionGroups.length - 1}
-                    title={language === 'he' ? 'גרסה קודמת' : 'Previous version'}
-                    className="h-9 w-9 p-0 rounded-full"
+                   variant="outline"
+                   size="sm"
+                   onClick={() => setCurrentVersionIndex(Math.min(currentVersionIndex + 1, versionGroups.length - 1))}
+                   disabled={currentVersionIndex >= versionGroups.length - 1}
+                   title={language === 'he' ? 'גרסה קודמת' : 'Previous version'}
+                   className="h-9 w-9 p-0 rounded-full"
                   >
-                    {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+                   {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                   </Button>
-                  <div className="flex flex-col items-center min-w-[80px]">
-                    <Badge variant="outline" className={`px-3 text-xs font-semibold ${currentVersionIndex === 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
-                      {currentVersionIndex === 0 ? (
-                        language === 'he' ? 'נוכחית' : language === 'ar' ? 'حالية' : 'Current'
-                      ) : (
-                        `${versionGroups.length - currentVersionIndex}/${versionGroups.length}`
-                      )}
-                    </Badge>
-                    {currentSnapshot?.changeDescription && currentVersionIndex > 0 && (
-                      <span className="text-[10px] text-slate-500 mt-0.5 max-w-[150px] truncate text-center" title={currentSnapshot.changeDescription}>
-                        {currentSnapshot.changeDescription.replace('לפני: ', '')}
-                      </span>
-                    )}
+                  <div className="flex flex-col items-center min-w-[200px]">
+                   <Badge variant="outline" className={`px-3 text-xs font-semibold ${currentVersionIndex === 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                     {currentVersionIndex === 0 ? (
+                       language === 'he' ? 'נוכחית' : language === 'ar' ? 'حالية' : 'Current'
+                     ) : (
+                       `${versionGroups.length - currentVersionIndex}/${versionGroups.length}`
+                     )}
+                   </Badge>
+                   {currentSnapshot?.changeDescription && currentVersionIndex > 0 && (
+                     <span className="text-[10px] text-slate-500 mt-0.5 max-w-[180px] truncate text-center" title={currentSnapshot.changeDescription}>
+                       {currentSnapshot.changeDescription.replace('לפני: ', '')}
+                     </span>
+                   )}
+                   {currentVersionIndex > 0 && currentSnapshot?.proVotes !== undefined && (
+                     <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-600">
+                       <span className="flex items-center gap-0.5" title={language === 'he' ? 'תומכים' : 'Pro votes'}>
+                         <ThumbsUp className="w-2.5 h-2.5 text-green-600" />
+                         {currentSnapshot.proVotes}
+                       </span>
+                       <span className="flex items-center gap-0.5" title={language === 'he' ? 'מתנגדים' : 'Con votes'}>
+                         <ThumbsDown className="w-2.5 h-2.5 text-red-600" />
+                         {currentSnapshot.conVotes}
+                       </span>
+                       {currentSnapshot.participantsAtAcceptance && (
+                         <span className="flex items-center gap-0.5" title={language === 'he' ? 'משתתפים במסמך' : 'Document participants'}>
+                           <Users className="w-2.5 h-2.5 text-blue-600" />
+                           {currentSnapshot.participantsAtAcceptance}
+                         </span>
+                       )}
+                       {currentSnapshot.suggestionConsensus !== undefined && (
+                         <>
+                           <span className="text-slate-400">•</span>
+                           <span className="flex items-center gap-0.5" title={language === 'he' ? 'מד קונצנזוס של הגרסה' : 'Version consensus'}>
+                             <TrendingUp className="w-2.5 h-2.5 text-purple-600" />
+                             {(currentSnapshot.suggestionConsensus * 100).toFixed(0)}%
+                           </span>
+                         </>
+                       )}
+                     </div>
+                   )}
                   </div>
                   <Button
                     variant="outline"
