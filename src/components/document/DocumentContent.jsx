@@ -1177,7 +1177,7 @@ Return ONLY the translated text:`;
                               ))}
 
                             {index > 0 && (
-                              <div className="group relative h-4 flex items-center justify-center -my-2">
+                              <div className="group relative h-4 flex items-center justify-center -my-2 -mb-4 z-10">
                                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                   <div className="h-full flex items-center justify-center">
                                     <Button
