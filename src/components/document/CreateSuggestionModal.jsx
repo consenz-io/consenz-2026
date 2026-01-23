@@ -286,37 +286,33 @@ Return ONLY the translated HTML:`;
         createdByLanguage: language, // Track language user was viewing when creating suggestion
       });
 
-      // All background tasks - don't block UI
-      Promise.all([
-        ensureUserPublicProfile(currentUser).catch(err => console.error('Error ensuring public profile:', err)),
-        base44.auth.updateMe({
-          suggestionsCreated: (currentUser.suggestionsCreated || 0) + 1,
-          ...(gamificationEnabled ? { points: currentPoints - pointsCost } : {})
-        }).catch(err => console.error('Error updating user:', err)),
-        gamificationEnabled ? base44.entities.PointsTransaction.create({
+      console.log('[CREATE SUGGESTION] ===== Suggestion created:', suggestion.id, 'type:', suggestion.type, '=====');
+      
+      // ===== Background tasks - fire-and-forget =====
+      ensureUserPublicProfile(currentUser).catch(() => {});
+      
+      base44.auth.updateMe({
+        suggestionsCreated: (currentUser.suggestionsCreated || 0) + 1,
+        ...(gamificationEnabled ? { points: currentPoints - pointsCost } : {})
+      }).catch(err => console.error('[UPDATE USER]', err));
+      
+      if (gamificationEnabled) {
+        base44.entities.PointsTransaction.create({
           userId: currentUser.id,
           amount: -pointsCost,
           action: 'suggestion_created',
           description: `${t('pointsTransactionCreated')} ${autoTitle}`,
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion'
-        }).catch(() => {}) : Promise.resolve()
-      ]).catch(err => console.error('Background tasks error:', err));
-
-      // Send notifications - wait for completion to ensure they're sent
-      console.log('[CREATE SUGGESTION] Suggestion created:', suggestion.id, 'type:', suggestion.type);
-      console.log('[CREATE SUGGESTION] Sending notifications...');
-      try {
-        await sendNotificationsInBackground(document, suggestion, currentUser);
-        console.log('[CREATE SUGGESTION] Notifications sent successfully');
-      } catch (err) {
-        console.error('[CREATE SUGGESTION] Notification error:', err);
-        console.error('[CREATE SUGGESTION] Error message:', err.message);
-        console.error('[CREATE SUGGESTION] Stack:', err.stack);
+        }).catch(err => console.error('[POINTS]', err));
       }
       
-      // Update contributors in background
       updateContributorsInBackground(document.id);
+      
+      // ===== Send notifications - MUST WAIT =====
+      console.log('[CREATE SUGGESTION] Sending notifications...');
+      await sendNotificationsInBackground(document, suggestion, currentUser);
+      console.log('[CREATE SUGGESTION] ✓ Notifications sent');
 
       return suggestion;
     },
