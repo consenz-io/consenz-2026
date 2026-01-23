@@ -162,6 +162,18 @@ export default function DocumentView() {
     enabled: !!documentId,
   });
 
+  // Calculate version count matching DocumentCleanView logic
+  const versionCount = React.useMemo(() => {
+    if (!documentVersions || documentVersions.length === 0) return 1;
+    // Count unique suggestions (each creates one snapshot in DocumentCleanView)
+    const uniqueSuggestions = new Set(
+      documentVersions
+        .filter(v => v.suggestionId)
+        .map(v => v.suggestionId)
+    );
+    return uniqueSuggestions.size + 1; // +1 for current version
+  }, [documentVersions]);
+
   // Count all section comments for this document
   const sectionCommentsCount = React.useMemo(() => {
     const sectionIds = sections.map(s => s.id);
@@ -950,10 +962,10 @@ export default function DocumentView() {
           <Link 
             to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`}
             className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-teal-400 hover:shadow-lg transition-all"
-            aria-label={`${documentVersions.length} ${language === 'he' ? 'גרסאות קודמות' : language === 'ar' ? 'الإصدارات السابقة' : 'versions'}. ${language === 'he' ? 'לחץ לצפייה בהיסטוריה' : 'Click to view history'}`}
+            aria-label={`${versionCount} ${language === 'he' ? 'גרסאות' : language === 'ar' ? 'الإصدارات' : 'versions'}. ${language === 'he' ? 'לחץ לצפייה בהיסטוריה' : 'Click to view history'}`}
           >
             <Clock className="w-4 h-4 md:w-6 md:h-6 text-teal-600" aria-hidden="true" />
-            <div className="text-base md:text-xl font-bold text-slate-900">{documentVersions.length}</div>
+            <div className="text-base md:text-xl font-bold text-slate-900">{versionCount}</div>
             <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{language === 'he' ? 'גרסאות' : language === 'ar' ? 'الإصدارات' : 'Versions'}</div>
           </Link>
         </div>
