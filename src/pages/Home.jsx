@@ -83,7 +83,8 @@ export default function Home() {
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
     initialData: [],
-    staleTime: 60000,
+    staleTime: 0,
+    refetchOnMount: 'always',
     // Always fetch - it's public data available to everyone
   });
 
