@@ -628,28 +628,34 @@ ${text}`;
       <div className="max-w-4xl mx-auto p-4 md:p-8 print:p-12">
         {/* Version Metadata */}
         {currentVersionIndex > 0 && currentSnapshot && currentSnapshot.suggestionId && (
-          <div className="mb-2 p-1.5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg shadow-sm">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-1">
-              <div className="flex flex-col items-center justify-center p-1.5 bg-white rounded shadow-sm">
-                <span className="text-sm font-bold text-green-600">{currentSnapshot.proVotes || 0}</span>
-                <span className="text-[9px] text-slate-600">{language === 'he' ? 'תמכו' : language === 'ar' ? 'مؤيدون' : 'Pro'}</span>
-              </div>
-              <div className="flex flex-col items-center justify-center p-1.5 bg-white rounded shadow-sm">
-                <span className="text-sm font-bold text-red-600">{currentSnapshot.conVotes || 0}</span>
-                <span className="text-[9px] text-slate-600">{language === 'he' ? 'התנגדו' : language === 'ar' ? 'معارضون' : 'Con'}</span>
-              </div>
-              <div className="flex flex-col items-center justify-center p-1.5 bg-white rounded shadow-sm">
-                <span className="text-sm font-bold text-blue-600">{currentSnapshot.participantsAtAcceptance || 0}</span>
-                <span className="text-[9px] text-slate-600 text-center">{language === 'he' ? 'משתתפים' : language === 'ar' ? 'مشاركون' : 'Participants'}</span>
-              </div>
-              <div className="flex flex-col items-center justify-center p-1.5 bg-white rounded shadow-sm">
-                <span className="text-sm font-bold text-purple-600">{((currentSnapshot.suggestionConsensus || 0) * 100).toFixed(0)}%</span>
-                <span className="text-[9px] text-slate-600 text-center">{language === 'he' ? 'קונצנזוס' : language === 'ar' ? 'إجماع' : 'Consensus'}</span>
-              </div>
-              <div className="flex flex-col items-center justify-center p-1.5 bg-white rounded shadow-sm col-span-2 md:col-span-3 lg:col-span-1">
-                <span className="text-sm font-bold text-indigo-600">{((currentSnapshot.documentConsensusAtTime || 0) * 100).toFixed(0)}%</span>
-                <span className="text-[9px] text-slate-600 text-center">{language === 'he' ? 'מד מסמך' : language === 'ar' ? 'مقياس وثيقة' : 'Doc meter'}</span>
-              </div>
+          <div className="mb-4 p-2 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg text-xs text-slate-700">
+            <div className="flex flex-wrap gap-x-4 gap-y-1">
+              <span>
+                <span className="font-semibold">{language === 'he' ? 'תמכו:' : language === 'ar' ? 'مؤيدون:' : 'Pro:'}</span>
+                {' '}<span className="text-green-600 font-bold">{currentSnapshot.proVotes || 0}</span>
+              </span>
+              <span>
+                <span className="font-semibold">{language === 'he' ? 'התנגדו:' : language === 'ar' ? 'معارضون:' : 'Con:'}</span>
+                {' '}<span className="text-red-600 font-bold">{currentSnapshot.conVotes || 0}</span>
+              </span>
+              <span>
+                <span className="font-semibold">{language === 'he' ? 'משתתפים:' : language === 'ar' ? 'مشاركون:' : 'Participants:'}</span>
+                {' '}<span className="text-blue-600 font-bold">{currentSnapshot.participantsAtAcceptance || 0}</span>
+              </span>
+              <span>
+                <span className="font-semibold">{language === 'he' ? 'קונצנזוס גרסה:' : language === 'ar' ? 'إجماع الإصدار:' : 'Version consensus:'}</span>
+                {' '}<span className="text-purple-600 font-bold">
+                  {(() => {
+                    const consensus = currentSnapshot.suggestionConsensus || 0;
+                    const percentage = consensus > 1 ? consensus : consensus * 100;
+                    return percentage.toFixed(0);
+                  })()}%
+                </span>
+              </span>
+              <span>
+                <span className="font-semibold">{language === 'he' ? 'מד קונצנזוס מסמך:' : language === 'ar' ? 'مقياس إجماع الوثيقة:' : 'Doc consensus:'}</span>
+                {' '}<span className="text-indigo-600 font-bold">{((currentSnapshot.documentConsensusAtTime || 0) * 100).toFixed(0)}%</span>
+              </span>
             </div>
           </div>
         )}
