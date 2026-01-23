@@ -324,7 +324,7 @@ const translations = {
     conVotes: "הצבעות נגד",
     consensus: "קונצנזוס",
     votesNeeded: "הצבעות נדרשות",
-    passedConsensus: "עבר את סף הקונסנזוס!",
+    passedConsensus: "עבר את סף הקונצנזוס!",
     cannotPass: "לא יכול לעבור",
     
     // סטטוס
