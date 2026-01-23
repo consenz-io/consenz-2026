@@ -132,6 +132,14 @@ export default function DocumentCleanView() {
       if (v.sectionId) allSectionIds.add(v.sectionId);
     });
     
+    // Calculate current weighted consensus from document.consensuses
+    const currentWeightedConsensus = React.useMemo(() => {
+      const consensuses = document?.consensuses || [];
+      if (consensuses.length === 0) return 0.5;
+      const avg = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
+      return avg;
+    }, [document]);
+    
     // Current state snapshot
     const currentSnapshot = {
       version: 'current',
@@ -140,7 +148,7 @@ export default function DocumentCleanView() {
       sectionContents: {},
       existingSections: new Set(),
       allSectionIds: allSectionIds,
-      documentConsensus: document?.avgSuggestionConsensus || 0.5,
+      weightedConsensus: currentWeightedConsensus,
       documentThreshold: document?.threshold || 2,
       totalParticipants: document?.totalUsersInteracted || 0
     };
@@ -192,6 +200,19 @@ export default function DocumentCleanView() {
       // Find the related suggestion
       const relatedSuggestion = suggestions.find(s => s.id === afterVersion.suggestionId);
       
+      // Calculate weighted consensus at this point in time
+      // Include all suggestions accepted up to and including this one
+      const acceptedSuggestionsUpToHere = suggestions
+        .filter(s => s.status === 'accepted' && new Date(s.created_date) <= new Date(afterVersion.created_date))
+        .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+
+      const weightedConsensusAtTime = acceptedSuggestionsUpToHere.length === 0 ? 0.5 : 
+        acceptedSuggestionsUpToHere.reduce((sum, s) => {
+          const total = (s.proVotes || 0) + (s.conVotes || 0);
+          const consensus = total > 0 ? (s.proVotes || 0) / total : 0;
+          return sum + Math.min(1, consensus);
+        }, 0) / acceptedSuggestionsUpToHere.length;
+
       // This snapshot shows the state RIGHT AFTER this change was applied
       const snapshotAfterChange = {
         version: afterVersion.version,
@@ -210,7 +231,7 @@ export default function DocumentCleanView() {
         conVotes: relatedSuggestion?.conVotes || 0,
         participantsAtAcceptance: relatedSuggestion?.participantsAtAcceptance || 0,
         suggestionConsensus: relatedSuggestion?.suggestionConsensus || 0,
-        documentConsensusAtTime: document?.avgSuggestionConsensus || 0.5,
+        weightedConsensus: weightedConsensusAtTime,
         documentThresholdAtTime: document?.threshold || 2
       };
       
@@ -664,8 +685,8 @@ ${text}`;
               </span>
               <span className="text-slate-300">|</span>
               <span className="px-2 py-1 bg-white rounded border border-indigo-200">
-                <span className="font-semibold">{language === 'he' ? 'מד קונצנזוס מסמך:' : language === 'ar' ? 'مقياس إجماع الوثيقة:' : 'Doc consensus:'}</span>
-                {' '}<span className="text-indigo-600 font-bold">{((currentSnapshot.documentConsensusAtTime || 0) * 100).toFixed(0)}%</span>
+                <span className="font-semibold">{language === 'he' ? 'קונצנזוס משוקלל:' : language === 'ar' ? 'إجماع موزون:' : 'Weighted consensus:'}</span>
+                {' '}<span className="text-indigo-600 font-bold">{((currentSnapshot.weightedConsensus || 0.5) * 100).toFixed(0)}%</span>
               </span>
             </div>
           </Link>
