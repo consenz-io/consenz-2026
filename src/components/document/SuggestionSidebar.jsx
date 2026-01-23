@@ -233,6 +233,16 @@ export default function SuggestionSidebar({
       // פעולות רקע - fire-and-forget (רק עבור הצבעה חדשה)
       if (voteAction === 'create') {
         ensureUserPublicProfile(user).catch(() => {});
+        
+        // שליחת התראה על הצבעה
+        import('../notifications/createNotification').then(({ notifyVoteOnSuggestion }) => {
+          notifyVoteOnSuggestion({ 
+            suggestion, 
+            voterEmail: user.email,
+            voterName: user.full_name 
+          }).catch(err => console.error('[VOTE NOTIFICATION]', err));
+        }).catch(() => {});
+        
         import('./calculateContributors').then(({ calculateDocumentContributors }) => 
           calculateDocumentContributors(suggestion.documentId).then(count => 
             base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count })
@@ -422,11 +432,9 @@ export default function SuggestionSidebar({
 
       await base44.entities.Suggestion.update(suggestionId, { status });
       
-      try {
-        await notifySuggestionStatusChange({ suggestion, newStatus: status });
-      } catch (notifError) {
-        console.error('[STATUS NOTIFICATION ERROR]', notifError);
-      }
+      // שליחת התראה על שינוי סטטוס - חובה לחכות שתסתיים
+      console.log('[UPDATE STATUS] Sending status change notifications...');
+      await notifySuggestionStatusChange({ suggestion, newStatus: status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });

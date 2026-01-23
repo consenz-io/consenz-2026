@@ -342,106 +342,89 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
  * Create notification for suggestion status change
  */
 export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
+  console.log('[NOTIFY STATUS] ===== START =====');
+  console.log('[NOTIFY STATUS] Suggestion:', suggestion.id, 'Status:', newStatus);
+  
   try {
-    if (!suggestion || !suggestion.id) {
-      console.error('[NOTIFICATION ERROR] Invalid suggestion:', suggestion);
+    if (!suggestion?.id || !suggestion?.created_by) {
+      console.error('[NOTIFY STATUS] ✗ Missing data:', { id: suggestion?.id, created_by: suggestion?.created_by });
       return;
     }
-    
-    if (!suggestion.created_by) {
-      console.error('[NOTIFICATION ERROR] Suggestion missing created_by:', suggestion.id);
-      return;
-    }
-    
-    const notifiedUserIds = new Set();
-    const notifications = [];
-    const actionUrl = createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
     
     const statusKeys = {
       accepted: { titleKey: 'notifAcceptedTitle', messageKey: 'notifAcceptedMessage' },
       rejected: { titleKey: 'notifRejectedTitle', messageKey: 'notifRejectedMessage' }
     };
+    
+    if (!statusKeys[newStatus]) {
+      console.error('[NOTIFY STATUS] ✗ Invalid status:', newStatus);
+      return;
+    }
+    
     const statusKey = statusKeys[newStatus];
-    if (!statusKey) {
-      console.error('[NOTIFICATION ERROR] Invalid status:', newStatus);
+    const notifiedUserIds = new Set();
+    const notifications = [];
+    const actionUrl = createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
+    
+    // 1. Fetch suggestion creator
+    console.log('[NOTIFY STATUS] Fetching creator:', suggestion.created_by);
+    const creatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+    
+    if (!creatorList || creatorList.length === 0) {
+      console.error('[NOTIFY STATUS] ✗ Creator not found');
       return;
     }
     
-    const suggestionTitle = suggestion.title || 'Untitled suggestion';
-    
-    // 1. Suggestion creator - direct fetch from DB
-    console.log('[NOTIFICATION] Looking for suggestion creator:', suggestion.created_by);
-    const suggestionCreatorList = await base44.entities.User.filter({ email: suggestion.created_by });
-    console.log('[NOTIFICATION] Found users:', suggestionCreatorList?.length || 0, suggestionCreatorList?.map(u => u.email));
-    const suggestionCreator = suggestionCreatorList?.[0];
-    
-    if (suggestionCreator) {
-      console.log('[NOTIFICATION] Found creator:', suggestionCreator.email, 'ID:', suggestionCreator.id);
-      notifiedUserIds.add(suggestionCreator.id);
-      const userLang = suggestionCreator.preferredLanguage || 'he';
-      
-      // Fetch document for context
-      const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
-      const doc = docs[0];
-      
-      notifications.push({
-        userId: suggestionCreator.id,
-        type: newStatus === 'accepted' ? 'suggestion_accepted' : 'suggestion_rejected',
-        title: translate(statusKey.titleKey, userLang),
-        message: translate(statusKey.messageKey, userLang, { title: suggestionTitle }),
-        relatedEntityId: suggestion.id,
-        relatedEntityType: 'suggestion',
-        actionUrl,
-        documentId: suggestion.documentId,
-        documentTitle: doc?.title
-      });
-      console.log('[NOTIFICATION] Added notification for suggestion creator:', suggestionCreator.email);
-    } else {
-      console.error('[NOTIFICATION ERROR] Suggestion creator not found in DB:', suggestion.created_by);
-      console.error('[NOTIFICATION ERROR] suggestionCreatorList was:', suggestionCreatorList);
+    const creator = creatorList[0];
+    if (!creator.id) {
+      console.error('[NOTIFY STATUS] ✗ Creator has no ID');
       return;
     }
     
-    // 2. If accepted - document creator, admins, and pro voters
+    notifiedUserIds.add(creator.id);
+    const userLang = creator.preferredLanguage || 'he';
+    
+    // Fetch document for context
+    const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
+    const doc = docs[0];
+    
+    notifications.push({
+      userId: creator.id,
+      type: newStatus === 'accepted' ? 'suggestion_accepted' : 'suggestion_rejected',
+      title: translate(statusKey.titleKey, userLang),
+      message: translate(statusKey.messageKey, userLang, { title: suggestion.title || 'הצעה' }),
+      relatedEntityId: suggestion.id,
+      relatedEntityType: 'suggestion',
+      actionUrl,
+      documentId: suggestion.documentId,
+      documentTitle: doc?.title
+    });
+    console.log('[NOTIFY STATUS] ✓ Added creator notification');
+  
+    
+    // 2. If accepted - notify admins and pro voters
     if (newStatus === 'accepted') {
+      console.log('[NOTIFY STATUS] Fetching voters and admins...');
       const [adminIds, proVotes, publicProfiles] = await Promise.all([
         getDocumentAdmins(suggestion.documentId),
         base44.entities.Vote.filter({ suggestionId: suggestion.id, vote: 'pro' }),
         getCachedPublicProfiles()
       ]);
       
-      // Fetch only relevant users instead of all
+      console.log('[NOTIFY STATUS] Admins:', adminIds.length, 'Pro votes:', proVotes.length);
+      
+      // Fetch relevant users
       const relevantUserIds = [...new Set([
         ...adminIds,
         ...proVotes.map(v => v.userId)
-      ].filter(Boolean))];
+      ].filter(Boolean).filter(id => id !== creator.id))];
       
+      console.log('[NOTIFY STATUS] Fetching', relevantUserIds.length, 'users...');
       const allUsers = relevantUserIds.length > 0 
         ? await base44.entities.User.filter({ id: { $in: relevantUserIds } })
         : [];
       
-      const docCreator = await getDocumentCreator(suggestion.documentId, allUsers, publicProfiles);
-      if (docCreator && !notifiedUserIds.has(docCreator.id)) {
-        notifiedUserIds.add(docCreator.id);
-        const userLang = docCreator.preferredLanguage || 'he';
-        const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
-        const doc = docs[0];
-        notifications.push({
-          userId: docCreator.id,
-          type: 'suggestion_accepted',
-          title: translate('notifAcceptedTitle', userLang),
-          message: translate('notifAcceptedMessage', userLang, { title: suggestionTitle }),
-          relatedEntityId: suggestion.id,
-          relatedEntityType: 'suggestion',
-          actionUrl,
-          documentId: suggestion.documentId,
-          documentTitle: doc?.title
-        });
-      }
-      
-      const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
-      const doc = docs[0];
-      
+      // Notify admins
       for (const adminId of adminIds) {
         if (notifiedUserIds.has(adminId)) continue;
         notifiedUserIds.add(adminId);
@@ -451,7 +434,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
           userId: adminId,
           type: 'suggestion_accepted',
           title: translate('notifAcceptedTitle', userLang),
-          message: translate('notifAcceptedMessage', userLang, { title: suggestionTitle }),
+          message: translate('notifAcceptedMessage', userLang, { title: suggestion.title || 'הצעה' }),
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
           actionUrl,
@@ -459,7 +442,9 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
           documentTitle: doc?.title
         });
       }
+      console.log('[NOTIFY STATUS] ✓ Added', adminIds.length, 'admin notifications');
       
+      // Notify pro voters
       for (const vote of proVotes) {
         if (notifiedUserIds.has(vote.userId)) continue;
         notifiedUserIds.add(vote.userId);
@@ -469,7 +454,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
           userId: vote.userId,
           type: 'suggestion_accepted',
           title: translate('notifAcceptedVoterTitle', userLang),
-          message: translate('notifAcceptedVoterMessage', userLang, { title: suggestionTitle }),
+          message: translate('notifAcceptedVoterMessage', userLang, { title: suggestion.title || 'הצעה' }),
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
           actionUrl,
@@ -477,18 +462,20 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
           documentTitle: doc?.title
         });
       }
+      console.log('[NOTIFY STATUS] ✓ Added', proVotes.length, 'voter notifications');
     }
     
+    console.log('[NOTIFY STATUS] Total to send:', notifications.length);
+    
     if (notifications.length > 0) {
-      console.log('[NOTIFY STATUS] Creating', notifications.length, 'notifications...');
       const { successful, failed } = await batchCreateNotifications(notifications);
       console.log(`[NOTIFY STATUS] ✓ Complete: ${successful} sent, ${failed} failed`);
-    } else {
-      console.warn('[NOTIFY STATUS] No notifications to send');
     }
+    
+    console.log('[NOTIFY STATUS] ===== END =====');
   } catch (error) {
-    console.error('[NOTIFICATION ERROR] Failed to send notifications:', error);
-    console.error('[NOTIFICATION ERROR] Stack:', error.stack);
+    console.error('[NOTIFY STATUS] ✗ CRITICAL ERROR:', error?.message || error);
+    console.error('[NOTIFY STATUS] Stack:', error?.stack);
     throw error;
   }
 }
@@ -587,130 +574,99 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
     console.log('[NOTIFY NEW SUGGESTION] - Total comments:', allComments.length);
 
     // ===== Auto-follow current user on first interaction =====
-    console.log('[NOTIFY NEW SUGGESTION] ===== AUTO-FOLLOW CHECK =====');
-    try {
-      const existingFollow = await base44.entities.DocumentFollow.filter({
-        documentId: doc.id,
-        userId: currentUser.id
-      });
-      
-      if (existingFollow.length === 0) {
-        console.log('[NOTIFY NEW SUGGESTION] Creating auto-follow for user:', currentUser.email);
-        await base44.entities.DocumentFollow.create({
+    console.log('[NOTIFY NEW SUGGESTION] Auto-follow check...');
+    if (currentUser?.id) {
+      try {
+        const existingFollow = await base44.entities.DocumentFollow.filter({
           documentId: doc.id,
-          userId: currentUser.id,
-          followedAt: new Date().toISOString()
+          userId: currentUser.id
         });
-        console.log('[NOTIFY NEW SUGGESTION] Auto-follow created successfully');
-      } else {
-        console.log('[NOTIFY NEW SUGGESTION] User already following document');
+        
+        if (existingFollow.length === 0) {
+          await base44.entities.DocumentFollow.create({
+            documentId: doc.id,
+            userId: currentUser.id,
+            followedAt: new Date().toISOString()
+          });
+          console.log('[NOTIFY NEW SUGGESTION] ✓ Auto-followed');
+        }
+      } catch (followError) {
+        console.error('[NOTIFY NEW SUGGESTION] Auto-follow error:', followError);
       }
-    } catch (followError) {
-      console.error('[NOTIFY NEW SUGGESTION] Error with auto-follow:', followError);
-      // Don't throw - this shouldn't block notifications
     }
     
     // ===== Fetch document followers =====
-    console.log('[NOTIFY NEW SUGGESTION] ===== FETCHING DOCUMENT FOLLOWERS =====');
+    console.log('[NOTIFY NEW SUGGESTION] Fetching followers...');
     const followers = await base44.entities.DocumentFollow.filter({ documentId: doc.id });
-    console.log('[NOTIFY NEW SUGGESTION] Found', followers.length, 'followers');
-    console.log('[NOTIFY NEW SUGGESTION] Current user ID:', currentUser.id);
-    console.log('[NOTIFY NEW SUGGESTION] All follower user IDs:', followers.map(f => f.userId));
+    console.log('[NOTIFY NEW SUGGESTION] Found', followers.length, 'total followers');
     
-    const followerUserIds = followers.map(f => f.userId).filter(id => {
-      const shouldInclude = id !== currentUser.id;
-      if (!shouldInclude) {
-        console.log('[NOTIFY NEW SUGGESTION] Excluding current user from followers:', id);
-      }
-      return shouldInclude;
-    });
-    console.log('[NOTIFY NEW SUGGESTION] Follower user IDs (excluding current user):', followerUserIds.length, followerUserIds);
+    const followerUserIds = followers
+      .map(f => f.userId)
+      .filter(id => id && id !== currentUser.id);
+    
+    console.log('[NOTIFY NEW SUGGESTION] Followers to notify:', followerUserIds.length);
     
     if (followerUserIds.length === 0) {
-      console.log('[NOTIFY NEW SUGGESTION] ===== NO FOLLOWERS TO NOTIFY =====');
+      console.log('[NOTIFY NEW SUGGESTION] ✓ No followers - skipping');
       return;
     }
     
-    // ===== Fetch follower users =====
-    console.log('[NOTIFY NEW SUGGESTION] ===== FETCHING FOLLOWER USER DATA =====');
+    // Fetch follower users
     const users = await base44.entities.User.filter({ 
       id: { $in: followerUserIds } 
     });
+    console.log('[NOTIFY NEW SUGGESTION] Fetched', users.length, 'user records');
     
-    console.log('[NOTIFY NEW SUGGESTION] Fetched', users.length, 'follower users');
-    
-    // ===== Build notifications =====
-    console.log('[NOTIFY NEW SUGGESTION] ===== BUILDING NOTIFICATIONS =====');
+    // Build notifications
     const notifications = [];
     
-    // Build action URL based on entity type
-    let actionUrl;
-    if (relatedEntityType === 'topic_edit_suggestion' && topicId) {
-      // For topic edit suggestions, navigate to document view with hash to topic
-      actionUrl = `${createPageUrl("DocumentView")}?id=${doc.id}#topic-${topicId}`;
-    } else {
-      // For regular suggestions, use suggestion detail page
-      actionUrl = createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
-    }
-    console.log('[NOTIFY NEW SUGGESTION] Action URL:', actionUrl);
+    // Build action URL
+    const actionUrl = relatedEntityType === 'topic_edit_suggestion' && topicId
+      ? `${createPageUrl("DocumentView")}?id=${doc.id}#topic-${topicId}`
+      : createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
     
     const suggestionTypeText = relatedEntityType === 'topic_edit_suggestion'
-      ? 'topic title edit suggestion'
+      ? (language === 'he' ? 'הצעת שינוי לכותרת נושא' : 'topic edit')
       : suggestion.type === 'new_section' 
-      ? 'new section suggestion' 
-      : 'section edit suggestion';
-
-    let successfulNotifications = 0;
-    let failedNotifications = 0;
+      ? (language === 'he' ? 'סעיף חדש' : 'new section')
+      : (language === 'he' ? 'עריכת סעיף' : 'section edit');
     
-    for (const user of users) {
-      if (!user.id) {
-        console.error('[NOTIFY NEW SUGGESTION] ERROR: User has no ID:', user.email);
-        failedNotifications++;
+    for (const followerUser of users) {
+      if (!followerUser.id) {
+        console.warn('[NOTIFY NEW SUGGESTION] Skipping user without ID');
         continue;
       }
       
-      const userLang = user.preferredLanguage || 'he';
-      const notifTitle = translate('notifNewSuggestionTitle', userLang);
-      const notifMessage = `${currentUser.full_name} published a ${suggestionTypeText} in document "${doc.title}"`;
+      const userLang = followerUser.preferredLanguage || 'he';
       
       notifications.push({
-        userId: user.id,
+        userId: followerUser.id,
         type: 'new_suggestion_in_followed_document',
-        title: notifTitle,
-        message: notifMessage,
+        title: translate('notifNewSuggestionTitle', userLang),
+        message: translate('notifNewSuggestionMessage', userLang, { 
+          name: currentUser.full_name, 
+          title: doc.title 
+        }),
         relatedEntityId: suggestion.id,
         relatedEntityType: relatedEntityType,
         actionUrl,
         documentId: doc.id,
         documentTitle: doc.title
       });
-      successfulNotifications++;
-      
-      console.log('[NOTIFY NEW SUGGESTION] Created notification for:', user.email, '/', user.full_name || user.email);
     }
-
-    console.log('[NOTIFY NEW SUGGESTION] ===== NOTIFICATION SUMMARY =====');
-    console.log('[NOTIFY NEW SUGGESTION] Successfully prepared:', successfulNotifications);
-    console.log('[NOTIFY NEW SUGGESTION] Failed to prepare:', failedNotifications);
-    console.log('[NOTIFY NEW SUGGESTION] Total notifications to send:', notifications.length);
+    
+    console.log('[NOTIFY NEW SUGGESTION] Prepared', notifications.length, 'notifications');
     
     if (notifications.length > 0) {
-      console.log('[NOTIFY NEW SUGGESTION] Sending', notifications.length, 'notifications...');
       const { successful, failed } = await batchCreateNotifications(notifications);
-      console.log(`[NOTIFY NEW SUGGESTION] ✓ Complete: ${successful} sent, ${failed} failed`);
-    } else {
-      console.log('[NOTIFY NEW SUGGESTION] No notifications to send');
+      console.log(`[NOTIFY NEW SUGGESTION] ✓ ${successful} sent, ${failed} failed`);
     }
+    
+    console.log('[NOTIFY NEW SUGGESTION] ===== END =====');
   } catch (error) {
-    console.error('[NOTIFICATION ERROR] ===== CRITICAL ERROR IN notifyNewSuggestion =====');
-    console.error('[NOTIFICATION ERROR] Error:', error);
-    console.error('[NOTIFICATION ERROR] Error message:', error.message);
-    console.error('[NOTIFICATION ERROR] Stack trace:', error.stack);
-    console.error('[NOTIFICATION ERROR] Suggestion ID:', suggestion?.id);
-    console.error('[NOTIFICATION ERROR] Document ID:', doc?.id);
-    console.error('[NOTIFICATION ERROR] Current user:', currentUser?.email);
-    throw error;
+    console.error('[NOTIFY NEW SUGGESTION] ✗ CRITICAL:', error?.message || error);
+    console.error('[NOTIFY NEW SUGGESTION] Stack:', error?.stack);
+    // Don't throw - notifications should not break the main flow
   }
 }
 
