@@ -855,10 +855,11 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
     });
     
     if (notifications.length > 0) {
-      await batchCreateNotifications(notifications);
+      const { successful, failed } = await batchCreateNotifications(notifications);
+      console.log(`[NOTIFY COMMENT] ✓ ${successful} sent, ${failed} failed`);
     }
   } catch (error) {
-    console.error('[NOTIFICATION ERROR]', error);
+    console.error('[NOTIFY COMMENT] Error:', error?.message || error);
   }
 }
 
@@ -999,9 +1000,10 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
     });
     
     if (notifications.length > 0) {
-      await batchCreateNotifications(notifications);
+      const { successful, failed } = await batchCreateNotifications(notifications);
+      console.log(`[NOTIFY DOC COMMENT] ✓ ${successful} sent, ${failed} failed`);
     }
   } catch (error) {
-    console.error('[NOTIFICATION ERROR]', error);
+    console.error('[NOTIFY DOC COMMENT] Error:', error?.message || error);
   }
 }
