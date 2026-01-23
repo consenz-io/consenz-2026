@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import { calculateContributorsFromData } from "@/components/document/calculateContributors";
 import AllContributorsModal from "@/components/home/AllContributorsModal";
+import ActivityChatBot from "@/components/home/ActivityChatBot";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -549,6 +550,8 @@ export default function Home() {
         onClose={() => setShowContributorsModal(false)}
         contributors={displayedUsers}
       />
+      
+      <ActivityChatBot />
     </div>
   );
 }
