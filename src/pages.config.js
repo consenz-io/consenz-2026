@@ -4,7 +4,6 @@ import CreateGroup from './pages/CreateGroup';
 import DocumentAdmin from './pages/DocumentAdmin';
 import DocumentCleanView from './pages/DocumentCleanView';
 import DocumentComments from './pages/DocumentComments';
-import DocumentVersions from './pages/DocumentVersions';
 import DocumentView from './pages/DocumentView';
 import EmailLogs from './pages/EmailLogs';
 import EmailSettings from './pages/EmailSettings';
@@ -27,7 +26,6 @@ export const PAGES = {
     "DocumentAdmin": DocumentAdmin,
     "DocumentCleanView": DocumentCleanView,
     "DocumentComments": DocumentComments,
-    "DocumentVersions": DocumentVersions,
     "DocumentView": DocumentView,
     "EmailLogs": EmailLogs,
     "EmailSettings": EmailSettings,

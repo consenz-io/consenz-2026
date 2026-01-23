@@ -948,7 +948,7 @@ export default function DocumentView() {
             <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('consensus')}</div>
           </Link>
           <Link 
-            to={`${createPageUrl("DocumentVersions")}?id=${documentId}`}
+            to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`}
             className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-amber-400 hover:shadow-lg transition-all"
             aria-label={`${documentVersions.length} ${language === 'he' ? 'גרסאות קודמות' : language === 'ar' ? 'الإصدارات السابقة' : 'versions'}. ${language === 'he' ? 'לחץ לצפייה בהיסטוריה' : 'Click to view history'}`}
           >
