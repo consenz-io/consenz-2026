@@ -244,6 +244,9 @@ export default function DocumentCleanView() {
         snapshotAfterChange.isDeleted = true;
         snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
         snapshotAfterChange.deletedSectionContent = beforeVersion.content;
+        // Keep the deleted section in sectionContents so it can be displayed
+        snapshotAfterChange.sectionContents[afterVersion.sectionId] = beforeVersion.content;
+        snapshotAfterChange.existingSections.add(afterVersion.sectionId);
       }
       
       snapshots.push(snapshotAfterChange);
@@ -792,18 +795,13 @@ ${text}`;
                           currentSnapshot?.deletedSectionId === section.id;
 
                         // Check if this section changed between versions (content edit)
-                        // This section changed if:
-                        // 1. We're in this snapshot's changed section AND
-                        // 2. There's actual new content AND
-                        // 3. We have an older version to compare to
+                        // Compare the snapshot's content with the newer version's content
                         const hasChanged = isViewingHistory && 
                           !isDeletedSection &&
-                          !isNewlyCreatedSection &&
                           currentSnapshot?.changedSectionId === section.id && 
                           currentSnapshot?.newContent && 
                           currentSnapshot?.newContent !== '' &&
-                          olderContent &&
-                          olderContent !== currentSnapshot?.newContent;
+                          displayedContent !== currentSnapshot?.newContent;
 
                         return (
                           <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
