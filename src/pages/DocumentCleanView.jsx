@@ -627,28 +627,28 @@ ${text}`;
       {/* Document Content */}
       <div className="max-w-4xl mx-auto p-4 md:p-8 print:p-12">
         {/* Version Metadata */}
-        {currentVersionIndex > 0 && currentSnapshot && (
-          <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-lg text-sm">
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-slate-700">
-              <div>
-                <span className="font-semibold">{language === 'he' ? 'תמכו:' : language === 'ar' ? 'مؤيدون:' : 'Pro:'}</span>
-                <span className="ml-1">{currentSnapshot.proVotes || 0}</span>
+        {currentVersionIndex > 0 && currentSnapshot && currentSnapshot.suggestionId && (
+          <div className="mb-8 p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl shadow-sm">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              <div className="flex flex-col items-center justify-center p-3 bg-white rounded-lg shadow-sm">
+                <span className="text-2xl font-bold text-green-600">{currentSnapshot.proVotes || 0}</span>
+                <span className="text-xs text-slate-600 mt-1">{language === 'he' ? 'תמכו' : language === 'ar' ? 'مؤيدون' : 'Pro votes'}</span>
               </div>
-              <div>
-                <span className="font-semibold">{language === 'he' ? 'התנגדו:' : language === 'ar' ? 'معارضون:' : 'Con:'}</span>
-                <span className="ml-1">{currentSnapshot.conVotes || 0}</span>
+              <div className="flex flex-col items-center justify-center p-3 bg-white rounded-lg shadow-sm">
+                <span className="text-2xl font-bold text-red-600">{currentSnapshot.conVotes || 0}</span>
+                <span className="text-xs text-slate-600 mt-1">{language === 'he' ? 'התנגדו' : language === 'ar' ? 'معارضون' : 'Con votes'}</span>
               </div>
-              <div>
-                <span className="font-semibold">{language === 'he' ? 'משתתפים בעת קבלת ההצעה:' : language === 'ar' ? 'المشاركون عند القبول:' : 'Participants at acceptance:'}</span>
-                <span className="ml-1">{currentSnapshot.participantsAtAcceptance || 0}</span>
+              <div className="flex flex-col items-center justify-center p-3 bg-white rounded-lg shadow-sm">
+                <span className="text-2xl font-bold text-blue-600">{currentSnapshot.participantsAtAcceptance || 0}</span>
+                <span className="text-xs text-slate-600 mt-1 text-center">{language === 'he' ? 'משתתפים' : language === 'ar' ? 'مشاركون' : 'Participants'}</span>
               </div>
-              <div>
-                <span className="font-semibold">{language === 'he' ? 'קונצנזוס גרסה זו:' : language === 'ar' ? 'إجماع هذا الإصدار:' : 'Version consensus:'}</span>
-                <span className="ml-1">{((currentSnapshot.suggestionConsensus || 0) * 100).toFixed(0)}%</span>
+              <div className="flex flex-col items-center justify-center p-3 bg-white rounded-lg shadow-sm">
+                <span className="text-2xl font-bold text-purple-600">{((currentSnapshot.suggestionConsensus || 0) * 100).toFixed(0)}%</span>
+                <span className="text-xs text-slate-600 mt-1 text-center">{language === 'he' ? 'קונצנזוס גרסה' : language === 'ar' ? 'إجماع الإصدار' : 'Version consensus'}</span>
               </div>
-              <div>
-                <span className="font-semibold">{language === 'he' ? 'מד הקונצנזוס המשוכלל למסמך:' : language === 'ar' ? 'مقياس الإجماع للوثيقة:' : 'Document consensus meter:'}</span>
-                <span className="ml-1">{((currentSnapshot.documentConsensusAtTime || 0) * 100).toFixed(0)}%</span>
+              <div className="flex flex-col items-center justify-center p-3 bg-white rounded-lg shadow-sm col-span-2 md:col-span-3 lg:col-span-1">
+                <span className="text-2xl font-bold text-indigo-600">{((currentSnapshot.documentConsensusAtTime || 0) * 100).toFixed(0)}%</span>
+                <span className="text-xs text-slate-600 mt-1 text-center">{language === 'he' ? 'מד קונצנזוס מסמך' : language === 'ar' ? 'مقياس إجماع الوثيقة' : 'Document consensus'}</span>
               </div>
             </div>
           </div>
