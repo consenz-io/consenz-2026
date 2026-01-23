@@ -58,7 +58,7 @@ const sendNotificationsInBackground = async (doc, suggestion, currentUser) => {
       console.log('[CREATE SUGGESTION MODAL] Updated current user:', currentUser);
     }
     
-    const { notifyNewSuggestion } = await import('@/components/notifications/createNotificationSimple');
+    const { notifyNewSuggestion } = await import('@/components/notifications/createNotification');
     console.log('[CREATE SUGGESTION MODAL] Calling notifyNewSuggestion...');
     await notifyNewSuggestion({
       suggestion,
