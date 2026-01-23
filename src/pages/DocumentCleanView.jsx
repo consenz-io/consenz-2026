@@ -133,12 +133,9 @@ export default function DocumentCleanView() {
     });
     
     // Calculate current weighted consensus from document.consensuses
-    const currentWeightedConsensus = React.useMemo(() => {
-      const consensuses = document?.consensuses || [];
-      if (consensuses.length === 0) return 0.5;
-      const avg = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-      return avg;
-    }, [document]);
+    const consensuses = document?.consensuses || [];
+    const currentWeightedConsensus = consensuses.length === 0 ? 0.5 :
+      consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
     
     // Current state snapshot
     const currentSnapshot = {
