@@ -176,7 +176,7 @@ export default function TopicTitleCarousel({
                     return votesNeeded > 0 ? (
                       <span>נדרשים עוד {votesNeeded} תומכים</span>
                     ) : (
-                      <span className="text-green-600 font-semibold">✓ עבר את סף הקונסנזוס</span>
+                      <span className="text-green-600 font-semibold">✓ עבר את סף הקונצנזוס</span>
                     );
                   })()}
                 </div>
