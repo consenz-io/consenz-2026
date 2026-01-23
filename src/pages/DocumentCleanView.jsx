@@ -628,8 +628,8 @@ ${text}`;
       <div className="max-w-4xl mx-auto p-4 md:p-8 print:p-12">
         {/* Version Metadata */}
         {currentVersionIndex > 0 && currentSnapshot && currentSnapshot.suggestionId && (
-          <div className="mb-4 p-3 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg text-xs text-slate-700 w-full">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+          <div className="mb-4 p-3 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg text-xs text-slate-700 w-full max-w-full">
+            <div className="flex flex-wrap items-center justify-start gap-x-2 gap-y-2 w-full">
               <span className="px-2 py-1 bg-white rounded border border-green-200">
                 <span className="font-semibold">{language === 'he' ? 'תמכו:' : language === 'ar' ? 'مؤيدون:' : 'Pro:'}</span>
                 {' '}<span className="text-green-600 font-bold">{currentSnapshot.proVotes || 0}</span>
