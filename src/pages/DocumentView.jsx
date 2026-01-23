@@ -949,10 +949,10 @@ export default function DocumentView() {
           </Link>
           <Link 
             to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`}
-            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-amber-400 hover:shadow-lg transition-all"
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-teal-400 hover:shadow-lg transition-all"
             aria-label={`${documentVersions.length} ${language === 'he' ? 'גרסאות קודמות' : language === 'ar' ? 'الإصدارات السابقة' : 'versions'}. ${language === 'he' ? 'לחץ לצפייה בהיסטוריה' : 'Click to view history'}`}
           >
-            <Clock className="w-4 h-4 md:w-6 md:h-6 text-amber-600" aria-hidden="true" />
+            <Clock className="w-4 h-4 md:w-6 md:h-6 text-teal-600" aria-hidden="true" />
             <div className="text-base md:text-xl font-bold text-slate-900">{documentVersions.length}</div>
             <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{language === 'he' ? 'גרסאות' : language === 'ar' ? 'الإصدارات' : 'Versions'}</div>
           </Link>
