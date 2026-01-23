@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle, ChevronLeft, ChevronRight, MoreVertical, Bell, BellOff } from "lucide-react";
+import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle, ChevronLeft, ChevronRight, MoreVertical, Bell, BellOff, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/components/LanguageContext";
@@ -151,6 +151,13 @@ export default function DocumentView() {
   const { data: documentAgreements } = useQuery({
     queryKey: ['documentAgreements', documentId],
     queryFn: () => base44.entities.DocumentAgreement.filter({ documentId }),
+    initialData: [],
+    enabled: !!documentId,
+  });
+
+  const { data: documentVersions } = useQuery({
+    queryKey: ['documentVersions', documentId],
+    queryFn: () => base44.entities.DocumentVersion.filter({ documentId }),
     initialData: [],
     enabled: !!documentId,
   });
@@ -885,7 +892,7 @@ export default function DocumentView() {
 
         </div>
 
-        <div className="grid grid-cols-3 gap-3 md:gap-4 w-full max-w-full">
+        <div className="grid grid-cols-4 gap-2 md:gap-4 w-full max-w-full">
           <button
             type="button"
             className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-blue-400 hover:shadow-lg transition-all"
@@ -939,6 +946,15 @@ export default function DocumentView() {
               })()}%
             </div>
             <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('consensus')}</div>
+          </Link>
+          <Link 
+            to={`${createPageUrl("DocumentVersions")}?id=${documentId}`}
+            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-amber-400 hover:shadow-lg transition-all"
+            aria-label={`${documentVersions.length} ${language === 'he' ? 'גרסאות קודמות' : language === 'ar' ? 'الإصدارات السابقة' : 'versions'}. ${language === 'he' ? 'לחץ לצפייה בהיסטוריה' : 'Click to view history'}`}
+          >
+            <Clock className="w-4 h-4 md:w-6 md:h-6 text-amber-600" aria-hidden="true" />
+            <div className="text-base md:text-xl font-bold text-slate-900">{documentVersions.length}</div>
+            <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{language === 'he' ? 'גרסאות' : language === 'ar' ? 'الإصدارات' : 'Versions'}</div>
           </Link>
         </div>
 
