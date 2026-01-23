@@ -191,7 +191,7 @@ export function AccessibilityToolbarContent() {
             </div>
             </div>
 
-      <style jsx global>{`
+      <style>{`
         /* High Contrast Mode */
         body.high-contrast-mode {
           filter: contrast(1.5);
