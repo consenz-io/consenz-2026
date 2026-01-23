@@ -545,12 +545,9 @@ export default function SuggestionDetail() {
 
       await base44.entities.Suggestion.update(suggestionId, { status });
       
-      // שליחת התראה על שינוי סטטוס
-      try {
-        await notifySuggestionStatusChange({ suggestion, newStatus: status });
-      } catch (notifError) {
-        console.error('[STATUS NOTIFICATION ERROR]', notifError);
-      }
+      // שליחת התראה על שינוי סטטוס - חובה לחכות שתסתיים
+      console.log('[UPDATE STATUS] Sending status change notifications...');
+      await notifySuggestionStatusChange({ suggestion, newStatus: status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
