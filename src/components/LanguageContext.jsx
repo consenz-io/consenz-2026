@@ -382,7 +382,7 @@ const translations = {
     beFirstToComment: "היה הראשון להגיב!",
     reply: "השב",
     delete: "מחק",
-    passedConsensusThreshold: "עבר את סף הקונסנזוס!",
+    passedConsensusThreshold: "עבר את סף הקונצנזוס!",
     fullAgreementNeeded: "דרושה הסכמה מלאה",
     votesNeededToPass: "חסרים {count} תומכים לאישור",
     noDocumentsYet: "אין מסמכים עדיין",
