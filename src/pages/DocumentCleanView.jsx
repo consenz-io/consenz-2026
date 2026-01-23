@@ -69,6 +69,13 @@ export default function DocumentCleanView() {
     enabled: !!documentId,
   });
 
+  const { data: suggestions } = useQuery({
+    queryKey: ['suggestions', documentId],
+    queryFn: () => base44.entities.Suggestion.filter({ documentId }),
+    initialData: [],
+    enabled: !!documentId,
+  });
+
   const { data: topicEditSuggestions } = useQuery({
     queryKey: ['topicEditSuggestions', documentId],
     queryFn: () => base44.entities.TopicEditSuggestion.filter({ documentId, status: 'accepted' }, 'created_date'),
@@ -132,7 +139,10 @@ export default function DocumentCleanView() {
       timestamp: new Date().toISOString(),
       sectionContents: {},
       existingSections: new Set(),
-      allSectionIds: allSectionIds
+      allSectionIds: allSectionIds,
+      documentConsensus: document?.avgSuggestionConsensus || 0.5,
+      documentThreshold: document?.threshold || 2,
+      totalParticipants: document?.totalUsersInteracted || 0
     };
     sections.forEach(s => {
       currentSnapshot.sectionContents[s.id] = s.content;
@@ -179,6 +189,9 @@ export default function DocumentCleanView() {
       const afterVersion = versionsForSuggestion[0];
       const beforeVersion = versionsForSuggestion[1];
       
+      // Find the related suggestion
+      const relatedSuggestion = suggestions.find(s => s.id === afterVersion.suggestionId);
+      
       // This snapshot shows the state RIGHT AFTER this change was applied
       const snapshotAfterChange = {
         version: afterVersion.version,
@@ -191,7 +204,14 @@ export default function DocumentCleanView() {
         existingSections: new Set(currentExistingSections),
         changedSectionId: afterVersion.sectionId,
         newContent: afterVersion.content,
-        allSectionIds: allSectionIds
+        allSectionIds: allSectionIds,
+        // Metadata from the suggestion
+        proVotes: relatedSuggestion?.proVotes || 0,
+        conVotes: relatedSuggestion?.conVotes || 0,
+        participantsAtAcceptance: relatedSuggestion?.participantsAtAcceptance || 0,
+        suggestionConsensus: relatedSuggestion?.suggestionConsensus || 0,
+        documentConsensusAtTime: document?.avgSuggestionConsensus || 0.5,
+        documentThresholdAtTime: document?.threshold || 2
       };
       
       // Mark if this is a new section creation
@@ -606,6 +626,34 @@ ${text}`;
 
       {/* Document Content */}
       <div className="max-w-4xl mx-auto p-4 md:p-8 print:p-12">
+        {/* Version Metadata */}
+        {currentVersionIndex > 0 && currentSnapshot && (
+          <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-lg text-sm">
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-slate-700">
+              <div>
+                <span className="font-semibold">{language === 'he' ? 'תמכו:' : language === 'ar' ? 'مؤيدون:' : 'Pro:'}</span>
+                <span className="ml-1">{currentSnapshot.proVotes || 0}</span>
+              </div>
+              <div>
+                <span className="font-semibold">{language === 'he' ? 'התנגדו:' : language === 'ar' ? 'معارضون:' : 'Con:'}</span>
+                <span className="ml-1">{currentSnapshot.conVotes || 0}</span>
+              </div>
+              <div>
+                <span className="font-semibold">{language === 'he' ? 'משתתפים בעת קבלת ההצעה:' : language === 'ar' ? 'المشاركون عند القبول:' : 'Participants at acceptance:'}</span>
+                <span className="ml-1">{currentSnapshot.participantsAtAcceptance || 0}</span>
+              </div>
+              <div>
+                <span className="font-semibold">{language === 'he' ? 'קונצנזוס גרסה זו:' : language === 'ar' ? 'إجماع هذا الإصدار:' : 'Version consensus:'}</span>
+                <span className="ml-1">{((currentSnapshot.suggestionConsensus || 0) * 100).toFixed(0)}%</span>
+              </div>
+              <div>
+                <span className="font-semibold">{language === 'he' ? 'מד הקונצנזוס המשוכלל למסמך:' : language === 'ar' ? 'مقياس الإجماع للوثيقة:' : 'Document consensus meter:'}</span>
+                <span className="ml-1">{((currentSnapshot.documentConsensusAtTime || 0) * 100).toFixed(0)}%</span>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Topics and Sections */}
         <div className="space-y-8 md:space-y-12">
           {topics.length === 0 ? (
