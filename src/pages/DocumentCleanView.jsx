@@ -652,6 +652,11 @@ ${text}`;
             title={language === 'he' ? 'לחץ להסבר על הקונצנזוס' : language === 'ar' ? 'انقر للحصول على شرح الإجماع' : 'Click to understand consensus'}
           >
             <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+              <span className="px-2 py-1 bg-white rounded border border-slate-300">
+                <span className="font-semibold">{language === 'he' ? 'גרסה:' : language === 'ar' ? 'إصدار:' : 'Version:'}</span>
+                {' '}<span className="text-slate-900 font-bold">{currentSnapshot.version}</span>
+              </span>
+              <span className="text-slate-300">|</span>
               <span className="px-2 py-1 bg-white rounded border border-green-200">
                 <span className="font-semibold">{language === 'he' ? 'תמכו:' : language === 'ar' ? 'مؤيدون:' : 'Pro:'}</span>
                 {' '}<span className="text-green-600 font-bold">{currentSnapshot.proVotes || 0}</span>
