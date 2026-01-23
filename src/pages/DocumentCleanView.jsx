@@ -261,8 +261,9 @@ export default function DocumentCleanView() {
         // So add it back with its previous content
         currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
         currentExistingSections.add(afterVersion.sectionId);
-      } else if (beforeVersion) {
-        // Section existed with different content
+      } else if (beforeVersion && beforeVersion.content !== '') {
+        // Section existed with different content - use the "before" version content
+        // This is the content that existed BEFORE this change
         currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
       }
     });
