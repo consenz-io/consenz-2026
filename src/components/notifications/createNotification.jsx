@@ -682,22 +682,16 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
       ? `${createPageUrl("DocumentView")}?id=${doc.id}#topic-${topicId}`
       : createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
     
-    const suggestionTypeText = relatedEntityType === 'topic_edit_suggestion'
-      ? (language === 'he' ? 'הצעת שינוי לכותרת נושא' : 'topic edit')
-      : suggestion.type === 'new_section' 
-      ? (language === 'he' ? 'סעיף חדש' : 'new section')
-      : (language === 'he' ? 'עריכת סעיף' : 'section edit');
-    
-    for (const followerUser of users) {
-      if (!followerUser.id) {
+    for (const user of usersByEmail) {
+      if (!user.id) {
         console.warn('[NOTIFY NEW SUGGESTION] Skipping user without ID');
         continue;
       }
       
-      const userLang = followerUser.preferredLanguage || 'he';
+      const userLang = user.preferredLanguage || 'he';
       
       notifications.push({
-        userId: followerUser.id,
+        userId: user.id,
         type: 'new_suggestion_in_followed_document',
         title: translate('notifNewSuggestionTitle', userLang),
         message: translate('notifNewSuggestionMessage', userLang, { 
