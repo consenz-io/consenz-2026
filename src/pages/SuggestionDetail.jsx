@@ -200,51 +200,7 @@ export default function SuggestionDetail() {
   });
 
   // פונקציית עזר לטיפול בנקודות ברקע - fire-and-forget
-  const handlePointsInBackground = (suggestionData, action, vote, currentUserVote) => {
-    if (!document?.gamificationEnabled || !suggestionData) return Promise.resolve();
-
-    let pointsChange = 0;
-    let description = '';
-
-    if (action === 'cancel' && vote === 'pro') {
-      pointsChange = -10;
-      description = `ביטול הצבעה בעד על ההצעה: ${suggestionData.title}`;
-    } else if (action === 'change') {
-      if (currentUserVote?.vote === 'con' && vote === 'pro') {
-        pointsChange = 10;
-        description = `קיבל הצבעה בעד על ההצעה: ${suggestionData.title}`;
-      } else if (currentUserVote?.vote === 'pro' && vote === 'con') {
-        pointsChange = -10;
-        description = `הצבעה השתנתה מבעד לנגד על ההצעה: ${suggestionData.title}`;
-      }
-    } else if (action === 'new' && vote === 'pro') {
-      pointsChange = 10;
-      description = `קיבל הצבעה בעד על ההצעה: ${suggestionData.title}`;
-    }
-
-    if (pointsChange !== 0) {
-      return base44.asServiceRole.listUsers()
-        .then(allUsers => {
-          const suggestionCreator = allUsers.find(u => u.email === suggestionData.created_by);
-          if (suggestionCreator) {
-            const newPoints = Math.max(0, (suggestionCreator.points || 1000) + pointsChange);
-            return Promise.all([
-              base44.asServiceRole.updateUser(suggestionCreator.id, { points: newPoints }),
-              base44.entities.PointsTransaction.create({
-                userId: suggestionCreator.id,
-                amount: pointsChange,
-                action: pointsChange > 0 ? 'vote_received' : 'vote_canceled',
-                description,
-                relatedEntityId: suggestionData.id,
-                relatedEntityType: 'suggestion'
-              })
-            ]);
-          }
-        })
-        .catch(err => console.error('[POINTS] Error handling points:', err));
-    }
-    return Promise.resolve();
-  };
+  // הוסרה - הפונקציה הזו השתמשה ב-asServiceRole שלא זמין בקליינט
 
   const voteMutation = useMutation({
     mutationFn: async (vote) => {
@@ -408,7 +364,8 @@ export default function SuggestionDetail() {
       if (context?.previousVote !== undefined) {
         queryClient.setQueryData(['userVote', suggestionId, user?.id], context.previousVote);
       }
-      console.error('[VOTE ERROR]', err);
+      setError(err.message);
+      setTimeout(() => setError(null), 5000);
     },
     onSuccess: (data) => {
       // תמיד רענן את ההצעה כדי לקבל את הסטטוס האמיתי מהשרת
