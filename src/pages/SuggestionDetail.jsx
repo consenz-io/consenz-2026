@@ -408,8 +408,7 @@ export default function SuggestionDetail() {
       if (context?.previousVote !== undefined) {
         queryClient.setQueryData(['userVote', suggestionId, user?.id], context.previousVote);
       }
-      setError(err.message);
-      setTimeout(() => setError(null), 5000);
+      console.error('[VOTE ERROR]', err);
     },
     onSuccess: (data) => {
       // תמיד רענן את ההצעה כדי לקבל את הסטטוס האמיתי מהשרת
