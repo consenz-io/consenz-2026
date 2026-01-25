@@ -276,7 +276,7 @@ export default function SuggestionDetail() {
       }
       
       // פעולות רקע - fire-and-forget (לא חוסמות)
-      handlePointsInBackground(suggestion, pointsAction, vote, userVote);
+      // הוסר טיפול בנקודות שהשתמש ב-asServiceRole
       
       // שליחת התראה - רק אם זו הצבעה חדשה (לא ביטול)
       if (pointsAction === 'new') {
