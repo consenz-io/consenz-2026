@@ -1,20 +1,18 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Mail, Bell, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Mail, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
-import PageHeader from "../components/PageHeader";
+import PageHeader from "@/components/PageHeader";
 
 export default function EmailSettings() {
-  const { t, isRTL, language } = useLanguage();
-  const navigate = useNavigate();
+  const { t, isRTL } = useLanguage();
   const queryClient = useQueryClient();
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
@@ -25,15 +23,10 @@ export default function EmailSettings() {
     retry: false,
   });
 
-  const [frequency, setFrequency] = useState(user?.emailDigestFrequency || 'none');
-  const [selectedTypes, setSelectedTypes] = useState(user?.emailDigestTypes || []);
-
-  React.useEffect(() => {
-    if (user) {
-      setFrequency(user.emailDigestFrequency || 'none');
-      setSelectedTypes(user.emailDigestTypes || []);
-    }
-  }, [user]);
+  const [frequency, setFrequency] = useState(user?.emailDigestFrequency || 'weekly');
+  const [selectedTypes, setSelectedTypes] = useState(
+    user?.emailDigestTypes || ['new_suggestion_in_followed_document', 'reply_to_my_comment', 'reply_to_my_suggestion']
+  );
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (settings) => {
@@ -41,11 +34,11 @@ export default function EmailSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-      setSuccess(language === 'he' ? 'ההגדרות נשמרו בהצלחה' : 'Settings saved successfully');
+      setSuccess(isRTL ? 'ההגדרות נשמרו בהצלחה' : 'Settings saved successfully');
       setTimeout(() => setSuccess(null), 3000);
     },
     onError: (err) => {
-      setError(err.message || (language === 'he' ? 'שגיאה בשמירת ההגדרות' : 'Error saving settings'));
+      setError(err.message);
       setTimeout(() => setError(null), 5000);
     }
   });
@@ -53,80 +46,81 @@ export default function EmailSettings() {
   const handleSave = () => {
     updateSettingsMutation.mutate({
       emailDigestFrequency: frequency,
-      emailDigestTypes: frequency === 'none' ? [] : selectedTypes
+      emailDigestTypes: selectedTypes
     });
-  };
-
-  const toggleType = (type) => {
-    setSelectedTypes(prev => 
-      prev.includes(type) 
-        ? prev.filter(t => t !== type)
-        : [...prev, type]
-    );
   };
 
   const notificationTypes = [
     {
       id: 'new_suggestion_in_followed_document',
-      title: language === 'he' ? 'הצעות חדשות במסמכים שאני עוקב אחריהם' : 'New suggestions in followed documents',
-      description: language === 'he' ? 'קבל התראה כאשר מפורסמת הצעה חדשה במסמך שאתה עוקב אחריו' : 'Get notified when a new suggestion is published in a document you follow'
-    },
-    {
-      id: 'suggestion_status_changed',
-      title: language === 'he' ? 'שינוי סטטוס הצעות שלי' : 'Status change in my suggestions',
-      description: language === 'he' ? 'קבל התראה כאשר הצעה שיצרת מתקבלת או נדחית' : 'Get notified when a suggestion you created is accepted or rejected'
+      label: isRTL ? 'הצעה חדשה במסמך שאני עוקב אחריו' : 'New suggestion in followed document',
+      description: isRTL ? 'קבל התראה כשיש הצעה חדשה במסמך שאתה עוקב אחריו' : 'Get notified when there\'s a new suggestion in a document you follow'
     },
     {
       id: 'reply_to_my_comment',
-      title: language === 'he' ? 'תגובות לתגובות שלי' : 'Replies to my comments',
-      description: language === 'he' ? 'קבל התראה כאשר מישהו מגיב לתגובה שכתבת' : 'Get notified when someone replies to your comment'
+      label: isRTL ? 'תשובה לתגובה שלי' : 'Reply to my comment',
+      description: isRTL ? 'קבל התראה כשמישהו עונה לתגובה שלך' : 'Get notified when someone replies to your comment'
     },
     {
       id: 'reply_to_my_suggestion',
-      title: language === 'he' ? 'תגובות להצעות שלי' : 'Comments on my suggestions',
-      description: language === 'he' ? 'קבל התראה כאשר מישהו מגיב על הצעה שיצרת' : 'Get notified when someone comments on a suggestion you created'
+      label: isRTL ? 'תגובה על ההצעה שלי' : 'Comment on my suggestion',
+      description: isRTL ? 'קבל התראה כשמישהו מגיב על ההצעה שלך' : 'Get notified when someone comments on your suggestion'
     },
     {
       id: 'new_vote_on_suggestion',
-      title: language === 'he' ? 'הצבעות על הצעות שלי' : 'Votes on my suggestions',
-      description: language === 'he' ? 'קבל התראה כאשר מישהו מצביע על הצעה שיצרת' : 'Get notified when someone votes on a suggestion you created'
+      label: isRTL ? 'הצבעה על ההצעה שלי' : 'Vote on my suggestion',
+      description: isRTL ? 'קבל התראה כשמישהו מצביע על ההצעה שלך' : 'Get notified when someone votes on your suggestion'
+    },
+    {
+      id: 'suggestion_status_changed',
+      label: isRTL ? 'שינוי סטטוס של הצעה' : 'Suggestion status changed',
+      description: isRTL ? 'קבל התראה כשההצעה שלך מתקבלת או נדחית' : 'Get notified when your suggestion is accepted or rejected'
     },
     {
       id: 'suggestion_expiring',
-      title: language === 'he' ? 'הצעות שממתינות להצבעה' : 'Suggestions awaiting vote',
-      description: language === 'he' ? 'קבל תזכורת על הצעות שטרם הצבעת עליהן והתאריך שלהן עומד לפוג' : 'Get reminded about suggestions you haven\'t voted on that are about to expire'
+      label: isRTL ? 'הצעה עומדת לפוג' : 'Suggestion expiring soon',
+      description: isRTL ? 'קבל התראה כשהצעה שהצבעת עליה עומדת לפוג' : 'Get notified when a suggestion you voted on is about to expire'
     }
   ];
+
+  const toggleType = (typeId) => {
+    if (selectedTypes.includes(typeId)) {
+      setSelectedTypes(selectedTypes.filter(t => t !== typeId));
+    } else {
+      setSelectedTypes([...selectedTypes, typeId]);
+    }
+  };
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="max-w-3xl mx-auto space-y-6">
-          <Skeleton className="h-12 w-64" />
-          <Skeleton className="h-96 w-full" />
+        <div className="max-w-3xl mx-auto">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto" />
         </div>
       </div>
     );
   }
 
   if (!user) {
-    base44.auth.redirectToLogin(window.location.pathname);
-    return null;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+        <div className="max-w-3xl mx-auto text-center">
+          <p>{isRTL ? 'אנא התחבר כדי לצפות בהגדרות' : 'Please sign in to view settings'}</p>
+          <Button onClick={() => base44.auth.redirectToLogin()} className="mt-4">
+            {isRTL ? 'התחבר' : 'Sign In'}
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-3xl mx-auto space-y-6">
         <PageHeader 
-          title={language === 'he' ? 'הגדרות עדכונים במייל' : 'Email Digest Settings'}
+          title={isRTL ? 'הגדרות דוא״ל והתראות' : 'Email & Notification Settings'} 
+          backUrl="/profile"
         />
-
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
 
         {success && (
           <Alert className="bg-green-50 border-green-200">
@@ -135,21 +129,26 @@ export default function EmailSettings() {
           </Alert>
         )}
 
-        <Card className="bg-white">
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Mail className="w-5 h-5" />
-              {language === 'he' ? 'תדירות עדכונים' : 'Digest Frequency'}
+              {isRTL ? 'תדירות דיוור' : 'Email Frequency'}
             </CardTitle>
             <CardDescription>
-              {language === 'he' 
-                ? 'בחר באיזו תדירות תרצה לקבל עדכונים מרוכזים במייל'
-                : 'Choose how often you want to receive email digests'}
+              {isRTL ? 'באיזו תדירות תרצה לקבל סיכום בדוא״ל?' : 'How often do you want to receive email digests?'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
-              <Label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+              <Label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-slate-50">
                 <input
                   type="radio"
                   name="frequency"
@@ -159,16 +158,14 @@ export default function EmailSettings() {
                   className="w-4 h-4"
                 />
                 <div>
-                  <div className="font-medium">{language === 'he' ? 'ללא עדכונים במייל' : 'No email digests'}</div>
+                  <div className="font-medium">{isRTL ? 'כבוי' : 'None'}</div>
                   <div className="text-sm text-slate-500">
-                    {language === 'he' 
-                      ? 'לא אקבל עדכונים במייל (אמשיך לקבל התראות בממשק)'
-                      : 'Don\'t send me email digests (I\'ll still get in-app notifications)'}
+                    {isRTL ? 'לא לשלוח דוא״ל כלל (רק התראות בפלטפורמה)' : 'Don\'t send emails (platform notifications only)'}
                   </div>
                 </div>
               </Label>
 
-              <Label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+              <Label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-slate-50">
                 <input
                   type="radio"
                   name="frequency"
@@ -178,16 +175,14 @@ export default function EmailSettings() {
                   className="w-4 h-4"
                 />
                 <div>
-                  <div className="font-medium">{language === 'he' ? 'פעם ביום' : 'Daily'}</div>
+                  <div className="font-medium">{isRTL ? 'יומי' : 'Daily'}</div>
                   <div className="text-sm text-slate-500">
-                    {language === 'he' 
-                      ? 'קבל סיכום יומי של כל העדכונים'
-                      : 'Get a daily summary of all updates'}
+                    {isRTL ? 'קבל סיכום יומי של כל הפעילות' : 'Get a daily summary of all activity'}
                   </div>
                 </div>
               </Label>
 
-              <Label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+              <Label className="flex items-center gap-3 p-4 border rounded-lg cursor-pointer hover:bg-slate-50">
                 <input
                   type="radio"
                   name="frequency"
@@ -197,11 +192,12 @@ export default function EmailSettings() {
                   className="w-4 h-4"
                 />
                 <div>
-                  <div className="font-medium">{language === 'he' ? 'פעם בשבוע' : 'Weekly'}</div>
+                  <div className="font-medium">
+                    {isRTL ? 'שבועי' : 'Weekly'}
+                    <Badge variant="outline" className="ml-2">{isRTL ? 'מומלץ' : 'Recommended'}</Badge>
+                  </div>
                   <div className="text-sm text-slate-500">
-                    {language === 'he' 
-                      ? 'קבל סיכום שבועי של כל העדכונים'
-                      : 'Get a weekly summary of all updates'}
+                    {isRTL ? 'קבל סיכום שבועי של הפעילות' : 'Get a weekly summary of activity'}
                   </div>
                 </div>
               </Label>
@@ -210,65 +206,50 @@ export default function EmailSettings() {
         </Card>
 
         {frequency !== 'none' && (
-          <Card className="bg-white">
+          <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="w-5 h-5" />
-                {language === 'he' ? 'סוגי עדכונים' : 'Notification Types'}
-              </CardTitle>
+              <CardTitle>{isRTL ? 'סוגי התראות' : 'Notification Types'}</CardTitle>
               <CardDescription>
-                {language === 'he' 
-                  ? 'בחר אילו סוגי התראות תרצה לכלול בעדכונים שלך'
-                  : 'Choose which types of notifications to include in your digest'}
+                {isRTL ? 'בחר אילו התראות תרצה לקבל בדוא״ל' : 'Choose which notifications you want to receive via email'}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {notificationTypes.map((type) => (
-                <div 
-                  key={type.id}
-                  className={`flex items-start gap-3 p-3 border rounded-lg hover:bg-slate-50 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}
-                >
+            <CardContent className="space-y-4">
+              {notificationTypes.map(type => (
+                <div key={type.id} className="flex items-start gap-3 p-4 border rounded-lg">
                   <Switch
                     checked={selectedTypes.includes(type.id)}
                     onCheckedChange={() => toggleType(type.id)}
-                    className="mt-1 shrink-0"
+                    id={type.id}
                   />
                   <div className="flex-1">
-                    <div className={`font-medium ${isRTL ? 'text-right' : ''}`}>{type.title}</div>
-                    <div className={`text-sm text-slate-500 mt-1 ${isRTL ? 'text-right' : ''}`}>{type.description}</div>
+                    <Label htmlFor={type.id} className="font-medium cursor-pointer">
+                      {type.label}
+                    </Label>
+                    <p className="text-sm text-slate-500 mt-1">{type.description}</p>
                   </div>
                 </div>
               ))}
-
-              {selectedTypes.length === 0 && (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    {language === 'he' 
-                      ? 'בחר לפחות סוג אחד של התראה כדי לקבל עדכונים'
-                      : 'Select at least one notification type to receive updates'}
-                  </AlertDescription>
-                </Alert>
-              )}
             </CardContent>
           </Card>
         )}
 
         <div className="flex justify-end gap-3">
           <Button
-            variant="outline"
-            onClick={() => navigate(-1)}
-          >
-            {language === 'he' ? 'ביטול' : 'Cancel'}
-          </Button>
-          <Button
             onClick={handleSave}
             disabled={updateSettingsMutation.isPending}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600"
+            className="bg-blue-600 hover:bg-blue-700"
           >
-            {updateSettingsMutation.isPending 
-              ? (language === 'he' ? 'שומר...' : 'Saving...')
-              : (language === 'he' ? 'שמור הגדרות' : 'Save Settings')}
+            {updateSettingsMutation.isPending ? (
+              <>
+                <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
+                {isRTL ? 'שומר...' : 'Saving...'}
+              </>
+            ) : (
+              <>
+                <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {isRTL ? 'שמור הגדרות' : 'Save Settings'}
+              </>
+            )}
           </Button>
         </div>
       </div>

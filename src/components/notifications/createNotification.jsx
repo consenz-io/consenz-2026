@@ -750,9 +750,9 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
 
      let actionUrl;
      if (targetEntityType === 'suggestion') {
-       actionUrl = createPageUrl("SuggestionDetail") + `?id=${targetEntity.id}&scrollToComment=${comment.id}`;
+       actionUrl = createPageUrl("SuggestionDetail") + `?id=${targetEntity.id}&commentId=${comment.id}`;
      } else if (targetEntityType === 'section') {
-       actionUrl = createPageUrl("SectionHistory") + `?id=${targetEntity.id}&scrollToComment=${comment.id}`;
+       actionUrl = createPageUrl("SectionHistory") + `?id=${targetEntity.id}&commentId=${comment.id}`;
      }
     
     // 1. Parent comment author (if this is a reply) - FIRST PRIORITY!
