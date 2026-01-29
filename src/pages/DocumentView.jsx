@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle, ChevronLeft, ChevronRight, MoreVertical, Bell, BellOff, Clock } from "lucide-react";
+import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle, ChevronLeft, ChevronRight, MoreVertical, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/components/LanguageContext";
@@ -24,7 +24,6 @@ import { TranslationProvider } from "../components/document/TranslationContext";
 import TranslateAllButton from "../components/document/TranslateAllButton";
 import DocumentAgreementModal from "../components/document/DocumentAgreementModal";
 import SignersListModal from "../components/document/SignersListModal";
-import FollowDocumentButton from "../components/document/FollowDocumentButton";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -296,35 +295,7 @@ export default function DocumentView() {
     enabled: !!user?.id && !!documentId,
   });
 
-  const { data: following } = useQuery({
-    queryKey: ['documentFollow', documentId, user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const follows = await base44.entities.DocumentFollow.filter({
-        documentId,
-        userId: user.id
-      });
-      return follows.length > 0 ? follows[0] : null;
-    },
-    enabled: !!user?.id && !!documentId,
-  });
 
-  const followMutation = useMutation({
-    mutationFn: async () => {
-      if (following) {
-        await base44.entities.DocumentFollow.delete(following.id);
-      } else {
-        await base44.entities.DocumentFollow.create({
-          documentId,
-          userId: user.id,
-          followedAt: new Date().toISOString()
-        });
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documentFollow', documentId, user?.id] });
-    },
-  });
 
   const userHasAgreed = React.useMemo(() => {
     if (!user?.id) return false;
@@ -640,14 +611,6 @@ export default function DocumentView() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                
-                <DropdownMenuItem onSelect={() => followMutation.mutate()} disabled={!user}>
-                  {following ? <BellOff className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} /> : <Bell className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
-                  {following 
-                    ? (language === 'he' ? 'הפסק מעקב' : language === 'ar' ? 'إلغاء المتابعة' : 'Unfollow')
-                    : (language === 'he' ? 'עקוב' : language === 'ar' ? 'متابعة' : 'Follow')}
-                </DropdownMenuItem>
-                
                 <DropdownMenuItem onSelect={() => setShowSignersListModal(true)}>
                   <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} ${userHasAgreed ? 'text-emerald-600' : ''}`} />
                   {language === 'he' ? 'חתומים' : language === 'ar' ? 'الموقعون' : 'Signers'} ({documentAgreements.length})
