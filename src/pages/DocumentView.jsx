@@ -65,6 +65,53 @@ export default function DocumentView() {
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
 
+  const voteMutation = useMutation({
+    mutationFn: async ({ suggestionId, vote, currentVote }) => {
+      if (!user) throw new Error(t('mustBeLoggedInToVote'));
+
+      const suggestion = suggestions.find(s => s.id === suggestionId);
+      if (!suggestion) throw new Error('Suggestion not found');
+
+      let newProVotes = suggestion.proVotes || 0;
+      let newConVotes = suggestion.conVotes || 0;
+      
+      if (currentVote) {
+        if (currentVote.vote === vote) {
+          await base44.entities.Vote.delete(currentVote.id);
+          if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
+          else newConVotes = Math.max(0, newConVotes - 1);
+        } else {
+          await base44.entities.Vote.update(currentVote.id, { vote });
+          if (vote === 'pro') {
+            newProVotes += 1;
+            newConVotes = Math.max(0, newConVotes - 1);
+          } else {
+            newConVotes += 1;
+            newProVotes = Math.max(0, newProVotes - 1);
+          }
+        }
+      } else {
+        await base44.entities.Vote.create({
+          suggestionId,
+          userId: user.id,
+          vote
+        });
+        if (vote === 'pro') newProVotes += 1;
+        else newConVotes += 1;
+      }
+      
+      await base44.entities.Suggestion.update(suggestionId, {
+        proVotes: newProVotes,
+        conVotes: newConVotes
+      });
+
+      return { newProVotes, newConVotes };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suggestions', documentId] });
+    },
+  });
+
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
     queryFn: async () => {
@@ -412,7 +459,49 @@ export default function DocumentView() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleEditSection = (section, isDirectEdit = false) => {
+  const handleEditSection = async (section, isDirectEdit = false) => {
+    // בדיקה האם זו הצעת מחיקה
+    if (section.isDeletingSuggestion && !isDirectEdit) {
+      // חיפוש הצעת מחיקה קיימת לסעיף
+      const existingDeleteSuggestion = suggestions.find(s => 
+        s.sectionId === section.id && 
+        s.type === 'delete_section' && 
+        s.status === 'pending'
+      );
+      
+      if (existingDeleteSuggestion) {
+        // אם יש כבר הצעת מחיקה - פשוט הצבע בעד במקום ליצור הצעה חדשה
+        if (!user) {
+          base44.auth.redirectToLogin(window.location.href);
+          return;
+        }
+        
+        // בדיקה אם המשתמש כבר הצביע
+        const userVote = await base44.entities.Vote.filter({ 
+          suggestionId: existingDeleteSuggestion.id, 
+          userId: user.id 
+        });
+        
+        const currentVote = userVote.length > 0 ? userVote[0] : null;
+        
+        // הצבעה בעד
+        voteMutation.mutate({
+          suggestionId: existingDeleteSuggestion.id,
+          vote: 'pro',
+          currentVote: currentVote
+        });
+        
+        // ניווט להצעה
+        const element = document.getElementById(`suggestion-${existingDeleteSuggestion.id}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        
+        return;
+      }
+    }
+    
+    // אחרת - פתיחת מודל רגילה
     setEditingSection(isDirectEdit ? { ...section, isDirectEdit: true } : section);
     setShowCreateSuggestion(true);
   };
