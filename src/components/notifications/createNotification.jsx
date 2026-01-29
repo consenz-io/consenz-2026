@@ -579,27 +579,33 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
     }
     
     // ===== Build list of users to notify =====
-    // Collect unique user emails from:
-    // 1. Document followers
-    // 2. Users who created suggestions in this document
-    // 3. Users who voted on suggestions in this document
+    // Collect unique user IDs/emails from:
+    // 1. Document followers (MAIN SOURCE)
+    // 2. Users who created suggestions
+    // 3. Users who voted on suggestions
     // 4. Users who created arguments
-    // 5. Section editors
+    // 5. Users who commented on suggestions
+    // 6. Section editors
+    // 7. Document admins
     
     console.log('[NOTIFY NEW SUGGESTION] Building notification list...');
     
+    const userIdsToNotify = new Set();
     const userEmailsToNotify = new Set();
     
-    // 1. Followers
+    // 1. Followers - MAIN SOURCE
     const followers = await base44.entities.DocumentFollow.filter({ documentId: doc.id });
     console.log('[NOTIFY NEW SUGGESTION] Found', followers.length, 'followers');
-    const followerUserIds = followers.map(f => f.userId).filter(Boolean);
+    followers.forEach(f => {
+      if (f.userId) userIdsToNotify.add(f.userId);
+    });
     
     // 2. Suggestion creators
     const suggestionCreators = allSuggestions
       .map(s => s.created_by)
       .filter(Boolean);
     console.log('[NOTIFY NEW SUGGESTION] Found', suggestionCreators.length, 'suggestion creators');
+    suggestionCreators.forEach(email => userEmailsToNotify.add(email));
     
     // 3. Voters (need to get user emails from user IDs)
     const voterUserIds = [...new Set(allVotes
@@ -607,6 +613,7 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
       .map(v => v.userId)
       .filter(Boolean))];
     console.log('[NOTIFY NEW SUGGESTION] Found', voterUserIds.length, 'voters');
+    voterUserIds.forEach(id => userIdsToNotify.add(id));
     
     // 4. Argument creators
     const argumentCreators = allArguments
@@ -614,58 +621,67 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
       .map(arg => arg.created_by)
       .filter(Boolean);
     console.log('[NOTIFY NEW SUGGESTION] Found', argumentCreators.length, 'argument creators');
+    argumentCreators.forEach(email => userEmailsToNotify.add(email));
     
-    // 5. Section editors
+    // 5. Comment creators
+    const relevantComments = allComments.filter(c => 
+      (c.rootEntityType === 'suggestion' && suggestionIds.includes(c.rootEntityId)) ||
+      (c.rootEntityType === 'section' && sections.map(s => s.id).includes(c.rootEntityId)) ||
+      (c.rootEntityType === 'document' && c.rootEntityId === doc.id)
+    );
+    const commentCreators = relevantComments.map(c => c.created_by).filter(Boolean);
+    console.log('[NOTIFY NEW SUGGESTION] Found', commentCreators.length, 'comment creators');
+    commentCreators.forEach(email => userEmailsToNotify.add(email));
+    
+    // 6. Section editors
     const sectionEditors = sections
       .map(s => s.lastEditedBy)
       .filter(Boolean);
     console.log('[NOTIFY NEW SUGGESTION] Found', sectionEditors.length, 'section editors');
+    sectionEditors.forEach(id => userIdsToNotify.add(id));
     
-    // Fetch all users
-    const allRelevantUserIds = [...new Set([...followerUserIds, ...voterUserIds, ...sectionEditors])];
-    console.log('[NOTIFY NEW SUGGESTION] Fetching', allRelevantUserIds.length, 'users by ID...');
+    // 7. Document admins
+    adminIds.forEach(id => userIdsToNotify.add(id));
     
-    const users = allRelevantUserIds.length > 0
-      ? await base44.entities.User.filter({ id: { $in: allRelevantUserIds } })
+    // Fetch all users by IDs
+    console.log('[NOTIFY NEW SUGGESTION] Fetching', userIdsToNotify.size, 'users by ID...');
+    const usersByIds = userIdsToNotify.size > 0
+      ? await base44.entities.User.filter({ id: { $in: Array.from(userIdsToNotify) } })
       : [];
-    console.log('[NOTIFY NEW SUGGESTION] Fetched', users.length, 'user records');
+    console.log('[NOTIFY NEW SUGGESTION] Fetched', usersByIds.length, 'user records by ID');
     
-    // Add emails from users
-    users.forEach(u => {
-      if (u.email && u.email !== currentUser.email) {
-        userEmailsToNotify.add(u.email);
+    // Fetch all users by emails
+    console.log('[NOTIFY NEW SUGGESTION] Fetching', userEmailsToNotify.size, 'users by email...');
+    const usersByEmails = userEmailsToNotify.size > 0
+      ? await base44.entities.User.filter({ email: { $in: Array.from(userEmailsToNotify) } })
+      : [];
+    console.log('[NOTIFY NEW SUGGESTION] Fetched', usersByEmails.length, 'user records by email');
+    
+    // Combine all users and deduplicate
+    const allRelevantUsers = [...usersByIds, ...usersByEmails];
+    const uniqueUsersMap = new Map();
+    allRelevantUsers.forEach(u => {
+      if (u.id && u.email && u.email !== currentUser.email) {
+        uniqueUsersMap.set(u.id, u);
       }
     });
     
-    // Add emails from creators
-    [...suggestionCreators, ...argumentCreators].forEach(email => {
-      if (email && email !== currentUser.email) {
-        userEmailsToNotify.add(email);
-      }
-    });
+    const uniqueUsers = Array.from(uniqueUsersMap.values());
+    console.log('[NOTIFY NEW SUGGESTION] Total unique users to notify:', uniqueUsers.length);
     
-    console.log('[NOTIFY NEW SUGGESTION] Total unique users to notify:', userEmailsToNotify.size);
-    
-    if (userEmailsToNotify.size === 0) {
+    if (uniqueUsers.length === 0) {
       console.log('[NOTIFY NEW SUGGESTION] ✓ No users - skipping');
       return;
     }
-    
-    // Fetch user records by email
-    const usersByEmail = await base44.entities.User.filter({ 
-      email: { $in: Array.from(userEmailsToNotify) } 
-    });
-    console.log('[NOTIFY NEW SUGGESTION] Fetched', usersByEmail.length, 'user records by email');
-    
-    // Build notifications
-    const notifications = [];
     
     // Build action URL
     const actionUrl = relatedEntityType === 'topic_edit_suggestion' && topicId
       ? `${createPageUrl("DocumentView")}?id=${doc.id}#topic-${topicId}`
       : createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
     
-    for (const user of usersByEmail) {
+    // Build notifications for all unique users
+    const notifications = [];
+    for (const user of uniqueUsers) {
       if (!user.id) {
         console.warn('[NOTIFY NEW SUGGESTION] Skipping user without ID');
         continue;
