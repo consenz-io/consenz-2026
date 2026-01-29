@@ -556,49 +556,27 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
     console.log('[NOTIFY NEW SUGGESTION] - Total votes:', allVotes.length);
     console.log('[NOTIFY NEW SUGGESTION] - Total comments:', allComments.length);
 
-    // ===== Auto-follow current user on first interaction =====
-    console.log('[NOTIFY NEW SUGGESTION] Auto-follow check...');
-    if (currentUser?.id) {
-      try {
-        const existingFollow = await base44.entities.DocumentFollow.filter({
-          documentId: doc.id,
-          userId: currentUser.id
-        });
-        
-        if (existingFollow.length === 0) {
-          await base44.entities.DocumentFollow.create({
-            documentId: doc.id,
-            userId: currentUser.id,
-            followedAt: new Date().toISOString()
-          });
-          console.log('[NOTIFY NEW SUGGESTION] ✓ Auto-followed');
-        }
-      } catch (followError) {
-        console.error('[NOTIFY NEW SUGGESTION] Auto-follow error:', followError);
-      }
-    }
+    // No auto-follow needed - notifications based on interactions only
     
     // ===== Build list of users to notify =====
-    // Collect unique user IDs/emails from:
-    // 1. Document followers (MAIN SOURCE)
-    // 2. Users who created suggestions
-    // 3. Users who voted on suggestions
-    // 4. Users who created arguments
-    // 5. Users who commented on suggestions
-    // 6. Section editors
-    // 7. Document admins
+    // Collect unique user IDs/emails from all interactions:
+    // 1. Users who created suggestions in this document
+    // 2. Users who voted on suggestions in this document
+    // 3. Users who created arguments
+    // 4. Users who commented (on suggestions, sections, or document)
+    // 5. Section editors
+    // 6. Document admins
+    // 7. Document creator
     
-    console.log('[NOTIFY NEW SUGGESTION] Building notification list...');
+    console.log('[NOTIFY NEW SUGGESTION] Building notification list based on interactions...');
     
     const userIdsToNotify = new Set();
     const userEmailsToNotify = new Set();
     
-    // 1. Followers - MAIN SOURCE
-    const followers = await base44.entities.DocumentFollow.filter({ documentId: doc.id });
-    console.log('[NOTIFY NEW SUGGESTION] Found', followers.length, 'followers');
-    followers.forEach(f => {
-      if (f.userId) userIdsToNotify.add(f.userId);
-    });
+    // 1. Document creator
+    if (doc.created_by) {
+      userEmailsToNotify.add(doc.created_by);
+    }
     
     // 2. Suggestion creators
     const suggestionCreators = allSuggestions
