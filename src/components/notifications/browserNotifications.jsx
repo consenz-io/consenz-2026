@@ -62,8 +62,11 @@ export function showBrowserNotification({ title, body, actionUrl, icon }) {
   }
 
   try {
+    // Sanitize body to prevent sensitive data exposure
+    const sanitizedBody = body && body.length > 100 ? body.substring(0, 97) + '...' : body;
+    
     const notification = new Notification(title, {
-      body,
+      body: sanitizedBody,
       icon: icon || '/favicon.ico',
       badge: '/favicon.ico',
       tag: actionUrl || 'consenz-notification', // Prevents duplicate notifications

@@ -292,6 +292,29 @@ function LayoutContent({ children, currentPageName }) {
 
             <SidebarGroup>
               <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
+                {language === 'he' ? 'הגדרות' : language === 'ar' ? 'الإعدادات' : 'Settings'}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      asChild 
+                      className={`hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 rounded-lg mb-1 ${
+                        location.pathname === createPageUrl("EmailSettings") ? 'bg-blue-50 text-blue-700' : ''
+                      }`}
+                    >
+                      <Link to={createPageUrl("EmailSettings")} className="flex items-center gap-3 px-3 py-2">
+                        <Settings className="w-4 h-4" />
+                        <span className="font-medium">{language === 'he' ? 'התראות ודוא״ל' : 'Email & Notifications'}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
                 {language === 'he' ? 'נגישות' : language === 'ar' ? 'إمكانية الوصول' : 'Accessibility'}
               </SidebarGroupLabel>
               <SidebarGroupContent>

@@ -1,6 +1,7 @@
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { showBrowserNotification } from './browserNotifications';
+import { validateActionUrl, sendNotificationsBatch, deduplicateNotifications, sanitizeMessage } from './notificationHelpers';
 
 // Helper function - stub for now, user interaction profile is already handled in CommentsSection
 async function ensureUserPublicProfileForInteraction(user) {
@@ -161,48 +162,29 @@ async function getDocumentCreator(documentId, users, publicProfiles, docList = n
   }
 }
 
-// Batch create notifications for efficiency with rate limit protection
+/**
+ * Batch create notifications - now using backend function for async processing
+ */
 async function batchCreateNotifications(notifications) {
   if (!notifications || notifications.length === 0) {
     console.log('[BATCH NOTIFICATIONS] No notifications to create');
     return { successful: 0, failed: 0 };
   }
   
-  console.log('[BATCH NOTIFICATIONS] Creating', notifications.length, 'notifications...');
+  // Deduplicate before sending
+  const uniqueNotifications = deduplicateNotifications(notifications);
   
-  try {
-    // Create one at a time with delay to avoid rate limits completely
-    const results = [];
-    
-    for (let i = 0; i < notifications.length; i++) {
-      // Add delay before each notification (except first)
-      if (i > 0) {
-        await new Promise(resolve => setTimeout(resolve, 2000)); // 2 seconds between each
-      }
-      
-      try {
-        const result = await base44.entities.Notification.create({ 
-          ...notifications[i], 
-          read: false 
-        });
-        console.log(`[BATCH NOTIFICATIONS] ✓ Created ${i + 1}/${notifications.length}`);
-        results.push(result);
-      } catch (err) {
-        console.error(`[BATCH NOTIFICATIONS] ✗ Failed ${i + 1}/${notifications.length}:`, err?.message || err);
-        results.push(null);
-      }
-    }
-    
-    const successful = results.filter(r => r !== null).length;
-    const failed = results.length - successful;
-    
-    console.log('[BATCH NOTIFICATIONS] Complete: Success:', successful, 'Failed:', failed);
-    
-    return { successful, failed };
-  } catch (error) {
-    console.error('[BATCH NOTIFICATIONS] CRITICAL:', error?.message || error);
-    return { successful: 0, failed: notifications.length };
-  }
+  // Validate and sanitize all notifications
+  const validatedNotifications = uniqueNotifications.map(notif => ({
+    ...notif,
+    actionUrl: validateActionUrl(notif.actionUrl),
+    message: sanitizeMessage(notif.message, 150)
+  }));
+  
+  console.log('[BATCH NOTIFICATIONS] Sending', validatedNotifications.length, 'notifications via backend...');
+  
+  // Send via backend function (async, non-blocking)
+  return sendNotificationsBatch(validatedNotifications);
 }
 
 /**
@@ -226,14 +208,15 @@ export async function createNotification({
       return null;
     }
     
-    // Validate actionUrl
-    const validActionUrl = (actionUrl && typeof actionUrl === 'string' && actionUrl.length > 0) 
-      ? actionUrl 
-      : null;
+    // Validate and sanitize actionUrl
+    const validActionUrl = validateActionUrl(actionUrl);
     
     if (!validActionUrl) {
-      console.warn('[NOTIFICATION] Missing actionUrl for type:', type);
+      console.warn('[NOTIFICATION] Invalid actionUrl for type:', type);
     }
+    
+    // Sanitize message for browser notifications
+    const sanitizedMessage = sanitizeMessage(message, 150);
     
     // Create notification in DB
     const notification = await base44.entities.Notification.create({
@@ -264,7 +247,7 @@ export async function createNotification({
     // Show browser notification (if page is not focused)
     showBrowserNotification({
       title,
-      body: message,
+      body: sanitizedMessage,
       actionUrl: validActionUrl
     });
     
