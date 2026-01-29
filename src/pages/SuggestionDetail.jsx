@@ -739,12 +739,25 @@ export default function SuggestionDetail() {
                   {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
                 </span>
               </div>
-              {suggestion.status === 'pending' && suggestion.timerEndsAt && (
-                <Badge variant="outline" className="flex items-center gap-1 text-xs shrink-0">
-                  <Clock className="w-3 h-3" />
-                  {getTimeRemaining(suggestion.timerEndsAt)}
-                </Badge>
-              )}
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                {suggestion.status === 'pending' && suggestion.timerEndsAt && (
+                  <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                    <Clock className="w-3 h-3" />
+                    {getTimeRemaining(suggestion.timerEndsAt)}
+                  </Badge>
+                )}
+                {suggestion.status === 'accepted' && suggestion.updated_date && (
+                  <span className="text-xs text-slate-500">
+                    {t('acceptedOn')} {new Date(suggestion.updated_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4 md:space-y-6 p-3 md:p-6 overflow-x-hidden">
