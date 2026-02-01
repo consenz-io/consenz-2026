@@ -186,7 +186,7 @@ export default function UnderstandingConsensus() {
         {/* הסבר על המנגנון */}
         <Card className="bg-amber-50 border-amber-200">
           <CardContent className="p-5">
-            <div className={`flex gap-4 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
+            <div className={`flex gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Info className="w-8 h-8 text-amber-600 flex-shrink-0" />
               <div className="space-y-3">
                 <h3 className="font-bold text-amber-900 text-lg">{t('howItWorksTitle')}</h3>
