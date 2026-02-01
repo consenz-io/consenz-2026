@@ -116,8 +116,8 @@ export default function UnderstandingConsensus() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className={`max-w-4xl mx-auto space-y-6 ${isRTL ? 'text-right' : 'text-left'}`}>
         <PageHeader 
           title={t('understandingConsensusTitle')}
           backUrl={returnUrl || `${createPageUrl("DocumentView")}?id=${documentId}`}
