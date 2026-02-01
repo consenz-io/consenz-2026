@@ -71,6 +71,8 @@ function translate(key, lang, replacements = {}) {
       notifAcceptedVoterMessage: "The suggestion \"{title}\" you voted for was accepted",
       notifRejectedTitle: "Your suggestion was rejected",
       notifRejectedMessage: "The suggestion \"{title}\" was rejected by the document admin",
+      notifExpiredTitle: "Your suggestion expired",
+      notifExpiredMessage: "The suggestion \"{title}\" voting period has ended",
       notifNewSuggestionTitle: "New suggestion in document",
       notifNewSuggestionMessage: "{name} added a new suggestion in the document \"{title}\"",
       notifReplyTitle: "Reply to your comment",
@@ -91,6 +93,8 @@ function translate(key, lang, replacements = {}) {
       notifAcceptedVoterMessage: "ההצעה \"{title}\" שהצבעת בעדה התקבלה",
       notifRejectedTitle: "ההצעה שלך נדחתה",
       notifRejectedMessage: "ההצעה \"{title}\" נדחתה על ידי מנהל המסמך",
+      notifExpiredTitle: "ההצעה שלך פגה",
+      notifExpiredMessage: "תקופת ההצבעה על ההצעה \"{title}\" הסתיימה",
       notifNewSuggestionTitle: "הצעה חדשה במסמך",
       notifNewSuggestionMessage: "{name} הוסיף הצעה חדשה במסמך \"{title}\"",
       notifReplyTitle: "תשובה לתגובה שלך",
@@ -111,6 +115,8 @@ function translate(key, lang, replacements = {}) {
       notifAcceptedVoterMessage: "تم قبول الاقتراح \"{title}\" الذي صوتت له",
       notifRejectedTitle: "تم رفض اقتراحك",
       notifRejectedMessage: "تم رفض الاقتراح \"{title}\" من قبل مدير المستند",
+      notifExpiredTitle: "انتهت صلاحية اقتراحك",
+      notifExpiredMessage: "انتهت فترة التصويت على الاقتراح \"{title}\"",
       notifNewSuggestionTitle: "اقتراح جديد في المستند",
       notifNewSuggestionMessage: "{name} أضاف اقتراحًا جديدًا في المستند \"{title}\"",
       notifReplyTitle: "رد على تعليقك",
@@ -412,7 +418,8 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     
     const statusKeys = {
       accepted: { titleKey: 'notifAcceptedTitle', messageKey: 'notifAcceptedMessage' },
-      rejected: { titleKey: 'notifRejectedTitle', messageKey: 'notifRejectedMessage' }
+      rejected: { titleKey: 'notifRejectedTitle', messageKey: 'notifRejectedMessage' },
+      expired: { titleKey: 'notifExpiredTitle', messageKey: 'notifExpiredMessage' }
     };
     
     if (!statusKeys[newStatus]) {
@@ -424,6 +431,10 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     const notifiedUserIds = new Set();
     const notifications = [];
     const actionUrl = createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
+    
+    // Fetch document for context
+    const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
+    const doc = docs[0];
     
     // 1. Fetch suggestion creator
     console.log('[NOTIFY STATUS] Fetching creator:', suggestion.created_by);
@@ -443,13 +454,9 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     notifiedUserIds.add(creator.id);
     const userLang = creator.preferredLanguage || 'he';
     
-    // Fetch document for context
-    const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
-    const doc = docs[0];
-    
     notifications.push({
       userId: creator.id,
-      type: newStatus === 'accepted' ? 'suggestion_accepted' : 'suggestion_rejected',
+      type: newStatus === 'accepted' ? 'suggestion_accepted' : newStatus === 'rejected' ? 'suggestion_rejected' : 'suggestion_expiring',
       title: translate(statusKey.titleKey, userLang),
       message: translate(statusKey.messageKey, userLang, { title: suggestion.title || 'הצעה' }),
       relatedEntityId: suggestion.id,
@@ -461,39 +468,75 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     console.log('[NOTIFY STATUS] ✓ Added creator notification');
   
     
-    // 2. If accepted - notify admins and pro voters
+    // 2. If accepted - notify all document participants
     if (newStatus === 'accepted') {
-      console.log('[NOTIFY STATUS] Fetching voters and admins...');
-      const [adminIds, proVotes, publicProfiles] = await Promise.all([
-        getDocumentAdmins(suggestion.documentId),
-        base44.entities.Vote.filter({ suggestionId: suggestion.id, vote: 'pro' }),
+      console.log('[NOTIFY STATUS] Fetching document participants...');
+      const [userInteractions, publicProfiles] = await Promise.all([
+        base44.entities.UserInteraction.filter({ documentId: suggestion.documentId }),
         getCachedPublicProfiles()
       ]);
       
-      console.log('[NOTIFY STATUS] Admins:', adminIds.length, 'Pro votes:', proVotes.length);
+      const participantUserIds = userInteractions.map(ui => ui.userId).filter(Boolean).filter(id => id !== creator.id);
+      console.log('[NOTIFY STATUS] Found', participantUserIds.length, 'document participants');
       
-      // Fetch relevant users
-      const relevantUserIds = [...new Set([
-        ...adminIds,
-        ...proVotes.map(v => v.userId)
-      ].filter(Boolean).filter(id => id !== creator.id))];
+      if (participantUserIds.length > 0) {
+        const allUsers = await base44.entities.User.filter({ id: { $in: participantUserIds } });
+        
+        for (const user of allUsers) {
+          if (notifiedUserIds.has(user.id)) continue;
+          notifiedUserIds.add(user.id);
+          const userLang = user.preferredLanguage || 'he';
+          notifications.push({
+            userId: user.id,
+            type: 'suggestion_accepted',
+            title: translate('notifAcceptedTitle', userLang),
+            message: translate('notifAcceptedMessage', userLang, { title: suggestion.title || 'הצעה' }),
+            relatedEntityId: suggestion.id,
+            relatedEntityType: 'suggestion',
+            actionUrl,
+            documentId: suggestion.documentId,
+            documentTitle: doc?.title
+          });
+        }
+        console.log('[NOTIFY STATUS] ✓ Added', allUsers.length, 'participant notifications');
+      }
+    }
+    
+    // 3. If expired - notify voters and commenters
+    if (newStatus === 'expired') {
+      console.log('[NOTIFY STATUS] Fetching voters and commenters...');
+      const [allVotes, allComments, publicProfiles] = await Promise.all([
+        base44.entities.Vote.filter({ suggestionId: suggestion.id }),
+        base44.entities.Comment.filter({ rootEntityType: 'suggestion', rootEntityId: suggestion.id }),
+        getCachedPublicProfiles()
+      ]);
       
-      console.log('[NOTIFY STATUS] Fetching', relevantUserIds.length, 'users...');
-      const allUsers = relevantUserIds.length > 0 
-        ? await base44.entities.User.filter({ id: { $in: relevantUserIds } })
-        : [];
+      console.log('[NOTIFY STATUS] Votes:', allVotes.length, 'Comments:', allComments.length);
       
-      // Notify admins
-      for (const adminId of adminIds) {
-        if (notifiedUserIds.has(adminId)) continue;
-        notifiedUserIds.add(adminId);
-        const admin = getUserFromCache(allUsers, publicProfiles, { id: adminId });
-        const userLang = admin?.preferredLanguage || 'he';
+      // Collect voter user IDs
+      const voterIds = allVotes.map(v => v.userId).filter(Boolean);
+      
+      // Collect commenter emails
+      const commenterEmails = [...new Set(allComments.map(c => c.created_by).filter(Boolean))];
+      
+      // Fetch users
+      const [voterUsers, commenterUsers] = await Promise.all([
+        voterIds.length > 0 ? base44.entities.User.filter({ id: { $in: voterIds } }) : [],
+        commenterEmails.length > 0 ? base44.entities.User.filter({ email: { $in: commenterEmails } }) : []
+      ]);
+      
+      const allUsers = [...voterUsers, ...commenterUsers];
+      
+      // Deduplicate and notify
+      for (const user of allUsers) {
+        if (notifiedUserIds.has(user.id)) continue;
+        notifiedUserIds.add(user.id);
+        const userLang = user.preferredLanguage || 'he';
         notifications.push({
-          userId: adminId,
-          type: 'suggestion_accepted',
-          title: translate('notifAcceptedTitle', userLang),
-          message: translate('notifAcceptedMessage', userLang, { title: suggestion.title || 'הצעה' }),
+          userId: user.id,
+          type: 'suggestion_expiring',
+          title: translate('notifExpiredTitle', userLang),
+          message: translate('notifExpiredMessage', userLang, { title: suggestion.title || 'הצעה' }),
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
           actionUrl,
@@ -501,27 +544,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
           documentTitle: doc?.title
         });
       }
-      console.log('[NOTIFY STATUS] ✓ Added', adminIds.length, 'admin notifications');
-      
-      // Notify pro voters
-      for (const vote of proVotes) {
-        if (notifiedUserIds.has(vote.userId)) continue;
-        notifiedUserIds.add(vote.userId);
-        const voter = getUserFromCache(allUsers, publicProfiles, { id: vote.userId });
-        const userLang = voter?.preferredLanguage || 'he';
-        notifications.push({
-          userId: vote.userId,
-          type: 'suggestion_accepted',
-          title: translate('notifAcceptedVoterTitle', userLang),
-          message: translate('notifAcceptedVoterMessage', userLang, { title: suggestion.title || 'הצעה' }),
-          relatedEntityId: suggestion.id,
-          relatedEntityType: 'suggestion',
-          actionUrl,
-          documentId: suggestion.documentId,
-          documentTitle: doc?.title
-        });
-      }
-      console.log('[NOTIFY STATUS] ✓ Added', proVotes.length, 'voter notifications');
+      console.log('[NOTIFY STATUS] ✓ Added', allUsers.length, 'expired notifications');
     }
     
     console.log('[NOTIFY STATUS] Total to send:', notifications.length);
