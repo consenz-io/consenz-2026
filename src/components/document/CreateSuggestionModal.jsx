@@ -512,6 +512,7 @@ Return ONLY the translated HTML:`;
                   value={newTopicName}
                   onChange={(e) => setNewTopicName(e.target.value)}
                   placeholder={t('enterNewTopicName')}
+                  className={isRTL ? "text-right" : "text-left"}
                 />
               ) : (
                 <Select
