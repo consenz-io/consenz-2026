@@ -601,12 +601,13 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
     
     // ===== Fetch data from database =====
     console.log('[NOTIFY NEW SUGGESTION] Fetching data from database...');
-    const [publicProfiles, allSuggestions, allArguments, sections, adminIds] = await Promise.all([
+    const [publicProfiles, allSuggestions, allArguments, sections, adminIds, userInteractions] = await Promise.all([
       getCachedPublicProfiles(),
       base44.entities.Suggestion.filter({ documentId: doc.id }),
       base44.entities.Argument.list(),
       base44.entities.Section.filter({ documentId: doc.id }),
-      getDocumentAdmins(doc.id)
+      getDocumentAdmins(doc.id),
+      base44.entities.UserInteraction.filter({ documentId: doc.id })
     ]);
     
     console.log('[NOTIFY NEW SUGGESTION] Data fetched successfully:');
@@ -615,6 +616,7 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
     console.log('[NOTIFY NEW SUGGESTION] - Arguments (all):', allArguments.length);
     console.log('[NOTIFY NEW SUGGESTION] - Sections:', sections.length);
     console.log('[NOTIFY NEW SUGGESTION] - Admin IDs:', adminIds.length);
+    console.log('[NOTIFY NEW SUGGESTION] - User Interactions:', userInteractions.length);
     
     // Build suggestion IDs list
     const suggestionIds = allSuggestions.map(s => s.id);
@@ -696,6 +698,11 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
     
     // 7. Document admins
     adminIds.forEach(id => userIdsToNotify.add(id));
+    
+    // 8. All document participants (from UserInteraction)
+    const participantUserIds = userInteractions.map(ui => ui.userId).filter(Boolean);
+    console.log('[NOTIFY NEW SUGGESTION] Found', participantUserIds.length, 'document participants');
+    participantUserIds.forEach(id => userIdsToNotify.add(id));
     
     // Fetch all users by IDs
     console.log('[NOTIFY NEW SUGGESTION] Fetching', userIdsToNotify.size, 'users by ID...');
