@@ -570,6 +570,7 @@ Return ONLY the translated HTML:`;
                 onChange={(e) => setFormData({ ...formData, newContent: e.target.value })}
                 placeholder={t('enterContent')}
                 rows={8}
+                className={isRTL ? "text-right" : "text-left"}
               />
             )}
           </div>
@@ -583,6 +584,7 @@ Return ONLY the translated HTML:`;
               onChange={(e) => setFormData({ ...formData, explanation: e.target.value })}
               placeholder={t('explainChange')}
               rows={3}
+              className={isRTL ? "text-right" : "text-left"}
             />
           </div>
 
