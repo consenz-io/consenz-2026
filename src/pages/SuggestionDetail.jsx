@@ -499,10 +499,15 @@ export default function SuggestionDetail() {
         });
       }
 
-      const updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, { status });
+      await base44.entities.Suggestion.update(suggestionId, { status });
+      
+      // קבלת ההצעה המעודכנת מהשרת
+      const updatedSuggestions = await base44.entities.Suggestion.filter({ id: suggestionId });
+      const updatedSuggestion = updatedSuggestions[0] || { ...suggestion, status };
       
       // שליחת התראה על שינוי סטטוס - חובה לחכות שתסתיים
       console.log('[UPDATE STATUS] Sending status change notifications...');
+      console.log('[UPDATE STATUS] Updated suggestion:', updatedSuggestion);
       await notifySuggestionStatusChange({ suggestion: updatedSuggestion, newStatus: status });
     },
     onSuccess: () => {
