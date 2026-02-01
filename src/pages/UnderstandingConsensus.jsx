@@ -252,12 +252,12 @@ export default function UnderstandingConsensus() {
 
         {/* היסטוריית ההצעות שאושרו */}
         <Card>
-          <CardHeader className={isRTL ? 'text-right' : ''}>
-            <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
+          <CardHeader>
+            <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
               <CheckCircle2 className="w-5 h-5 text-green-600" />
               {t('acceptedSuggestionsHistory')}
             </CardTitle>
-            <p className={`text-sm text-slate-500 mt-1 ${isRTL ? 'text-right' : ''}`}>{t('eachSuggestionAffectsThreshold')}</p>
+            <p className="text-sm text-slate-500 mt-1">{t('eachSuggestionAffectsThreshold')}</p>
           </CardHeader>
           <CardContent>
             {acceptedSuggestions.length === 0 ? (
