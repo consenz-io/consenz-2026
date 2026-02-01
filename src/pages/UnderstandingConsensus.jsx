@@ -386,12 +386,11 @@ export default function UnderstandingConsensus() {
                     <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
                       <TrendingUp className="w-6 h-6 text-white" />
                     </div>
-                    <div className={isRTL ? 'text-right' : ''}>
+                    <div>
                       <h4 className="font-bold text-indigo-900 text-lg">{t('averageCalculation')}</h4>
                       <p className="text-sm text-indigo-700 mt-1">
                         {t('avgConsensusResult', { 
                           count: acceptedSuggestions.length,
-                          values: consensuses.map(c => (c * 100).toFixed(0) + '%').join(' + '),
                           avg: (documentConsensusMeter * 100).toFixed(0)
                         })}
                       </p>
