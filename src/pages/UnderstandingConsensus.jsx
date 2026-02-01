@@ -220,7 +220,7 @@ export default function UnderstandingConsensus() {
         {/* נוסחת החישוב */}
         <Card>
           <CardHeader>
-            <CardTitle className={`flex items-center gap-2 text-lg ${isRTL ? 'flex-row-reverse text-right justify-end' : ''}`}>
+            <CardTitle className={`flex items-center gap-2 text-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
               <Target className="w-5 h-5 text-blue-600" />
               {t('calculationFormula')}
             </CardTitle>
