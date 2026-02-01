@@ -583,17 +583,17 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     
     // עדכון סטטוס ההצעה רק אחרי שהסעיף נוצר בהצלחה
     console.log('[AUTO-ACCEPT] Section created successfully, updating suggestion status to accepted');
-    await base44.entities.Suggestion.update(suggestion.id, { 
+    const updatedSuggestion = await base44.entities.Suggestion.update(suggestion.id, { 
       status: 'accepted',
       suggestionConsensus: boundedSectionConsensus,
       participantsAtAcceptance: participantsAtAcceptance
     });
     
     // שליחת התראה ונקודות - בדיקה שיש created_by
-    if (freshSuggestion.created_by) {
-      console.log('[AUTO ACCEPT] Sending notification for suggestion:', freshSuggestion.id, 'created_by:', freshSuggestion.created_by);
+    if (updatedSuggestion.created_by) {
+      console.log('[AUTO ACCEPT] Sending notification for suggestion:', updatedSuggestion.id, 'created_by:', updatedSuggestion.created_by);
       // Run in background - don't block main flow
-      notifySuggestionStatusChange({ suggestion: freshSuggestion, newStatus: 'accepted' })
+      notifySuggestionStatusChange({ suggestion: updatedSuggestion, newStatus: 'accepted' })
         .then(() => console.log('[AUTO ACCEPT] Notification sent successfully'))
         .catch(notifError => {
           console.error('[AUTO ACCEPT NOTIFICATION ERROR]', notifError);
@@ -601,7 +601,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
           console.error('[AUTO ACCEPT NOTIFICATION ERROR] Stack:', notifError.stack);
         });
     } else {
-      console.warn('[AUTO ACCEPT] No created_by for suggestion:', freshSuggestion.id, '- skipping notification');
+      console.warn('[AUTO ACCEPT] No created_by for suggestion:', updatedSuggestion.id, '- skipping notification');
     }
     
     // Award 200 points to suggestion creator when accepted (only if gamification enabled)
