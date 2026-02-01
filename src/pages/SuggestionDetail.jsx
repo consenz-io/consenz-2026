@@ -499,11 +499,11 @@ export default function SuggestionDetail() {
         });
       }
 
-      await base44.entities.Suggestion.update(suggestionId, { status });
+      const updatedSuggestion = await base44.entities.Suggestion.update(suggestionId, { status });
       
       // שליחת התראה על שינוי סטטוס - חובה לחכות שתסתיים
       console.log('[UPDATE STATUS] Sending status change notifications...');
-      await notifySuggestionStatusChange({ suggestion, newStatus: status });
+      await notifySuggestionStatusChange({ suggestion: updatedSuggestion, newStatus: status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
