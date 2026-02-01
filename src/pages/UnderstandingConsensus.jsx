@@ -360,7 +360,7 @@ export default function UnderstandingConsensus() {
                         {/* Consensus meter for this suggestion */}
                         <div className={`mt-4 bg-gradient-to-r rounded-lg p-4 ${isRTL ? 'from-purple-50 to-indigo-50' : 'from-indigo-50 to-purple-50'}`}>
                           <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <span className="text-sm font-medium text-indigo-800">רמת הקונצנזוס של השינוי בגרסה</span>
+                            <span className="text-sm font-medium text-indigo-800">{t('suggestionConsensusMeter')}</span>
                             <Badge className="bg-indigo-600 text-white">
                               {(suggestionConsensusMeter * 100).toFixed(0)}%
                             </Badge>
