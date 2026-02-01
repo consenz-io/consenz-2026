@@ -519,12 +519,21 @@ Return ONLY the translated HTML:`;
                   value={formData.topicId}
                   onValueChange={(value) => setFormData({ ...formData, topicId: value })}
                 >
-                  <SelectTrigger className={isRTL ? "text-right" : "text-left"}>
+                  <SelectTrigger 
+                    className={isRTL ? "text-right" : "text-left"}
+                    dir={isRTL ? "rtl" : "ltr"}
+                    style={{ textAlign: isRTL ? 'right' : 'left' }}
+                  >
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent dir={isRTL ? "rtl" : "ltr"}>
                     {topics.map((topic) => (
-                      <SelectItem key={topic.id} value={topic.id} className={isRTL ? "text-right" : "text-left"}>
+                      <SelectItem 
+                        key={topic.id} 
+                        value={topic.id} 
+                        className={isRTL ? "text-right" : "text-left"}
+                        style={{ textAlign: isRTL ? 'right' : 'left', direction: isRTL ? 'rtl' : 'ltr' }}
+                      >
                         {topic.title}
                       </SelectItem>
                     ))}
