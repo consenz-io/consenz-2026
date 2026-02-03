@@ -174,17 +174,15 @@ export default function DocumentContent({
                 duration: 4000,
               });
 
-              setTimeout(() => {
-                Promise.all([
-                  queryClient.invalidateQueries({ queryKey: ['sections', document.id] }),
-                  queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
-                  queryClient.invalidateQueries({ queryKey: ['versions', document.id] })
-                ]);
-              }, 7000);
-
-              queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
-              queryClient.invalidateQueries({ queryKey: ['document', document.id] });
-              queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
+              // רענון מיידי של כל הקווריז - כולל sections ו-versions
+              Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['sections', document.id] }),
+                queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] }),
+                queryClient.invalidateQueries({ queryKey: ['document', document.id] }),
+                queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
+                queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
+                queryClient.invalidateQueries({ queryKey: ['versions', document.id] })
+              ]);
             }
           } catch (err) {
             console.error('[AUTO-ACCEPT SECTION] Error:', err);
@@ -416,19 +414,15 @@ export default function DocumentContent({
             accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
             
             if (accepted) {
-              // רענון הסעיפים אחרי 7 שניות
-              setTimeout(() => {
-                Promise.all([
-                  queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
-                  queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
-                  queryClient.invalidateQueries({ queryKey: ['versions', document?.id] })
-                ]);
-              }, 7000);
-              
-              // רענון הצעות והמסמך מיד
-              queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
-              queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
-              queryClient.invalidateQueries({ queryKey: ['topics', document?.id] });
+              // רענון מיידי של כל הקווריז - כולל sections ו-versions
+              Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
+                queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] }),
+                queryClient.invalidateQueries({ queryKey: ['document', document?.id] }),
+                queryClient.invalidateQueries({ queryKey: ['topics', document?.id] }),
+                queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
+                queryClient.invalidateQueries({ queryKey: ['versions', document?.id] })
+              ]);
               
               // טיפול בנקודות ברקע - fire-and-forget
               if (!currentVote && vote === 'pro' && document.gamificationEnabled) {
