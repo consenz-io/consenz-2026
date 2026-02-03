@@ -102,14 +102,14 @@ export default function NewSectionSuggestionCard({
 
   // Auto-navigate to newest version when chain updates
   React.useEffect(() => {
-    if (suggestionChain.length > 1 && currentVersionId === suggestion.id) {
+    if (suggestionChain.length > 1) {
       const newestVersion = suggestionChain[suggestionChain.length - 1];
-      if (newestVersion && newestVersion.id !== suggestion.id) {
+      if (newestVersion && newestVersion.id !== currentVersionId) {
         console.log('[NEW SECTION CARD] Auto-navigating to newest version:', newestVersion.id);
         setCurrentVersionId(newestVersion.id);
       }
     }
-  }, [suggestionChain, suggestion.id]);
+  }, [suggestionChain.length]);
 
   // Truncate content for preview
   const getContentPreview = (html) => {
