@@ -666,7 +666,9 @@ Return ONLY the translated text:`;
 
   const getNewSectionSuggestionsForTopic = (topicId) => {
     return suggestions.filter(s => {
+      // רק הצעות לסעיפים חדשים שהן ROOT (אין להן parent)
       if (s.type !== 'new_section') return false;
+      if (s.parentSuggestionId) return false; // דלג על הצעות עריכה - נציג אותן בקרוסלה
       
       // אם ההצעה מיועדת לנושא קיים - בדוק לפי topicId
       if (s.topicId) {
@@ -684,7 +686,8 @@ Return ONLY the translated text:`;
       s.type === 'new_section' && 
       !s.topicId && 
       s.newTopicTitle &&
-      s.status === 'pending'
+      s.status === 'pending' &&
+      !s.parentSuggestionId // רק ROOT suggestions
     ).sort((a, b) => (a.newTopicOrder || 999) - (b.newTopicOrder || 999));
   };
 
