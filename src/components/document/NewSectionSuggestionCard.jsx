@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, CheckCircle } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, CheckCircle, Edit2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -23,7 +23,8 @@ export default function NewSectionSuggestionCard({
   getCommentsCount,
   toggleComments,
   showComments,
-  isAdmin
+  isAdmin,
+  onEditSuggestion
 }) {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
@@ -344,6 +345,19 @@ export default function NewSectionSuggestionCard({
         >
           {t('viewDetails')}
         </Button>
+        {user && suggestion.status === 'pending' && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditSuggestion && onEditSuggestion(suggestion);
+            }}
+            className="h-7 md:h-8 text-xs px-2"
+          >
+            <Edit2 className="w-3 h-3 md:w-4 md:h-4" />
+          </Button>
+        )}
         {canDelete && (
           <Button
             variant="ghost"
