@@ -329,7 +329,25 @@ Return ONLY the translated HTML:`;
 
       return suggestion;
     },
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
+            if (user && result?.id) {
+        try {
+          await base44.entities.Vote.create({
+            suggestionId: result.id,
+            userId: user.id,
+            vote: 'pro',
+          });
+          const suggestion = await base44.entities.Suggestion.filter({ id: result.id });
+          if(suggestion.length > 0){
+            await base44.entities.Suggestion.update(result.id, {
+              proVotes: (suggestion[0].proVotes || 0) + 1,
+            });
+          }
+        } catch (error) {
+          console.error("Failed to auto-vote:", error);
+        }
+      }
+
       if (result?.isDirectEdit) {
         queryClient.invalidateQueries({ queryKey: ['sections'] });
         queryClient.invalidateQueries({ queryKey: ['allVersions'] });
@@ -344,6 +362,9 @@ Return ONLY the translated HTML:`;
         onClose();
         
         // Notify parent to scroll to the new suggestion
+                queryClient.invalidateQueries({ queryKey: ['userVote', result.id, user?.id] });
+        queryClient.invalidateQueries({ queryKey: ['suggestion', result.id] });
+
         if (result?.id && onSuggestionCreated) {
           setTimeout(() => {
             onSuggestionCreated(result.id, result.sectionId, result.topicId);
