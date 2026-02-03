@@ -330,7 +330,7 @@ Return ONLY the translated HTML:`;
       return suggestion;
     },
     onSuccess: async (result) => {
-      if (user && result?.id) {
+      if (user && result?.id && !result?.isDirectEdit) {
         try {
           // Create the auto-vote
           const newVote = await base44.entities.Vote.create({
@@ -341,7 +341,17 @@ Return ONLY the translated HTML:`;
           
           // Update suggestion with new vote count
           await base44.entities.Suggestion.update(result.id, {
-            proVotes: (result.proVotes || 0) + 1,
+            proVotes: 1,
+          });
+          
+          // CRITICAL: Update suggestions cache immediately with the vote count
+          queryClient.setQueryData(['suggestions', document.id], (old) => {
+            if (!old) return old;
+            return old.map(s => 
+              s.id === result.id 
+                ? { ...s, proVotes: 1 }
+                : s
+            );
           });
           
           // CRITICAL: Update userVotes cache immediately to prevent double voting
@@ -350,8 +360,10 @@ Return ONLY the translated HTML:`;
             // Add the new vote to the cache
             return [...existingVotes, newVote];
           });
+          
+          console.log('[AUTO-VOTE] ✅ Auto-vote created and cache updated for suggestion:', result.id);
         } catch (error) {
-          console.error("Failed to auto-vote:", error);
+          console.error("[AUTO-VOTE] ❌ Failed to auto-vote:", error);
         }
       }
 
