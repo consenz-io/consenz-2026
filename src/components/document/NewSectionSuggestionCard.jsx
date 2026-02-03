@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, CheckCircle, Edit2 } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, CheckCircle, Edit2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -24,11 +24,13 @@ export default function NewSectionSuggestionCard({
   toggleComments,
   showComments,
   isAdmin,
-  onEditSuggestion
+  onEditSuggestion,
+  allDocumentSuggestions
 }) {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
   const queryClient = useQueryClient();
+  const [currentVersionId, setCurrentVersionId] = React.useState(suggestion.id);
 
   const deleteSuggestionMutation = useMutation({
     mutationFn: async () => {
@@ -44,6 +46,61 @@ export default function NewSectionSuggestionCard({
   const prevStatusRef = React.useRef(suggestion.status);
   const hasAnimatedRef = React.useRef(false);
 
+  // Build version chain for this suggestion (new_section + edit_suggestion types)
+  const suggestionChain = React.useMemo(() => {
+    if (!allDocumentSuggestions || allDocumentSuggestions.length === 0) return [suggestion];
+
+    let chain = [];
+    let current = allDocumentSuggestions.find(s => s.id === suggestion.id);
+
+    // Go up to find the root
+    while (current && current.parentSuggestionId) {
+      const parent = allDocumentSuggestions.find(s => s.id === current.parentSuggestionId);
+      if (!parent || chain.some(item => item.id === parent.id)) break;
+      chain.unshift(parent);
+      current = parent;
+    }
+    
+    if (current && !chain.some(item => item.id === current.id)) {
+      chain.unshift(current);
+    }
+
+    const root = chain[0];
+    if (!root) {
+      if (suggestion.type === 'new_section' || suggestion.type === 'edit_suggestion') {
+        return [suggestion];
+      }
+      return [suggestion];
+    }
+
+    // Go down to find all descendants in a linear path
+    let fullChain = [...chain];
+    let head = chain[chain.length - 1];
+    let visitedIds = new Set(fullChain.map(s => s.id));
+
+    while (head) {
+      const nextInChain = allDocumentSuggestions
+        .filter(s => s.parentSuggestionId === head.id)
+        .sort((a, b) => new Date(a.created_date) - new Date(b.created_date))[0];
+
+      if (nextInChain && !visitedIds.has(nextInChain.id)) {
+        fullChain.push(nextInChain);
+        visitedIds.add(nextInChain.id);
+        head = nextInChain;
+      } else {
+        head = null;
+      }
+    }
+
+    return fullChain.filter(s => s.type === 'new_section' || s.type === 'edit_suggestion');
+  }, [suggestion, allDocumentSuggestions]);
+
+  const currentVersionIndex = React.useMemo(() => {
+    return suggestionChain.findIndex(s => s.id === currentVersionId);
+  }, [suggestionChain, currentVersionId]);
+
+  const currentVersion = suggestionChain[currentVersionIndex] || suggestion;
+
   // Truncate content for preview
   const getContentPreview = (html) => {
     if (typeof window !== 'undefined' && typeof document !== 'undefined' && document.createElement) {
@@ -58,39 +115,39 @@ export default function NewSectionSuggestionCard({
   // מעקב אחרי שינוי סטטוס להצגת אנימציה - רק פעם אחת
   // CRITICAL: וידוא שההצעה באמת התקבלה ברמת השרת ולא רק עדכון אופטימיסטי
   React.useEffect(() => {
-    const isReallyAccepted = suggestion.status === 'accepted' && 
-                             suggestion.suggestionConsensus !== undefined && 
-                             suggestion.participantsAtAcceptance !== undefined;
+    const isReallyAccepted = currentVersion.status === 'accepted' && 
+                             currentVersion.suggestionConsensus !== undefined && 
+                             currentVersion.participantsAtAcceptance !== undefined;
     
     if (prevStatusRef.current === 'pending' && isReallyAccepted && !hasAnimatedRef.current) {
       hasAnimatedRef.current = true;
-      console.log('[ANIMATION] ✅ Suggestion was REALLY accepted by server, starting celebration:', suggestion.id);
-      console.log('[ANIMATION] - suggestionConsensus:', suggestion.suggestionConsensus);
-      console.log('[ANIMATION] - participantsAtAcceptance:', suggestion.participantsAtAcceptance);
+      console.log('[ANIMATION] ✅ Suggestion was REALLY accepted by server, starting celebration:', currentVersion.id);
+      console.log('[ANIMATION] - suggestionConsensus:', currentVersion.suggestionConsensus);
+      console.log('[ANIMATION] - participantsAtAcceptance:', currentVersion.participantsAtAcceptance);
       setAnimationPhase('celebrating');
       
       // שלב 1: חגיגה (3 שניות)
       setTimeout(() => {
-        console.log('[ANIMATION] Transitioning to white for suggestion:', suggestion.id);
+        console.log('[ANIMATION] Transitioning to white for suggestion:', currentVersion.id);
         setAnimationPhase('transitioning');
       }, 3000);
       
       // שלב 2: דהייה והעלמה (אחרי עוד 2 שניות - סה"כ 5 שניות)
       setTimeout(() => {
-        console.log('[ANIMATION] Fading out suggestion:', suggestion.id);
+        console.log('[ANIMATION] Fading out suggestion:', currentVersion.id);
         setAnimationPhase('fading');
       }, 5000);
       
       // שלב 3: העלמה סופית (אחרי עוד 1 שניה - סה"כ 6 שניות)
       setTimeout(() => {
-        console.log('[ANIMATION] Hiding suggestion:', suggestion.id);
+        console.log('[ANIMATION] Hiding suggestion:', currentVersion.id);
         setAnimationPhase('hidden');
       }, 6000);
-    } else if (prevStatusRef.current === 'pending' && suggestion.status === 'accepted' && !isReallyAccepted) {
+    } else if (prevStatusRef.current === 'pending' && currentVersion.status === 'accepted' && !isReallyAccepted) {
       console.log('[ANIMATION] ⚠️ Status changed to accepted but missing server fields - likely optimistic update, waiting for real update...');
     }
-    prevStatusRef.current = suggestion.status;
-  }, [suggestion.status, suggestion.suggestionConsensus, suggestion.participantsAtAcceptance]);
+    prevStatusRef.current = currentVersion.status;
+  }, [currentVersion.status, currentVersion.suggestionConsensus, currentVersion.participantsAtAcceptance]);
 
   // אם בשלב העלמה סופית - אל תציג כלום
   if (animationPhase === 'hidden') {
@@ -98,9 +155,19 @@ export default function NewSectionSuggestionCard({
   }
 
   // אם ההצעה התקבלה אבל האנימציה לא התחילה - אל תציג
-  if (suggestion.status === 'accepted' && animationPhase === 'none') {
+  if (currentVersion.status === 'accepted' && animationPhase === 'none') {
     return null;
   }
+
+  const handlePrev = () => {
+    if (currentVersionIndex <= 0) return;
+    setCurrentVersionId(suggestionChain[currentVersionIndex - 1].id);
+  };
+
+  const handleNext = () => {
+    if (currentVersionIndex >= suggestionChain.length - 1) return;
+    setCurrentVersionId(suggestionChain[currentVersionIndex + 1].id);
+  };
 
   // שלב החגיגה - מסגרת ירוקה ואייקון (3 שניות)
   if (animationPhase === 'celebrating') {
@@ -116,7 +183,7 @@ export default function NewSectionSuggestionCard({
             background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(220 252 231) 100%)',
             border: '2px solid rgb(34 197 94)',
           }}
-        >
+          >
           <motion.div
             className="absolute inset-0 bg-green-500/10"
             initial={{ opacity: 0 }}
@@ -142,11 +209,11 @@ export default function NewSectionSuggestionCard({
                 >
                   ההצעה התקבלה!
                 </motion.div>
-                {suggestion.explanation && typeof suggestion.explanation === 'string' && (
+                {currentVersion.explanation && typeof currentVersion.explanation === 'string' && (
                   <div className="text-xs md:text-sm mb-2">
                     <TranslatableContent
-                      content={suggestion.explanation}
-                      entity={suggestion}
+                      content={currentVersion.explanation}
+                      entity={currentVersion}
                       entityType="Suggestion"
                       className="text-slate-600 break-words"
                     />
@@ -154,8 +221,8 @@ export default function NewSectionSuggestionCard({
                 )}
                 <div className="text-sm bg-white/80 p-3 rounded border border-green-200">
                   <TranslatableContent
-                    content={getContentPreview(suggestion.newContent)}
-                    entity={suggestion}
+                    content={getContentPreview(currentVersion.newContent)}
+                    entity={currentVersion}
                     entityType="Suggestion"
                     className="text-slate-700"
                   />
@@ -163,7 +230,7 @@ export default function NewSectionSuggestionCard({
               </div>
             </div>
           </CardContent>
-        </Card>
+          </Card>
       </motion.div>
     );
   }
@@ -211,8 +278,8 @@ export default function NewSectionSuggestionCard({
           <CardContent className="p-4 md:p-6">
             <div className="prose prose-sm max-w-none">
               <TranslatableContent
-                content={suggestion.newContent}
-                entity={suggestion}
+                content={currentVersion.newContent}
+                entity={currentVersion}
                 entityType="Suggestion"
                 className="text-slate-700"
                 renderContent={(html) => <div dangerouslySetInnerHTML={{ __html: html }} />}
@@ -243,12 +310,12 @@ export default function NewSectionSuggestionCard({
 
       {/* תוכן ההצעה */}
       <div className="min-h-[100px]">
-        {suggestion.explanation && typeof suggestion.explanation === 'string' && (
+        {currentVersion.explanation && typeof currentVersion.explanation === 'string' && (
           <div className="mb-3 text-sm">
             <div className="font-semibold text-slate-700 mb-1">הסבר:</div>
             <TranslatableContent
-              content={suggestion.explanation}
-              entity={suggestion}
+              content={currentVersion.explanation}
+              entity={currentVersion}
               entityType="Suggestion"
               className="text-slate-600"
             />
@@ -257,8 +324,8 @@ export default function NewSectionSuggestionCard({
         
         <div className="p-3 md:p-4 bg-white/80 rounded border border-amber-200">
           <TranslatableContent
-            content={suggestion.newContent}
-            entity={suggestion}
+            content={currentVersion.newContent}
+            entity={currentVersion}
             entityType="Suggestion"
             className="prose prose-sm max-w-none"
             renderContent={(content) => (
@@ -273,7 +340,7 @@ export default function NewSectionSuggestionCard({
         {doc?.votingButtonsEnabled ? (
           <>
             <Button
-              variant={getUserVote(suggestion.id)?.vote === 'pro' ? 'default' : 'outline'}
+              variant={getUserVote(currentVersion.id)?.vote === 'pro' ? 'default' : 'outline'}
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
@@ -282,19 +349,19 @@ export default function NewSectionSuggestionCard({
                   return;
                 }
                 voteMutation.mutate({
-                  suggestionId: suggestion.id,
+                  suggestionId: currentVersion.id,
                   vote: 'pro',
-                  currentVote: getUserVote(suggestion.id)
+                  currentVote: getUserVote(currentVersion.id)
                 });
               }}
               disabled={voteMutation.isPending}
-              className={`text-xs px-2 md:px-3 ${getUserVote(suggestion.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
+              className={`text-xs px-2 md:px-3 ${getUserVote(currentVersion.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
             >
               <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-              {suggestion.proVotes || 0}
+              {currentVersion.proVotes || 0}
             </Button>
             <Button
-              variant={getUserVote(suggestion.id)?.vote === 'con' ? 'default' : 'outline'}
+              variant={getUserVote(currentVersion.id)?.vote === 'con' ? 'default' : 'outline'}
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
@@ -303,33 +370,33 @@ export default function NewSectionSuggestionCard({
                   return;
                 }
                 voteMutation.mutate({
-                  suggestionId: suggestion.id,
+                  suggestionId: currentVersion.id,
                   vote: 'con',
-                  currentVote: getUserVote(suggestion.id)
+                  currentVote: getUserVote(currentVersion.id)
                 });
               }}
               disabled={voteMutation.isPending}
-              className={`text-xs px-2 md:px-3 ${getUserVote(suggestion.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
+              className={`text-xs px-2 md:px-3 ${getUserVote(currentVersion.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
             >
               <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-              {suggestion.conVotes || 0}
+              {currentVersion.conVotes || 0}
             </Button>
           </>
         ) : (
           <>
             <div className="flex items-center gap-1 text-green-600 text-xs md:text-sm">
               <ThumbsUp className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="font-medium">{suggestion.proVotes || 0}</span>
+              <span className="font-medium">{currentVersion.proVotes || 0}</span>
             </div>
             <div className="flex items-center gap-1 text-red-600 text-xs md:text-sm">
               <ThumbsDown className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="font-medium">{suggestion.conVotes || 0}</span>
+              <span className="font-medium">{currentVersion.conVotes || 0}</span>
             </div>
           </>
         )}
         <div className="flex-shrink-0">
           <VotesNeededCounter 
-            suggestion={suggestion}
+            suggestion={currentVersion}
             document={doc}
             acceptedSuggestions={acceptedSuggestions}
           />
@@ -340,18 +407,18 @@ export default function NewSectionSuggestionCard({
           className="text-[10px] md:text-xs h-7 md:h-8 px-2 md:px-3 flex-shrink-0"
           onClick={(e) => {
             e.stopPropagation();
-            onOpenSidebar && onOpenSidebar(suggestion.id);
+            onOpenSidebar && onOpenSidebar(currentVersion.id);
           }}
         >
           {t('viewDetails')}
         </Button>
-        {user && suggestion.status === 'pending' && (
+        {user && currentVersion.status === 'pending' && (
           <Button
             variant="outline"
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              onEditSuggestion && onEditSuggestion(suggestion);
+              onEditSuggestion && onEditSuggestion(currentVersion);
             }}
             className="h-7 md:h-8 text-xs px-2"
           >
@@ -383,19 +450,19 @@ export default function NewSectionSuggestionCard({
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            toggleComments && toggleComments(`suggestion-${suggestion.id}`);
+            toggleComments && toggleComments(`suggestion-${currentVersion.id}`);
           }}
           className="h-7 md:h-8 text-xs px-2"
         >
           <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-          {t('comments')} ({getCommentsCount ? getCommentsCount('suggestion', suggestion.id) : 0})
+          {t('comments')} ({getCommentsCount ? getCommentsCount('suggestion', currentVersion.id) : 0})
         </Button>
       </div>
-      {showComments && showComments[`suggestion-${suggestion.id}`] && (
+      {showComments && showComments[`suggestion-${currentVersion.id}`] && (
         <div className="mt-4 pt-4 border-t border-amber-200">
           <CommentsSection
             entityType="suggestion"
-            entityId={suggestion.id}
+            entityId={currentVersion.id}
             user={user}
           />
         </div>

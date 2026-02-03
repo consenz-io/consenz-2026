@@ -1132,6 +1132,7 @@ Return ONLY the translated text:`;
                      showComments={showComments}
                      isAdmin={isAdmin}
                      onEditSuggestion={onEditSuggestion}
+                     allDocumentSuggestions={suggestions}
                     />
                   ))}
                 </>
@@ -1176,6 +1177,7 @@ Return ONLY the translated text:`;
                                   showComments={showComments}
                                   isAdmin={isAdmin}
                                   onEditSuggestion={onEditSuggestion}
+                                  allDocumentSuggestions={suggestions}
                                 />
                               ))}
 
@@ -1279,6 +1281,7 @@ Return ONLY the translated text:`;
                                         showComments={showComments}
                                         isAdmin={isAdmin}
                                         onEditSuggestion={onEditSuggestion}
+                                        allDocumentSuggestions={suggestions}
                                       />
                                     ))}
                               </>
@@ -1366,6 +1369,7 @@ Return ONLY the translated text:`;
                               showComments={showComments}
                               isAdmin={isAdmin}
                               onEditSuggestion={onEditSuggestion}
+                              allDocumentSuggestions={suggestions}
                             />
                             </CardContent>
                             </Card>
@@ -1403,21 +1407,22 @@ Return ONLY the translated text:`;
                             </div>
                             </CardHeader>
                             <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
-                            <NewSectionSuggestionCard
-                            suggestion={suggestion}
-                            document={document}
-                            getUserName={getUserName}
-                            acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
-                            user={user}
-                            getUserVote={getUserVote}
-                            voteMutation={voteMutation}
-                            onOpenSidebar={onOpenSuggestionSidebar}
-                            getCommentsCount={getCommentsCount}
-                            toggleComments={toggleComments}
-                            showComments={showComments}
-                            isAdmin={isAdmin}
-                            onEditSuggestion={onEditSuggestion}
-                            />
+                              <NewSectionSuggestionCard
+                                suggestion={suggestion}
+                                document={document}
+                                getUserName={getUserName}
+                                acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                                user={user}
+                                getUserVote={getUserVote}
+                                voteMutation={voteMutation}
+                                onOpenSidebar={onOpenSuggestionSidebar}
+                                getCommentsCount={getCommentsCount}
+                                toggleComments={toggleComments}
+                                showComments={showComments}
+                                isAdmin={isAdmin}
+                                onEditSuggestion={onEditSuggestion}
+                                allDocumentSuggestions={suggestions}
+                              />
                             </CardContent>
                             </Card>
                             ))}
