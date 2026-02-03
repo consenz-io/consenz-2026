@@ -303,9 +303,46 @@ export default function NewSectionSuggestionCard({
 
   return (
     <div 
-      id={`suggestion-${suggestion.id}`}
+      id={`suggestion-${currentVersion.id}`}
       className="group relative p-3 md:p-6 border-2 border-amber-300 rounded-lg hover:border-amber-400 transition-all bg-gradient-to-br from-amber-50 to-yellow-50 scroll-mt-24"
     >
+      {/* כפתורי דפדוף בין גרסאות - מוצג ראשון אם יש יותר מגרסה אחת */}
+      {suggestionChain.length > 1 && (
+        <div className="flex items-center justify-between mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm border-amber-400 bg-gradient-to-r from-amber-100 to-orange-100">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrev}
+            disabled={currentVersionIndex <= 0}
+            className="flex items-center bg-white"
+          >
+            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </Button>
+
+          <div className="text-center">
+            <div className="text-xs text-slate-600 mb-1">
+              גרסה {currentVersionIndex + 1} / {suggestionChain.length}
+            </div>
+            <div className="text-sm font-bold text-blue-700">
+              {currentVersionIndex === 0 
+                ? (isRTL ? 'גרסה מקורית' : 'Original Version')
+                : `${isRTL ? 'עריכה מאת' : 'Edit by'} ${getUserName(currentVersion.created_by)}`
+              }
+            </div>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNext}
+            disabled={currentVersionIndex >= suggestionChain.length - 1}
+            className="flex items-center bg-white"
+          >
+            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </Button>
+        </div>
+      )}
+
       {/* כותרת עם אינדיקטור של הצעה חדשה */}
       <div className="flex items-center justify-between mb-3 md:mb-4">
         <div className="flex items-center gap-2 md:gap-3">
@@ -313,7 +350,7 @@ export default function NewSectionSuggestionCard({
             <Plus className="w-5 h-5 text-white" />
           </div>
           <div className="text-sm md:text-base font-semibold text-slate-900">
-            הצעה לסעיף חדש מאת {getUserName(suggestion.created_by)}
+            הצעה לסעיף חדש מאת {getUserName(currentVersion.created_by)}
           </div>
         </div>
       </div>
