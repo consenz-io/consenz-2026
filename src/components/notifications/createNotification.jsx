@@ -75,6 +75,8 @@ function translate(key, lang, replacements = {}) {
       notifExpiredMessage: "The voting period for suggestion \"{title}\" has ended",
       notifNewSuggestionTitle: "New suggestion in document",
       notifNewSuggestionMessage: "{name} added a new suggestion in the document \"{title}\"",
+      notifNewEditSuggestionTitle: "Suggestion to edit a suggestion",
+      notifNewEditSuggestionMessage: "{name} suggested an edit to a suggestion in document \"{title}\"",
       notifReplyTitle: "Reply to your comment",
       notifReplyMessage: "{name} replied to your comment",
       notifCommentTitle: "New comment",
@@ -97,6 +99,8 @@ function translate(key, lang, replacements = {}) {
       notifExpiredMessage: "תקופת ההצבעה על ההצעה \"{title}\" הסתיימה",
       notifNewSuggestionTitle: "הצעה חדשה במסמך",
       notifNewSuggestionMessage: "{name} הוסיף הצעה חדשה במסמך \"{title}\"",
+      notifNewEditSuggestionTitle: "הצעה לעריכת הצעה",
+      notifNewEditSuggestionMessage: "{name} הציע/ה עריכה להצעה במסמך \"{title}\"",
       notifReplyTitle: "תשובה לתגובה שלך",
       notifReplyMessage: "{name} השיב לתגובה שלך",
       notifCommentTitle: "תגובה חדשה",
@@ -118,7 +122,9 @@ function translate(key, lang, replacements = {}) {
       notifExpiredTitle: "انتهت فترة التصويت",
       notifExpiredMessage: "انتهت فترة التصويت على الاقتراح \"{title}\"",
       notifNewSuggestionTitle: "اقتراح جديد في المستند",
-      notifNewSuggestionMessage: "{name} أضاف اقتراحًا جديدًا في المستند \"{title}\"",
+      notifNewSuggestionMessage: "{name} أضاف اقتراحًا جديدًا في المستמך \"{title}\"",
+      notifNewEditSuggestionTitle: "اقتراح لتعديل اقتراح",
+      notifNewEditSuggestionMessage: "{name} اقترح تعديلاً على اقتراح في المستند \"{title}\"",
       notifReplyTitle: "رد على تعليقك",
       notifReplyMessage: "{name} رد على تعليقك",
       notifCommentTitle: "تعليق جديد",
@@ -776,11 +782,17 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
       notifications.push({
         userId: user.id,
         type: 'new_suggestion_in_followed_document',
-        title: translate('notifNewSuggestionTitle', userLang),
-        message: translate('notifNewSuggestionMessage', userLang, { 
-          name: currentUser.full_name, 
-          title: doc.title 
-        }),
+        const isEditOfSuggestion = suggestion.type === 'edit_suggestion';
+        const title = isEditOfSuggestion ? translate('notifNewEditSuggestionTitle', userLang) : translate('notifNewSuggestionTitle', userLang);
+        const message = isEditOfSuggestion 
+          ? translate('notifNewEditSuggestionMessage', userLang, { name: currentUser.full_name, title: doc.title })
+          : translate('notifNewSuggestionMessage', userLang, { name: currentUser.full_name, title: doc.title });
+
+        notifications.push({
+          userId: user.id,
+          type: 'new_suggestion_in_followed_document',
+          title: title,
+          message: message,
         relatedEntityId: suggestion.id,
         relatedEntityType: relatedEntityType,
         actionUrl,

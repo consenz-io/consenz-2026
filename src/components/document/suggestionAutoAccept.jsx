@@ -341,6 +341,13 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
   
   try {
     console.log('[AUTO-ACCEPT] Starting section creation/update...');
+    if (freshSuggestion.type === 'edit_suggestion') {
+        if (freshSuggestion.parentSuggestionId) {
+            await base44.entities.Suggestion.update(freshSuggestion.parentSuggestionId, { status: 'rejected' });
+        }
+        freshSuggestion.type = 'new_section';
+    }
+
     // טיפול בהצעת עריכה לסעיף קיים
     if (freshSuggestion.type === 'edit_section' && freshSuggestion.sectionId) {
       let section;

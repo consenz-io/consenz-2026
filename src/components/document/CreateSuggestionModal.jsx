@@ -90,6 +90,7 @@ export default function CreateSuggestionModal({
   topics, 
   sections, 
   editingSection, 
+  editingSuggestion,
   user, 
   onClose,
   isAdmin,
@@ -111,9 +112,10 @@ export default function CreateSuggestionModal({
   console.log('CreateSuggestionModal - currentUser.points:', currentUser?.points);
   
   const isNewSection = editingSection?.isNew;
+  const isEditingSuggestion = !!editingSuggestion;
   const isDirectEdit = editingSection?.isDirectEdit || false;
   const isDeleteSection = isDeletingSuggestion || false;
-  const existingSection = !isNewSection ? sections.find(s => s.id === editingSection?.id) : null;
+  const existingSection = !isNewSection && !isEditingSuggestion ? sections.find(s => s.id === editingSection?.id) : null;
 
   const [formData, setFormData] = useState({
     topicId: editingSection?.topicId || topics[0]?.id || "",
@@ -126,6 +128,16 @@ export default function CreateSuggestionModal({
 
   // Load translated content on mount
   React.useEffect(() => {
+    if (isEditingSuggestion) {
+        setFormData(prev => ({ 
+            ...prev, 
+            newContent: editingSuggestion.newContent,
+            explanation: editingSuggestion.explanation,
+            topicId: editingSuggestion.topicId
+        }));
+        return;
+    }
+
     const loadContent = async () => {
       if (!existingSection) return;
       
@@ -272,7 +284,7 @@ Return ONLY the translated HTML:`;
         topicId: targetTopicId,
         newTopicTitle: newTopicTitle, // Save new topic title if creating one
         newTopicOrder: newTopicOrder, // Save new topic order if creating one
-        type: isDeleteSection ? 'delete_section' : isNewSection ? 'new_section' : 'edit_section',
+        type: isDeleteSection ? 'delete_section' : isNewSection ? 'new_section' : (isEditingSuggestion ? 'edit_suggestion' : 'edit_section'),
         title: autoTitle,
         newContent: isDeleteSection ? '' : data.newContent,
         originalContent: isNewSection ? null : (isDeleteSection ? existingSection?.content : existingSection?.content),
@@ -282,6 +294,7 @@ Return ONLY the translated HTML:`;
         proVotes: 0,
         conVotes: 0,
         insertPosition: editingSection?.insertPosition,
+        parentSuggestionId: isEditingSuggestion ? editingSuggestion.id : null,
         originalLanguage: detectedLanguage,
         createdByLanguage: language, // Track language user was viewing when creating suggestion
       });

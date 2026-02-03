@@ -801,6 +801,8 @@ export default function SuggestionDetail() {
                     ? t('newSection') 
                     : suggestion.type === 'delete_section'
                     ? (language === 'he' ? 'מחיקת סעיף' : language === 'ar' ? 'حذف قسم' : 'Delete Section')
+                    : suggestion.type === 'edit_suggestion'
+                    ? (isRTL ? 'הצעה לעריכת הצעה' : 'Edit Suggestion')
                     : t('suggestionToEditSection')}
                 </Badge>
 
@@ -928,7 +930,7 @@ export default function SuggestionDetail() {
                   />
                 </div>
               </div>
-            ) : (suggestion.type === 'edit_section' || suggestion.type === 'edit_suggestion') && suggestion.originalContent ? (
+            ) : (suggestion.type === 'edit_section' || (suggestion.type === 'edit_suggestion' && suggestion.originalContent)) ? (
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</h3>
