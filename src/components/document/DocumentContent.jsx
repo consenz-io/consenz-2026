@@ -179,10 +179,6 @@ export default function DocumentContent({
                     : s
                 );
               });
-              
-              toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', {
-                duration: 4000,
-              });
 
               // רענון מיידי של כל הקווריז
               Promise.all([
