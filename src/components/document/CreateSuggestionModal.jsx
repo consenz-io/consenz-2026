@@ -280,10 +280,10 @@ Return ONLY the translated HTML:`;
       
       const suggestion = await base44.entities.Suggestion.create({
         documentId: document.id,
-        sectionId: isNewSection ? null : (existingSection?.id || editingSection?.id || null),
-        topicId: targetTopicId,
-        newTopicTitle: newTopicTitle, // Save new topic title if creating one
-        newTopicOrder: newTopicOrder, // Save new topic order if creating one
+        sectionId: isEditingSuggestion ? editingSuggestion.sectionId : (isNewSection ? null : (existingSection?.id || editingSection?.id || null)),
+        topicId: isEditingSuggestion ? editingSuggestion.topicId : targetTopicId,
+        newTopicTitle: isEditingSuggestion ? editingSuggestion.newTopicTitle : newTopicTitle, // Preserve new topic title when editing suggestion
+        newTopicOrder: isEditingSuggestion ? editingSuggestion.newTopicOrder : newTopicOrder, // Preserve new topic order when editing suggestion
         type: isDeleteSection ? 'delete_section' : isNewSection ? 'new_section' : (isEditingSuggestion ? 'edit_suggestion' : 'edit_section'),
         title: autoTitle,
         newContent: isDeleteSection ? '' : data.newContent,
@@ -293,7 +293,7 @@ Return ONLY the translated HTML:`;
         timerEndsAt: timerEndsAt.toISOString(),
         proVotes: 0,
         conVotes: 0,
-        insertPosition: editingSection?.insertPosition,
+        insertPosition: isEditingSuggestion ? editingSuggestion.insertPosition : editingSection?.insertPosition,
         parentSuggestionId: isEditingSuggestion ? editingSuggestion.id : null,
         originalLanguage: detectedLanguage,
         createdByLanguage: language, // Track language user was viewing when creating suggestion
