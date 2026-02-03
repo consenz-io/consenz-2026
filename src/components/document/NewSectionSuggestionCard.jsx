@@ -52,6 +52,7 @@ export default function NewSectionSuggestionCard({
 
     let chain = [];
     let current = allDocumentSuggestions.find(s => s.id === suggestion.id);
+    if (!current) return [suggestion];
 
     // Go up to find the root
     while (current && current.parentSuggestionId) {
@@ -66,12 +67,7 @@ export default function NewSectionSuggestionCard({
     }
 
     const root = chain[0];
-    if (!root) {
-      if (suggestion.type === 'new_section' || suggestion.type === 'edit_suggestion') {
-        return [suggestion];
-      }
-      return [suggestion];
-    }
+    if (!root) return [suggestion];
 
     // Go down to find all descendants in a linear path
     let fullChain = [...chain];
@@ -80,7 +76,7 @@ export default function NewSectionSuggestionCard({
 
     while (head) {
       const nextInChain = allDocumentSuggestions
-        .filter(s => s.parentSuggestionId === head.id)
+        .filter(s => s.parentSuggestionId === head.id && (s.type === 'new_section' || s.type === 'edit_suggestion'))
         .sort((a, b) => new Date(a.created_date) - new Date(b.created_date))[0];
 
       if (nextInChain && !visitedIds.has(nextInChain.id)) {
@@ -92,7 +88,10 @@ export default function NewSectionSuggestionCard({
       }
     }
 
-    return fullChain.filter(s => s.type === 'new_section' || s.type === 'edit_suggestion');
+    // Filter to only show new_section and edit_suggestion types, keep all statuses
+    const filtered = fullChain.filter(s => s.type === 'new_section' || s.type === 'edit_suggestion');
+    console.log('[SUGGESTION CHAIN] Built chain:', filtered.map(s => ({ id: s.id, type: s.type, status: s.status })));
+    return filtered;
   }, [suggestion, allDocumentSuggestions]);
 
   const currentVersionIndex = React.useMemo(() => {
