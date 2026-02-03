@@ -138,6 +138,11 @@ export default function CreateSuggestionModal({
         return;
     }
 
+    // אם זה סעיף חדש - אל תתרגם כלום
+    if (isNewSection) {
+      return;
+    }
+
     const loadContent = async () => {
       if (!existingSection) return;
       
