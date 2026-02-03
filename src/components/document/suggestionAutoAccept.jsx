@@ -914,11 +914,11 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
        // ===== שלב נוסף: הפיכת ההצעה ל-edit_section =====
        console.log('[AUTO-ACCEPT NEW_SECTION] Converting new_section to edit_section');
        
-       // עדכון ההצעה המקורית
+       // עדכון ההצעה המקורית - לא צריך לעדכן originalContent
+       // כי זו ההצעה שיצרה את הסעיף, אז originalContent נכון שיישאר כמו שהוא
        await base44.entities.Suggestion.update(freshSuggestion.id, {
          type: 'edit_section',
          sectionId: newSection.id,
-         originalContent: '', // הסעיף נוצר מכלום
        });
        
        console.log('[AUTO-ACCEPT NEW_SECTION] ✅ Converted suggestion to edit_section');
