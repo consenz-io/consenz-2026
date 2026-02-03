@@ -384,64 +384,176 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent suggestion type:', parentSuggestion.type);
       console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent has sectionId?', !!parentSuggestion.sectionId);
       
-      // אם הצעת האב היא new_section שכבר נוצר לה סעיף - עדכן גם את הסעיף
-      if (parentSuggestion.type === 'new_section' && parentSuggestion.sectionId) {
-        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent is new_section with existing section, checking if section exists...');
+      // אם הצעת האב היא new_section - צור/עדכן את הסעיף
+      if (parentSuggestion.type === 'new_section') {
+        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent is new_section');
         
-        const sections = await base44.entities.Section.filter({ id: parentSuggestion.sectionId });
-        if (sections.length > 0) {
-          const section = sections[0];
-          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Section exists, creating version and updating section content');
+        // בדוק אם כבר יש סעיף
+        if (parentSuggestion.sectionId) {
+          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent has existing section, updating it');
           
-          // יצירת גרסה עם התוכן הישן
-          const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
-          const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
+          const sections = await base44.entities.Section.filter({ id: parentSuggestion.sectionId });
+          if (sections.length > 0) {
+            const section = sections[0];
+            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Section exists, creating version and updating section content');
+            
+            // יצירת גרסה עם התוכן הישן
+            const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
+            const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
+            
+            await base44.entities.DocumentVersion.create({
+              documentId: section.documentId,
+              sectionId: section.id,
+              content: section.content,
+              changeDescription: `לפני: ${freshSuggestion.title || 'עריכת הצעה'}`,
+              version: nextVersion,
+              changeType: 'suggestion_accepted',
+              suggestionId: freshSuggestion.id,
+              originalLanguage: section.originalLanguage || 'he',
+              translations: section.translations || {}
+            });
+            
+            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Created "before" version:', nextVersion);
+            
+            // עדכון הסעיף עם התוכן החדש
+            await base44.entities.Section.update(section.id, {
+              content: freshSuggestion.newContent,
+              lastEditedBy: userId,
+              originalLanguage: newContentLanguage,
+              translations: {} // איפוס תרגומים כי התוכן השתנה
+            });
+            
+            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Section updated with new content');
+            
+            // יצירת גרסה עם התוכן החדש
+            await base44.entities.DocumentVersion.create({
+              documentId: section.documentId,
+              sectionId: section.id,
+              content: freshSuggestion.newContent,
+              changeDescription: freshSuggestion.title || 'עריכת הצעה',
+              version: nextVersion + 1,
+              changeType: 'suggestion_accepted',
+              suggestionId: freshSuggestion.id,
+              originalLanguage: newContentLanguage,
+              translations: {}
+            });
+            
+            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Created "after" version:', nextVersion + 1);
+          } else {
+            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ⚠️ Section not found with ID:', parentSuggestion.sectionId);
+          }
+        } else {
+          // הצעת האב עדיין pending ואין לה סעיף - צור אותו עכשיו!
+          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent has no section yet, creating section now');
           
-          await base44.entities.DocumentVersion.create({
-            documentId: section.documentId,
-            sectionId: section.id,
-            content: section.content,
-            changeDescription: `לפני: ${freshSuggestion.title || 'עריכת הצעה'}`,
-            version: nextVersion,
-            changeType: 'suggestion_accepted',
-            suggestionId: freshSuggestion.id,
-            originalLanguage: section.originalLanguage || 'he',
-            translations: section.translations || {}
-          });
+          let targetTopicId = parentSuggestion.topicId;
           
-          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Created "before" version:', nextVersion);
+          // אם יש newTopicTitle - צור נושא חדש
+          if (!targetTopicId && parentSuggestion.newTopicTitle) {
+            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Creating new topic:', parentSuggestion.newTopicTitle);
+            
+            const existingTopics = await base44.entities.Topic.filter({ 
+              documentId: parentSuggestion.documentId 
+            }, 'order');
+            
+            let topicOrderToUse;
+            if (parentSuggestion.newTopicOrder !== undefined && parentSuggestion.newTopicOrder !== null) {
+              topicOrderToUse = parentSuggestion.newTopicOrder;
+              const topicsToShift = existingTopics.filter(t => (t.order || 0) >= topicOrderToUse);
+              if (topicsToShift.length > 0) {
+                await Promise.all(
+                  topicsToShift.map(topic => 
+                    base44.entities.Topic.update(topic.id, { order: (topic.order || 0) + 1 })
+                  )
+                );
+              }
+            } else {
+              const maxTopicOrder = existingTopics.length > 0 
+                ? Math.max(...existingTopics.map(t => t.order || 0)) 
+                : -1;
+              topicOrderToUse = maxTopicOrder + 1;
+            }
+            
+            const newTopicLanguage = detectLanguage(parentSuggestion.newTopicTitle);
+            const newTopic = await base44.entities.Topic.create({
+              documentId: parentSuggestion.documentId,
+              title: parentSuggestion.newTopicTitle,
+              order: topicOrderToUse,
+              originalLanguage: newTopicLanguage,
+              translations: {}
+            });
+            
+            targetTopicId = newTopic.id;
+            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Created new topic with ID:', targetTopicId);
+          }
           
-          // עדכון הסעיף עם התוכן החדש
-          await base44.entities.Section.update(section.id, {
-            content: freshSuggestion.newContent,
+          if (!targetTopicId) {
+            console.error('[AUTO-ACCEPT EDIT_SUGGESTION] No topicId for parent new_section');
+            return false;
+          }
+          
+          // מצא את ה-order הנכון
+          const allSections = await base44.entities.Section.filter({ 
+            documentId: parentSuggestion.documentId,
+            topicId: targetTopicId 
+          }, 'order');
+          
+          let newOrder;
+          if (parentSuggestion.insertPosition !== undefined && parentSuggestion.insertPosition !== null) {
+            const sectionsToUpdate = allSections
+              .filter(s => (s.order || 0) >= parentSuggestion.insertPosition)
+              .sort((a, b) => (b.order || 0) - (a.order || 0));
+            
+            await Promise.all(
+              sectionsToUpdate.map(sec => 
+                base44.entities.Section.update(sec.id, { order: (sec.order || 0) + 1 })
+              )
+            );
+            
+            newOrder = parentSuggestion.insertPosition;
+          } else {
+            const maxOrder = allSections.length > 0 ? Math.max(...allSections.map(s => s.order || 0)) : -1;
+            newOrder = maxOrder + 1;
+          }
+          
+          // יצירת הסעיף החדש עם התוכן המעודכן
+          const newSection = await base44.entities.Section.create({
+            documentId: parentSuggestion.documentId,
+            topicId: targetTopicId,
+            content: freshSuggestion.newContent, // התוכן המעודכן מההצעה לעריכה
+            order: newOrder,
             lastEditedBy: userId,
             originalLanguage: newContentLanguage,
-            translations: {} // איפוס תרגומים כי התוכן השתנה
+            translations: {}
           });
           
-          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Section updated with new content');
+          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Created new section with ID:', newSection.id);
           
-          // יצירת גרסה עם התוכן החדש
+          // עדכן את הצעת האב עם sectionId
+          await base44.entities.Suggestion.update(parentSuggestion.id, {
+            sectionId: newSection.id
+          });
+          
+          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Updated parent suggestion with sectionId');
+          
+          // יצירת גרסה ראשונה לסעיף
           await base44.entities.DocumentVersion.create({
-            documentId: section.documentId,
-            sectionId: section.id,
+            documentId: parentSuggestion.documentId,
+            sectionId: newSection.id,
             content: freshSuggestion.newContent,
-            changeDescription: freshSuggestion.title || 'עריכת הצעה',
-            version: nextVersion + 1,
-            changeType: 'suggestion_accepted',
+            changeDescription: `${parentSuggestion.title} (${freshSuggestion.title})`,
+            version: 1,
+            changeType: 'section_created',
             suggestionId: freshSuggestion.id,
             originalLanguage: newContentLanguage,
             translations: {}
           });
           
-          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Created "after" version:', nextVersion + 1);
-        } else {
-          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ⚠️ Section not found with ID:', parentSuggestion.sectionId);
+          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Created version 1 for new section');
         }
       } else {
-        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent is not new_section or has no sectionId yet');
+        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent is not new_section');
         console.log('[AUTO-ACCEPT EDIT_SUGGESTION] - Parent type:', parentSuggestion.type);
-        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] - Parent sectionId:', parentSuggestion.sectionId);
         console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Only parent suggestion content updated, no section/version created');
       }
       
