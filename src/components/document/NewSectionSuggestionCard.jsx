@@ -100,6 +100,17 @@ export default function NewSectionSuggestionCard({
 
   const currentVersion = suggestionChain[currentVersionIndex] || suggestion;
 
+  // Auto-navigate to newest version when chain updates
+  React.useEffect(() => {
+    if (suggestionChain.length > 1 && currentVersionId === suggestion.id) {
+      const newestVersion = suggestionChain[suggestionChain.length - 1];
+      if (newestVersion && newestVersion.id !== suggestion.id) {
+        console.log('[NEW SECTION CARD] Auto-navigating to newest version:', newestVersion.id);
+        setCurrentVersionId(newestVersion.id);
+      }
+    }
+  }, [suggestionChain, suggestion.id]);
+
   // Truncate content for preview
   const getContentPreview = (html) => {
     if (typeof window !== 'undefined' && typeof document !== 'undefined' && document.createElement) {
