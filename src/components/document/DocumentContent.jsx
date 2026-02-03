@@ -170,11 +170,21 @@ export default function DocumentContent({
             const acceptingUserId = user?.id || suggestion.created_by;
             const accepted = await autoAcceptSuggestion(suggestion, acceptingUserId, document);
             if (accepted) {
+              // עדכון מיידי של הקאש - optimistic update
+              queryClient.setQueryData(['suggestions', document.id], (old) => {
+                if (!old) return old;
+                return old.map(s => 
+                  s.id === suggestion.id 
+                    ? { ...s, status: 'accepted' }
+                    : s
+                );
+              });
+              
               toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', {
                 duration: 4000,
               });
 
-              // רענון מיידי של כל הקווריז - כולל sections ו-versions
+              // רענון מיידי של כל הקווריז
               Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['sections', document.id] }),
                 queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] }),
@@ -422,7 +432,17 @@ export default function DocumentContent({
             accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
             
             if (accepted) {
-              // רענון מיידי של כל הקווריז - כולל sections ו-versions
+              // עדכון מיידי של הקאש לפני invalidate - optimistic update
+              queryClient.setQueryData(['suggestions', document?.id], (old) => {
+                if (!old) return old;
+                return old.map(s => 
+                  s.id === updatedSuggestion.id 
+                    ? { ...s, status: 'accepted', suggestionConsensus: updatedSuggestion.suggestionConsensus, participantsAtAcceptance: updatedSuggestion.participantsAtAcceptance }
+                    : s
+                );
+              });
+              
+              // רענון מיידי של כל הקווריז
               Promise.all([
                 queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
                 queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] }),

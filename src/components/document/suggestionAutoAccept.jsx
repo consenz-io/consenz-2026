@@ -368,12 +368,21 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       
       // עדכן את תוכן הצעת האב עם השפה המתאימה
       const newContentLanguage = detectLanguage(freshSuggestion.newContent || '');
-      await base44.entities.Suggestion.update(parentSuggestion.id, {
+      const parentUpdateData = {
         newContent: freshSuggestion.newContent,
         originalLanguage: newContentLanguage,
-      });
+      };
+      
+      // שמירת translations אם זה new_section (חשוב למניעת שגיאות)
+      if (parentSuggestion.type === 'new_section') {
+        parentUpdateData.translations = {};
+      }
+      
+      await base44.entities.Suggestion.update(parentSuggestion.id, parentUpdateData);
       
       console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Parent suggestion updated successfully');
+      console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent suggestion type:', parentSuggestion.type);
+      console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent has sectionId?', !!parentSuggestion.sectionId);
       
       // אם הצעת האב היא new_section שכבר נוצר לה סעיף - עדכן גם את הסעיף
       if (parentSuggestion.type === 'new_section' && parentSuggestion.sectionId) {
@@ -427,8 +436,13 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
           
           console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Created "after" version:', nextVersion + 1);
         } else {
-          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Section not found, only updating parent suggestion');
+          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ⚠️ Section not found with ID:', parentSuggestion.sectionId);
         }
+      } else {
+        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent is not new_section or has no sectionId yet');
+        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] - Parent type:', parentSuggestion.type);
+        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] - Parent sectionId:', parentSuggestion.sectionId);
+        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Only parent suggestion content updated, no section/version created');
       }
       
       // עדכן את סטטוס ההצעה הזו
