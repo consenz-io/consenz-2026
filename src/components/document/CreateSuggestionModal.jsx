@@ -330,7 +330,36 @@ Return ONLY the translated HTML:`;
       return suggestion;
     },
     onSuccess: async (result) => {
-      if (user && result?.id && !result?.isDirectEdit) {
+      if (result?.isDirectEdit) {
+        queryClient.invalidateQueries({ queryKey: ['sections'] });
+        queryClient.invalidateQueries({ queryKey: ['allVersions'] });
+        onClose();
+        return;
+      }
+
+      // CRITICAL: Update all caches BEFORE creating auto-vote to ensure instant UI update
+      if (user && result?.id) {
+        // עדכון קאש ההצעות עם ההצעה החדשה כולל הצבעת בעד ראשונה
+        queryClient.setQueryData(['suggestions', document.id], (old) => {
+          const existing = old || [];
+          // הוסף את ההצעה החדשה עם proVotes: 1
+          return [...existing, { ...result, proVotes: 1, conVotes: 0 }];
+        });
+
+        // עדכון קאש הנקודות של המשתמש
+        const gamificationEnabled = document.gamificationEnabled || false;
+        const pointsCost = result.type === 'new_section' ? POINTS_COST_NEW : POINTS_COST_EDIT;
+        if (gamificationEnabled) {
+          queryClient.setQueryData(['currentUser'], (old) => {
+            if (!old) return old;
+            return {
+              ...old,
+              points: (old.points || 1000) - pointsCost,
+              suggestionsCreated: (old.suggestionsCreated || 0) + 1
+            };
+          });
+        }
+        
         try {
           // Create the auto-vote
           const newVote = await base44.entities.Vote.create({
@@ -339,57 +368,34 @@ Return ONLY the translated HTML:`;
             vote: 'pro',
           });
           
-          // Update suggestion with new vote count
+          // Update suggestion with vote count
           await base44.entities.Suggestion.update(result.id, {
             proVotes: 1,
           });
           
-          // CRITICAL: Update suggestions cache immediately with the vote count
-          queryClient.setQueryData(['suggestions', document.id], (old) => {
-            if (!old) return old;
-            return old.map(s => 
-              s.id === result.id 
-                ? { ...s, proVotes: 1 }
-                : s
-            );
-          });
-          
-          // CRITICAL: Update userVotes cache immediately to prevent double voting
+          // Update userVotes cache immediately with the new vote
           queryClient.setQueryData(['userVotes', document.id, user.id], (old) => {
             const existingVotes = old || [];
-            // Add the new vote to the cache
             return [...existingVotes, newVote];
           });
           
           console.log('[AUTO-VOTE] ✅ Auto-vote created and cache updated for suggestion:', result.id);
         } catch (error) {
           console.error("[AUTO-VOTE] ❌ Failed to auto-vote:", error);
+          // Rollback optimistic update on error
+          queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
+          queryClient.invalidateQueries({ queryKey: ['userVotes', document.id, user.id] });
         }
       }
 
-      if (result?.isDirectEdit) {
-        queryClient.invalidateQueries({ queryKey: ['sections'] });
-        queryClient.invalidateQueries({ queryKey: ['allVersions'] });
-        onClose();
-      } else {
-        // Refresh data after successful creation
-        queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
-        queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-        queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
-        queryClient.invalidateQueries({ queryKey: ['userVotes', document.id, user?.id] });
-        
-        // Close modal only after notifications are sent
-        onClose();
-        
-        // Notify parent to scroll to the new suggestion
-        queryClient.invalidateQueries({ queryKey: ['userVote', result.id, user?.id] });
-        queryClient.invalidateQueries({ queryKey: ['suggestion', result.id] });
-
-        if (result?.id && onSuggestionCreated) {
-          setTimeout(() => {
-            onSuggestionCreated(result.id, result.sectionId, result.topicId);
-          }, 200);
-        }
+      // Close modal immediately - user sees instant feedback
+      onClose();
+      
+      // Scroll to new suggestion
+      if (result?.id && onSuggestionCreated) {
+        setTimeout(() => {
+          onSuggestionCreated(result.id, result.sectionId, result.topicId);
+        }, 100);
       }
     },
     onError: (err, variables, context) => {
