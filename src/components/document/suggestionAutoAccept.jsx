@@ -836,6 +836,42 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
        });
 
        console.log('[AUTO-ACCEPT NEW_SECTION] Created version 1 for new section');
+       
+       // ===== שלב נוסף: הפיכת ההצעה ל-edit_section =====
+       console.log('[AUTO-ACCEPT NEW_SECTION] Converting new_section to edit_section');
+       
+       // עדכון ההצעה המקורית
+       await base44.entities.Suggestion.update(freshSuggestion.id, {
+         type: 'edit_section',
+         sectionId: newSection.id,
+         originalContent: '', // הסעיף נוצר מכלום
+       });
+       
+       console.log('[AUTO-ACCEPT NEW_SECTION] ✅ Converted suggestion to edit_section');
+       
+       // מצא את כל הצעות ה-edit_suggestion שהיו קשורות להצעת new_section הזו
+       const relatedEditSuggestions = await base44.entities.Suggestion.filter({
+         parentSuggestionId: freshSuggestion.id,
+         type: 'edit_suggestion'
+       });
+       
+       console.log('[AUTO-ACCEPT NEW_SECTION] Found', relatedEditSuggestions.length, 'related edit_suggestion(s)');
+       
+       // המר כל אחת מהן ל-edit_section
+       await Promise.all(
+         relatedEditSuggestions.map(async (editSugg) => {
+           console.log('[AUTO-ACCEPT NEW_SECTION] Converting edit_suggestion to edit_section:', editSugg.id);
+           
+           return base44.entities.Suggestion.update(editSugg.id, {
+             type: 'edit_section',
+             sectionId: newSection.id,
+             parentSuggestionId: null, // כבר לא עריכה של הצעה
+             originalContent: freshSuggestion.newContent // התוכן שהיה בהצעת האב כשהעריכה נוצרה
+           });
+         })
+       );
+       
+       console.log('[AUTO-ACCEPT NEW_SECTION] ✅ Converted all related edit_suggestion(s) to edit_section');
      }
     
     // עדכון סטטוס ההצעה רק אחרי שהסעיף נוצר בהצלחה
