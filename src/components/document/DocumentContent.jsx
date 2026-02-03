@@ -148,8 +148,8 @@ export default function DocumentContent({
     lastCheckRef.current = now;
 
     const checkAndAutoAccept = async () => {
-      // בדיקת הצעות סעיפים שעברו את הסף אבל לא התקבלו - עבור edit_section ו-delete_section
-      const pendingSuggestions = suggestions.filter(s => s.status === 'pending' && (s.type === 'edit_section' || s.type === 'delete_section'));
+      // בדיקת הצעות סעיפים שעברו את הסף אבל לא התקבלו - עבור edit_section, delete_section, edit_suggestion, ו-new_section
+      const pendingSuggestions = suggestions.filter(s => s.status === 'pending' && (s.type === 'edit_section' || s.type === 'delete_section' || s.type === 'edit_suggestion' || s.type === 'new_section'));
       for (const suggestion of pendingSuggestions) {
         const consensuses = document.consensuses || [];
         let threshold;
