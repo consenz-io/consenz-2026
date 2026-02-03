@@ -1006,7 +1006,7 @@ export default function SuggestionDetail() {
                       onClick={() => setShowEditSuggestionModal(true)}
                       className="w-full"
                       >
-                      <Edit2 className={\`w-4 h-4 \${isRTL ? 'ml-2' : 'mr-2'}\`} />
+                      <Edit2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                       {isRTL ? 'הצע עריכה להצעה זו' : 'Suggest an Edit to this Suggestion'}
                   </Button>
               </div>
@@ -1397,7 +1397,7 @@ export default function SuggestionDetail() {
           isAdmin={isAdmin}
           onSuggestionCreated={(newSuggestionId) => {
             setShowEditSuggestionModal(false);
-            navigate(\`\${createPageUrl("SuggestionDetail")}?id=\${newSuggestionId}\`);
+            navigate(`${createPageUrl("SuggestionDetail")}?id=${newSuggestionId}`);
           }}
           />
           )}
