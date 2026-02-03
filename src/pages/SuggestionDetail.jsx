@@ -22,6 +22,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import { notifyVoteOnSuggestion, notifySuggestionStatusChange } from "../components/notifications/createNotification";
 import PageHeader from "../components/PageHeader";
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
+import { useMemo } from "react";
 import { toast } from "sonner";
 
 export default function SuggestionDetail() {
@@ -37,6 +38,7 @@ export default function SuggestionDetail() {
   const [isEditingExplanation, setIsEditingExplanation] = useState(false);
   const [editedExplanation, setEditedExplanation] = useState("");
   const [showEditSectionModal, setShowEditSectionModal] = useState(false);
+  const [showEditSuggestionModal, setShowEditSuggestionModal] = useState(false);
 
   // Polling interval for live sync (60 seconds to avoid rate limits)
   const SYNC_INTERVAL = 60000;
@@ -649,6 +651,68 @@ export default function SuggestionDetail() {
   const isNewestVersion = currentVersionIndex === 0;
   const isOldestVersion = currentVersionIndex === suggestionVersions.length - 1 || currentVersionIndex === -1;
 
+  const suggestionChain = useMemo(() => {
+      if (!suggestion || !allDocumentSuggestions || allDocumentSuggestions.length === 0) return [];
+
+      let chain = [];
+      let current = allDocumentSuggestions.find(s => s.id === suggestion.id);
+
+      // Go up to find the root
+      while (current && current.parentSuggestionId) {
+          const parent = allDocumentSuggestions.find(s => s.id === current.parentSuggestionId);
+          if (!parent || chain.some(item => item.id === parent.id)) { // Prevent infinite loops
+              break;
+          }
+          chain.unshift(parent);
+          current = parent;
+      }
+       if (current && !chain.some(item => item.id === current.id)) {
+          chain.unshift(current);
+      }
+
+      const root = chain[0];
+      if (!root) {
+           // This suggestion might be a root itself
+          if (suggestion.type === 'new_section' || suggestion.type === 'edit_suggestion'){
+              return [suggestion];
+          }
+          return [];
+      }
+
+      // Go down to find all descendants in a linear path
+      let fullChain = [...chain];
+      let head = chain[chain.length - 1];
+
+      let visitedIds = new Set(fullChain.map(s => s.id));
+
+      while (head) {
+          // Find the next suggestion in the chain (assuming one edit at a time)
+          const nextInChain = allDocumentSuggestions
+              .filter(s => s.parentSuggestionId === head.id)
+              .sort((a, b) => new Date(a.created_date) - new Date(b.created_date))[0];
+
+          if (nextInChain && !visitedIds.has(nextInChain.id)) {
+              fullChain.push(nextInChain);
+              visitedIds.add(nextInChain.id);
+              head = nextInChain;
+          } else {
+              head = null;
+          }
+      }
+
+      // Ensure the current suggestion is in the chain if it was missed
+      if (!visitedIds.has(suggestion.id)) {
+          // This case can happen if there are branches, for now, we just add it.
+          // A more robust solution might be needed for branching histories.
+      }
+
+      return fullChain.filter(s => s.type === 'new_section' || s.type === 'edit_suggestion');
+  }, [suggestion, allDocumentSuggestions]);
+
+  const currentSuggestionIndexInChain = useMemo(() => {
+      return suggestionChain.findIndex(s => s.id === suggestionId);
+  }, [suggestionChain, suggestionId]);
+
   // NOW check for loading/error states - AFTER all hooks
   if (suggestionLoading) {
     return (
@@ -864,7 +928,7 @@ export default function SuggestionDetail() {
                   />
                 </div>
               </div>
-            ) : suggestion.type === 'edit_section' && suggestion.originalContent ? (
+            ) : (suggestion.type === 'edit_section' || suggestion.type === 'edit_suggestion') && suggestion.originalContent ? (
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</h3>
@@ -933,7 +997,18 @@ export default function SuggestionDetail() {
                   />
                 </div>
               </div>
-            ) : suggestion.type === 'edit_section' && isContentStillCurrent ? (
+              ) : (suggestion.type === 'new_section' || (suggestion.type === 'edit_suggestion' && suggestion.status === 'pending')) ? (
+              <div className="pt-4">
+                  <Button
+                      variant="outline"
+                      onClick={() => setShowEditSuggestionModal(true)}
+                      className="w-full"
+                      >
+                      <Edit2 className={\`w-4 h-4 \${isRTL ? 'ml-2' : 'mr-2'}\`} />
+                      {isRTL ? 'הצע עריכה להצעה זו' : 'Suggest an Edit to this Suggestion'}
+                  </Button>
+              </div>
+              ) : suggestion.type === 'edit_section' && isContentStillCurrent ? (
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-semibold text-slate-700">{t('proposedContent')}</h3>
@@ -1278,8 +1353,23 @@ export default function SuggestionDetail() {
             setShowEditSectionModal(false);
             navigate(`${createPageUrl("SuggestionDetail")}?id=${newSuggestionId}`);
           }}
-        />
-      )}
-    </div>
+          />
+          )}
+          {showEditSuggestionModal && (
+          <CreateSuggestionModal
+          document={document}
+          topics={topics}
+          sections={sections}
+          editingSuggestion={suggestion}
+          user={user}
+          onClose={() => setShowEditSuggestionModal(false)}
+          isAdmin={isAdmin}
+          onSuggestionCreated={(newSuggestionId) => {
+            setShowEditSuggestionModal(false);
+            navigate(\`\${createPageUrl("SuggestionDetail")}?id=\${newSuggestionId}\`);
+          }}
+          />
+          )}
+          </div>
   );
 }
