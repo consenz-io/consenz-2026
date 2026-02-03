@@ -443,10 +443,10 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
             // ===== המרת הצעת האב וכל הצעות ה-edit_suggestion הקשורות ל-edit_section =====
             console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Converting parent and related suggestions to edit_section');
             
-            // המרת הצעת האב ל-edit_section
+            // המרת הצעת האב ל-edit_section - לא צריך לעדכן originalContent
+            // כי זו ההצעה שיצרה את הסעיף, אז originalContent נכון שיישאר כמו שהוא
             await base44.entities.Suggestion.update(parentSuggestion.id, {
               type: 'edit_section',
-              originalContent: '', // הסעיף נוצר מכלום
             });
             
             console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Converted parent suggestion to edit_section');
