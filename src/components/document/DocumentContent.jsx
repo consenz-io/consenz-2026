@@ -37,7 +37,8 @@ export default function DocumentContent({
   onOpenSuggestionSidebar,
   newlyCreatedSuggestion,
   onClearNewlyCreated,
-  targetSuggestionId
+  targetSuggestionId,
+  onEditSuggestion
 }) {
   const [showComments, setShowComments] = useState({});
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
@@ -1130,6 +1131,7 @@ Return ONLY the translated text:`;
                      toggleComments={toggleComments}
                      showComments={showComments}
                      isAdmin={isAdmin}
+                     onEditSuggestion={onEditSuggestion}
                     />
                   ))}
                 </>
@@ -1173,6 +1175,7 @@ Return ONLY the translated text:`;
                                   toggleComments={toggleComments}
                                   showComments={showComments}
                                   isAdmin={isAdmin}
+                                  onEditSuggestion={onEditSuggestion}
                                 />
                               ))}
 
@@ -1275,6 +1278,7 @@ Return ONLY the translated text:`;
                                         toggleComments={toggleComments}
                                         showComments={showComments}
                                         isAdmin={isAdmin}
+                                        onEditSuggestion={onEditSuggestion}
                                       />
                                     ))}
                               </>
@@ -1361,60 +1365,62 @@ Return ONLY the translated text:`;
                               toggleComments={toggleComments}
                               showComments={showComments}
                               isAdmin={isAdmin}
+                              onEditSuggestion={onEditSuggestion}
                             />
-                          </CardContent>
-                        </Card>
-                      ))}
-                      </div>
-                      )}
-                      </Draggable>
-                      );
-                      })}
-            {provided.placeholder}
+                            </CardContent>
+                            </Card>
+                            ))}
+                            </div>
+                            )}
+                            </Draggable>
+                            );
+                            })}
+                            {provided.placeholder}
 
-            {/* הצעות לנושאים חדשים בסוף (שלא שויכו לנושא מסוים) */}
-            {getNewTopicSuggestions()
-              .filter(s => {
-                // אם אין newTopicOrder - הצג בסוף
-                if (!s.newTopicOrder && s.newTopicOrder !== 0) return true;
-                
-                // אם יש נושאים - הצג רק הצעות שמעבר לנושא האחרון
-                if (topics.length > 0) {
-                  const maxTopicOrder = Math.max(...topics.map(t => t.order));
-                  // הצג רק אם newTopicOrder גדול מ-maxTopicOrder+1 (כלומר לא מוצג אחרי נושא קיים)
-                  return s.newTopicOrder > maxTopicOrder + 1;
-                }
-                
-                // אם אין נושאים - הצג הכל
-                return true;
-              })
-              .map((suggestion) => (
-                <Card key={suggestion.id} className="bg-white border-slate-200 w-full overflow-hidden">
-                  <CardHeader className="border-b border-slate-100 p-4 md:p-6 bg-purple-50">
-                    <div className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <CardTitle className={`text-lg md:text-2xl break-words flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
-                        {suggestion.newTopicTitle} <Badge className="ml-2 bg-purple-600 text-white">נושא חדש מוצע</Badge>
-                      </CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
-                    <NewSectionSuggestionCard
-                      suggestion={suggestion}
-                      document={document}
-                      getUserName={getUserName}
-                      acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
-                      user={user}
-                      getUserVote={getUserVote}
-                      voteMutation={voteMutation}
-                      onOpenSidebar={onOpenSuggestionSidebar}
-                      getCommentsCount={getCommentsCount}
-                      toggleComments={toggleComments}
-                      showComments={showComments}
-                      isAdmin={isAdmin}
-                    />
-                  </CardContent>
-                </Card>
-              ))}
+                            {/* הצעות לנושאים חדשים בסוף (שלא שויכו לנושא מסוים) */}
+                            {getNewTopicSuggestions()
+                            .filter(s => {
+                            // אם אין newTopicOrder - הצג בסוף
+                            if (!s.newTopicOrder && s.newTopicOrder !== 0) return true;
+
+                            // אם יש נושאים - הצג רק הצעות שמעבר לנושא האחרון
+                            if (topics.length > 0) {
+                            const maxTopicOrder = Math.max(...topics.map(t => t.order));
+                            // הצג רק אם newTopicOrder גדול מ-maxTopicOrder+1 (כלומר לא מוצג אחרי נושא קיים)
+                            return s.newTopicOrder > maxTopicOrder + 1;
+                            }
+
+                            // אם אין נושאים - הצג הכל
+                            return true;
+                            })
+                            .map((suggestion) => (
+                            <Card key={suggestion.id} className="bg-white border-slate-200 w-full overflow-hidden">
+                            <CardHeader className="border-b border-slate-100 p-4 md:p-6 bg-purple-50">
+                            <div className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <CardTitle className={`text-lg md:text-2xl break-words flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
+                            {suggestion.newTopicTitle} <Badge className="ml-2 bg-purple-600 text-white">נושא חדש מוצע</Badge>
+                            </CardTitle>
+                            </div>
+                            </CardHeader>
+                            <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
+                            <NewSectionSuggestionCard
+                            suggestion={suggestion}
+                            document={document}
+                            getUserName={getUserName}
+                            acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                            user={user}
+                            getUserVote={getUserVote}
+                            voteMutation={voteMutation}
+                            onOpenSidebar={onOpenSuggestionSidebar}
+                            getCommentsCount={getCommentsCount}
+                            toggleComments={toggleComments}
+                            showComments={showComments}
+                            isAdmin={isAdmin}
+                            onEditSuggestion={onEditSuggestion}
+                            />
+                            </CardContent>
+                            </Card>
+                            ))}
 
             {topics.length === 0 && getNewTopicSuggestions().length === 0 && (
               <Card className="bg-white border-slate-200 w-full overflow-hidden">

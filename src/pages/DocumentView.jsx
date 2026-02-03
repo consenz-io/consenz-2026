@@ -61,6 +61,7 @@ export default function DocumentView() {
   const [showSuggestionNav, setShowSuggestionNav] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [editingSuggestion, setEditingSuggestion] = useState(null);
 
   // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
@@ -422,6 +423,11 @@ export default function DocumentView() {
     const currentTopic = topics.find(t => t.id === topicId);
     const topicOrder = currentTopic?.order;
     setEditingSection({ topicId, insertPosition, isNew: true, topicOrder });
+    setShowCreateSuggestion(true);
+  };
+
+  const handleEditSuggestion = (suggestion) => {
+    setEditingSuggestion(suggestion);
     setShowCreateSuggestion(true);
   };
 
@@ -947,6 +953,7 @@ export default function DocumentView() {
             newlyCreatedSuggestion={newlyCreatedSuggestion}
             onClearNewlyCreated={() => setNewlyCreatedSuggestion(null)}
             targetSuggestionId={targetSuggestionId}
+            onEditSuggestion={handleEditSuggestion}
           />
       </div>
 
@@ -956,11 +963,13 @@ export default function DocumentView() {
           topics={topics}
           sections={sections}
           editingSection={editingSection}
+          editingSuggestion={editingSuggestion}
           user={user}
           isAdmin={isAdmin}
           onClose={() => {
             setShowCreateSuggestion(false);
             setEditingSection(null);
+            setEditingSuggestion(null);
           }}
           onSuggestionCreated={(suggestionId, sectionId, topicId) => {
             setNewlyCreatedSuggestion({ suggestionId, sectionId, topicId });
