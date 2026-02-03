@@ -587,6 +587,43 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
           });
           
           console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Created version 1 for new section');
+          
+          // ===== המרת הצעת האב וכל הצעות ה-edit_suggestion הקשורות ל-edit_section =====
+          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Converting parent and related suggestions to edit_section');
+          
+          // המרת הצעת האב ל-edit_section
+          await base44.entities.Suggestion.update(parentSuggestion.id, {
+            type: 'edit_section',
+            originalContent: '', // הסעיף נוצר מכלום
+          });
+          
+          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Converted parent suggestion to edit_section');
+          
+          // מצא את כל הצעות ה-edit_suggestion שקשורות להצעת האב (מלבד זו שהתקבלה עכשיו)
+          const relatedEditSuggestions = await base44.entities.Suggestion.filter({
+            parentSuggestionId: parentSuggestion.id,
+            type: 'edit_suggestion'
+          });
+          
+          const otherEditSuggestions = relatedEditSuggestions.filter(s => s.id !== freshSuggestion.id);
+          
+          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Found', otherEditSuggestions.length, 'other related edit_suggestion(s)');
+          
+          // המר את כולן ל-edit_section
+          await Promise.all(
+            otherEditSuggestions.map(async (editSugg) => {
+              console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Converting edit_suggestion to edit_section:', editSugg.id);
+              
+              return base44.entities.Suggestion.update(editSugg.id, {
+                type: 'edit_section',
+                sectionId: newSection.id,
+                parentSuggestionId: null,
+                originalContent: freshSuggestion.newContent // התוכן שנוצר כעת
+              });
+            })
+          );
+          
+          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Converted all related edit_suggestion(s) to edit_section');
         }
       } else {
         console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent is not new_section');
