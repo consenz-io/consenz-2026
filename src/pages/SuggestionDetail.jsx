@@ -1196,6 +1196,35 @@ export default function SuggestionDetail() {
           </CardContent>
         </Card>
 
+        {suggestionChain && suggestionChain.length > 1 && (
+            <Card className="bg-white border-slate-200 w-full overflow-hidden">
+                <CardHeader className="p-4 md:p-6">
+                    <CardTitle className="text-base md:text-lg">{isRTL ? 'היסטוריית עריכה של ההצעה' : 'Suggestion Edit History'}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 md:p-6 flex justify-between items-center">
+                    <Button 
+                        variant="outline"
+                        onClick={() => navigate(`${createPageUrl("SuggestionDetail")}?id=${suggestionChain[currentSuggestionIndexInChain - 1].id}`)}
+                        disabled={currentSuggestionIndexInChain <= 0}
+                    >
+                        <ChevronLeft className="w-4 h-4" />
+                        {isRTL ? 'גרסה קודמת' : 'Previous Version'}
+                    </Button>
+                    <span className="text-sm text-slate-600">
+                        {isRTL ? 'גרסה' : 'Version'} {currentSuggestionIndexInChain + 1} / {suggestionChain.length}
+                    </span>
+                    <Button 
+                        variant="outline"
+                        onClick={() => navigate(`${createPageUrl("SuggestionDetail")}?id=${suggestionChain[currentSuggestionIndexInChain + 1].id}`)}
+                        disabled={currentSuggestionIndexInChain >= suggestionChain.length - 1}
+                    >
+                        {isRTL ? 'גרסה הבאה' : 'Next Version'}
+                        <ChevronRight className="w-4 h-4" />
+                    </Button>
+                </CardContent>
+            </Card>
+        )}
+
         <div className="grid md:grid-cols-2 gap-4 md:gap-6">
           <Card className="bg-white border-slate-200 w-full overflow-hidden">
             <CardHeader className="p-4 md:p-6">
