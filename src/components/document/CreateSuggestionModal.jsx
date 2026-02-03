@@ -330,15 +330,25 @@ Return ONLY the translated HTML:`;
       return suggestion;
     },
     onSuccess: async (result) => {
-            if (user && result?.id) {
+      if (user && result?.id) {
         try {
-          await base44.entities.Vote.create({
+          // Create the auto-vote
+          const newVote = await base44.entities.Vote.create({
             suggestionId: result.id,
             userId: user.id,
             vote: 'pro',
           });
+          
+          // Update suggestion with new vote count
           await base44.entities.Suggestion.update(result.id, {
             proVotes: (result.proVotes || 0) + 1,
+          });
+          
+          // CRITICAL: Update userVotes cache immediately to prevent double voting
+          queryClient.setQueryData(['userVotes', document.id, user.id], (old) => {
+            const existingVotes = old || [];
+            // Add the new vote to the cache
+            return [...existingVotes, newVote];
           });
         } catch (error) {
           console.error("Failed to auto-vote:", error);
@@ -354,12 +364,13 @@ Return ONLY the translated HTML:`;
         queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
         queryClient.invalidateQueries({ queryKey: ['currentUser'] });
         queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
+        queryClient.invalidateQueries({ queryKey: ['userVotes', document.id, user?.id] });
         
         // Close modal only after notifications are sent
         onClose();
         
         // Notify parent to scroll to the new suggestion
-                queryClient.invalidateQueries({ queryKey: ['userVote', result.id, user?.id] });
+        queryClient.invalidateQueries({ queryKey: ['userVote', result.id, user?.id] });
         queryClient.invalidateQueries({ queryKey: ['suggestion', result.id] });
 
         if (result?.id && onSuggestionCreated) {
