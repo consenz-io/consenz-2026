@@ -469,8 +469,8 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
                 return base44.entities.Suggestion.update(editSugg.id, {
                   type: 'edit_section',
                   sectionId: section.id,
-                  parentSuggestionId: null,
-                  originalContent: freshSuggestion.newContent // התוכן שנוצר כעת
+                  parentSuggestionId: null
+                  // originalContent לא צריך להתעדכן - הוא משקף את התוכן המקורי בזמן יצירת ההצעה
                 });
               })
             );
@@ -617,8 +617,8 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
               return base44.entities.Suggestion.update(editSugg.id, {
                 type: 'edit_section',
                 sectionId: newSection.id,
-                parentSuggestionId: null,
-                originalContent: freshSuggestion.newContent // התוכן שנוצר כעת
+                parentSuggestionId: null
+                // originalContent לא צריך להתעדכן - הוא משקף את התוכן המקורי בזמן יצירת ההצעה
               });
             })
           );
@@ -939,8 +939,8 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
            return base44.entities.Suggestion.update(editSugg.id, {
              type: 'edit_section',
              sectionId: newSection.id,
-             parentSuggestionId: null, // כבר לא עריכה של הצעה
-             originalContent: freshSuggestion.newContent // התוכן שהיה בהצעת האב כשהעריכה נוצרה
+             parentSuggestionId: null
+             // originalContent לא צריך להתעדכן - הוא משקף את התוכן המקורי בזמן יצירת ההצעה
            });
          })
        );
