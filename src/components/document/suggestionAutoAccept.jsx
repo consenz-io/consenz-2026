@@ -341,11 +341,72 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
   
   try {
     console.log('[AUTO-ACCEPT] Starting section creation/update...');
+    
+    // טיפול בהצעת עריכה להצעה אחרת
     if (freshSuggestion.type === 'edit_suggestion') {
-        if (freshSuggestion.parentSuggestionId) {
-            await base44.entities.Suggestion.update(freshSuggestion.parentSuggestionId, { status: 'rejected' });
+      console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Processing edit to another suggestion');
+      
+      if (!freshSuggestion.parentSuggestionId) {
+        console.error('[AUTO-ACCEPT] edit_suggestion missing parentSuggestionId:', freshSuggestion.id);
+        return false;
+      }
+      
+      // מצא את הצעת האב
+      const parentSuggestions = await base44.entities.Suggestion.filter({ id: freshSuggestion.parentSuggestionId });
+      const parentSuggestion = parentSuggestions.length > 0 ? parentSuggestions[0] : null;
+      
+      if (!parentSuggestion) {
+        console.error('[AUTO-ACCEPT] Parent suggestion not found:', freshSuggestion.parentSuggestionId);
+        return false;
+      }
+      
+      console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent suggestion found:', parentSuggestion.id);
+      console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Updating parent newContent from:', parentSuggestion.newContent?.substring(0, 50));
+      console.log('[AUTO-ACCEPT EDIT_SUGGESTION] To:', freshSuggestion.newContent?.substring(0, 50));
+      
+      // עדכן את תוכן הצעת האב
+      await base44.entities.Suggestion.update(parentSuggestion.id, {
+        newContent: freshSuggestion.newContent,
+      });
+      
+      console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Parent suggestion updated successfully');
+      
+      // עדכן את סטטוס ההצעה הזו
+      await base44.entities.Suggestion.update(freshSuggestion.id, {
+        status: 'accepted',
+        suggestionConsensus: boundedSectionConsensus,
+        participantsAtAcceptance: participantsAtAcceptance,
+      });
+      
+      console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ edit_suggestion marked as accepted');
+      
+      // Award points if gamification enabled
+      if (document.gamificationEnabled && freshSuggestion.created_by) {
+        try {
+          await base44.functions.invoke('awardSuggestionPoints', {
+            suggestionId: freshSuggestion.id,
+            action: 'suggestion_accepted'
+          });
+          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Points awarded');
+        } catch (pointsError) {
+          console.error('[AUTO-ACCEPT EDIT_SUGGESTION] Points error:', pointsError);
         }
-        freshSuggestion.type = 'new_section';
+      }
+      
+      // Send notification - create updated suggestion object
+      const updatedSuggestion = {
+        ...freshSuggestion,
+        status: 'accepted',
+        suggestionConsensus: boundedSectionConsensus,
+        participantsAtAcceptance: participantsAtAcceptance
+      };
+      
+      if (updatedSuggestion.created_by && updatedSuggestion.documentId) {
+        notifySuggestionStatusChange({ suggestion: updatedSuggestion, newStatus: 'accepted' })
+          .catch(err => console.error('[AUTO-ACCEPT EDIT_SUGGESTION] Notification error:', err));
+      }
+      
+      return true;
     }
 
     // טיפול בהצעת עריכה לסעיף קיים

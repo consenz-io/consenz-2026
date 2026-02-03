@@ -287,7 +287,7 @@ Return ONLY the translated HTML:`;
         type: isDeleteSection ? 'delete_section' : isNewSection ? 'new_section' : (isEditingSuggestion ? 'edit_suggestion' : 'edit_section'),
         title: autoTitle,
         newContent: isDeleteSection ? '' : data.newContent,
-        originalContent: isNewSection ? null : (isDeleteSection ? existingSection?.content : existingSection?.content),
+        originalContent: isEditingSuggestion ? editingSuggestion.newContent : (isNewSection ? null : (isDeleteSection ? existingSection?.content : existingSection?.content)),
         explanation: data.explanation,
         status: 'pending',
         timerEndsAt: timerEndsAt.toISOString(),

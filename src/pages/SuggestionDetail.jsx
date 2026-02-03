@@ -999,7 +999,9 @@ export default function SuggestionDetail() {
                   />
                 </div>
               </div>
-            ) : (suggestion.type === 'new_section' || (suggestion.type === 'edit_suggestion' && suggestion.status === 'pending')) ? (
+            ) : null}
+
+            {(suggestion.type === 'new_section' && suggestion.status === 'pending') && (
               <div className="pt-4">
                 <Button
                   variant="outline"
@@ -1010,7 +1012,9 @@ export default function SuggestionDetail() {
                   {isRTL ? 'הצע עריכה להצעה זו' : 'Suggest an Edit to this Suggestion'}
                 </Button>
               </div>
-            ) : suggestion.type === 'edit_section' && isContentStillCurrent ? (
+            )}
+
+            {suggestion.type === 'edit_section' && isContentStillCurrent && (
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-semibold text-slate-700">{t('proposedContent')}</h3>
