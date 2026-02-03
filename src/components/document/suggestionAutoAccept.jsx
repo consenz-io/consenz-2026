@@ -813,15 +813,26 @@ export async function autoAcceptTopicEditSuggestion(suggestion, userId, document
   });
 
   // Create document version for topic title change
+  // Note: Topic changes don't have sectionId since they affect the topic, not a specific section
   const versions = await base44.entities.DocumentVersion.filter({ documentId: document.id });
   const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
   
-  await base44.entities.DocumentVersion.create({
-    documentId: document.id,
-    changeDescription: `כותרת נושא עודכנה: ${freshSuggestion.originalTitle} ← ${freshSuggestion.newTitle}`,
-    version: nextVersion,
-    changeType: 'suggestion_accepted',
-  });
+  // Get a section from the topic to attach the version to (required by schema)
+  const topicSections = await base44.entities.Section.filter({ topicId: freshSuggestion.topicId });
+  const firstSectionId = topicSections.length > 0 ? topicSections[0].id : null;
+  
+  if (firstSectionId) {
+    await base44.entities.DocumentVersion.create({
+      documentId: document.id,
+      sectionId: firstSectionId,
+      content: `כותרת נושא עודכנה: ${freshSuggestion.originalTitle} → ${freshSuggestion.newTitle}`,
+      changeDescription: `כותרת נושא עודכנה: ${freshSuggestion.originalTitle} → ${freshSuggestion.newTitle}`,
+      version: nextVersion,
+      changeType: 'suggestion_accepted',
+      originalLanguage: 'he',
+      translations: {}
+    });
+  }
 
   // Award points to creator
   if (document.gamificationEnabled && freshSuggestion.created_by) {
