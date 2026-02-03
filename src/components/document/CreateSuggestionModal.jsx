@@ -462,8 +462,8 @@ Return ONLY the translated HTML:`;
       
       <Dialog open onOpenChange={onClose}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-labelledby="suggestion-modal-title" aria-describedby="suggestion-modal-description">
-        <DialogHeader>
-          <DialogTitle id="suggestion-modal-title">
+        <DialogHeader className={isRTL ? "text-start" : "text-start"}>
+          <DialogTitle id="suggestion-modal-title" className="text-start">
             {isDeleteSection 
               ? (language === 'he' ? 'הצעה למחיקת סעיף' : 'Delete Section Suggestion')
               : isDirectEdit ? 'Direct Edit' : (isNewSection ? t('suggestNewSection') : t('suggestEditSection'))}
