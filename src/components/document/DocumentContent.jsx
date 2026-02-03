@@ -349,7 +349,15 @@ export default function DocumentContent({
 
       try {
         const suggestion = suggestions.find(s => s.id === suggestionId);
-        if (!suggestion) throw new Error("ההצעה לא נמצאה");
+        if (!suggestion) {
+          throw new Error("ההצעה לא נמצאה");
+        }
+        
+        // בדיקה שההצעה עדיין ממתינה (לא התקבלה כבר)
+        if (suggestion.status !== 'pending') {
+          console.log('[VOTE] Suggestion already processed with status:', suggestion.status);
+          throw new Error("לא ניתן להצביע על הצעה שכבר טופלה");
+        }
         
         let newProVotes = suggestion.proVotes || 0;
         let newConVotes = suggestion.conVotes || 0;
