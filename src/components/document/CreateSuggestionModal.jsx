@@ -337,12 +337,9 @@ Return ONLY the translated HTML:`;
             userId: user.id,
             vote: 'pro',
           });
-          const suggestion = await base44.entities.Suggestion.filter({ id: result.id });
-          if(suggestion.length > 0){
-            await base44.entities.Suggestion.update(result.id, {
-              proVotes: (suggestion[0].proVotes || 0) + 1,
-            });
-          }
+          await base44.entities.Suggestion.update(result.id, {
+            proVotes: (result.proVotes || 0) + 1,
+          });
         } catch (error) {
           console.error("Failed to auto-vote:", error);
         }
