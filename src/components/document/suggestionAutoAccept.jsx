@@ -465,10 +465,6 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
             });
             
             console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Converted parent suggestion to edit_section and kept as pending');
-            
-            // לא ממירים את שאר הצעות ה-edit_suggestion - הן ימשיכו להציע עריכות להצעת האב
-            // כשהן בעצמן יתקבלו, הן יעדכנו את תוכן הצעת האב
-            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Other edit_suggestion(s) remain as-is, will continue proposing edits to parent');
           } else {
             console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ⚠️ Section not found with ID:', parentSuggestion.sectionId);
           }
@@ -586,7 +582,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
           
           // ===== המרת הצעת האב וכל הצעות ה-edit_suggestion הקשורות ל-edit_section =====
           console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Converting parent and related suggestions to edit_section');
-          
+
           // המרת הצעת האב ל-edit_section ושמירה כ-pending
           // חשוב: שומרים pending כדי שההצעה תופיע בקרוסלה של הסעיף
           // מוחקים parentSuggestionId כי ההצעה כבר לא חלק מהשרשרת אלא הפכה לסעיף עצמאי
@@ -599,12 +595,8 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
             originalContent: freshSuggestion.newContent // התוכן שהסעיף נוצר איתו
             // newContent נשאר ללא שינוי - זה התוכן המקורי של ההצעה
           });
-          
+
           console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Converted parent suggestion to edit_section and kept as pending');
-          
-          // לא ממירים את שאר הצעות ה-edit_suggestion - הן ימשיכו להציע עריכות להצעת האב
-          // כשהן בעצמן יתקבלו, הן יעדכנו את תוכן הצעת האב
-          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Other edit_suggestion(s) remain as-is, will continue proposing edits to parent');
         }
       } else {
         console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent is not new_section');
