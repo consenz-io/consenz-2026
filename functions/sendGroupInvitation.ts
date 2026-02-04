@@ -75,24 +75,67 @@ Deno.serve(async (req) => {
         </div>
       `;
 
-    // Send email via external email function
-    const emailResponse = await base44.functions.invoke('sendExternalEmail', {
-      to: email,
-      subject,
-      html: emailHtml,
+    // Rate limiting: Check recent emails from this user (max 100 per hour)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const recentEmails = await base44.asServiceRole.entities.EmailLog.filter({
+      senderUserId: user.id,
+      created_date: { $gte: oneHourAgo }
+    });
+
+    if (recentEmails.length >= 100) {
+      const remainingTime = Math.ceil((new Date(recentEmails[0].created_date).getTime() + 60 * 60 * 1000 - Date.now()) / 60000);
+      throw new Error(language === 'he' 
+        ? `חריגה ממגבלת שליחת מיילים (100 לשעה). נסה שוב בעוד ${remainingTime} דקות.`
+        : `Email rate limit exceeded (100/hour). Try again in ${remainingTime} minutes.`);
+    }
+
+    // Get SendGrid API key and from email from secrets
+    const sendgridApiKey = Deno.env.get('SENDGRID_API_KEY');
+    const fromEmail = Deno.env.get('email_from') || 'noreply@consenz.io';
+
+    if (!sendgridApiKey) {
+      throw new Error('SendGrid configuration missing');
+    }
+
+    // Send email via SendGrid REST API
+    const sendgridResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${sendgridApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email: email }] }],
+        from: { email: fromEmail, name: 'Consenz' },
+        subject: subject,
+        content: [{ type: 'text/html', value: emailHtml }]
+      })
+    });
+
+    const success = sendgridResponse.status === 202;
+    let errorMessage = null;
+
+    if (!success) {
+      const errorBody = await sendgridResponse.text();
+      errorMessage = `SendGrid error (${sendgridResponse.status}): ${errorBody}`;
+      console.error('SendGrid error:', errorMessage);
+    }
+
+    // Log the email attempt
+    await base44.asServiceRole.entities.EmailLog.create({
+      senderUserId: user.id,
+      senderEmail: user.email,
+      recipientEmail: email,
+      subject: subject,
       purpose: 'group_invitation',
+      status: success ? 'sent' : 'failed',
+      errorMessage: errorMessage,
       relatedEntityId: groupId,
       relatedEntityType: 'group'
     });
 
-    if (!emailResponse.data.success) {
-      const errorMsg = emailResponse.data.error || 'Failed to send invitation email';
-      if (errorMsg.includes('Rate limit')) {
-        throw new Error(language === 'he' 
-          ? `חריגה ממגבלת שליחת מיילים (100 לשעה). נסה שוב בעוד ${emailResponse.data.remainingTime || 60} דקות.`
-          : `Email rate limit exceeded (100/hour). Try again in ${emailResponse.data.remainingTime || 60} minutes.`);
-      }
-      throw new Error(errorMsg);
+    if (!success) {
+      throw new Error('Failed to send invitation email');
     }
 
     return Response.json({ 
