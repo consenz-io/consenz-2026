@@ -931,36 +931,43 @@ export default function SuggestionDetail() {
               </div>
             ) : (suggestion.type === 'edit_section' || (suggestion.type === 'edit_suggestion' && suggestion.originalContent)) ? (
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</h3>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);
-                      setTimeout(() => {
-                        if (typeof window !== 'undefined') {
-                          const element = window.document.getElementById(`section-${suggestion.sectionId}`);
-                          if (element) {
-                            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }
-                        }
-                      }, 300);
-                    }}
-                    className="h-7 px-2 text-xs"
-                  >
-                    <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
-                    {isRTL ? 'חזרה למסמך' : 'Back to Document'}
-                  </Button>
-                </div>
-                <SectionDiff
-                  originalContent={suggestion.originalContent}
-                  newContent={suggestion.newContent}
-                  suggestion={suggestion}
-                  documentId={suggestion.documentId}
-                  sectionId={suggestion.sectionId}
-                  section={section}
-                />
+               <div className="flex items-center justify-between mb-2">
+                 <h3 className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</h3>
+                 <Button
+                   variant="outline"
+                   size="sm"
+                   onClick={() => {
+                     navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);
+                     setTimeout(() => {
+                       if (typeof window !== 'undefined') {
+                         const element = window.document.getElementById(`section-${suggestion.sectionId}`);
+                         if (element) {
+                           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                         }
+                       }
+                     }, 300);
+                   }}
+                   className="h-7 px-2 text-xs"
+                 >
+                   <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
+                   {isRTL ? 'חזרה למסמך' : 'Back to Document'}
+                 </Button>
+               </div>
+               <div className="relative">
+                 {isAutoAccepting && (
+                   <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10">
+                     <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                   </div>
+                 )}
+                 <SectionDiff
+                   originalContent={suggestion.originalContent}
+                   newContent={suggestion.newContent}
+                   suggestion={suggestion}
+                   documentId={suggestion.documentId}
+                   sectionId={suggestion.sectionId}
+                   section={section}
+                 />
+               </div>
               </div>
             ) : suggestion.type === 'new_section' ? (
               <div>
