@@ -467,16 +467,17 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
             // ===== המרת הצעת האב וכל הצעות ה-edit_suggestion הקשורות ל-edit_section =====
             console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Converting parent and related suggestions to edit_section');
             
-            // המרת הצעת האב ל-edit_section וסימון כ-accepted
-            // חשוב: מעדכנים גם את הסטטוס ל-accepted כדי למנוע יצירת סעיף כפול
+            // המרת הצעת האב ל-edit_section ושמירה כ-pending
+            // חשוב: שומרים pending כדי שההצעה תופיע בקרוסלה של הסעיף
             // מוחקים parentSuggestionId כי ההצעה כבר לא חלק מהשרשרת אלא הפכה לסעיף עצמאי
             await base44.entities.Suggestion.update(parentSuggestion.id, {
               type: 'edit_section',
-              status: 'accepted',
-              parentSuggestionId: null
+              status: 'pending',
+              parentSuggestionId: null,
+              originalContent: freshSuggestion.newContent // התוכן שהסעיף נוצר איתו
             });
             
-            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Converted parent suggestion to edit_section and marked as accepted');
+            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Converted parent suggestion to edit_section and kept as pending');
             
             // לא ממירים את שאר הצעות ה-edit_suggestion - הן ימשיכו להציע עריכות להצעת האב
             // כשהן בעצמן יתקבלו, הן יעדכנו את תוכן הצעת האב
@@ -596,16 +597,17 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
           // ===== המרת הצעת האב וכל הצעות ה-edit_suggestion הקשורות ל-edit_section =====
           console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Converting parent and related suggestions to edit_section');
           
-          // המרת הצעת האב ל-edit_section וסימון כ-accepted
-          // חשוב: מעדכנים גם את הסטטוס ל-accepted כדי למנוע יצירת סעיף כפול
+          // המרת הצעת האב ל-edit_section ושמירה כ-pending
+          // חשוב: שומרים pending כדי שההצעה תופיע בקרוסלה של הסעיף
           // מוחקים parentSuggestionId כי ההצעה כבר לא חלק מהשרשרת אלא הפכה לסעיף עצמאי
           await base44.entities.Suggestion.update(parentSuggestion.id, {
             type: 'edit_section',
-            status: 'accepted',
-            parentSuggestionId: null
+            status: 'pending',
+            parentSuggestionId: null,
+            originalContent: freshSuggestion.newContent // התוכן שהסעיף נוצר איתו
           });
           
-          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Converted parent suggestion to edit_section and marked as accepted');
+          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Converted parent suggestion to edit_section and kept as pending');
           
           // לא ממירים את שאר הצעות ה-edit_suggestion - הן ימשיכו להציע עריכות להצעת האב
           // כשהן בעצמן יתקבלו, הן יעדכנו את תוכן הצעת האב
@@ -893,21 +895,22 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
        // ===== שלב נוסף: הפיכת ההצעה ל-edit_section =====
        console.log('[AUTO-ACCEPT NEW_SECTION] Converting new_section to edit_section');
        
-       // עדכון ההצעה המקורית - לא צריך לעדכן originalContent
-       // כי זו ההצעה שיצרה את הסעיף, אז originalContent נכון שיישאר כמו שהוא
-       // חשוב: מעדכנים גם status ל-accepted כדי למנוע יצירת סעיף כפול
+       // עדכון ההצעה המקורית - המרה ל-edit_section ושמירה כ-pending
+       // חשוב: שומרים pending כדי שההצעה תופיע בקרוסלה של הסעיף
        // מוחקים parentSuggestionId כי ההצעה כבר לא חלק מהשרשרת אלא הפכה לסעיף עצמאי
+       // originalContent צריך להיות התוכן שהסעיף נוצר איתו (newContent)
        await base44.entities.Suggestion.update(freshSuggestion.id, {
          type: 'edit_section',
          sectionId: newSection.id,
-         status: 'accepted',
+         status: 'pending',
+         originalContent: freshSuggestion.newContent,
          suggestionConsensus: boundedSectionConsensus,
          participantsAtAcceptance: participantsAtAcceptance,
          threshold: newThreshold,
          parentSuggestionId: null
        });
        
-       console.log('[AUTO-ACCEPT NEW_SECTION] ✅ Converted suggestion to edit_section and marked as accepted');
+       console.log('[AUTO-ACCEPT NEW_SECTION] ✅ Converted suggestion to edit_section and kept as pending');
        
        // לא ממירים את הצעות ה-edit_suggestion - הן ימשיכו להציע עריכות להצעה המקורית
        // כשהן בעצמן יתקבלו, הן יעדכנו את תוכן ההצעה המקורית
