@@ -452,31 +452,9 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
             
             console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Converted parent suggestion to edit_section and marked as accepted');
             
-            // מצא את כל הצעות ה-edit_suggestion שקשורות להצעת האב (מלבד זו שהתקבלה עכשיו)
-            const relatedEditSuggestions = await base44.entities.Suggestion.filter({
-              parentSuggestionId: parentSuggestion.id,
-              type: 'edit_suggestion'
-            });
-            
-            const otherEditSuggestions = relatedEditSuggestions.filter(s => s.id !== freshSuggestion.id);
-            
-            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Found', otherEditSuggestions.length, 'other related edit_suggestion(s)');
-            
-            // המר את כולן ל-edit_section
-            await Promise.all(
-              otherEditSuggestions.map(async (editSugg) => {
-                console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Converting edit_suggestion to edit_section:', editSugg.id);
-                
-                return base44.entities.Suggestion.update(editSugg.id, {
-                  type: 'edit_section',
-                  sectionId: section.id,
-                  parentSuggestionId: null
-                  // originalContent לא צריך להתעדכן - הוא משקף את התוכן המקורי בזמן יצירת ההצעה
-                });
-              })
-            );
-            
-            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Converted all related edit_suggestion(s) to edit_section');
+            // לא ממירים את שאר הצעות ה-edit_suggestion - הן ימשיכו להציע עריכות להצעת האב
+            // כשהן בעצמן יתקבלו, הן יעדכנו את תוכן הצעת האב
+            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Other edit_suggestion(s) remain as-is, will continue proposing edits to parent');
           } else {
             console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ⚠️ Section not found with ID:', parentSuggestion.sectionId);
           }
@@ -601,31 +579,9 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
           
           console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Converted parent suggestion to edit_section and marked as accepted');
           
-          // מצא את כל הצעות ה-edit_suggestion שקשורות להצעת האב (מלבד זו שהתקבלה עכשיו)
-          const relatedEditSuggestions = await base44.entities.Suggestion.filter({
-            parentSuggestionId: parentSuggestion.id,
-            type: 'edit_suggestion'
-          });
-          
-          const otherEditSuggestions = relatedEditSuggestions.filter(s => s.id !== freshSuggestion.id);
-          
-          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Found', otherEditSuggestions.length, 'other related edit_suggestion(s)');
-          
-          // המר את כולן ל-edit_section
-          await Promise.all(
-            otherEditSuggestions.map(async (editSugg) => {
-              console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Converting edit_suggestion to edit_section:', editSugg.id);
-              
-              return base44.entities.Suggestion.update(editSugg.id, {
-                type: 'edit_section',
-                sectionId: newSection.id,
-                parentSuggestionId: null
-                // originalContent לא צריך להתעדכן - הוא משקף את התוכן המקורי בזמן יצירת ההצעה
-              });
-            })
-          );
-          
-          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Converted all related edit_suggestion(s) to edit_section');
+          // לא ממירים את שאר הצעות ה-edit_suggestion - הן ימשיכו להציע עריכות להצעת האב
+          // כשהן בעצמן יתקבלו, הן יעדכנו את תוכן הצעת האב
+          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Other edit_suggestion(s) remain as-is, will continue proposing edits to parent');
         }
       } else {
         console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent is not new_section');
@@ -927,29 +883,9 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
        
        console.log('[AUTO-ACCEPT NEW_SECTION] ✅ Converted suggestion to edit_section and marked as accepted');
        
-       // מצא את כל הצעות ה-edit_suggestion שהיו קשורות להצעת new_section הזו
-       const relatedEditSuggestions = await base44.entities.Suggestion.filter({
-         parentSuggestionId: freshSuggestion.id,
-         type: 'edit_suggestion'
-       });
-       
-       console.log('[AUTO-ACCEPT NEW_SECTION] Found', relatedEditSuggestions.length, 'related edit_suggestion(s)');
-       
-       // המר כל אחת מהן ל-edit_section
-       await Promise.all(
-         relatedEditSuggestions.map(async (editSugg) => {
-           console.log('[AUTO-ACCEPT NEW_SECTION] Converting edit_suggestion to edit_section:', editSugg.id);
-           
-           return base44.entities.Suggestion.update(editSugg.id, {
-             type: 'edit_section',
-             sectionId: newSection.id,
-             parentSuggestionId: null
-             // originalContent לא צריך להתעדכן - הוא משקף את התוכן המקורי בזמן יצירת ההצעה
-           });
-         })
-       );
-       
-       console.log('[AUTO-ACCEPT NEW_SECTION] ✅ Converted all related edit_suggestion(s) to edit_section');
+       // לא ממירים את הצעות ה-edit_suggestion - הן ימשיכו להציע עריכות להצעה המקורית
+       // כשהן בעצמן יתקבלו, הן יעדכנו את תוכן ההצעה המקורית
+       console.log('[AUTO-ACCEPT NEW_SECTION] edit_suggestion(s) remain as-is, will continue proposing edits to accepted suggestion');
      }
     
     // עדכון סטטוס ההצעה רק אחרי שהסעיף נוצר בהצלחה
