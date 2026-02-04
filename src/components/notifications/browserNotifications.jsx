@@ -81,7 +81,8 @@ export function showBrowserNotification({ title, body, actionUrl, icon }) {
       notification.onclick = (event) => {
         event.preventDefault();
         window.focus();
-        window.location.href = actionUrl;
+        // Navigate using the actionUrl as-is (already valid from createPageUrl)
+        window.location.href = actionUrl.startsWith('http') ? actionUrl : window.location.origin + actionUrl;
         notification.close();
       };
     }
