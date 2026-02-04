@@ -363,24 +363,8 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent suggestion found:', parentSuggestion.id);
       console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent type:', parentSuggestion.type);
       console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent status:', parentSuggestion.status);
-      console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Updating parent newContent from:', parentSuggestion.newContent?.substring(0, 50));
-      console.log('[AUTO-ACCEPT EDIT_SUGGESTION] To:', freshSuggestion.newContent?.substring(0, 50));
-      
-      // עדכן את תוכן הצעת האב עם השפה המתאימה
-      const newContentLanguage = detectLanguage(freshSuggestion.newContent || '');
-      const parentUpdateData = {
-        newContent: freshSuggestion.newContent,
-        originalLanguage: newContentLanguage,
-      };
-      
-      // שמירת translations אם זה new_section (חשוב למניעת שגיאות)
-      if (parentSuggestion.type === 'new_section') {
-        parentUpdateData.translations = {};
-      }
-      
-      await base44.entities.Suggestion.update(parentSuggestion.id, parentUpdateData);
-      
-      console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Parent suggestion updated successfully');
+      console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent newContent stays:', parentSuggestion.newContent?.substring(0, 50));
+      console.log('[AUTO-ACCEPT EDIT_SUGGESTION] NOT updating parent newContent - it should remain as original suggestion content');
       console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent suggestion type:', parentSuggestion.type);
       console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent has sectionId?', !!parentSuggestion.sectionId);
 
@@ -600,11 +584,14 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
           // המרת הצעת האב ל-edit_section ושמירה כ-pending
           // חשוב: שומרים pending כדי שההצעה תופיע בקרוסלה של הסעיף
           // מוחקים parentSuggestionId כי ההצעה כבר לא חלק מהשרשרת אלא הפכה לסעיף עצמאי
+          // originalContent = התוכן שהסעיף נוצר איתו (התוכן המעודכן)
+          // newContent = נשאר התוכן המקורי של ההצעה (parentSuggestion.newContent)
           await base44.entities.Suggestion.update(parentSuggestion.id, {
             type: 'edit_section',
             status: 'pending',
             parentSuggestionId: null,
             originalContent: freshSuggestion.newContent // התוכן שהסעיף נוצר איתו
+            // newContent נשאר ללא שינוי - זה התוכן המקורי של ההצעה
           });
           
           console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Converted parent suggestion to edit_section and kept as pending');
