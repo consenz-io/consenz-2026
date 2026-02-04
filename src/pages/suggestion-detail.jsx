@@ -349,7 +349,8 @@ export default function SuggestionDetail() {
         }
       });
       
-      return { previousSuggestion, previousVote };
+        return { previousSuggestion, previousVote };
+      });
     },
     onError: (err, variables, context) => {
       if (context?.previousSuggestion) {
