@@ -396,16 +396,18 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Found', otherPendingEdits.length, 'other pending edit_suggestion(s) to same parent');
 
       if (otherPendingEdits.length > 0) {
-        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Updating originalContent for other edit_suggestions');
+        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Updating originalContent for other edit_suggestions and resetting votes');
         await Promise.all(
           otherPendingEdits.map(editSugg => {
-            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] - Updating suggestion', editSugg.id);
+            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] - Resetting suggestion', editSugg.id, '(votes:', editSugg.proVotes, 'pro /', editSugg.conVotes, 'con → 0/0)');
             return base44.entities.Suggestion.update(editSugg.id, {
-              originalContent: freshSuggestion.newContent
+              originalContent: freshSuggestion.newContent,
+              proVotes: 0,
+              conVotes: 0
             });
           })
         );
-        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Updated originalContent for', otherPendingEdits.length, 'suggestions');
+        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Reset originalContent and votes for', otherPendingEdits.length, 'suggestions');
       }
       
       // אם הצעת האב היא new_section - צור/עדכן את הסעיף
