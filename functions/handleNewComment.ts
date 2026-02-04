@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
         notificationMessage = `${commenterName} הגיב על ההצעה שלך`;
       }
 
-      actionUrl = `/suggestiondetail?id=${suggestion.id}&commentId=${comment.id}`;
+      actionUrl = `/suggestion-detail?id=${suggestion.id}&commentId=${comment.id}`;
     }
 
     // אם זו תגובה על סעיף

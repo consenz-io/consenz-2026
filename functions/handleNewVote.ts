@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
       message: `${voterName} הצביע על ההצעה "${suggestion.title}"`,
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
-      actionUrl: `/suggestiondetail?id=${suggestion.id}`
+      actionUrl: `/suggestion-detail?id=${suggestion.id}`
     });
 
     // טיפול בנקודות אם gamification מופעל
