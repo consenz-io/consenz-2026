@@ -326,10 +326,11 @@ export default function ActivityFeed() {
                         {item.type === 'suggestion' && (
                           <div className="text-sm text-slate-600">
                             <p className="font-medium mb-1">{item.data.title}</p>
-                            {item.data.explanation && (
-                              <p className="line-clamp-2 text-slate-500">
-                                {item.data.explanation}
-                              </p>
+                            {item.data.newContent && (
+                              <div 
+                                className="line-clamp-3 text-slate-500 prose prose-sm max-w-none"
+                                dangerouslySetInnerHTML={{ __html: item.data.newContent }}
+                              />
                             )}
                           </div>
                         )}
