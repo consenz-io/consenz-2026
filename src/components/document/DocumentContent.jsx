@@ -354,32 +354,40 @@ export default function DocumentContent({
       votingInProgressRef.current.add(suggestionId);
 
       try {
-        const suggestion = suggestions.find(s => s.id === suggestionId);
-        if (!suggestion) {
+        // שלב 1: קריאת המצב העדכני מהשרת (source of truth) 
+        const [freshVotes, freshSuggestions] = await Promise.all([
+          base44.entities.Vote.filter({ suggestionId, userId: user.id }),
+          base44.entities.Suggestion.filter({ id: suggestionId })
+        ]);
+        
+        const serverVote = freshVotes[0];
+        const freshSuggestion = freshSuggestions[0];
+        
+        if (!freshSuggestion) {
           throw new Error("ההצעה לא נמצאה");
         }
         
         // בדיקה שההצעה עדיין ממתינה (לא התקבלה כבר)
-        if (suggestion.status !== 'pending') {
-          console.log('[VOTE] Suggestion already processed with status:', suggestion.status);
+        if (freshSuggestion.status !== 'pending') {
+          console.log('[VOTE] Suggestion already processed with status:', freshSuggestion.status);
           throw new Error("לא ניתן להצביע על הצעה שכבר טופלה");
         }
         
-        let newProVotes = suggestion.proVotes || 0;
-        let newConVotes = suggestion.conVotes || 0;
+        let newProVotes = freshSuggestion.proVotes || 0;
+        let newConVotes = freshSuggestion.conVotes || 0;
         let pointsAction = null;
         
-        // ביצוע הפעולות על בסיס המצב מהקאש
-        if (currentVote) {
-          if (currentVote.vote === vote) {
+        // ביצוע הפעולות על בסיס המצב האמיתי מהשרת
+        if (serverVote) {
+          if (serverVote.vote === vote) {
             // ביטול הצבעה
-            await base44.entities.Vote.delete(currentVote.id);
+            await base44.entities.Vote.delete(serverVote.id);
             if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
             else newConVotes = Math.max(0, newConVotes - 1);
             pointsAction = 'cancel';
           } else {
             // שינוי כיוון הצבעה
-            await base44.entities.Vote.update(currentVote.id, { vote });
+            await base44.entities.Vote.update(serverVote.id, { vote });
             if (vote === 'pro') {
               newProVotes += 1;
               newConVotes = Math.max(0, newConVotes - 1);
@@ -390,16 +398,37 @@ export default function DocumentContent({
             pointsAction = 'change';
           }
         } else {
-          // הצבעה חדשה
-          await base44.entities.Vote.create({
-            suggestionId,
-            userId: user.id,
-            vote
-          });
-          
-          if (vote === 'pro') newProVotes += 1;
-          else newConVotes += 1;
-          pointsAction = 'new';
+          // בדיקה כפולה לפני יצירת הצבעה חדשה
+          const doubleCheck = await base44.entities.Vote.filter({ suggestionId, userId: user.id });
+          if (doubleCheck.length > 0) {
+            const existingVote = doubleCheck[0];
+            if (existingVote.vote !== vote) {
+              await base44.entities.Vote.update(existingVote.id, { vote });
+              if (vote === 'pro') {
+                newProVotes += 1;
+                newConVotes = Math.max(0, newConVotes - 1);
+              } else {
+                newConVotes += 1;
+                newProVotes = Math.max(0, newProVotes - 1);
+              }
+            } else {
+              await base44.entities.Vote.delete(existingVote.id);
+              if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
+              else newConVotes = Math.max(0, newConVotes - 1);
+            }
+            pointsAction = 'cancel';
+          } else {
+            // באמת הצבעה חדשה
+            await base44.entities.Vote.create({
+              suggestionId,
+              userId: user.id,
+              vote
+            });
+            
+            if (vote === 'pro') newProVotes += 1;
+            else newConVotes += 1;
+            pointsAction = 'new';
+          }
         }
         
         // עדכון ההצעה עם הערכים החדשים
@@ -408,11 +437,11 @@ export default function DocumentContent({
           conVotes: newConVotes
         });
         
-        const updatedSuggestion = { ...suggestion, proVotes: newProVotes, conVotes: newConVotes };
+        const updatedSuggestion = { ...freshSuggestion, proVotes: newProVotes, conVotes: newConVotes };
 
         // בדיקת קונסנזוס רק אם ההצעה עדיין ממתינה
         let accepted = false;
-        if (suggestion.status === 'pending') {
+        if (freshSuggestion.status === 'pending') {
           const consensuses = document.consensuses || [];
           let threshold;
           if (consensuses.length > 0) {
@@ -466,8 +495,10 @@ export default function DocumentContent({
         
         // טיפול בנקודות ברקע - fire-and-forget (רק אם לא התקבלה)
         if (!accepted && pointsAction === 'new') {
-          handlePointsInBackground(pointsAction, suggestion, vote, currentVote).catch(() => {});
+          handlePointsInBackground(pointsAction, freshSuggestion, vote, null).catch(() => {});
           ensureUserPublicProfile(user).catch(() => {});
+        } else if (!accepted && pointsAction) {
+          handlePointsInBackground(pointsAction, freshSuggestion, vote, serverVote).catch(() => {});
         }
       
         return { accepted, newProVotes, newConVotes };
