@@ -21,12 +21,56 @@ export default function PointsCostConfirmDialog({
   currentPoints,
   actionType // "document" or "suggestion"
 }) {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
-  const actionText = actionType === "document" 
-    ? "יצירת מסמך חדש" 
-    : "יצירת הצעה";
+  const getActionText = () => {
+    const texts = {
+      en: { document: "Create new document", suggestion: "Create suggestion" },
+      he: { document: "יצירת מסמך חדש", suggestion: "יצירת הצעה" },
+      ar: { document: "إنشاء مستند جديد", suggestion: "إنشاء اقتراح" }
+    };
+    return texts[language]?.[actionType] || texts.he[actionType];
+  };
+
+  const getTexts = () => {
+    const textsByLang = {
+      en: {
+        confirmTitle: "Confirm",
+        costDescription: "This action will deduct {cost} points",
+        yourPoints: "Your current points:",
+        costLabel: "Cost of {action}:",
+        remaining: "Points after action:",
+        dontShowAgain: "Don't show this message again",
+        cancel: "Cancel",
+        confirm: "Confirm"
+      },
+      he: {
+        confirmTitle: "אישור",
+        costDescription: "פעולה זו תנכה {cost} נקודות",
+        yourPoints: "הנקודות שלך כרגע:",
+        costLabel: "עלות {action}:",
+        remaining: "יתרה לאחר הפעולה:",
+        dontShowAgain: "אל תציג הודעה זו שוב",
+        cancel: "ביטול",
+        confirm: "אישור"
+      },
+      ar: {
+        confirmTitle: "تأكيد",
+        costDescription: "ستؤدي هذه الإجراءات إلى خصم {cost} نقطة",
+        yourPoints: "نقاطك الحالية:",
+        costLabel: "تكلفة {action}:",
+        remaining: "النقاط المتبقية بعد الإجراء:",
+        dontShowAgain: "لا تعرض هذه الرسالة مرة أخرى",
+        cancel: "إلغاء",
+        confirm: "تأكيد"
+      }
+    };
+    return textsByLang[language] || textsByLang.he;
+  };
+
+  const actionText = getActionText();
+  const texts = getTexts();
 
   const handleConfirm = () => {
     if (dontShowAgain) {
@@ -45,9 +89,9 @@ export default function PointsCostConfirmDialog({
               <Coins className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <DialogTitle className="text-xl">אישור {actionText}</DialogTitle>
+              <DialogTitle className="text-xl">{texts.confirmTitle} {actionText}</DialogTitle>
               <DialogDescription className="text-sm text-slate-600">
-                פעולה זו תנכה {cost} נקודות
+                {texts.costDescription.replace('{cost}', cost)}
               </DialogDescription>
             </div>
           </div>
@@ -56,16 +100,16 @@ export default function PointsCostConfirmDialog({
         <div className="space-y-4 py-4">
           <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-slate-600">הנקודות שלך כרגע:</span>
+              <span className="text-sm text-slate-600">{texts.yourPoints}</span>
               <span className="text-2xl font-bold text-slate-900">{currentPoints}</span>
             </div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-slate-600">עלות {actionText}:</span>
+              <span className="text-sm text-slate-600">{texts.costLabel.replace('{action}', actionText)}:</span>
               <span className="text-xl font-bold text-red-600">-{cost}</span>
             </div>
             <div className="border-t border-slate-300 my-2"></div>
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-slate-700">יתרה לאחר הפעולה:</span>
+              <span className="text-sm font-medium text-slate-700">{texts.remaining}</span>
               <span className="text-2xl font-bold text-green-600">{currentPoints - cost}</span>
             </div>
           </div>
@@ -78,11 +122,11 @@ export default function PointsCostConfirmDialog({
                 onCheckedChange={setDontShowAgain}
               />
               <label
-                htmlFor="dontShowAgain"
-                className="text-sm text-blue-900 cursor-pointer"
-              >
-                אל תציג הודעה זו שוב
-              </label>
+                 htmlFor="dontShowAgain"
+                 className="text-sm text-blue-900 cursor-pointer"
+               >
+                 {texts.dontShowAgain}
+               </label>
             </div>
             <a
               href={`${createPageUrl("LearnMore")}#gamification`}
@@ -98,10 +142,10 @@ export default function PointsCostConfirmDialog({
 
         <DialogFooter className="gap-2">
           <Button onClick={onClose} variant="outline">
-            ביטול
+            {texts.cancel}
           </Button>
           <Button onClick={handleConfirm} className="bg-gradient-to-r from-blue-600 to-indigo-600">
-            אישור
+            {texts.confirm}
           </Button>
         </DialogFooter>
       </DialogContent>
