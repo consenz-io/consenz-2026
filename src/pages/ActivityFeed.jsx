@@ -125,7 +125,7 @@ export default function ActivityFeed() {
             data: suggestion,
             userName: getUserName(suggestion.created_by),
             documentTitle: getDocumentTitle(suggestion.documentId),
-            link: `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`,
+            link: `${createPageUrl("suggestion-detail")}?id=${suggestion.id}`,
           });
         });
     }
@@ -144,7 +144,7 @@ export default function ActivityFeed() {
               data: comment,
               userName: getUserName(comment.created_by),
               documentTitle: getDocumentTitle(relatedSuggestion.documentId),
-              link: `${createPageUrl("SuggestionDetail")}?id=${comment.rootEntityId}&commentId=${comment.id}`,
+              link: `${createPageUrl("suggestion-detail")}?id=${comment.rootEntityId}&commentId=${comment.id}`,
             });
           }
         }
@@ -164,7 +164,7 @@ export default function ActivityFeed() {
             userName: getUserName(vote.created_by, vote.userId),
             documentTitle: getDocumentTitle(relatedSuggestion.documentId),
             suggestionTitle: relatedSuggestion.title,
-            link: `${createPageUrl("SuggestionDetail")}?id=${vote.suggestionId}`,
+            link: `${createPageUrl("suggestion-detail")}?id=${vote.suggestionId}`,
           });
         }
       });
