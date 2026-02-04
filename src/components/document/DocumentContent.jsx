@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -22,7 +22,6 @@ import TopicTitleCarousel from "./TopicTitleCarousel";
 
 import { useLanguage } from "@/components/LanguageContext";
 import { checkSuggestionConsensus, autoAcceptSuggestion, autoAcceptTopicEditSuggestion, checkTopicEditConsensus } from "./suggestionAutoAccept";
-import { useVoteQueue } from "./useVoteQueue";
 import { toast } from "sonner";
 
 export default function DocumentContent({ 
@@ -306,16 +305,26 @@ export default function DocumentContent({
 
 
 
+  // מעקב אחרי הצבעות בתהליך למניעת race conditions
+  const votingInProgressRef = React.useRef(new Set());
+  
   const voteMutation = useMutation({
     mutationFn: async ({ suggestionId, vote, currentVote }) => {
       if (!user) throw new Error("יש להתחבר כדי להצביע");
 
+      // מניעת הצבעות כפולות על אותה הצעה
+      if (votingInProgressRef.current.has(suggestionId)) {
+        console.log('[VOTE] Already voting on this suggestion, ignoring');
+        throw new Error("ההצבעה בתהליך, אנא המתן");
+      }
+      votingInProgressRef.current.add(suggestionId);
+
       try {
-         // שלב 1: קריאת המצב העדכני מהשרת (source of truth) 
-         const [freshVotes, freshSuggestions] = await Promise.all([
-           base44.entities.Vote.filter({ suggestionId, userId: user.id }),
-           base44.entities.Suggestion.filter({ id: suggestionId })
-         ]);
+        // שלב 1: קריאת המצב העדכני מהשרת (source of truth) 
+        const [freshVotes, freshSuggestions] = await Promise.all([
+          base44.entities.Vote.filter({ suggestionId, userId: user.id }),
+          base44.entities.Suggestion.filter({ id: suggestionId })
+        ]);
         
         const serverVote = freshVotes[0];
         const freshSuggestion = freshSuggestions[0];
@@ -470,6 +479,9 @@ export default function DocumentContent({
         return { accepted, newProVotes, newConVotes };
       } catch (err) {
         throw err;
+      } finally {
+        // מסירים מהרשימה אחרי שהפעולה הסתיימה
+        votingInProgressRef.current.delete(suggestionId);
       }
     },
     // Optimistic update - עדכון ה-UI מיידית לפני שהשרת מגיב
@@ -595,9 +607,6 @@ export default function DocumentContent({
       ]);
     },
   });
-
-  // Vote Queue - לטיפול בהצבעות המוניות עם rate limiting
-  const { addToQueue: addVoteToQueue, queueLength } = useVoteQueue(voteMutation);
 
   const getUserName = (email) => {
     // Try public profile first (accessible to everyone)
