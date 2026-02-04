@@ -23,31 +23,8 @@ export const detectLanguage = (text) => {
  * Translate HTML content to a target language using LLM
  */
 export const translateContent = async (content, targetLanguage) => {
-  if (!content || !targetLanguage) return content;
-  
-  const prompt = `You are a professional translator. Translate the following HTML content to ${languageNames[targetLanguage]}.
-
-CRITICAL INSTRUCTIONS:
-- Keep ALL HTML tags exactly as they are
-- Only translate the TEXT CONTENT between the tags
-- Return ONLY the translated HTML, nothing else
-- Do not add any explanations or comments
-- Maintain exact same structure and formatting
-
-HTML content to translate:
-${content}
-
-Return ONLY the translated HTML:`;
-
-  const result = await base44.integrations.Core.InvokeLLM({
-    prompt: prompt,
-    add_context_from_internet: false,
-  });
-
-  let translated = typeof result === 'string' ? result : result.content || result;
-  translated = translated.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
-  
-  return translated;
+  // DISABLED: Automatic LLM translation creates hallucinations
+  throw new Error('Automatic translation is disabled. Please use manual translation or system updates.');
 };
 
 /**
