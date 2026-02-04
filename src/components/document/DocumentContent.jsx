@@ -1175,7 +1175,7 @@ Return ONLY the translated text:`;
                      isAdmin={isAdmin}
                      onEditSuggestion={onEditSuggestion}
                      allDocumentSuggestions={suggestions}
-                     isAutoAccepting={autoAcceptingIds.has(suggestion.id)}
+                     isAutoAccepting={!!autoAcceptingIds[suggestion.id]}
                     />
                   ))}
                 </>
