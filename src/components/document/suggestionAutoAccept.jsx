@@ -875,13 +875,6 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
 
        console.log('[AUTO-ACCEPT NEW_SECTION] Created new section with ID:', newSection.id);
 
-       // Update the suggestion with the newly created section's ID
-       await base44.entities.Suggestion.update(freshSuggestion.id, {
-         sectionId: newSection.id
-       });
-
-       console.log('[AUTO-ACCEPT NEW_SECTION] Updated suggestion', freshSuggestion.id, 'with new sectionId:', newSection.id);
-
        // שמירת גרסה ראשונה (רק גרסה אחת לסעיף חדש - ללא "לפני")
        await base44.entities.DocumentVersion.create({
          documentId: freshSuggestion.documentId,
@@ -908,6 +901,9 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
          type: 'edit_section',
          sectionId: newSection.id,
          status: 'accepted',
+         suggestionConsensus: boundedSectionConsensus,
+         participantsAtAcceptance: participantsAtAcceptance,
+         threshold: newThreshold,
          parentSuggestionId: null
        });
        
@@ -916,10 +912,43 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
        // לא ממירים את הצעות ה-edit_suggestion - הן ימשיכו להציע עריכות להצעה המקורית
        // כשהן בעצמן יתקבלו, הן יעדכנו את תוכן ההצעה המקורית
        console.log('[AUTO-ACCEPT NEW_SECTION] edit_suggestion(s) remain as-is, will continue proposing edits to accepted suggestion');
+       
+       // קפוץ לסוף - ההצעה כבר מסומנת כ-accepted
+       // שליחת התראה ונקודות
+       if (freshSuggestion.created_by && freshSuggestion.documentId) {
+         const updatedSuggestionForNotif = {
+           ...freshSuggestion,
+           status: 'accepted',
+           suggestionConsensus: boundedSectionConsensus,
+           participantsAtAcceptance: participantsAtAcceptance,
+           threshold: newThreshold
+         };
+         
+         console.log('[AUTO ACCEPT NEW_SECTION] Sending notification for suggestion:', updatedSuggestionForNotif.id);
+         notifySuggestionStatusChange({ suggestion: updatedSuggestionForNotif, newStatus: 'accepted' })
+           .catch(notifError => console.error('[AUTO ACCEPT NEW_SECTION NOTIFICATION ERROR]', notifError));
+       }
+       
+       // Award points
+       const gamificationEnabled = document?.gamificationEnabled || false;
+       if (gamificationEnabled && freshSuggestion.created_by) {
+         try {
+           await base44.functions.invoke('awardSuggestionPoints', {
+             suggestionId: freshSuggestion.id,
+             action: 'suggestion_accepted'
+           });
+           console.log('[AUTO-ACCEPT NEW_SECTION] ✅ Points awarded');
+         } catch (pointsError) {
+           console.error('[AUTO-ACCEPT NEW_SECTION] Points error:', pointsError);
+         }
+       }
+       
+       return true;
      }
     
-    // עדכון סטטוס ההצעה רק אחרי שהסעיף נוצר בהצלחה
-    console.log('[AUTO-ACCEPT] Section created successfully, updating suggestion status to accepted');
+    // עדכון סטטוס ההצעה רק אחרי שהסעיף נוצר/עודכן בהצלחה
+    // (למעט new_section שכבר טופל למעלה)
+    console.log('[AUTO-ACCEPT] Section created/updated successfully, updating suggestion status to accepted');
 
     // יצירת אובייקט ההצעה המעודכנת עם כל השדות
     const updatedSuggestion = {
@@ -930,44 +959,51 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       threshold: newThreshold
     };
 
-    await base44.entities.Suggestion.update(suggestion.id, { 
-      status: 'accepted',
-      suggestionConsensus: boundedSectionConsensus,
-      participantsAtAcceptance: participantsAtAcceptance,
-      threshold: newThreshold
-    });
-    
-    // שליחת התראה ונקודות - בדיקה שיש created_by
-    if (updatedSuggestion.created_by && updatedSuggestion.documentId) {
-      console.log('[AUTO ACCEPT] Sending notification for suggestion:', updatedSuggestion.id, 'created_by:', updatedSuggestion.created_by, 'documentId:', updatedSuggestion.documentId);
-      // Run in background - don't block main flow
-      notifySuggestionStatusChange({ suggestion: updatedSuggestion, newStatus: 'accepted' })
-        .then(() => console.log('[AUTO ACCEPT] Notification sent successfully'))
-        .catch(notifError => {
-          console.error('[AUTO ACCEPT NOTIFICATION ERROR]', notifError);
-          console.error('[AUTO ACCEPT NOTIFICATION ERROR] Message:', notifError.message);
-          console.error('[AUTO ACCEPT NOTIFICATION ERROR] Stack:', notifError.stack);
-        });
-    } else {
-      console.warn('[AUTO ACCEPT] Missing data for notification:', {
-        created_by: updatedSuggestion.created_by,
-        documentId: updatedSuggestion.documentId
+    // Update suggestion status only for edit_section and delete_section
+    // new_section already updated above
+    if (freshSuggestion.type !== 'new_section') {
+      await base44.entities.Suggestion.update(suggestion.id, { 
+        status: 'accepted',
+        suggestionConsensus: boundedSectionConsensus,
+        participantsAtAcceptance: participantsAtAcceptance,
+        threshold: newThreshold
       });
     }
     
-    // Award 200 points to suggestion creator when accepted (only if gamification enabled)
-    const gamificationEnabled = document?.gamificationEnabled || false;
-    if (gamificationEnabled && freshSuggestion.created_by) {
-      console.log('[POINTS] 🎯 Attempting to award 200 points to suggestion creator:', freshSuggestion.created_by);
-      try {
-        const response = await base44.functions.invoke('awardSuggestionPoints', {
-          suggestionId: freshSuggestion.id,
-          action: 'suggestion_accepted'
+    // שליחת התראה ונקודות - רק עבור edit_section ו-delete_section
+    // new_section כבר טופל למעלה
+    if (freshSuggestion.type !== 'new_section') {
+      if (updatedSuggestion.created_by && updatedSuggestion.documentId) {
+        console.log('[AUTO ACCEPT] Sending notification for suggestion:', updatedSuggestion.id, 'created_by:', updatedSuggestion.created_by, 'documentId:', updatedSuggestion.documentId);
+        // Run in background - don't block main flow
+        notifySuggestionStatusChange({ suggestion: updatedSuggestion, newStatus: 'accepted' })
+          .then(() => console.log('[AUTO ACCEPT] Notification sent successfully'))
+          .catch(notifError => {
+            console.error('[AUTO ACCEPT NOTIFICATION ERROR]', notifError);
+            console.error('[AUTO ACCEPT NOTIFICATION ERROR] Message:', notifError.message);
+            console.error('[AUTO ACCEPT NOTIFICATION ERROR] Stack:', notifError.stack);
+          });
+      } else {
+        console.warn('[AUTO ACCEPT] Missing data for notification:', {
+          created_by: updatedSuggestion.created_by,
+          documentId: updatedSuggestion.documentId
         });
-        console.log('[POINTS] ✅ Points awarded successfully:', response.data);
-      } catch (pointsError) {
-        console.error('[POINTS DEBUG] ❌ Error awarding points:', pointsError);
-        console.error('[POINTS DEBUG] Error details:', pointsError.message);
+      }
+      
+      // Award 200 points to suggestion creator when accepted (only if gamification enabled)
+      const gamificationEnabled = document?.gamificationEnabled || false;
+      if (gamificationEnabled && freshSuggestion.created_by) {
+        console.log('[POINTS] 🎯 Attempting to award 200 points to suggestion creator:', freshSuggestion.created_by);
+        try {
+          const response = await base44.functions.invoke('awardSuggestionPoints', {
+            suggestionId: freshSuggestion.id,
+            action: 'suggestion_accepted'
+          });
+          console.log('[POINTS] ✅ Points awarded successfully:', response.data);
+        } catch (pointsError) {
+          console.error('[POINTS DEBUG] ❌ Error awarding points:', pointsError);
+          console.error('[POINTS DEBUG] Error details:', pointsError.message);
+        }
       }
     }
     
