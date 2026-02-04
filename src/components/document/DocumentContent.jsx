@@ -708,7 +708,8 @@ Return ONLY the translated text:`;
       !s.topicId && 
       s.newTopicTitle &&
       s.status === 'pending' &&
-      !s.parentSuggestionId // רק ROOT suggestions
+      !s.parentSuggestionId && // רק ROOT suggestions
+      !s.sectionId // דלג על הצעות שהסעיף כבר נוצר
     ).sort((a, b) => (a.newTopicOrder || 999) - (b.newTopicOrder || 999));
   };
 
