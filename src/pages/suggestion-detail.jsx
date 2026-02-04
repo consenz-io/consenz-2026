@@ -289,6 +289,7 @@ export default function SuggestionDetail() {
       ).catch(() => {});
       
       return { accepted: false, newProVotes, newConVotes };
+      }); // Close votingQueue.add()
     },
     // Optimistic update - only for vote counts, NOT for status
     onMutate: async (vote) => {
