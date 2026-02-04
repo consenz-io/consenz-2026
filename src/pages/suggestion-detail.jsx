@@ -635,7 +635,7 @@ export default function SuggestionDetail() {
     
     if (targetIndex >= 0 && targetIndex < suggestionVersions.length) {
       const targetVersion = suggestionVersions[targetIndex];
-      navigate(`${createPageUrl("suggestion-detail")}?id=${targetVersion.suggestionId}`);
+      navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${targetVersion.suggestionId}`);
     }
   };
 
@@ -1128,7 +1128,7 @@ export default function SuggestionDetail() {
                 <CardContent className="p-3 md:p-6 flex justify-between items-center">
                     <Button 
                         variant="outline"
-                        onClick={() => navigate(`${createPageUrl("suggestion-detail")}?id=${suggestionChain[currentSuggestionIndexInChain - 1].id}`)}
+                        onClick={() => navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${suggestionChain[currentSuggestionIndexInChain - 1].id}`)}
                         disabled={currentSuggestionIndexInChain <= 0}
                     >
                         <ChevronLeft className="w-4 h-4" />
