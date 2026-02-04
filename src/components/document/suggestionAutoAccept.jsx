@@ -399,16 +399,19 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
         // בדוק אם כבר יש סעיף
         if (parentSuggestion.sectionId) {
           console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent has existing section, updating it');
-          
+
           const sections = await base44.entities.Section.filter({ id: parentSuggestion.sectionId });
           if (sections.length > 0) {
             const section = sections[0];
             console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Section exists, creating version and updating section content');
-            
+
             // יצירת גרסה עם התוכן הישן
             const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
             const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
-            
+
+            // זיהוי שפה לתוכן החדש
+            const newContentLanguage = detectLanguage(freshSuggestion.newContent || '');
+
             await base44.entities.DocumentVersion.create({
               documentId: section.documentId,
               sectionId: section.id,
@@ -420,9 +423,9 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
               originalLanguage: section.originalLanguage || 'he',
               translations: section.translations || {}
             });
-            
+
             console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Created "before" version:', nextVersion);
-            
+
             // עדכון הסעיף עם התוכן החדש
             await base44.entities.Section.update(section.id, {
               content: freshSuggestion.newContent,
@@ -472,7 +475,10 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
         } else {
           // הצעת האב עדיין pending ואין לה סעיף - צור אותו עכשיו!
           console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent has no section yet, creating section now');
-          
+
+          // זיהוי שפה לתוכן החדש
+          const newContentLanguage = detectLanguage(freshSuggestion.newContent || '');
+
           let targetTopicId = parentSuggestion.topicId;
           
           // אם יש newTopicTitle - צור נושא חדש
