@@ -81,59 +81,8 @@ const translateWithReference = async (
  * This ensures consistency between the two versions
  */
 const translatePairTogether = async (originalText, modifiedText, sourceLanguage, targetLanguage) => {
-  const prompt = `You are a professional translator. Translate TWO versions of the same document to ${languageNames[targetLanguage]}.
-
-CRITICAL INSTRUCTIONS:
-1. Both texts are versions of the SAME document
-2. Use IDENTICAL translations for parts that are the same in both versions
-3. Only the ACTUAL CHANGES should have different translations
-4. Keep ALL HTML tags exactly as they are
-5. Return a JSON object with "original" and "modified" keys
-
-Original version (${languageNames[sourceLanguage]}):
-${originalText}
-
-Modified version (${languageNames[sourceLanguage]}):
-${modifiedText}
-
-Return ONLY valid JSON in this format:
-{
-  "original": "<translated original>",
-  "modified": "<translated modified>"
-}`;
-
-  const result = await base44.integrations.Core.InvokeLLM({
-    prompt,
-    add_context_from_internet: false,
-    response_json_schema: {
-      type: "object",
-      properties: {
-        original: { type: "string" },
-        modified: { type: "string" }
-      },
-      required: ["original", "modified"]
-    }
-  });
-
-  // Handle both string and object responses
-  if (typeof result === 'object' && result.original && result.modified) {
-    return {
-      original: cleanHtml(result.original),
-      modified: cleanHtml(result.modified)
-    };
-  }
-
-  // Try parsing as JSON string
-  try {
-    const parsed = typeof result === 'string' ? JSON.parse(result) : result;
-    return {
-      original: cleanHtml(parsed.original),
-      modified: cleanHtml(parsed.modified)
-    };
-  } catch (e) {
-    console.error('Failed to parse translation pair response:', e);
-    throw new Error('Translation failed - invalid response format');
-  }
+  // DISABLED: Automatic LLM translation creates hallucinations
+  throw new Error('Automatic translation is disabled. Please use manual translation or system updates.');
 };
 
 const cleanHtml = (text) => {
