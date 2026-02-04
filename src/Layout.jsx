@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages, ArrowUp, Users } from "lucide-react";
+import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages, ArrowUp, Users, Activity } from "lucide-react";
 import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
 import { Toaster } from "sonner";
 import { initBrowserNotifications } from "@/components/notifications/browserNotifications";
@@ -143,6 +143,100 @@ function LayoutContent({ children, currentPageName }) {
     base44.auth.logout();
   };
 
+  // Calculate unread activity count
+  const { data: lastVisit } = useQuery({
+    queryKey: ['lastActivityVisit', user?.id],
+    queryFn: () => Promise.resolve(user?.lastActivityFeedVisit),
+    enabled: !!user,
+  });
+
+  const { data: userGroupMemberships = [] } = useQuery({
+    queryKey: ['userGroupMemberships', user?.id],
+    queryFn: () => base44.entities.GroupMember.filter({ userId: user.id }),
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
+  const userGroupIds = userGroupMemberships.map(m => m.groupId);
+
+  const { data: groupDocuments = [] } = useQuery({
+    queryKey: ['groupDocuments', userGroupIds.join(',')],
+    queryFn: async () => {
+      if (userGroupIds.length === 0) return [];
+      const docs = await base44.entities.Document.list();
+      return docs.filter(doc => doc.groupId && userGroupIds.includes(doc.groupId));
+    },
+    enabled: userGroupIds.length > 0,
+    initialData: [],
+  });
+
+  const groupDocIds = groupDocuments.map(d => d.id);
+
+  const { data: recentSuggestions = [] } = useQuery({
+    queryKey: ['recentSuggestions'],
+    queryFn: () => base44.entities.Suggestion.list('-created_date', 50),
+    initialData: [],
+  });
+
+  const { data: recentComments = [] } = useQuery({
+    queryKey: ['recentComments'],
+    queryFn: () => base44.entities.Comment.list('-created_date', 50),
+    initialData: [],
+  });
+
+  const { data: recentVotes = [] } = useQuery({
+    queryKey: ['recentVotes'],
+    queryFn: () => base44.entities.Vote.list('-created_date', 50),
+    initialData: [],
+  });
+
+  const { data: recentVersions = [] } = useQuery({
+    queryKey: ['recentVersions'],
+    queryFn: () => base44.entities.DocumentVersion.list('-created_date', 50),
+    initialData: [],
+  });
+
+  const unreadCount = React.useMemo(() => {
+    if (!lastVisit || groupDocIds.length === 0) return 0;
+    
+    const lastVisitDate = new Date(lastVisit);
+    let count = 0;
+
+    // Count new suggestions
+    count += recentSuggestions.filter(s => 
+      groupDocIds.includes(s.documentId) && 
+      new Date(s.created_date) > lastVisitDate
+    ).length;
+
+    // Count new comments
+    recentComments.forEach(c => {
+      if (c.rootEntityType === 'suggestion') {
+        const relatedSuggestion = recentSuggestions.find(s => s.id === c.rootEntityId);
+        if (relatedSuggestion && groupDocIds.includes(relatedSuggestion.documentId) && 
+            new Date(c.created_date) > lastVisitDate) {
+          count++;
+        }
+      }
+    });
+
+    // Count new votes
+    recentVotes.forEach(v => {
+      const relatedSuggestion = recentSuggestions.find(s => s.id === v.suggestionId);
+      if (relatedSuggestion && groupDocIds.includes(relatedSuggestion.documentId) && 
+          new Date(v.created_date) > lastVisitDate) {
+        count++;
+      }
+    });
+
+    // Count new versions
+    count += recentVersions.filter(v => 
+      groupDocIds.includes(v.documentId) && 
+      new Date(v.created_date) > lastVisitDate
+    ).length;
+
+    return count;
+  }, [lastVisit, groupDocIds, recentSuggestions, recentComments, recentVotes, recentVersions]);
+
   const navigationItems = [
     {
       title: t('home'),
@@ -209,6 +303,29 @@ function LayoutContent({ children, currentPageName }) {
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
+                  
+                  {user && (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton 
+                        asChild 
+                        className={`hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 rounded-lg mb-1 ${
+                          location.pathname === createPageUrl("ActivityFeed") ? 'bg-blue-50 text-blue-700' : ''
+                        }`}
+                      >
+                        <Link to={createPageUrl("ActivityFeed")} className="flex items-center gap-3 px-3 py-2 relative">
+                          <Activity className="w-4 h-4" />
+                          <span className="font-medium">
+                            {language === 'he' ? 'פיד פעילות' : language === 'ar' ? 'آخر النشاطات' : 'Activity Feed'}
+                          </span>
+                          {unreadCount > 0 && (
+                            <span className="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                              {unreadCount > 9 ? '9+' : unreadCount}
+                            </span>
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>

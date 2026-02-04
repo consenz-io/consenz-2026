@@ -303,52 +303,7 @@ export default function DocumentContent({
     return votesForSuggestion[votesForSuggestion.length - 1] || null;
   }, [userVotes]);
 
-  // פונקציית עזר לעדכון נקודות ברקע (לא חוסמת את ה-UI)
-  const handlePointsInBackground = (action, suggestion, vote, currentVote) => {
-    if (!document.gamificationEnabled) return Promise.resolve();
-    
-    let pointsChange = 0;
-    let description = '';
-    
-    if (action === 'cancel' && vote === 'pro') {
-      pointsChange = -10;
-      description = `ביטול הצבעה בעד על ההצעה: ${suggestion.title}`;
-    } else if (action === 'change') {
-      if (currentVote?.vote === 'con' && vote === 'pro') {
-        pointsChange = 10;
-        description = `קיבל הצבעה בעד על ההצעה: ${suggestion.title}`;
-      } else if (currentVote?.vote === 'pro' && vote === 'con') {
-        pointsChange = -10;
-        description = `הצבעה השתנתה מבעד לנגד על ההצעה: ${suggestion.title}`;
-      }
-    } else if (action === 'new' && vote === 'pro') {
-      pointsChange = 10;
-      description = `קיבל הצבעה בעד על ההצעה: ${suggestion.title}`;
-    }
-    
-    if (pointsChange !== 0) {
-      return base44.entities.User.filter({ email: suggestion.created_by })
-        .then(suggestionCreatorList => {
-          if (suggestionCreatorList.length > 0) {
-            const suggestionCreator = suggestionCreatorList[0];
-            const newPoints = Math.max(0, (suggestionCreator.points || 1000) + pointsChange);
-            return Promise.all([
-              base44.entities.User.update(suggestionCreator.id, { points: newPoints }),
-              base44.entities.PointsTransaction.create({
-                userId: suggestionCreator.id,
-                amount: pointsChange,
-                action: pointsChange > 0 ? 'vote_received' : 'vote_canceled',
-                description,
-                relatedEntityId: suggestion.id,
-                relatedEntityType: 'suggestion'
-              })
-            ]);
-          }
-        })
-        .catch(err => console.error('[POINTS] Error handling points:', err));
-    }
-    return Promise.resolve();
-  };
+
 
   // מעקב אחרי הצבעות בתהליך למניעת race conditions
   const votingInProgressRef = React.useRef(new Set());
@@ -516,12 +471,9 @@ export default function DocumentContent({
           }
         }
         
-        // טיפול בנקודות ברקע - fire-and-forget (רק אם לא התקבלה)
+        // ensureUserPublicProfile ברקע - fire-and-forget
         if (!accepted && pointsAction === 'new') {
-          handlePointsInBackground(pointsAction, freshSuggestion, vote, null).catch(() => {});
           ensureUserPublicProfile(user).catch(() => {});
-        } else if (!accepted && pointsAction) {
-          handlePointsInBackground(pointsAction, freshSuggestion, vote, serverVote).catch(() => {});
         }
       
         return { accepted, newProVotes, newConVotes };
