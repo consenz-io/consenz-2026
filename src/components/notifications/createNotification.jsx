@@ -387,7 +387,7 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
     // Get document for context
     const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
     const doc = docs[0];
-    
+
     await createNotification({
       userId: creator.id,
       type: 'vote_on_suggestion',
@@ -398,7 +398,7 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
       }),
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
-      actionUrl,
+      actionUrl: `/suggestion-detail?id=${suggestion.id}`,
       documentId: suggestion.documentId,
       documentTitle: doc?.title
     });
