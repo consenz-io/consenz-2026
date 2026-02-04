@@ -43,7 +43,7 @@ export default function DocumentContent({
   const [showComments, setShowComments] = useState({});
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
   const [editingTopic, setEditingTopic] = useState(null);
-  const [autoAcceptingIds, setAutoAcceptingIds] = useState(new Set());
+  const [autoAcceptingIds, setAutoAcceptingIds] = useState({});
   const queryClient = useQueryClient();
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
@@ -168,7 +168,7 @@ export default function DocumentContent({
           hasCheckedRef.current.add(`${suggestion.id}-accepted`);
           
           // סמן את ההצעה כעומדת לאישור
-          setAutoAcceptingIds(prev => new Set(prev).add(suggestion.id));
+          setAutoAcceptingIds(prev => ({ ...prev, [suggestion.id]: true }));
           
           try {
             const acceptingUserId = user?.id || suggestion.created_by;
@@ -203,8 +203,8 @@ export default function DocumentContent({
           } finally {
             // הסר את הסמון של עומד לאישור
             setAutoAcceptingIds(prev => {
-              const next = new Set(prev);
-              next.delete(suggestion.id);
+              const next = { ...prev };
+              delete next[suggestion.id];
               return next;
             });
           }
@@ -466,7 +466,7 @@ export default function DocumentContent({
           if (shouldAccept) {
             hasCheckedRef.current.add(`${suggestionId}-accepted`);
             // סמן את ההצעה כעומדת לאישור
-            setAutoAcceptingIds(prev => new Set(prev).add(suggestionId));
+            setAutoAcceptingIds(prev => ({ ...prev, [suggestionId]: true }));
             
             try {
               accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
@@ -508,8 +508,8 @@ export default function DocumentContent({
             } finally {
               // הסר את הסמון של עומד לאישור
               setAutoAcceptingIds(prev => {
-                const next = new Set(prev);
-                next.delete(suggestionId);
+                const next = { ...prev };
+                delete next[suggestionId];
                 return next;
               });
             }
@@ -1269,7 +1269,7 @@ Return ONLY the translated text:`;
                                   isAdmin={isAdmin}
                                   onEditSuggestion={onEditSuggestion}
                                   allDocumentSuggestions={suggestions}
-                                  isAutoAccepting={autoAcceptingIds.has(suggestion.id)}
+                                  isAutoAccepting={!!autoAcceptingIds[suggestion.id]}
                                 />
                               ))}
 
