@@ -55,25 +55,9 @@ export default function TranslatableContent({
       
       const translations = entity?.translations || {};
       
-      const prompt = `You are a professional translator. Translate the following HTML content to ${languagePrompts[language]}.
-
-CRITICAL INSTRUCTIONS:
-- Keep ALL HTML tags exactly as they are (including <p>, <strong>, <em>, <ul>, <li>, etc.)
-- Only translate the TEXT CONTENT between the tags
-- Return ONLY the translated HTML, nothing else
-- Do not add any explanations or comments
-- Do not escape HTML characters
-- Maintain exact same structure and formatting
-
-HTML content to translate:
-${content}
-
-Return ONLY the translated HTML:`;
-      
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: prompt,
-        add_context_from_internet: false,
-      });
+      // DISABLED: Automatic LLM translation creates hallucinations
+      // Users must manually review translations
+      throw new Error('תרגום אוטומטי מושבת כעת. אנא השתמש בתרגום ידני או בעדכן מערכת הנושא.');
 
       console.log('[TRANSLATE DEBUG] Raw result:', result);
       console.log('[TRANSLATE DEBUG] Result type:', typeof result);
