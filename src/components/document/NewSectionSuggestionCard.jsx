@@ -25,7 +25,8 @@ export default function NewSectionSuggestionCard({
   showComments,
   isAdmin,
   onEditSuggestion,
-  allDocumentSuggestions
+  allDocumentSuggestions,
+  isAutoAccepting = false
 }) {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
@@ -308,7 +309,11 @@ export default function NewSectionSuggestionCard({
   return (
     <div 
       id={`suggestion-${currentVersion.id}`}
-      className="group relative p-3 md:p-6 border-2 border-amber-300 rounded-lg hover:border-amber-400 transition-all bg-gradient-to-br from-amber-50 to-yellow-50 scroll-mt-24"
+      className={`group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 ${
+        isAutoAccepting 
+          ? 'border-green-400 bg-gradient-to-br from-green-50 to-emerald-50' 
+          : 'border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50'
+      }`}
     >
       {/* כפתורי דפדוף בין גרסאות - מוצג ראשון אם יש יותר מגרסה אחת */}
       {suggestionChain.length > 1 && (
@@ -350,11 +355,21 @@ export default function NewSectionSuggestionCard({
       {/* כותרת עם אינדיקטור של הצעה חדשה */}
       <div className="flex items-center justify-between mb-3 md:mb-4">
         <div className="flex items-center gap-2 md:gap-3">
-          <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
-            <Plus className="w-5 h-5 text-white" />
-          </div>
+          {isAutoAccepting ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0"
+            >
+              <CheckCircle className="w-5 h-5 text-white" />
+            </motion.div>
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
+              <Plus className="w-5 h-5 text-white" />
+            </div>
+          )}
           <div className="text-sm md:text-base font-semibold text-slate-900">
-            הצעה לסעיף חדש מאת {getUserName(currentVersion.created_by)}
+            {isAutoAccepting ? 'מאשר הצעה...' : `הצעה לסעיף חדש מאת ${getUserName(currentVersion.created_by)}`}
           </div>
         </div>
       </div>
