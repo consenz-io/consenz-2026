@@ -383,6 +383,30 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Parent suggestion updated successfully');
       console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent suggestion type:', parentSuggestion.type);
       console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Parent has sectionId?', !!parentSuggestion.sectionId);
+
+      // עדכן את originalContent של הצעות edit_suggestion אחרות שמצביעות לאותו אב
+      const otherEditSuggestions = await base44.entities.Suggestion.filter({
+        parentSuggestionId: parentSuggestion.id,
+        type: 'edit_suggestion',
+        status: 'pending'
+      });
+
+      const otherPendingEdits = otherEditSuggestions.filter(s => s.id !== freshSuggestion.id);
+
+      console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Found', otherPendingEdits.length, 'other pending edit_suggestion(s) to same parent');
+
+      if (otherPendingEdits.length > 0) {
+        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Updating originalContent for other edit_suggestions');
+        await Promise.all(
+          otherPendingEdits.map(editSugg => {
+            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] - Updating suggestion', editSugg.id);
+            return base44.entities.Suggestion.update(editSugg.id, {
+              originalContent: freshSuggestion.newContent
+            });
+          })
+        );
+        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Updated originalContent for', otherPendingEdits.length, 'suggestions');
+      }
       
       // אם הצעת האב היא new_section - צור/עדכן את הסעיף
       if (parentSuggestion.type === 'new_section') {
