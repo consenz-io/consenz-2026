@@ -211,8 +211,6 @@ export default function SuggestionDetail() {
       if (!user) throw new Error(t('mustBeLoggedInToVote'));
       if (!suggestion) throw new Error('Suggestion not found');
 
-      // Execute vote through queue to prevent rate limiting
-      return votingQueue.add(async () => {
       let newProVotes = suggestion.proVotes || 0;
       let newConVotes = suggestion.conVotes || 0;
       let pointsAction = null;
