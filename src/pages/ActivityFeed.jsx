@@ -324,9 +324,14 @@ export default function ActivityFeed() {
                         </p>
                         
                         {item.type === 'suggestion' && (
-                          <p className="text-sm text-slate-600 truncate">
-                            {item.data.title}
-                          </p>
+                          <div className="text-sm text-slate-600">
+                            <p className="font-medium mb-1">{item.data.title}</p>
+                            {item.data.explanation && (
+                              <p className="line-clamp-2 text-slate-500">
+                                {item.data.explanation}
+                              </p>
+                            )}
+                          </div>
                         )}
                         
                         {item.type === 'comment' && (
