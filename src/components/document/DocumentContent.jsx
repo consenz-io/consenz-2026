@@ -596,6 +596,9 @@ export default function DocumentContent({
     },
   });
 
+  // Vote Queue - לטיפול בהצבעות המוניות עם rate limiting
+  const { addToQueue: addVoteToQueue, queueLength } = useVoteQueue(voteMutation);
+
   const getUserName = (email) => {
     // Try public profile first (accessible to everyone)
     const profile = publicProfiles?.find(p => p.email === email);
