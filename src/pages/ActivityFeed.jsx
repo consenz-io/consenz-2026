@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { PAGE_NAMES } from "@/constants/pageNames";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -125,7 +126,7 @@ export default function ActivityFeed() {
             data: suggestion,
             userName: getUserName(suggestion.created_by),
             documentTitle: getDocumentTitle(suggestion.documentId),
-            link: `${createPageUrl("suggestion-detail")}?id=${suggestion.id}`,
+            link: `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${suggestion.id}`,
           });
         });
     }
@@ -144,7 +145,7 @@ export default function ActivityFeed() {
               data: comment,
               userName: getUserName(comment.created_by),
               documentTitle: getDocumentTitle(relatedSuggestion.documentId),
-              link: `${createPageUrl("suggestion-detail")}?id=${comment.rootEntityId}&commentId=${comment.id}`,
+              link: `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${comment.rootEntityId}&commentId=${comment.id}`,
             });
           }
         }
@@ -164,7 +165,7 @@ export default function ActivityFeed() {
             userName: getUserName(vote.created_by, vote.userId),
             documentTitle: getDocumentTitle(relatedSuggestion.documentId),
             suggestionTitle: relatedSuggestion.title,
-            link: `${createPageUrl("suggestion-detail")}?id=${vote.suggestionId}`,
+            link: `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${vote.suggestionId}`,
           });
         }
       });
@@ -182,7 +183,7 @@ export default function ActivityFeed() {
             data: version,
             userName: getUserName(version.created_by),
             documentTitle: getDocumentTitle(version.documentId),
-            link: `${createPageUrl("DocumentView")}?id=${version.documentId}`,
+            link: `${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${version.documentId}`,
           });
         });
     }

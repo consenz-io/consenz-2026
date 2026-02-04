@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { PAGE_NAMES } from "@/constants/pageNames";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -520,7 +521,7 @@ export default function SuggestionDetail() {
       await base44.entities.Suggestion.delete(suggestionId);
     },
     onSuccess: () => {
-      navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}`);
+      navigate(`${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${suggestion.documentId}`);
     },
     onError: (err) => {
       setError(err.message);
@@ -740,7 +741,7 @@ export default function SuggestionDetail() {
           <div className="flex-1 min-w-0 w-full">
             <PageHeader 
               title={suggestion.title}
-              backUrl={`${createPageUrl("DocumentView")}?id=${suggestion.documentId}`}
+              backUrl={`${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${suggestion.documentId}`}
             />
           </div>
           {user && user.email === suggestion.created_by && suggestion.status !== 'accepted' && (
@@ -763,7 +764,7 @@ export default function SuggestionDetail() {
         
         {document && (
           <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>
-            <Link to={`${createPageUrl("DocumentView")}?id=${document.id}`} className="hover:underline">
+            <Link to={`${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${document.id}`} className="hover:underline">
               {document.title}
             </Link>
           </p>
@@ -1121,7 +1122,7 @@ export default function SuggestionDetail() {
                     </span>
                     <Button 
                         variant="outline"
-                        onClick={() => navigate(`${createPageUrl("suggestion-detail")}?id=${suggestionChain[currentSuggestionIndexInChain + 1].id}`)}
+                        onClick={() => navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${suggestionChain[currentSuggestionIndexInChain + 1].id}`)}
                         disabled={currentSuggestionIndexInChain >= suggestionChain.length - 1}
                     >
                         {isRTL ? 'גרסה הבאה' : 'Next Version'}
@@ -1288,7 +1289,7 @@ export default function SuggestionDetail() {
           isAdmin={isAdmin}
           onSuggestionCreated={(newSuggestionId) => {
             setShowEditSectionModal(false);
-            navigate(`${createPageUrl("suggestion-detail")}?id=${newSuggestionId}`);
+            navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${newSuggestionId}`);
           }}
           />
           )}
@@ -1303,7 +1304,7 @@ export default function SuggestionDetail() {
           isAdmin={isAdmin}
           onSuggestionCreated={(newSuggestionId) => {
             setShowEditSuggestionModal(false);
-            navigate(`${createPageUrl("suggestion-detail")}?id=${newSuggestionId}`);
+            navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${newSuggestionId}`);
           }}
           />
           )}
