@@ -398,7 +398,7 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
       }),
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
-      actionUrl: `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`,
+      actionUrl: `suggestiondetail?id=${suggestion.id}`,
       documentId: suggestion.documentId,
       documentTitle: doc?.title
     });
@@ -766,8 +766,8 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
     
     // Build action URL
     const actionUrl = relatedEntityType === 'topic_edit_suggestion' && topicId
-      ? `${createPageUrl("DocumentView")}?id=${doc.id}#topic-${topicId}`
-      : `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`;
+      ? `documentview?id=${doc.id}#topic-${topicId}`
+      : `suggestiondetail?id=${suggestion.id}`;
 
     // Build notifications for all unique users
     const notifications = [];
