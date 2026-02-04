@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
 
     // Rate limiting: Check recent emails from this user (max 100 per hour)
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    const recentEmails = await base44.entities.EmailLog.filter({
+    const recentEmails = await base44.asServiceRole.entities.EmailLog.filter({
       senderUserId: user.id,
       created_date: { $gte: oneHourAgo }
     });
@@ -29,38 +29,20 @@ Deno.serve(async (req) => {
       }, { status: 429 });
     }
 
-    // Get SendGrid API key and from email from secrets
-    const sendgridApiKey = Deno.env.get('SENDGRID_API_KEY');
-    const fromEmail = Deno.env.get('email_from');
-
-    if (!sendgridApiKey || !fromEmail) {
-      throw new Error('SendGrid configuration missing');
-    }
-
-    // Send email via SendGrid REST API
-    const sendgridResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${sendgridApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: to }] }],
-        from: { email: fromEmail, name: 'Consenz' },
-        subject: subject,
-        content: [
-          html ? { type: 'text/html', value: html } : { type: 'text/plain', value: text }
-        ]
-      })
-    });
-
-    const success = sendgridResponse.status === 202;
+    // Send email via Base44 Core integration
+    let success = true;
     let errorMessage = null;
 
-    if (!success) {
-      const errorBody = await sendgridResponse.text();
-      errorMessage = `SendGrid error (${sendgridResponse.status}): ${errorBody}`;
-      console.error('SendGrid error:', errorMessage);
+    try {
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        to: to,
+        subject: subject,
+        body: html || text
+      });
+    } catch (emailError) {
+      success = false;
+      errorMessage = emailError.message || 'Failed to send email';
+      console.error('Email error:', errorMessage);
     }
 
     // Log the email attempt

@@ -89,36 +89,20 @@ Deno.serve(async (req) => {
         : `Email rate limit exceeded (100/hour). Try again in ${remainingTime} minutes.`);
     }
 
-    // Get SendGrid API key and from email from secrets
-    const sendgridApiKey = Deno.env.get('SENDGRID_API_KEY');
-    const fromEmail = Deno.env.get('email_from') || 'noreply@consenz.io';
-
-    if (!sendgridApiKey) {
-      throw new Error('SendGrid configuration missing');
-    }
-
-    // Send email via SendGrid REST API
-    const sendgridResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${sendgridApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: email }] }],
-        from: { email: fromEmail, name: 'Consenz' },
-        subject: subject,
-        content: [{ type: 'text/html', value: emailHtml }]
-      })
-    });
-
-    const success = sendgridResponse.status === 202;
+    // Send email via Base44 Core integration
+    let success = true;
     let errorMessage = null;
 
-    if (!success) {
-      const errorBody = await sendgridResponse.text();
-      errorMessage = `SendGrid error (${sendgridResponse.status}): ${errorBody}`;
-      console.error('SendGrid error:', errorMessage);
+    try {
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        to: email,
+        subject: subject,
+        body: emailHtml
+      });
+    } catch (emailError) {
+      success = false;
+      errorMessage = emailError.message || 'Failed to send email';
+      console.error('Email error:', errorMessage);
     }
 
     // Log the email attempt
