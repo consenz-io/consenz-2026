@@ -445,9 +445,11 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
             
             // המרת הצעת האב ל-edit_section וסימון כ-accepted
             // חשוב: מעדכנים גם את הסטטוס ל-accepted כדי למנוע יצירת סעיף כפול
+            // מוחקים parentSuggestionId כי ההצעה כבר לא חלק מהשרשרת אלא הפכה לסעיף עצמאי
             await base44.entities.Suggestion.update(parentSuggestion.id, {
               type: 'edit_section',
-              status: 'accepted'
+              status: 'accepted',
+              parentSuggestionId: null
             });
             
             console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Converted parent suggestion to edit_section and marked as accepted');
@@ -572,9 +574,11 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
           
           // המרת הצעת האב ל-edit_section וסימון כ-accepted
           // חשוב: מעדכנים גם את הסטטוס ל-accepted כדי למנוע יצירת סעיף כפול
+          // מוחקים parentSuggestionId כי ההצעה כבר לא חלק מהשרשרת אלא הפכה לסעיף עצמאי
           await base44.entities.Suggestion.update(parentSuggestion.id, {
             type: 'edit_section',
-            status: 'accepted'
+            status: 'accepted',
+            parentSuggestionId: null
           });
           
           console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Converted parent suggestion to edit_section and marked as accepted');
@@ -875,10 +879,12 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
        // עדכון ההצעה המקורית - לא צריך לעדכן originalContent
        // כי זו ההצעה שיצרה את הסעיף, אז originalContent נכון שיישאר כמו שהוא
        // חשוב: מעדכנים גם status ל-accepted כדי למנוע יצירת סעיף כפול
+       // מוחקים parentSuggestionId כי ההצעה כבר לא חלק מהשרשרת אלא הפכה לסעיף עצמאי
        await base44.entities.Suggestion.update(freshSuggestion.id, {
          type: 'edit_section',
          sectionId: newSection.id,
-         status: 'accepted'
+         status: 'accepted',
+         parentSuggestionId: null
        });
        
        console.log('[AUTO-ACCEPT NEW_SECTION] ✅ Converted suggestion to edit_section and marked as accepted');
