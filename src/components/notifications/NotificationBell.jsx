@@ -10,8 +10,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useLanguage } from "@/components/LanguageContext";
+import { createPageUrl } from "@/utils";
 
 export default function NotificationBell({ user }) {
   const { t, isRTL } = useLanguage();
@@ -108,14 +109,7 @@ export default function NotificationBell({ user }) {
       if (notification.actionUrl && typeof notification.actionUrl === 'string' && notification.actionUrl.length > 0) {
         // Small delay to ensure popover closes
         await new Promise(resolve => setTimeout(resolve, 150));
-        
-        try {
-          navigate(notification.actionUrl);
-        } catch (navError) {
-          console.error('[NAVIGATION ERROR] React Router failed:', navError);
-          // Fallback to window.location for external or problematic URLs
-          window.location.href = notification.actionUrl;
-        }
+        window.location.href = notification.actionUrl;
       }
     } catch (error) {
       console.error('[NOTIFICATION CLICK ERROR]', error);
