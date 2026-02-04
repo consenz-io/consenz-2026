@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import ActivityFeed from './pages/ActivityFeed';
 import AdminSyncProfiles from './pages/AdminSyncProfiles';
 import CreateDocument from './pages/CreateDocument';
 import CreateGroup from './pages/CreateGroup';
@@ -61,16 +62,16 @@ import Groups from './pages/Groups';
 import Home from './pages/Home';
 import LearnMore from './pages/LearnMore';
 import MyDocuments from './pages/MyDocuments';
+import NotificationQA from './pages/NotificationQA';
 import Profile from './pages/Profile';
 import SectionHistory from './pages/SectionHistory';
 import UnderstandingConsensus from './pages/UnderstandingConsensus';
-import ActivityFeed from './pages/ActivityFeed';
-import NotificationQA from './pages/NotificationQA';
 import suggestionDetail from './pages/suggestion-detail';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "ActivityFeed": ActivityFeed,
     "AdminSyncProfiles": AdminSyncProfiles,
     "CreateDocument": CreateDocument,
     "CreateGroup": CreateGroup,
@@ -85,11 +86,10 @@ export const PAGES = {
     "Home": Home,
     "LearnMore": LearnMore,
     "MyDocuments": MyDocuments,
+    "NotificationQA": NotificationQA,
     "Profile": Profile,
     "SectionHistory": SectionHistory,
     "UnderstandingConsensus": UnderstandingConsensus,
-    "ActivityFeed": ActivityFeed,
-    "NotificationQA": NotificationQA,
     "suggestion-detail": suggestionDetail,
 }
 

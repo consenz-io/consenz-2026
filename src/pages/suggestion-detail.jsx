@@ -19,6 +19,7 @@ import CommentsSection from "../components/document/CommentsSection";
 import SectionDiff from "../components/document/SectionDiff";
 import TranslatableContent from "../components/document/TranslatableContent";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "../components/document/suggestionAutoAccept";
+import { votingQueue } from "../components/document/VotingQueue";
 import { useLanguage } from "@/components/LanguageContext";
 import { notifyVoteOnSuggestion, notifySuggestionStatusChange } from "../components/notifications/createNotification";
 import PageHeader from "../components/PageHeader";
