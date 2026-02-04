@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, CheckCircle, Edit2, ChevronLeft, ChevronRight } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, CheckCircle, Edit2, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -311,7 +311,7 @@ export default function NewSectionSuggestionCard({
       id={`suggestion-${currentVersion.id}`}
       className={`group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 ${
         isAutoAccepting 
-          ? 'border-green-400 bg-gradient-to-br from-green-50 to-emerald-50' 
+          ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50 ring-2 ring-blue-300 ring-offset-1' 
           : 'border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50'
       }`}
     >
@@ -354,22 +354,16 @@ export default function NewSectionSuggestionCard({
 
       {/* כותרת עם אינדיקטור של הצעה חדשה */}
       <div className="flex items-center justify-between mb-3 md:mb-4">
-        <div className="flex items-center gap-2 md:gap-3">
+        <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
           {isAutoAccepting ? (
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0"
-            >
-              <CheckCircle className="w-5 h-5 text-white" />
-            </motion.div>
+            <Loader2 className="w-5 h-5 md:w-6 md:h-6 animate-spin text-blue-600 flex-shrink-0" />
           ) : (
             <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
               <Plus className="w-5 h-5 text-white" />
             </div>
           )}
-          <div className="text-sm md:text-base font-semibold text-slate-900">
-            {isAutoAccepting ? 'מאשר הצעה...' : `הצעה לסעיף חדש מאת ${getUserName(currentVersion.created_by)}`}
+          <div className="text-sm md:text-base font-semibold text-slate-900 break-words">
+            {isAutoAccepting ? 'מעבד הצעה...' : `הצעה לסעיף חדש מאת ${getUserName(currentVersion.created_by)}`}
           </div>
         </div>
       </div>
