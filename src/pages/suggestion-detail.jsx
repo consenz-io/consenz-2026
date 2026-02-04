@@ -41,6 +41,7 @@ export default function SuggestionDetail() {
   const [editedExplanation, setEditedExplanation] = useState("");
   const [showEditSectionModal, setShowEditSectionModal] = useState(false);
   const [showEditSuggestionModal, setShowEditSuggestionModal] = useState(false);
+  const [isAutoAccepting, setIsAutoAccepting] = useState(false);
 
   // Polling interval for live sync (60 seconds to avoid rate limits)
   const SYNC_INTERVAL = 60000;
