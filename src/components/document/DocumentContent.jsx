@@ -176,14 +176,7 @@ export default function DocumentContent({
             const accepted = await autoAcceptSuggestion(suggestion, acceptingUserId, document);
             if (accepted) {
               // עדכון מיידי של הקאש - optimistic update
-              queryClient.setQueryData(['suggestions', document.id], (old) => {
-                if (!old) return old;
-                return old.map(s => 
-                  s.id === suggestion.id 
-                    ? { ...s, status: 'accepted' }
-                    : s
-                );
-              });
+              queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
 
               // רענון מיידי של כל הקווריז
               Promise.all([
