@@ -688,6 +688,9 @@ Return ONLY the translated text:`;
       if (s.type !== 'new_section') return false;
       if (s.parentSuggestionId) return false; // דלג על הצעות עריכה - נציג אותן בקרוסלה
       
+      // דלג על הצעות שכבר התקבלו או שיש להן sectionId (הסעיף כבר נוצר)
+      if (s.status === 'accepted' || s.sectionId) return false;
+      
       // אם ההצעה מיועדת לנושא קיים - בדוק לפי topicId
       if (s.topicId) {
         return s.topicId === topicId;
