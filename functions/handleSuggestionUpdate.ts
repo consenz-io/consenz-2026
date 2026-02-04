@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
       message,
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
-      actionUrl: `/suggestion-detail?id=${suggestion.id}`
+      actionUrl: `/suggestiondetail?id=${suggestion.id}`
     });
 
     console.log('[AUTOMATION] Status change notification sent');
