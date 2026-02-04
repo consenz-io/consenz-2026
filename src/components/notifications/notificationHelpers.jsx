@@ -9,12 +9,14 @@ export function validateActionUrl(url) {
   }
   
   // Remove any whitespace
-  const cleaned = url.trim();
+  let cleaned = url.trim();
   
-  // Check if it's a valid URL format (starts with / or http)
-  if (!cleaned.startsWith('/') && !cleaned.startsWith('http')) {
-    console.warn('[NOTIFICATION] Invalid actionUrl format:', cleaned);
-    return null;
+  // Ensure it starts with /
+  if (!cleaned.startsWith('/')) {
+    if (cleaned.startsWith('http')) {
+      return cleaned; // Already a full URL
+    }
+    cleaned = '/' + cleaned;
   }
   
   return cleaned;
