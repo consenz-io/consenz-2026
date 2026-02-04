@@ -165,17 +165,12 @@ export default function NewSectionSuggestionCard({
   }
 
   // אם ההצעה התקבלה אבל האנימציה לא התחילה - אל תציג
-  // EXCEPT: אם זו הצעה שהומרה ל-edit_section ויש עליה edit_suggestions ממתינות - הצג אותה בקרוסלה
-  const hasSubSuggestionsPending = suggestionChain.length > 1 && suggestionChain.some(s => s.status === 'pending');
+  // הצעות שהתקבלו והומרו ל-edit_section אמורות להופיע בקרוסלה של הסעיף, לא כהצעות חדשות
   const isConvertedToEditSection = currentVersion.type === 'edit_section';
   
   if (currentVersion.status === 'accepted' && animationPhase === 'none') {
-    // אם זו הצעה שהומרה ל-edit_section ויש עליה הצעות ממתינות - המשך להציג
-    if (isConvertedToEditSection && hasSubSuggestionsPending) {
-      // המשך להציג את הקרוסלה
-    } else {
-      return null;
-    }
+    // אם הצעה התקבלה והומרה ל-edit_section - לא להציג כהצעה חדשה (תוצג בקרוסלה של הסעיף)
+    return null;
   }
 
   const handlePrev = () => {
