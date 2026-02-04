@@ -958,7 +958,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     // Update suggestion status only for edit_section and delete_section
     // new_section already updated above
     if (freshSuggestion.type !== 'new_section') {
-      await base44.entities.Suggestion.update(suggestion.id, { 
+      await base44.entities.Suggestion.update(freshSuggestion.id, { 
         status: 'accepted',
         suggestionConsensus: boundedSectionConsensus,
         participantsAtAcceptance: participantsAtAcceptance,
