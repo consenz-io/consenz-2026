@@ -719,8 +719,12 @@ Return ONLY the translated text:`;
       if (s.type !== 'new_section') return false;
       if (s.parentSuggestionId) return false; // דלג על הצעות עריכה - נציג אותן בקרוסלה
       
-      // דלג על הצעות שכבר התקבלו או שיש להן sectionId (הסעיף כבר נוצר)
-      if (s.status === 'accepted' || s.sectionId) return false;
+      // דלג על הצעות שכבר התקבלו והסעיף נוצר (בודקים את ה-type שהוא עכשיו edit_section)
+      // כאשר new_section מתקבלת, היא הופכת ל-edit_section, לכן לא צריכה להופיע כאן
+      if (s.status === 'accepted' && s.type === 'edit_section') return false;
+      
+      // דלג גם על pending שכבר יש להן sectionId (הסעיף נוצר אבל הן עדיין pending)
+      if (s.type === 'new_section' && s.sectionId) return false;
       
       // אם ההצעה מיועדת לנושא קיים - בדוק לפי topicId
       if (s.topicId) {
@@ -734,14 +738,21 @@ Return ONLY the translated text:`;
 
   // פונקציה נפרדת להצעות לנושאים חדשים שעדיין לא נוצרו
   const getNewTopicSuggestions = () => {
-    return suggestions.filter(s => 
-      s.type === 'new_section' && 
-      !s.topicId && 
-      s.newTopicTitle &&
-      s.status === 'pending' &&
-      !s.parentSuggestionId && // רק ROOT suggestions
-      !s.sectionId // דלג על הצעות שהסעיף כבר נוצר
-    ).sort((a, b) => (a.newTopicOrder || 999) - (b.newTopicOrder || 999));
+    return suggestions.filter(s => {
+      // רק הצעות new_section (לא edit_section)
+      if (s.type !== 'new_section') return false;
+      // לא topicId - כלומר נושא חדש
+      if (s.topicId) return false;
+      // חייב newTopicTitle
+      if (!s.newTopicTitle) return false;
+      // רק ROOT suggestions
+      if (s.parentSuggestionId) return false;
+      // רק pending או accepted שעדיין לא נוצר הסעיף
+      if (s.status === 'accepted' && s.type === 'edit_section') return false;
+      if (s.sectionId) return false;
+      
+      return true;
+    }).sort((a, b) => (a.newTopicOrder || 999) - (b.newTopicOrder || 999));
   };
 
   // פונקציה להצעות נושאים חדשים שצריכות להופיע אחרי נושא מסוים
