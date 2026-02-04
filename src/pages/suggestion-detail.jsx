@@ -278,9 +278,12 @@ export default function SuggestionDetail() {
               }).catch(() => {});
             }
             return { accepted: true, newProVotes, newConVotes };
-          }
-        }
-      }
+            }
+            } finally {
+            setIsAutoAccepting(false);
+            }
+            }
+            }
       
       // עדכון מספר תורמים ברקע - fire-and-forget
       import('../components/document/calculateContributors').then(({ calculateDocumentContributors }) => 
