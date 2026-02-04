@@ -842,9 +842,9 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
 
      let actionUrl;
      if (targetEntityType === 'suggestion') {
-       actionUrl = `${createPageUrl("SuggestionDetail")}?id=${targetEntity.id}#comment-${comment.id}`;
+       actionUrl = `suggestiondetail?id=${targetEntity.id}#comment-${comment.id}`;
      } else if (targetEntityType === 'section') {
-       actionUrl = `${createPageUrl("SectionHistory")}?id=${targetEntity.id}#comment-${comment.id}`;
+       actionUrl = `sectionhistory?id=${targetEntity.id}#comment-${comment.id}`;
      }
     
     // 1. Parent comment author (if this is a reply) - FIRST PRIORITY!
@@ -987,7 +987,7 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
     const notifiedEmails = new Set();
     notifiedEmails.add(comment.created_by);
     const notifications = [];
-    const actionUrl = `${createPageUrl("DocumentView")}?id=${doc.id}`;
+    const actionUrl = `documentview?id=${doc.id}`;
     
     // ===== Collect all emails that need notifications =====
     
