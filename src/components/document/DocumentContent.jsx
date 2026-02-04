@@ -321,7 +321,6 @@ export default function DocumentContent({
       votingInProgressRef.current.add(suggestionId);
 
       // Execute vote through queue to prevent rate limiting
-      return votingQueue.add(async () => {
       try {
         // שלב 1: קריאת המצב העדכני מהשרת (source of truth) 
         const [freshVotes, freshSuggestions] = await Promise.all([
