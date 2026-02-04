@@ -260,30 +260,29 @@ export default function SuggestionDetail() {
         const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
         
         if (shouldAccept) {
-           setIsAutoAccepting(true);
-           try {
-             const actuallyAccepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
+          setIsAutoAccepting(true);
+          try {
+            const actuallyAccepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
 
-             if (actuallyAccepted) {
-            // נקודות להצבעה שהשפיעה על קבלת ההצעה - fire-and-forget
-            if (!userVote && vote === 'pro' && document?.gamificationEnabled) {
-              base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
-              base44.entities.PointsTransaction.create({
-                userId: user.id,
-                amount: 50,
-                action: 'vote_influenced_acceptance',
-                description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${updatedSuggestion.title}`,
-                relatedEntityId: updatedSuggestion.id,
-                relatedEntityType: 'suggestion'
-              }).catch(() => {});
+            if (actuallyAccepted) {
+              // נקודות להצבעה שהשפיעה על קבלת ההצעה - fire-and-forget
+              if (!userVote && vote === 'pro' && document?.gamificationEnabled) {
+                base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
+                base44.entities.PointsTransaction.create({
+                  userId: user.id,
+                  amount: 50,
+                  action: 'vote_influenced_acceptance',
+                  description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${updatedSuggestion.title}`,
+                  relatedEntityId: updatedSuggestion.id,
+                  relatedEntityType: 'suggestion'
+                }).catch(() => {});
+              }
+              return { accepted: true, newProVotes, newConVotes };
             }
-            return { accepted: true, newProVotes, newConVotes };
-            }
-            } finally {
+          } finally {
             setIsAutoAccepting(false);
-            }
-            }
-            }
+          }
+        }
       
       // עדכון מספר תורמים ברקע - fire-and-forget
       import('../components/document/calculateContributors').then(({ calculateDocumentContributors }) => 
