@@ -14,6 +14,7 @@ import TranslatableContent from "./TranslatableContent";
 import InlineDiff, { extractText, tokenize, computeWordDiff } from "./InlineDiff";
 import DiffModeSelector, { DIFF_MODES, useDiffMode } from "./DiffModeSelector";
 import { motion, AnimatePresence } from "framer-motion";
+import { PAGE_NAMES } from "@/components/pageNames";
 
 const languagePrompts = {
   en: "English",
@@ -241,7 +242,7 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                                  t('directEdit')}
                               </Badge>
                               {group.suggestionId && (
-                                <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.suggestionId}`}>
+                                 <Link to={`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${group.suggestionId}`}>
                                   <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-7">
                                     <MessageSquare className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                     {t('viewFullDiscussion')}
