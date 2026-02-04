@@ -49,7 +49,27 @@ export default function SectionCarousel({
   const { data: allSectionSuggestions = [] } = useQuery({
     queryKey: ['suggestions', document?.id],
     enabled: false,
-    select: (data) => data?.filter(s => s.sectionId === section.id && (s.type === 'edit_section' || s.type === 'delete_section')) || [],
+    select: (data) => {
+      if (!data) return [];
+      
+      // הצעות ישירות לסעיף הזה
+      const directSuggestions = data.filter(s => 
+        s.sectionId === section.id && 
+        (s.type === 'edit_section' || s.type === 'delete_section')
+      );
+      
+      // מצא IDs של ההצעות השייכות לסעיף
+      const sectionSuggestionIds = new Set(directSuggestions.map(s => s.id));
+      
+      // הצעות edit_suggestion שמקושרות להצעות של הסעיף הזה
+      const editSuggestions = data.filter(s => 
+        s.type === 'edit_suggestion' && 
+        s.parentSuggestionId && 
+        sectionSuggestionIds.has(s.parentSuggestionId)
+      );
+      
+      return [...directSuggestions, ...editSuggestions];
+    },
     staleTime: 0,
   });
   
