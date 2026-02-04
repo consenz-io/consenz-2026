@@ -768,7 +768,7 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
     const actionUrl = relatedEntityType === 'topic_edit_suggestion' && topicId
       ? `/document-view?id=${doc.id}#topic-${topicId}`
       : `/suggestion-detail?id=${suggestion.id}`;
-    
+
     // Build notifications for all unique users
     const notifications = [];
     for (const user of uniqueUsers) {
