@@ -163,29 +163,46 @@ export default function CreateSuggestionModal({
       // Otherwise, translate
       setIsLoadingTranslation(true);
       try {
+        // Validate content before translation
+        if (!existingSection.content || existingSection.content.trim().length === 0) {
+          console.warn('[TRANSLATION] Cannot translate empty content');
+          setFormData(prev => ({ ...prev, newContent: '' }));
+          setIsLoadingTranslation(false);
+          return;
+        }
+
         const languageNames = { en: 'English', he: 'Hebrew', ar: 'Arabic' };
         const targetLangName = languageNames[language];
-        
+
         const prompt = `You are a professional translator. Translate the following HTML content to ${targetLangName}.
 
-CRITICAL INSTRUCTIONS:
-- Keep ALL HTML tags exactly as they are (including <p>, <strong>, <em>, <ul>, <li>, etc.)
-- Only translate the TEXT CONTENT between the tags
-- Return ONLY the translated HTML, nothing else
-- Do not add any explanations or comments
-- Do not escape HTML characters
-- Maintain exact same structure and formatting
+      CRITICAL INSTRUCTIONS:
+      - Keep ALL HTML tags exactly as they are (including <p>, <strong>, <em>, <ul>, <li>, etc.)
+      - Only translate the TEXT CONTENT between the tags
+      - Return ONLY the translated HTML, nothing else
+      - Do not add any explanations or comments
+      - Do not escape HTML characters
+      - Maintain exact same structure and formatting
+      - Do NOT create placeholder or example content - translate ONLY what is provided
 
-HTML content to translate:
-${existingSection.content}
+      HTML content to translate:
+      ${existingSection.content}
 
-Return ONLY the translated HTML:`;
+      Return ONLY the translated HTML:`;
 
         const result = await base44.integrations.Core.InvokeLLM({ prompt });
         let translatedContent = typeof result === 'string' ? result : result.content || result;
         // Remove markdown code blocks
         translatedContent = translatedContent.replace(/```html\s*/gi, '').replace(/```\s*/g, '').trim();
-        
+
+        // Validate translated content
+        if (!translatedContent || translatedContent.length === 0) {
+          console.warn('[TRANSLATION] Translation returned empty content, using original');
+          setFormData(prev => ({ ...prev, newContent: existingSection.content }));
+          setIsLoadingTranslation(false);
+          return;
+        }
+
         setFormData(prev => ({ ...prev, newContent: translatedContent }));
         
         // Save translation to cache
