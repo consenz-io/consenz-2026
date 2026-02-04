@@ -258,7 +258,7 @@ export default function SuggestionDetail() {
       // בדיקת קונסנזוס רק אם ההצעה עדיין ממתינה
       if (suggestion.status === 'pending') {
         const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
-        
+
         if (shouldAccept) {
           setIsAutoAccepting(true);
           try {
@@ -283,14 +283,15 @@ export default function SuggestionDetail() {
             setIsAutoAccepting(false);
           }
         }
-      
+      }
+
       // עדכון מספר תורמים ברקע - fire-and-forget
       import('../components/document/calculateContributors').then(({ calculateDocumentContributors }) => 
         calculateDocumentContributors(suggestion.documentId).then(count => 
           base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count })
         )
       ).catch(() => {});
-      
+
       return { accepted: false, newProVotes, newConVotes };
     },
     // Optimistic update - only for vote counts, NOT for status
