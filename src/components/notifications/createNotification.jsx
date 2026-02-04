@@ -122,7 +122,7 @@ function translate(key, lang, replacements = {}) {
       notifExpiredTitle: "انتهت فترة التصويت",
       notifExpiredMessage: "انتهت فترة التصويت على الاقتراح \"{title}\"",
       notifNewSuggestionTitle: "اقتراح جديد في المستند",
-      notifNewSuggestionMessage: "{name} أضاف اقتراحًا جديدًا في المستמך \"{title}\"",
+      notifNewSuggestionMessage: "{name} أضاف اقتراحًا جديدًا في المستمך \"{title}\"",
       notifNewEditSuggestionTitle: "اقتراح لتعديل اقتراح",
       notifNewEditSuggestionMessage: "{name} اقترح تعديلاً على اقتراح في المستند \"{title}\"",
       notifReplyTitle: "رد على تعليقك",
@@ -398,7 +398,7 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
       }),
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
-      actionUrl: `suggestiondetail?id=${suggestion.id}`,
+      actionUrl: `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`,
       documentId: suggestion.documentId,
       documentTitle: doc?.title
     });
@@ -766,8 +766,8 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
     
     // Build action URL
     const actionUrl = relatedEntityType === 'topic_edit_suggestion' && topicId
-      ? `documentview?id=${doc.id}#topic-${topicId}`
-      : `suggestiondetail?id=${suggestion.id}`;
+      ? `${createPageUrl("DocumentView")}?id=${doc.id}#topic-${topicId}`
+      : `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`;
 
     // Build notifications for all unique users
     const notifications = [];
@@ -842,9 +842,9 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
 
      let actionUrl;
      if (targetEntityType === 'suggestion') {
-       actionUrl = `suggestiondetail?id=${targetEntity.id}#comment-${comment.id}`;
+       actionUrl = `${createPageUrl("SuggestionDetail")}?id=${targetEntity.id}#comment-${comment.id}`;
      } else if (targetEntityType === 'section') {
-       actionUrl = `sectionhistory?id=${targetEntity.id}#comment-${comment.id}`;
+       actionUrl = `${createPageUrl("SectionHistory")}?id=${targetEntity.id}#comment-${comment.id}`;
      }
     
     // 1. Parent comment author (if this is a reply) - FIRST PRIORITY!
@@ -987,7 +987,7 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
     const notifiedEmails = new Set();
     notifiedEmails.add(comment.created_by);
     const notifications = [];
-    const actionUrl = `documentview?id=${doc.id}`;
+    const actionUrl = `${createPageUrl("DocumentView")}?id=${doc.id}`;
     
     // ===== Collect all emails that need notifications =====
     
