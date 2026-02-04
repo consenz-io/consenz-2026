@@ -398,7 +398,7 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
       }),
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
-      actionUrl: createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`,
+      actionUrl: createPageUrl("suggestion-detail") + `?id=${suggestion.id}`,
       documentId: suggestion.documentId,
       documentTitle: doc?.title
     });
@@ -436,7 +436,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     const statusKey = statusKeys[newStatus];
     const notifiedUserIds = new Set();
     const notifications = [];
-    const actionUrl = createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
+    const actionUrl = createPageUrl("suggestion-detail") + `?id=${suggestion.id}`;
     
     // Fetch document for context
     const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
@@ -767,7 +767,7 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
     // Build action URL
     const actionUrl = relatedEntityType === 'topic_edit_suggestion' && topicId
       ? `${createPageUrl("DocumentView")}?id=${doc.id}#topic-${topicId}`
-      : createPageUrl("SuggestionDetail") + `?id=${suggestion.id}`;
+      : createPageUrl("suggestion-detail") + `?id=${suggestion.id}`;
     
     // Build notifications for all unique users
     const notifications = [];
@@ -842,7 +842,7 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
 
      let actionUrl;
      if (targetEntityType === 'suggestion') {
-       actionUrl = createPageUrl("SuggestionDetail") + `?id=${targetEntity.id}&commentId=${comment.id}`;
+       actionUrl = createPageUrl("suggestion-detail") + `?id=${targetEntity.id}&commentId=${comment.id}`;
      } else if (targetEntityType === 'section') {
        actionUrl = createPageUrl("SectionHistory") + `?id=${targetEntity.id}&commentId=${comment.id}`;
      }
