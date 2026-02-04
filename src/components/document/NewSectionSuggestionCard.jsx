@@ -76,7 +76,7 @@ export default function NewSectionSuggestionCard({
 
     while (head) {
       const nextInChain = allDocumentSuggestions
-        .filter(s => s.parentSuggestionId === head.id && (s.type === 'new_section' || s.type === 'edit_suggestion'))
+        .filter(s => s.parentSuggestionId === head.id && (s.type === 'new_section' || s.type === 'edit_suggestion' || s.type === 'edit_section'))
         .sort((a, b) => new Date(a.created_date) - new Date(b.created_date))[0];
 
       if (nextInChain && !visitedIds.has(nextInChain.id)) {
@@ -88,8 +88,8 @@ export default function NewSectionSuggestionCard({
       }
     }
 
-    // Filter to only show new_section and edit_suggestion types, keep all statuses
-    const filtered = fullChain.filter(s => s.type === 'new_section' || s.type === 'edit_suggestion');
+    // Filter to only show new_section, edit_suggestion, and edit_section types (after conversion), keep all statuses
+    const filtered = fullChain.filter(s => s.type === 'new_section' || s.type === 'edit_suggestion' || s.type === 'edit_section');
     console.log('[SUGGESTION CHAIN] Built chain:', filtered.map(s => ({ id: s.id, type: s.type, status: s.status })));
     return filtered;
   }, [suggestion, allDocumentSuggestions]);
