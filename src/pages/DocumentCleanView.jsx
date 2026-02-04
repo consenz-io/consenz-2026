@@ -297,28 +297,25 @@ export default function DocumentCleanView() {
     });
     
     // Add sections from versions that might be deleted now
+    // BUT: Only add if it's truly deleted (not just an older version of a current section)
     allVersions.forEach(v => {
       if (v.sectionId && !sectionMap.has(v.sectionId)) {
-        // Find the topic for this section from versions
-        const relatedVersions = allVersions.filter(ver => ver.sectionId === v.sectionId);
-        if (relatedVersions.length > 0) {
-          // Try to get topic info
-          const latestVersion = relatedVersions.sort((a, b) => (b.version || 0) - (a.version || 0))[0];
-          
-          // Find the topic by checking current sections or create a placeholder
+        // Double check: This section ID doesn't exist in current sections
+        // This means it was either created and deleted, or created and currently exists
+        // Find if this section ever existed
+        const allVersionsForSection = allVersions.filter(ver => ver.sectionId === v.sectionId);
+        const latestVersionForSection = allVersionsForSection.sort((a, b) => (b.version || 0) - (a.version || 0))[0];
+        
+        // Only add if the latest version is empty (deleted) or if section truly doesn't exist anywhere
+        if (latestVersionForSection && latestVersionForSection.content === '') {
+          // Find the topic for this section from versions
           let topicId = null;
-          const currentSection = sections.find(s => s.id === v.sectionId);
-          if (currentSection) {
-            topicId = currentSection.topicId;
-          } else {
-            // Try to infer from other versions or default to first topic
-            const sectionWithTopic = sections.find(s => s.topicId);
-            topicId = sectionWithTopic?.topicId || topics[0]?.id;
-          }
+          const sectionWithTopic = sections.find(s => s.topicId);
+          topicId = sectionWithTopic?.topicId || topics[0]?.id;
           
           sectionMap.set(v.sectionId, {
             id: v.sectionId,
-            content: latestVersion.content,
+            content: latestVersionForSection.content,
             topicId: topicId,
             order: 999, // Put deleted sections at end
             isDeleted: true // Mark as deleted
