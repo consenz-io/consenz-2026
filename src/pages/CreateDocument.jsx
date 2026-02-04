@@ -73,6 +73,16 @@ export default function CreateDocument() {
     }
   }, [user, userLoading]);
 
+  // Update formData when groupId from URL changes
+  useEffect(() => {
+    if (groupId) {
+      setFormData(prev => ({
+        ...prev,
+        groupId: groupId
+      }));
+    }
+  }, [groupId]);
+
   // Check points requirement before allowing document creation
   useEffect(() => {
     if (!user || userLoading) return;
