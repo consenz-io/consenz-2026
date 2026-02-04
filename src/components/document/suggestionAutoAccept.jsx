@@ -920,19 +920,21 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
     
     // עדכון סטטוס ההצעה רק אחרי שהסעיף נוצר בהצלחה
     console.log('[AUTO-ACCEPT] Section created successfully, updating suggestion status to accepted');
-    
+
     // יצירת אובייקט ההצעה המעודכנת עם כל השדות
     const updatedSuggestion = {
       ...freshSuggestion,
       status: 'accepted',
       suggestionConsensus: boundedSectionConsensus,
-      participantsAtAcceptance: participantsAtAcceptance
+      participantsAtAcceptance: participantsAtAcceptance,
+      threshold: newThreshold
     };
-    
+
     await base44.entities.Suggestion.update(suggestion.id, { 
       status: 'accepted',
       suggestionConsensus: boundedSectionConsensus,
-      participantsAtAcceptance: participantsAtAcceptance
+      participantsAtAcceptance: participantsAtAcceptance,
+      threshold: newThreshold
     });
     
     // שליחת התראה ונקודות - בדיקה שיש created_by
