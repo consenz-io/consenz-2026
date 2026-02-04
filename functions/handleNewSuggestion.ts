@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
       message: `${creatorName} ${suggestion.type === 'edit_suggestion' ? 'הציע עריכה להצעה' : 'הוסיף הצעה חדשה'} במסמך "${document.title}"`,
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
-      actionUrl: `/suggestion-detail?id=${suggestion.id}`
+      actionUrl: `/suggestiondetail?id=${suggestion.id}`
     }));
 
     if (notifications.length > 0) {
