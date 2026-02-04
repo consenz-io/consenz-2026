@@ -72,35 +72,8 @@ const translateWithReference = async (
   sourceLanguage,
   targetLanguage
 ) => {
-  const prompt = `You are a professional translator specializing in maintaining consistency.
-
-CONTEXT:
-- Original text (${languageNames[sourceLanguage]}): "${referenceOriginal}"
-- Its translation to ${languageNames[targetLanguage]}: "${referenceTranslation}"
-
-TASK:
-Translate the following text (which is a modified version of the original) to ${languageNames[targetLanguage]}.
-
-CRITICAL INSTRUCTIONS:
-1. MAINTAIN CONSISTENCY: For parts that are identical to the original, use EXACTLY the same translation as provided
-2. Only translate the CHANGED parts differently
-3. Keep ALL HTML tags exactly as they are
-4. Return ONLY the translated HTML, nothing else
-
-Text to translate:
-${textToTranslate}
-
-Return ONLY the translated text:`;
-
-  const result = await base44.integrations.Core.InvokeLLM({
-    prompt,
-    add_context_from_internet: false,
-  });
-
-  let translated = typeof result === 'string' ? result : result.content || result;
-  translated = translated.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
-  
-  return translated;
+  // DISABLED: Automatic LLM translation creates hallucinations
+  throw new Error('Automatic translation is disabled. Please use manual translation or system updates.');
 };
 
 /**
