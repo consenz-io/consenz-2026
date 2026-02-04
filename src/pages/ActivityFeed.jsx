@@ -313,12 +313,13 @@ export default function ActivityFeed() {
                         </div>
                         
                         <p className="text-sm font-medium text-slate-900 mb-1">
+                          {item.type === 'suggestion' && (language === 'he' ? 'הצעה חדשה מאת ' : language === 'ar' ? 'اقتراح جديد من ' : 'new suggestion by ')}
+                          {item.type === 'comment' && (language === 'he' ? 'תגובה חדשה מאת ' : language === 'ar' ? 'تعليق جديد من ' : 'new comment by ')}
+                          {item.type === 'vote' && (language === 'he' ? 'הצבעה מאת ' : language === 'ar' ? 'تصويت من ' : 'vote by ')}
+                          {item.type === 'edit' && (language === 'he' ? 'עריכה מאת ' : language === 'ar' ? 'تعديل من ' : 'edit by ')}
                           <span className="font-semibold text-blue-600">{item.userName}</span>
-                          {' • '}
-                          {item.type === 'suggestion' && (language === 'he' ? 'הצעה חדשה ב' : language === 'ar' ? 'اقتراح جديد في' : 'new suggestion in')}
-                          {item.type === 'comment' && (language === 'he' ? 'תגובה חדשה ב' : language === 'ar' ? 'تعليق جديد في' : 'new comment in')}
-                          {item.type === 'vote' && (language === 'he' ? 'הצבעה על' : language === 'ar' ? 'تصويت على' : 'voted on')}
-                          {item.type === 'edit' && (language === 'he' ? 'עריכה של' : language === 'ar' ? 'تعديل في' : 'edited')}
+                          {' '}
+                          {language === 'he' ? 'ב' : language === 'ar' ? 'في' : 'in'}
                           {' '}
                           <span className="text-slate-700">{item.documentTitle}</span>
                         </p>
