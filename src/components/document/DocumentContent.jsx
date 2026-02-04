@@ -43,6 +43,7 @@ export default function DocumentContent({
   const [showComments, setShowComments] = useState({});
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
   const [editingTopic, setEditingTopic] = useState(null);
+  const [autoAcceptingIds, setAutoAcceptingIds] = useState(new Set());
   const queryClient = useQueryClient();
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
@@ -166,6 +167,9 @@ export default function DocumentContent({
           console.log('[AUTO-ACCEPT SECTION] Auto-accepting section suggestion:', suggestion.id);
           hasCheckedRef.current.add(`${suggestion.id}-accepted`);
           
+          // סמן את ההצעה כעומדת לאישור
+          setAutoAcceptingIds(prev => new Set(prev).add(suggestion.id));
+          
           try {
             const acceptingUserId = user?.id || suggestion.created_by;
             const accepted = await autoAcceptSuggestion(suggestion, acceptingUserId, document);
@@ -196,6 +200,13 @@ export default function DocumentContent({
             console.error('[AUTO-ACCEPT SECTION] Error stack:', err.stack);
             hasCheckedRef.current.delete(`${suggestion.id}-accepted`);
             toast.error('שגיאה באישור ההצעה: ' + err.message);
+          } finally {
+            // הסר את הסמון של עומד לאישור
+            setAutoAcceptingIds(prev => {
+              const next = new Set(prev);
+              next.delete(suggestion.id);
+              return next;
+            });
           }
         }
       }
@@ -454,7 +465,11 @@ export default function DocumentContent({
           
           if (shouldAccept) {
             hasCheckedRef.current.add(`${suggestionId}-accepted`);
-            accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
+            // סמן את ההצעה כעומדת לאישור
+            setAutoAcceptingIds(prev => new Set(prev).add(suggestionId));
+            
+            try {
+              accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
             
             if (accepted) {
               // עדכון מיידי של הקאש לפני invalidate - optimistic update
@@ -489,6 +504,14 @@ export default function DocumentContent({
                   relatedEntityType: 'suggestion'
                 }).catch(() => {});
               }
+            }
+            } finally {
+              // הסר את הסמון של עומד לאישור
+              setAutoAcceptingIds(prev => {
+                const next = new Set(prev);
+                next.delete(suggestionId);
+                return next;
+              });
             }
           }
         }
@@ -1200,6 +1223,7 @@ Return ONLY the translated text:`;
                      isAdmin={isAdmin}
                      onEditSuggestion={onEditSuggestion}
                      allDocumentSuggestions={suggestions}
+                     isAutoAccepting={autoAcceptingIds.has(suggestion.id)}
                     />
                   ))}
                 </>
@@ -1245,6 +1269,7 @@ Return ONLY the translated text:`;
                                   isAdmin={isAdmin}
                                   onEditSuggestion={onEditSuggestion}
                                   allDocumentSuggestions={suggestions}
+                                  isAutoAccepting={autoAcceptingIds.has(suggestion.id)}
                                 />
                               ))}
 
