@@ -896,10 +896,10 @@ export default function SuggestionDetail() {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);
+                      navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#suggestion-${suggestionId}`);
                       setTimeout(() => {
                         if (typeof window !== 'undefined' && window.document?.getElementById) {
-                          const element = window.document.getElementById(`section-${suggestion.sectionId}`);
+                          const element = window.document.getElementById(`suggestion-${suggestionId}`);
                           if (element) {
                             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                           }
