@@ -306,15 +306,6 @@ export default function DocumentContent({
 
 
 
-  // Vote Queue - לטיפול בהצבעות המוניות עם rate limiting
-  const handleVoteClick = useCallback((suggestionId, vote) => {
-    if (!user) {
-      base44.auth.redirectToLogin(window.location.href);
-      return;
-    }
-    addVoteToQueue(suggestionId, vote);
-  }, [user, addVoteToQueue]);
-
   const voteMutation = useMutation({
     mutationFn: async ({ suggestionId, vote, currentVote }) => {
       if (!user) throw new Error("יש להתחבר כדי להצביע");
