@@ -955,8 +955,9 @@ export default function SuggestionDetail() {
                </div>
                <div className="relative">
                  {isAutoAccepting && (
-                   <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10">
+                   <div className="absolute inset-0 bg-white/50 rounded-lg flex flex-col items-center justify-center z-10 gap-3">
                      <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                     <p className="text-sm font-medium text-slate-700">{isRTL ? 'מעבד הצעה...' : 'Processing suggestion...'}</p>
                    </div>
                  )}
                  <SectionDiff
