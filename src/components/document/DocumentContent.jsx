@@ -486,6 +486,7 @@ export default function DocumentContent({
         // מסירים מהרשימה אחרי שהפעולה הסתיימה
         votingInProgressRef.current.delete(suggestionId);
       }
+      }); // Close votingQueue.add()
     },
     // Optimistic update - עדכון ה-UI מיידית לפני שהשרת מגיב
     onMutate: async ({ suggestionId, vote, currentVote }) => {
