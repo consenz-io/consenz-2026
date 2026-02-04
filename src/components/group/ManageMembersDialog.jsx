@@ -71,48 +71,70 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose }) {
 
       // Check if user exists
       const users = await base44.entities.User.filter({ email: trimmedEmail });
-      if (users.length === 0) {
-        throw new Error(language === 'he' ? 'משתמש לא נמצא במערכת' : 'User not found in system');
-      }
+      
+      if (users.length > 0) {
+        // User exists - add directly
+        const user = users[0];
 
-      const user = users[0];
+        // Check if already a member
+        const existingMember = groupMembers.find(m => m.userId === user.id);
+        if (existingMember) {
+          throw new Error(language === 'he' ? 'משתמש כבר חבר בקבוצה' : 'User is already a member');
+        }
 
-      // Check if already a member
-      const existingMember = groupMembers.find(m => m.userId === user.id);
-      if (existingMember) {
-        throw new Error(language === 'he' ? 'משתמש כבר חבר בקבוצה' : 'User is already a member');
-      }
-
-      // Add as member
-      await base44.entities.GroupMember.create({
-        groupId,
-        userId: user.id,
-        role: 'member',
-      });
-
-      // Send email notification
-      try {
-        const groupName = group?.name || 'קבוצה';
-        const adminName = currentUser?.full_name || 'מנהל';
-        
-        await base44.integrations.Core.SendEmail({
-          to: trimmedEmail,
-          subject: language === 'he' 
-            ? `נוספת לקבוצה: ${groupName}`
-            : `You were added to group: ${groupName}`,
-          body: language === 'he'
-            ? `שלום ${user.full_name},\n\n${adminName} הוסיף אותך לקבוצה "${groupName}".\n\nכעת תוכל לראות ולהשתתף במסמכים של הקבוצה.\n\nבברכה,\nצוות Consenz`
-            : `Hello ${user.full_name},\n\n${adminName} added you to the group "${groupName}".\n\nYou can now view and participate in the group's documents.\n\nBest regards,\nConsenz Team`
+        // Add as member
+        await base44.entities.GroupMember.create({
+          groupId,
+          userId: user.id,
+          role: 'member',
         });
-      } catch (emailError) {
-        console.error('Failed to send email:', emailError);
-      }
 
-      return user;
+        // Send email notification
+        try {
+          const groupName = group?.name || 'קבוצה';
+          const adminName = currentUser?.full_name || 'מנהל';
+          
+          await base44.integrations.Core.SendEmail({
+            to: trimmedEmail,
+            subject: language === 'he' 
+              ? `נוספת לקבוצה: ${groupName}`
+              : `You were added to group: ${groupName}`,
+            body: language === 'he'
+              ? `שלום ${user.full_name},\n\n${adminName} הוסיף אותך לקבוצה "${groupName}".\n\nכעת תוכל לראות ולהשתתף במסמכים של הקבוצה.\n\nבברכה,\nצוות Consenz`
+              : `Hello ${user.full_name},\n\n${adminName} added you to the group "${groupName}".\n\nYou can now view and participate in the group's documents.\n\nBest regards,\nConsenz Team`
+          });
+        } catch (emailError) {
+          console.error('Failed to send email:', emailError);
+        }
+
+        return { type: 'existing_user', user };
+      } else {
+        // User not registered - send invitation email
+        const groupName = group?.name || 'קבוצה';
+        
+        const response = await base44.functions.invoke('sendGroupInvitation', {
+          groupId,
+          email: trimmedEmail,
+          groupName
+        });
+
+        if (!response.data.success) {
+          throw new Error(response.data.error || (language === 'he' ? 'שגיאה בשליחת הזמנה' : 'Error sending invitation'));
+        }
+
+        return { type: 'invitation_sent', email: trimmedEmail };
+      }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['groupMembers', groupId] });
-      setSuccess(language === 'he' ? 'חבר נוסף בהצלחה!' : 'Member added successfully!');
+      queryClient.invalidateQueries({ queryKey: ['groupInvitations', groupId] });
+      
+      if (result.type === 'existing_user') {
+        setSuccess(language === 'he' ? 'חבר נוסף בהצלחה!' : 'Member added successfully!');
+      } else {
+        setSuccess(language === 'he' ? 'הזמנה נשלחה בהצלחה במייל!' : 'Invitation sent successfully via email!');
+      }
+      
       setInviteEmail("");
       setError(null);
       setTimeout(() => setSuccess(null), 3000);
@@ -352,8 +374,8 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose }) {
             </div>
             <p className="text-xs text-slate-500">
               {language === 'he' 
-                ? 'משתמש חייב להיות רשום במערכת'
-                : 'User must be registered in the system'}
+                ? 'אם המשתמש לא רשום, ישלח לו מייל הזמנה'
+                : 'If user is not registered, they will receive an invitation email'}
             </p>
           </div>
         </form>
