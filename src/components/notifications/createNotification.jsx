@@ -1,6 +1,6 @@
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
-import { PAGE_NAMES } from "@/constants/pageNames";
+import { PAGE_NAMES } from "@/components/pageNames";
 import { showBrowserNotification } from './browserNotifications';
 import { validateActionUrl, sendNotificationsBatch, deduplicateNotifications, sanitizeMessage } from './notificationHelpers';
 
