@@ -164,12 +164,12 @@ export default function NewSectionSuggestionCard({
     return null;
   }
 
-  // אם ההצעה התקבלה אבל האנימציה לא התחילה - אל תציג
-  // הצעות שהתקבלו והומרו ל-edit_section אמורות להופיע בקרוסלה של הסעיף, לא כהצעות חדשות
-  const isConvertedToEditSection = currentVersion.type === 'edit_section';
-  
-  if (currentVersion.status === 'accepted' && animationPhase === 'none') {
-    // אם הצעה התקבלה והומרה ל-edit_section - לא להציג כהצעה חדשה (תוצג בקרוסלה של הסעיף)
+  // CRITICAL: בדיקה על ההצעה המקורית (suggestion prop), לא על currentVersion
+  // כי suggestion היא ההצעה שמוצגת ע"י DocumentContent
+  // אם ההצעה המקורית התקבלה והומרה ל-edit_section (כלומר הסעיף כבר נוצר),
+  // אסור להציג אותה כהצעה חדשה - היא תופיע בקרוסלה של הסעיף
+  if (suggestion.type === 'edit_section' && suggestion.status === 'accepted' && animationPhase === 'none') {
+    console.log('[NEW SECTION CARD] Suggestion converted to edit_section, hiding from new section view:', suggestion.id);
     return null;
   }
 
