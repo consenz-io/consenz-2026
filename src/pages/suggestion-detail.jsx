@@ -1110,7 +1110,7 @@ export default function SuggestionDetail() {
                 <CardContent className="p-3 md:p-6 flex justify-between items-center">
                     <Button 
                         variant="outline"
-                        onClick={() => navigate(`${createPageUrl("SuggestionDetail")}?id=${suggestionChain[currentSuggestionIndexInChain - 1].id}`)}
+                        onClick={() => navigate(`${createPageUrl("suggestion-detail")}?id=${suggestionChain[currentSuggestionIndexInChain - 1].id}`)}
                         disabled={currentSuggestionIndexInChain <= 0}
                     >
                         <ChevronLeft className="w-4 h-4" />
@@ -1121,7 +1121,7 @@ export default function SuggestionDetail() {
                     </span>
                     <Button 
                         variant="outline"
-                        onClick={() => navigate(`${createPageUrl("SuggestionDetail")}?id=${suggestionChain[currentSuggestionIndexInChain + 1].id}`)}
+                        onClick={() => navigate(`${createPageUrl("suggestion-detail")}?id=${suggestionChain[currentSuggestionIndexInChain + 1].id}`)}
                         disabled={currentSuggestionIndexInChain >= suggestionChain.length - 1}
                     >
                         {isRTL ? 'גרסה הבאה' : 'Next Version'}
