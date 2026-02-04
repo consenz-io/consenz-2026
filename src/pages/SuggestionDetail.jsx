@@ -277,18 +277,7 @@ export default function SuggestionDetail() {
         }
       }
       
-      // פעולות רקע - fire-and-forget (לא חוסמות)
-      // הוסר טיפול בנקודות שהשתמש ב-asServiceRole
-      
-      // שליחת התראה - רק אם זו הצבעה חדשה (לא ביטול)
-      if (pointsAction === 'new') {
-        notifyVoteOnSuggestion({ 
-          suggestion, 
-          voterEmail: user.email,
-          voterName: user.full_name 
-        }).catch(err => console.error('[VOTE NOTIFICATION]', err));
-      }
-      
+      // עדכון מספר תורמים ברקע - fire-and-forget
       import('../components/document/calculateContributors').then(({ calculateDocumentContributors }) => 
         calculateDocumentContributors(suggestion.documentId).then(count => 
           base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count })
