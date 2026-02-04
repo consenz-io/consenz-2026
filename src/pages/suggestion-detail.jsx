@@ -260,9 +260,11 @@ export default function SuggestionDetail() {
         const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
         
         if (shouldAccept) {
-          const actuallyAccepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
-          
-          if (actuallyAccepted) {
+           setIsAutoAccepting(true);
+           try {
+             const actuallyAccepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
+
+             if (actuallyAccepted) {
             // נקודות להצבעה שהשפיעה על קבלת ההצעה - fire-and-forget
             if (!userVote && vote === 'pro' && document?.gamificationEnabled) {
               base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
