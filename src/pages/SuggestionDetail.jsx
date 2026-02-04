@@ -625,7 +625,7 @@ export default function SuggestionDetail() {
     
     if (targetIndex >= 0 && targetIndex < suggestionVersions.length) {
       const targetVersion = suggestionVersions[targetIndex];
-      navigate(`${createPageUrl("SuggestionDetail")}?id=${targetVersion.suggestionId}`);
+      navigate(`${createPageUrl("suggestion-detail")}?id=${targetVersion.suggestionId}`);
     }
   };
 
@@ -1288,7 +1288,7 @@ export default function SuggestionDetail() {
           isAdmin={isAdmin}
           onSuggestionCreated={(newSuggestionId) => {
             setShowEditSectionModal(false);
-            navigate(`${createPageUrl("SuggestionDetail")}?id=${newSuggestionId}`);
+            navigate(`${createPageUrl("suggestion-detail")}?id=${newSuggestionId}`);
           }}
           />
           )}
@@ -1303,7 +1303,7 @@ export default function SuggestionDetail() {
           isAdmin={isAdmin}
           onSuggestionCreated={(newSuggestionId) => {
             setShowEditSuggestionModal(false);
-            navigate(`${createPageUrl("SuggestionDetail")}?id=${newSuggestionId}`);
+            navigate(`${createPageUrl("suggestion-detail")}?id=${newSuggestionId}`);
           }}
           />
           )}
