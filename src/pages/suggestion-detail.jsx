@@ -290,11 +290,12 @@ export default function SuggestionDetail() {
     },
     // Optimistic update - only for vote counts, NOT for status
     onMutate: async (vote) => {
-      await queryClient.cancelQueries({ queryKey: ['suggestion', suggestionId] });
-      await queryClient.cancelQueries({ queryKey: ['userVote', suggestionId, user?.id] });
-      
-      const previousSuggestion = queryClient.getQueryData(['suggestion', suggestionId]);
-      const previousVote = queryClient.getQueryData(['userVote', suggestionId, user?.id]);
+      return await votingQueue.add(async () => {
+        await queryClient.cancelQueries({ queryKey: ['suggestion', suggestionId] });
+        await queryClient.cancelQueries({ queryKey: ['userVote', suggestionId, user?.id] });
+        
+        const previousSuggestion = queryClient.getQueryData(['suggestion', suggestionId]);
+        const previousVote = queryClient.getQueryData(['userVote', suggestionId, user?.id]);
       
       // עדכון אופטימיסטי של ההצעה - רק ספירת הצבעות, לא סטטוס!
       queryClient.setQueryData(['suggestion', suggestionId], (old) => {
