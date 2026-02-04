@@ -38,6 +38,7 @@ export default function CreateDocument() {
   const [showInsufficientPointsDialog, setShowInsufficientPointsDialog] = useState(false);
   const [showPointsConfirm, setShowPointsConfirm] = useState(false);
   const [pendingDocData, setPendingDocData] = useState(null);
+  const [pointsCheckCompleted, setPointsCheckCompleted] = useState(false);
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -69,6 +70,35 @@ export default function CreateDocument() {
   useEffect(() => {
     if (!userLoading && !user) {
       base44.auth.redirectToLogin(window.location.pathname);
+    }
+  }, [user, userLoading]);
+
+  // Check points requirement before allowing document creation
+  useEffect(() => {
+    if (!user || userLoading) return;
+
+    // If admin - skip points check
+    if (user.role === 'admin') {
+      setPointsCheckCompleted(true);
+      return;
+    }
+
+    // Check if user already confirmed in this session
+    const sessionConfirmed = sessionStorage.getItem('consenz_document_points_confirmed');
+    if (sessionConfirmed === 'true') {
+      setPointsCheckCompleted(true);
+      return;
+    }
+
+    // Check points
+    const currentPoints = user.points || 1000;
+    if (currentPoints < 1001) {
+      setShowInsufficientPointsDialog(true);
+      setPointsCheckCompleted(false);
+    } else {
+      // Has enough points - show confirmation
+      setShowPointsConfirm(true);
+      setPointsCheckCompleted(false);
     }
   }, [user, userLoading]);
 
@@ -419,6 +449,17 @@ Return JSON with title, topics array (each with title and sections array with co
     }
   };
 
+  const handleInitialPointsConfirm = () => {
+    sessionStorage.setItem('consenz_document_points_confirmed', 'true');
+    setPointsCheckCompleted(true);
+    setShowPointsConfirm(false);
+  };
+
+  const handleInsufficientPointsClose = () => {
+    setShowInsufficientPointsDialog(false);
+    navigate(createPageUrl("Home"));
+  };
+
   const addTopic = () => {
     setTopics([...topics, { title: "", sections: [{ content: "" }] }]);
   };
@@ -511,19 +552,26 @@ Return JSON with title, topics array (each with title and sections array with co
     <>
       <InsufficientPointsDialog
         isOpen={showInsufficientPointsDialog}
-        onClose={() => setShowInsufficientPointsDialog(false)}
+        onClose={handleInsufficientPointsClose}
         requiredPoints={1001}
         currentPoints={user?.points || 1000}
         actionType="document"
       />
 
       <PointsCostConfirmDialog
-        isOpen={showPointsConfirm}
+        isOpen={showPointsConfirm && !pendingDocData}
         onClose={() => {
-          setShowPointsConfirm(false);
-          setPendingDocData(null);
+          if (pendingDocData) {
+            // This is the final confirmation before creation
+            setShowPointsConfirm(false);
+            setPendingDocData(null);
+          } else {
+            // This is the initial confirmation - go back to home
+            setShowPointsConfirm(false);
+            navigate(createPageUrl("Home"));
+          }
         }}
-        onConfirm={handleConfirmPoints}
+        onConfirm={pendingDocData ? handleConfirmPoints : handleInitialPointsConfirm}
         cost={1001}
         currentPoints={user?.points || 1000}
         actionType="document"
@@ -535,6 +583,14 @@ Return JSON with title, topics array (each with title and sections array with co
           title={t('createNewDocument')}
         />
         
+        {!pointsCheckCompleted && (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          </div>
+        )}
+        
+        {pointsCheckCompleted && (
+          <>
         <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>{t('fillDetailsBelow')}</p>
 
         {user && user.role !== 'admin' && (
@@ -893,6 +949,8 @@ Return JSON with title, topics array (each with title and sections array with co
               </Button>
             </div>
           </form>
+        )}
+        </>
         )}
         </div>
       </div>
