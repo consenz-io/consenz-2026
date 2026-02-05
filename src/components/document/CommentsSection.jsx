@@ -446,11 +446,17 @@ export default function CommentsSection({ entityType, entityId, user }) {
       // Ensure UserPublicProfile exists for display
       await ensureUserPublicProfile(user);
       
+      // Find parent comment if this is a reply
       const parentComment = data.parentCommentId 
          ? comments.find(c => c.id === data.parentCommentId) 
          : null;
 
-       runBackgroundTasks(comment, entityType, entityId, parentComment, user);
+      // For replies, we need to determine the root entity (suggestion/section/document)
+      // from the parent comment's rootEntityType and rootEntityId
+      const actualEntityType = parentComment ? parentComment.rootEntityType : entityType;
+      const actualEntityId = parentComment ? parentComment.rootEntityId : entityId;
+
+      runBackgroundTasks(comment, actualEntityType, actualEntityId, parentComment, user);
       
       return comment;
     },
