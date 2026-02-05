@@ -282,7 +282,7 @@ export default function DocumentCleanView() {
     }
     
     return snapshots;
-  }, [allVersions, sections, document]);
+  }, [allVersions, sections, document, suggestions]);
 
   const currentSnapshot = versionGroups[currentVersionIndex] || versionGroups[0];
   const olderSnapshot = currentVersionIndex < versionGroups.length - 1 ? versionGroups[currentVersionIndex + 1] : null;
