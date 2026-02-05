@@ -156,11 +156,7 @@ const CommentItem = memo(({
                         base44.auth.redirectToLogin(window.location.href);
                         return;
                       }
-                      // For replies, reply to the parent instead to maintain 2-level hierarchy
-                      setReplyTo(isReply && comment.parentCommentId 
-                        ? allComments.find(c => c.id === comment.parentCommentId) || comment
-                        : comment
-                      );
+                      setReplyTo(comment);
                     }}
                     className="h-7 text-xs"
                   >
