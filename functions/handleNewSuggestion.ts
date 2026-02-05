@@ -25,48 +25,63 @@ Deno.serve(async (req) => {
 
     console.log('[SUGGESTION AUTOMATION] ✅ Processing new suggestion:', suggestion.id);
 
-    // שליחת התראה למשתתפים במסמך
-    console.log('[SUGGESTION AUTOMATION] Fetching document:', suggestion.documentId);
-    const document = await base44.asServiceRole.entities.Document.filter({ id: suggestion.documentId }).then(d => d[0]);
+    // OPTIMIZED: Fetch all data in parallel
+    console.log('[SUGGESTION AUTOMATION] Fetching data in parallel...');
+    const [documents, interactions, creatorProfiles] = await Promise.all([
+      base44.asServiceRole.entities.Document.filter({ id: suggestion.documentId }),
+      base44.asServiceRole.entities.UserInteraction.filter({ documentId: suggestion.documentId }),
+      base44.asServiceRole.entities.UserPublicProfile.filter({ email: suggestion.created_by })
+    ]);
     
+    const document = documents[0];
     if (!document) {
       console.error('[SUGGESTION AUTOMATION] ❌ Document not found:', suggestion.documentId);
-      return Response.json({ message: 'Document not found' }, { status: 200 });
+      return Response.json({ message: 'Document not found' }, { status: 404 });
     }
     
     console.log('[SUGGESTION AUTOMATION] ✅ Document found:', document.title);
-
-    // קבלת כל המשתתפים במסמך (למעט יוצר ההצעה)
-    console.log('[SUGGESTION AUTOMATION] Fetching user interactions...');
-    const interactions = await base44.asServiceRole.entities.UserInteraction.filter({ documentId: document.id });
     console.log('[SUGGESTION AUTOMATION] Total interactions:', interactions.length);
-    
+
+    // OPTIMIZED: Extract unique users more efficiently
     const uniqueUserIds = [...new Set(interactions.map(i => i.userId))].filter(uid => uid !== suggestion.created_by);
     console.log('[SUGGESTION AUTOMATION] Unique users to notify (excluding creator):', uniqueUserIds.length);
 
-    // קבלת פרטי היוצר
-    const creatorProfile = await base44.asServiceRole.entities.UserPublicProfile.filter({ email: suggestion.created_by }).then(p => p[0]);
+    const creatorProfile = creatorProfiles[0];
     const creatorName = creatorProfile?.fullName || 'User';
+    console.log('[SUGGESTION AUTOMATION] Creator:', creatorName);
 
-    // יצירת התראות לכל המשתתפים
-    const notifications = uniqueUserIds.map(userId => ({
-      userId,
-      type: suggestion.type === 'edit_suggestion' ? 'reply_to_my_suggestion' : 'vote_on_suggestion',
-      title: suggestion.type === 'edit_suggestion' 
-        ? `הצעה לעריכת הצעה מאת ${creatorName}`
-        : `הצעה חדשה במסמך "${document.title}"`,
-      message: `${creatorName} ${suggestion.type === 'edit_suggestion' ? 'הציע עריכה להצעה' : 'הוסיף הצעה חדשה'} במסמך "${document.title}"`,
-      relatedEntityId: suggestion.id,
-      relatedEntityType: 'suggestion',
-      actionUrl: `/suggestiondetail?id=${suggestion.id}`
-    }));
-
-    if (notifications.length > 0) {
-      console.log('[SUGGESTION AUTOMATION] Creating', notifications.length, 'notifications...');
-      await base44.asServiceRole.entities.Notification.bulkCreate(notifications);
-      console.log('[SUGGESTION AUTOMATION] ✅ Notifications created successfully');
+    // OPTIMIZED: Batch notifications - skip if no users to notify
+    if (uniqueUserIds.length === 0) {
+      console.log('[SUGGESTION AUTOMATION] ⏭️ No users to notify, skipping notification creation');
     } else {
-      console.log('[SUGGESTION AUTOMATION] No notifications to create');
+      console.log('[SUGGESTION AUTOMATION] Preparing', uniqueUserIds.length, 'notifications...');
+      
+      // Build notification type and messages
+      const isEditSuggestion = suggestion.type === 'edit_suggestion';
+      const notificationType = isEditSuggestion ? 'reply_to_my_suggestion' : 'vote_on_suggestion';
+      const title = isEditSuggestion 
+        ? `הצעה לעריכת הצעה מאת ${creatorName}`
+        : `הצעה חדשה במסמך "${document.title}"`;
+      const message = `${creatorName} ${isEditSuggestion ? 'הציע עריכה להצעה' : 'הוסיף הצעה חדשה'} במסמך "${document.title}"`;
+      
+      // Create notifications array
+      const notifications = uniqueUserIds.map(userId => ({
+        userId,
+        type: notificationType,
+        title,
+        message,
+        relatedEntityId: suggestion.id,
+        relatedEntityType: 'suggestion',
+        actionUrl: `/suggestiondetail?id=${suggestion.id}`
+      }));
+
+      try {
+        await base44.asServiceRole.entities.Notification.bulkCreate(notifications);
+        console.log('[SUGGESTION AUTOMATION] ✅ Created', notifications.length, 'notifications successfully');
+      } catch (notifError) {
+        console.error('[SUGGESTION AUTOMATION] ⚠️ Notification error (non-critical):', notifError.message);
+        // Don't fail the entire request if notifications fail
+      }
     }
 
     const duration = Date.now() - startTime;
@@ -82,16 +97,26 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error('[SUGGESTION AUTOMATION] ❌ ERROR:', error.message);
+    console.error('[SUGGESTION AUTOMATION] ❌ CRITICAL ERROR:', error.message);
     console.error('[SUGGESTION AUTOMATION] Error stack:', error.stack);
+    console.error('[SUGGESTION AUTOMATION] Error name:', error.name);
     console.error('[SUGGESTION AUTOMATION] Duration before error:', duration, 'ms');
-    console.error('[SUGGESTION AUTOMATION] Suggestion data:', JSON.stringify(suggestion, null, 2));
+    console.error('[SUGGESTION AUTOMATION] Suggestion data:', {
+      id: suggestion?.id,
+      documentId: suggestion?.documentId,
+      type: suggestion?.type,
+      created_by: suggestion?.created_by
+    });
     console.error('[SUGGESTION AUTOMATION] ===== END (ERROR) =====');
+    
+    // Return appropriate status code
+    const statusCode = error.message?.includes('not found') ? 404 : 500;
     
     return Response.json({ 
       error: error.message,
+      errorType: error.name,
       duration,
       suggestionId: suggestion?.id
-    }, { status: 500 });
+    }, { status: statusCode });
   }
 });
