@@ -66,6 +66,7 @@ export default function NotificationBell({ user }) {
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'vote_on_suggestion':
+      case 'new_vote_on_suggestion':
         return '👍';
       case 'suggestion_accepted':
         return '✅';
@@ -73,9 +74,13 @@ export default function NotificationBell({ user }) {
         return '❌';
       case 'suggestion_comment':
       case 'section_comment':
+      case 'document_comment':
+      case 'comment_reply':
         return '💬';
       case 'suggestion_expiring':
         return '⏰';
+      case 'new_suggestion_in_followed_document':
+        return '📝';
       default:
         return '🔔';
     }
