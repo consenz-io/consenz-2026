@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { userProfileCache } from '@/utils/cache';
-import { queryKeys, QUERY_STALE_TIMES } from '@/api/queryConfig';
+import { userProfileCache } from '@/components/utils/cache';
+import { queryKeys, QUERY_STALE_TIMES } from '@/components/config/queryConfig';
 
 // Optimized hook for fetching user profiles with caching
 export function useOptimizedUserProfiles() {

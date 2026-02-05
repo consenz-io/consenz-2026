@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { queryKeys, QUERY_STALE_TIMES } from '@/api/queryConfig';
+import { queryKeys, QUERY_STALE_TIMES } from '@/components/config/queryConfig';
 
 // Hook to prefetch document data when hovering over a link
 export function usePrefetchDocument() {
