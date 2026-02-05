@@ -288,6 +288,12 @@ export async function createNotification({
   documentTitle = null
 }) {
   try {
+    // Block all vote-related notifications
+    if (type === 'vote_on_suggestion' || type === 'new_vote_on_suggestion') {
+      console.log('[NOTIFICATION] Skipping vote notification');
+      return null;
+    }
+    
     if (!userId) {
       console.warn('[NOTIFICATION] Missing userId, skipping');
       return null;

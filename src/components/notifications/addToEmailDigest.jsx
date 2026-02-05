@@ -16,6 +16,12 @@ export async function addToEmailDigest({
   documentTitle
 }) {
   try {
+    // Skip vote notifications completely
+    if (notificationType === 'vote_on_suggestion' || notificationType === 'new_vote_on_suggestion') {
+      console.log('[EMAIL DIGEST] Skipping vote notification');
+      return;
+    }
+    
     // בדוק אם המשתמש רוצה לקבל התראות מייל
     const userList = await base44.entities.User.filter({ id: userId });
     if (!userList || userList.length === 0) {
