@@ -654,7 +654,12 @@ const SectionCarousel = React.memo(function SectionCarousel({
 
             {/* כפתורי הצבעה והערות - רק אם לא באנימציה */}
             {!['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView.data.id]) && (
-              <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap">
+              <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap relative">
+                {voteMutation.isPending && (
+                  <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10">
+                    <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                  </div>
+                )}
                 {document?.votingButtonsEnabled ? (
                   <>
                     <Button

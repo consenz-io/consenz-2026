@@ -194,12 +194,17 @@ const DeleteSectionSuggestionCard = React.memo(function DeleteSectionSuggestionC
       </div>
 
       {/* Voting Section */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
+      <div className="flex flex-wrap items-center gap-3 mb-4 relative">
+        {onVote?.isPending && (
+          <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10">
+            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+          </div>
+        )}
         <Button
           size="sm"
           variant={userVote === 'pro' ? 'default' : 'outline'}
           onClick={() => onVote(suggestion, 'pro')}
-          disabled={!currentUser}
+          disabled={!currentUser || onVote?.isPending}
           className={userVote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}
         >
           <ThumbsUp className="w-4 h-4 mr-1" />
@@ -209,7 +214,7 @@ const DeleteSectionSuggestionCard = React.memo(function DeleteSectionSuggestionC
           size="sm"
           variant={userVote === 'con' ? 'default' : 'outline'}
           onClick={() => onVote(suggestion, 'con')}
-          disabled={!currentUser}
+          disabled={!currentUser || onVote?.isPending}
           className={userVote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}
         >
           <ThumbsDown className="w-4 h-4 mr-1" />
