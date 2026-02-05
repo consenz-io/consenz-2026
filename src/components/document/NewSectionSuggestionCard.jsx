@@ -396,7 +396,12 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       </div>
 
       {/* כפתורי הצבעה והערות */}
-      <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap">
+      <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap relative">
+        {voteMutation.isPending && (
+          <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10">
+            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+          </div>
+        )}
         {doc?.votingButtonsEnabled ? (
           <>
             <Button

@@ -739,18 +739,19 @@ export default function SuggestionSidebar({
 
           {/* Vote buttons */}
           {user && suggestion.status === 'pending' && (document || parentDocument)?.votingButtonsEnabled && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 relative">
+              {voteMutation.isPending && (
+                <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10">
+                  <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                </div>
+              )}
               <Button
                 variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
                 onClick={() => voteMutation.mutate('pro')}
                 disabled={voteMutation.isPending}
                 className={`flex-1 ${userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
               >
-                {voteMutation.isPending ? (
-                  <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
-                ) : (
-                  <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                )}
+                <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 {t('votePro')}
               </Button>
               <Button
@@ -759,11 +760,7 @@ export default function SuggestionSidebar({
                 disabled={voteMutation.isPending}
                 className={`flex-1 ${userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
               >
-                {voteMutation.isPending ? (
-                  <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
-                ) : (
-                  <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                )}
+                <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 {t('voteCon')}
               </Button>
             </div>
