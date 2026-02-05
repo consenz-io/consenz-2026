@@ -235,15 +235,6 @@ export default function SuggestionSidebar({
       if (voteAction === 'create') {
         ensureUserPublicProfile(user).catch(() => {});
         
-        // שליחת התראה על הצבעה
-        import('../notifications/createNotification').then(({ notifyVoteOnSuggestion }) => {
-          notifyVoteOnSuggestion({ 
-            suggestion, 
-            voterEmail: user.email,
-            voterName: user.full_name 
-          }).catch(err => console.error('[VOTE NOTIFICATION]', err));
-        }).catch(() => {});
-        
         import('./calculateContributors').then(({ calculateDocumentContributors }) => 
           calculateDocumentContributors(suggestion.documentId).then(count => 
             base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count })
