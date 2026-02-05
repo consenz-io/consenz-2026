@@ -92,19 +92,6 @@ export default function MyDocuments() {
     initialData: [],
   });
 
-  // Check for unvoted suggestions per document
-  const getUnvotedSuggestionsCount = (docId) => {
-    if (!user?.id) return 0;
-    const docSuggestions = allSuggestions.filter(s => s.documentId === docId && s.status === 'pending');
-    const unvoted = docSuggestions.filter(s => !votes.some(v => v.suggestionId === s.id));
-    return unvoted.length;
-  };
-
-  // Total unvoted suggestions across all user documents
-  const totalUnvotedSuggestions = React.useMemo(() => {
-    return myDocuments.reduce((total, doc) => total + getUnvotedSuggestionsCount(doc.id), 0);
-  }, [myDocuments, allSuggestions, votes]);
-
   // Calculate real contributors per document using shared logic
   const getDocumentContributors = (doc) => {
     return calculateContributorsFromData({
@@ -156,6 +143,14 @@ export default function MyDocuments() {
   ]);
 
   const myDocuments = allDocuments.filter(doc => myDocumentIds.has(doc.id));
+
+  // Check for unvoted suggestions per document
+  const getUnvotedSuggestionsCount = (docId) => {
+    if (!user?.id) return 0;
+    const docSuggestions = allSuggestions.filter(s => s.documentId === docId && s.status === 'pending');
+    const unvoted = docSuggestions.filter(s => !votes.some(v => v.suggestionId === s.id));
+    return unvoted.length;
+  };
 
   const handleTranslateTitle = async (doc) => {
     if (translatedTitles[doc.id]) {
