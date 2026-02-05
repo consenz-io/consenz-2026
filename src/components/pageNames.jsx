@@ -1,3 +1,4 @@
+
 /**
  * Centralized page name constants
  * Use these EVERYWHERE instead of hardcoding page names
@@ -7,7 +8,7 @@
 export const PAGE_NAMES = {
   HOME: 'Home',
   DOCUMENT_VIEW: 'DocumentView',
-  SUGGESTION_DETAIL: 'suggestion-detail', // ✅ The correct page name with hyphen
+  SUGGESTION_DETAIL: 'suggestiondetail', // ✅ No hyphen - consistent with all notifications
   ACTIVITY_FEED: 'ActivityFeed',
   PROFILE: 'Profile',
   CREATE_DOCUMENT: 'CreateDocument',
