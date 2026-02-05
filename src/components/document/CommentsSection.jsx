@@ -11,6 +11,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
 import { ensureUserPublicProfile } from "@/components/ensureUserPublicProfile";
+import { rateLimitedAction, RATE_LIMITS } from "@/components/utils/rateLimiter";
+import { toast } from "sonner";
 
 // CommentItem Component - memoized to prevent unnecessary re-renders
 const CommentItem = memo(({ 
