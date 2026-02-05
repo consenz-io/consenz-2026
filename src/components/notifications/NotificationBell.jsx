@@ -171,9 +171,8 @@ export default function NotificationBell({ user }) {
               onMarkAsRead={(id) => markAsReadMutation.mutate(id)}
               onDelete={(id) => deleteNotificationMutation.mutate(id)}
               onNotificationClick={handleNotificationClick}
-              formatTimeAgo={formatTimeAgo}
-              getNotificationIcon={getNotificationIcon}
               isRTL={isRTL}
+              language={t('language')}
             />
           )}
         </div>

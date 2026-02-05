@@ -9,6 +9,7 @@ const NotificationItem = React.memo(({
   notification, 
   onMarkAsRead, 
   onDelete,
+  onNotificationClick,
   isRTL,
   language 
 }) => {
@@ -29,10 +30,13 @@ const NotificationItem = React.memo(({
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           {notification.actionUrl ? (
-            <Link to={notification.actionUrl} className="block hover:opacity-80">
+            <button 
+              onClick={() => onNotificationClick(notification)} 
+              className="block hover:opacity-80 text-right w-full"
+            >
               <h4 className="font-medium text-sm text-slate-900 mb-1">{notification.title}</h4>
               <p className="text-xs text-slate-600">{notification.message}</p>
-            </Link>
+            </button>
           ) : (
             <>
               <h4 className="font-medium text-sm text-slate-900 mb-1">{notification.title}</h4>
@@ -53,7 +57,10 @@ const NotificationItem = React.memo(({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onMarkAsRead(notification.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onMarkAsRead(notification.id);
+              }}
               className="h-6 w-6 p-0"
               title={language === 'he' ? 'סמן כנקרא' : 'Mark as read'}
             >
@@ -63,7 +70,10 @@ const NotificationItem = React.memo(({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onDelete(notification.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(notification.id);
+            }}
             className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
             title={language === 'he' ? 'מחק' : 'Delete'}
           >
