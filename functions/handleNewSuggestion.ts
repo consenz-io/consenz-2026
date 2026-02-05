@@ -58,13 +58,13 @@ Deno.serve(async (req) => {
       
       // Build notification type and messages
       const isEditSuggestion = suggestion.type === 'edit_suggestion';
-      const notificationType = isEditSuggestion ? 'reply_to_my_suggestion' : 'vote_on_suggestion';
+      const notificationType = 'new_suggestion_in_followed_document';
       const title = isEditSuggestion 
         ? `הצעה לעריכת הצעה מאת ${creatorName}`
         : `הצעה חדשה במסמך "${document.title}"`;
       const message = `${creatorName} ${isEditSuggestion ? 'הציע עריכה להצעה' : 'הוסיף הצעה חדשה'} במסמך "${document.title}"`;
       
-      // Create notifications array
+      // Create notifications array with digest info
       const notifications = uniqueUserIds.map(userId => ({
         userId,
         type: notificationType,
@@ -76,8 +76,26 @@ Deno.serve(async (req) => {
       }));
 
       try {
+        // Create in-app notifications
         await base44.asServiceRole.entities.Notification.bulkCreate(notifications);
-        console.log('[SUGGESTION AUTOMATION] ✅ Created', notifications.length, 'notifications successfully');
+        console.log('[SUGGESTION AUTOMATION] ✅ Created', notifications.length, 'in-app notifications');
+        
+        // Add to email digest
+        const digestEntries = notifications.map(n => ({
+          userId: n.userId,
+          notificationType: n.type,
+          title: n.title,
+          message: n.message,
+          actionUrl: n.actionUrl,
+          relatedEntityType: n.relatedEntityType,
+          relatedEntityId: n.relatedEntityId,
+          documentId: suggestion.documentId,
+          documentTitle: document.title,
+          isIncludedInDigest: false
+        }));
+        
+        await base44.asServiceRole.entities.EmailDigest.bulkCreate(digestEntries);
+        console.log('[SUGGESTION AUTOMATION] ✅ Added', digestEntries.length, 'entries to email digest');
       } catch (notifError) {
         console.error('[SUGGESTION AUTOMATION] ⚠️ Notification error (non-critical):', notifError.message);
         // Don't fail the entire request if notifications fail
@@ -87,12 +105,12 @@ Deno.serve(async (req) => {
     const duration = Date.now() - startTime;
     console.log('[SUGGESTION AUTOMATION] ✅ Completed successfully');
     console.log('[SUGGESTION AUTOMATION] Duration:', duration, 'ms');
-    console.log('[SUGGESTION AUTOMATION] Notifications sent:', notifications.length);
+    console.log('[SUGGESTION AUTOMATION] Notifications sent:', uniqueUserIds.length);
     console.log('[SUGGESTION AUTOMATION] ===== END =====');
 
     return Response.json({ 
       success: true, 
-      notificationsSent: notifications.length,
+      notificationsSent: uniqueUserIds.length,
       duration
     });
   } catch (error) {
