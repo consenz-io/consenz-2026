@@ -61,13 +61,13 @@ import GroupView from './pages/GroupView';
 import Groups from './pages/Groups';
 import Home from './pages/Home';
 import LearnMore from './pages/LearnMore';
+import LoadTesting from './pages/LoadTesting';
 import MyDocuments from './pages/MyDocuments';
 import NotificationQA from './pages/NotificationQA';
 import Profile from './pages/Profile';
 import SectionHistory from './pages/SectionHistory';
 import UnderstandingConsensus from './pages/UnderstandingConsensus';
 import suggestiondetail from './pages/suggestiondetail';
-import LoadTesting from './pages/LoadTesting';
 import __Layout from './Layout.jsx';
 
 
@@ -86,13 +86,13 @@ export const PAGES = {
     "Groups": Groups,
     "Home": Home,
     "LearnMore": LearnMore,
+    "LoadTesting": LoadTesting,
     "MyDocuments": MyDocuments,
     "NotificationQA": NotificationQA,
     "Profile": Profile,
     "SectionHistory": SectionHistory,
     "UnderstandingConsensus": UnderstandingConsensus,
     "suggestiondetail": suggestiondetail,
-    "LoadTesting": LoadTesting,
 }
 
 export const pagesConfig = {

@@ -146,33 +146,47 @@ export default function DocumentCleanView() {
         // Find the topic for this section from versions
         const relatedVersions = allVersions.filter(ver => ver.sectionId === v.sectionId);
         if (relatedVersions.length > 0) {
-          // Try to get topic info
+          // Get the earliest version (when section was created) to find original order
+          const earliestVersion = relatedVersions.sort((a, b) => (a.version || 0) - (b.version || 0))[0];
           const latestVersion = relatedVersions.sort((a, b) => (b.version || 0) - (a.version || 0))[0];
           
-          // Find the topic by checking current sections or create a placeholder
+          // Try to find the corresponding suggestion to get topic and order info
+          const relatedSuggestion = suggestions.find(s => 
+            s.id === earliestVersion.suggestionId || 
+            allVersions.some(ver => ver.sectionId === v.sectionId && ver.suggestionId === s.id)
+          );
+          
           let topicId = null;
-          const currentSection = sections.find(s => s.id === v.sectionId);
-          if (currentSection) {
-            topicId = currentSection.topicId;
+          let order = 999; // Default fallback
+          
+          if (relatedSuggestion) {
+            topicId = relatedSuggestion.topicId;
+            order = relatedSuggestion.insertPosition || 999;
           } else {
-            // Try to infer from other versions or default to first topic
-            const sectionWithTopic = sections.find(s => s.topicId);
-            topicId = sectionWithTopic?.topicId || topics[0]?.id;
+            // Try to infer from other sections in the same topic
+            const currentSection = sections.find(s => s.id === v.sectionId);
+            if (currentSection) {
+              topicId = currentSection.topicId;
+              order = currentSection.order;
+            } else {
+              const sectionWithTopic = sections.find(s => s.topicId);
+              topicId = sectionWithTopic?.topicId || topics[0]?.id;
+            }
           }
           
           sectionMap.set(v.sectionId, {
             id: v.sectionId,
             content: latestVersion.content,
             topicId: topicId,
-            order: 999, // Put deleted sections at end
-            isDeleted: true // Mark as deleted
+            order: order,
+            isDeleted: true
           });
         }
       }
     });
     
     return sectionMap;
-  }, [sections, allVersions, topics]);
+  }, [sections, allVersions, topics, suggestions]);
   
   // Reset version index if it's out of bounds
   React.useEffect(() => {
