@@ -63,8 +63,8 @@ export default function DocumentView() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState(null);
 
-  // Polling interval for live sync (10 seconds for better responsiveness)
-  const SYNC_INTERVAL = 10000;
+  // Polling interval for live sync - reduced to 15 seconds for performance
+  const SYNC_INTERVAL = 15000;
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
@@ -77,7 +77,7 @@ export default function DocumentView() {
     refetchIntervalInBackground: false,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
-    staleTime: 5000,
+    staleTime: 10000, // Increased to 10 seconds
   });
 
   const { data: topics, isLoading: topicsLoading } = useQuery({
@@ -107,34 +107,29 @@ export default function DocumentView() {
     refetchIntervalInBackground: false,
   });
 
-  const { data: allVotes } = useQuery({
-    queryKey: ['allVotes'],
-    queryFn: () => base44.entities.Vote.list(),
-    initialData: [],
-    enabled: !!documentId,
-    staleTime: 30000,
+  // Merged queries for better performance - fetch all at once
+  const { data: aggregatedData } = useQuery({
+    queryKey: ['documentAggregatedData'],
+    queryFn: async () => {
+      const [votes, users, publicProfiles, arguments, comments] = await Promise.all([
+        base44.entities.Vote.list(),
+        base44.entities.User.list(),
+        base44.entities.UserPublicProfile.list(),
+        base44.entities.Argument.list(),
+        base44.entities.Comment.list(),
+      ]);
+      return { votes, users, publicProfiles, arguments, comments };
+    },
+    initialData: { votes: [], users: [], publicProfiles: [], arguments: [], comments: [] },
+    staleTime: 60000, // 1 minute - data doesn't change often
+    cacheTime: 300000, // 5 minutes
   });
 
-  const { data: allUsers } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
-    initialData: [],
-    staleTime: 60000,
-  });
-
-  const { data: allArguments } = useQuery({
-    queryKey: ['allArguments'],
-    queryFn: () => base44.entities.Argument.list(),
-    initialData: [],
-    staleTime: 30000,
-  });
-
-  const { data: allComments } = useQuery({
-    queryKey: ['allComments'],
-    queryFn: () => base44.entities.Comment.list(),
-    initialData: [],
-    staleTime: 30000,
-  });
+  const allVotes = aggregatedData?.votes || [];
+  const allUsers = aggregatedData?.users || [];
+  const publicProfiles = aggregatedData?.publicProfiles || [];
+  const allArguments = aggregatedData?.arguments || [];
+  const allComments = aggregatedData?.comments || [];
 
   const { data: documentComments } = useQuery({
     queryKey: ['documentComments', documentId],
@@ -148,19 +143,23 @@ export default function DocumentView() {
     refetchIntervalInBackground: false,
   });
 
-  const { data: documentAgreements } = useQuery({
-    queryKey: ['documentAgreements', documentId],
-    queryFn: () => base44.entities.DocumentAgreement.filter({ documentId }),
-    initialData: [],
+  // Merge agreements and versions into one query
+  const { data: documentMetadata } = useQuery({
+    queryKey: ['documentMetadata', documentId],
+    queryFn: async () => {
+      const [agreements, versions] = await Promise.all([
+        base44.entities.DocumentAgreement.filter({ documentId }),
+        base44.entities.DocumentVersion.filter({ documentId }),
+      ]);
+      return { agreements, versions };
+    },
+    initialData: { agreements: [], versions: [] },
     enabled: !!documentId,
+    staleTime: 30000, // 30 seconds
   });
 
-  const { data: documentVersions } = useQuery({
-    queryKey: ['documentVersions', documentId],
-    queryFn: () => base44.entities.DocumentVersion.filter({ documentId }),
-    initialData: [],
-    enabled: !!documentId,
-  });
+  const documentAgreements = documentMetadata?.agreements || [];
+  const documentVersions = documentMetadata?.versions || [];
 
   // Calculate version count matching DocumentCleanView logic
   const versionCount = React.useMemo(() => {
@@ -188,12 +187,12 @@ export default function DocumentView() {
       document,
       suggestions,
       allVotes,
-      allUsers,
+      allUsers: publicProfiles.length > 0 ? publicProfiles : allUsers,
       allComments,
       sections,
       documentAgreements
     });
-  }, [document, suggestions, allVotes, allUsers, allComments, sections, documentAgreements]);
+  }, [document, suggestions, allVotes, publicProfiles, allUsers, allComments, sections, documentAgreements]);
 
   // Get pending suggestions ordered by section appearance
   const pendingSuggestions = React.useMemo(() => {
@@ -283,7 +282,7 @@ export default function DocumentView() {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     retry: false,
-    staleTime: 0,
+    staleTime: 300000, // 5 minutes - user data rarely changes
   });
 
   const { data: isAdmin } = useQuery({
