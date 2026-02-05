@@ -56,11 +56,70 @@ function LayoutContent({ children, currentPageName }) {
     initialData: [],
   });
 
+  const { data: userInteractions = [] } = useQuery({
+    queryKey: ['userInteractions', user?.id],
+    queryFn: () => base44.entities.UserInteraction.filter({ userId: user.id }),
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
+  const { data: allDocuments = [] } = useQuery({
+    queryKey: ['allDocuments'],
+    queryFn: () => base44.entities.Document.list(),
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
+  const { data: allSuggestions = [] } = useQuery({
+    queryKey: ['allSuggestions'],
+    queryFn: () => base44.entities.Suggestion.list(),
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
+  const { data: allVotes = [] } = useQuery({
+    queryKey: ['allVotes'],
+    queryFn: () => base44.entities.Vote.list(),
+    enabled: !!user?.id,
+    initialData: [],
+  });
+
   const acceptedSuggestionsCount = React.useMemo(() => 
     userSuggestions.filter(s => s.status === 'accepted').length, 
     [userSuggestions]
   );
   const proVotesCount = React.useMemo(() => userVotes.length, [userVotes]);
+
+  // Calculate unvoted suggestions in user's documents
+  const totalUnvotedSuggestions = React.useMemo(() => {
+    if (!user?.id) return 0;
+    
+    // Get user's documents
+    const interactedDocumentIds = userInteractions.map(ui => ui.documentId);
+    const suggestedDocumentIds = userSuggestions.map(s => s.documentId);
+    const votedSuggestions = allSuggestions.filter(s => 
+      allVotes.some(v => v.suggestionId === s.id && v.userId === user.id)
+    );
+    const votedDocumentIds = votedSuggestions.map(s => s.documentId);
+    
+    const myDocumentIds = new Set([
+      ...interactedDocumentIds,
+      ...suggestedDocumentIds,
+      ...votedDocumentIds
+    ]);
+    
+    const myDocuments = allDocuments.filter(doc => myDocumentIds.has(doc.id));
+    
+    // Count unvoted suggestions in these documents
+    let count = 0;
+    myDocuments.forEach(doc => {
+      const docSuggestions = allSuggestions.filter(s => s.documentId === doc.id && s.status === 'pending');
+      const unvoted = docSuggestions.filter(s => !allVotes.some(v => v.suggestionId === s.id && v.userId === user.id));
+      count += unvoted.length;
+    });
+    
+    return count;
+  }, [user, userInteractions, userSuggestions, allSuggestions, allVotes, allDocuments]);
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
@@ -249,6 +308,7 @@ function LayoutContent({ children, currentPageName }) {
       title: t('myDocuments'),
       url: createPageUrl("MyDocuments"),
       icon: FileText,
+      badge: totalUnvotedSuggestions > 0 ? totalUnvotedSuggestions : null,
     },
     {
       title: language === 'he' ? 'הקבוצות שלי' : language === 'ar' ? 'مجموعاتي' : 'My Groups',
@@ -298,9 +358,14 @@ function LayoutContent({ children, currentPageName }) {
                           location.pathname === item.url ? 'bg-blue-50 text-blue-700' : ''
                         }`}
                       >
-                        <Link to={item.url} className="flex items-center gap-3 px-3 py-2">
+                        <Link to={item.url} className="flex items-center gap-3 px-3 py-2 relative">
                           <item.icon className="w-4 h-4" />
                           <span className="font-medium">{item.title}</span>
+                          {item.badge && (
+                            <span className="absolute top-1 left-1 bg-orange-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                              {item.badge > 9 ? '9+' : item.badge}
+                            </span>
+                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

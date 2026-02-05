@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { FileText, Users, TrendingUp, Languages, Loader2 } from "lucide-react";
+import { FileText, Users, TrendingUp, Languages, Loader2, Bell } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { calculateContributorsFromData } from "@/components/document/calculateContributors";
 
@@ -91,6 +91,19 @@ export default function MyDocuments() {
     enabled: !!user?.id,
     initialData: [],
   });
+
+  // Check for unvoted suggestions per document
+  const getUnvotedSuggestionsCount = (docId) => {
+    if (!user?.id) return 0;
+    const docSuggestions = allSuggestions.filter(s => s.documentId === docId && s.status === 'pending');
+    const unvoted = docSuggestions.filter(s => !votes.some(v => v.suggestionId === s.id));
+    return unvoted.length;
+  };
+
+  // Total unvoted suggestions across all user documents
+  const totalUnvotedSuggestions = React.useMemo(() => {
+    return myDocuments.reduce((total, doc) => total + getUnvotedSuggestionsCount(doc.id), 0);
+  }, [myDocuments, allSuggestions, votes]);
 
   // Calculate real contributors per document using shared logic
   const getDocumentContributors = (doc) => {
@@ -204,9 +217,10 @@ export default function MyDocuments() {
             {myDocuments.map((doc) => {
               const mySuggestionsCount = suggestions.filter(s => s.documentId === doc.id).length;
               const myVotesCount = votedSuggestions.filter(s => s.documentId === doc.id).length;
+              const unvotedCount = getUnvotedSuggestionsCount(doc.id);
 
               return (
-                <Card key={doc.id} className="bg-white/80 backdrop-blur-sm border-slate-200 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 h-full">
+                <Card key={doc.id} className={`bg-white/80 backdrop-blur-sm border-slate-200 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 h-full ${unvotedCount > 0 ? 'ring-2 ring-orange-400 ring-offset-2' : ''}`}>
                   <CardHeader className="border-b border-slate-100">
                     <div className="flex items-start justify-between gap-2">
                       <Link to={`${createPageUrl("DocumentView")}?id=${doc.id}`} className="flex-1 cursor-pointer">
@@ -215,6 +229,14 @@ export default function MyDocuments() {
                         </CardTitle>
                       </Link>
                       <div className="flex items-center gap-2 flex-shrink-0">
+                        {unvotedCount > 0 && (
+                          <div className="relative">
+                            <Bell className="w-5 h-5 text-orange-500 animate-pulse" aria-hidden="true" />
+                            <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                              {unvotedCount}
+                            </span>
+                          </div>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"

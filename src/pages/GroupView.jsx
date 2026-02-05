@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Users, Lock, Globe, FileText, Plus, Settings, UserPlus, 
-  AlertCircle, Trash2, Mail 
+  AlertCircle, Trash2, Mail, Bell 
 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "@/components/PageHeader";
@@ -99,9 +99,24 @@ export default function GroupView() {
     initialData: [],
   });
 
+  const { data: userVotes = [] } = useQuery({
+    queryKey: ['userVotes', currentUser?.id],
+    queryFn: () => base44.entities.Vote.filter({ userId: currentUser.id }),
+    enabled: !!currentUser?.id,
+    initialData: [],
+  });
+
   const isAdmin = currentUser && groupMembers.some(
     m => m.groupId === groupId && m.userId === currentUser.id && m.role === 'admin'
   );
+
+  // Check for unvoted suggestions per document
+  const getUnvotedSuggestionsCount = (docId) => {
+    if (!currentUser?.id) return 0;
+    const docSuggestions = allSuggestions.filter(s => s.documentId === docId && s.status === 'pending');
+    const unvoted = docSuggestions.filter(s => !userVotes.some(v => v.suggestionId === s.id));
+    return unvoted.length;
+  };
 
   const isMember = currentUser && groupMembers.some(
     m => m.groupId === groupId && m.userId === currentUser.id
@@ -392,12 +407,14 @@ export default function GroupView() {
                         sections: allSections.filter(s => s.documentId === doc.id),
                         documentAgreements: allAgreements.filter(a => a.documentId === doc.id)
                       });
+                      
+                      const unvotedCount = getUnvotedSuggestionsCount(doc.id);
 
                       return (
                         <Link
                           key={doc.id}
                           to={`${createPageUrl("DocumentView")}?id=${doc.id}`}
-                          className="block p-4 border rounded-lg hover:bg-slate-50 transition-colors"
+                          className={`block p-4 border rounded-lg hover:bg-slate-50 transition-colors ${unvotedCount > 0 ? 'ring-2 ring-orange-400' : ''}`}
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
@@ -408,9 +425,19 @@ export default function GroupView() {
                                 />
                               )}
                             </div>
-                            <div className="flex items-center gap-1 text-sm text-slate-600 shrink-0">
-                              <Users className="w-4 h-4" />
-                              <span>{participantsCount}</span>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {unvotedCount > 0 && (
+                                <div className="relative">
+                                  <Bell className="w-4 h-4 text-orange-500 animate-pulse" />
+                                  <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                                    {unvotedCount}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="flex items-center gap-1 text-sm text-slate-600">
+                                <Users className="w-4 h-4" />
+                                <span>{participantsCount}</span>
+                              </div>
                             </div>
                           </div>
                         </Link>
