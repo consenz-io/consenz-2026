@@ -214,7 +214,6 @@ export default function SuggestionDetail() {
 
       let newProVotes = suggestion.proVotes || 0;
       let newConVotes = suggestion.conVotes || 0;
-      let pointsAction = null;
       
       if (userVote) {
         if (userVote.vote === vote) {
@@ -222,7 +221,6 @@ export default function SuggestionDetail() {
           await base44.entities.Vote.delete(userVote.id);
           if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
           else newConVotes = Math.max(0, newConVotes - 1);
-          pointsAction = 'cancel';
         } else {
           // שינוי כיוון הצבעה
           await base44.entities.Vote.update(userVote.id, { vote });
@@ -233,7 +231,6 @@ export default function SuggestionDetail() {
             newConVotes += 1;
             newProVotes = Math.max(0, newProVotes - 1);
           }
-          pointsAction = 'change';
         }
       } else {
         // הצבעה חדשה
@@ -244,7 +241,6 @@ export default function SuggestionDetail() {
         });
         if (vote === 'pro') newProVotes += 1;
         else newConVotes += 1;
-        pointsAction = 'new';
       }
       
       // עדכון ההצעה
@@ -253,45 +249,6 @@ export default function SuggestionDetail() {
         conVotes: newConVotes
       });
       
-      const updatedSuggestion = { ...suggestion, proVotes: newProVotes, conVotes: newConVotes };
-      
-      // בדיקת קונסנזוס רק אם ההצעה עדיין ממתינה
-      if (suggestion.status === 'pending') {
-        const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, document);
-
-        if (shouldAccept) {
-          setIsAutoAccepting(true);
-          try {
-            const actuallyAccepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
-
-            if (actuallyAccepted) {
-              // נקודות להצבעה שהשפיעה על קבלת ההצעה - fire-and-forget
-              if (!userVote && vote === 'pro' && document?.gamificationEnabled) {
-                base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
-                base44.entities.PointsTransaction.create({
-                  userId: user.id,
-                  amount: 50,
-                  action: 'vote_influenced_acceptance',
-                  description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${updatedSuggestion.title}`,
-                  relatedEntityId: updatedSuggestion.id,
-                  relatedEntityType: 'suggestion'
-                }).catch(() => {});
-              }
-              return { accepted: true, newProVotes, newConVotes };
-            }
-          } finally {
-            setIsAutoAccepting(false);
-          }
-        }
-      }
-
-      // עדכון מספר תורמים ברקע - fire-and-forget
-      import('../components/document/calculateContributors').then(({ calculateDocumentContributors }) => 
-        calculateDocumentContributors(suggestion.documentId).then(count => 
-          base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count })
-        )
-      ).catch(() => {});
-
       return { accepted: false, newProVotes, newConVotes };
     },
     // Optimistic update - only for vote counts, NOT for status
