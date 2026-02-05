@@ -111,16 +111,16 @@ export default function DocumentView() {
   const { data: aggregatedData } = useQuery({
     queryKey: ['documentAggregatedData'],
     queryFn: async () => {
-      const [votes, users, publicProfiles, arguments, comments] = await Promise.all([
+      const [votes, users, publicProfiles, args, comments] = await Promise.all([
         base44.entities.Vote.list(),
         base44.entities.User.list(),
         base44.entities.UserPublicProfile.list(),
         base44.entities.Argument.list(),
         base44.entities.Comment.list(),
       ]);
-      return { votes, users, publicProfiles, arguments, comments };
+      return { votes, users, publicProfiles, args, comments };
     },
-    initialData: { votes: [], users: [], publicProfiles: [], arguments: [], comments: [] },
+    initialData: { votes: [], users: [], publicProfiles: [], args: [], comments: [] },
     staleTime: 60000, // 1 minute - data doesn't change often
     cacheTime: 300000, // 5 minutes
   });
@@ -128,7 +128,7 @@ export default function DocumentView() {
   const allVotes = aggregatedData?.votes || [];
   const allUsers = aggregatedData?.users || [];
   const publicProfiles = aggregatedData?.publicProfiles || [];
-  const allArguments = aggregatedData?.arguments || [];
+  const allArguments = aggregatedData?.args || [];
   const allComments = aggregatedData?.comments || [];
 
   const { data: documentComments } = useQuery({
