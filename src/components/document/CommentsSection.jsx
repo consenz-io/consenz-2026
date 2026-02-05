@@ -200,7 +200,7 @@ const CommentItem = memo(({
       </Card>
 
       {/* Reply input form - shown below this comment when replyTo is set to this comment */}
-      {replyTo?.id === comment.id && (
+      {replyTo?.id === comment.id && !isReply && (
        <div className="mt-2 p-3 bg-blue-50 rounded-lg space-y-2 border border-blue-200">
          <div className="flex items-center gap-2 text-sm text-slate-600">
            <Reply className="w-4 h-4" />
