@@ -12,6 +12,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/components/LanguageContext";
+import VirtualizedNotificationsList from "./VirtualizedNotificationsList";
 
 export default function NotificationBell({ user }) {
   const { t, isRTL } = useLanguage();
@@ -151,50 +152,24 @@ export default function NotificationBell({ user }) {
             </Button>
           )}
         </div>
-        <ScrollArea className="h-[400px]">
+        <div className="max-h-96 overflow-y-auto p-4">
           {notifications.length === 0 ? (
             <div className="p-8 text-center text-slate-500">
               <Bell className="w-12 h-12 mx-auto mb-2 opacity-30" />
               <p>אין התראות חדשות</p>
             </div>
           ) : (
-            <div className="divide-y">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-4 hover:bg-slate-50 cursor-pointer transition-colors ${
-                    !notification.read ? 'bg-blue-50' : ''
-                  }`}
-                  onClick={() => handleNotificationClick(notification)}
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">{getNotificationIcon(notification.type)}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="font-medium text-sm">{notification.title}</p>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 hover:bg-slate-200"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteNotificationMutation.mutate(notification.id);
-                          }}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <p className="text-sm text-slate-600 mt-1">{notification.message}</p>
-                      <p className="text-xs text-slate-400 mt-2">
-                        {formatTimeAgo(notification.created_date)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <VirtualizedNotificationsList
+              notifications={notifications}
+              onMarkAsRead={(id) => markAsReadMutation.mutate(id)}
+              onDelete={(id) => deleteNotificationMutation.mutate(id)}
+              onNotificationClick={handleNotificationClick}
+              formatTimeAgo={formatTimeAgo}
+              getNotificationIcon={getNotificationIcon}
+              isRTL={isRTL}
+            />
           )}
-        </ScrollArea>
+        </div>
       </PopoverContent>
     </Popover>
   );

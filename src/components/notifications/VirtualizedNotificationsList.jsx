@@ -81,23 +81,27 @@ export default function VirtualizedNotificationsList({
   notifications,
   onMarkAsRead,
   onDelete,
-  isRTL,
-  language
+  onNotificationClick,
+  formatTimeAgo,
+  getNotificationIcon,
+  isRTL
 }) {
   if (!notifications || notifications.length === 0) return null;
 
   // Use virtualization for lists with >15 items
   if (notifications.length <= 15) {
     return (
-      <div className="space-y-2">
+      <div className="divide-y">
         {notifications.map(notification => (
           <NotificationItem
             key={notification.id}
             notification={notification}
             onMarkAsRead={onMarkAsRead}
             onDelete={onDelete}
+            onNotificationClick={onNotificationClick}
+            formatTimeAgo={formatTimeAgo}
+            getNotificationIcon={getNotificationIcon}
             isRTL={isRTL}
-            language={language}
           />
         ))}
       </div>
@@ -107,17 +111,17 @@ export default function VirtualizedNotificationsList({
   return (
     <Virtuoso
       data={notifications}
-      style={{ height: '500px' }}
+      style={{ height: '400px' }}
       itemContent={(index, notification) => (
-        <div className="pb-2">
-          <NotificationItem
-            notification={notification}
-            onMarkAsRead={onMarkAsRead}
-            onDelete={onDelete}
-            isRTL={isRTL}
-            language={language}
-          />
-        </div>
+        <NotificationItem
+          notification={notification}
+          onMarkAsRead={onMarkAsRead}
+          onDelete={onDelete}
+          onNotificationClick={onNotificationClick}
+          formatTimeAgo={formatTimeAgo}
+          getNotificationIcon={getNotificationIcon}
+          isRTL={isRTL}
+        />
       )}
     />
   );
