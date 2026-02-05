@@ -5,6 +5,7 @@ import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages, ArrowUp
 import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
 import { Toaster } from "sonner";
 import { initBrowserNotifications } from "@/components/notifications/browserNotifications";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import {
   Sidebar,
   SidebarContent,
@@ -547,8 +548,10 @@ function LayoutContent({ children, currentPageName }) {
 
 export default function Layout({ children, currentPageName }) {
   return (
-    <LanguageProvider>
-      <LayoutContent children={children} currentPageName={currentPageName} />
-    </LanguageProvider>
+    <ErrorBoundary>
+      <LanguageProvider>
+        <LayoutContent children={children} currentPageName={currentPageName} />
+      </LanguageProvider>
+    </ErrorBoundary>
   );
 }

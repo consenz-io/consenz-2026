@@ -1,15 +1,28 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
+  const startTime = Date.now();
+  console.log('[VOTE AUTOMATION] ===== START =====');
+  console.log('[VOTE AUTOMATION] Timestamp:', new Date().toISOString());
+  
   try {
     const base44 = createClientFromRequest(req);
     const { event, data: vote } = await req.json();
 
+    console.log('[VOTE AUTOMATION] Event type:', event?.type);
+    console.log('[VOTE AUTOMATION] Vote data received:', {
+      id: vote?.id,
+      userId: vote?.userId,
+      suggestionId: vote?.suggestionId,
+      vote: vote?.vote
+    });
+
     if (!vote || event.type !== 'create') {
+      console.log('[VOTE AUTOMATION] ⏭️ Skipping - not a create event');
       return Response.json({ message: 'Not a create event' }, { status: 200 });
     }
 
-    console.log('[AUTOMATION] New vote created:', vote.id);
+    console.log('[VOTE AUTOMATION] ✅ Processing new vote:', vote.id);
 
     // קבלת ההצעה
     const suggestion = await base44.asServiceRole.entities.Suggestion.filter({ id: vote.suggestionId }).then(s => s[0]);
@@ -65,10 +78,28 @@ Deno.serve(async (req) => {
       console.log('[AUTOMATION] Awarded 10 points to suggestion creator');
     }
 
-    console.log('[AUTOMATION] Vote notification sent successfully');
-    return Response.json({ success: true });
+    const duration = Date.now() - startTime;
+    console.log('[VOTE AUTOMATION] ✅ Completed successfully');
+    console.log('[VOTE AUTOMATION] Duration:', duration, 'ms');
+    console.log('[VOTE AUTOMATION] ===== END =====');
+    
+    return Response.json({ 
+      success: true,
+      duration,
+      voteId: vote.id
+    });
   } catch (error) {
-    console.error('[AUTOMATION ERROR]', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    const duration = Date.now() - startTime;
+    console.error('[VOTE AUTOMATION] ❌ ERROR:', error.message);
+    console.error('[VOTE AUTOMATION] Error stack:', error.stack);
+    console.error('[VOTE AUTOMATION] Duration before error:', duration, 'ms');
+    console.error('[VOTE AUTOMATION] Vote data:', JSON.stringify(vote, null, 2));
+    console.error('[VOTE AUTOMATION] ===== END (ERROR) =====');
+    
+    return Response.json({ 
+      error: error.message,
+      duration,
+      voteId: vote?.id 
+    }, { status: 500 });
   }
 });
