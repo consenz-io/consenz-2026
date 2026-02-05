@@ -26,7 +26,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import FloatingNotificationBell from "@/components/notifications/FloatingNotificationBell";
 import { AccessibilityAnnouncer } from "@/components/AccessibilityAnnouncer";
 import { AccessibilityToolbarContent } from "@/components/AccessibilityToolbar";
-import { queryKeys, QUERY_STALE_TIMES } from "@/components/config/queryConfig";
 
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
@@ -44,19 +43,17 @@ function LayoutContent({ children, currentPageName }) {
   });
 
   const { data: userSuggestions = [] } = useQuery({
-    queryKey: queryKeys.userSuggestions(user?.email),
+    queryKey: ['userSuggestions', user?.email],
     queryFn: () => base44.entities.Suggestion.filter({ created_by: user.email }),
     enabled: !!user?.email,
     initialData: [],
-    staleTime: QUERY_STALE_TIMES.SUGGESTIONS,
   });
 
   const { data: userVotes = [] } = useQuery({
-    queryKey: queryKeys.userVotes(user?.id),
+    queryKey: ['userProVotes', user?.id],
     queryFn: () => base44.entities.Vote.filter({ userId: user.id, vote: 'pro' }),
     enabled: !!user?.id,
     initialData: [],
-    staleTime: QUERY_STALE_TIMES.VOTES,
   });
 
   const acceptedSuggestionsCount = React.useMemo(() => 
@@ -181,28 +178,24 @@ function LayoutContent({ children, currentPageName }) {
     queryKey: ['recentSuggestions'],
     queryFn: () => base44.entities.Suggestion.list('-created_date', 50),
     initialData: [],
-    staleTime: QUERY_STALE_TIMES.SUGGESTIONS,
   });
 
   const { data: recentComments = [] } = useQuery({
     queryKey: ['recentComments'],
     queryFn: () => base44.entities.Comment.list('-created_date', 50),
     initialData: [],
-    staleTime: QUERY_STALE_TIMES.COMMENTS,
   });
 
   const { data: recentVotes = [] } = useQuery({
     queryKey: ['recentVotes'],
     queryFn: () => base44.entities.Vote.list('-created_date', 50),
     initialData: [],
-    staleTime: QUERY_STALE_TIMES.VOTES,
   });
 
   const { data: recentVersions = [] } = useQuery({
     queryKey: ['recentVersions'],
     queryFn: () => base44.entities.DocumentVersion.list('-created_date', 50),
     initialData: [],
-    staleTime: QUERY_STALE_TIMES.VERSIONS,
   });
 
   const unreadCount = React.useMemo(() => {
