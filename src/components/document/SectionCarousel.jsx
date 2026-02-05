@@ -17,7 +17,7 @@ import DocumentTextContent from "./DocumentTextContent";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 
-export default function SectionCarousel({
+const SectionCarousel = React.memo(function SectionCarousel({
   section,
   pendingSuggestions,
   document,
@@ -854,4 +854,6 @@ export default function SectionCarousel({
       />
     </div>
   );
-}
+});
+
+export default SectionCarousel;

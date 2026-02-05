@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 
-export default function DeleteSectionSuggestionCard({ 
+const DeleteSectionSuggestionCard = React.memo(function DeleteSectionSuggestionCard({ 
   suggestion, 
   section,
   document,
@@ -266,4 +266,6 @@ export default function DeleteSectionSuggestionCard({
       </AnimatePresence>
     </Card>
   );
-}
+});
+
+export default DeleteSectionSuggestionCard;

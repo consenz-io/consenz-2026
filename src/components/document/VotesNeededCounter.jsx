@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { calculateContributorsFromData } from "./calculateContributors";
 
-export default function VotesNeededCounter({ suggestion, document, sectionId }) {
+const VotesNeededCounter = React.memo(function VotesNeededCounter({ suggestion, document, sectionId }) {
   const { t } = useLanguage();
 
   // Fetch all data needed for dynamic contributor calculation

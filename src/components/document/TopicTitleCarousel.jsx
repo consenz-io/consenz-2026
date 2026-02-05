@@ -8,7 +8,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 
-export default function TopicTitleCarousel({
+const TopicTitleCarousel = React.memo(function TopicTitleCarousel({
   topic,
   topicEditSuggestions,
   document,
@@ -199,4 +199,6 @@ export default function TopicTitleCarousel({
       )}
     </div>
   );
-}
+});
+
+export default TopicTitleCarousel;

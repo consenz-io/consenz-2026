@@ -11,7 +11,7 @@ import TranslatableContent from "./TranslatableContent";
 import CommentsSection from "./CommentsSection";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function NewSectionSuggestionCard({ 
+const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({ 
   suggestion, 
   document: doc,
   getUserName,
@@ -529,4 +529,6 @@ export default function NewSectionSuggestionCard({
       )}
     </div>
   );
-}
+});
+
+export default NewSectionSuggestionCard;

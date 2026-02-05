@@ -265,10 +265,10 @@ export default function DocumentContent({
     enabled: !!document?.id,
   });
 
-  const getCommentsCount = (entityType, entityId) => {
+  const getCommentsCount = React.useCallback((entityType, entityId) => {
     const comments = entityType === 'section' ? sectionComments : suggestionComments;
     return comments.filter(c => c.rootEntityId === entityId).length;
-  };
+  }, [sectionComments, suggestionComments]);
 
   const { data: userVotes } = useQuery({
     queryKey: ['userVotes', document?.id, user?.id],
@@ -610,7 +610,7 @@ export default function DocumentContent({
     },
   });
 
-  const getUserName = (email) => {
+  const getUserName = React.useCallback((email) => {
     // Try public profile first (accessible to everyone)
     const profile = publicProfiles?.find(p => p.email === email);
     if (profile?.fullName) return profile.fullName;
@@ -621,14 +621,14 @@ export default function DocumentContent({
     
     // User hasn't completed profile yet
     return 'User';
-  };
+  }, [publicProfiles, users]);
 
-  const toggleComments = (id) => {
+  const toggleComments = React.useCallback((id) => {
     setShowComments(prev => ({
       ...prev,
       [id]: !prev[id]
     }));
-  };
+  }, []);
 
   const translateTopicMutation = useMutation({
     mutationFn: async (topic) => {
@@ -678,19 +678,19 @@ Return ONLY the translated text:`;
     }
   });
 
-  const getSectionsForTopic = (topicId) => {
+  const getSectionsForTopic = React.useCallback((topicId) => {
     return sections.filter(s => s.topicId === topicId).sort((a, b) => a.order - b.order);
-  };
+  }, [sections]);
 
-  const getSuggestionsForSection = (sectionId) => {
+  const getSuggestionsForSection = React.useCallback((sectionId) => {
     return suggestions.filter(s => 
       s.sectionId === sectionId && 
       (s.type === 'edit_section' || s.type === 'delete_section') && 
       s.status === 'pending'
     );
-  };
+  }, [suggestions]);
 
-  const getNewSectionSuggestionsForTopic = (topicId) => {
+  const getNewSectionSuggestionsForTopic = React.useCallback((topicId) => {
     return suggestions.filter(s => {
       // רק הצעות לסעיפים חדשים שהן ROOT (אין להן parent)
       if (s.type !== 'new_section') return false;
@@ -711,10 +711,10 @@ Return ONLY the translated text:`;
       // אם ההצעה מיועדת לנושא חדש שעדיין לא נוצר - לא מציגים אותה בשום נושא
       return false;
     }).sort((a, b) => (a.insertPosition || 999) - (b.insertPosition || 999));
-  };
+  }, [suggestions]);
 
   // פונקציה נפרדת להצעות לנושאים חדשים שעדיין לא נוצרו
-  const getNewTopicSuggestions = () => {
+  const getNewTopicSuggestions = React.useCallback(() => {
     return suggestions.filter(s => {
       // רק הצעות new_section (לא edit_section)
       if (s.type !== 'new_section') return false;
@@ -730,16 +730,17 @@ Return ONLY the translated text:`;
       
       return true;
     }).sort((a, b) => (a.newTopicOrder || 999) - (b.newTopicOrder || 999));
-  };
+  }, [suggestions]);
 
   // פונקציה להצעות נושאים חדשים שצריכות להופיע אחרי נושא מסוים
-  const getNewTopicSuggestionsAfterTopic = (topicOrder) => {
-    return getNewTopicSuggestions().filter(s => 
+  const getNewTopicSuggestionsAfterTopic = React.useCallback((topicOrder) => {
+    const newTopicSuggestions = getNewTopicSuggestions();
+    return newTopicSuggestions.filter(s => 
       s.newTopicOrder !== undefined && 
       s.newTopicOrder !== null && 
       s.newTopicOrder === topicOrder + 1
     );
-  };
+  }, [getNewTopicSuggestions]);
 
   const reorderSectionsMutation = useMutation({
     mutationFn: async ({ topicId, reorderedSections }) => {
@@ -817,13 +818,13 @@ Return ONLY the translated text:`;
     }
   };
 
-  const getTopicEditSuggestions = (topicId) => {
+  const getTopicEditSuggestions = React.useCallback((topicId) => {
     return topicEditSuggestions.filter(s => s.topicId === topicId && s.status === 'pending');
-  };
+  }, [topicEditSuggestions]);
 
-  const getUserTopicVote = (suggestionId) => {
+  const getUserTopicVote = React.useCallback((suggestionId) => {
     return topicEditVotes?.find(v => v.suggestionId === suggestionId);
-  };
+  }, [topicEditVotes]);
 
   // מעקב אחרי הצבעות על כותרות נושאים למניעת race conditions
   const topicVotingInProgressRef = React.useRef(new Set());

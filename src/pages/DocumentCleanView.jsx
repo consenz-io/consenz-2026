@@ -10,8 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
 import InlineDiff from "@/components/document/InlineDiff";
 import PageHeader from "@/components/PageHeader";
-import SectionHistorySidebar from "@/components/document/SectionHistorySidebar";
-import SuggestionSidebar from "@/components/document/SuggestionSidebar";
+import VersionNavigation from "@/components/document/VersionNavigation";
+import DocumentSnapshot from "@/components/document/DocumentSnapshot";
+import { useDocumentVersions } from "@/components/document/hooks/useDocumentVersions";
+
+// Lazy load sidebars
+const SectionHistorySidebar = React.lazy(() => import("@/components/document/SectionHistorySidebar"));
+const SuggestionSidebar = React.lazy(() => import("@/components/document/SuggestionSidebar"));
 
 const detectLanguage = (text) => {
   if (!text) return 'en';
@@ -120,169 +125,8 @@ export default function DocumentCleanView() {
     return relevantSuggestions[relevantSuggestions.length - 1].newTitle;
   };
 
-  // Build document snapshots - each suggestion acceptance creates one snapshot
-  const versionGroups = React.useMemo(() => {
-    // Always start with current snapshot if we have sections
-    const snapshots = [];
-    
-    // Collect all section IDs that ever existed (from sections + versions)
-    const allSectionIds = new Set();
-    sections.forEach(s => allSectionIds.add(s.id));
-    allVersions.forEach(v => {
-      if (v.sectionId) allSectionIds.add(v.sectionId);
-    });
-    
-    // Calculate current weighted consensus from document.consensuses
-    const consensuses = document?.consensuses || [];
-    const currentWeightedConsensus = consensuses.length === 0 ? 0.5 :
-      consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-    
-    // Current state snapshot
-    const currentSnapshot = {
-      version: 'current',
-      label: 'נוכחית',
-      timestamp: new Date().toISOString(),
-      sectionContents: {},
-      existingSections: new Set(),
-      allSectionIds: allSectionIds,
-      weightedConsensus: currentWeightedConsensus,
-      documentThreshold: document?.threshold || 2,
-      totalParticipants: document?.totalUsersInteracted || 0
-    };
-    sections.forEach(s => {
-      currentSnapshot.sectionContents[s.id] = s.content;
-      currentSnapshot.existingSections.add(s.id);
-    });
-    snapshots.push(currentSnapshot);
-    
-    // If no versions, return just current snapshot
-    if (!allVersions || allVersions.length === 0) {
-      return snapshots;
-    }
-    
-    // Sort all versions by created_date descending (newest first)
-    const sortedVersions = [...allVersions].sort((a, b) => {
-      const dateA = new Date(a.created_date || 0).getTime();
-      const dateB = new Date(b.created_date || 0).getTime();
-      return dateB - dateA;
-    });
-    
-    // Track section states as we go backwards
-    let currentSectionContents = { ...currentSnapshot.sectionContents };
-    let currentExistingSections = new Set(currentSnapshot.existingSections);
-    
-    // Group versions by suggestionId to handle paired versions (before/after)
-    const versionsBySuggestion = new Map();
-    sortedVersions.forEach(v => {
-      if (v.suggestionId) {
-        if (!versionsBySuggestion.has(v.suggestionId)) {
-          versionsBySuggestion.set(v.suggestionId, []);
-        }
-        versionsBySuggestion.get(v.suggestionId).push(v);
-      }
-    });
-    
-    // Process each suggestion (newest first)
-    const processedSuggestions = new Set();
-    sortedVersions.forEach(v => {
-      if (!v.suggestionId || processedSuggestions.has(v.suggestionId)) return;
-      processedSuggestions.add(v.suggestionId);
-      
-      const versionsForSuggestion = versionsBySuggestion.get(v.suggestionId);
-      // Sort by version to get after (higher) and before (lower)
-      versionsForSuggestion.sort((a, b) => (b.version || 0) - (a.version || 0));
-      const afterVersion = versionsForSuggestion[0];
-      const beforeVersion = versionsForSuggestion[1];
-      
-      // Find the related suggestion
-      const relatedSuggestion = suggestions.find(s => s.id === afterVersion.suggestionId);
-      
-      // Calculate weighted consensus at this point in time
-      // Include all suggestions accepted up to and including this one
-      const acceptedSuggestionsUpToHere = suggestions
-        .filter(s => s.status === 'accepted' && new Date(s.created_date) <= new Date(afterVersion.created_date))
-        .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-
-      const weightedConsensusAtTime = acceptedSuggestionsUpToHere.length === 0 ? 0.5 : 
-        acceptedSuggestionsUpToHere.reduce((sum, s) => {
-          const total = (s.proVotes || 0) + (s.conVotes || 0);
-          const consensus = total > 0 ? (s.proVotes || 0) / total : 0;
-          return sum + Math.min(1, consensus);
-        }, 0) / acceptedSuggestionsUpToHere.length;
-
-      // This snapshot shows the state RIGHT AFTER this change was applied
-      const snapshotAfterChange = {
-        version: afterVersion.version,
-        label: `גרסה ${afterVersion.version}`,
-        timestamp: afterVersion.created_date,
-        changeDescription: afterVersion.changeDescription,
-        changeType: afterVersion.changeType,
-        suggestionId: afterVersion.suggestionId,
-        sectionContents: { ...currentSectionContents },
-        existingSections: new Set(currentExistingSections),
-        changedSectionId: afterVersion.sectionId,
-        newContent: afterVersion.content,
-        allSectionIds: allSectionIds,
-        // Metadata from the suggestion
-        proVotes: relatedSuggestion?.proVotes || 0,
-        conVotes: relatedSuggestion?.conVotes || 0,
-        participantsAtAcceptance: relatedSuggestion?.participantsAtAcceptance || 0,
-        suggestionConsensus: relatedSuggestion?.suggestionConsensus || 0,
-        weightedConsensus: weightedConsensusAtTime,
-        documentThresholdAtTime: document?.threshold || 2
-      };
-      
-      // Mark if this is a new section creation
-      if (afterVersion.changeType === 'section_created') {
-        snapshotAfterChange.isNewSection = true;
-        snapshotAfterChange.newSectionId = afterVersion.sectionId;
-        snapshotAfterChange.newSectionContent = afterVersion.content;
-      }
-      
-      // Mark if this is a deletion
-      if (afterVersion.content === '' && beforeVersion) {
-        snapshotAfterChange.isDeleted = true;
-        snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
-        snapshotAfterChange.deletedSectionContent = beforeVersion.content;
-        // Keep the deleted section in sectionContents so it can be displayed
-        snapshotAfterChange.sectionContents[afterVersion.sectionId] = beforeVersion.content;
-        snapshotAfterChange.existingSections.add(afterVersion.sectionId);
-      }
-      
-      snapshots.push(snapshotAfterChange);
-      
-      // Now update state for the OLDER version (before this change)
-      if (afterVersion.changeType === 'section_created') {
-        // This section didn't exist before, remove it
-        delete currentSectionContents[afterVersion.sectionId];
-        currentExistingSections.delete(afterVersion.sectionId);
-      } else if (afterVersion.content === '' && beforeVersion) {
-        // This is a section deletion - section existed BEFORE deletion
-        // So add it back with its previous content
-        currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
-        currentExistingSections.add(afterVersion.sectionId);
-      } else if (beforeVersion) {
-        // Section was edited - use the "before" version content for older snapshot
-        currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
-      }
-    });
-    
-    // Add the ORIGINAL version (before any changes) as the last snapshot
-    if (Object.keys(currentSectionContents).length > 0) {
-      const originalSnapshot = {
-        version: 0,
-        label: 'גרסה מקורית',
-        timestamp: document?.created_date || new Date(0).toISOString(),
-        sectionContents: { ...currentSectionContents },
-        existingSections: new Set(currentExistingSections),
-        allSectionIds: allSectionIds,
-        isOriginal: true
-      };
-      snapshots.push(originalSnapshot);
-    }
-    
-    return snapshots;
-  }, [allVersions, sections, document, suggestions]);
+  // Use custom hook for version management
+  const versionGroups = useDocumentVersions(document, sections, allVersions, suggestions);
 
   const currentSnapshot = versionGroups[currentVersionIndex] || versionGroups[0];
   const olderSnapshot = currentVersionIndex < versionGroups.length - 1 ? versionGroups[currentVersionIndex + 1] : null;
@@ -590,48 +434,14 @@ ${text}`;
               backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
             />
           </div>
-          {versionGroups.length > 1 && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 print:hidden">
-              <div className="bg-white/95 backdrop-blur-sm border-2 border-slate-300 rounded-full shadow-lg px-4 py-2">
-                <div className={`flex items-center gap-3`}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentVersionIndex(Math.min(currentVersionIndex + 1, versionGroups.length - 1))}
-                    disabled={currentVersionIndex >= versionGroups.length - 1}
-                    title={language === 'he' ? 'גרסה קודמת' : 'Previous version'}
-                    className="h-9 w-9 p-0 rounded-full"
-                  >
-                    {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-                  </Button>
-                  <div className="flex flex-col items-center min-w-[80px]">
-                    <Badge variant="outline" className={`px-3 text-xs font-semibold ${currentVersionIndex === 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
-                      {currentVersionIndex === 0 ? (
-                        language === 'he' ? 'נוכחית' : language === 'ar' ? 'حالية' : 'Current'
-                      ) : (
-                        `${versionGroups.length - currentVersionIndex}/${versionGroups.length}`
-                      )}
-                    </Badge>
-                    {currentSnapshot?.changeDescription && currentVersionIndex > 0 && (
-                      <span className="text-[10px] text-slate-500 mt-0.5 max-w-[150px] truncate text-center" title={currentSnapshot.changeDescription}>
-                        {currentSnapshot.changeDescription.replace('לפני: ', '')}
-                      </span>
-                    )}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentVersionIndex(Math.max(0, currentVersionIndex - 1))}
-                    disabled={currentVersionIndex === 0}
-                    title={language === 'he' ? 'גרסה חדשה יותר' : 'Newer version'}
-                    className="h-9 w-9 p-0 rounded-full"
-                  >
-                    {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
+          <VersionNavigation
+            currentIndex={currentVersionIndex}
+            totalVersions={versionGroups.length}
+            onNavigate={setCurrentVersionIndex}
+            currentSnapshot={currentSnapshot}
+            language={language}
+            isRTL={isRTL}
+          />
           <div className="flex items-center gap-2 flex-wrap">
 
             <Button variant="outline" size="sm" onClick={handlePrint} className="hidden md:flex">
@@ -1049,23 +859,25 @@ ${text}`;
         }
       `}</style>
 
-      {openSectionHistoryId && (
-        <SectionHistorySidebar
-          sectionId={openSectionHistoryId}
-          isOpen={true}
-          onClose={() => setOpenSectionHistoryId(null)}
-        />
-      )}
+      <React.Suspense fallback={<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"><div className="bg-white p-4 rounded-lg shadow-lg">טוען...</div></div>}>
+        {openSectionHistoryId && (
+          <SectionHistorySidebar
+            sectionId={openSectionHistoryId}
+            isOpen={true}
+            onClose={() => setOpenSectionHistoryId(null)}
+          />
+        )}
 
-      {openSuggestionId && (
-        <SuggestionSidebar
-          suggestionId={openSuggestionId}
-          onClose={() => setOpenSuggestionId(null)}
-          document={document}
-          user={null}
-          isAdmin={false}
-        />
-      )}
+        {openSuggestionId && (
+          <SuggestionSidebar
+            suggestionId={openSuggestionId}
+            onClose={() => setOpenSuggestionId(null)}
+            document={document}
+            user={null}
+            isAdmin={false}
+          />
+        )}
+      </React.Suspense>
     </div>
   );
 }

@@ -14,16 +14,18 @@ import { useLanguage } from "@/components/LanguageContext";
 import ReactQuill from "react-quill";
 
 import DocumentContent from "../components/document/DocumentContent";
-import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 import PageHeader from "../components/PageHeader";
-import ContributorsModal from "../components/document/ContributorsModal";
-import CommentsSection from "../components/document/CommentsSection";
-import SuggestionSidebar from "../components/document/SuggestionSidebar";
 import { calculateContributorsFromData } from "../components/document/calculateContributors";
 import { TranslationProvider } from "../components/document/TranslationContext";
 import TranslateAllButton from "../components/document/TranslateAllButton";
-import DocumentAgreementModal from "../components/document/DocumentAgreementModal";
-import SignersListModal from "../components/document/SignersListModal";
+import CommentsSection from "../components/document/CommentsSection";
+
+// Lazy load heavy components
+const CreateSuggestionModal = React.lazy(() => import("../components/document/CreateSuggestionModal"));
+const ContributorsModal = React.lazy(() => import("../components/document/ContributorsModal"));
+const SuggestionSidebar = React.lazy(() => import("../components/document/SuggestionSidebar"));
+const DocumentAgreementModal = React.lazy(() => import("../components/document/DocumentAgreementModal"));
+const SignersListModal = React.lazy(() => import("../components/document/SignersListModal"));
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -228,7 +230,7 @@ export default function DocumentView() {
       });
   }, [suggestions, sections, topics]);
 
-  const scrollToSuggestion = (index) => {
+  const scrollToSuggestion = React.useCallback((index) => {
     const suggestion = pendingSuggestions[index];
     if (!suggestion) return;
     if (typeof window === 'undefined' || typeof window.document === 'undefined' || !window.document.getElementById) return;
@@ -276,7 +278,7 @@ export default function DocumentView() {
         }
       }, 100);
     }
-  };
+  }, [pendingSuggestions]);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -412,23 +414,23 @@ export default function DocumentView() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleEditSection = (section, isDirectEdit = false) => {
+  const handleEditSection = React.useCallback((section, isDirectEdit = false) => {
     setEditingSection(isDirectEdit ? { ...section, isDirectEdit: true } : section);
     setShowCreateSuggestion(true);
-  };
+  }, []);
 
-  const handleNewSection = (topicId, insertPosition) => {
+  const handleNewSection = React.useCallback((topicId, insertPosition) => {
     // מציאת ה-order של הנושא הנוכחי
     const currentTopic = topics.find(t => t.id === topicId);
     const topicOrder = currentTopic?.order;
     setEditingSection({ topicId, insertPosition, isNew: true, topicOrder });
     setShowCreateSuggestion(true);
-  };
+  }, [topics]);
 
-  const handleEditSuggestion = (suggestion) => {
+  const handleEditSuggestion = React.useCallback((suggestion) => {
     setEditingSuggestion(suggestion);
     setShowCreateSuggestion(true);
-  };
+  }, []);
 
   const languagePrompts = {
     en: "English",
@@ -956,64 +958,72 @@ export default function DocumentView() {
           />
       </div>
 
-      {showCreateSuggestion && (
-        <CreateSuggestionModal
-          document={document}
-          topics={topics}
-          sections={sections}
-          editingSection={editingSection}
-          editingSuggestion={editingSuggestion}
-          user={user}
-          isAdmin={isAdmin}
-          onClose={() => {
-            setShowCreateSuggestion(false);
-            setEditingSection(null);
-            setEditingSuggestion(null);
-          }}
-          onSuggestionCreated={(suggestionId, sectionId, topicId) => {
-            setNewlyCreatedSuggestion({ suggestionId, sectionId, topicId });
-          }}
-          isDeletingSuggestion={editingSection?.isDeletingSuggestion}
-        />
-      )}
+      <React.Suspense fallback={<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"><div className="bg-white p-4 rounded-lg shadow-lg">טוען...</div></div>}>
+        {showCreateSuggestion && (
+          <CreateSuggestionModal
+            document={document}
+            topics={topics}
+            sections={sections}
+            editingSection={editingSection}
+            editingSuggestion={editingSuggestion}
+            user={user}
+            isAdmin={isAdmin}
+            onClose={() => {
+              setShowCreateSuggestion(false);
+              setEditingSection(null);
+              setEditingSuggestion(null);
+            }}
+            onSuggestionCreated={(suggestionId, sectionId, topicId) => {
+              setNewlyCreatedSuggestion({ suggestionId, sectionId, topicId });
+            }}
+            isDeletingSuggestion={editingSection?.isDeletingSuggestion}
+          />
+        )}
 
-      <ContributorsModal
-        isOpen={showContributorsModal}
-        onClose={() => setShowContributorsModal(false)}
-        documentId={documentId}
-      />
+        {showContributorsModal && (
+          <ContributorsModal
+            isOpen={showContributorsModal}
+            onClose={() => setShowContributorsModal(false)}
+            documentId={documentId}
+          />
+        )}
 
-      {openSuggestionId && (
-        <SuggestionSidebar
-          suggestionId={openSuggestionId}
-          onClose={() => setOpenSuggestionId(null)}
-          document={document}
-          user={user}
-          isAdmin={isAdmin}
-        />
-      )}
+        {openSuggestionId && (
+          <SuggestionSidebar
+            suggestionId={openSuggestionId}
+            onClose={() => setOpenSuggestionId(null)}
+            document={document}
+            user={user}
+            isAdmin={isAdmin}
+          />
+        )}
 
-      <DocumentAgreementModal
-        isOpen={showAgreementModal}
-        onClose={() => setShowAgreementModal(false)}
-        onConfirm={() => signAgreementMutation.mutate()}
-        isLoading={signAgreementMutation.isPending}
-      />
+        {showAgreementModal && (
+          <DocumentAgreementModal
+            isOpen={showAgreementModal}
+            onClose={() => setShowAgreementModal(false)}
+            onConfirm={() => signAgreementMutation.mutate()}
+            isLoading={signAgreementMutation.isPending}
+          />
+        )}
 
-      <SignersListModal
-        isOpen={showSignersListModal}
-        onClose={() => setShowSignersListModal(false)}
-        signers={documentAgreements}
-        allUsers={allUsers}
-        user={user}
-        userHasAgreed={userHasAgreed}
-        onJoinClick={() => {
-          setShowSignersListModal(false);
-          setShowAgreementModal(true);
-        }}
-        onRemoveSignature={() => removeSignatureMutation.mutate()}
-        isRemoving={removeSignatureMutation.isPending}
-      />
+        {showSignersListModal && (
+          <SignersListModal
+            isOpen={showSignersListModal}
+            onClose={() => setShowSignersListModal(false)}
+            signers={documentAgreements}
+            allUsers={allUsers}
+            user={user}
+            userHasAgreed={userHasAgreed}
+            onJoinClick={() => {
+              setShowSignersListModal(false);
+              setShowAgreementModal(true);
+            }}
+            onRemoveSignature={() => removeSignatureMutation.mutate()}
+            isRemoving={removeSignatureMutation.isPending}
+          />
+        )}
+      </React.Suspense>
 
       {/* Floating navigation for suggestions */}
       {pendingSuggestions.length > 0 && showSuggestionNav && showScrollTop && (
