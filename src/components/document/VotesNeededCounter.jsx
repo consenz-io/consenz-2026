@@ -126,4 +126,6 @@ const VotesNeededCounter = React.memo(function VotesNeededCounter({ suggestion, 
       </Badge>
     </Link>
   );
-}
+});
+
+export default VotesNeededCounter;
