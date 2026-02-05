@@ -102,29 +102,30 @@ export default function NotificationBell({ user }) {
 
   const handleNotificationClick = async (notification) => {
     try {
-      // Mark as read first and WAIT for it
-      if (!notification.read) {
-        await markAsReadMutation.mutateAsync(notification.id);
-      }
-      
-      // Close the popover
+      // Close the popover immediately
       setOpen(false);
+      
+      // Mark as read (in background, don't wait)
+      if (!notification.read) {
+        markAsReadMutation.mutate(notification.id);
+      }
       
       // Navigate only if we have a valid actionUrl
       if (notification.actionUrl && typeof notification.actionUrl === 'string' && notification.actionUrl.length > 0) {
-        // Small delay to ensure popover closes
-        await new Promise(resolve => setTimeout(resolve, 150));
-        
-        try {
-          navigate(notification.actionUrl);
-        } catch (navError) {
-          console.error('[NAVIGATION ERROR] React Router failed:', navError);
-          // Fallback to window.location for external or problematic URLs
-          window.location.href = notification.actionUrl;
-        }
+        // Small delay to ensure popover closes smoothly
+        setTimeout(() => {
+          try {
+            navigate(notification.actionUrl);
+          } catch (navError) {
+            console.error('[NAVIGATION ERROR] React Router failed:', navError);
+            // Fallback to window.location for external or problematic URLs
+            window.location.href = notification.actionUrl;
+          }
+        }, 100);
       }
     } catch (error) {
       console.error('[NOTIFICATION CLICK ERROR]', error);
+      setOpen(false); // Ensure popover closes even on error
     }
   };
 
