@@ -414,27 +414,31 @@ export default function GroupView() {
                         <Link
                           key={doc.id}
                           to={`${createPageUrl("DocumentView")}?id=${doc.id}`}
-                          className={`block p-4 border rounded-lg hover:bg-slate-50 transition-colors ${unvotedCount > 0 ? 'ring-2 ring-orange-400' : ''}`}
+                          className={`block overflow-hidden border rounded-lg hover:bg-slate-50 transition-colors ${unvotedCount > 0 ? 'ring-2 ring-orange-400' : ''}`}
                         >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-slate-900">{doc.title}</h3>
-                              {doc.description && (
-                                <p className="text-sm text-slate-500 mt-1 line-clamp-2" 
-                                   dangerouslySetInnerHTML={{ __html: doc.description }} 
-                                />
-                              )}
+                          {unvotedCount > 0 && (
+                            <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3 py-1.5 text-xs font-medium flex items-center gap-2">
+                              <Bell className="w-3 h-3 animate-pulse" />
+                              <span>
+                                {language === 'he' 
+                                  ? `${unvotedCount} ${unvotedCount === 1 ? 'הצעה' : 'הצעות'} ממתינות להצבעתך`
+                                  : language === 'ar'
+                                  ? `${unvotedCount} اقتراح بانتظار تصويتك`
+                                  : `${unvotedCount} awaiting vote`}
+                              </span>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              {unvotedCount > 0 && (
-                                <div className="relative">
-                                  <Bell className="w-4 h-4 text-orange-500 animate-pulse" />
-                                  <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                                    {unvotedCount}
-                                  </span>
-                                </div>
-                              )}
-                              <div className="flex items-center gap-1 text-sm text-slate-600">
+                          )}
+                          <div className="p-4">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-slate-900">{doc.title}</h3>
+                                {doc.description && (
+                                  <p className="text-sm text-slate-500 mt-1 line-clamp-2" 
+                                     dangerouslySetInnerHTML={{ __html: doc.description }} 
+                                  />
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1 text-sm text-slate-600 shrink-0">
                                 <Users className="w-4 h-4" />
                                 <span>{participantsCount}</span>
                               </div>

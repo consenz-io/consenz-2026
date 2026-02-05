@@ -216,6 +216,18 @@ export default function MyDocuments() {
 
               return (
                 <Card key={doc.id} className={`bg-white/80 backdrop-blur-sm border-slate-200 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 h-full ${unvotedCount > 0 ? 'ring-2 ring-orange-400 ring-offset-2' : ''}`}>
+                  {unvotedCount > 0 && (
+                    <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 text-sm font-medium flex items-center gap-2">
+                      <Bell className="w-4 h-4 animate-pulse" />
+                      <span>
+                        {language === 'he' 
+                          ? `יש ${unvotedCount} ${unvotedCount === 1 ? 'הצעה' : 'הצעות'} שטרם הצבעת עליהן`
+                          : language === 'ar'
+                          ? `${unvotedCount} اقتراح لم تصوت عليه بعد`
+                          : `${unvotedCount} suggestion${unvotedCount > 1 ? 's' : ''} awaiting your vote`}
+                      </span>
+                    </div>
+                  )}
                   <CardHeader className="border-b border-slate-100">
                     <div className="flex items-start justify-between gap-2">
                       <Link to={`${createPageUrl("DocumentView")}?id=${doc.id}`} className="flex-1 cursor-pointer">
@@ -224,14 +236,6 @@ export default function MyDocuments() {
                         </CardTitle>
                       </Link>
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        {unvotedCount > 0 && (
-                          <div className="relative">
-                            <Bell className="w-5 h-5 text-orange-500 animate-pulse" aria-hidden="true" />
-                            <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                              {unvotedCount}
-                            </span>
-                          </div>
-                        )}
                         <Button
                           variant="ghost"
                           size="icon"
