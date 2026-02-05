@@ -46,9 +46,10 @@ export default function Home() {
   });
 
   const { data: user } = useQuery({
-    queryKey: ['currentUser'],
+    queryKey: queryKeys.currentUser,
     queryFn: () => base44.auth.me(),
     retry: false,
+    staleTime: QUERY_STALE_TIMES.CURRENT_USER,
   });
 
   const { data: acceptedSuggestions } = useQuery({

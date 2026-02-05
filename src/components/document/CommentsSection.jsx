@@ -424,17 +424,26 @@ export default function CommentsSection({ entityType, entityId, user }) {
 
   const createCommentMutation = useMutation({
     mutationFn: async (data) => {
-      const hebrewPattern = /[\u0590-\u05FF]/;
-      const arabicPattern = /[\u0600-\u06FF]/;
-      let detectedLanguage = 'en';
+      // Apply rate limiting
+      const createComment = rateLimitedAction(
+        async () => {
+          const hebrewPattern = /[\u0590-\u05FF]/;
+          const arabicPattern = /[\u0600-\u06FF]/;
+          let detectedLanguage = 'en';
+          
+          if (hebrewPattern.test(data.content)) detectedLanguage = 'he';
+          else if (arabicPattern.test(data.content)) detectedLanguage = 'ar';
+          
+          return await base44.entities.Comment.create({
+            ...data,
+            originalLanguage: detectedLanguage
+          });
+        },
+        `comment_${user?.id}`,
+        RATE_LIMITS.COMMENT
+      );
       
-      if (hebrewPattern.test(data.content)) detectedLanguage = 'he';
-      else if (arabicPattern.test(data.content)) detectedLanguage = 'ar';
-      
-      const comment = await base44.entities.Comment.create({
-        ...data,
-        originalLanguage: detectedLanguage
-      });
+      const comment = await createComment();
       
       // Ensure UserPublicProfile exists for display
       await ensureUserPublicProfile(user);
@@ -482,7 +491,9 @@ export default function CommentsSection({ entityType, entityId, user }) {
       if (context?.previousComments) {
         queryClient.setQueryData(['comments', entityType, entityId], context.previousComments);
       }
-      setError(err.message || "Failed to post comment");
+      const errorMsg = err.message || "Failed to post comment";
+      setError(errorMsg);
+      toast.error(errorMsg);
     },
   });
 

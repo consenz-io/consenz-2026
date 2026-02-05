@@ -4,6 +4,7 @@ import { ensureUserPublicProfile } from "@/components/ensureUserPublicProfile";
 import { toast } from "sonner";
 import { autoAcceptSuggestion } from "../suggestionAutoAccept";
 import React from "react";
+import { rateLimitedAction, RATE_LIMITS } from "@/components/utils/rateLimiter";
 
 /**
  * Custom hook for voting on suggestions
@@ -17,11 +18,21 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
     mutationFn: async ({ suggestionId, vote, currentVote }) => {
       if (!user) throw new Error("יש להתחבר כדי להצביע");
 
-      if (votingInProgressRef.current.has(suggestionId)) {
-        console.log('[VOTE] Already voting, ignoring');
-        throw new Error("ההצבעה בתהליך, אנא המתן");
-      }
-      votingInProgressRef.current.add(suggestionId);
+      // Rate limiting check
+      const rateLimitedVote = rateLimitedAction(
+        async () => {
+          if (votingInProgressRef.current.has(suggestionId)) {
+            console.log('[VOTE] Already voting, ignoring');
+            throw new Error("ההצבעה בתהליך, אנא המתן");
+          }
+          votingInProgressRef.current.add(suggestionId);
+          return true;
+        },
+        `vote_${user.id}`,
+        RATE_LIMITS.VOTE
+      );
+
+      await rateLimitedVote();
 
       try {
         const [freshVotes, freshSuggestions] = await Promise.all([
