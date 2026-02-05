@@ -138,21 +138,22 @@ export default function NotificationBell({ user }) {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className={`w-96 p-0 ${isRTL ? 'ml-4' : 'mr-4'}`} align={isRTL ? 'start' : 'end'}>
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-semibold">התראות</h3>
+      <PopoverContent className={`w-[95vw] max-w-md p-0 ${isRTL ? 'ml-2' : 'mr-2'}`} align={isRTL ? 'start' : 'end'}>
+        <div className="flex items-center justify-between p-3 md:p-4 border-b">
+          <h3 className="font-semibold text-sm md:text-base">התראות</h3>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => markAllAsReadMutation.mutate()}
               disabled={markAllAsReadMutation.isPending}
+              className="text-xs md:text-sm h-8"
             >
               סמן הכל כנקרא
             </Button>
           )}
         </div>
-        <div className="max-h-96 overflow-y-auto p-4">
+        <div className="max-h-[60vh] md:max-h-96 overflow-y-auto p-3 md:p-4">
           {notifications.length === 0 ? (
             <div className="p-8 text-center text-slate-500">
               <Bell className="w-12 h-12 mx-auto mb-2 opacity-30" />
