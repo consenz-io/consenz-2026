@@ -43,16 +43,8 @@ Deno.serve(async (req) => {
       return Response.json({ message: 'Voter is creator' }, { status: 200 });
     }
 
-    // שליחת התראה ליוצר ההצעה
-    await base44.asServiceRole.entities.Notification.create({
-      userId: creator.id,
-      type: 'vote_on_suggestion',
-      title: `הצבעה חדשה על ההצעה שלך`,
-      message: `${voterName} הצביע על ההצעה "${suggestion.title}"`,
-      relatedEntityId: suggestion.id,
-      relatedEntityType: 'suggestion',
-      actionUrl: `/suggestiondetail?id=${suggestion.id}`
-    });
+    // Vote notifications disabled
+    // await base44.asServiceRole.entities.Notification.create(...);
 
     // טיפול בנקודות אם gamification מופעל
     if (document.gamificationEnabled && vote.vote === 'pro') {

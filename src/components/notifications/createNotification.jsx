@@ -353,65 +353,11 @@ export async function createNotification({
 
 /**
  * Create notification for new vote on suggestion
+ * DISABLED - No vote notifications
  */
 export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName, currentUser = null }) {
-  try {
-    // Don't notify if voter is the suggestion creator
-    if (voterEmail === suggestion.created_by) {
-      console.log('[NOTIFY VOTE] Skipping - voter is creator');
-      return;
-    }
-    
-    // Validate required data
-    if (!suggestion?.id || !suggestion?.created_by || !voterEmail) {
-      console.error('[NOTIFY VOTE] Missing data:', { 
-        suggestionId: suggestion?.id, 
-        createdBy: suggestion?.created_by, 
-        voterEmail 
-      });
-      return;
-    }
-    
-    // Fetch suggestion creator
-    const creatorList = await base44.entities.User.filter({ email: suggestion.created_by });
-    if (!creatorList || creatorList.length === 0) {
-      console.error('[NOTIFY VOTE] Creator not found:', suggestion.created_by);
-      return;
-    }
-    
-    const creator = creatorList[0];
-    if (!creator.id) {
-      console.error('[NOTIFY VOTE] Creator missing ID');
-      return;
-    }
-    
-    // Get voter name
-    const displayName = voterName || (voterEmail ? voterEmail.split('@')[0] : 'Someone');
-    const userLang = creator.preferredLanguage || 'he';
-    
-    // Get document for context
-    const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
-    const doc = docs[0];
-    
-    await createNotification({
-      userId: creator.id,
-      type: 'vote_on_suggestion',
-      title: translate('notifVoteTitle', userLang),
-      message: translate('notifVoteMessage', userLang, { 
-        name: displayName, 
-        title: suggestion.title || 'הצעה' 
-      }),
-      relatedEntityId: suggestion.id,
-      relatedEntityType: 'suggestion',
-      actionUrl: `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${suggestion.id}`,
-      documentId: suggestion.documentId,
-      documentTitle: doc?.title
-    });
-    
-    console.log('[NOTIFY VOTE] ✓ Sent to:', creator.email);
-  } catch (error) {
-    console.error('[NOTIFY VOTE] Error:', error?.message || error);
-  }
+  // Vote notifications are disabled
+  return;
 }
 
 /**
