@@ -67,6 +67,7 @@ import Profile from './pages/Profile';
 import SectionHistory from './pages/SectionHistory';
 import UnderstandingConsensus from './pages/UnderstandingConsensus';
 import suggestiondetail from './pages/suggestiondetail';
+import LoadTesting from './pages/LoadTesting';
 import __Layout from './Layout.jsx';
 
 
@@ -91,6 +92,7 @@ export const PAGES = {
     "SectionHistory": SectionHistory,
     "UnderstandingConsensus": UnderstandingConsensus,
     "suggestiondetail": suggestiondetail,
+    "LoadTesting": LoadTesting,
 }
 
 export const pagesConfig = {

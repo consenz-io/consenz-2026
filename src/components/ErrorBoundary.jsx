@@ -1,122 +1,133 @@
 import React from 'react';
-import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import { createPageUrl } from '@/utils';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { 
       hasError: false, 
-      error: null, 
+      error: null,
       errorInfo: null,
-      errorCount: 0
+      errorCount: 0,
     };
   }
 
   static getDerivedStateFromError(error) {
-    return { hasError: true };
+    return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
-    const errorCount = this.state.errorCount + 1;
-    
     // Log error details
-    console.error('🔴 [ERROR BOUNDARY] Caught error:', {
-      error: error?.message || error,
-      stack: error?.stack,
-      componentStack: errorInfo?.componentStack,
+    console.error('[ERROR BOUNDARY]', {
+      error: error.toString(),
+      componentStack: errorInfo.componentStack,
       timestamp: new Date().toISOString(),
-      errorCount
     });
 
-    // Update state with error details
-    this.setState({
-      error,
+    this.setState(prev => ({
       errorInfo,
-      errorCount
-    });
+      errorCount: prev.errorCount + 1,
+    }));
 
-    // Send to monitoring service (if available)
-    if (typeof window !== 'undefined' && window.trackError) {
-      window.trackError({
-        message: error?.message,
-        stack: error?.stack,
-        componentStack: errorInfo?.componentStack
-      });
+    // Report to monitoring service (if configured)
+    if (window.reportError) {
+      window.reportError(error, errorInfo);
     }
   }
 
   handleReset = () => {
-    this.setState({
-      hasError: false,
-      error: null,
-      errorInfo: null
+    this.setState({ 
+      hasError: false, 
+      error: null, 
+      errorInfo: null 
     });
+  };
+
+  handleReload = () => {
+    window.location.reload();
+  };
+
+  handleGoHome = () => {
+    window.location.href = createPageUrl('Home');
   };
 
   render() {
     if (this.state.hasError) {
-      const isDev = process.env.NODE_ENV === 'development';
+      // Show different UI based on error count
+      const isCritical = this.state.errorCount > 2;
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50 p-6">
-          <div className="max-w-2xl w-full">
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-5 w-5" />
-              <AlertTitle className="text-lg font-semibold">משהו השתבש</AlertTitle>
-              <AlertDescription className="mt-2">
-                <p className="mb-4">
-                  אירעה שגיאה בלתי צפויה באפליקציה. אנחנו מתנצלים על אי הנוחות.
-                </p>
-                
-                {isDev && this.state.error && (
-                  <div className="mt-4 p-4 bg-gray-900 text-white rounded-lg overflow-auto max-h-60 text-sm font-mono">
-                    <div className="font-bold mb-2">שגיאה:</div>
-                    <div className="mb-3">{this.state.error.toString()}</div>
-                    
-                    {this.state.error.stack && (
-                      <>
-                        <div className="font-bold mb-2 mt-4">Stack Trace:</div>
-                        <pre className="whitespace-pre-wrap text-xs">
-                          {this.state.error.stack}
-                        </pre>
-                      </>
-                    )}
-                    
-                    {this.state.errorInfo?.componentStack && (
-                      <>
-                        <div className="font-bold mb-2 mt-4">Component Stack:</div>
-                        <pre className="whitespace-pre-wrap text-xs">
-                          {this.state.errorInfo.componentStack}
-                        </pre>
-                      </>
-                    )}
-                  </div>
-                )}
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 p-4">
+          <Card className="max-w-2xl w-full shadow-xl">
+            <CardHeader className={isCritical ? 'bg-red-50' : 'bg-amber-50'}>
+              <CardTitle className="flex items-center gap-3">
+                <AlertTriangle className={`w-6 h-6 ${isCritical ? 'text-red-600' : 'text-amber-600'}`} />
+                <span className={isCritical ? 'text-red-900' : 'text-amber-900'}>
+                  {isCritical ? 'שגיאה קריטית' : 'משהו השתבש'}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 p-6">
+              <p className="text-slate-700">
+                {isCritical 
+                  ? 'המערכת נתקלה בשגיאה חוזרת. אנא רענן את הדף או חזור לדף הבית.'
+                  : 'התרחשה שגיאה בלתי צפויה. אתה יכול לנסות שוב או לחזור לדף הבית.'}
+              </p>
 
-                <div className="flex gap-3 mt-6">
-                  <Button onClick={this.handleReset} className="gap-2">
-                    <RefreshCw className="w-4 h-4" />
+              {!isCritical && this.state.error && (
+                <details className="bg-slate-100 p-4 rounded-lg text-xs">
+                  <summary className="cursor-pointer font-medium text-slate-700 mb-2">
+                    פרטי שגיאה טכניים
+                  </summary>
+                  <pre className="text-red-600 overflow-auto">
+                    {this.state.error.toString()}
+                  </pre>
+                  {this.state.errorInfo && (
+                    <pre className="text-slate-600 mt-2 overflow-auto">
+                      {this.state.errorInfo.componentStack}
+                    </pre>
+                  )}
+                </details>
+              )}
+
+              <div className="flex gap-3 pt-4">
+                {!isCritical && (
+                  <Button
+                    onClick={this.handleReset}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
                     נסה שוב
                   </Button>
-                  
-                  <Button
-                    variant="outline"
-                    onClick={() => window.location.href = '/'}
-                  >
-                    חזור לדף הבית
-                  </Button>
-                </div>
-
-                {this.state.errorCount > 2 && (
-                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
-                    ⚠️ השגיאה חוזרת על עצמה. אנא נסה לרענן את הדף או לחזור מאוחר יותר.
-                  </div>
                 )}
-              </AlertDescription>
-            </Alert>
-          </div>
+                <Button
+                  onClick={this.handleReload}
+                  variant={isCritical ? 'default' : 'outline'}
+                  className="flex-1"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  רענן דף
+                </Button>
+                <Button
+                  onClick={this.handleGoHome}
+                  className="flex-1"
+                >
+                  <Home className="w-4 h-4 mr-2" />
+                  חזור לבית
+                </Button>
+              </div>
+
+              {this.state.errorCount > 1 && (
+                <p className="text-xs text-slate-500 text-center pt-2">
+                  שגיאה זו התרחשה {this.state.errorCount} פעמים
+                </p>
+              )}
+            </CardContent>
+          </Card>
         </div>
       );
     }
