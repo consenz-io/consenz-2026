@@ -38,7 +38,8 @@ function LayoutContent({ children, currentPageName }) {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     retry: false,
-    staleTime: 0,
+    staleTime: 0, // Always fresh for auth
+    cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
   const { data: userSuggestions = [] } = useQuery({
