@@ -177,10 +177,11 @@ export default function Profile() {
       return data;
     },
     onSuccess: async (data) => {
-      // Force refetch all user data
-      await queryClient.refetchQueries({ queryKey: ['currentUser'] });
-      await queryClient.refetchQueries({ queryKey: ['viewUser', viewUserId] });
-      await queryClient.refetchQueries({ queryKey: ['publicProfiles'] });
+      // Invalidate all relevant user data queries to force refetch
+      await queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      await queryClient.invalidateQueries({ queryKey: ['viewUser'] });
+      await queryClient.invalidateQueries({ queryKey: ['viewUserProfile'] });
+      await queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
       
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
