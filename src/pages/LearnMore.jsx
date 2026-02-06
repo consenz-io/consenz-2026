@@ -394,7 +394,7 @@ export default function LearnMore() {
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-start">
+                  <div className="text-right flex-1">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Create Document", "פרסום מסמך", "نشر وثيقة")}
                     </p>
@@ -402,7 +402,7 @@ export default function LearnMore() {
                       {getLocalizedText("Cost to publish a new document", "עלות פרסום מסמך חדש", "تكلفة نشر وثيقة جديدة")}
                     </p>
                   </div>
-                  <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap">-1001</Badge>
+                  <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0">1001-</Badge>
                 </div>
                 
                 <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
