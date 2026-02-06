@@ -388,7 +388,6 @@ export default function LearnMore() {
           <Card className="bg-white/80 backdrop-blur-sm border-red-200">
             <CardHeader className="bg-gradient-to-br from-red-50 to-orange-50">
               <CardTitle className={`text-xl flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <ThumbsDown className="w-6 h-6 text-red-600" />
                 {getLocalizedText("Costs", "עלויות", "التكاليف")}
               </CardTitle>
             </CardHeader>
