@@ -217,16 +217,18 @@ export default function MyDocuments() {
               return (
                 <Card key={doc.id} className={`bg-white/80 backdrop-blur-sm border-slate-200 hover:shadow-xl hover:scale-[1.02] transition-all duration-300 h-full ${unvotedCount > 0 ? 'ring-2 ring-orange-400 ring-offset-2' : ''}`}>
                   {unvotedCount > 0 && (
-                    <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 text-sm font-medium flex items-center gap-2">
-                      <Bell className="w-4 h-4 animate-pulse" />
-                      <span>
-                        {language === 'he' 
-                          ? `יש ${unvotedCount} ${unvotedCount === 1 ? 'הצעה' : 'הצעות'} שטרם הצבעת עליהן`
-                          : language === 'ar'
-                          ? `${unvotedCount} اقتراح لم تصوت عليه بعد`
-                          : `${unvotedCount} suggestion${unvotedCount > 1 ? 's' : ''} awaiting your vote`}
-                      </span>
-                    </div>
+                    <Link to={`${createPageUrl("DocumentView")}?id=${doc.id}`}>
+                      <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-4 py-2 text-sm font-medium flex items-center gap-2 hover:from-orange-600 hover:to-amber-600 transition-colors cursor-pointer">
+                        <Bell className="w-4 h-4 animate-pulse" />
+                        <span>
+                          {language === 'he' 
+                            ? `יש ${unvotedCount} ${unvotedCount === 1 ? 'הצעה' : 'הצעות'} שטרם הצבעת עליהן`
+                            : language === 'ar'
+                            ? `${unvotedCount} اقتراح لم تصوت عليه بعد`
+                            : `${unvotedCount} suggestion${unvotedCount > 1 ? 's' : ''} awaiting your vote`}
+                        </span>
+                      </div>
+                    </Link>
                   )}
                   <CardHeader className="border-b border-slate-100">
                     <div className="flex items-start justify-between gap-2">
