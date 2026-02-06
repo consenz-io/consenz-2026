@@ -87,7 +87,8 @@ Deno.serve(async (req) => {
         notificationMessage = `${commenterName} הגיב על הסעיף שלך`;
       }
 
-      actionUrl = `/document-view?id=${section.documentId}#section-${section.id}-comment-${comment.id}`;
+      const document = await base44.asServiceRole.entities.Document.filter({ id: section.documentId }).then(d => d[0]);
+      actionUrl = `/document-view?id=${section.documentId}#section-${section.id}`;
     }
 
     // יצירת התראות
