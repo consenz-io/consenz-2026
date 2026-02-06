@@ -159,9 +159,9 @@ export default function FloatingPointsBadge() {
             </div>
           )}
 
-          {!isLoadingTransactions && newPointsTransactions.length === 0 && !hasNewPoints && (
+          {!isLoadingTransactions && newPointsTransactions.length === 0 && pointsTransactions.length === 0 && (
             <p className="text-slate-500 text-sm text-center py-4">
-              {language === 'he' ? 'אין נקודות חדשות' : language === 'ar' ? 'لا توجد نقاط جديدة' : 'No new points'}
+              {language === 'he' ? 'אין עדיין אירועים' : language === 'ar' ? 'لا توجد أحداث بعد' : 'No events yet'}
             </p>
           )}
 
