@@ -558,7 +558,7 @@ function LayoutContent({ children, currentPageName }) {
           tabIndex={-1}
           role="main"
           aria-label={isRTL ? 'תוכן ראשי' : 'Main content'}
-          style={{ '--sidebar-width': '16rem' } as React.CSSProperties}
+          style={{ '--sidebar-width': '16rem' }}
         >
           <header className={`bg-white/80 backdrop-blur-sm border-b border-slate-200 ${user && totalUnvotedSuggestions > 0 ? 'fixed' : 'sticky'} top-0 z-30 w-full ${user && totalUnvotedSuggestions > 0 ? 'shadow-md' : ''}`} role="banner" style={user && totalUnvotedSuggestions > 0 ? { [isRTL ? 'paddingRight' : 'paddingLeft']: 'var(--sidebar-width, 0px)' } : {}}>
             <div className={`flex items-center ${user && totalUnvotedSuggestions > 0 ? 'justify-center' : 'justify-between'} gap-2 px-2 md:px-6 ${user && totalUnvotedSuggestions > 0 ? 'py-3 md:py-5' : 'py-2 md:py-4'}`}>
