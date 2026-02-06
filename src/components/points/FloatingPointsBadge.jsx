@@ -134,12 +134,22 @@ export default function FloatingPointsBadge() {
       >
         <div className="space-y-3">
           <div className="flex items-center justify-between border-b pb-2">
-            <h3 className="font-semibold text-slate-900">
-              {hasNewPoints 
-                ? (language === 'he' ? 'נקודות חדשות' : language === 'ar' ? 'نقاط جديدة' : 'New Points')
-                : (language === 'he' ? 'הנקודות שלך' : language === 'ar' ? 'نقاطك' : 'Your Points')
-              }
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-slate-900">
+                {hasNewPoints 
+                  ? (language === 'he' ? 'נקודות חדשות' : language === 'ar' ? 'نقاط جديدة' : 'New Points')
+                  : (language === 'he' ? 'הנקודות שלך' : language === 'ar' ? 'نقاطك' : 'Your Points')
+                }
+              </h3>
+              <a 
+                href={createPageUrl('LearnMore') + '#gamification'}
+                className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {language === 'he' ? '?' : '?'}
+              </a>
+            </div>
             <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-lg font-bold">
               {currentPoints}
             </Badge>
