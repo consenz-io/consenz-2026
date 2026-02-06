@@ -442,14 +442,14 @@ export default function LearnMore() {
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div className={`flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-start">
-                    <p className="font-semibold text-slate-900">
-                      {getLocalizedText("Receive Pro Vote", "קבלת הצבעה בעד", "تلقي تصويت مع")}
-                    </p>
-                    <p className="text-sm text-slate-600">
-                      {getLocalizedText("Each pro vote on your suggestion", "כל הצבעה בעד על ההצעה שלך", "كل تصويت مع على مقترحك")}
-                    </p>
-                  </div>
+                   <div className="text-end">
+                     <p className="font-semibold text-slate-900">
+                       {getLocalizedText("Receive Pro Vote", "קבלת הצבעה בעד", "تلقي تصويت مع")}
+                     </p>
+                     <p className="text-sm text-slate-600">
+                       {getLocalizedText("Each pro vote on your suggestion", "כל הצבעה בעד על ההצעה שלך", "كل تصويت مع على مقترحك")}
+                     </p>
+                   </div>
                   <Badge className="bg-green-600 text-white text-lg px-4 py-2 whitespace-nowrap">+10</Badge>
                 </div>
 
