@@ -83,6 +83,7 @@ Deno.serve(async (req) => {
       base44.entities.PointsTransaction.create({
         userId: creatorId,
         amount: pointsAmount,
+        balanceAfter: newPoints,
         action,
         description,
         relatedEntityId: suggestionId,
