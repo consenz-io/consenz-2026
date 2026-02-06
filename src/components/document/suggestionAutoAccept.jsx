@@ -26,25 +26,8 @@ export async function checkSuggestionConsensus(suggestion, document) {
   const proVotes = suggestion.proVotes || 0;
   const conVotes = suggestion.conVotes || 0;
   
-  // חישוב דינמי של מספר המשתתפים
-  const [suggestions, allVotes, publicProfiles, allArguments, allComments, sections] = await Promise.all([
-    base44.entities.Suggestion.filter({ documentId: document.id }),
-    base44.entities.Vote.list(),
-    base44.entities.UserPublicProfile.list(),
-    base44.entities.Argument.list(),
-    base44.entities.Comment.list(),
-    base44.entities.Section.filter({ documentId: document.id })
-  ]);
-  
-  const totalUsers = calculateContributorsFromData({
-    document,
-    suggestions,
-    allVotes,
-    allUsers: publicProfiles,
-    allArguments,
-    allComments,
-    sections
-  }) || 1;
+  // שימוש במספר המשתתפים ששמור במסמך
+  const totalUsers = document.totalUsersInteracted || 1;
   
   console.log('[CONSENSUS CHECK] Vote counts:');
   console.log('[CONSENSUS CHECK] - Pro votes:', proVotes);
@@ -160,27 +143,10 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
   console.log('[AUTO-ACCEPT] ✅ Threshold met! Proceeding with auto-acceptance...');
   console.log('[AUTO-ACCEPT] - Consensus (delta):', consensus);
   
-  // חישוב דינמי של מספר המשתתפים
-  const [allSuggestions, allVotes, publicProfiles, allArguments, allComments, allSections] = await Promise.all([
-    base44.entities.Suggestion.filter({ documentId: document.id }),
-    base44.entities.Vote.list(),
-    base44.entities.UserPublicProfile.list(),
-    base44.entities.Argument.list(),
-    base44.entities.Comment.list(),
-    base44.entities.Section.filter({ documentId: document.id })
-  ]);
+  // שימוש במספר המשתתפים ששמור במסמך במקום לחשב מחדש
+  const totalUsers = document.totalUsersInteracted || 1;
   
-  const totalUsers = calculateContributorsFromData({
-    document,
-    suggestions: allSuggestions,
-    allVotes,
-    allUsers: publicProfiles,
-    allArguments,
-    allComments,
-    sections: allSections
-  }) || 1;
-  
-  console.log('[AUTO-ACCEPT] Calculated totalUsers:', totalUsers);
+  console.log('[AUTO-ACCEPT] Using cached totalUsers from document:', totalUsers);
   
   // עדכון מד הקונצנזוס עבור כל סוגי ההצעות (edit_section, new_section, delete_section)
   // כל הצעה שמתקבלת משפיעה על מד הקונצנזוס ועל רף התמיכה הדרוש
@@ -1031,25 +997,8 @@ export async function checkTopicEditConsensus(suggestion, document) {
   const proVotes = suggestion.proVotes || 0;
   const conVotes = suggestion.conVotes || 0;
   
-  // חישוב דינמי של מספר המשתתפים
-  const [suggestions, allVotes, publicProfiles, allArguments, allComments, sections] = await Promise.all([
-    base44.entities.Suggestion.filter({ documentId: document.id }),
-    base44.entities.Vote.list(),
-    base44.entities.UserPublicProfile.list(),
-    base44.entities.Argument.list(),
-    base44.entities.Comment.list(),
-    base44.entities.Section.filter({ documentId: document.id })
-  ]);
-  
-  const totalUsers = calculateContributorsFromData({
-    document,
-    suggestions,
-    allVotes,
-    allUsers: publicProfiles,
-    allArguments,
-    allComments,
-    sections
-  }) || 1;
+  // שימוש במספר המשתתפים ששמור במסמך
+  const totalUsers = document.totalUsersInteracted || 1;
   
   // חישוב threshold דינמי על בסיס consensuses של המסמך - זהה לחישוב של הצעות סעיפים
   let threshold;
