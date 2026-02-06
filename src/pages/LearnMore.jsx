@@ -763,12 +763,10 @@ export default function LearnMore() {
                   </p>
                   <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <ThumbsUp className="w-4 h-4 text-green-600" />
-                      <span className="font-bold">5</span>
+                      <span className="font-bold text-green-600">+5</span>
                     </div>
                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <ThumbsDown className="w-4 h-4 text-red-600" />
-                      <span className="font-bold">1</span>
+                      <span className="font-bold text-red-600">-1</span>
                     </div>
                     <span className="text-sm text-slate-600">
                       {getLocalizedText("Delta: 4", "דלתא: 4", "دلتا: 4")}
