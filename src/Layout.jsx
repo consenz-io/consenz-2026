@@ -560,8 +560,8 @@ function LayoutContent({ children, currentPageName }) {
           aria-label={isRTL ? 'תוכן ראשי' : 'Main content'}
         >
           <header className={`bg-white/80 backdrop-blur-sm border-b border-slate-200 ${user && totalUnvotedSuggestions > 0 ? 'fixed' : 'sticky'} top-0 z-30 w-full ${user && totalUnvotedSuggestions > 0 ? 'shadow-md' : ''}`} role="banner">
-            <div className={`flex items-center ${user && totalUnvotedSuggestions > 0 ? 'justify-center' : 'justify-between'} gap-2 px-2 md:px-6 ${user && totalUnvotedSuggestions > 0 ? 'py-3 md:py-5' : 'py-2 md:py-4'}`}>
-              <div className={`flex items-center gap-2 md:gap-4 ${user && totalUnvotedSuggestions > 0 ? 'absolute left-2 md:left-6' : ''}`}>
+            <div className={`flex items-center ${user && totalUnvotedSuggestions > 0 ? 'justify-center' : 'justify-between'} gap-2 px-2 md:px-6 ${user && totalUnvotedSuggestions > 0 ? 'py-3 md:py-5' : 'py-2 md:py-4'} ${user && totalUnvotedSuggestions > 0 ? (isRTL ? 'md:pr-72' : 'md:pl-72') : ''}`}>
+              <div className={`flex items-center gap-2 md:gap-4 ${user && totalUnvotedSuggestions > 0 ? (isRTL ? 'absolute right-2 md:right-6' : 'absolute left-2 md:left-6') : ''}`}>
                 <SidebarTrigger 
                   className="md:hidden hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200 touch-manipulation"
                   aria-label={isRTL ? 'פתיחת תפריט ניווט' : 'Open navigation menu'}
@@ -573,7 +573,7 @@ function LayoutContent({ children, currentPageName }) {
               {user && totalUnvotedSuggestions > 0 && (
                 <Link 
                   to={createPageUrl("MyDocuments")} 
-                  className="w-full max-w-2xl mx-auto px-4 md:px-0"
+                  className="w-full max-w-xl mx-auto px-2 md:px-4"
                 >
                   <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 bg-orange-50 border-2 border-orange-300 rounded-lg hover:bg-orange-100 transition-all shadow-lg hover:shadow-xl cursor-pointer">
                     <div className="w-7 h-7 md:w-8 md:h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm md:text-base font-bold animate-pulse flex-shrink-0">
