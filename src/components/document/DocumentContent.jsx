@@ -1225,6 +1225,7 @@ Return ONLY the translated text:`;
                                   onEditSuggestion={onEditSuggestion}
                                   allDocumentSuggestions={suggestions}
                                   isAutoAccepting={!!autoAcceptingIds[suggestion.id]}
+                                  targetSuggestionId={targetSuggestionId}
                                 />
                               ))}
 
@@ -1314,22 +1315,23 @@ Return ONLY the translated text:`;
                                     })
                                     .map((suggestion) => (
                                       <NewSectionSuggestionCard
-                                        key={suggestion.id}
-                                        suggestion={suggestion}
-                                        document={document}
-                                        getUserName={getUserName}
-                                        acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
-                                        user={user}
-                                        getUserVote={getUserVote}
-                                        voteMutation={voteMutation}
-                                        onOpenSidebar={onOpenSuggestionSidebar}
-                                        getCommentsCount={getCommentsCount}
-                                        toggleComments={toggleComments}
-                                        showComments={showComments}
-                                        isAdmin={isAdmin}
-                                        onEditSuggestion={onEditSuggestion}
-                                        allDocumentSuggestions={suggestions}
-                                      />
+                                                      key={suggestion.id}
+                                                      suggestion={suggestion}
+                                                      document={document}
+                                                      getUserName={getUserName}
+                                                      acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                                                      user={user}
+                                                      getUserVote={getUserVote}
+                                                      voteMutation={voteMutation}
+                                                      onOpenSidebar={onOpenSuggestionSidebar}
+                                                      getCommentsCount={getCommentsCount}
+                                                      toggleComments={toggleComments}
+                                                      showComments={showComments}
+                                                      isAdmin={isAdmin}
+                                                      onEditSuggestion={onEditSuggestion}
+                                                      allDocumentSuggestions={suggestions}
+                                                      targetSuggestionId={targetSuggestionId}
+                                                    />
                                     ))}
                               </>
                             )}
@@ -1418,6 +1420,7 @@ Return ONLY the translated text:`;
                               onEditSuggestion={onEditSuggestion}
                               allDocumentSuggestions={suggestions}
                               isAutoAccepting={!!autoAcceptingIds[suggestion.id]}
+                              targetSuggestionId={targetSuggestionId}
                             />
                             </CardContent>
                             </Card>
@@ -1471,6 +1474,7 @@ Return ONLY the translated text:`;
                                 onEditSuggestion={onEditSuggestion}
                                 allDocumentSuggestions={suggestions}
                                 isAutoAccepting={!!autoAcceptingIds[suggestion.id]}
+                                targetSuggestionId={targetSuggestionId}
                               />
                             </CardContent>
                             </Card>

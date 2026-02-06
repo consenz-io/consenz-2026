@@ -26,12 +26,13 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   isAdmin,
   onEditSuggestion,
   allDocumentSuggestions,
-  isAutoAccepting = false
+  isAutoAccepting = false,
+  targetSuggestionId
 }) {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
   const queryClient = useQueryClient();
-  const [currentVersionId, setCurrentVersionId] = React.useState(suggestion.id);
+  const [currentVersionId, setCurrentVersionId] = React.useState('latest');
 
   const deleteSuggestionMutation = useMutation({
     mutationFn: async () => {
@@ -95,22 +96,48 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
     return filtered;
   }, [suggestion, allDocumentSuggestions]);
 
-  const currentVersionIndex = React.useMemo(() => {
-    return suggestionChain.findIndex(s => s.id === currentVersionId);
-  }, [suggestionChain, currentVersionId]);
+  // Build all views: original + versions (circular navigation)
+  const allViews = React.useMemo(() => {
+    return [
+      { type: 'original', data: suggestionChain[0], id: suggestionChain[0]?.id || suggestion.id },
+      ...suggestionChain.slice(1).map(s => ({ type: 'version', data: s, id: s.id }))
+    ];
+  }, [suggestionChain, suggestion]);
 
-  const currentVersion = suggestionChain[currentVersionIndex] || suggestion;
+  const currentViewIndex = React.useMemo(() => {
+    if (currentVersionId === 'latest') {
+      return allViews.length - 1;
+    }
+    if (currentVersionId === 'original') {
+      return 0;
+    }
+    const idx = allViews.findIndex(v => v.id === currentVersionId);
+    return idx >= 0 ? idx : allViews.length - 1;
+  }, [currentVersionId, allViews]);
 
-  // Auto-navigate to newest version when chain updates
+  const currentView = allViews[currentViewIndex] || allViews[0];
+  const currentVersion = currentView?.data || suggestion;
+
+  // Auto-navigate to newest version when chain updates (only on mount)
+  const hasInitializedRef = React.useRef(false);
   React.useEffect(() => {
-    if (suggestionChain.length > 1) {
-      const newestVersion = suggestionChain[suggestionChain.length - 1];
-      if (newestVersion && newestVersion.id !== currentVersionId) {
-        console.log('[NEW SECTION CARD] Auto-navigating to newest version:', newestVersion.id);
-        setCurrentVersionId(newestVersion.id);
-      }
+    if (!hasInitializedRef.current && suggestionChain.length > 0) {
+      hasInitializedRef.current = true;
+      setCurrentVersionId('latest');
     }
   }, [suggestionChain.length]);
+
+  // Navigate when targetSuggestionId changes (from floating nav buttons)
+  React.useEffect(() => {
+    if (targetSuggestionId) {
+      // Check if this suggestion or any of its versions is the target
+      const isTarget = suggestionChain.some(s => s.id === targetSuggestionId);
+      if (isTarget) {
+        console.log('[NEW SECTION CARD] Navigating to target suggestion:', targetSuggestionId);
+        setCurrentVersionId('latest');
+      }
+    }
+  }, [targetSuggestionId, suggestionChain]);
 
   // Truncate content for preview
   const getContentPreview = (html) => {
@@ -175,13 +202,17 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   }
 
   const handlePrev = () => {
-    if (currentVersionIndex <= 0) return;
-    setCurrentVersionId(suggestionChain[currentVersionIndex - 1].id);
+    if (!allViews || allViews.length === 0) return;
+    const prevIndex = (currentViewIndex - 1 + allViews.length) % allViews.length;
+    const prevView = allViews[prevIndex];
+    setCurrentVersionId(prevView.type === 'original' ? 'original' : prevView.id);
   };
 
   const handleNext = () => {
-    if (currentVersionIndex >= suggestionChain.length - 1) return;
-    setCurrentVersionId(suggestionChain[currentVersionIndex + 1].id);
+    if (!allViews || allViews.length === 0) return;
+    const nextIndex = (currentViewIndex + 1) % allViews.length;
+    const nextView = allViews[nextIndex];
+    setCurrentVersionId(nextView.type === 'original' ? 'original' : nextView.id);
   };
 
   // שלב החגיגה - מסגרת ירוקה ואייקון (3 שניות)
@@ -308,43 +339,46 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
 
   return (
     <div 
-      id={`suggestion-${currentVersion.id}`}
+      id={`suggestion-${suggestion.id}`}
       className={`group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 ${
         isAutoAccepting 
           ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50 ring-2 ring-blue-300 ring-offset-1' 
-          : 'border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50'
+          : currentView.type === 'original'
+            ? 'border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50'
+            : 'border-blue-300 hover:border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50'
       }`}
     >
-      {/* כפתורי דפדוף בין גרסאות - מוצג ראשון אם יש יותר מגרסה אחת */}
-      {suggestionChain.length > 1 && (
+      {/* כפתורי דפדוף בין גרסאות - מעגלי כמו SectionCarousel */}
+      {allViews.length > 1 && (
         <div className="flex items-center justify-between mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm border-amber-400 bg-gradient-to-r from-amber-100 to-orange-100">
           <Button
             variant="outline"
             size="sm"
             onClick={handlePrev}
-            disabled={currentVersionIndex <= 0}
             className="flex items-center bg-white"
           >
             {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </Button>
 
           <div className="text-center">
-            <div className="text-xs text-slate-600 mb-1">
-              גרסה {currentVersionIndex + 1} / {suggestionChain.length}
-            </div>
-            <div className="text-sm font-bold text-blue-700">
-              {currentVersionIndex === 0 
-                ? (isRTL ? 'גרסה מקורית' : 'Original Version')
-                : `${isRTL ? 'עריכה מאת' : 'Edit by'} ${getUserName(currentVersion.created_by)}`
-              }
-            </div>
+            {currentView.type === 'original' ? (
+              <p className="text-sm">
+                <span className="font-bold text-amber-700 text-lg">{allViews.length - 1}</span> <span className="font-bold text-slate-800">{isRTL ? 'הצעות עריכה' : 'Edit Suggestions'}</span>
+              </p>
+            ) : (
+              <button 
+                onClick={() => setCurrentVersionId('original')}
+                className="text-sm font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer transition-colors"
+              >
+                {`${isRTL ? 'עריכה מאת' : 'Edit by'} ${getUserName(currentVersion.created_by)}`}
+              </button>
+            )}
           </div>
 
           <Button
             variant="outline"
             size="sm"
             onClick={handleNext}
-            disabled={currentVersionIndex >= suggestionChain.length - 1}
             className="flex items-center bg-white"
           >
             {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -352,18 +386,27 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
         </div>
       )}
 
-      {/* כותרת עם אינדיקטור של הצעה חדשה */}
+      {/* כותרת עם אינדיקטור של הצעה חדשה או גרסה */}
       <div className="flex items-center justify-between mb-3 md:mb-4">
         <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
           {isAutoAccepting ? (
             <Loader2 className="w-5 h-5 md:w-6 md:h-6 animate-spin text-blue-600 flex-shrink-0" />
-          ) : (
+          ) : currentView.type === 'original' ? (
             <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
               <Plus className="w-5 h-5 text-white" />
             </div>
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+              <Edit2 className="w-5 h-5 text-white" />
+            </div>
           )}
           <div className="text-sm md:text-base font-semibold text-slate-900 break-words">
-            {isAutoAccepting ? 'מעבד הצעה...' : `הצעה לסעיף חדש מאת ${getUserName(currentVersion.created_by)}`}
+            {isAutoAccepting 
+              ? 'מעבד הצעה...' 
+              : currentView.type === 'original'
+                ? `הצעה לסעיף חדש מאת ${getUserName(currentVersion.created_by)}`
+                : `${isRTL ? 'עריכה מאת' : 'Edit by'} ${getUserName(currentVersion.created_by)}`
+            }
           </div>
         </div>
       </div>
