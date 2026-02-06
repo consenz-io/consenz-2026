@@ -419,11 +419,11 @@ export default function LearnMore() {
                 </div>
                 
                 <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-start">
-                    <p className="font-semibold text-slate-900">
-                      {getLocalizedText("New Section Suggestion", "הצעה לסעיף חדש", "اقتراح قسم جديد")}
+                  <div className="text-right flex-1">
+                    <p className="font-semibold text-slate-900 text-right">
+                      {getLocalizedText("New Section Suggestion", "הצעה לסעיף חדש", "اقتراح قسם جديד")}
                     </p>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-slate-600 text-right">
                       {getLocalizedText("Cost to suggest adding new section", "עלות להצעת הוספת סעיף חדש", "تكلفة اقتراح إضافة قسم جديد")}
                     </p>
                   </div>
