@@ -406,14 +406,14 @@ export default function LearnMore() {
                 </div>
                 
                 <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-start">
-                    <p className="font-semibold text-slate-900">
-                      {getLocalizedText("Edit Section Suggestion", "הצעה לעריכת סעיף", "اقتراح تعديل قسم")}
-                    </p>
-                    <p className="text-sm text-slate-600">
-                      {getLocalizedText("Cost to suggest editing existing section", "עלות להצעת עריכה לסעיף קיים", "تكلفة اقتراح تعديل قسم موجود")}
-                    </p>
-                  </div>
+                   <div className="text-end">
+                     <p className="font-semibold text-slate-900">
+                       {getLocalizedText("Edit Section Suggestion", "הצעה לעריכת סעיף", "اقتراح تعديل قسم")}
+                     </p>
+                     <p className="text-sm text-slate-600">
+                       {getLocalizedText("Cost to suggest editing existing section", "עלות להצעת עריכה לסעיף קיים", "تكلفة اقتراح تعديل قסم موجود")}
+                     </p>
+                   </div>
                   <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap">-200</Badge>
                 </div>
                 
