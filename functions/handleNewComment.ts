@@ -87,10 +87,7 @@ Deno.serve(async (req) => {
         notificationMessage = `${commenterName} הגיב על הסעיף שלך`;
       }
 
-      const document = await base44.asServiceRole.entities.Document.filter({ id: section.documentId }).then(d => d[0]);
-      // תוצאות תגובות על סעיפים גם הן אמורות להוביל לעמוד ההצעה עם anchor hash, לא לעמוד המסמך
-      // כי אנחנו מציגים תגובות בדף ההצעה
-      actionUrl = `/suggestiondetail?id=${section.id}#comment-${comment.id}`;
+      actionUrl = `/document-view?id=${section.documentId}#section-${section.id}-comment-${comment.id}`;
     }
 
     // יצירת התראות
