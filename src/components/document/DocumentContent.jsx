@@ -319,10 +319,24 @@ export default function DocumentContent({
       if (!user) throw new Error("יש להתחבר כדי להצביע");
       if (!document) throw new Error("מסמך לא נמצא");
 
-      // מניעת הצבעות כפולות על אותה הצעה
+      // מניעת הצבעות כפולות על אותה הצעה - בדיקה בלבד, לא חסימה
       if (votingInProgressRef.current.has(suggestionId)) {
-        console.log('[VOTE] Already voting on this suggestion, ignoring');
-        throw new Error("ההצבעה בתהליך, אנא המתן");
+        console.log('[VOTE] Already voting on this suggestion, waiting for completion');
+        // המתן עד שההצבעה הקודמת תסתיים
+        await new Promise(resolve => {
+          const checkInterval = setInterval(() => {
+            if (!votingInProgressRef.current.has(suggestionId)) {
+              clearInterval(checkInterval);
+              resolve();
+            }
+          }, 100);
+          // timeout אחרי 5 שניות
+          setTimeout(() => {
+            clearInterval(checkInterval);
+            votingInProgressRef.current.delete(suggestionId);
+            resolve();
+          }, 5000);
+        });
       }
       votingInProgressRef.current.add(suggestionId);
       
