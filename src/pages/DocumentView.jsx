@@ -285,37 +285,34 @@ export default function DocumentView() {
           }, 200);
         } else {
           // הצעה לעריכת הצעה על הצעה לסעיף חדש - גלול להצעה האב והקרוסלה שלה תטפל
-          const elementId = `suggestion-${parentSuggestion.id}`;
+          setTargetSuggestionId(suggestion.id); // מעביר את ה-ID של ההצעה הספציפית (העריכה)
           setTimeout(() => {
-            const element = window.document.getElementById(elementId);
+            const element = window.document.getElementById(`suggestion-${parentSuggestion.id}`);
             if (element) {
               element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              
-              // צריך גם לעדכן את הקרוסלה של NewSectionSuggestionCard להצעה האחרונה
-              // נעשה זאת על ידי dispatch של event או שימוש ב-state
-              // כרגע NewSectionSuggestionCard עובר אוטומטית לגרסה האחרונה, אז זה אמור לעבוד
-              
               element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
               setTimeout(() => {
                 element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
+                setTargetSuggestionId(null);
               }, 2000);
             }
-          }, 100);
+          }, 200);
         }
       }
     } else {
       // הצעה לסעיף חדש - גלילה רגילה
-      const elementId = `suggestion-${suggestion.id}`;
+      setTargetSuggestionId(suggestion.id);
       setTimeout(() => {
-        const element = window.document.getElementById(elementId);
+        const element = window.document.getElementById(`suggestion-${suggestion.id}`);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
           setTimeout(() => {
             element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
+            setTargetSuggestionId(null);
           }, 2000);
         }
-      }, 100);
+      }, 200);
     }
   }, [pendingSuggestions, suggestions]);
 
