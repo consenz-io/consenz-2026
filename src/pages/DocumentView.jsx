@@ -656,9 +656,8 @@ export default function DocumentView() {
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="text-xs md:text-sm px-4 h-8">
-                  <MoreVertical className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {language === 'he' ? 'תפריט' : language === 'ar' ? 'القائمة' : 'Menu'}
+                <Button variant="outline" size="sm" className="text-xs md:text-sm px-2 h-8">
+                  <MoreVertical className="w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
