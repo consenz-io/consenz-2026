@@ -699,8 +699,8 @@ export default function LearnMore() {
 
               <div className="p-4 bg-white rounded-lg border border-slate-200">
                 <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Badge className="bg-purple-600">3</Badge>
-                  <div className="text-start">
+                  <Badge className="bg-purple-600 flex-shrink-0">3</Badge>
+                  <div className="text-right">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Dynamic threshold update", "עדכון דינמי של הסף", "تحديث عتبة ديناميكي")}
                     </p>
