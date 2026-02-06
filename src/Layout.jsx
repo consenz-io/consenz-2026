@@ -380,16 +380,11 @@ function LayoutContent({ children, currentPageName }) {
                           location.pathname === createPageUrl("ActivityFeed") ? 'bg-blue-50 text-blue-700' : ''
                         }`}
                       >
-                        <Link to={createPageUrl("ActivityFeed")} className="flex items-center gap-3 px-3 py-2 relative">
+                        <Link to={createPageUrl("ActivityFeed")} className="flex items-center gap-3 px-3 py-2">
                           <Activity className="w-4 h-4" />
                           <span className="font-medium">
                             {language === 'he' ? 'פיד פעילות' : language === 'ar' ? 'آخر النشاطات' : 'Activity Feed'}
                           </span>
-                          {unreadCount > 0 && (
-                            <span className="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
-                              {unreadCount > 9 ? '9+' : unreadCount}
-                            </span>
-                          )}
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
