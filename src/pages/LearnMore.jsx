@@ -388,6 +388,7 @@ export default function LearnMore() {
           <Card className="bg-white/80 backdrop-blur-sm border-red-200">
             <CardHeader className="bg-gradient-to-br from-red-50 to-orange-50">
               <CardTitle className={`text-xl flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <ThumbsDown className="w-6 h-6 text-red-600" />
                 {getLocalizedText("Costs", "עלויות", "التكاليف")}
               </CardTitle>
             </CardHeader>
@@ -436,6 +437,7 @@ export default function LearnMore() {
           <Card className="bg-white/80 backdrop-blur-sm border-green-200">
             <CardHeader className="bg-gradient-to-br from-green-50 to-emerald-50">
               <CardTitle className={`text-xl flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <ThumbsUp className="w-6 h-6 text-green-600" />
                 {getLocalizedText("Rewards", "תגמולים", "المكافآت")}
               </CardTitle>
             </CardHeader>
@@ -746,10 +748,12 @@ export default function LearnMore() {
                   </p>
                   <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <span className="font-bold text-green-600">+8</span>
+                      <ThumbsUp className="w-4 h-4 text-green-600" />
+                      <span className="font-bold">8</span>
                     </div>
                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <span className="font-bold text-red-600">-2</span>
+                      <ThumbsDown className="w-4 h-4 text-red-600" />
+                      <span className="font-bold">2</span>
                     </div>
                     <span className="text-sm text-slate-600">
                       {getLocalizedText("Delta: 6", "דלתא: 6", "دلتا: 6")}
@@ -763,10 +767,12 @@ export default function LearnMore() {
                   </p>
                   <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <span className="font-bold text-green-600">+5</span>
+                      <ThumbsUp className="w-4 h-4 text-green-600" />
+                      <span className="font-bold">5</span>
                     </div>
                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <span className="font-bold text-red-600">-1</span>
+                      <ThumbsDown className="w-4 h-4 text-red-600" />
+                      <span className="font-bold">1</span>
                     </div>
                     <span className="text-sm text-slate-600">
                       {getLocalizedText("Delta: 4", "דלתא: 4", "دلتا: 4")}
