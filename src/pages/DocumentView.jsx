@@ -108,6 +108,7 @@ export default function DocumentView() {
       return results || [];
     },
     enabled: !!documentId,
+    initialData: [],
     refetchInterval: SYNC_INTERVAL,
     refetchIntervalInBackground: false,
     staleTime: 5000,
