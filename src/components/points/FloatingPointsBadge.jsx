@@ -287,7 +287,7 @@ export default function FloatingPointsBadge() {
                       </span>
                     </div>
                     <p className="text-sm text-slate-700 font-medium">
-                      {language === 'he' ? 'מענק על הצטרפות' : language === 'ar' ? 'مكافأة الانضمام' : 'Welcome bonus'}
+                      {language === 'he' ? 'מענק הצטרפות' : language === 'ar' ? 'مكافأة الانضمام' : 'Welcome bonus'}
                     </p>
                   </div>
                 </div>
