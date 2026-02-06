@@ -657,9 +657,23 @@ const SectionCarousel = React.memo(function SectionCarousel({
             {/* כפתורי הצבעה והערות - רק אם לא באנימציה */}
             {!['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView.data.id]) && (
               <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap relative">
-                {voteMutation.isPending && (
-                  <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10">
+                {(voteMutation.voteMutation?.isPending || voteMutation.isInCooldown) && (
+                  <div className="absolute inset-0 bg-white/90 rounded-lg flex flex-col items-center justify-center z-10 gap-2">
                     <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                    {voteMutation.isInCooldown && (
+                      <p className="text-xs font-medium text-slate-600">
+                        {language === 'he' ? `המתן ${voteMutation.cooldownSeconds} שניות` : 
+                         language === 'ar' ? `انتظر ${voteMutation.cooldownSeconds} ثانية` :
+                         `Wait ${voteMutation.cooldownSeconds}s`}
+                      </p>
+                    )}
+                    {voteMutation.voteMutation?.isPending && !voteMutation.isInCooldown && (
+                      <p className="text-xs font-medium text-slate-600">
+                        {language === 'he' ? 'מעבד הצבעה...' : 
+                         language === 'ar' ? 'معالجة التصويت...' :
+                         'Processing vote...'}
+                      </p>
+                    )}
                   </div>
                 )}
                 {document?.votingButtonsEnabled ? (
@@ -673,13 +687,13 @@ const SectionCarousel = React.memo(function SectionCarousel({
                           base44.auth.redirectToLogin(window.location.href);
                           return;
                         }
-                        voteMutation.mutate({
+                        voteMutation.voteMutation.mutate({
                           suggestionId: currentView.data.id,
                           vote: 'pro',
                           currentVote: getUserVote(currentView.data.id)
                         });
                       }}
-                      disabled={voteMutation.isPending}
+                      disabled={voteMutation.voteMutation?.isPending || voteMutation.isInCooldown}
                       className={`text-xs px-2 md:px-3 ${getUserVote(currentView.data.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
                     >
                       <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
@@ -694,13 +708,13 @@ const SectionCarousel = React.memo(function SectionCarousel({
                           base44.auth.redirectToLogin(window.location.href);
                           return;
                         }
-                        voteMutation.mutate({
+                        voteMutation.voteMutation.mutate({
                           suggestionId: currentView.data.id,
                           vote: 'con',
                           currentVote: getUserVote(currentView.data.id)
                         });
                       }}
-                      disabled={voteMutation.isPending}
+                      disabled={voteMutation.voteMutation?.isPending || voteMutation.isInCooldown}
                       className={`text-xs px-2 md:px-3 ${getUserVote(currentView.data.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
                     >
                       <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
