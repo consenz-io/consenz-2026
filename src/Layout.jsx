@@ -570,21 +570,18 @@ function LayoutContent({ children, currentPageName }) {
                 />
                 <h1 className="text-base md:text-xl font-bold text-slate-900 md:hidden truncate">Consenz</h1>
               </div>
-              <div className="flex items-center gap-2 md:gap-3">
-                <div className="relative touch-manipulation">
-                  <Languages className="absolute left-1.5 md:left-2 top-1/2 -translate-y-1/2 w-3 h-3 md:w-4 md:h-4 text-slate-500 pointer-events-none" aria-hidden="true" />
-                  <select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className="pl-6 md:pl-7 pr-1.5 md:pr-2 py-1.5 md:py-2 border border-slate-300 rounded-lg text-xs md:text-sm font-medium bg-white cursor-pointer min-w-[70px] md:min-w-[90px] touch-manipulation"
-                    aria-label={isRTL ? 'בחירת שפה' : 'Select language'}
-                  >
-                    <option value="en">EN</option>
-                    <option value="he">עב</option>
-                    <option value="ar">عر</option>
-                  </select>
-                </div>
-              </div>
+              {user && totalUnvotedSuggestions > 0 && (
+                <Link to={createPageUrl("MyDocuments")} className="flex-1 max-w-md">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer">
+                    <div className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold animate-pulse">
+                      {totalUnvotedSuggestions > 9 ? '9+' : totalUnvotedSuggestions}
+                    </div>
+                    <span className="text-xs md:text-sm font-medium text-orange-800 truncate">
+                      {language === 'he' ? 'הצעות ממתינות להצבעתך' : language === 'ar' ? 'اقتراحات تنتظر تصويتك' : 'Suggestions awaiting your vote'}
+                    </span>
+                  </div>
+                </Link>
+              )}
             </div>
           </header>
 
