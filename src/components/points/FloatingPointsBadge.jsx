@@ -11,6 +11,32 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
 
+function AnimatedCounter({ value }) {
+  const [displayValue, setDisplayValue] = React.useState(value);
+
+  React.useEffect(() => {
+    if (displayValue === value) return;
+
+    const difference = value - displayValue;
+    const steps = Math.min(Math.abs(difference), 20);
+    const stepValue = difference / steps;
+    let current = 0;
+
+    const interval = setInterval(() => {
+      current++;
+      setDisplayValue(Math.round(displayValue + stepValue * current));
+      if (current >= steps) {
+        clearInterval(interval);
+        setDisplayValue(value);
+      }
+    }, 20);
+
+    return () => clearInterval(interval);
+  }, [value, displayValue]);
+
+  return <span className="font-bold text-sm tabular-nums">{displayValue}</span>;
+}
+
 export default function FloatingPointsBadge() {
   const { language, isRTL } = useLanguage();
   const queryClient = useQueryClient();
