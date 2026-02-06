@@ -589,7 +589,7 @@ export default function LearnMore() {
               </div>
 
               {/* Key Insight */}
-              <div className="p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-300 text-start">
+              <div className="p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-300 text-right">
                 <p className="font-bold text-amber-900 mb-2">
                   {getLocalizedText("Key Insight:", "תובנה מרכזית:", "رؤية رئيسية:")}
                 </p>
