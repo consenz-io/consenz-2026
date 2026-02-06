@@ -13,6 +13,7 @@ import TranslatableContent from "./TranslatableContent";
 import { ensureUserPublicProfile } from "@/components/ensureUserPublicProfile";
 import { rateLimitedAction, RATE_LIMITS } from "@/components/utils/rateLimiter";
 import { toast } from "sonner";
+import { formatLocalDateTime } from "@/components/utils/dateFormatter";
 
 // CommentItem Component - memoized to prevent unnecessary re-renders
 const CommentItem = memo(({ 
@@ -90,12 +91,7 @@ const CommentItem = memo(({
                 {getUserName(comment.created_by)}
               </Link>
               <span className="text-xs text-slate-500">
-                {new Date(comment.created_date).toLocaleDateString('he-IL', {
-                  day: 'numeric',
-                  month: 'short',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                {formatLocalDateTime(comment.created_date, 'DD/MM HH:mm')}
               </span>
             </div>
             
