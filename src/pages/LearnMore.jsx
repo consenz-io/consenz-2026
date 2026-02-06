@@ -718,7 +718,7 @@ export default function LearnMore() {
               <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                 <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-start">
+                  <div className="text-right">
                     <p className="font-semibold text-green-900">
                       {getLocalizedText("Result: Community-adapted algorithm", "תוצאה: אלגוריתם מותאם לקהילה", "النتيجة: خوارزمية متكيفة مع المجتمع")}
                     </p>
