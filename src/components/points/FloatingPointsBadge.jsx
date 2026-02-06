@@ -1,7 +1,7 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Sparkles } from "lucide-react";
+import { Coins } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -49,8 +49,9 @@ export default function FloatingPointsBadge() {
   });
 
   const hasNewPoints = totalNewPoints > 0;
+  const currentPoints = user?.points || 1000;
 
-  if (!user || !hasNewPoints) return null;
+  if (!user) return null;
 
   return (
     <Popover onOpenChange={(open) => {
@@ -60,13 +61,16 @@ export default function FloatingPointsBadge() {
     }}>
       <PopoverTrigger asChild>
         <button
-          className={`fixed ${isRTL ? 'right-6' : 'left-6'} bottom-36 bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all hover:scale-110 z-50 focus:ring-4 focus:ring-amber-300`}
-          aria-label={language === 'he' ? 'נקודות חדשות' : 'New points'}
+          className={`fixed ${isRTL ? 'right-6' : 'left-6'} bottom-36 bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all hover:scale-110 z-50 focus:ring-4 focus:ring-amber-300 ${hasNewPoints ? 'animate-pulse' : ''}`}
+          aria-label={language === 'he' ? `${currentPoints} נקודות` : language === 'ar' ? `${currentPoints} نقاط` : `${currentPoints} points`}
         >
-          <Sparkles className="w-5 h-5" aria-hidden="true" />
+          <div className="flex items-center gap-1.5">
+            <Coins className="w-5 h-5" aria-hidden="true" />
+            <span className="font-bold text-sm">{currentPoints}</span>
+          </div>
           {hasNewPoints && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-pulse">
-              {totalNewPoints > 99 ? '99+' : `+${totalNewPoints}`}
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-bounce">
+              +{totalNewPoints > 99 ? '99' : totalNewPoints}
             </span>
           )}
         </button>
@@ -79,18 +83,30 @@ export default function FloatingPointsBadge() {
         <div className="space-y-3">
           <div className="flex items-center justify-between border-b pb-2">
             <h3 className="font-semibold text-slate-900">
-              {language === 'he' ? 'נקודות חדשות' : language === 'ar' ? 'نقاط جديدة' : 'New Points'}
+              {hasNewPoints 
+                ? (language === 'he' ? 'נקודות חדשות' : language === 'ar' ? 'نقاط جديدة' : 'New Points')
+                : (language === 'he' ? 'הנקודות שלך' : language === 'ar' ? 'نقاطك' : 'Your Points')
+              }
             </h3>
-            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-              +{totalNewPoints}
+            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-lg font-bold">
+              {currentPoints}
             </Badge>
           </div>
 
-          {newPointsTransactions.length === 0 ? (
-            <p className="text-slate-500 text-sm text-center py-4">
-              {language === 'he' ? 'אין נקודות חדשות' : language === 'ar' ? 'لا توجد نقاط جديدة' : 'No new points'}
-            </p>
-          ) : (
+          {hasNewPoints && (
+            <>
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg border border-green-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-green-800">
+                    {language === 'he' ? 'נקודות חדשות' : language === 'ar' ? 'نقاط جديدة' : 'New Points'}
+                  </span>
+                  <span className="text-xl font-bold text-green-600">+{totalNewPoints}</span>
+                </div>
+              </div>
+            </>
+          )}
+
+          {newPointsTransactions.length > 0 && (
             <div className="space-y-2">
               {newPointsTransactions.slice(0, 10).map((transaction) => (
                 <div 
@@ -121,6 +137,12 @@ export default function FloatingPointsBadge() {
                 </div>
               ))}
             </div>
+          )}
+
+          {!hasNewPoints && (
+            <p className="text-slate-500 text-sm text-center py-4">
+              {language === 'he' ? 'אין נקודות חדשות' : language === 'ar' ? 'لا توجد نقاط جديدة' : 'No new points'}
+            </p>
           )}
 
           <div className="border-t pt-2">
