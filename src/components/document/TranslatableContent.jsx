@@ -159,8 +159,10 @@ export default function TranslatableContent({
         }
       }
       
+      // ONLY show translation when globalShowTranslated is true (manual activation)
+      // Never auto-translate based on language mismatch
       if (hasTranslation) {
-        setLocalShowTranslated(globalShowTranslated || (needsTranslation && hasTranslation));
+        setLocalShowTranslated(globalShowTranslated);
       }
     }
   }, [globalShowTranslated, entity, language, fieldName, content]);
