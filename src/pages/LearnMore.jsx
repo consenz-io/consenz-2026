@@ -500,10 +500,10 @@ export default function LearnMore() {
                 </h4>
                 <div className="space-y-3">
                   <div>
-                    <p className="font-semibold text-slate-800 mb-1">
+                    <p className="font-semibold text-slate-800 mb-1 text-right">
                       {getLocalizedText("Entry Cost Creates Quality Threshold", "מחיר כניסה יוצר סף איכות", "تكلفة الدخول تخلق عتبة جودة")}
                     </p>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-slate-600 text-right">
                       {getLocalizedText(
                         "The 200-350 point cost for creating suggestions acts as a 'spam filter' - users think twice before adding content. Only those who believe their suggestion has real value will invest their points.",
                         "העלות של 200-350 נקודות ליצירת הצעות משמשת כ'פילטר ספאם' - משתמשים חושבים פעמיים לפני הוספת תוכן. רק מי שמאמין שההצעה שלו בעלת ערך אמיתי ישקיע את הנקודות שלו.",
