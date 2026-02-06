@@ -266,9 +266,7 @@ export default function DocumentView() {
       }, 200);
     } else {
       // הצעה לסעיף חדש או הצעה לעריכת הצעה - גלילה רגילה
-      const elementId = suggestion.type === 'edit_suggestion' 
-        ? `edit-suggestion-${suggestion.id}` 
-        : `suggestion-${suggestion.id}`;
+      const elementId = `suggestion-${suggestion.id}`;
       setTimeout(() => {
         const element = window.document.getElementById(elementId);
         if (element) {
