@@ -48,9 +48,9 @@ export default function FloatingPointsBadge() {
     },
   });
 
-  if (!user) return null;
-
   const hasNewPoints = totalNewPoints > 0;
+
+  if (!user || !hasNewPoints) return null;
 
   return (
     <Popover onOpenChange={(open) => {
