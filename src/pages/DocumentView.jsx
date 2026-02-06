@@ -887,7 +887,7 @@ export default function DocumentView() {
           </button>
           <button
             type="button"
-            className={`bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-400 rounded-lg p-2 md:p-3 hover:border-indigo-600 hover:shadow-lg transition-all flex flex-col items-center justify-center gap-1 relative overflow-hidden ${pendingSuggestions.length > 0 ? 'cursor-pointer' : 'cursor-default'}`}
+            className={`bg-orange-50 border-2 border-orange-300 rounded-lg p-2 md:p-3 hover:bg-orange-100 hover:shadow-xl transition-all flex flex-col items-center justify-center gap-1 relative overflow-hidden ${pendingSuggestions.length > 0 ? 'cursor-pointer shadow-lg' : 'cursor-default'}`}
             onClick={() => {
               if (pendingSuggestions.length > 0) {
                 setShowSuggestionNav(true);
@@ -899,14 +899,14 @@ export default function DocumentView() {
             {pendingSuggestions.length > 0 && (
               <div className="absolute top-1 right-1">
                 <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
                 </span>
               </div>
             )}
-            <MessageSquare className="w-5 h-5 md:w-7 md:h-7 text-indigo-600" aria-hidden="true" />
-            <div className="text-lg md:text-2xl font-bold text-indigo-900">{pendingSuggestions.length}</div>
-            <div className="text-[10px] md:text-sm text-indigo-700 text-center leading-tight font-medium">{language === 'he' ? 'הצעות פתוחות' : language === 'ar' ? 'مقترحات مفتوحة' : 'Open Suggestions'}</div>
+            <MessageSquare className="w-5 h-5 md:w-7 md:h-7 text-orange-600" aria-hidden="true" />
+            <div className="text-lg md:text-2xl font-bold text-orange-900">{pendingSuggestions.length}</div>
+            <div className="text-[10px] md:text-sm text-orange-700 text-center leading-tight font-medium">{language === 'he' ? 'הצעות פתוחות' : language === 'ar' ? 'مقترحات مفتوحة' : 'Open Suggestions'}</div>
           </button>
           <Link 
             to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
