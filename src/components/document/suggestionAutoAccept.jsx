@@ -616,14 +616,20 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       // Award points if gamification enabled - fire and forget to avoid rate limits
       if (document.gamificationEnabled && freshSuggestion.created_by) {
         console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Scheduling points award...');
-        base44.functions.invoke('awardSuggestionPoints', {
-          suggestionId: freshSuggestion.id,
-          action: 'suggestion_accepted'
-        }).then(() => {
-          console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Points awarded');
-        }).catch(pointsError => {
-          console.error('[AUTO-ACCEPT EDIT_SUGGESTION] Points error:', pointsError);
-        });
+        // Add delay to avoid rate limits
+        setTimeout(() => {
+          base44.functions.invoke('awardSuggestionPoints', {
+            suggestionId: freshSuggestion.id,
+            action: 'suggestion_accepted'
+          }).then(() => {
+            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Points awarded');
+          }).catch(pointsError => {
+            // Silently handle rate limits - points will be awarded eventually
+            if (!pointsError?.message?.includes('Rate limit')) {
+              console.error('[AUTO-ACCEPT EDIT_SUGGESTION] Points error:', pointsError);
+            }
+          });
+        }, 1000);
       }
       
       // Send notification - create updated suggestion object
@@ -921,14 +927,20 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
        const gamificationEnabled = document?.gamificationEnabled || false;
        if (gamificationEnabled && freshSuggestion.created_by) {
          console.log('[AUTO-ACCEPT NEW_SECTION] Scheduling points award...');
-         base44.functions.invoke('awardSuggestionPoints', {
-           suggestionId: freshSuggestion.id,
-           action: 'suggestion_accepted'
-         }).then(() => {
-           console.log('[AUTO-ACCEPT NEW_SECTION] ✅ Points awarded');
-         }).catch(pointsError => {
-           console.error('[AUTO-ACCEPT NEW_SECTION] Points error:', pointsError);
-         });
+         // Add delay to avoid rate limits
+         setTimeout(() => {
+           base44.functions.invoke('awardSuggestionPoints', {
+             suggestionId: freshSuggestion.id,
+             action: 'suggestion_accepted'
+           }).then(() => {
+             console.log('[AUTO-ACCEPT NEW_SECTION] ✅ Points awarded');
+           }).catch(pointsError => {
+             // Silently handle rate limits - points will be awarded eventually
+             if (!pointsError?.message?.includes('Rate limit')) {
+               console.error('[AUTO-ACCEPT NEW_SECTION] Points error:', pointsError);
+             }
+           });
+         }, 1500);
        }
        
        return true;
@@ -982,15 +994,21 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       const gamificationEnabled = document?.gamificationEnabled || false;
       if (gamificationEnabled && freshSuggestion.created_by) {
         console.log('[POINTS] 🎯 Scheduling points award to suggestion creator:', freshSuggestion.created_by);
-        base44.functions.invoke('awardSuggestionPoints', {
-          suggestionId: freshSuggestion.id,
-          action: 'suggestion_accepted'
-        }).then(response => {
-          console.log('[POINTS] ✅ Points awarded successfully:', response.data);
-        }).catch(pointsError => {
-          console.error('[POINTS DEBUG] ❌ Error awarding points:', pointsError);
-          console.error('[POINTS DEBUG] Error details:', pointsError.message);
-        });
+        // Add delay to avoid rate limits
+        setTimeout(() => {
+          base44.functions.invoke('awardSuggestionPoints', {
+            suggestionId: freshSuggestion.id,
+            action: 'suggestion_accepted'
+          }).then(response => {
+            console.log('[POINTS] ✅ Points awarded successfully:', response.data);
+          }).catch(pointsError => {
+            // Silently handle rate limits - points will be awarded eventually
+            if (!pointsError?.message?.includes('Rate limit')) {
+              console.error('[POINTS DEBUG] ❌ Error awarding points:', pointsError);
+              console.error('[POINTS DEBUG] Error details:', pointsError.message);
+            }
+          });
+        }, 2000);
       }
     }
     

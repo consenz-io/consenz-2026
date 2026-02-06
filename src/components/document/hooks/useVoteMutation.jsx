@@ -175,6 +175,10 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
               }
             } catch (acceptError) {
               console.error('[VOTE] Error during auto-accept:', acceptError);
+              // Silently handle rate limits in auto-accept
+              if (acceptError?.message?.includes('Rate limit')) {
+                console.log('[VOTE] Rate limit in auto-accept, vote succeeded but points delayed');
+              }
               // Don't throw - let the vote still succeed even if auto-accept fails
               accepted = false;
             } finally {
