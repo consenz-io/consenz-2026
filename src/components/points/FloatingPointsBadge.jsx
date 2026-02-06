@@ -252,11 +252,6 @@ export default function FloatingPointsBadge() {
                           }`}>
                             {transaction.amount > 0 ? '+' : ''}{transaction.amount}
                           </Badge>
-                          {transaction.balanceAfter !== undefined && (
-                            <span className="text-xs text-slate-500">
-                              {language === 'he' ? 'יתרה:' : language === 'ar' ? 'الرصيد:' : 'Balance:'} {transaction.balanceAfter}
-                            </span>
-                          )}
                           <span className="text-xs text-slate-500">
                             {formatLocalDateTime(transaction.created_date, 'DD/MM HH:mm')}
                           </span>
