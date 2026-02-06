@@ -570,18 +570,6 @@ function LayoutContent({ children, currentPageName }) {
                 />
                 <h1 className="text-base md:text-xl font-bold text-slate-900 md:hidden truncate">Consenz</h1>
               </div>
-              {user && totalUnvotedSuggestions > 0 && (
-                <Link to={createPageUrl("MyDocuments")} className="flex-1 max-w-md">
-                  <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer">
-                    <div className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold animate-pulse">
-                      {totalUnvotedSuggestions > 9 ? '9+' : totalUnvotedSuggestions}
-                    </div>
-                    <span className="text-xs md:text-sm font-medium text-orange-800 truncate">
-                      {language === 'he' ? 'הצעות ממתינות להצבעתך' : language === 'ar' ? 'اقتراحات تنتظر تصويتك' : 'Suggestions awaiting your vote'}
-                    </span>
-                  </div>
-                </Link>
-              )}
             </div>
           </header>
 
@@ -604,6 +592,24 @@ function LayoutContent({ children, currentPageName }) {
 
               <FloatingNotificationBell />
               <AccessibilityAnnouncer />
+              
+              {/* Floating unvoted suggestions nudge */}
+              {user && totalUnvotedSuggestions > 0 && (
+                <Link 
+                  to={createPageUrl("MyDocuments")} 
+                  className="fixed top-20 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-2rem)] max-w-2xl px-4"
+                  style={{ [isRTL ? 'right' : 'left']: '50%' }}
+                >
+                  <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 bg-orange-50 border-2 border-orange-300 rounded-lg hover:bg-orange-100 transition-all shadow-lg hover:shadow-xl cursor-pointer">
+                    <div className="w-7 h-7 md:w-8 md:h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm md:text-base font-bold animate-pulse flex-shrink-0">
+                      {totalUnvotedSuggestions > 9 ? '9+' : totalUnvotedSuggestions}
+                    </div>
+                    <span className="text-sm md:text-base font-semibold text-orange-900 flex-1">
+                      {language === 'he' ? 'הצעות ממתינות להצבעתך' : language === 'ar' ? 'اقتراحات تنتظر تصويتك' : 'Suggestions awaiting your vote'}
+                    </span>
+                  </div>
+                </Link>
+              )}
               </div>
               </SidebarProvider>
               );
