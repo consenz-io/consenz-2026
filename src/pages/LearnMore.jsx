@@ -663,8 +663,8 @@ export default function LearnMore() {
             <div className="space-y-4">
               <div className="p-4 bg-white rounded-lg border border-slate-200">
                 <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Badge className="bg-blue-600">1</Badge>
-                  <div className="text-start">
+                  <Badge className="bg-blue-600 flex-shrink-0">1</Badge>
+                  <div className="text-right">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Start with default value", "התחלה עם ערך ברירת מחדל", "البدء بقيمة افتراضية")}
                     </p>
