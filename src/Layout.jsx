@@ -24,6 +24,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import FloatingNotificationBell from "@/components/notifications/FloatingNotificationBell";
+import FloatingPointsBadge from "@/components/points/FloatingPointsBadge";
 import { AccessibilityAnnouncer } from "@/components/AccessibilityAnnouncer";
 import { AccessibilityToolbarContent } from "@/components/AccessibilityToolbar";
 
@@ -607,6 +608,7 @@ function LayoutContent({ children, currentPageName }) {
               )}
 
               <FloatingNotificationBell />
+              <FloatingPointsBadge />
               <AccessibilityAnnouncer />
               </div>
               </SidebarProvider>
