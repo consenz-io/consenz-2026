@@ -100,13 +100,18 @@ export default function DocumentView() {
     refetchIntervalInBackground: false,
   });
 
-  const { data: suggestions, isLoading: suggestionsLoading } = useQuery({
+  const { data: suggestions = [], isLoading: suggestionsLoading } = useQuery({
     queryKey: ['suggestions', documentId],
-    queryFn: () => base44.entities.Suggestion.filter({ documentId }, '-created_date'),
-    initialData: [],
+    queryFn: async () => {
+      if (!documentId) return [];
+      const results = await base44.entities.Suggestion.filter({ documentId }, '-created_date');
+      return results || [];
+    },
     enabled: !!documentId,
     refetchInterval: SYNC_INTERVAL,
     refetchIntervalInBackground: false,
+    staleTime: 5000,
+    retry: 2,
   });
 
   // Merged queries for better performance - fetch all at once
