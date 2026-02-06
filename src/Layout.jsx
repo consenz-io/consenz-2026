@@ -458,10 +458,10 @@ function LayoutContent({ children, currentPageName }) {
                       <span className="text-slate-700 font-medium text-sm">{t('acceptedSuggestions')}</span>
                       <span className="font-bold text-xl text-green-600">{acceptedSuggestionsCount}</span>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
+                    <Link to={createPageUrl("Profile")} className="flex items-center justify-between text-sm hover:bg-blue-50 p-2 rounded-lg transition-colors cursor-pointer">
                       <span className="text-slate-600">{language === 'he' ? 'נקודות שצברת' : language === 'ar' ? 'النقاط المكتسبة' : 'Points earned'}</span>
                       <span className="font-bold text-lg text-blue-600">{user.points || 1000}</span>
-                    </div>
+                    </Link>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-600">{t('suggestionsCreatedByYou')}</span>
                       <span className="font-semibold">{user.suggestionsCreated || 0}</span>
