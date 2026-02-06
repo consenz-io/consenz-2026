@@ -332,9 +332,11 @@ export default function CreateSuggestionModal({
       }).catch(err => console.error('[UPDATE USER]', err));
       
       if (gamificationEnabled) {
+        const newBalance = currentPoints - pointsCost;
         base44.entities.PointsTransaction.create({
           userId: currentUser.id,
           amount: -pointsCost,
+          balanceAfter: newBalance,
           action: 'suggestion_created',
           description: `${t('pointsTransactionCreated')} ${autoTitle}`,
           relatedEntityId: suggestion.id,
