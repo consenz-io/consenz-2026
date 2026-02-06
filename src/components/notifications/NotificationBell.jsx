@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/components/LanguageContext";
 import VirtualizedNotificationsList from "./VirtualizedNotificationsList";
+import { formatRelativeTime } from "@/components/utils/dateFormatter";
 
 export default function NotificationBell({ user }) {
   const { t, isRTL } = useLanguage();
@@ -87,17 +88,7 @@ export default function NotificationBell({ user }) {
   };
 
   const formatTimeAgo = (date) => {
-    const now = new Date();
-    const then = new Date(date);
-    const diff = now - then;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return 'עכשיו';
-    if (minutes < 60) return `לפני ${minutes} דקות`;
-    if (hours < 24) return `לפני ${hours} שעות`;
-    return `לפני ${days} ימים`;
+    return formatRelativeTime(date);
   };
 
   const handleNotificationClick = async (notification) => {
