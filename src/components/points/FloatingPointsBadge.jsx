@@ -9,6 +9,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import { formatLocalDateTime } from "@/components/utils/dateFormatter";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { toast } from "sonner";
 
 export default function FloatingPointsBadge() {
   const { language, isRTL } = useLanguage();
