@@ -157,7 +157,9 @@ export default function DocumentView() {
     },
     initialData: { agreements: [], versions: [] },
     enabled: !!documentId,
-    staleTime: 30000, // 30 seconds
+    refetchInterval: SYNC_INTERVAL,
+    refetchIntervalInBackground: false,
+    staleTime: 10000,
   });
 
   const documentAgreements = documentMetadata?.agreements || [];
