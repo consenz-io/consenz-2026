@@ -192,8 +192,8 @@ export default function Profile() {
     },
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSave = (e) => {
+    if (e) e.preventDefault();
     setError(null);
     updateProfileMutation.mutate(formData);
   };
@@ -273,13 +273,13 @@ export default function Profile() {
                     {t('cancel')}
                   </Button>
                   <Button 
-                    onClick={handleSubmit}
+                    onClick={handleSave}
                     disabled={updateProfileMutation.isPending}
                     size="sm"
                     className="bg-gradient-to-r from-blue-600 to-indigo-600"
                   >
                     <Save className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {t('saveChanges')}
+                    {updateProfileMutation.isPending ? t('saving') : t('saveChanges')}
                   </Button>
                 </div>
               ) : null}
