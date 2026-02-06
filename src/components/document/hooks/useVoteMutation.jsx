@@ -23,6 +23,14 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
         console.log('[VOTE] Already voting on this suggestion, ignoring');
         throw new Error("ההצבעה בתהליך, אנא המתן");
       }
+      
+      // Apply rate limiting
+      try {
+        await rateLimitedAction('voting', async () => {})();
+      } catch (rateLimitError) {
+        throw rateLimitError;
+      }
+      
       votingInProgressRef.current.add(suggestionId);
 
       try {
