@@ -394,7 +394,7 @@ export default function LearnMore() {
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                   <div className="text-end">
+                   <div className="text-right">
                      <p className="font-semibold text-slate-900">
                        {getLocalizedText("Create Document", "פרסום מסמך", "نشر وثيقة")}
                      </p>
@@ -406,7 +406,7 @@ export default function LearnMore() {
                 </div>
                 
                 <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                   <div className="text-end">
+                   <div className="text-right">
                      <p className="font-semibold text-slate-900">
                        {getLocalizedText("Edit Section Suggestion", "הצעה לעריכת סעיף", "اقتراح تعديل قسم")}
                      </p>
@@ -418,7 +418,7 @@ export default function LearnMore() {
                 </div>
                 
                 <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                   <div className="text-end">
+                   <div className="text-right">
                      <p className="font-semibold text-slate-900">
                        {getLocalizedText("New Section Suggestion", "הצעה לסעיף חדש", "اقتراح قسم جديد")}
                      </p>
