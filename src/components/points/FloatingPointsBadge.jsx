@@ -77,9 +77,12 @@ export default function FloatingPointsBadge() {
       .reduce((sum, t) => sum + (t.amount || 0), 0);
   }, [pointsTransactions, lastPointsVisit]);
 
+  const hasNewPoints = totalNewPoints > 0;
+  const currentPoints = user?.points || 1000;
+
   React.useEffect(() => {
-    if (hasNewPoints && !lastPointsVisit) {
-      // Show toast notification on mount if there are new points
+    if (hasNewPoints && lastPointsVisit) {
+      // Show toast notification only when there are new points after first visit
       toast.success(
         language === 'he' 
           ? `🎉 קיבלת ${totalNewPoints} נקודות חדשות!` 
