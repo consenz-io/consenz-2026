@@ -387,7 +387,7 @@ export default function LearnMore() {
           {/* Costs Table */}
           <Card className="bg-white/80 backdrop-blur-sm border-red-200">
             <CardHeader className="bg-gradient-to-br from-red-50 to-orange-50">
-              <CardTitle className="text-xl text-start">
+              <CardTitle className="text-xl text-right">
                 {getLocalizedText("Costs", "עלויות", "التكاليف")}
               </CardTitle>
             </CardHeader>
