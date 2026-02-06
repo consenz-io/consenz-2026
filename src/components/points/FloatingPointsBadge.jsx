@@ -274,9 +274,25 @@ export default function FloatingPointsBadge() {
           )}
 
           {!isLoadingTransactions && newPointsTransactions.length === 0 && pointsTransactions.length === 0 && (
-            <p className="text-slate-500 text-sm text-center py-4">
-              {language === 'he' ? 'אין עדיין אירועים' : language === 'ar' ? 'لا توجد أحداث بعد' : 'No events yet'}
-            </p>
+            <div className="space-y-2">
+              <div className="block p-3 rounded-lg border bg-green-50 border-green-200">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant="outline" className="text-xs font-semibold bg-green-100 text-green-800 border-green-300">
+                        +1000
+                      </Badge>
+                      <span className="text-xs text-slate-400">
+                        (1000)
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-700 font-medium">
+                      {language === 'he' ? 'מענק על הצטרפות' : language === 'ar' ? 'مكافأة الانضمام' : 'Welcome bonus'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
           <div className="border-t pt-2">
