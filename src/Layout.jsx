@@ -588,7 +588,7 @@ function LayoutContent({ children, currentPageName }) {
             </div>
           </header>
 
-          <div className="flex-1 overflow-auto max-w-full min-w-0">
+          <div className={`flex-1 overflow-auto max-w-full min-w-0 ${user && totalUnvotedSuggestions > 0 ? 'pt-20 md:pt-24' : ''}`}>
             {children}
           </div>
           </main>
