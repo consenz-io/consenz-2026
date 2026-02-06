@@ -166,9 +166,6 @@ export default function FloatingPointsBadge() {
 
           {!isLoadingTransactions && newPointsTransactions.length > 0 && (
             <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-slate-600 uppercase">
-                {language === 'he' ? 'אירועים שהובילו לנקודות' : language === 'ar' ? 'الأحداث' : 'Events'}
-              </h4>
               {newPointsTransactions.slice(0, 10).map((transaction) => {
                 const getTransactionUrl = () => {
                   if (transaction.relatedEntityType === 'suggestion') {
