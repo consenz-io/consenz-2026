@@ -87,12 +87,12 @@ export default function FloatingPointsBadge() {
     }}>
       <PopoverTrigger asChild>
         <button
-          className={`bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all hover:scale-110 focus:ring-4 focus:ring-amber-300 ${hasNewPoints ? 'animate-pulse' : ''}`}
+          className={`bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all hover:scale-110 focus:ring-4 focus:ring-amber-300 ${hasNewPoints ? 'animate-pulse scale-110' : ''}`}
           aria-label={language === 'he' ? `${currentPoints} נקודות` : language === 'ar' ? `${currentPoints} نقاط` : `${currentPoints} points`}
         >
           <div className="flex items-center gap-1.5">
             <Coins className="w-5 h-5" aria-hidden="true" />
-            <span className="font-bold text-sm">{currentPoints}</span>
+            <AnimatedCounter value={currentPoints} />
           </div>
           {hasNewPoints && (
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-bounce">
