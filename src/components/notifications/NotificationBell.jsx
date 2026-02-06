@@ -32,8 +32,8 @@ export default function NotificationBell({ user }) {
     staleTime: 30000,
     refetchInterval: 60000,
     refetchIntervalInBackground: false,
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const markAsReadMutation = useMutation({
