@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
+import { formatLocalDateTime } from "@/components/utils/dateFormatter";
 
 const NotificationItem = React.memo(({ 
   notification, 
@@ -44,12 +45,7 @@ const NotificationItem = React.memo(({
             </>
           )}
           <span className="text-[10px] text-slate-400 mt-1 block">
-            {new Date(notification.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : 'en-US', {
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}
+            {formatLocalDateTime(notification.created_date, 'DD/MM/YYYY HH:mm')}
           </span>
         </div>
         <div className="flex gap-1 flex-shrink-0">
