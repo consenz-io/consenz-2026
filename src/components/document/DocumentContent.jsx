@@ -320,7 +320,6 @@ export default function DocumentContent({
       }
       votingInProgressRef.current.add(suggestionId);
 
-      // Execute vote through queue to prevent rate limiting
       try {
         // שלב 1: קריאת המצב העדכני מהשרת (source of truth) 
         const [freshVotes, freshSuggestions] = await Promise.all([
@@ -338,7 +337,11 @@ export default function DocumentContent({
         // בדיקה שההצעה עדיין ממתינה (לא התקבלה כבר)
         if (freshSuggestion.status !== 'pending') {
           console.log('[VOTE] Suggestion already processed with status:', freshSuggestion.status);
-          throw new Error("לא ניתן להצביע על הצעה שכבר טופלה");
+          // אם ההצעה כבר התקבלה - פשוט נרענן את הנתונים בלי לזרוק שגיאה
+          votingInProgressRef.current.delete(suggestionId);
+          await queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
+          await queryClient.invalidateQueries({ queryKey: ['userVotes', document?.id, user?.id] });
+          return { alreadyProcessed: true };
         }
         
         let newProVotes = freshSuggestion.proVotes || 0;
@@ -407,9 +410,14 @@ export default function DocumentContent({
         
         const updatedSuggestion = { ...freshSuggestion, proVotes: newProVotes, conVotes: newConVotes };
 
-        // בדיקת קונסנזוס רק אם ההצעה עדיין ממתינה
+        // בדיקת קונסנזוס אחרי העדכון - רק אם זו לא הצעה שכבר טופלה
         let accepted = false;
-        if (freshSuggestion.status === 'pending') {
+        
+        // רענון ההצעה מהשרת אחרי העדכון
+        const finalSuggestions = await base44.entities.Suggestion.filter({ id: suggestionId });
+        const finalSuggestion = finalSuggestions[0];
+        
+        if (finalSuggestion && finalSuggestion.status === 'pending') {
           const consensuses = document.consensuses || [];
           let threshold;
           if (consensuses.length > 0) {
@@ -418,50 +426,67 @@ export default function DocumentContent({
           } else {
             threshold = Math.max(2, document.threshold || 2);
           }
-          const shouldAccept = (newProVotes - newConVotes) >= threshold;
+          
+          const finalDelta = (finalSuggestion.proVotes || 0) - (finalSuggestion.conVotes || 0);
+          const shouldAccept = finalDelta >= threshold;
+          
+          console.log('[VOTE AUTO-ACCEPT CHECK]', {
+            suggestionId,
+            finalProVotes: finalSuggestion.proVotes,
+            finalConVotes: finalSuggestion.conVotes,
+            finalDelta,
+            threshold,
+            shouldAccept
+          });
           
           if (shouldAccept) {
             hasCheckedRef.current.add(`${suggestionId}-accepted`);
-            // סמן את ההצעה כעומדת לאישור
             setAutoAcceptingIds(prev => ({ ...prev, [suggestionId]: true }));
             
             try {
-              accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
+              console.log('[VOTE] Attempting auto-accept for suggestion:', suggestionId);
+              accepted = await autoAcceptSuggestion(finalSuggestion, user.id, document);
+              console.log('[VOTE] Auto-accept result:', accepted);
             
-            if (accepted) {
-              // עדכון מיידי של הקאש לפני invalidate - optimistic update
-              queryClient.setQueryData(['suggestions', document?.id], (old) => {
-                if (!old) return old;
-                return old.map(s => 
-                  s.id === updatedSuggestion.id 
-                    ? { ...s, status: 'accepted', suggestionConsensus: updatedSuggestion.suggestionConsensus, participantsAtAcceptance: updatedSuggestion.participantsAtAcceptance }
-                    : s
-                );
-              });
-              
-              // רענון מיידי של כל הקווריז
-              Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
-                queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] }),
-                queryClient.invalidateQueries({ queryKey: ['document', document?.id] }),
-                queryClient.invalidateQueries({ queryKey: ['topics', document?.id] }),
-                queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
-                queryClient.invalidateQueries({ queryKey: ['versions', document?.id] })
-              ]);
-              
-              // טיפול בנקודות ברקע - fire-and-forget
-              if (!currentVote && vote === 'pro' && document.gamificationEnabled) {
-                base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
-                base44.entities.PointsTransaction.create({
-                  userId: user.id,
-                  amount: 50,
-                  action: 'vote_influenced_acceptance',
-                  description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${suggestion.title}`,
-                  relatedEntityId: suggestion.id,
-                  relatedEntityType: 'suggestion'
-                }).catch(() => {});
+              if (accepted) {
+                console.log('[VOTE] ✅ Suggestion auto-accepted successfully');
+                // עדכון מיידי של הקאש לפני invalidate - optimistic update
+                queryClient.setQueryData(['suggestions', document?.id], (old) => {
+                  if (!old) return old;
+                  return old.map(s => 
+                    s.id === suggestionId 
+                      ? { ...s, status: 'accepted' }
+                      : s
+                  );
+                });
+                
+                // רענון מיידי של כל הקווריז
+                Promise.all([
+                  queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
+                  queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] }),
+                  queryClient.invalidateQueries({ queryKey: ['document', document?.id] }),
+                  queryClient.invalidateQueries({ queryKey: ['topics', document?.id] }),
+                  queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
+                  queryClient.invalidateQueries({ queryKey: ['versions', document?.id] })
+                ]);
+                
+                // טיפול בנקודות ברקע - fire-and-forget
+                if (!currentVote && vote === 'pro' && document.gamificationEnabled) {
+                  base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
+                  base44.entities.PointsTransaction.create({
+                    userId: user.id,
+                    amount: 50,
+                    action: 'vote_influenced_acceptance',
+                    description: `ההצבעה שלך השפיעה על קבלת ההצעה: ${finalSuggestion.title}`,
+                    relatedEntityId: suggestionId,
+                    relatedEntityType: 'suggestion'
+                  }).catch(() => {});
+                }
               }
-            }
+            } catch (autoAcceptError) {
+              console.error('[VOTE] Auto-accept error:', autoAcceptError);
+              // אל תזרוק את השגיאה - ההצבעה עצמה הצליחה
+              toast.error('שגיאה באישור אוטומטי של ההצעה: ' + autoAcceptError.message);
             } finally {
               // הסר את הסמון של עומד לאישור
               setAutoAcceptingIds(prev => {
@@ -579,6 +604,14 @@ export default function DocumentContent({
       toast.error('שגיאה בהצבעה, נסה שוב');
     },
     onSuccess: (data, variables, context) => {
+      // אם ההצעה כבר טופלה - פשוט נרענן את הנתונים
+      if (data?.alreadyProcessed) {
+        console.log('[VOTE SUCCESS] Suggestion already processed, refreshing data');
+        queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
+        queryClient.invalidateQueries({ queryKey: ['userVotes', document?.id, user?.id] });
+        return;
+      }
+      
       // עדכון הקאש עם הערכים האמיתיים מהשרת
       if (data?.newProVotes !== undefined) {
         queryClient.setQueryData(['suggestions', document?.id], (old) => {
@@ -605,7 +638,10 @@ export default function DocumentContent({
       // רענון מיידי במקביל - לא מחכים
       Promise.all([
         queryClient.invalidateQueries({ queryKey: ['userVotes', document?.id, user?.id] }),
-        queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] })
+        queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] }),
+        queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
+        queryClient.invalidateQueries({ queryKey: ['document', document?.id] }),
+        queryClient.invalidateQueries({ queryKey: ['topics', document?.id] })
       ]);
     },
   });
