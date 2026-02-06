@@ -604,7 +604,7 @@ export default function LearnMore() {
         </Card>
 
         <div className="mt-8 p-6 bg-amber-50 border border-amber-200 rounded-lg">
-          <p className="text-sm text-amber-900 text-start">
+           <p className="text-sm text-amber-900 text-right">
             <strong>
               {getLocalizedText("Note:", "שים לב:", "ملاحظة:")}
             </strong>{" "}
