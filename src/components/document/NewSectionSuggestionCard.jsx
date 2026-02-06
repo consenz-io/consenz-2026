@@ -118,22 +118,14 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   const currentView = allViews[currentViewIndex] || allViews[0];
   const currentVersion = currentView?.data || suggestion;
 
-  // Auto-navigate to newest version when chain updates (only on mount)
-  const hasInitializedRef = React.useRef(false);
-  React.useEffect(() => {
-    if (!hasInitializedRef.current && suggestionChain.length > 0) {
-      hasInitializedRef.current = true;
-      setCurrentVersionId('latest');
-    }
-  }, [suggestionChain.length]);
-
-  // Navigate when targetSuggestionId changes (from floating nav buttons)
+  // Navigate when targetSuggestionId changes (from floating nav buttons or other sources)
   React.useEffect(() => {
     if (targetSuggestionId) {
       // Check if this suggestion or any of its versions is the target
       const isTarget = suggestionChain.some(s => s.id === targetSuggestionId);
       if (isTarget) {
         console.log('[NEW SECTION CARD] Navigating to target suggestion:', targetSuggestionId);
+        // Always show latest version when navigating from external buttons
         setCurrentVersionId('latest');
       }
     }
