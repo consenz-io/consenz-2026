@@ -466,7 +466,7 @@ export default function LearnMore() {
                 </div>
 
                 <div className={`flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-start">
+                  <div className="text-right flex-1">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Decisive Vote", "הצבעה מכרעת", "تصويت حاسم")}
                     </p>
@@ -474,7 +474,7 @@ export default function LearnMore() {
                       {getLocalizedText("Your vote caused acceptance", "ההצבעה שלך גרמה לאישור", "تصويتك تسبب في القبول")}
                     </p>
                   </div>
-                  <Badge className="bg-purple-600 text-white text-lg px-4 py-2 whitespace-nowrap">+50</Badge>
+                  <Badge className="bg-purple-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0">+50</Badge>
                 </div>
               </div>
             </CardContent>
