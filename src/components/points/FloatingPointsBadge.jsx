@@ -103,9 +103,6 @@ export default function FloatingPointsBadge() {
     },
   });
 
-  const hasNewPoints = totalNewPoints > 0;
-  const currentPoints = user?.points || 1000;
-
   if (!user) return null;
 
   return (
