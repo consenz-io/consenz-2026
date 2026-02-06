@@ -666,11 +666,11 @@ export default function LearnMore() {
               <div className="p-4 bg-white rounded-lg border border-slate-200">
                 <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Badge className="bg-blue-600">1</Badge>
-                  <div className="text-start">
-                    <p className="font-semibold text-slate-900">
+                  <div className="text-right">
+                    <p className="font-semibold text-slate-900 text-right">
                       {getLocalizedText("Start with default value", "התחלה עם ערך ברירת מחדל", "البدء بقيمة افتراضية")}
                     </p>
-                    <p className="text-sm text-slate-600 mt-1">
+                    <p className="text-sm text-slate-600 mt-1 text-right">
                       {getLocalizedText(
                         "Each document starts with a default consensus threshold (e.g., delta of 2 between pro and con votes)",
                         "כל מסמך מתחיל עם סף קונצנזוס ברירת מחדל (למשל, דלתא של 2 בין הצבעות בעד לנגד)",
