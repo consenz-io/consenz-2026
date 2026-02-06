@@ -813,12 +813,7 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
 
      // ===== Collect all emails that need notifications =====
 
-     let actionUrl;
-     if (targetEntityType === 'suggestion') {
-       actionUrl = `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${targetEntity.id}&commentId=${comment.id}`;
-     } else if (targetEntityType === 'section') {
-       actionUrl = `${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${documentId}#section-${targetEntity.id}-comment-${comment.id}`;
-     }
+     const actionUrl = `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${targetEntity.id}#comment-${comment.id}`;
     
     // 1. Parent comment author (if this is a reply) - FIRST PRIORITY!
     let parentCommentAuthorEmail = null;
