@@ -466,7 +466,7 @@ export default function LearnMore() {
                 </div>
 
                 <div className={`flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-end">
+                  <div className="text-right">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Decisive Vote", "הצבעה מכרעת", "تصويت حاسم")}
                     </p>
