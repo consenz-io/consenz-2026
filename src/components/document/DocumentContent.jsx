@@ -1355,7 +1355,7 @@ Return ONLY the translated text:`;
                               showComments={showComments}
                               getCommentsCount={getCommentsCount}
                               getUserVote={getUserVote}
-                              voteMutation={voteMutation}
+                              voteMutation={{ voteMutation, isInCooldown: false, cooldownSeconds: 0 }}
                               getUserName={getUserName}
                               acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
                               sectionIndex={index}
