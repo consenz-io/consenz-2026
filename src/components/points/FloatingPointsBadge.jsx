@@ -219,7 +219,12 @@ export default function FloatingPointsBadge() {
 
           {!isLoadingTransactions && newPointsTransactions.length > 0 && (
             <div className="space-y-2">
-              {newPointsTransactions.slice(0, 10).map((transaction) => {
+              {newPointsTransactions.slice(0, 10).map((transaction, index) => {
+                // Calculate balance at time of transaction
+                const transactionsAfter = newPointsTransactions.slice(0, index);
+                const pointsAfter = transactionsAfter.reduce((sum, t) => sum + (t.amount || 0), 0);
+                const balanceAtTime = currentPoints - pointsAfter;
+                
                 const getTransactionUrl = () => {
                   if (transaction.relatedEntityType === 'suggestion') {
                     return createPageUrl('suggestiondetail') + `?id=${transaction.relatedEntityId}`;
@@ -252,6 +257,9 @@ export default function FloatingPointsBadge() {
                           }`}>
                             {transaction.amount > 0 ? '+' : ''}{transaction.amount}
                           </Badge>
+                          <span className="text-xs text-slate-400">
+                            ({balanceAtTime})
+                          </span>
                           <span className="text-xs text-slate-500">
                             {formatLocalDateTime(transaction.created_date, 'DD/MM HH:mm')}
                           </span>
