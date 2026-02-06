@@ -438,8 +438,8 @@ function LayoutContent({ children, currentPageName }) {
                       id="language-selector"
                     >
                       <option value="en">English</option>
-                      <option value="he">עברית</option>
                       <option value="ar">العربية</option>
+                      <option value="he">עברית</option>
                     </select>
                   </div>
                 </div>

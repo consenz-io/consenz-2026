@@ -870,7 +870,10 @@ export const useLanguage = () => {
 
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState(() => {
-    return localStorage.getItem('consenz_language') || 'he';
+    return localStorage.getItem('consenz_language') || 'en';
+  });
+  const [showLanguageModal, setShowLanguageModal] = useState(() => {
+    return !localStorage.getItem('consenz_language_selected');
   });
 
   useEffect(() => {
@@ -878,6 +881,12 @@ export const LanguageProvider = ({ children }) => {
     document.documentElement.dir = language === 'en' ? 'ltr' : 'rtl';
     document.documentElement.lang = language;
   }, [language]);
+
+  const selectLanguage = (lang) => {
+    setLanguage(lang);
+    localStorage.setItem('consenz_language_selected', 'true');
+    setShowLanguageModal(false);
+  };
 
   const t = (key, options = {}) => {
     let translation = translations[language][key] || key;
@@ -892,6 +901,37 @@ export const LanguageProvider = ({ children }) => {
   return (
     <LanguageContext.Provider value={{ language, setLanguage, t, isRTL }}>
       <Toaster position="top-center" richColors closeButton dir={isRTL ? 'rtl' : 'ltr'} />
+      {showLanguageModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Language</h2>
+              <p className="text-sm text-gray-600 mb-1">בחר את השפה שלך</p>
+              <p className="text-sm text-gray-600">اختر لغتك</p>
+            </div>
+            <div className="space-y-3">
+              <button
+                onClick={() => selectLanguage('en')}
+                className="w-full p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-center font-medium text-gray-900"
+              >
+                English
+              </button>
+              <button
+                onClick={() => selectLanguage('ar')}
+                className="w-full p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-center font-medium text-gray-900"
+              >
+                العربية
+              </button>
+              <button
+                onClick={() => selectLanguage('he')}
+                className="w-full p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-center font-medium text-gray-900"
+              >
+                עברית
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {children}
     </LanguageContext.Provider>
   );
