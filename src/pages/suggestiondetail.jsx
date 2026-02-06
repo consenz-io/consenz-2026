@@ -326,8 +326,12 @@ export default function SuggestionDetail() {
       }
       
       // Check if it's a rate limit error
-      if (err.message?.includes('המתן') || err.message?.toLowerCase().includes('wait')) {
-        const retrySeconds = 30; // Default wait time
+      const errorMsg = err.message || '';
+      if (errorMsg.includes('המתן') || errorMsg.toLowerCase().includes('wait')) {
+        // Extract wait time from error message
+        const match = errorMsg.match(/(\d+)\s*(?:שניות|seconds)/);
+        const retrySeconds = match ? parseInt(match[1]) : 30;
+        
         setRateLimitRetryAfter(retrySeconds);
         
         // Countdown timer
