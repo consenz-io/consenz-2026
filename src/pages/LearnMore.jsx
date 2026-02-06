@@ -454,9 +454,9 @@ export default function LearnMore() {
                 </div>
 
                 <div className={`flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-start">
-                    <p className="font-semibold text-slate-900">
-                      {getLocalizedText("Suggestion Accepted", "הצעה התקבלה", "المقترح مقبول")}
+                  <div className="text-end">
+                   <p className="font-semibold text-slate-900">
+                     {getLocalizedText("Suggestion Accepted", "הצעה התקבלה", "المقترح مقبول")}
                     </p>
                     <p className="text-sm text-slate-600">
                       {getLocalizedText("Your suggestion passes consensus", "ההצעה שלך עוברת את הקונצנזוס", "مقترحך يتجاوز الإجماع")}
