@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
   FileText, Users, Vote, CheckCircle, MessageSquare, 
   TrendingUp, ArrowRight, ChevronRight, ArrowLeft,
-  Edit3, Plus, Clock
+  Edit3, Plus, ThumbsUp, ThumbsDown, Clock
 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
@@ -387,7 +387,7 @@ export default function LearnMore() {
           {/* Costs Table */}
           <Card className="bg-white/80 backdrop-blur-sm border-red-200">
             <CardHeader className="bg-gradient-to-br from-red-50 to-orange-50">
-              <CardTitle className={`text-xl text-end flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <CardTitle className="text-xl text-start">
                 {getLocalizedText("Costs", "עלויות", "التكاليف")}
               </CardTitle>
             </CardHeader>
@@ -435,7 +435,7 @@ export default function LearnMore() {
           {/* Rewards Table */}
           <Card className="bg-white/80 backdrop-blur-sm border-green-200">
             <CardHeader className="bg-gradient-to-br from-green-50 to-emerald-50">
-              <CardTitle className={`text-xl text-end flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <CardTitle className="text-xl text-start">
                 {getLocalizedText("Rewards", "תגמולים", "المكافآت")}
               </CardTitle>
             </CardHeader>
@@ -462,7 +462,7 @@ export default function LearnMore() {
                       {getLocalizedText("Your suggestion passes consensus", "ההצעה שלך עוברת את הקונצנזוס", "مقترحך يتجاوز الإجماع")}
                     </p>
                   </div>
-                  <Badge className="bg-blue-600 text-white text-lg px-4 py-2 whitespace-nowrap">+100</Badge>
+                  <Badge className="bg-blue-600 text-white text-lg px-4 py-2 whitespace-nowrap">+200</Badge>
                 </div>
 
                 <div className={`flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -746,10 +746,12 @@ export default function LearnMore() {
                   </p>
                   <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <span className="font-bold text-green-600">+8</span>
+                      <ThumbsUp className="w-4 h-4 text-green-600" />
+                      <span className="font-bold">8</span>
                     </div>
                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <span className="font-bold text-red-600">-2</span>
+                      <ThumbsDown className="w-4 h-4 text-red-600" />
+                      <span className="font-bold">2</span>
                     </div>
                     <span className="text-sm text-slate-600">
                       {getLocalizedText("Delta: 6", "דלתא: 6", "دلتا: 6")}
@@ -763,10 +765,12 @@ export default function LearnMore() {
                   </p>
                   <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <span className="font-bold text-green-600">+5</span>
+                      <ThumbsUp className="w-4 h-4 text-green-600" />
+                      <span className="font-bold">5</span>
                     </div>
                     <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                      <span className="font-bold text-red-600">-1</span>
+                      <ThumbsDown className="w-4 h-4 text-red-600" />
+                      <span className="font-bold">1</span>
                     </div>
                     <span className="text-sm text-slate-600">
                       {getLocalizedText("Delta: 4", "דלתא: 4", "دلتا: 4")}
