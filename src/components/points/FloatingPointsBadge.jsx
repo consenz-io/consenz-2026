@@ -61,7 +61,7 @@ export default function FloatingPointsBadge() {
     }}>
       <PopoverTrigger asChild>
         <button
-          className={`fixed ${isRTL ? 'right-6' : 'left-6'} bottom-36 bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all hover:scale-110 z-50 focus:ring-4 focus:ring-amber-300 ${hasNewPoints ? 'animate-pulse' : ''}`}
+          className={`bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all hover:scale-110 focus:ring-4 focus:ring-amber-300 ${hasNewPoints ? 'animate-pulse' : ''}`}
           aria-label={language === 'he' ? `${currentPoints} נקודות` : language === 'ar' ? `${currentPoints} نقاط` : `${currentPoints} points`}
         >
           <div className="flex items-center gap-1.5">
