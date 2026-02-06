@@ -108,8 +108,17 @@ export default function FloatingPointsBadge() {
             </>
           )}
 
-          {newPointsTransactions.length > 0 && (
+          {isLoadingTransactions && (
+            <p className="text-slate-400 text-sm text-center py-4">
+              {language === 'he' ? 'טוען...' : language === 'ar' ? 'جارٍ التحميل...' : 'Loading...'}
+            </p>
+          )}
+
+          {!isLoadingTransactions && newPointsTransactions.length > 0 && (
             <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-slate-600 uppercase">
+                {language === 'he' ? 'אירועים שהובילו לנקודות' : language === 'ar' ? 'الأحداث' : 'Events'}
+              </h4>
               {newPointsTransactions.slice(0, 10).map((transaction) => (
                 <div 
                   key={transaction.id}
@@ -133,7 +142,7 @@ export default function FloatingPointsBadge() {
                           {formatLocalDateTime(transaction.created_date, 'DD/MM HH:mm')}
                         </span>
                       </div>
-                      <p className="text-sm text-slate-700">{transaction.description}</p>
+                      <p className="text-sm text-slate-700 font-medium">{transaction.description}</p>
                     </div>
                   </div>
                 </div>
@@ -141,7 +150,7 @@ export default function FloatingPointsBadge() {
             </div>
           )}
 
-          {!hasNewPoints && (
+          {!isLoadingTransactions && newPointsTransactions.length === 0 && !hasNewPoints && (
             <p className="text-slate-500 text-sm text-center py-4">
               {language === 'he' ? 'אין נקודות חדשות' : language === 'ar' ? 'لا توجد نقاط جديدة' : 'No new points'}
             </p>
