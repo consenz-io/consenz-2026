@@ -82,7 +82,7 @@ export default function FloatingPointsBadge() {
 
   React.useEffect(() => {
     if (hasNewPoints && lastPointsVisit) {
-      // Show toast notification only when there are new points after first visit
+      // Show toast notification when new points are earned
       toast.success(
         language === 'he' 
           ? `🎉 קיבלת ${totalNewPoints} נקודות חדשות!` 
