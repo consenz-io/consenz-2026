@@ -906,8 +906,8 @@ export const LanguageProvider = ({ children }) => {
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose Your Language</h2>
-              <p className="text-sm text-gray-600 mb-1">בחר את השפה שלך</p>
-              <p className="text-sm text-gray-600">اختر لغتك</p>
+              <p className="text-sm text-gray-600 mb-1">בחירת שפה</p>
+              <p className="text-sm text-gray-600">اختيار اللغة</p>
             </div>
             <div className="space-y-3">
               <button
