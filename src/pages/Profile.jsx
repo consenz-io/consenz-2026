@@ -14,6 +14,7 @@ import { User, Mail, Shield, Sparkles, FileText, CheckCircle, AlertCircle, Edit2
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
+import { formatLocalDateTime, formatLocalDate } from "@/components/utils/dateFormatter";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -516,11 +517,7 @@ export default function Profile() {
 
             <div className="border-t pt-4">
               <p className="text-xs text-slate-500">
-                Member since {new Date(user.created_date).toLocaleDateString('en-US', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
+                Member since {formatLocalDate(user.created_date, 'DD/MM/YYYY')}
               </p>
             </div>
           </CardContent>
@@ -588,10 +585,7 @@ export default function Profile() {
                               {transaction.amount > 0 ? '+' : ''}{transaction.amount}
                             </Badge>
                             <span className="text-xs text-slate-500">
-                              {new Date(transaction.created_date).toLocaleDateString(
-                                language === 'en' ? 'en-US' : language === 'ar' ? 'ar-EG' : 'he-IL',
-                                { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }
-                              )}
+                              {formatLocalDateTime(transaction.created_date, 'DD/MM/YYYY HH:mm')}
                             </span>
                           </div>
                           <p className="text-sm text-slate-700">{transaction.description}</p>
@@ -631,10 +625,7 @@ export default function Profile() {
                               {t('accepted')}
                             </Badge>
                             <span className="text-xs text-slate-500">
-                              {new Date(suggestion.created_date).toLocaleDateString(
-                                language === 'en' ? 'en-US' : language === 'ar' ? 'ar-EG' : 'he-IL', 
-                                { year: 'numeric', month: 'short', day: 'numeric' }
-                              )}
+                             {formatLocalDate(suggestion.created_date)}
                             </span>
                           </div>
                           <p className="text-sm font-medium text-slate-900 mb-1">{suggestion.title}</p>
@@ -785,10 +776,7 @@ export default function Profile() {
                                 {vote.vote === 'pro' ? t('pro') : t('con')}
                               </Badge>
                               <span className="text-xs text-slate-500">
-                                {new Date(vote.created_date).toLocaleDateString(
-                                  language === 'en' ? 'en-US' : language === 'ar' ? 'ar-EG' : 'he-IL', 
-                                  { year: 'numeric', month: 'short', day: 'numeric' }
-                                )}
+                               {formatLocalDate(vote.created_date)}
                               </span>
                             </div>
                             <p className="text-sm text-slate-700">
