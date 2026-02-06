@@ -14,7 +14,7 @@ import { User, Mail, Shield, Sparkles, FileText, CheckCircle, AlertCircle, Edit2
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
-import { formatLocalDateTime, formatLocalDate } from "@/components/utils/dateFormatter";
+import { formatLocalDate } from "@/components/utils/dateFormatter";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -585,7 +585,7 @@ export default function Profile() {
                               {transaction.amount > 0 ? '+' : ''}{transaction.amount}
                             </Badge>
                             <span className="text-xs text-slate-500">
-                              {formatLocalDateTime(transaction.created_date, 'DD/MM/YYYY HH:mm')}
+                              {formatLocalDate(transaction.created_date, 'DD/MM/YYYY HH:mm')}
                             </span>
                           </div>
                           <p className="text-sm text-slate-700">{transaction.description}</p>
@@ -625,7 +625,7 @@ export default function Profile() {
                               {t('accepted')}
                             </Badge>
                             <span className="text-xs text-slate-500">
-                             {formatLocalDate(suggestion.created_date)}
+                              {formatLocalDate(suggestion.created_date, 'DD/MM/YYYY')}
                             </span>
                           </div>
                           <p className="text-sm font-medium text-slate-900 mb-1">{suggestion.title}</p>
@@ -685,10 +685,7 @@ export default function Profile() {
                                   {t('commentOn')} {comment.rootEntityType === 'suggestion' ? t('suggestion') : t('section')}
                                 </Badge>
                                 <span className="text-xs text-slate-500">
-                                  {new Date(comment.created_date).toLocaleDateString(
-                                    language === 'en' ? 'en-US' : language === 'ar' ? 'ar-EG' : 'he-IL', 
-                                    { year: 'numeric', month: 'short', day: 'numeric' }
-                                  )}
+                                  {formatLocalDate(comment.created_date, 'DD/MM/YYYY')}
                                 </span>
                               </div>
                               <p className="text-sm text-slate-700 line-clamp-2 mb-2">{comment.content}</p>
@@ -776,7 +773,7 @@ export default function Profile() {
                                 {vote.vote === 'pro' ? t('pro') : t('con')}
                               </Badge>
                               <span className="text-xs text-slate-500">
-                               {formatLocalDate(vote.created_date)}
+                                {formatLocalDate(vote.created_date, 'DD/MM/YYYY')}
                               </span>
                             </div>
                             <p className="text-sm text-slate-700">
