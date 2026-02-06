@@ -48,7 +48,9 @@ const SectionCarousel = React.memo(function SectionCarousel({
   // שליפת כל ההצעות של הסעיף (לא רק pending) כדי לעקוב אחרי שינויי סטטוס
   const { data: allSectionSuggestions = [] } = useQuery({
     queryKey: ['suggestions', document?.id],
-    enabled: false,
+    queryFn: () => base44.entities.Suggestion.filter({ documentId: document?.id }),
+    enabled: !!document?.id,
+    initialData: [],
     select: (data) => {
       if (!data) return [];
       
