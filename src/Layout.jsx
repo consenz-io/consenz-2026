@@ -560,7 +560,7 @@ function LayoutContent({ children, currentPageName }) {
           aria-label={isRTL ? 'תוכן ראשי' : 'Main content'}
           style={{ '--sidebar-width': '16rem' }}
         >
-          <header className={`bg-white/80 backdrop-blur-sm border-b border-slate-200 ${user && totalUnvotedSuggestions > 0 ? 'fixed' : 'sticky'} top-0 z-30 w-full ${user && totalUnvotedSuggestions > 0 ? 'shadow-md' : ''}`} role="banner" style={user && totalUnvotedSuggestions > 0 ? { [isRTL ? 'paddingRight' : 'paddingLeft']: 'var(--sidebar-width, 0px)' } : {}}>
+          <header className={`bg-white/80 backdrop-blur-sm border-b border-slate-200 ${user && totalUnvotedSuggestions > 0 ? 'fixed md:inset-inline-start-64 md:w-[calc(100vw-16rem)]' : 'sticky'} top-0 z-30 w-full ${user && totalUnvotedSuggestions > 0 ? 'shadow-md' : ''}`} role="banner">
             <div className={`flex items-center ${user && totalUnvotedSuggestions > 0 ? 'justify-center' : 'justify-between'} gap-2 px-2 md:px-6 ${user && totalUnvotedSuggestions > 0 ? 'py-3 md:py-5' : 'py-2 md:py-4'}`}>
               <div className={`flex items-center gap-2 md:gap-4 ${user && totalUnvotedSuggestions > 0 ? 'md:absolute md:inset-inline-start-6' : ''}`}>
                 <SidebarTrigger 
