@@ -32,14 +32,23 @@ export default function FloatingPointsBadge() {
   const lastPointsVisit = user?.lastPointsVisit;
 
   const newPointsTransactions = React.useMemo(() => {
-    if (!lastPointsVisit) return pointsTransactions;
+    if (!lastPointsVisit) {
+      // If no last visit, show all transactions
+      return pointsTransactions;
+    }
     const lastVisitDate = new Date(lastPointsVisit);
-    return pointsTransactions.filter(t => new Date(t.created_date) > lastVisitDate);
+    const filtered = pointsTransactions.filter(t => new Date(t.created_date) > lastVisitDate);
+    // If no new transactions, fall back to showing all recent ones
+    return filtered.length > 0 ? filtered : pointsTransactions;
   }, [pointsTransactions, lastPointsVisit]);
 
   const totalNewPoints = React.useMemo(() => {
-    return newPointsTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
-  }, [newPointsTransactions]);
+    if (!lastPointsVisit) return 0; // Don't show badge highlight on first visit
+    const lastVisitDate = new Date(lastPointsVisit);
+    return pointsTransactions
+      .filter(t => new Date(t.created_date) > lastVisitDate)
+      .reduce((sum, t) => sum + (t.amount || 0), 0);
+  }, [pointsTransactions, lastPointsVisit]);
 
   const markAsViewedMutation = useMutation({
     mutationFn: async () => {
