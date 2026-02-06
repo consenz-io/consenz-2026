@@ -53,15 +53,14 @@ export default function FloatingPointsBadge() {
   const hasNewPoints = totalNewPoints > 0;
 
   return (
-    <Popover>
+    <Popover onOpenChange={(open) => {
+      if (open && hasNewPoints) {
+        markAsViewedMutation.mutate();
+      }
+    }}>
       <PopoverTrigger asChild>
         <button
           className={`fixed ${isRTL ? 'right-6' : 'left-6'} bottom-20 bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all hover:scale-110 z-50 focus:ring-4 focus:ring-amber-300`}
-          onClick={() => {
-            if (hasNewPoints) {
-              markAsViewedMutation.mutate();
-            }
-          }}
           aria-label={language === 'he' ? 'נקודות חדשות' : 'New points'}
         >
           <Sparkles className="w-5 h-5" aria-hidden="true" />
