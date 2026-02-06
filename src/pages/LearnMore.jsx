@@ -435,7 +435,7 @@ export default function LearnMore() {
           {/* Rewards Table */}
           <Card className="bg-white/80 backdrop-blur-sm border-green-200">
             <CardHeader className="bg-gradient-to-br from-green-50 to-emerald-50">
-              <CardTitle className="text-xl text-start">
+              <CardTitle className="text-xl text-right">
                 {getLocalizedText("Rewards", "תגמולים", "المكافآت")}
               </CardTitle>
             </CardHeader>
