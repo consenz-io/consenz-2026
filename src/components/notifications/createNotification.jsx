@@ -366,6 +366,9 @@ export async function notifyVoteOnSuggestion({ suggestion, voterEmail, voterName
   return;
 }
 
+// Cache to prevent duplicate notifications for the same suggestion status change
+const notifiedStatusChanges = new Set();
+
 /**
  * Create notification for suggestion status change
  */
@@ -377,6 +380,19 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     if (!suggestion?.id || !suggestion?.created_by) {
       console.error('[NOTIFY STATUS] ✗ Missing data:', { id: suggestion?.id, created_by: suggestion?.created_by });
       return;
+    }
+    
+    // Prevent duplicate notifications for the same suggestion status change
+    const notificationKey = `${suggestion.id}-${newStatus}`;
+    if (notifiedStatusChanges.has(notificationKey)) {
+      console.log('[NOTIFY STATUS] ⚠️ Already sent notification for this status change, skipping');
+      return;
+    }
+    notifiedStatusChanges.add(notificationKey);
+    
+    // Clean cache periodically to prevent memory leaks
+    if (notifiedStatusChanges.size > 1000) {
+      notifiedStatusChanges.clear();
     }
     
     const statusKeys = {
