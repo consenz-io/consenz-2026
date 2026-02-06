@@ -97,7 +97,7 @@ export default function VirtualizedNotificationsList({
   // Use virtualization for lists with >15 items
   if (notifications.length <= 15) {
     return (
-      <div className="divide-y">
+      <div className="space-y-2">
         {notifications.map(notification => (
           <NotificationItem
             key={notification.id}
