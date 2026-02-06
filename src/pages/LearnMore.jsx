@@ -651,7 +651,7 @@ export default function LearnMore() {
       <section id="consensus-calculation" className="max-w-7xl mx-auto px-6 py-16" dir={isRTL ? 'rtl' : 'ltr'}>
         <Card className="bg-gradient-to-br from-slate-50 to-blue-50 border-slate-200">
           <CardHeader>
-            <CardTitle className="text-2xl text-start">
+            <CardTitle className="text-2xl text-right">
               {getLocalizedText(
                 "How is the Consensus Threshold Calculated?",
                 "איך מחושב סף הקונצנזוס?",
