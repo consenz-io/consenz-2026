@@ -560,7 +560,7 @@ function LayoutContent({ children, currentPageName }) {
           aria-label={isRTL ? 'תוכן ראשי' : 'Main content'}
         >
           <header className={`bg-white/80 backdrop-blur-sm border-b border-slate-200 ${user && totalUnvotedSuggestions > 0 ? 'fixed' : 'sticky'} top-0 z-30 w-full ${user && totalUnvotedSuggestions > 0 ? 'shadow-md' : ''}`} role="banner">
-            <div className="relative flex items-center justify-between gap-2 px-2 py-2 md:px-6 md:py-4">
+            <div className={`relative flex items-center justify-between gap-2 px-2 md:px-6 ${user && totalUnvotedSuggestions > 0 ? 'py-3 md:py-5' : 'py-2 md:py-4'}`}>
               <div className="flex items-center gap-2 md:gap-4">
                 <SidebarTrigger 
                   className="md:hidden hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200 touch-manipulation"
