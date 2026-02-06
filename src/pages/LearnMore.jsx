@@ -491,11 +491,11 @@ export default function LearnMore() {
           <CardContent>
             <div className="space-y-6">
               {/* Noise Filtering */}
-              <div className="p-4 bg-white rounded-lg border border-slate-200 text-start">
-                <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
-                  <Badge className="bg-red-600">1</Badge>
-                  {getLocalizedText("Noise Filtering Mechanism", "מנגנון סינון רעשים", "آلية تصفية الضوضاء")}
-                </h4>
+              <div className="p-4 bg-white rounded-lg border border-slate-200 text-right">
+                 <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2 text-right">
+                   <Badge className="bg-red-600">1</Badge>
+                   {getLocalizedText("Noise Filtering Mechanism", "מנגנון סינון רעשים", "آلية تصفية الضوضاء")}
+                 </h4>
                 <div className="space-y-3">
                   <div>
                     <p className="font-semibold text-slate-800 mb-1">
