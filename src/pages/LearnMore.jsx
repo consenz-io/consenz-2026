@@ -462,7 +462,7 @@ export default function LearnMore() {
                       {getLocalizedText("Your suggestion passes consensus", "ההצעה שלך עוברת את הקונצנזוס", "مقترحך يتجاوز الإجماع")}
                     </p>
                   </div>
-                  <Badge className="bg-blue-600 text-white text-lg px-4 py-2 whitespace-nowrap">+100</Badge>
+                  <Badge className="bg-blue-600 text-white text-lg px-4 py-2 whitespace-nowrap">+200</Badge>
                 </div>
 
                 <div className={`flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
