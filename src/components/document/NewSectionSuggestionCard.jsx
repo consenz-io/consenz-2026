@@ -32,7 +32,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
   const queryClient = useQueryClient();
-  const [currentVersionId, setCurrentVersionId] = React.useState('latest');
+  const [currentVersionId, setCurrentVersionId] = React.useState('original');
 
   const deleteSuggestionMutation = useMutation({
     mutationFn: async () => {
@@ -125,11 +125,14 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       const isTarget = suggestionChain.some(s => s.id === targetSuggestionId);
       if (isTarget) {
         console.log('[NEW SECTION CARD] Navigating to target suggestion:', targetSuggestionId);
-        // Always show latest version when navigating from external buttons
-        setCurrentVersionId('latest');
+        // Find which specific version is the target
+        const targetVersion = suggestionChain.find(s => s.id === targetSuggestionId);
+        if (targetVersion) {
+          setCurrentVersionId(targetVersion.id === suggestion.id ? 'original' : targetVersion.id);
+        }
       }
     }
-  }, [targetSuggestionId, suggestionChain]);
+  }, [targetSuggestionId, suggestionChain, suggestion.id]);
 
   // Truncate content for preview
   const getContentPreview = (html) => {
@@ -335,9 +338,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       className={`group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 ${
         isAutoAccepting 
           ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50 ring-2 ring-blue-300 ring-offset-1' 
-          : currentView.type === 'original'
-            ? 'border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50'
-            : 'border-blue-300 hover:border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50'
+          : 'border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50'
       }`}
     >
       {/* כפתורי דפדוף בין גרסאות - מעגלי כמו SectionCarousel */}
@@ -378,26 +379,20 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
         </div>
       )}
 
-      {/* כותרת עם אינדיקטור של הצעה חדשה או גרסה */}
+      {/* כותרת עם אינדיקטור של הצעה חדשה */}
       <div className="flex items-center justify-between mb-3 md:mb-4">
         <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
           {isAutoAccepting ? (
             <Loader2 className="w-5 h-5 md:w-6 md:h-6 animate-spin text-blue-600 flex-shrink-0" />
-          ) : currentView.type === 'original' ? (
+          ) : (
             <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
               <Plus className="w-5 h-5 text-white" />
-            </div>
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
-              <Edit2 className="w-5 h-5 text-white" />
             </div>
           )}
           <div className="text-sm md:text-base font-semibold text-slate-900 break-words">
             {isAutoAccepting 
               ? 'מעבד הצעה...' 
-              : currentView.type === 'original'
-                ? `הצעה לסעיף חדש מאת ${getUserName(currentVersion.created_by)}`
-                : `${isRTL ? 'עריכה מאת' : 'Edit by'} ${getUserName(currentVersion.created_by)}`
+              : `הצעה לסעיף חדש מאת ${getUserName(currentVersion.created_by)}`
             }
           </div>
         </div>
