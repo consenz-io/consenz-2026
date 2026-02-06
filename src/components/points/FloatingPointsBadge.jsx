@@ -128,34 +128,49 @@ export default function FloatingPointsBadge() {
               <h4 className="text-xs font-semibold text-slate-600 uppercase">
                 {language === 'he' ? 'אירועים שהובילו לנקודות' : language === 'ar' ? 'الأحداث' : 'Events'}
               </h4>
-              {newPointsTransactions.slice(0, 10).map((transaction) => (
-                <div 
-                  key={transaction.id}
-                  className={`p-3 rounded-lg border ${
-                    transaction.amount > 0 
-                      ? 'bg-green-50 border-green-200' 
-                      : 'bg-red-50 border-red-200'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline" className={`text-xs font-semibold ${
-                          transaction.amount > 0 
-                            ? 'bg-green-100 text-green-800 border-green-300' 
-                            : 'bg-red-100 text-red-800 border-red-300'
-                        }`}>
-                          {transaction.amount > 0 ? '+' : ''}{transaction.amount}
-                        </Badge>
-                        <span className="text-xs text-slate-500">
-                          {formatLocalDateTime(transaction.created_date, 'DD/MM HH:mm')}
-                        </span>
+              {newPointsTransactions.slice(0, 10).map((transaction) => {
+                const getTransactionUrl = () => {
+                  if (transaction.relatedEntityType === 'suggestion') {
+                    return createPageUrl('suggestiondetail') + `?id=${transaction.relatedEntityId}`;
+                  }
+                  return null;
+                };
+
+                const url = getTransactionUrl();
+                const Component = url ? Link : 'div';
+
+                return (
+                  <Component
+                    key={transaction.id}
+                    to={url}
+                    className={`block p-3 rounded-lg border transition-all ${
+                      url ? 'cursor-pointer hover:shadow-md' : ''
+                    } ${
+                      transaction.amount > 0 
+                        ? 'bg-green-50 border-green-200' 
+                        : 'bg-red-50 border-red-200'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline" className={`text-xs font-semibold ${
+                            transaction.amount > 0 
+                              ? 'bg-green-100 text-green-800 border-green-300' 
+                              : 'bg-red-100 text-red-800 border-red-300'
+                          }`}>
+                            {transaction.amount > 0 ? '+' : ''}{transaction.amount}
+                          </Badge>
+                          <span className="text-xs text-slate-500">
+                            {formatLocalDateTime(transaction.created_date, 'DD/MM HH:mm')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-slate-700 font-medium">{transaction.description}</p>
                       </div>
-                      <p className="text-sm text-slate-700 font-medium">{transaction.description}</p>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  </Component>
+                );
+              })}
             </div>
           )}
 
