@@ -13,6 +13,11 @@ import { rateLimitedAction, RATE_LIMITS } from "@/components/utils/rateLimiter";
 export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds, hasCheckedRef) {
   const queryClient = useQueryClient();
   const votingInProgressRef = React.useRef(new Set());
+  const [cooldownUntil, setCooldownUntil] = React.useState(null);
+  
+  // Check if in cooldown period
+  const isInCooldown = cooldownUntil && Date.now() < cooldownUntil;
+  const cooldownSeconds = isInCooldown ? Math.ceil((cooldownUntil - Date.now()) / 1000) : 0;
   
   const voteMutation = useMutation({
     mutationFn: async ({ suggestionId, vote, currentVote }) => {
