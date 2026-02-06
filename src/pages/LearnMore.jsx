@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
   FileText, Users, Vote, CheckCircle, MessageSquare, 
   TrendingUp, ArrowRight, ChevronRight, ArrowLeft,
-  Edit3, Plus, ThumbsUp, ThumbsDown, Clock
+  Edit3, Plus, Clock
 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
@@ -396,10 +396,10 @@ export default function LearnMore() {
               <div className="space-y-4">
                 <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <div className="text-start">
-                    <p className="font-semibold text-slate-900 text-right">
+                    <p className="font-semibold text-slate-900">
                       {getLocalizedText("Create Document", "פרסום מסמך", "نشر وثيقة")}
                     </p>
-                    <p className="text-sm text-slate-600 text-right">
+                    <p className="text-sm text-slate-600">
                       {getLocalizedText("Cost to publish a new document", "עלות פרסום מסמך חדש", "تكلفة نشر وثيقة جديدة")}
                     </p>
                   </div>
@@ -407,23 +407,23 @@ export default function LearnMore() {
                 </div>
                 
                 <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                   <div className="text-right flex-1">
-                     <p className="font-semibold text-slate-900 text-right">
-                       {getLocalizedText("Edit Section Suggestion", "הצעה לעריכת סעיף", "اقتراح تعديل قسم")}
-                     </p>
-                     <p className="text-sm text-slate-600 text-right">
-                       {getLocalizedText("Cost to suggest editing existing section", "עלות להצעת עריכה לסעיף קיים", "تكلفة اقتراح تعديل قسم موجود")}
-                     </p>
-                   </div>
+                  <div className="text-start">
+                    <p className="font-semibold text-slate-900">
+                      {getLocalizedText("Edit Section Suggestion", "הצעה לעריכת סעיף", "اقتراح تعديل قسم")}
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      {getLocalizedText("Cost to suggest editing existing section", "עלות להצעת עריכה לסעיף קיים", "تكلفة اقتراح تعديل قسم موجود")}
+                    </p>
+                  </div>
                   <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap">-200</Badge>
                 </div>
                 
                 <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-right flex-1">
-                    <p className="font-semibold text-slate-900 text-right">
-                      {getLocalizedText("New Section Suggestion", "הצעה לסעיף חדש", "اقتراح قسם جديד")}
+                  <div className="text-start">
+                    <p className="font-semibold text-slate-900">
+                      {getLocalizedText("New Section Suggestion", "הצעה לסעיף חדש", "اقتراح قسم جديد")}
                     </p>
-                    <p className="text-sm text-slate-600 text-right">
+                    <p className="text-sm text-slate-600">
                       {getLocalizedText("Cost to suggest adding new section", "עלות להצעת הוספת סעיף חדש", "تكلفة اقتراح إضافة قسم جديد")}
                     </p>
                   </div>
@@ -444,11 +444,11 @@ export default function LearnMore() {
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div className={`flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-right flex-1">
-                    <p className="font-semibold text-slate-900 text-right">
+                  <div className="text-start">
+                    <p className="font-semibold text-slate-900">
                       {getLocalizedText("Receive Pro Vote", "קבלת הצבעה בעד", "تلقي تصويت مع")}
                     </p>
-                    <p className="text-sm text-slate-600 text-right">
+                    <p className="text-sm text-slate-600">
                       {getLocalizedText("Each pro vote on your suggestion", "כל הצבעה בעד על ההצעה שלך", "كل تصويت مع على مقترحك")}
                     </p>
                   </div>
@@ -456,11 +456,11 @@ export default function LearnMore() {
                 </div>
 
                 <div className={`flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-right flex-1">
-                    <p className="font-semibold text-slate-900 text-right">
+                  <div className="text-start">
+                    <p className="font-semibold text-slate-900">
                       {getLocalizedText("Suggestion Accepted", "הצעה התקבלה", "المقترح مقبول")}
                     </p>
-                    <p className="text-sm text-slate-600 text-right">
+                    <p className="text-sm text-slate-600">
                       {getLocalizedText("Your suggestion passes consensus", "ההצעה שלך עוברת את הקונצנזוס", "مقترحך يتجاوز الإجماع")}
                     </p>
                   </div>
@@ -468,11 +468,11 @@ export default function LearnMore() {
                 </div>
 
                 <div className={`flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-right flex-1">
-                    <p className="font-semibold text-slate-900 text-right">
+                  <div className="text-start">
+                    <p className="font-semibold text-slate-900">
                       {getLocalizedText("Decisive Vote", "הצבעה מכרעת", "تصويت حاسم")}
                     </p>
-                    <p className="text-sm text-slate-600 text-right">
+                    <p className="text-sm text-slate-600">
                       {getLocalizedText("Your vote caused acceptance", "ההצבעה שלך גרמה לאישור", "تصويتك تسبب في القبول")}
                     </p>
                   </div>
@@ -493,17 +493,17 @@ export default function LearnMore() {
           <CardContent>
             <div className="space-y-6">
               {/* Noise Filtering */}
-              <div className="p-4 bg-white rounded-lg border border-slate-200 text-right">
+              <div className="p-4 bg-white rounded-lg border border-slate-200 text-start">
                 <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
                   <Badge className="bg-red-600">1</Badge>
                   {getLocalizedText("Noise Filtering Mechanism", "מנגנון סינון רעשים", "آلية تصفية الضوضاء")}
                 </h4>
                 <div className="space-y-3">
                   <div>
-                    <p className="font-semibold text-slate-800 mb-1 text-right">
+                    <p className="font-semibold text-slate-800 mb-1">
                       {getLocalizedText("Entry Cost Creates Quality Threshold", "מחיר כניסה יוצר סף איכות", "تكلفة الدخول تخلق عتبة جودة")}
                     </p>
-                    <p className="text-sm text-slate-600 text-right">
+                    <p className="text-sm text-slate-600">
                       {getLocalizedText(
                         "The 200-350 point cost for creating suggestions acts as a 'spam filter' - users think twice before adding content. Only those who believe their suggestion has real value will invest their points.",
                         "העלות של 200-350 נקודות ליצירת הצעות משמשת כ'פילטר ספאם' - משתמשים חושבים פעמיים לפני הוספת תוכן. רק מי שמאמין שההצעה שלו בעלת ערך אמיתי ישקיע את הנקודות שלו.",
@@ -541,7 +541,7 @@ export default function LearnMore() {
               </div>
 
               {/* Positive Incentives */}
-              <div className="p-4 bg-white rounded-lg border border-slate-200 text-right">
+              <div className="p-4 bg-white rounded-lg border border-slate-200 text-start">
                 <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
                   <Badge className="bg-green-600">2</Badge>
                   {getLocalizedText("Creating Positive Incentives", "יצירת תמריצים חיוביים", "خلق حوافز إيجابية")}
@@ -589,7 +589,7 @@ export default function LearnMore() {
               </div>
 
               {/* Key Insight */}
-              <div className="p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-300 text-right">
+              <div className="p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-300 text-start">
                 <p className="font-bold text-amber-900 mb-2">
                   {getLocalizedText("Key Insight:", "תובנה מרכזית:", "رؤية رئيسية:")}
                 </p>
@@ -606,7 +606,7 @@ export default function LearnMore() {
         </Card>
 
         <div className="mt-8 p-6 bg-amber-50 border border-amber-200 rounded-lg">
-          <p className="text-sm text-amber-900 text-right">
+          <p className="text-sm text-amber-900 text-start">
             <strong>
               {getLocalizedText("Note:", "שים לב:", "ملاحظة:")}
             </strong>{" "}
@@ -666,11 +666,11 @@ export default function LearnMore() {
               <div className="p-4 bg-white rounded-lg border border-slate-200">
                 <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                   <Badge className="bg-blue-600">1</Badge>
-                  <div className="text-right">
-                    <p className="font-semibold text-slate-900 text-right">
+                  <div className="text-start">
+                    <p className="font-semibold text-slate-900">
                       {getLocalizedText("Start with default value", "התחלה עם ערך ברירת מחדל", "البدء بقيمة افتراضية")}
                     </p>
-                    <p className="text-sm text-slate-600 mt-1 text-right">
+                    <p className="text-sm text-slate-600 mt-1">
                       {getLocalizedText(
                         "Each document starts with a default consensus threshold (e.g., delta of 2 between pro and con votes)",
                         "כל מסמך מתחיל עם סף קונצנזוס ברירת מחדל (למשל, דלתא של 2 בין הצבעות בעד לנגד)",
