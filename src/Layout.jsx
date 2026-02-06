@@ -602,20 +602,18 @@ function LayoutContent({ children, currentPageName }) {
           </main>
 
           {showScrollTop && (
-            <button
-              onClick={scrollToTop}
-              type="button"
-              className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50 focus:ring-4 focus:ring-blue-300"
-              aria-label={isRTL ? 'גלילה לראש העמוד' : 'Scroll to top'}
-            >
-              <ArrowUp className="w-5 h-5" aria-hidden="true" />
-              <span className="sr-only">{isRTL ? 'גלילה לראש העמוד' : 'Scroll to top'}</span>
-              </button>
-              )}
+           <button
+             onClick={scrollToTop}
+             type="button"
+             className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50 focus:ring-4 focus:ring-blue-300"
+             aria-label={isRTL ? 'גלילה לראש העמוד' : 'Scroll to top'}
+           >
+             <ArrowUp className="w-5 h-5" aria-hidden="true" />
+             <span className="sr-only">{isRTL ? 'גלילה לראש העמוד' : 'Scroll to top'}</span>
+             </button>
+             )}
 
-              <FloatingNotificationBell />
-              <FloatingPointsBadge />
-              <AccessibilityAnnouncer />
+             <AccessibilityAnnouncer />
               </div>
               </SidebarProvider>
               );
