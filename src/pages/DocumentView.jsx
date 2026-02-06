@@ -264,8 +264,47 @@ export default function DocumentView() {
           }, 300);
         }
       }, 200);
+    } else if (suggestion.type === 'edit_suggestion') {
+      // הצעה לעריכת הצעה - מעבר לחלון הקרוסלה שלה להצעה האב
+      // קודם כל, צריך למצוא את ההצעה האב
+      const parentSuggestion = suggestions.find(s => s.id === suggestion.parentSuggestionId);
+      
+      if (parentSuggestion) {
+        // אם זו הצעה לעריכת הצעה על סעיף קיים, צריך לעבור לקרוסלה של הסעיף
+        if (parentSuggestion.type === 'edit_section' || parentSuggestion.type === 'delete_section') {
+          setTargetSuggestionId(parentSuggestion.id);
+          setTimeout(() => {
+            const element = window.document.getElementById(`suggestion-${parentSuggestion.id}`);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
+              setTimeout(() => {
+                element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
+              }, 2000);
+            }
+          }, 200);
+        } else {
+          // הצעה לעריכת הצעה על הצעה לסעיף חדש - גלול להצעה האב והקרוסלה שלה תטפל
+          const elementId = `suggestion-${parentSuggestion.id}`;
+          setTimeout(() => {
+            const element = window.document.getElementById(elementId);
+            if (element) {
+              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              
+              // צריך גם לעדכן את הקרוסלה של NewSectionSuggestionCard להצעה האחרונה
+              // נעשה זאת על ידי dispatch של event או שימוש ב-state
+              // כרגע NewSectionSuggestionCard עובר אוטומטית לגרסה האחרונה, אז זה אמור לעבוד
+              
+              element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
+              setTimeout(() => {
+                element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4');
+              }, 2000);
+            }
+          }, 100);
+        }
+      }
     } else {
-      // הצעה לסעיף חדש או הצעה לעריכת הצעה - גלילה רגילה
+      // הצעה לסעיף חדש - גלילה רגילה
       const elementId = `suggestion-${suggestion.id}`;
       setTimeout(() => {
         const element = window.document.getElementById(elementId);
@@ -278,7 +317,7 @@ export default function DocumentView() {
         }
       }, 100);
     }
-  }, [pendingSuggestions]);
+  }, [pendingSuggestions, suggestions]);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
