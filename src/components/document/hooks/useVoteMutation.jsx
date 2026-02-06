@@ -263,10 +263,12 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
       }
       
       // Show user-friendly error message
-      const errorMessage = err.message?.includes('המתן') 
-        ? err.message 
-        : 'שגיאה בהצבעה, נסה שוב';
-      toast.error(errorMessage);
+      if (err.message?.includes('המתן') || err.message?.toLowerCase().includes('wait')) {
+        toast.error('נא להמתין מעט לפני הצבעה נוספת', { duration: 3000 });
+      } else {
+        const errorMessage = err.message || 'שגיאה בהצבעה, נסה שוב';
+        toast.error(errorMessage);
+      }
     },
     onSuccess: (data, variables) => {
       console.log('[VOTE SUCCESS]', { suggestionId: variables.suggestionId, accepted: data?.accepted });
