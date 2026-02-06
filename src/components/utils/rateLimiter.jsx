@@ -44,10 +44,10 @@ export const rateLimiter = new RateLimiter();
 
 // Presets for common actions
 export const RATE_LIMITS = {
-  VOTE: { maxRequests: 10, windowMs: 10 * 1000 }, // 10 votes per 10 seconds
-  COMMENT: { maxRequests: 5, windowMs: 60 * 1000 }, // 5 comments per minute
-  SUGGESTION: { maxRequests: 3, windowMs: 60 * 1000 }, // 3 suggestions per minute
-  TRANSLATION: { maxRequests: 10, windowMs: 60 * 1000 }, // 10 translations per minute
+  VOTE: { maxRequests: 50, windowMs: 10 * 1000 }, // 50 votes per 10 seconds
+  COMMENT: { maxRequests: 10, windowMs: 60 * 1000 }, // 10 comments per minute
+  SUGGESTION: { maxRequests: 5, windowMs: 60 * 1000 }, // 5 suggestions per minute
+  TRANSLATION: { maxRequests: 20, windowMs: 60 * 1000 }, // 20 translations per minute
 };
 
 // Helper function to create a rate-limited action
