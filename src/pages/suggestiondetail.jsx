@@ -381,54 +381,92 @@ export default function SuggestionDetail() {
     }
   });
 
+  // Retry helper with exponential backoff
+  const retryWithBackoff = async (fn, maxAttempts = 3, initialDelayMs = 500) => {
+    let lastError;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        return await fn();
+      } catch (error) {
+        lastError = error;
+        if (attempt < maxAttempts - 1) {
+          // Rate limit exceeded? Add backoff
+          const delayMs = initialDelayMs * Math.pow(2, attempt);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+      }
+    }
+    throw lastError;
+  };
+
   const updateStatusMutation = useMutation({
     mutationFn: async (status) => {
       if (!isAdmin) throw new Error(t('adminAccessRequired'));
       
       if (status === 'accepted' && suggestion.type === 'edit_section' && section) {
         // Get existing versions to calculate next version number
-        const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
+        const versions = await retryWithBackoff(() => 
+          base44.entities.DocumentVersion.filter({ sectionId: section.id })
+        );
         const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
         
         // Save version with OLD content before updating
-        await base44.entities.DocumentVersion.create({
-          documentId: suggestion.documentId,
-          sectionId: section.id,
-          content: section.content,
-          changeDescription: `לפני: ${suggestion.title}`,
-          version: nextVersion,
-          changeType: 'suggestion_accepted',
-          suggestionId: suggestion.id
-        });
+        await retryWithBackoff(() =>
+          base44.entities.DocumentVersion.create({
+            documentId: suggestion.documentId,
+            sectionId: section.id,
+            content: section.content,
+            changeDescription: `לפני: ${suggestion.title}`,
+            version: nextVersion,
+            changeType: 'suggestion_accepted',
+            suggestionId: suggestion.id
+          })
+        );
+        
+        // Small delay between operations to avoid rate limits
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         // Update section with new content
-        await base44.entities.Section.update(section.id, {
-          content: suggestion.newContent,
-          lastEditedBy: user.id
-        });
+        await retryWithBackoff(() =>
+          base44.entities.Section.update(section.id, {
+            content: suggestion.newContent,
+            lastEditedBy: user.id
+          })
+        );
+        
+        // Small delay between operations
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         // Save version with NEW content after updating
-        await base44.entities.DocumentVersion.create({
-          documentId: suggestion.documentId,
-          sectionId: section.id,
-          content: suggestion.newContent,
-          changeDescription: suggestion.title,
-          version: nextVersion + 1,
-          changeType: 'suggestion_accepted',
-          suggestionId: suggestion.id
-        });
+        await retryWithBackoff(() =>
+          base44.entities.DocumentVersion.create({
+            documentId: suggestion.documentId,
+            sectionId: section.id,
+            content: suggestion.newContent,
+            changeDescription: suggestion.title,
+            version: nextVersion + 1,
+            changeType: 'suggestion_accepted',
+            suggestionId: suggestion.id
+          })
+        );
       } else if (status === 'accepted' && suggestion.type === 'new_section') {
-        const sections = await base44.entities.Section.filter({ 
-          documentId: suggestion.documentId,
-          topicId: suggestion.topicId 
-        }, 'order');
+        const sections = await retryWithBackoff(() =>
+          base44.entities.Section.filter({ 
+            documentId: suggestion.documentId,
+            topicId: suggestion.topicId 
+          }, 'order')
+        );
         
         let newOrder;
         if (suggestion.insertPosition !== undefined && suggestion.insertPosition !== null) {
           // Insert at specific position - update orders of sections after this position
           const sectionsToUpdate = sections.filter(s => s.order >= suggestion.insertPosition);
           for (const section of sectionsToUpdate) {
-            await base44.entities.Section.update(section.id, { order: section.order + 1 });
+            await retryWithBackoff(() =>
+              base44.entities.Section.update(section.id, { order: section.order + 1 })
+            );
+            // Small delay between sequential updates
+            await new Promise(resolve => setTimeout(resolve, 200));
           }
           newOrder = suggestion.insertPosition;
         } else {
@@ -437,31 +475,48 @@ export default function SuggestionDetail() {
           newOrder = maxOrder + 1;
         }
         
-        const newSection = await base44.entities.Section.create({
-          documentId: suggestion.documentId,
-          topicId: suggestion.topicId,
-          content: suggestion.newContent,
-          order: newOrder,
-          lastEditedBy: user.id
-        });
+        const newSection = await retryWithBackoff(() =>
+          base44.entities.Section.create({
+            documentId: suggestion.documentId,
+            topicId: suggestion.topicId,
+            content: suggestion.newContent,
+            order: newOrder,
+            lastEditedBy: user.id
+          })
+        );
+        
+        // Small delay before creating version
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         // Create initial version for new section
-        await base44.entities.DocumentVersion.create({
-          documentId: suggestion.documentId,
-          sectionId: newSection.id,
-          content: suggestion.newContent,
-          changeDescription: suggestion.title,
-          version: 1,
-          changeType: 'section_created',
-          suggestionId: suggestion.id
-        });
+        await retryWithBackoff(() =>
+          base44.entities.DocumentVersion.create({
+            documentId: suggestion.documentId,
+            sectionId: newSection.id,
+            content: suggestion.newContent,
+            changeDescription: suggestion.title,
+            version: 1,
+            changeType: 'section_created',
+            suggestionId: suggestion.id
+          })
+        );
       }
 
-      await base44.entities.Suggestion.update(suggestionId, { status });
+      // Small delay before updating suggestion status
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      await retryWithBackoff(() =>
+        base44.entities.Suggestion.update(suggestionId, { status })
+      );
       
       // קבלת ההצעה המעודכנת מהשרת
-      const updatedSuggestions = await base44.entities.Suggestion.filter({ id: suggestionId });
+      const updatedSuggestions = await retryWithBackoff(() =>
+        base44.entities.Suggestion.filter({ id: suggestionId })
+      );
       const updatedSuggestion = updatedSuggestions[0] || { ...suggestion, status };
+      
+      // Small delay before sending notifications
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // שליחת התראה על שינוי סטטוס - חובה לחכות שתסתיים
       console.log('[UPDATE STATUS] Sending status change notifications...');
