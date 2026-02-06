@@ -541,7 +541,7 @@ export default function LearnMore() {
               </div>
 
               {/* Positive Incentives */}
-              <div className="p-4 bg-white rounded-lg border border-slate-200 text-start">
+              <div className="p-4 bg-white rounded-lg border border-slate-200 text-right">
                 <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2">
                   <Badge className="bg-green-600">2</Badge>
                   {getLocalizedText("Creating Positive Incentives", "יצירת תמריצים חיוביים", "خلق حوافز إيجابية")}
