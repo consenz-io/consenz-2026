@@ -24,13 +24,6 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
         throw new Error("ההצבעה בתהליך, אנא המתן");
       }
       
-      // Apply rate limiting
-      try {
-        await rateLimitedAction('voting', async () => {})();
-      } catch (rateLimitError) {
-        throw rateLimitError;
-      }
-      
       votingInProgressRef.current.add(suggestionId);
 
       try {
