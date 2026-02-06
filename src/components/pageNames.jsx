@@ -7,7 +7,7 @@
 
 export const PAGE_NAMES = {
   HOME: 'Home',
-  DOCUMENT_VIEW: 'DocumentView',
+  DOCUMENT_VIEW: 'DocumentView', // Must match the actual file name - no hyphens!
   SUGGESTION_DETAIL: 'suggestiondetail', // ✅ No hyphen - consistent with all notifications
   ACTIVITY_FEED: 'ActivityFeed',
   PROFILE: 'Profile',
