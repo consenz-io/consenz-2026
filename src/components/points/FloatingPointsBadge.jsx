@@ -51,6 +51,20 @@ export default function FloatingPointsBadge() {
       .reduce((sum, t) => sum + (t.amount || 0), 0);
   }, [pointsTransactions, lastPointsVisit]);
 
+  React.useEffect(() => {
+    if (hasNewPoints && !lastPointsVisit) {
+      // Show toast notification on mount if there are new points
+      toast.success(
+        language === 'he' 
+          ? `🎉 קיבלת ${totalNewPoints} נקודות חדשות!` 
+          : language === 'ar'
+          ? `🎉 لقد حصلت على ${totalNewPoints} نقاط جديدة!`
+          : `🎉 You earned ${totalNewPoints} new points!`,
+        { duration: 5000 }
+      );
+    }
+  }, [hasNewPoints, lastPointsVisit, totalNewPoints, language]);
+
   const markAsViewedMutation = useMutation({
     mutationFn: async () => {
       await base44.auth.updateMe({ lastPointsVisit: new Date().toISOString() });
