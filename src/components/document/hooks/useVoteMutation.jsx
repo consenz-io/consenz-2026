@@ -18,21 +18,12 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
     mutationFn: async ({ suggestionId, vote, currentVote }) => {
       if (!user) throw new Error("יש להתחבר כדי להצביע");
 
-      // Rate limiting check
-      const rateLimitedVote = rateLimitedAction(
-        async () => {
-          if (votingInProgressRef.current.has(suggestionId)) {
-            console.log('[VOTE] Already voting, ignoring');
-            throw new Error("ההצבעה בתהליך, אנא המתן");
-          }
-          votingInProgressRef.current.add(suggestionId);
-          return true;
-        },
-        `vote_${user.id}`,
-        RATE_LIMITS.VOTE
-      );
-
-      await rateLimitedVote();
+      // Prevent concurrent votes on same suggestion
+      if (votingInProgressRef.current.has(suggestionId)) {
+        console.log('[VOTE] Already voting on this suggestion, ignoring');
+        throw new Error("ההצבעה בתהליך, אנא המתן");
+      }
+      votingInProgressRef.current.add(suggestionId);
 
       try {
         const [freshVotes, freshSuggestions] = await Promise.all([
@@ -108,47 +99,67 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
         
         const updatedSuggestion = { ...freshSuggestion, proVotes: newProVotes, conVotes: newConVotes };
 
-        // Check consensus
+        // Check consensus with fresh document data
         let accepted = false;
         if (freshSuggestion.status === 'pending') {
-          const consensuses = document.consensuses || [];
+          // Fetch fresh document to ensure accurate consensus calculation
+          const freshDocs = await base44.entities.Document.filter({ id: document.id });
+          const freshDocument = freshDocs[0] || document;
+          
+          const consensuses = freshDocument.consensuses || [];
           let threshold;
           if (consensuses.length > 0) {
             const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-            threshold = Math.max(2, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
+            threshold = Math.max(2, Math.round(consensusMeterAverage * (freshDocument.totalUsersInteracted || 1)));
           } else {
-            threshold = Math.max(2, document.threshold || 2);
+            threshold = Math.max(2, freshDocument.threshold || 2);
           }
           const shouldAccept = (newProVotes - newConVotes) >= threshold;
           
+          console.log('[VOTE CONSENSUS CHECK]', {
+            suggestionId,
+            proVotes: newProVotes,
+            conVotes: newConVotes,
+            delta: newProVotes - newConVotes,
+            threshold,
+            shouldAccept,
+            consensuses: consensuses.length
+          });
+          
           if (shouldAccept) {
+            // Check if already processing acceptance
+            if (hasCheckedRef.current.has(`${suggestionId}-accepted`)) {
+              console.log('[VOTE] Suggestion already being accepted, skipping');
+              return { accepted: false, newProVotes, newConVotes };
+            }
+            
             hasCheckedRef.current.add(`${suggestionId}-accepted`);
             setAutoAcceptingIds(prev => ({ ...prev, [suggestionId]: true }));
             
             try {
-              accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, document);
+              console.log('[VOTE] Attempting auto-accept for suggestion:', suggestionId);
+              accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, freshDocument);
             
               if (accepted) {
-                queryClient.setQueryData(['suggestions', document?.id], (old) => {
-                  if (!old) return old;
-                  return old.map(s => 
-                    s.id === updatedSuggestion.id 
-                      ? { ...s, status: 'accepted', suggestionConsensus: updatedSuggestion.suggestionConsensus, participantsAtAcceptance: updatedSuggestion.participantsAtAcceptance }
-                      : s
-                  );
-                });
+                console.log('[VOTE] Auto-accept succeeded, invalidating queries');
                 
-                Promise.all([
+                // Invalidate all related queries to ensure fresh data
+                await Promise.all([
                   queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
                   queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] }),
                   queryClient.invalidateQueries({ queryKey: ['document', document?.id] }),
                   queryClient.invalidateQueries({ queryKey: ['topics', document?.id] }),
                   queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
-                  queryClient.invalidateQueries({ queryKey: ['versions', document?.id] })
+                  queryClient.invalidateQueries({ queryKey: ['versions', document?.id] }),
+                  queryClient.invalidateQueries({ queryKey: ['documentMetadata', document?.id] })
                 ]);
                 
-                if (!currentVote && vote === 'pro' && document.gamificationEnabled) {
-                  base44.auth.updateMe({ points: (user.points || 1000) + 50 }).catch(() => {});
+                // Award points for vote that influenced acceptance
+                if (!currentVote && vote === 'pro' && freshDocument.gamificationEnabled) {
+                  base44.auth.updateMe({ points: (user.points || 1000) + 50 })
+                    .then(() => console.log('[VOTE] Awarded 50 points for influential vote'))
+                    .catch(err => console.error('[VOTE] Error awarding points:', err));
+                  
                   base44.entities.PointsTransaction.create({
                     userId: user.id,
                     amount: 50,
@@ -156,9 +167,15 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
                     description: `ההצבעה שלך השפיעה על קבלת ההצעה`,
                     relatedEntityId: suggestionId,
                     relatedEntityType: 'suggestion'
-                  }).catch(() => {});
+                  }).catch(err => console.error('[VOTE] Error creating points transaction:', err));
                 }
+              } else {
+                console.log('[VOTE] Auto-accept returned false');
               }
+            } catch (acceptError) {
+              console.error('[VOTE] Error during auto-accept:', acceptError);
+              // Don't throw - let the vote still succeed even if auto-accept fails
+              accepted = false;
             } finally {
               setAutoAcceptingIds(prev => {
                 const next = { ...prev };
@@ -235,15 +252,25 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
       return { previousSuggestions, previousVotes };
     },
     onError: (err, variables, context) => {
+      console.error('[VOTE ERROR]', err);
+      
+      // Rollback optimistic updates
       if (context?.previousSuggestions) {
         queryClient.setQueryData(['suggestions', document?.id], context.previousSuggestions);
       }
       if (context?.previousVotes) {
         queryClient.setQueryData(['userVotes', document?.id, user?.id], context.previousVotes);
       }
-      toast.error('שגיאה בהצבעה, נסה שוב');
+      
+      // Show user-friendly error message
+      const errorMessage = err.message?.includes('המתן') 
+        ? err.message 
+        : 'שגיאה בהצבעה, נסה שוב';
+      toast.error(errorMessage);
     },
     onSuccess: (data, variables) => {
+      console.log('[VOTE SUCCESS]', { suggestionId: variables.suggestionId, accepted: data?.accepted });
+      
       if (data?.newProVotes !== undefined) {
         queryClient.setQueryData(['suggestions', document?.id], (old) => {
           if (!old) return old;
@@ -263,10 +290,11 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
         toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', { duration: 4000 });
       }
       
+      // Ensure fresh data after vote
       Promise.all([
         queryClient.invalidateQueries({ queryKey: ['userVotes', document?.id, user?.id] }),
         queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] })
-      ]);
+      ]).catch(err => console.error('[VOTE] Error invalidating queries:', err));
     },
   });
 
