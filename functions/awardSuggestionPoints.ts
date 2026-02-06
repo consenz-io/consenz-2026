@@ -42,19 +42,39 @@ Deno.serve(async (req) => {
     }
     const currentUser = usersList[0];
 
-    // Award points based on action
-    let pointsAmount = 0;
-    let description = '';
+    // Award points based on action and suggestion type
+     let pointsAmount = 0;
+     let description = '';
 
-    if (action === 'suggestion_accepted') {
-      pointsAmount = 200;
-      description = `ההצעה שלך התקבלה: ${suggestion.title || 'הצעה'}`;
-    } else if (action === 'topic_edit_accepted') {
-      pointsAmount = 100;
-      description = `הצעתך לעריכת כותרת נושא התקבלה`;
-    } else {
-      return Response.json({ error: 'Invalid action' }, { status: 400 });
-    }
+     if (action === 'suggestion_accepted') {
+       // Award points based on suggestion type
+       switch (suggestion.type) {
+         case 'new_section':
+           pointsAmount = 200;
+           description = `הצעה לסעיף חדש התקבלה: ${suggestion.title || 'הצעה'}`;
+           break;
+         case 'edit_section':
+           pointsAmount = 200;
+           description = `הצעה לשינוי סעיף התקבלה: ${suggestion.title || 'הצעה'}`;
+           break;
+         case 'delete_section':
+           pointsAmount = 200;
+           description = `הצעה למחיקת סעיף התקבלה: ${suggestion.title || 'הצעה'}`;
+           break;
+         case 'edit_suggestion':
+           pointsAmount = 200;
+           description = `הצעה לשינוי הצעה התקבלה: ${suggestion.title || 'הצעה'}`;
+           break;
+         default:
+           pointsAmount = 200;
+           description = `ההצעה שלך התקבלה: ${suggestion.title || 'הצעה'}`;
+       }
+     } else if (action === 'topic_edit_accepted') {
+       pointsAmount = 100;
+       description = `הצעתך לעריכת כותרת נושא התקבלה`;
+     } else {
+       return Response.json({ error: 'Invalid action' }, { status: 400 });
+     }
 
     const newPoints = (currentUser.points || 1000) + pointsAmount;
 
