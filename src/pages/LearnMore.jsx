@@ -442,7 +442,7 @@ export default function LearnMore() {
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div className={`flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                   <div className="text-end">
+                   <div className="text-right">
                      <p className="font-semibold text-slate-900">
                        {getLocalizedText("Receive Pro Vote", "קבלת הצבעה בעד", "تلقي تصويت مع")}
                      </p>
