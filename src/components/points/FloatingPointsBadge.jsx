@@ -11,6 +11,49 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
 
+// Translation helper for transaction descriptions
+const translateTransactionDescription = (description, language) => {
+  if (!description) return '';
+  
+  // Hebrew patterns
+  if (description.includes('הצעה לסעיף חדש התקבלה')) {
+    const title = description.split(':')[1]?.trim() || '';
+    return language === 'en' ? `New section suggestion accepted: ${title}` : 
+           language === 'ar' ? `تم قبول اقتراح قسم جديد: ${title}` : description;
+  }
+  if (description.includes('הצעה לשינוי סעיף התקבלה')) {
+    const title = description.split(':')[1]?.trim() || '';
+    return language === 'en' ? `Section edit suggestion accepted: ${title}` :
+           language === 'ar' ? `تم قبول اقتراح تعديل قسم: ${title}` : description;
+  }
+  if (description.includes('הצעה למחיקת סעיף התקבלה')) {
+    const title = description.split(':')[1]?.trim() || '';
+    return language === 'en' ? `Section deletion suggestion accepted: ${title}` :
+           language === 'ar' ? `تم قبول اقتراح حذف قسم: ${title}` : description;
+  }
+  if (description.includes('הצעה לשינוי הצעה התקבלה')) {
+    const title = description.split(':')[1]?.trim() || '';
+    return language === 'en' ? `Suggestion edit accepted: ${title}` :
+           language === 'ar' ? `تم قبول تعديل اقتراح: ${title}` : description;
+  }
+  if (description.includes('ההצעה שלך התקבלה')) {
+    const title = description.split(':')[1]?.trim() || '';
+    return language === 'en' ? `Your suggestion was accepted: ${title}` :
+           language === 'ar' ? `تم قبول اقتراحك: ${title}` : description;
+  }
+  if (description.includes('הצעתך לעריכת כותרת נושא התקבלה')) {
+    return language === 'en' ? 'Your topic title edit was accepted' :
+           language === 'ar' ? 'تم قبول تعديل عنوان الموضوع' : description;
+  }
+  if (description.includes('יצירת הצעה')) {
+    const title = description.split(':')[1]?.trim() || '';
+    return language === 'en' ? `Created suggestion: ${title}` :
+           language === 'ar' ? `تم إنشاء اقتراح: ${title}` : description;
+  }
+  
+  return description;
+};
+
 function AnimatedCounter({ value }) {
   const [displayValue, setDisplayValue] = React.useState(value);
 
