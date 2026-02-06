@@ -587,11 +587,11 @@ export default function LearnMore() {
               </div>
 
               {/* Key Insight */}
-              <div className="p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-300 text-start">
+              <div className="p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-300 text-right">
                 <p className="font-bold text-amber-900 mb-2">
                   {getLocalizedText("Key Insight:", "תובנה מרכזית:", "رؤية رئيسية:")}
                 </p>
-                <p className="text-sm text-amber-800">
+                <p className="text-sm text-amber-800 text-right">
                   {getLocalizedText(
                     "The system doesn't punish participation - it rewards QUALITY participation. Even if you invest points, if your suggestions are valuable and get community support, you gain reputation and can continue contributing. Only spam and low-quality content results in point depletion.",
                     "המערכת לא מענישה השתתפות - היא מתגמלת השתתפות באיכות. גם אם אתה משקיע נקודות, אם ההצעות שלך בעלות ערך ומקבלות תמיכה קהילתית, אתה צובר מוניטין ויכול להמשיך לתרום. רק ספאם ותוכן באיכות נמוכה מביאים לדלדול נקודות.",
