@@ -20,11 +20,13 @@ export default function FloatingPointsBadge() {
     retry: false,
   });
 
-  const { data: pointsTransactions = [] } = useQuery({
+  const { data: pointsTransactions = [], isLoading: isLoadingTransactions } = useQuery({
     queryKey: ['pointsTransactions', user?.id],
     queryFn: () => base44.entities.PointsTransaction.filter({ userId: user.id }, '-created_date'),
     enabled: !!user?.id,
     initialData: [],
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   const lastPointsVisit = user?.lastPointsVisit;
