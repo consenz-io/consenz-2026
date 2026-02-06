@@ -14,8 +14,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "@/components/PageHeader";
-import { formatDistanceToNow } from "date-fns";
-import { he, ar, enUS } from "date-fns/locale";
+import { formatRelativeTime, formatLocalDateTime } from "@/components/utils/dateFormatter";
 
 export default function ActivityFeed() {
   const { t, isRTL, language } = useLanguage();
@@ -225,11 +224,7 @@ export default function ActivityFeed() {
   };
 
   const formatTimestamp = (timestamp) => {
-    const locale = language === 'he' ? he : language === 'ar' ? ar : enUS;
-    return formatDistanceToNow(new Date(timestamp), { 
-      addSuffix: true,
-      locale 
-    });
+    return formatRelativeTime(timestamp);
   };
 
   if (isLoading) {
