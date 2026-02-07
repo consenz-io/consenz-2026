@@ -232,6 +232,66 @@ Deno.serve(async (req) => {
 
     await Promise.all(updates);
 
+    // Send notifications to all participants in batch
+    console.log('[PROCESS ACCEPTANCE] Preparing notifications...');
+    const notifications = [];
+    
+    // 1. Notify suggestion creator
+    if (suggestion.created_by) {
+      const creatorUsers = await base44.asServiceRole.entities.User.filter({ email: suggestion.created_by });
+      if (creatorUsers[0]) {
+        notifications.push({
+          userId: creatorUsers[0].id,
+          type: 'suggestion_accepted',
+          title: '🎉 ההצעה שלך התקבלה!',
+          message: `ההצעה "${suggestion.title || 'הצעה'}" התקבלה ונוספה למסמך`,
+          relatedEntityId: suggestion.id,
+          relatedEntityType: 'suggestion',
+          actionUrl: `/document-view?id=${document.id}`,
+          documentId: document.id,
+          documentTitle: document.title
+        });
+      }
+    }
+    
+    // 2. Notify all document participants
+    const participants = await base44.entities.UserInteraction.filter({ documentId: document.id });
+    const participantUserIds = participants.map(p => p.userId).filter(Boolean);
+    
+    if (participantUserIds.length > 0) {
+      const participantUsers = await base44.asServiceRole.entities.User.filter({ 
+        id: { $in: participantUserIds } 
+      });
+      
+      for (const user of participantUsers) {
+        // Skip creator (already notified)
+        if (user.email === suggestion.created_by) continue;
+        
+        notifications.push({
+          userId: user.id,
+          type: 'suggestion_accepted',
+          title: 'הצעה התקבלה במסמך',
+          message: `ההצעה "${suggestion.title || 'הצעה'}" התקבלה במסמך "${document.title}"`,
+          relatedEntityId: suggestion.id,
+          relatedEntityType: 'suggestion',
+          actionUrl: `/document-view?id=${document.id}`,
+          documentId: document.id,
+          documentTitle: document.title
+        });
+      }
+    }
+    
+    // Send all notifications in one batch
+    if (notifications.length > 0) {
+      console.log('[PROCESS ACCEPTANCE] Sending', notifications.length, 'notifications in batch...');
+      try {
+        await base44.asServiceRole.entities.Notification.bulkCreate(notifications);
+        console.log('[PROCESS ACCEPTANCE] ✓ Notifications sent successfully');
+      } catch (err) {
+        console.error('[PROCESS ACCEPTANCE] Notification batch failed:', err);
+      }
+    }
+
     // Schedule points in background using queue system (batched processing)
     if (document.gamificationEnabled) {
       const pointsOperations = [];
