@@ -43,9 +43,6 @@ export default function SuggestionDetail() {
   const [showEditSuggestionModal, setShowEditSuggestionModal] = useState(false);
   const [isAutoAccepting, setIsAutoAccepting] = useState(false);
 
-  // Polling interval for live sync (60 seconds to avoid rate limits)
-  const SYNC_INTERVAL = 60000;
-
   const { data: suggestion, isLoading: suggestionLoading, error: suggestionError } = useQuery({
     queryKey: ['suggestion', suggestionId],
     queryFn: async () => {
@@ -57,21 +54,31 @@ export default function SuggestionDetail() {
       return results[0];
     },
     enabled: !!suggestionId,
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
     throwOnError: false,
-    staleTime: 5000,
+    staleTime: Infinity, // Real-time via subscription
   });
+
+  // Real-time subscription for suggestion updates
+  React.useEffect(() => {
+    if (!suggestionId) return;
+    
+    const unsubscribe = base44.entities.Suggestion.subscribe((event) => {
+      if (event.id === suggestionId) {
+        queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
+      }
+    });
+    
+    return unsubscribe;
+  }, [suggestionId, queryClient]);
 
   const { data: allDocumentSuggestions } = useQuery({
     queryKey: ['allDocumentSuggestions', suggestion?.documentId],
     queryFn: () => base44.entities.Suggestion.filter({ documentId: suggestion.documentId }),
     enabled: !!suggestion?.documentId,
     initialData: [],
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
+    staleTime: Infinity, // Real-time via subscription
   });
 
   const { data: document } = useQuery({
@@ -81,11 +88,9 @@ export default function SuggestionDetail() {
       return docs && docs.length > 0 ? docs[0] : null;
     },
     enabled: !!suggestion?.documentId,
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
-    staleTime: 5000,
+    staleTime: Infinity, // Real-time via subscription
   });
 
   const { data: section } = useQuery({
@@ -95,11 +100,9 @@ export default function SuggestionDetail() {
       return sections && sections.length > 0 ? sections[0] : null;
     },
     enabled: !!suggestion?.sectionId,
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
-    staleTime: 5000,
+    staleTime: Infinity, // Real-time via subscription
   });
 
   const { data: topic } = useQuery({
@@ -144,9 +147,21 @@ export default function SuggestionDetail() {
       return votes.length > 0 ? votes[0] : null;
     },
     enabled: !!suggestionId && !!user?.id,
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
+    staleTime: Infinity, // Real-time via subscription
   });
+
+  // Real-time subscription for votes
+  React.useEffect(() => {
+    if (!suggestionId || !user?.id) return;
+    
+    const unsubscribe = base44.entities.Vote.subscribe((event) => {
+      if (event.data?.suggestionId === suggestionId) {
+        queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user.id] });
+      }
+    });
+    
+    return unsubscribe;
+  }, [suggestionId, user?.id, queryClient]);
 
   const { data: args, isLoading: argsLoading } = useQuery({
     queryKey: ['arguments', suggestionId],

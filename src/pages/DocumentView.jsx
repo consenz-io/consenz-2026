@@ -65,9 +65,6 @@ export default function DocumentView() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState(null);
 
-  // Polling interval for live sync - reduced to 15 seconds for performance
-  const SYNC_INTERVAL = 15000;
-
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
     queryFn: async () => {
@@ -75,20 +72,31 @@ export default function DocumentView() {
       return docs && docs.length > 0 ? docs[0] : null;
     },
     enabled: !!documentId,
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
-    staleTime: 10000, // Increased to 10 seconds
+    staleTime: Infinity, // Real-time via subscription
   });
+
+  // Real-time subscription for document updates
+  React.useEffect(() => {
+    if (!documentId) return;
+    
+    const unsubscribe = base44.entities.Document.subscribe((event) => {
+      if (event.id === documentId) {
+        queryClient.invalidateQueries({ queryKey: ['document', documentId] });
+        queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
+      }
+    });
+    
+    return unsubscribe;
+  }, [documentId, queryClient]);
 
   const { data: topics, isLoading: topicsLoading } = useQuery({
     queryKey: ['topics', documentId],
     queryFn: () => base44.entities.Topic.filter({ documentId }, 'order'),
     initialData: [],
     enabled: !!documentId,
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
+    staleTime: Infinity, // Real-time via subscription
   });
 
   const { data: sections, isLoading: sectionsLoading } = useQuery({
@@ -96,8 +104,7 @@ export default function DocumentView() {
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order'),
     initialData: [],
     enabled: !!documentId,
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
+    staleTime: Infinity, // Real-time via subscription
   });
 
   const { data: suggestions = [], isLoading: suggestionsLoading } = useQuery({
@@ -109,11 +116,38 @@ export default function DocumentView() {
     },
     enabled: !!documentId,
     initialData: [],
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
-    staleTime: 5000,
+    staleTime: Infinity, // Real-time via subscription
     retry: 2,
   });
+
+  // Real-time subscriptions for topics, sections, suggestions
+  React.useEffect(() => {
+    if (!documentId) return;
+    
+    const unsubscribeTopic = base44.entities.Topic.subscribe((event) => {
+      if (event.data?.documentId === documentId) {
+        queryClient.invalidateQueries({ queryKey: ['topics', documentId] });
+      }
+    });
+    
+    const unsubscribeSection = base44.entities.Section.subscribe((event) => {
+      if (event.data?.documentId === documentId) {
+        queryClient.invalidateQueries({ queryKey: ['sections', documentId] });
+      }
+    });
+    
+    const unsubscribeSuggestion = base44.entities.Suggestion.subscribe((event) => {
+      if (event.data?.documentId === documentId) {
+        queryClient.invalidateQueries({ queryKey: ['suggestions', documentId] });
+      }
+    });
+    
+    return () => {
+      unsubscribeTopic();
+      unsubscribeSection();
+      unsubscribeSuggestion();
+    };
+  }, [documentId, queryClient]);
 
   // Merged queries for better performance - fetch all at once
   const { data: aggregatedData } = useQuery({
@@ -147,9 +181,19 @@ export default function DocumentView() {
     }),
     initialData: [],
     enabled: !!documentId,
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
+    staleTime: Infinity, // Real-time via subscription
   });
+
+  // Real-time subscription for comments
+  React.useEffect(() => {
+    if (!documentId) return;
+    
+    const unsubscribe = base44.entities.Comment.subscribe((event) => {
+      queryClient.invalidateQueries({ queryKey: ['documentComments', documentId] });
+    });
+    
+    return unsubscribe;
+  }, [documentId, queryClient]);
 
   // Merge agreements and versions into one query
   const { data: documentMetadata } = useQuery({
@@ -163,10 +207,30 @@ export default function DocumentView() {
     },
     initialData: { agreements: [], versions: [] },
     enabled: !!documentId,
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
-    staleTime: 10000,
+    staleTime: Infinity, // Real-time via subscription
   });
+
+  // Real-time subscriptions for metadata
+  React.useEffect(() => {
+    if (!documentId) return;
+    
+    const unsubscribeAgreement = base44.entities.DocumentAgreement.subscribe((event) => {
+      if (event.data?.documentId === documentId) {
+        queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
+      }
+    });
+    
+    const unsubscribeVersion = base44.entities.DocumentVersion.subscribe((event) => {
+      if (event.data?.documentId === documentId) {
+        queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
+      }
+    });
+    
+    return () => {
+      unsubscribeAgreement();
+      unsubscribeVersion();
+    };
+  }, [documentId, queryClient]);
 
   const documentAgreements = documentMetadata?.agreements || [];
   const documentVersions = documentMetadata?.versions || [];
