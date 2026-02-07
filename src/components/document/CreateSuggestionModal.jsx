@@ -655,14 +655,22 @@ export default function CreateSuggestionModal({
                 />
               </div>
             ) : (
-              <Textarea
-                id="content"
-                value={formData.newContent.replace(/<[^>]*>/g, '')}
-                onChange={(e) => setFormData({ ...formData, newContent: e.target.value })}
-                placeholder={t('enterContent')}
-                rows={8}
-                className={isRTL ? "text-right" : "text-left"}
-              />
+              <>
+                {document.gamificationEnabled && (currentUser?.points || 1000) < pointsCost && (
+                  <div className="mb-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                    {language === 'he' ? 'אין לך מספיק נקודות כדי ליצור הצעה' : language === 'ar' ? 'ليس لديك نقاط كافية لإنشاء اقتراح' : 'You don\'t have enough points to create a suggestion'}
+                  </div>
+                )}
+                <Textarea
+                  id="content"
+                  value={formData.newContent.replace(/<[^>]*>/g, '')}
+                  onChange={(e) => setFormData({ ...formData, newContent: e.target.value })}
+                  placeholder={t('enterContent')}
+                  rows={8}
+                  className={isRTL ? "text-right" : "text-left"}
+                  disabled={document.gamificationEnabled && (currentUser?.points || 1000) < pointsCost}
+                />
+              </>
             )}
           </div>
           )}
