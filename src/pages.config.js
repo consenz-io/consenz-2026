@@ -47,7 +47,6 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import ActivityFeed from './pages/ActivityFeed';
 import AdminSyncProfiles from './pages/AdminSyncProfiles';
 import CreateDocument from './pages/CreateDocument';
 import CreateGroup from './pages/CreateGroup';
@@ -72,7 +71,6 @@ import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "ActivityFeed": ActivityFeed,
     "AdminSyncProfiles": AdminSyncProfiles,
     "CreateDocument": CreateDocument,
     "CreateGroup": CreateGroup,
