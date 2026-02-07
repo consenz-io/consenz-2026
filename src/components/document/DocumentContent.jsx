@@ -245,24 +245,11 @@ export default function DocumentContent({
     checkAndAutoAccept();
   }, [topicEditSuggestions, document, user, queryClient, suggestions]);
 
-  const { data: sectionComments } = useQuery({
-    queryKey: ['sectionComments', document?.id],
-    queryFn: () => base44.entities.Comment.filter({ rootEntityType: 'section' }),
-    initialData: [],
-    enabled: !!document?.id,
-  });
-
-  const { data: suggestionComments } = useQuery({
-    queryKey: ['suggestionComments', document?.id],
-    queryFn: () => base44.entities.Comment.filter({ rootEntityType: 'suggestion' }),
-    initialData: [],
-    enabled: !!document?.id,
-  });
-
+  // Comments are now lazy-loaded in CommentsSection component
   const getCommentsCount = React.useCallback((entityType, entityId) => {
-    const comments = entityType === 'section' ? sectionComments : suggestionComments;
-    return comments.filter(c => c.rootEntityId === entityId).length;
-  }, [sectionComments, suggestionComments]);
+    // Return null to hide count until comments are opened
+    return null;
+  }, []);
 
   const { data: userVotes = [] } = useQuery({
     queryKey: ['userVotes', document?.id, user?.id],
