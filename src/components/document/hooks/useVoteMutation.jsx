@@ -66,8 +66,11 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
       }
     },
     onMutate: async ({ suggestionId, vote, currentVote }) => {
-      await queryClient.cancelQueries({ queryKey: ['suggestions', document?.id] });
-      await queryClient.cancelQueries({ queryKey: ['userVotes', document?.id, user?.id] });
+      // Cancel in-flight queries to prevent race conditions
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: ['suggestions', document?.id] }),
+        queryClient.cancelQueries({ queryKey: ['userVotes', document?.id, user?.id] })
+      ]);
       
       const previousSuggestions = queryClient.getQueryData(['suggestions', document?.id]);
       const previousVotes = queryClient.getQueryData(['userVotes', document?.id, user?.id]);

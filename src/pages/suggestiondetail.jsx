@@ -147,11 +147,10 @@ export default function SuggestionDetail() {
     queryKey: ['userVote', suggestionId, user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-      const votes = await base44.entities.Vote.filter({ 
-        suggestionId, 
-        userId: user.id 
-      });
-      return votes.length > 0 ? votes[0] : null;
+      // Fetch all votes for this suggestion and filter client-side
+      const allVotes = await base44.entities.Vote.filter({ suggestionId });
+      const userVotes = allVotes.filter(v => v.userId === user.id);
+      return userVotes.length > 0 ? userVotes[0] : null;
     },
     enabled: !!suggestionId && !!user?.id,
     staleTime: Infinity, // Real-time via subscription
@@ -371,26 +370,19 @@ export default function SuggestionDetail() {
       }
     },
     onSuccess: (data) => {
-      // תמיד רענן את ההצעה כדי לקבל את הסטטוס האמיתי מהשרת
-      queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
-      queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
-
-      // רק אם ההצעה באמת התקבלה (data.accepted === true) - נרענן את כל הנתונים ונציג הודעת הצלחה
+      console.log('[VOTE SUCCESS]', { accepted: data?.accepted });
+      
+      // Real-time subscriptions will handle data refresh
+      // Only show toast and minimal invalidations
       if (data?.accepted === true) {
-        // הצגת הודעת טוסט
         toast.success(isRTL ? 'ההצעה התקבלה! ✓' : 'Suggestion accepted! ✓', {
           duration: 4000,
         });
-        // רענון כל הנתונים הרלוונטיים כשההצעה התקבלה
-        Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
-          queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] }),
-          queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
-          queryClient.invalidateQueries({ queryKey: ['document', document?.id] }),
-          queryClient.invalidateQueries({ queryKey: ['allDocumentSuggestions', document?.id] }),
-          queryClient.invalidateQueries({ queryKey: ['currentUser'] }),
-          queryClient.invalidateQueries({ queryKey: ['documentMetadata', document?.id] })
-        ]).catch(err => console.error('[VOTE] Error invalidating:', err));
+        // Delay invalidations to prevent rate limits - subscriptions will update most data
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
+          queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
+        }, 2000);
       }
     },
   });
