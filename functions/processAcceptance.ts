@@ -232,86 +232,87 @@ Deno.serve(async (req) => {
 
     await Promise.all(updates);
 
-    // Send notifications to all participants in batch
+    // Send notifications in batch - optimized single query
     console.log('[PROCESS ACCEPTANCE] Preparing notifications...');
     const notifications = [];
     
-    // 1. Notify suggestion creator
-    if (suggestion.created_by) {
-      const creatorUsers = await base44.asServiceRole.entities.User.filter({ email: suggestion.created_by });
-      if (creatorUsers[0]) {
-        notifications.push({
-          userId: creatorUsers[0].id,
-          type: 'suggestion_accepted',
-          title: '🎉 ההצעה שלך התקבלה!',
-          message: `ההצעה "${suggestion.title || 'הצעה'}" התקבלה ונוספה למסמך`,
-          relatedEntityId: suggestion.id,
-          relatedEntityType: 'suggestion',
-          actionUrl: `/document-view?id=${document.id}`,
-          documentId: document.id,
-          documentTitle: document.title
-        });
-      }
-    }
+    // Fetch all data in one parallel query
+    const [participants, creatorUsers] = await Promise.all([
+      base44.entities.UserInteraction.filter({ documentId: document.id }),
+      suggestion.created_by ? base44.asServiceRole.entities.User.filter({ email: suggestion.created_by }) : []
+    ]);
     
-    // 2. Notify all document participants
-    const participants = await base44.entities.UserInteraction.filter({ documentId: document.id });
     const participantUserIds = participants.map(p => p.userId).filter(Boolean);
     
-    if (participantUserIds.length > 0) {
-      const participantUsers = await base44.asServiceRole.entities.User.filter({ 
-        id: { $in: participantUserIds } 
+    // Single query for all users (creator + participants)
+    const allUserIds = [...new Set([
+      ...(creatorUsers[0] ? [creatorUsers[0].id] : []),
+      ...participantUserIds
+    ])];
+    
+    const allUsers = allUserIds.length > 0 
+      ? await base44.asServiceRole.entities.User.filter({ id: { $in: allUserIds } })
+      : [];
+    
+    // Build notifications
+    const creator = creatorUsers[0];
+    if (creator) {
+      notifications.push({
+        userId: creator.id,
+        type: 'suggestion_accepted',
+        title: '🎉 ההצעה שלך התקבלה!',
+        message: `ההצעה "${suggestion.title || 'הצעה'}" התקבלה ונוספה למסמך`,
+        relatedEntityId: suggestion.id,
+        relatedEntityType: 'suggestion',
+        actionUrl: `/document-view?id=${document.id}`,
+        documentId: document.id,
+        documentTitle: document.title
       });
-      
-      for (const user of participantUsers) {
-        // Skip creator (already notified)
-        if (user.email === suggestion.created_by) continue;
-        
-        notifications.push({
-          userId: user.id,
-          type: 'suggestion_accepted',
-          title: 'הצעה התקבלה במסמך',
-          message: `ההצעה "${suggestion.title || 'הצעה'}" התקבלה במסמך "${document.title}"`,
-          relatedEntityId: suggestion.id,
-          relatedEntityType: 'suggestion',
-          actionUrl: `/document-view?id=${document.id}`,
-          documentId: document.id,
-          documentTitle: document.title
-        });
-      }
     }
     
-    // Send all notifications in one batch
+    // Participants
+    for (const user of allUsers) {
+      if (user.email === suggestion.created_by) continue;
+      
+      notifications.push({
+        userId: user.id,
+        type: 'suggestion_accepted',
+        title: 'הצעה התקבלה במסמך',
+        message: `ההצעה "${suggestion.title || 'הצעה'}" התקבלה במסמך "${document.title}"`,
+        relatedEntityId: suggestion.id,
+        relatedEntityType: 'suggestion',
+        actionUrl: `/document-view?id=${document.id}`,
+        documentId: document.id,
+        documentTitle: document.title
+      });
+    }
+    
+    // Send in one batch
     if (notifications.length > 0) {
-      console.log('[PROCESS ACCEPTANCE] Sending', notifications.length, 'notifications in batch...');
+      console.log('[PROCESS ACCEPTANCE] Sending', notifications.length, 'notifications...');
       try {
         await base44.asServiceRole.entities.Notification.bulkCreate(notifications);
-        console.log('[PROCESS ACCEPTANCE] ✓ Notifications sent successfully');
+        console.log('[PROCESS ACCEPTANCE] ✓ Sent successfully');
       } catch (err) {
-        console.error('[PROCESS ACCEPTANCE] Notification batch failed:', err);
+        console.error('[PROCESS ACCEPTANCE] Failed:', err);
       }
     }
 
-    // Schedule points in background using queue system (batched processing)
+    // Points - reuse creator from notifications query
     if (document.gamificationEnabled) {
       const pointsOperations = [];
       
-      // Get creator user ID
-      if (suggestion.created_by) {
-        const creatorUsers = await base44.asServiceRole.entities.User.filter({ email: suggestion.created_by });
-        if (creatorUsers[0]) {
-          pointsOperations.push({
-            userId: creatorUsers[0].id,
-            amount: 200,
-            action: 'suggestion_accepted',
-            description: `ההצעה שלך התקבלה: ${suggestion.title || 'הצעה'}`,
-            relatedEntityId: suggestion.id,
-            relatedEntityType: 'suggestion'
-          });
-        }
+      if (creator) {
+        pointsOperations.push({
+          userId: creator.id,
+          amount: 200,
+          action: 'suggestion_accepted',
+          description: `ההצעה שלך התקבלה: ${suggestion.title || 'הצעה'}`,
+          relatedEntityId: suggestion.id,
+          relatedEntityType: 'suggestion'
+        });
       }
       
-      // Award points to influential voter
       if (wasNewVote) {
         pointsOperations.push({
           userId: voterId,
@@ -323,7 +324,6 @@ Deno.serve(async (req) => {
         });
       }
       
-      // Queue all points operations together
       if (pointsOperations.length > 0) {
         setTimeout(() => {
           base44.asServiceRole.functions.invoke('pointsQueue', {
