@@ -8,7 +8,7 @@ import React from "react";
  * OPTIMIZED: Custom hook for voting on suggestions
  * Now uses backend function to reduce API calls from 45+ to 1-2
  */
-export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds, hasCheckedRef) {
+export function useVoteMutation(document, user, suggestions, hasCheckedRef) {
   const queryClient = useQueryClient();
   const votingInProgressRef = React.useRef(new Set());
   
@@ -38,20 +38,6 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
         const { newProVotes, newConVotes, accepted, voteAction } = response.data;
         
         console.log('[VOTE] Backend response:', { newProVotes, newConVotes, accepted, voteAction });
-
-        // Mark as auto-accepting if accepted
-        if (accepted) {
-          setAutoAcceptingIds(prev => ({ ...prev, [suggestionId]: true }));
-          
-          // Clear after invalidation
-          setTimeout(() => {
-            setAutoAcceptingIds(prev => {
-              const next = { ...prev };
-              delete next[suggestionId];
-              return next;
-            });
-          }, 2000);
-        }
 
         // Ensure public profile exists for new voters
         if (voteAction === 'created') {
@@ -162,20 +148,13 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
       
       if (data?.accepted) {
         toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', { duration: 4000 });
-        
-        // Real-time subscriptions will handle updates - only invalidate if not accepted
-        // This prevents cascading invalidations and rate limits
-        setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
-          queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
-        }, 1500);
       }
       
       // Emit event for layout to update unvoted count (optimistic decrement)
       window.dispatchEvent(new CustomEvent('consenz:vote-cast'));
       
-      // DON'T invalidate - optimistic updates + subscriptions handle it
-      // Prevents rate limit cascade
+      // Real-time subscriptions handle all updates - no manual invalidation needed
+      // This prevents cascading invalidations and rate limit issues
     },
   });
 

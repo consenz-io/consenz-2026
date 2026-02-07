@@ -313,7 +313,7 @@ export default function DocumentContent({
 
 
   // Use optimized vote hook
-  const voteMutation = useVoteMutation(document, user, suggestions, setAutoAcceptingIds, hasCheckedRef);
+  const voteMutation = useVoteMutation(document, user, suggestions, hasCheckedRef);
       
 
 
