@@ -48,6 +48,7 @@ function LayoutContent({ children, currentPageName }) {
     queryFn: () => base44.entities.Suggestion.filter({ created_by: user.email }),
     enabled: !!user?.email,
     initialData: [],
+    staleTime: Infinity, // Real-time via subscription
   });
 
   const { data: userVotes = [] } = useQuery({
@@ -55,6 +56,7 @@ function LayoutContent({ children, currentPageName }) {
     queryFn: () => base44.entities.Vote.filter({ userId: user.id, vote: 'pro' }),
     enabled: !!user?.id,
     initialData: [],
+    staleTime: Infinity, // Real-time via subscription
   });
 
   const { data: userInteractions = [] } = useQuery({
@@ -62,6 +64,7 @@ function LayoutContent({ children, currentPageName }) {
     queryFn: () => base44.entities.UserInteraction.filter({ userId: user.id }),
     enabled: !!user?.id,
     initialData: [],
+    staleTime: Infinity, // Real-time via subscription
   });
 
   const { data: allDocuments = [] } = useQuery({
@@ -69,6 +72,7 @@ function LayoutContent({ children, currentPageName }) {
     queryFn: () => base44.entities.Document.list(),
     enabled: !!user?.id,
     initialData: [],
+    staleTime: 60000, // Refresh every minute for new documents
   });
 
   const { data: allSuggestions = [] } = useQuery({
@@ -76,6 +80,7 @@ function LayoutContent({ children, currentPageName }) {
     queryFn: () => base44.entities.Suggestion.list(),
     enabled: !!user?.id,
     initialData: [],
+    staleTime: Infinity, // Real-time via subscription
   });
 
   const { data: allVotes = [] } = useQuery({
@@ -83,7 +88,33 @@ function LayoutContent({ children, currentPageName }) {
     queryFn: () => base44.entities.Vote.list(),
     enabled: !!user?.id,
     initialData: [],
+    staleTime: Infinity, // Real-time via subscription
   });
+
+  // Real-time subscriptions for layout queries
+  React.useEffect(() => {
+    if (!user?.id) return;
+    
+    const unsubscribeSuggestion = base44.entities.Suggestion.subscribe(() => {
+      queryClient.invalidateQueries({ queryKey: ['userSuggestions', user.email] });
+      queryClient.invalidateQueries({ queryKey: ['allSuggestions'] });
+    });
+    
+    const unsubscribeVote = base44.entities.Vote.subscribe(() => {
+      queryClient.invalidateQueries({ queryKey: ['userProVotes', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['allVotes'] });
+    });
+    
+    const unsubscribeInteraction = base44.entities.UserInteraction.subscribe(() => {
+      queryClient.invalidateQueries({ queryKey: ['userInteractions', user.id] });
+    });
+    
+    return () => {
+      unsubscribeSuggestion();
+      unsubscribeVote();
+      unsubscribeInteraction();
+    };
+  }, [user?.id, user?.email, queryClient]);
 
   const acceptedSuggestionsCount = React.useMemo(() => 
     userSuggestions.filter(s => s.status === 'accepted').length, 
@@ -238,25 +269,57 @@ function LayoutContent({ children, currentPageName }) {
     queryKey: ['recentSuggestions'],
     queryFn: () => base44.entities.Suggestion.list('-created_date', 50),
     initialData: [],
+    staleTime: Infinity, // Real-time via subscription
   });
 
   const { data: recentComments = [] } = useQuery({
     queryKey: ['recentComments'],
     queryFn: () => base44.entities.Comment.list('-created_date', 50),
     initialData: [],
+    staleTime: Infinity, // Real-time via subscription
   });
 
   const { data: recentVotes = [] } = useQuery({
     queryKey: ['recentVotes'],
     queryFn: () => base44.entities.Vote.list('-created_date', 50),
     initialData: [],
+    staleTime: Infinity, // Real-time via subscription
   });
 
   const { data: recentVersions = [] } = useQuery({
     queryKey: ['recentVersions'],
     queryFn: () => base44.entities.DocumentVersion.list('-created_date', 50),
     initialData: [],
+    staleTime: Infinity, // Real-time via subscription
   });
+
+  // Real-time subscriptions for activity feed
+  React.useEffect(() => {
+    if (!user?.id) return;
+    
+    const unsubscribeSuggestion = base44.entities.Suggestion.subscribe(() => {
+      queryClient.invalidateQueries({ queryKey: ['recentSuggestions'] });
+    });
+    
+    const unsubscribeComment = base44.entities.Comment.subscribe(() => {
+      queryClient.invalidateQueries({ queryKey: ['recentComments'] });
+    });
+    
+    const unsubscribeVote = base44.entities.Vote.subscribe(() => {
+      queryClient.invalidateQueries({ queryKey: ['recentVotes'] });
+    });
+    
+    const unsubscribeVersion = base44.entities.DocumentVersion.subscribe(() => {
+      queryClient.invalidateQueries({ queryKey: ['recentVersions'] });
+    });
+    
+    return () => {
+      unsubscribeSuggestion();
+      unsubscribeComment();
+      unsubscribeVote();
+      unsubscribeVersion();
+    };
+  }, [user?.id, queryClient]);
 
   const unreadCount = React.useMemo(() => {
     if (!lastVisit || groupDocIds.length === 0) return 0;
