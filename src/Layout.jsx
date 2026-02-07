@@ -128,36 +128,84 @@ function LayoutContent({ children, currentPageName }) {
   );
   const proVotesCount = React.useMemo(() => userVotes.length, [userVotes]);
 
-  // Calculate unvoted suggestions in user's documents
-  const totalUnvotedSuggestions = React.useMemo(() => {
-    if (!user?.id) return 0;
+  // Calculate unvoted suggestions - cached in session to reduce load
+  const [totalUnvotedSuggestions, setTotalUnvotedSuggestions] = React.useState(() => {
+    // Load from session on mount
+    const cached = sessionStorage.getItem('unvotedSuggestionsCount');
+    return cached ? parseInt(cached, 10) : 0;
+  });
+
+  // Calculate on mount or when user changes
+  React.useEffect(() => {
+    if (!user?.id) {
+      setTotalUnvotedSuggestions(0);
+      sessionStorage.removeItem('unvotedSuggestionsCount');
+      return;
+    }
+
+    // Check if we need to recalculate (only on initial load or after significant changes)
+    const lastCalculated = sessionStorage.getItem('unvotedSuggestionsLastCalc');
+    const now = Date.now();
     
-    // Get user's documents
-    const interactedDocumentIds = userInteractions.map(ui => ui.documentId);
-    const suggestedDocumentIds = userSuggestions.map(s => s.documentId);
-    const votedSuggestions = allSuggestions.filter(s => 
-      allVotes.some(v => v.suggestionId === s.id && v.userId === user.id)
-    );
-    const votedDocumentIds = votedSuggestions.map(s => s.documentId);
-    
-    const myDocumentIds = new Set([
-      ...interactedDocumentIds,
-      ...suggestedDocumentIds,
-      ...votedDocumentIds
-    ]);
-    
-    const myDocuments = allDocuments.filter(doc => myDocumentIds.has(doc.id));
-    
-    // Count unvoted suggestions in these documents
-    let count = 0;
-    myDocuments.forEach(doc => {
-      const docSuggestions = allSuggestions.filter(s => s.documentId === doc.id && s.status === 'pending');
-      const unvoted = docSuggestions.filter(s => !allVotes.some(v => v.suggestionId === s.id && v.userId === user.id));
-      count += unvoted.length;
-    });
-    
-    return count;
-  }, [user, userInteractions, userSuggestions, allSuggestions, allVotes, allDocuments]);
+    // Recalculate every 5 minutes or if not calculated yet
+    if (!lastCalculated || now - parseInt(lastCalculated, 10) > 5 * 60 * 1000) {
+      const calculate = () => {
+        const interactedDocumentIds = userInteractions.map(ui => ui.documentId);
+        const suggestedDocumentIds = userSuggestions.map(s => s.documentId);
+        const votedSuggestions = allSuggestions.filter(s => 
+          allVotes.some(v => v.suggestionId === s.id && v.userId === user.id)
+        );
+        const votedDocumentIds = votedSuggestions.map(s => s.documentId);
+        
+        const myDocumentIds = new Set([
+          ...interactedDocumentIds,
+          ...suggestedDocumentIds,
+          ...votedDocumentIds
+        ]);
+        
+        const myDocuments = allDocuments.filter(doc => myDocumentIds.has(doc.id));
+        
+        let count = 0;
+        myDocuments.forEach(doc => {
+          const docSuggestions = allSuggestions.filter(s => s.documentId === doc.id && s.status === 'pending');
+          const unvoted = docSuggestions.filter(s => !allVotes.some(v => v.suggestionId === s.id && v.userId === user.id));
+          count += unvoted.length;
+        });
+        
+        return count;
+      };
+
+      const count = calculate();
+      setTotalUnvotedSuggestions(count);
+      sessionStorage.setItem('unvotedSuggestionsCount', count.toString());
+      sessionStorage.setItem('unvotedSuggestionsLastCalc', now.toString());
+    }
+  }, [user?.id, userInteractions, userSuggestions, allSuggestions, allVotes, allDocuments]);
+
+  // Update count when realtime events happen (optimistic updates)
+  React.useEffect(() => {
+    if (!user?.id) return;
+
+    const handleSuggestionChange = () => {
+      // Invalidate cache to trigger recalculation on next effect run
+      sessionStorage.removeItem('unvotedSuggestionsLastCalc');
+    };
+
+    const handleVoteChange = () => {
+      // Immediate decrement for better UX (optimistic)
+      setTotalUnvotedSuggestions(prev => Math.max(0, prev - 1));
+      sessionStorage.removeItem('unvotedSuggestionsLastCalc');
+    };
+
+    // Listen to custom events from voting mutations
+    window.addEventListener('consenz:vote-cast', handleVoteChange);
+    window.addEventListener('consenz:suggestion-changed', handleSuggestionChange);
+
+    return () => {
+      window.removeEventListener('consenz:vote-cast', handleVoteChange);
+      window.removeEventListener('consenz:suggestion-changed', handleSuggestionChange);
+    };
+  }, [user?.id]);
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
