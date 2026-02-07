@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, CheckCircle, Edit2, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, Edit2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -43,9 +43,6 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   });
 
   const canDelete = user && (isAdmin || user.email === suggestion.created_by) && suggestion.status !== 'accepted';
-  const [animationPhase, setAnimationPhase] = React.useState('none');
-  const prevStatusRef = React.useRef(suggestion.status);
-  const hasAnimatedRef = React.useRef(false);
 
   // Build version chain for this suggestion (new_section + edit_suggestion types)
   const suggestionChain = React.useMemo(() => {
@@ -144,54 +141,15 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
     return html;
   };
 
-  // מעקב אחרי שינוי סטטוס להצגת אנימציה - רק פעם אחת
-  // CRITICAL: וידוא שההצעה באמת התקבלה ברמת השרת ולא רק עדכון אופטימיסטי
-  React.useEffect(() => {
-    const isReallyAccepted = currentVersion.status === 'accepted' && 
-                             currentVersion.suggestionConsensus !== undefined && 
-                             currentVersion.participantsAtAcceptance !== undefined;
-    
-    if (prevStatusRef.current === 'pending' && isReallyAccepted && !hasAnimatedRef.current) {
-      hasAnimatedRef.current = true;
-      console.log('[ANIMATION] ✅ Suggestion was REALLY accepted by server, starting celebration:', currentVersion.id);
-      console.log('[ANIMATION] - suggestionConsensus:', currentVersion.suggestionConsensus);
-      console.log('[ANIMATION] - participantsAtAcceptance:', currentVersion.participantsAtAcceptance);
-      setAnimationPhase('celebrating');
-      
-      // שלב 1: חגיגה (3 שניות)
-      setTimeout(() => {
-        console.log('[ANIMATION] Transitioning to white for suggestion:', currentVersion.id);
-        setAnimationPhase('transitioning');
-      }, 3000);
-      
-      // שלב 2: דהייה והעלמה (אחרי עוד 2 שניות - סה"כ 5 שניות)
-      setTimeout(() => {
-        console.log('[ANIMATION] Fading out suggestion:', currentVersion.id);
-        setAnimationPhase('fading');
-      }, 5000);
-      
-      // שלב 3: העלמה סופית (אחרי עוד 1 שניה - סה"כ 6 שניות)
-      setTimeout(() => {
-        console.log('[ANIMATION] Hiding suggestion:', currentVersion.id);
-        setAnimationPhase('hidden');
-      }, 6000);
-    } else if (prevStatusRef.current === 'pending' && currentVersion.status === 'accepted' && !isReallyAccepted) {
-      console.log('[ANIMATION] ⚠️ Status changed to accepted but missing server fields - likely optimistic update, waiting for real update...');
-    }
-    prevStatusRef.current = currentVersion.status;
-  }, [currentVersion.status, currentVersion.suggestionConsensus, currentVersion.participantsAtAcceptance]);
-
-  // אם בשלב העלמה סופית - אל תציג כלום
-  if (animationPhase === 'hidden') {
+  // Hide if accepted and converted to edit_section - will appear in section carousel
+  if (suggestion.type === 'edit_section' && suggestion.status === 'accepted') {
+    console.log('[NEW SECTION CARD] Suggestion converted to edit_section, hiding from new section view:', suggestion.id);
     return null;
   }
-
-  // CRITICAL: בדיקה על ההצעה המקורית (suggestion prop), לא על currentVersion
-  // כי suggestion היא ההצעה שמוצגת ע"י DocumentContent
-  // אם ההצעה המקורית התקבלה והומרה ל-edit_section (כלומר הסעיף כבר נוצר),
-  // אסור להציג אותה כהצעה חדשה - היא תופיע בקרוסלה של הסעיף
-  if (suggestion.type === 'edit_section' && suggestion.status === 'accepted' && animationPhase === 'none') {
-    console.log('[NEW SECTION CARD] Suggestion converted to edit_section, hiding from new section view:', suggestion.id);
+  
+  // Hide if accepted - real-time subscriptions will show it as a section
+  if (suggestion.status === 'accepted') {
+    console.log('[NEW SECTION CARD] Suggestion accepted, hiding card - will appear as section:', suggestion.id);
     return null;
   }
 
@@ -208,128 +166,6 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
     const nextView = allViews[nextIndex];
     setCurrentVersionId(nextView.type === 'original' ? 'original' : nextView.id);
   };
-
-  // שלב החגיגה - מסגרת ירוקה ואייקון (3 שניות)
-  if (animationPhase === 'celebrating') {
-    return (
-      <motion.div
-        initial={{ scale: 1 }}
-        animate={{ scale: [1, 1.02, 1] }}
-        transition={{ duration: 0.6, ease: "easeInOut" }}
-      >
-        <Card 
-          className="relative overflow-hidden"
-          style={{
-            background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(220 252 231) 100%)',
-            border: '2px solid rgb(34 197 94)',
-          }}
-          >
-          <motion.div
-            className="absolute inset-0 bg-green-500/10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0.3, 0.1] }}
-            transition={{ duration: 1 }}
-          />
-          <CardContent className="p-4 md:p-6 relative z-10">
-            <div className="flex items-start gap-3 mb-3">
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: "spring", duration: 0.6 }}
-                className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0"
-              >
-                <CheckCircle className="w-5 h-5 text-white" />
-              </motion.div>
-              <div className="flex-1 min-w-0">
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-lg font-bold text-green-700 mb-1"
-                >
-                  ההצעה התקבלה!
-                </motion.div>
-                {currentVersion.explanation && typeof currentVersion.explanation === 'string' && (
-                  <div className="text-xs md:text-sm mb-2">
-                    <TranslatableContent
-                      content={currentVersion.explanation}
-                      entity={currentVersion}
-                      entityType="Suggestion"
-                      className="text-slate-600 break-words"
-                    />
-                  </div>
-                )}
-                <div className="text-sm bg-white/80 p-3 rounded border border-green-200">
-                  <TranslatableContent
-                    content={getContentPreview(currentVersion.newContent)}
-                    entity={currentVersion}
-                    entityType="Suggestion"
-                    className="text-slate-700"
-                  />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-          </Card>
-      </motion.div>
-    );
-  }
-
-  // שלב המעבר - מעבר הדרגתי למראה של סעיף רגיל (2 שניות)
-  if (animationPhase === 'transitioning') {
-    return (
-      <Card 
-        className="relative overflow-hidden transition-all duration-[2000ms] ease-out"
-        style={{
-          background: 'rgb(255 255 255)',
-          border: '1px solid rgb(226 232 240)',
-        }}
-      >
-        <CardContent className="p-4 md:p-6">
-          <div className="prose prose-sm max-w-none">
-            <TranslatableContent
-              content={suggestion.newContent}
-              entity={suggestion}
-              entityType="Suggestion"
-              className="text-slate-700"
-              renderContent={(html) => <div dangerouslySetInnerHTML={{ __html: html }} />}
-            />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // שלב הדהייה - דהייה חלקה (1 שניה)
-  if (animationPhase === 'fading') {
-    return (
-      <motion.div
-        initial={{ opacity: 1 }}
-        animate={{ opacity: 0 }}
-        transition={{ duration: 1 }}
-      >
-        <Card 
-          className="relative overflow-hidden"
-          style={{
-            background: 'rgb(255 255 255)',
-            border: '1px solid rgb(226 232 240)',
-          }}
-        >
-          <CardContent className="p-4 md:p-6">
-            <div className="prose prose-sm max-w-none">
-              <TranslatableContent
-                content={currentVersion.newContent}
-                entity={currentVersion}
-                entityType="Suggestion"
-                className="text-slate-700"
-                renderContent={(html) => <div dangerouslySetInnerHTML={{ __html: html }} />}
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  }
 
   return (
     <div 
