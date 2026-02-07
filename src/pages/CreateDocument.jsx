@@ -383,11 +383,25 @@ Return JSON with title, topics array (each with title and sections array with co
 
       return doc;
     },
-    onSuccess: (doc) => {
-      queryClient.invalidateQueries({ queryKey: ['publicDocuments'] });
-      queryClient.invalidateQueries({ queryKey: ['allDocuments'] });
-      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-      navigate(`${createPageUrl("DocumentView")}?id=${doc.id}`);
+    onSuccess: async (doc) => {
+      console.log('[CREATE DOC] Document created:', doc.id);
+      
+      // Pre-cache the document in React Query
+      queryClient.setQueryData(['document', doc.id], doc);
+      
+      // Invalidate queries and wait for them to settle
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['publicDocuments'] }),
+        queryClient.invalidateQueries({ queryKey: ['allDocuments'] }),
+        queryClient.invalidateQueries({ queryKey: ['currentUser'] })
+      ]);
+      
+      console.log('[CREATE DOC] Queries invalidated, navigating to document');
+      
+      // Small delay to ensure all data is ready before navigation
+      setTimeout(() => {
+        navigate(`${createPageUrl("DocumentView")}?id=${doc.id}`);
+      }, 300);
     },
     onError: (err) => {
       console.error("Document creation error:", err);
