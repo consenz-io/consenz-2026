@@ -184,8 +184,8 @@ export default function DocumentView() {
       return { votes, users, publicProfiles, args, comments };
     },
     initialData: { votes: [], users: [], publicProfiles: [], args: [], comments: [] },
-    staleTime: 60000, // 1 minute - data doesn't change often
-    cacheTime: 300000, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes - stable reference data
+    cacheTime: 10 * 60 * 1000, // 10 minutes
   });
 
   const allVotes = aggregatedData?.votes || [];

@@ -321,15 +321,7 @@ Return JSON with title, topics array (each with title and sections array with co
         });
       }
       
-      // Create or update public profile for creator
-      const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
-      if (existingProfiles.length === 0 && user.full_name) {
-        await base44.entities.UserPublicProfile.create({
-          userId: user.id,
-          email: user.email,
-          fullName: user.full_name
-        });
-      }
+      // NOTE: Public profile already ensured by Layout on mount - no need to check here
 
       const doc = await base44.entities.Document.create({
         title: data.title.trim(),

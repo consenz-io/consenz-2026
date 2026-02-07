@@ -72,7 +72,7 @@ function LayoutContent({ children, currentPageName }) {
     queryFn: () => base44.entities.Document.list(),
     enabled: !!user?.id,
     initialData: [],
-    staleTime: 60000, // Refresh every minute for new documents
+    staleTime: 5 * 60 * 1000, // 5 minutes - documents don't change often
   });
 
   const { data: allSuggestions = [] } = useQuery({
@@ -80,7 +80,7 @@ function LayoutContent({ children, currentPageName }) {
     queryFn: () => base44.entities.Suggestion.list(),
     enabled: !!user?.id,
     initialData: [],
-    staleTime: Infinity, // Real-time via subscription
+    staleTime: 30000, // 30 seconds - subscriptions will update faster
   });
 
   const { data: allVotes = [] } = useQuery({
@@ -88,7 +88,7 @@ function LayoutContent({ children, currentPageName }) {
     queryFn: () => base44.entities.Vote.list(),
     enabled: !!user?.id,
     initialData: [],
-    staleTime: Infinity, // Real-time via subscription
+    staleTime: 30000, // 30 seconds - subscriptions will update faster
   });
 
   // Real-time subscriptions for layout queries
@@ -275,28 +275,28 @@ function LayoutContent({ children, currentPageName }) {
     queryKey: ['recentSuggestions'],
     queryFn: () => base44.entities.Suggestion.list('-created_date', 50),
     initialData: [],
-    staleTime: Infinity, // Real-time via subscription
+    staleTime: 60000, // 1 minute
   });
 
   const { data: recentComments = [] } = useQuery({
     queryKey: ['recentComments'],
     queryFn: () => base44.entities.Comment.list('-created_date', 50),
     initialData: [],
-    staleTime: Infinity, // Real-time via subscription
+    staleTime: 60000, // 1 minute
   });
 
   const { data: recentVotes = [] } = useQuery({
     queryKey: ['recentVotes'],
     queryFn: () => base44.entities.Vote.list('-created_date', 50),
     initialData: [],
-    staleTime: Infinity, // Real-time via subscription
+    staleTime: 60000, // 1 minute
   });
 
   const { data: recentVersions = [] } = useQuery({
     queryKey: ['recentVersions'],
     queryFn: () => base44.entities.DocumentVersion.list('-created_date', 50),
     initialData: [],
-    staleTime: Infinity, // Real-time via subscription
+    staleTime: 60000, // 1 minute
   });
 
   // Real-time subscriptions for activity feed
