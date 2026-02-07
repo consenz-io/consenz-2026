@@ -83,11 +83,13 @@ Deno.serve(async (req) => {
     console.log('[VOTE FUNCTION] Processing vote:', { suggestionId, vote, userId: user.id });
 
     // Fetch current state in parallel
-    const [currentVotes, suggestions, documents] = await Promise.all([
-      base44.entities.Vote.filter({ suggestionId, userId: user.id }),
+    const [allVotes, suggestions, documents] = await Promise.all([
+      base44.entities.Vote.filter({ suggestionId }),
       base44.entities.Suggestion.filter({ id: suggestionId }),
       base44.asServiceRole.entities.Document.list()
     ]);
+    
+    const currentVotes = allVotes.filter(v => v.userId === user.id);
 
     const existingVote = currentVotes[0] || null;
     const suggestion = suggestions[0];

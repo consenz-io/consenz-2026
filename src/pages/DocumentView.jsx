@@ -81,14 +81,20 @@ export default function DocumentView() {
   React.useEffect(() => {
     if (!documentId) return;
     
+    console.log('[REALTIME] Setting up Document subscription for:', documentId);
+    
     const unsubscribe = base44.entities.Document.subscribe((event) => {
+      console.log('[REALTIME] Document event:', event.type, event.id);
       if (event.id === documentId) {
         queryClient.invalidateQueries({ queryKey: ['document', documentId] });
         queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
       }
     });
     
-    return unsubscribe;
+    return () => {
+      console.log('[REALTIME] Cleaning up Document subscription');
+      unsubscribe();
+    };
   }, [documentId, queryClient]);
 
   const { data: topics, isLoading: topicsLoading } = useQuery({
@@ -124,30 +130,36 @@ export default function DocumentView() {
   React.useEffect(() => {
     if (!documentId) return;
     
+    console.log('[REALTIME] Setting up Topic/Section/Suggestion subscriptions');
+    
     const unsubscribeTopic = base44.entities.Topic.subscribe((event) => {
-      if (event.data?.documentId === documentId) {
+      console.log('[REALTIME] Topic event:', event.type, event.data?.documentId);
+      if (event.data?.documentId === documentId || (event.type === 'update' && event.id && topics?.some(t => t.id === event.id))) {
         queryClient.invalidateQueries({ queryKey: ['topics', documentId] });
       }
     });
     
     const unsubscribeSection = base44.entities.Section.subscribe((event) => {
-      if (event.data?.documentId === documentId) {
+      console.log('[REALTIME] Section event:', event.type);
+      if (event.data?.documentId === documentId || (event.type === 'update' && event.id && sections?.some(s => s.id === event.id))) {
         queryClient.invalidateQueries({ queryKey: ['sections', documentId] });
       }
     });
     
     const unsubscribeSuggestion = base44.entities.Suggestion.subscribe((event) => {
-      if (event.data?.documentId === documentId) {
+      console.log('[REALTIME] Suggestion event:', event.type);
+      if (event.data?.documentId === documentId || (event.type === 'update' && event.id && suggestions?.some(s => s.id === event.id))) {
         queryClient.invalidateQueries({ queryKey: ['suggestions', documentId] });
       }
     });
     
     return () => {
+      console.log('[REALTIME] Cleaning up Topic/Section/Suggestion subscriptions');
       unsubscribeTopic();
       unsubscribeSection();
       unsubscribeSuggestion();
     };
-  }, [documentId, queryClient]);
+  }, [documentId, queryClient, topics, sections, suggestions]);
 
   // Merged queries for better performance - fetch all at once
   const { data: aggregatedData } = useQuery({
@@ -188,11 +200,20 @@ export default function DocumentView() {
   React.useEffect(() => {
     if (!documentId) return;
     
+    console.log('[REALTIME] Setting up Comment subscription');
+    
     const unsubscribe = base44.entities.Comment.subscribe((event) => {
-      queryClient.invalidateQueries({ queryKey: ['documentComments', documentId] });
+      console.log('[REALTIME] Comment event:', event.type);
+      // Only invalidate if it's related to this document
+      if (event.data?.rootEntityType === 'document' && event.data?.rootEntityId === documentId) {
+        queryClient.invalidateQueries({ queryKey: ['documentComments', documentId] });
+      }
     });
     
-    return unsubscribe;
+    return () => {
+      console.log('[REALTIME] Cleaning up Comment subscription');
+      unsubscribe();
+    };
   }, [documentId, queryClient]);
 
   // Merge agreements and versions into one query
@@ -214,23 +235,28 @@ export default function DocumentView() {
   React.useEffect(() => {
     if (!documentId) return;
     
+    console.log('[REALTIME] Setting up Agreement/Version subscriptions');
+    
     const unsubscribeAgreement = base44.entities.DocumentAgreement.subscribe((event) => {
-      if (event.data?.documentId === documentId) {
+      console.log('[REALTIME] DocumentAgreement event:', event.type);
+      if (event.data?.documentId === documentId || (event.type === 'delete' && documentMetadata?.agreements?.some(a => a.id === event.id))) {
         queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
       }
     });
     
     const unsubscribeVersion = base44.entities.DocumentVersion.subscribe((event) => {
+      console.log('[REALTIME] DocumentVersion event:', event.type);
       if (event.data?.documentId === documentId) {
         queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
       }
     });
     
     return () => {
+      console.log('[REALTIME] Cleaning up Agreement/Version subscriptions');
       unsubscribeAgreement();
       unsubscribeVersion();
     };
-  }, [documentId, queryClient]);
+  }, [documentId, queryClient, documentMetadata]);
 
   const documentAgreements = documentMetadata?.agreements || [];
   const documentVersions = documentMetadata?.versions || [];

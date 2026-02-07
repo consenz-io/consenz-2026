@@ -64,14 +64,21 @@ export default function SuggestionDetail() {
   React.useEffect(() => {
     if (!suggestionId) return;
     
+    console.log('[REALTIME] Setting up Suggestion subscription for:', suggestionId);
+    
     const unsubscribe = base44.entities.Suggestion.subscribe((event) => {
-      if (event.id === suggestionId) {
+      console.log('[REALTIME] Suggestion event:', event.type, event.id);
+      if (event.id === suggestionId || event.data?.id === suggestionId) {
         queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
+        queryClient.invalidateQueries({ queryKey: ['allDocumentSuggestions', suggestion?.documentId] });
       }
     });
     
-    return unsubscribe;
-  }, [suggestionId, queryClient]);
+    return () => {
+      console.log('[REALTIME] Cleaning up Suggestion subscription');
+      unsubscribe();
+    };
+  }, [suggestionId, queryClient, suggestion?.documentId]);
 
   const { data: allDocumentSuggestions } = useQuery({
     queryKey: ['allDocumentSuggestions', suggestion?.documentId],
@@ -154,13 +161,19 @@ export default function SuggestionDetail() {
   React.useEffect(() => {
     if (!suggestionId || !user?.id) return;
     
+    console.log('[REALTIME] Setting up Vote subscription for:', suggestionId);
+    
     const unsubscribe = base44.entities.Vote.subscribe((event) => {
-      if (event.data?.suggestionId === suggestionId) {
-        queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user.id] });
-      }
+      console.log('[REALTIME] Vote event:', event.type);
+      // Invalidate on any vote change for this suggestion
+      queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user.id] });
+      queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
     });
     
-    return unsubscribe;
+    return () => {
+      console.log('[REALTIME] Cleaning up Vote subscription');
+      unsubscribe();
+    };
   }, [suggestionId, user?.id, queryClient]);
 
   const { data: args, isLoading: argsLoading } = useQuery({

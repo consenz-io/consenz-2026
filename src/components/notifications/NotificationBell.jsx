@@ -38,14 +38,20 @@ export default function NotificationBell({ user }) {
   React.useEffect(() => {
     if (!user?.id) return;
     
+    console.log('[REALTIME NOTIFICATIONS] Setting up Notification subscription for user:', user.id);
+    
     const unsubscribe = base44.entities.Notification.subscribe((event) => {
-      if (event.data?.userId === user.id) {
+      console.log('[REALTIME NOTIFICATIONS] Notification event:', event.type);
+      if (event.data?.userId === user.id || (event.type === 'update' && notifications?.some(n => n.id === event.id))) {
         queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
       }
     });
     
-    return unsubscribe;
-  }, [user?.id, queryClient]);
+    return () => {
+      console.log('[REALTIME NOTIFICATIONS] Cleaning up Notification subscription');
+      unsubscribe();
+    };
+  }, [user?.id, queryClient, notifications]);
 
   const markAsReadMutation = useMutation({
     mutationFn: (notificationId) => base44.entities.Notification.update(notificationId, { read: true }),

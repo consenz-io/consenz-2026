@@ -95,21 +95,27 @@ function LayoutContent({ children, currentPageName }) {
   React.useEffect(() => {
     if (!user?.id) return;
     
-    const unsubscribeSuggestion = base44.entities.Suggestion.subscribe(() => {
+    console.log('[REALTIME LAYOUT] Setting up subscriptions for user:', user.id);
+    
+    const unsubscribeSuggestion = base44.entities.Suggestion.subscribe((event) => {
+      console.log('[REALTIME LAYOUT] Suggestion event:', event.type);
       queryClient.invalidateQueries({ queryKey: ['userSuggestions', user.email] });
       queryClient.invalidateQueries({ queryKey: ['allSuggestions'] });
     });
     
-    const unsubscribeVote = base44.entities.Vote.subscribe(() => {
+    const unsubscribeVote = base44.entities.Vote.subscribe((event) => {
+      console.log('[REALTIME LAYOUT] Vote event:', event.type);
       queryClient.invalidateQueries({ queryKey: ['userProVotes', user.id] });
       queryClient.invalidateQueries({ queryKey: ['allVotes'] });
     });
     
-    const unsubscribeInteraction = base44.entities.UserInteraction.subscribe(() => {
+    const unsubscribeInteraction = base44.entities.UserInteraction.subscribe((event) => {
+      console.log('[REALTIME LAYOUT] UserInteraction event:', event.type);
       queryClient.invalidateQueries({ queryKey: ['userInteractions', user.id] });
     });
     
     return () => {
+      console.log('[REALTIME LAYOUT] Cleaning up subscriptions');
       unsubscribeSuggestion();
       unsubscribeVote();
       unsubscribeInteraction();
@@ -297,23 +303,30 @@ function LayoutContent({ children, currentPageName }) {
   React.useEffect(() => {
     if (!user?.id) return;
     
-    const unsubscribeSuggestion = base44.entities.Suggestion.subscribe(() => {
+    console.log('[REALTIME LAYOUT] Setting up activity feed subscriptions');
+    
+    const unsubscribeSuggestion = base44.entities.Suggestion.subscribe((event) => {
+      console.log('[REALTIME LAYOUT] Recent Suggestion event:', event.type);
       queryClient.invalidateQueries({ queryKey: ['recentSuggestions'] });
     });
     
-    const unsubscribeComment = base44.entities.Comment.subscribe(() => {
+    const unsubscribeComment = base44.entities.Comment.subscribe((event) => {
+      console.log('[REALTIME LAYOUT] Recent Comment event:', event.type);
       queryClient.invalidateQueries({ queryKey: ['recentComments'] });
     });
     
-    const unsubscribeVote = base44.entities.Vote.subscribe(() => {
+    const unsubscribeVote = base44.entities.Vote.subscribe((event) => {
+      console.log('[REALTIME LAYOUT] Recent Vote event:', event.type);
       queryClient.invalidateQueries({ queryKey: ['recentVotes'] });
     });
     
-    const unsubscribeVersion = base44.entities.DocumentVersion.subscribe(() => {
+    const unsubscribeVersion = base44.entities.DocumentVersion.subscribe((event) => {
+      console.log('[REALTIME LAYOUT] Recent Version event:', event.type);
       queryClient.invalidateQueries({ queryKey: ['recentVersions'] });
     });
     
     return () => {
+      console.log('[REALTIME LAYOUT] Cleaning up activity feed subscriptions');
       unsubscribeSuggestion();
       unsubscribeComment();
       unsubscribeVote();
