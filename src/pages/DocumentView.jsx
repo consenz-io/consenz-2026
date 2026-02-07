@@ -77,9 +77,9 @@ export default function DocumentView() {
     staleTime: Infinity, // Real-time via subscription
   });
 
-  // Real-time subscription for document updates
+  // Real-time subscription for document updates - wait for initial load
   React.useEffect(() => {
-    if (!documentId) return;
+    if (!documentId || !document) return;
     
     console.log('[REALTIME] Setting up Document subscription for:', documentId);
     
@@ -95,7 +95,7 @@ export default function DocumentView() {
       console.log('[REALTIME] Cleaning up Document subscription');
       unsubscribe();
     };
-  }, [documentId, queryClient]);
+  }, [documentId, document, queryClient]);
 
   const { data: topics, isLoading: topicsLoading } = useQuery({
     queryKey: ['topics', documentId],
@@ -130,9 +130,9 @@ export default function DocumentView() {
     retry: 2,
   });
 
-  // Real-time subscriptions for topics, sections, suggestions
+  // Real-time subscriptions for topics, sections, suggestions - wait for initial data
   React.useEffect(() => {
-    if (!documentId) return;
+    if (!documentId || !document || topicsLoading || sectionsLoading) return;
     
     console.log('[REALTIME] Setting up Topic/Section/Suggestion subscriptions');
     
@@ -168,11 +168,12 @@ export default function DocumentView() {
     
     return () => {
       console.log('[REALTIME] Cleaning up Topic/Section/Suggestion subscriptions');
+      clearTimeout(invalidationTimer);
       unsubscribeTopic();
       unsubscribeSection();
       unsubscribeSuggestion();
     };
-  }, [documentId, queryClient, topics, sections, suggestions]);
+  }, [documentId, document, topicsLoading, sectionsLoading, queryClient, topics, sections, suggestions]);
 
   // Merged queries for better performance - fetch all at once
   const { data: aggregatedData } = useQuery({
@@ -209,9 +210,9 @@ export default function DocumentView() {
     staleTime: Infinity, // Real-time via subscription
   });
 
-  // Real-time subscription for comments
+  // Real-time subscription for comments - wait for document to load
   React.useEffect(() => {
-    if (!documentId) return;
+    if (!documentId || !document) return;
     
     console.log('[REALTIME] Setting up Comment subscription');
     
@@ -227,7 +228,7 @@ export default function DocumentView() {
       console.log('[REALTIME] Cleaning up Comment subscription');
       unsubscribe();
     };
-  }, [documentId, queryClient]);
+  }, [documentId, document, queryClient]);
 
   // Merge agreements and versions into one query
   const { data: documentMetadata } = useQuery({
@@ -244,9 +245,9 @@ export default function DocumentView() {
     staleTime: Infinity, // Real-time via subscription
   });
 
-  // Real-time subscriptions for metadata
+  // Real-time subscriptions for metadata - wait for document to load
   React.useEffect(() => {
-    if (!documentId) return;
+    if (!documentId || !document) return;
     
     console.log('[REALTIME] Setting up Agreement/Version subscriptions');
     
@@ -269,7 +270,7 @@ export default function DocumentView() {
       unsubscribeAgreement();
       unsubscribeVersion();
     };
-  }, [documentId, queryClient, documentMetadata]);
+  }, [documentId, document, queryClient, documentMetadata]);
 
   const documentAgreements = documentMetadata?.agreements || [];
   const documentVersions = documentMetadata?.versions || [];
