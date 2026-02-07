@@ -62,9 +62,6 @@ export default function DocumentContent({
     ar: "Arabic"
   };
 
-  // Polling interval for live sync (30 seconds to avoid rate limits)
-  const SYNC_INTERVAL = 30000;
-  
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: () => base44.entities.User.list(),
@@ -82,8 +79,6 @@ export default function DocumentContent({
     queryFn: () => base44.entities.TopicEditSuggestion.filter({ documentId: document.id }),
     enabled: !!document?.id,
     initialData: [],
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
   });
 
   const { data: topicEditVotes } = useQuery({
@@ -94,8 +89,6 @@ export default function DocumentContent({
     },
     enabled: !!user?.id && !!document?.id,
     initialData: [],
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
   });
 
   // בדיקה ואישור אוטומטי של הצעות שעברו את רף הקונסנזוס
@@ -298,8 +291,6 @@ export default function DocumentContent({
     },
     enabled: !!user?.id && !!document?.id && suggestions.length > 0,
     staleTime: 0,
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
     retry: 1,
   });
 
