@@ -171,6 +171,9 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
         }, 1500);
       }
       
+      // Emit event for layout to update unvoted count (optimistic decrement)
+      window.dispatchEvent(new CustomEvent('consenz:vote-cast'));
+      
       // DON'T invalidate - optimistic updates + subscriptions handle it
       // Prevents rate limit cascade
     },
