@@ -214,44 +214,21 @@ export default function SuggestionDetail() {
       if (!user) throw new Error(t('mustBeLoggedInToVote'));
       if (!suggestion) throw new Error('Suggestion not found');
 
-      let newProVotes = suggestion.proVotes || 0;
-      let newConVotes = suggestion.conVotes || 0;
-      
-      if (userVote) {
-        if (userVote.vote === vote) {
-          // ביטול הצבעה
-          await base44.entities.Vote.delete(userVote.id);
-          if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
-          else newConVotes = Math.max(0, newConVotes - 1);
-        } else {
-          // שינוי כיוון הצבעה
-          await base44.entities.Vote.update(userVote.id, { vote });
-          if (vote === 'pro') {
-            newProVotes += 1;
-            newConVotes = Math.max(0, newConVotes - 1);
-          } else {
-            newConVotes += 1;
-            newProVotes = Math.max(0, newProVotes - 1);
-          }
-        }
-      } else {
-        // הצבעה חדשה
-        await base44.entities.Vote.create({
-          suggestionId,
-          userId: user.id,
-          vote
-        });
-        if (vote === 'pro') newProVotes += 1;
-        else newConVotes += 1;
-      }
-      
-      // עדכון ההצעה
-      await base44.entities.Suggestion.update(suggestionId, {
-        proVotes: newProVotes,
-        conVotes: newConVotes
+      // Use optimized backend function
+      const response = await base44.functions.invoke('voteOnSuggestion', {
+        suggestionId,
+        vote
       });
-      
-      return { accepted: false, newProVotes, newConVotes };
+
+      if (!response.data.success) {
+        throw new Error(response.data.error || 'שגיאה בהצבעה');
+      }
+
+      return {
+        accepted: response.data.accepted,
+        newProVotes: response.data.newProVotes,
+        newConVotes: response.data.newConVotes
+      };
     },
     // Optimistic update - only for vote counts, NOT for status
     onMutate: async (vote) => {
@@ -325,12 +302,9 @@ export default function SuggestionDetail() {
         queryClient.setQueryData(['userVote', suggestionId, user?.id], context.previousVote);
       }
       
-      // Check if it's a rate limit error
-      const errorMsg = err.message || '';
-      if (errorMsg.includes('המתן') || errorMsg.toLowerCase().includes('wait')) {
-        // Extract wait time from error message
-        const match = errorMsg.match(/(\d+)\s*(?:שניות|seconds)/);
-        const retrySeconds = match ? parseInt(match[1]) : 30;
+      // Handle rate limit with countdown from server response
+      if (err.response?.status === 429 || err.response?.data?.remainingSeconds) {
+        const retrySeconds = err.response.data.remainingSeconds || 30;
         
         setRateLimitRetryAfter(retrySeconds);
         
@@ -344,8 +318,23 @@ export default function SuggestionDetail() {
             return prev - 1;
           });
         }, 1000);
+      } else if (err.message?.includes('המתן') || err.message?.toLowerCase().includes('wait')) {
+        const match = err.message.match(/(\d+)\s*(?:שניות|seconds)/);
+        const retrySeconds = match ? parseInt(match[1]) : 30;
+        setRateLimitRetryAfter(retrySeconds);
+        
+        const interval = setInterval(() => {
+          setRateLimitRetryAfter(prev => {
+            if (prev <= 1) {
+              clearInterval(interval);
+              return null;
+            }
+            return prev - 1;
+          });
+        }, 1000);
       } else {
-        setError(err.message);
+        const errorMsg = err.response?.data?.error || err.message;
+        setError(errorMsg);
         setTimeout(() => setError(null), 5000);
       }
     },
@@ -361,11 +350,15 @@ export default function SuggestionDetail() {
           duration: 4000,
         });
         // רענון כל הנתונים הרלוונטיים כשההצעה התקבלה
-        queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
-        queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
-        queryClient.invalidateQueries({ queryKey: ['allVersions'] });
-        queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
-        queryClient.invalidateQueries({ queryKey: ['allDocumentSuggestions', document?.id] });
+        Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
+          queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] }),
+          queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
+          queryClient.invalidateQueries({ queryKey: ['document', document?.id] }),
+          queryClient.invalidateQueries({ queryKey: ['allDocumentSuggestions', document?.id] }),
+          queryClient.invalidateQueries({ queryKey: ['currentUser'] }),
+          queryClient.invalidateQueries({ queryKey: ['documentMetadata', document?.id] })
+        ]).catch(err => console.error('[VOTE] Error invalidating:', err));
       }
     },
   });

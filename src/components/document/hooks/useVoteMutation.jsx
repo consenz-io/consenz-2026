@@ -2,13 +2,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { ensureUserPublicProfile } from "@/components/ensureUserPublicProfile";
 import { toast } from "sonner";
-import { autoAcceptSuggestion } from "../suggestionAutoAccept";
 import React from "react";
-import { rateLimitedAction, RATE_LIMITS } from "@/components/utils/rateLimiter";
 
 /**
- * Custom hook for voting on suggestions
- * Handles optimistic updates, auto-acceptance, and race condition prevention
+ * OPTIMIZED: Custom hook for voting on suggestions
+ * Now uses backend function to reduce API calls from 45+ to 1-2
  */
 export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds, hasCheckedRef) {
   const queryClient = useQueryClient();
@@ -27,171 +25,36 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
       votingInProgressRef.current.add(suggestionId);
 
       try {
-        const [freshVotes, freshSuggestions] = await Promise.all([
-          base44.entities.Vote.filter({ suggestionId, userId: user.id }),
-          base44.entities.Suggestion.filter({ id: suggestionId })
-        ]);
-        
-        const serverVote = freshVotes[0];
-        const freshSuggestion = freshSuggestions[0];
-        
-        if (!freshSuggestion) throw new Error("ההצעה לא נמצאה");
-        if (freshSuggestion.status !== 'pending') {
-          throw new Error("לא ניתן להצביע על הצעה שכבר טופלה");
-        }
-        
-        let newProVotes = freshSuggestion.proVotes || 0;
-        let newConVotes = freshSuggestion.conVotes || 0;
-        let pointsAction = null;
-        
-        if (serverVote) {
-          if (serverVote.vote === vote) {
-            await base44.entities.Vote.delete(serverVote.id);
-            if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
-            else newConVotes = Math.max(0, newConVotes - 1);
-            pointsAction = 'cancel';
-          } else {
-            await base44.entities.Vote.update(serverVote.id, { vote });
-            if (vote === 'pro') {
-              newProVotes += 1;
-              newConVotes = Math.max(0, newConVotes - 1);
-            } else {
-              newConVotes += 1;
-              newProVotes = Math.max(0, newProVotes - 1);
-            }
-            pointsAction = 'change';
-          }
-        } else {
-          const doubleCheck = await base44.entities.Vote.filter({ suggestionId, userId: user.id });
-          if (doubleCheck.length > 0) {
-            const existingVote = doubleCheck[0];
-            if (existingVote.vote !== vote) {
-              await base44.entities.Vote.update(existingVote.id, { vote });
-              if (vote === 'pro') {
-                newProVotes += 1;
-                newConVotes = Math.max(0, newConVotes - 1);
-              } else {
-                newConVotes += 1;
-                newProVotes = Math.max(0, newProVotes - 1);
-              }
-            } else {
-              await base44.entities.Vote.delete(existingVote.id);
-              if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
-              else newConVotes = Math.max(0, newConVotes - 1);
-            }
-            pointsAction = 'cancel';
-          } else {
-            await base44.entities.Vote.create({
-              suggestionId,
-              userId: user.id,
-              vote
-            });
-            
-            if (vote === 'pro') newProVotes += 1;
-            else newConVotes += 1;
-            pointsAction = 'new';
-          }
-        }
-        
-        await base44.entities.Suggestion.update(suggestionId, {
-          proVotes: newProVotes,
-          conVotes: newConVotes
+        // Single backend call handles everything
+        const response = await base44.functions.invoke('voteOnSuggestion', {
+          suggestionId,
+          vote
         });
-        
-        const updatedSuggestion = { ...freshSuggestion, proVotes: newProVotes, conVotes: newConVotes };
 
-        // Check consensus with fresh document data
-        let accepted = false;
-        if (freshSuggestion.status === 'pending') {
-          // Fetch fresh document to ensure accurate consensus calculation
-          const freshDocs = await base44.entities.Document.filter({ id: document.id });
-          const freshDocument = freshDocs[0] || document;
-          
-          const consensuses = freshDocument.consensuses || [];
-          let threshold;
-          if (consensuses.length > 0) {
-            const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-            threshold = Math.max(2, Math.round(consensusMeterAverage * (freshDocument.totalUsersInteracted || 1)));
-          } else {
-            threshold = Math.max(2, freshDocument.threshold || 2);
-          }
-          const shouldAccept = (newProVotes - newConVotes) >= threshold;
-          
-          console.log('[VOTE CONSENSUS CHECK]', {
-            suggestionId,
-            proVotes: newProVotes,
-            conVotes: newConVotes,
-            delta: newProVotes - newConVotes,
-            threshold,
-            shouldAccept,
-            consensuses: consensuses.length
-          });
-          
-          if (shouldAccept) {
-            // Check if already processing acceptance
-            if (hasCheckedRef.current.has(`${suggestionId}-accepted`)) {
-              console.log('[VOTE] Suggestion already being accepted, skipping');
-              return { accepted: false, newProVotes, newConVotes };
-            }
-            
-            hasCheckedRef.current.add(`${suggestionId}-accepted`);
-            setAutoAcceptingIds(prev => ({ ...prev, [suggestionId]: true }));
-            
-            try {
-              console.log('[VOTE] Attempting auto-accept for suggestion:', suggestionId);
-              accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, freshDocument);
-            
-              if (accepted) {
-                console.log('[VOTE] Auto-accept succeeded, invalidating queries');
-                
-                // Invalidate all related queries to ensure fresh data
-                await Promise.all([
-                  queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
-                  queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] }),
-                  queryClient.invalidateQueries({ queryKey: ['document', document?.id] }),
-                  queryClient.invalidateQueries({ queryKey: ['topics', document?.id] }),
-                  queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
-                  queryClient.invalidateQueries({ queryKey: ['versions', document?.id] }),
-                  queryClient.invalidateQueries({ queryKey: ['documentMetadata', document?.id] })
-                ]);
-                
-                // Award points for vote that influenced acceptance
-                if (!currentVote && vote === 'pro' && freshDocument.gamificationEnabled) {
-                  base44.auth.updateMe({ points: (user.points || 1000) + 50 })
-                    .then(() => console.log('[VOTE] Awarded 50 points for influential vote'))
-                    .catch(err => console.error('[VOTE] Error awarding points:', err));
-                  
-                  base44.entities.PointsTransaction.create({
-                    userId: user.id,
-                    amount: 50,
-                    action: 'vote_influenced_acceptance',
-                    description: `ההצבעה שלך השפיעה על קבלת ההצעה`,
-                    relatedEntityId: suggestionId,
-                    relatedEntityType: 'suggestion'
-                  }).catch(err => console.error('[VOTE] Error creating points transaction:', err));
-                }
-              } else {
-                console.log('[VOTE] Auto-accept returned false');
-              }
-            } catch (acceptError) {
-              console.error('[VOTE] Error during auto-accept:', acceptError);
-              // Silently handle rate limits in auto-accept
-              if (acceptError?.message?.includes('Rate limit')) {
-                console.log('[VOTE] Rate limit in auto-accept, vote succeeded but points delayed');
-              }
-              // Don't throw - let the vote still succeed even if auto-accept fails
-              accepted = false;
-            } finally {
-              setAutoAcceptingIds(prev => {
-                const next = { ...prev };
-                delete next[suggestionId];
-                return next;
-              });
-            }
-          }
+        if (!response.data.success) {
+          throw new Error(response.data.error || 'שגיאה בהצבעה');
         }
+
+        const { newProVotes, newConVotes, accepted, voteAction } = response.data;
         
-        if (!accepted && pointsAction === 'new') {
+        console.log('[VOTE] Backend response:', { newProVotes, newConVotes, accepted, voteAction });
+
+        // Mark as auto-accepting if accepted
+        if (accepted) {
+          setAutoAcceptingIds(prev => ({ ...prev, [suggestionId]: true }));
+          
+          // Clear after invalidation
+          setTimeout(() => {
+            setAutoAcceptingIds(prev => {
+              const next = { ...prev };
+              delete next[suggestionId];
+              return next;
+            });
+          }, 2000);
+        }
+
+        // Ensure public profile exists for new voters
+        if (voteAction === 'created') {
           ensureUserPublicProfile(user).catch(() => {});
         }
       
@@ -267,11 +130,12 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
         queryClient.setQueryData(['userVotes', document?.id, user?.id], context.previousVotes);
       }
       
-      // Show user-friendly error message
-      if (err.message?.includes('המתן') || err.message?.toLowerCase().includes('wait')) {
-        toast.error('נא להמתין מעט לפני הצבעה נוספת', { duration: 3000 });
+      // Handle rate limit errors with countdown
+      if (err.response?.status === 429 || err.message?.includes('המתן') || err.message?.toLowerCase().includes('wait')) {
+        const remainingSeconds = err.response?.data?.remainingSeconds || 30;
+        toast.error(`נא להמתין ${remainingSeconds} שניות לפני הצבעה נוספת`, { duration: remainingSeconds * 1000 });
       } else {
-        const errorMessage = err.message || 'שגיאה בהצבעה, נסה שוב';
+        const errorMessage = err.response?.data?.error || err.message || 'שגיאה בהצבעה, נסה שוב';
         toast.error(errorMessage);
       }
     },
@@ -295,6 +159,15 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
       
       if (data?.accepted) {
         toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', { duration: 4000 });
+        
+        // Invalidate all related data when suggestion is accepted
+        Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
+          queryClient.invalidateQueries({ queryKey: ['document', document?.id] }),
+          queryClient.invalidateQueries({ queryKey: ['topics', document?.id] }),
+          queryClient.invalidateQueries({ queryKey: ['documentMetadata', document?.id] }),
+          queryClient.invalidateQueries({ queryKey: ['currentUser'] })
+        ]).catch(err => console.error('[VOTE] Error invalidating queries:', err));
       }
       
       // Ensure fresh data after vote
