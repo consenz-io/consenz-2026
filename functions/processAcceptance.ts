@@ -181,7 +181,7 @@ Deno.serve(async (req) => {
       await base44.entities.Suggestion.update(suggestion.id, {
         type: 'edit_section',
         sectionId: newSection.id,
-        status: 'pending',
+        status: 'accepted',
         originalContent: suggestion.newContent,
         suggestionConsensus: boundedConsensus,
         participantsAtAcceptance: totalUsers,
