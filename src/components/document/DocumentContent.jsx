@@ -23,6 +23,7 @@ import TopicTitleCarousel from "./TopicTitleCarousel";
 import { useLanguage } from "@/components/LanguageContext";
 import { checkSuggestionConsensus, autoAcceptSuggestion, autoAcceptTopicEditSuggestion, checkTopicEditConsensus } from "./suggestionAutoAccept";
 import { votingQueue } from "./VotingQueue";
+import { useVoteMutation } from "./hooks/useVoteMutation";
 import { toast } from "sonner";
 
 export default function DocumentContent({ 
