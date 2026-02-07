@@ -480,11 +480,12 @@ const SectionCarousel = React.memo(function SectionCarousel({
             {showComments[`section-${section.id}`] && (
               <div className="mt-4 pt-4 border-t border-slate-200">
                 <CommentsSection
-                  entityType="section"
-                  entityId={section.id}
+                  rootEntityType="section"
+                  rootEntityId={section.id}
                   user={user}
-                  relatedSuggestionIds={(allSectionSuggestions || []).map(s => s.id)}
-                  key={`section-${section.id}-all-comments`}
+                  documentId={document?.id}
+                  documentTitle={document?.title}
+                  isOpen={showComments[`section-${section.id}`]}
                 />
               </div>
             )}
@@ -772,10 +773,12 @@ const SectionCarousel = React.memo(function SectionCarousel({
                 {showComments[`suggestion-${currentView.data.id}`] && (
                   <div className="mt-4 pt-4 border-t border-slate-200">
                     <CommentsSection
-                      entityType="suggestion"
-                      entityId={currentView.data.id}
+                      rootEntityType="suggestion"
+                      rootEntityId={currentView.data.id}
                       user={user}
-                      sectionId={section?.id}
+                      documentId={document?.id}
+                      documentTitle={document?.title}
+                      isOpen={showComments[`suggestion-${currentView.data.id}`]}
                     />
                   </div>
                 )}
