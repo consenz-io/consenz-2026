@@ -103,6 +103,8 @@ export default function DocumentView() {
     initialData: [],
     enabled: !!documentId,
     staleTime: Infinity, // Real-time via subscription
+    retry: 3,
+    retryDelay: 1000,
   });
 
   const { data: sections, isLoading: sectionsLoading } = useQuery({
@@ -111,6 +113,8 @@ export default function DocumentView() {
     initialData: [],
     enabled: !!documentId,
     staleTime: Infinity, // Real-time via subscription
+    retry: 3,
+    retryDelay: 1000,
   });
 
   const { data: suggestions = [], isLoading: suggestionsLoading } = useQuery({
