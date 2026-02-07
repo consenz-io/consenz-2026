@@ -232,36 +232,47 @@ Deno.serve(async (req) => {
 
     await Promise.all(updates);
 
-    // Schedule points and notifications in background (delayed to avoid rate limits)
-    setTimeout(() => {
-      // Award points to creator
-      if (document.gamificationEnabled && suggestion.created_by) {
-        base44.asServiceRole.functions.invoke('awardSuggestionPoints', {
-          suggestionId: suggestion.id,
-          action: 'suggestion_accepted'
-        }).catch(err => console.error('[POINTS]', err));
+    // Schedule points in background using queue system (batched processing)
+    if (document.gamificationEnabled) {
+      const pointsOperations = [];
+      
+      // Get creator user ID
+      if (suggestion.created_by) {
+        const creatorUsers = await base44.asServiceRole.entities.User.filter({ email: suggestion.created_by });
+        if (creatorUsers[0]) {
+          pointsOperations.push({
+            userId: creatorUsers[0].id,
+            amount: 200,
+            action: 'suggestion_accepted',
+            description: `ההצעה שלך התקבלה: ${suggestion.title || 'הצעה'}`,
+            relatedEntityId: suggestion.id,
+            relatedEntityType: 'suggestion'
+          });
+        }
       }
-
+      
       // Award points to influential voter
-      if (wasNewVote && document.gamificationEnabled) {
-        base44.asServiceRole.entities.User.filter({ id: voterId }).then(users => {
-          if (users[0]) {
-            const newPoints = (users[0].points || 1000) + 50;
-            Promise.all([
-              base44.asServiceRole.entities.User.update(voterId, { points: newPoints }),
-              base44.entities.PointsTransaction.create({
-                userId: voterId,
-                amount: 50,
-                action: 'vote_influenced_acceptance',
-                description: 'ההצבעה שלך השפיעה על קבלת ההצעה',
-                relatedEntityId: suggestionId,
-                relatedEntityType: 'suggestion'
-              })
-            ]).catch(err => console.error('[VOTER POINTS]', err));
-          }
+      if (wasNewVote) {
+        pointsOperations.push({
+          userId: voterId,
+          amount: 50,
+          action: 'vote_influenced_acceptance',
+          description: 'ההצבעה שלך השפיעה על קבלת ההצעה',
+          relatedEntityId: suggestionId,
+          relatedEntityType: 'suggestion'
         });
       }
-    }, 2000);
+      
+      // Queue all points operations together
+      if (pointsOperations.length > 0) {
+        setTimeout(() => {
+          base44.asServiceRole.functions.invoke('pointsQueue', {
+            operations: pointsOperations,
+            processImmediate: true
+          }).catch(err => console.error('[POINTS QUEUE]', err));
+        }, 1000);
+      }
+    }
 
     console.log('[PROCESS ACCEPTANCE] Completed successfully');
     

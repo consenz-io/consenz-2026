@@ -613,23 +613,25 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
       
       console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ edit_suggestion marked as accepted');
       
-      // Award points if gamification enabled - fire and forget to avoid rate limits
+      // Award points via queue system
       if (document.gamificationEnabled && freshSuggestion.created_by) {
-        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Scheduling points award...');
-        // Add delay to avoid rate limits
-        setTimeout(() => {
-          base44.functions.invoke('awardSuggestionPoints', {
-            suggestionId: freshSuggestion.id,
-            action: 'suggestion_accepted'
-          }).then(() => {
-            console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Points awarded');
-          }).catch(pointsError => {
-            // Silently handle rate limits - points will be awarded eventually
-            if (!pointsError?.message?.includes('Rate limit')) {
-              console.error('[AUTO-ACCEPT EDIT_SUGGESTION] Points error:', pointsError);
-            }
-          });
-        }, 1000);
+        console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Queueing points award...');
+        const creatorUsers = await base44.entities.User.filter({ email: freshSuggestion.created_by });
+        if (creatorUsers[0]) {
+          setTimeout(() => {
+            base44.functions.invoke('pointsQueue', {
+              operations: [{
+                userId: creatorUsers[0].id,
+                amount: 200,
+                action: 'suggestion_accepted',
+                description: `הצעת עריכה התקבלה: ${freshSuggestion.title || 'הצעה'}`,
+                relatedEntityId: freshSuggestion.id,
+                relatedEntityType: 'suggestion'
+              }],
+              processImmediate: false
+            }).catch(err => console.error('[POINTS QUEUE]', err));
+          }, 1000);
+        }
       }
       
       // Send notification - create updated suggestion object
@@ -923,24 +925,26 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
            .catch(notifError => console.error('[AUTO ACCEPT NEW_SECTION NOTIFICATION ERROR]', notifError));
        }
        
-       // Award points - fire and forget to avoid rate limits
+       // Award points via queue system
        const gamificationEnabled = document?.gamificationEnabled || false;
        if (gamificationEnabled && freshSuggestion.created_by) {
-         console.log('[AUTO-ACCEPT NEW_SECTION] Scheduling points award...');
-         // Add delay to avoid rate limits
-         setTimeout(() => {
-           base44.functions.invoke('awardSuggestionPoints', {
-             suggestionId: freshSuggestion.id,
-             action: 'suggestion_accepted'
-           }).then(() => {
-             console.log('[AUTO-ACCEPT NEW_SECTION] ✅ Points awarded');
-           }).catch(pointsError => {
-             // Silently handle rate limits - points will be awarded eventually
-             if (!pointsError?.message?.includes('Rate limit')) {
-               console.error('[AUTO-ACCEPT NEW_SECTION] Points error:', pointsError);
-             }
-           });
-         }, 1500);
+         console.log('[AUTO-ACCEPT NEW_SECTION] Queueing points award...');
+         const creatorUsers = await base44.entities.User.filter({ email: freshSuggestion.created_by });
+         if (creatorUsers[0]) {
+           setTimeout(() => {
+             base44.functions.invoke('pointsQueue', {
+               operations: [{
+                 userId: creatorUsers[0].id,
+                 amount: 200,
+                 action: 'suggestion_accepted',
+                 description: `סעיף חדש התקבל: ${freshSuggestion.title || 'הצעה'}`,
+                 relatedEntityId: freshSuggestion.id,
+                 relatedEntityType: 'suggestion'
+               }],
+               processImmediate: false
+             }).catch(err => console.error('[POINTS QUEUE]', err));
+           }, 1500);
+         }
        }
        
        return true;
@@ -990,25 +994,26 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
         });
       }
       
-      // Award 200 points to suggestion creator when accepted - fire and forget to avoid rate limits
+      // Award points via queue system
       const gamificationEnabled = document?.gamificationEnabled || false;
       if (gamificationEnabled && freshSuggestion.created_by) {
-        console.log('[POINTS] 🎯 Scheduling points award to suggestion creator:', freshSuggestion.created_by);
-        // Add delay to avoid rate limits
-        setTimeout(() => {
-          base44.functions.invoke('awardSuggestionPoints', {
-            suggestionId: freshSuggestion.id,
-            action: 'suggestion_accepted'
-          }).then(response => {
-            console.log('[POINTS] ✅ Points awarded successfully:', response.data);
-          }).catch(pointsError => {
-            // Silently handle rate limits - points will be awarded eventually
-            if (!pointsError?.message?.includes('Rate limit')) {
-              console.error('[POINTS DEBUG] ❌ Error awarding points:', pointsError);
-              console.error('[POINTS DEBUG] Error details:', pointsError.message);
-            }
-          });
-        }, 2000);
+        console.log('[POINTS] 🎯 Queueing points award to suggestion creator:', freshSuggestion.created_by);
+        const creatorUsers = await base44.entities.User.filter({ email: freshSuggestion.created_by });
+        if (creatorUsers[0]) {
+          setTimeout(() => {
+            base44.functions.invoke('pointsQueue', {
+              operations: [{
+                userId: creatorUsers[0].id,
+                amount: 200,
+                action: 'suggestion_accepted',
+                description: `הצעת עריכה התקבלה: ${freshSuggestion.title || 'הצעה'}`,
+                relatedEntityId: freshSuggestion.id,
+                relatedEntityType: 'suggestion'
+              }],
+              processImmediate: false
+            }).catch(err => console.error('[POINTS QUEUE]', err));
+          }, 2000);
+        }
       }
     }
     
