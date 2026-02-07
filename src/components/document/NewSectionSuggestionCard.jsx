@@ -26,7 +26,6 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   isAdmin,
   onEditSuggestion,
   allDocumentSuggestions,
-  isAutoAccepting = false,
   targetSuggestionId
 }) {
   const { t, isRTL, language: rawLanguage } = useLanguage();
@@ -335,11 +334,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   return (
     <div 
       id={`suggestion-${suggestion.id}`}
-      className={`group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 ${
-        isAutoAccepting 
-          ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-cyan-50 ring-2 ring-blue-300 ring-offset-1' 
-          : 'border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50'
-      }`}
+      className="group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50"
     >
       {/* כפתורי דפדוף בין גרסאות - מעגלי כמו SectionCarousel */}
       {allViews.length > 1 && (
@@ -382,18 +377,11 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       {/* כותרת עם אינדיקטור של הצעה חדשה */}
       <div className="flex items-center justify-between mb-3 md:mb-4">
         <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-          {isAutoAccepting ? (
-            <Loader2 className="w-5 h-5 md:w-6 md:h-6 animate-spin text-blue-600 flex-shrink-0" />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
-              <Plus className="w-5 h-5 text-white" />
-            </div>
-          )}
+          <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
+            <Plus className="w-5 h-5 text-white" />
+          </div>
           <div className="text-sm md:text-base font-semibold text-slate-900 break-words">
-            {isAutoAccepting 
-              ? 'מעבד הצעה...' 
-              : `הצעה לסעיף חדש מאת ${getUserName(currentVersion.created_by)}`
-            }
+            {`הצעה לסעיף חדש מאת ${getUserName(currentVersion.created_by)}`}
           </div>
         </div>
       </div>
@@ -426,12 +414,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       </div>
 
       {/* כפתורי הצבעה והערות */}
-      <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap relative">
-        {voteMutation.isPending && (
-          <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10">
-            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-          </div>
-        )}
+      <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap">
         {doc?.votingButtonsEnabled ? (
           <>
             <Button
