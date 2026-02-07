@@ -296,9 +296,9 @@ export default function FloatingPointsBadge() {
           )}
 
           <div className="border-t pt-2">
-            <Link to={createPageUrl("Profile")}>
+            <Link to={createPageUrl("LearnMore") + '#gamification'}>
               <Button variant="outline" className="w-full" size="sm">
-                {language === 'he' ? 'צפה בכל הנקודות' : language === 'ar' ? 'عرض جميع النقاط' : 'View All Points'}
+                {language === 'he' ? 'איך צוברים נקודות?' : language === 'ar' ? 'كيف تكسب النقاط؟' : 'How to Earn Points?'}
               </Button>
             </Link>
           </div>
