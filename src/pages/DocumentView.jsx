@@ -132,24 +132,33 @@ export default function DocumentView() {
     
     console.log('[REALTIME] Setting up Topic/Section/Suggestion subscriptions');
     
+    // Debounced invalidation to prevent rate limits
+    let invalidationTimer;
+    const debouncedInvalidate = (queryKey) => {
+      clearTimeout(invalidationTimer);
+      invalidationTimer = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey });
+      }, 300);
+    };
+    
     const unsubscribeTopic = base44.entities.Topic.subscribe((event) => {
       console.log('[REALTIME] Topic event:', event.type, event.data?.documentId);
       if (event.data?.documentId === documentId || (event.type === 'update' && event.id && topics?.some(t => t.id === event.id))) {
-        queryClient.invalidateQueries({ queryKey: ['topics', documentId] });
+        debouncedInvalidate(['topics', documentId]);
       }
     });
     
     const unsubscribeSection = base44.entities.Section.subscribe((event) => {
       console.log('[REALTIME] Section event:', event.type);
       if (event.data?.documentId === documentId || (event.type === 'update' && event.id && sections?.some(s => s.id === event.id))) {
-        queryClient.invalidateQueries({ queryKey: ['sections', documentId] });
+        debouncedInvalidate(['sections', documentId]);
       }
     });
     
     const unsubscribeSuggestion = base44.entities.Suggestion.subscribe((event) => {
       console.log('[REALTIME] Suggestion event:', event.type);
       if (event.data?.documentId === documentId || (event.type === 'update' && event.id && suggestions?.some(s => s.id === event.id))) {
-        queryClient.invalidateQueries({ queryKey: ['suggestions', documentId] });
+        debouncedInvalidate(['suggestions', documentId]);
       }
     });
     

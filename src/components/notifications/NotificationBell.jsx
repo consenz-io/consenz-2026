@@ -40,10 +40,15 @@ export default function NotificationBell({ user }) {
     
     console.log('[REALTIME NOTIFICATIONS] Setting up Notification subscription for user:', user.id);
     
+    // Debounced to prevent rate limits
+    let notifTimer;
     const unsubscribe = base44.entities.Notification.subscribe((event) => {
       console.log('[REALTIME NOTIFICATIONS] Notification event:', event.type);
       if (event.data?.userId === user.id || (event.type === 'update' && notifications?.some(n => n.id === event.id))) {
-        queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
+        clearTimeout(notifTimer);
+        notifTimer = setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
+        }, 800);
       }
     });
     

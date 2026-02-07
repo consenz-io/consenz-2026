@@ -163,11 +163,15 @@ export default function SuggestionDetail() {
     
     console.log('[REALTIME] Setting up Vote subscription for:', suggestionId);
     
+    // Debounced to prevent rate limits
+    let voteTimer;
     const unsubscribe = base44.entities.Vote.subscribe((event) => {
       console.log('[REALTIME] Vote event:', event.type);
-      // Invalidate on any vote change for this suggestion
-      queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user.id] });
-      queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
+      clearTimeout(voteTimer);
+      voteTimer = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user.id] });
+        queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
+      }, 500);
     });
     
     return () => {

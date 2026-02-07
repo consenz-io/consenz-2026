@@ -160,21 +160,16 @@ export function useVoteMutation(document, user, suggestions, setAutoAcceptingIds
       if (data?.accepted) {
         toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', { duration: 4000 });
         
-        // Invalidate all related data when suggestion is accepted
-        Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['sections', document?.id] }),
-          queryClient.invalidateQueries({ queryKey: ['document', document?.id] }),
-          queryClient.invalidateQueries({ queryKey: ['topics', document?.id] }),
-          queryClient.invalidateQueries({ queryKey: ['documentMetadata', document?.id] }),
-          queryClient.invalidateQueries({ queryKey: ['currentUser'] })
-        ]).catch(err => console.error('[VOTE] Error invalidating queries:', err));
+        // Real-time subscriptions will handle updates - only invalidate if not accepted
+        // This prevents cascading invalidations and rate limits
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
+          queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
+        }, 1500);
       }
       
-      // Ensure fresh data after vote
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['userVotes', document?.id, user?.id] }),
-        queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] })
-      ]).catch(err => console.error('[VOTE] Error invalidating queries:', err));
+      // DON'T invalidate - optimistic updates + subscriptions handle it
+      // Prevents rate limit cascade
     },
   });
 
