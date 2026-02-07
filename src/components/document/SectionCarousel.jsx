@@ -187,7 +187,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
     const idx = allViews.findIndex(v => v.id === currentSuggestionId);
     return idx >= 0 ? idx : 0;
   }, [currentSuggestionId, allViews]);
-
+  const [showTranslated, setShowTranslated] = useState({});
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showHistorySidebar, setShowHistorySidebar] = useState(false);
   
@@ -273,7 +273,75 @@ const SectionCarousel = React.memo(function SectionCarousel({
     },
   });
 
-  // Translation is now handled only via manual button clicks in TranslatableContent component
+  const translateSuggestionMutation = useMutation({
+    mutationFn: async (suggestion) => {
+      const originalLanguage = suggestion.originalLanguage || 'he';
+      
+      // תרגום כותרת
+      const titlePrompt = `Translate the following HTML content to ${languagePrompts[language]}. Keep ALL HTML tags. Return ONLY the translated HTML:\n${suggestion.title}`;
+      const titleResult = await base44.integrations.Core.InvokeLLM({
+        prompt: titlePrompt,
+        add_context_from_internet: false,
+      });
+      const translatedTitle = (typeof titleResult === 'string' ? titleResult : titleResult.content || titleResult)
+        .replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+
+      console.log('[TRANSLATE DEBUG] Translated title:', translatedTitle);
+
+      // תרגום הסבר
+      let translatedExplanation = suggestion.explanation || '';
+      if (suggestion.explanation) {
+        const explanationPrompt = `Translate the following HTML content to ${languagePrompts[language]}. Keep ALL HTML tags. Return ONLY the translated HTML:\n${suggestion.explanation}`;
+        const explanationResult = await base44.integrations.Core.InvokeLLM({
+          prompt: explanationPrompt,
+          add_context_from_internet: false,
+        });
+        translatedExplanation = (typeof explanationResult === 'string' ? explanationResult : explanationResult.content || explanationResult)
+          .replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+      }
+
+      // תרגום תוכן מוצע
+      const contentPrompt = `Translate the following HTML content to ${languagePrompts[language]}. Keep ALL HTML tags. Return ONLY the translated HTML:\n${suggestion.newContent}`;
+      const contentResult = await base44.integrations.Core.InvokeLLM({
+        prompt: contentPrompt,
+        add_context_from_internet: false,
+      });
+      const translatedContent = (typeof contentResult === 'string' ? contentResult : contentResult.content || contentResult)
+        .replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+
+      console.log('[TRANSLATE DEBUG] Translated content:', translatedContent);
+
+      const newTranslations = {
+        ...(suggestion.translations || {}),
+        [language]: {
+          title: translatedTitle,
+          explanation: translatedExplanation,
+          newContent: translatedContent
+        }
+      };
+
+      await base44.entities.Suggestion.update(suggestion.id, {
+        translations: newTranslations
+      });
+
+      return { suggestionId: suggestion.id, translations: newTranslations, suggestion };
+    },
+    onMutate: async (suggestion) => {
+      // מגדיר מראש שאנחנו מציגים תרגום
+      setShowTranslated(prev => ({ ...prev, [suggestion.id]: true }));
+    },
+    onSuccess: (data) => {
+      // עדכון הדאטה באופן מיידי בקאש
+      queryClient.setQueryData(['suggestions', document.id], (oldData) => {
+        if (!oldData) return oldData;
+        return oldData.map(s => 
+          s.id === data.suggestionId 
+            ? { ...s, translations: data.translations }
+            : s
+        );
+      });
+    }
+  });
 
   const currentSuggestionDisplayId = currentView?.type === 'suggestion' ? `suggestion-${currentView.data.id}` : `section-${section.id}`;
 
@@ -589,23 +657,9 @@ const SectionCarousel = React.memo(function SectionCarousel({
             {/* כפתורי הצבעה והערות - רק אם לא באנימציה */}
             {!['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView.data.id]) && (
               <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap relative">
-                {(voteMutation.voteMutation?.isPending || voteMutation.isInCooldown) && (
-                  <div className="absolute inset-0 bg-white/90 rounded-lg flex flex-col items-center justify-center z-10 gap-2">
+                {voteMutation.isPending && (
+                  <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10">
                     <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                    {voteMutation.isInCooldown && (
-                      <p className="text-xs font-medium text-slate-600">
-                        {language === 'he' ? `המתן ${voteMutation.cooldownSeconds} שניות` : 
-                         language === 'ar' ? `انتظر ${voteMutation.cooldownSeconds} ثانية` :
-                         `Wait ${voteMutation.cooldownSeconds}s`}
-                      </p>
-                    )}
-                    {voteMutation.voteMutation?.isPending && !voteMutation.isInCooldown && (
-                      <p className="text-xs font-medium text-slate-600">
-                        {language === 'he' ? 'מעבד הצבעה...' : 
-                         language === 'ar' ? 'معالجة التصويت...' :
-                         'Processing vote...'}
-                      </p>
-                    )}
                   </div>
                 )}
                 {document?.votingButtonsEnabled ? (
@@ -619,13 +673,13 @@ const SectionCarousel = React.memo(function SectionCarousel({
                           base44.auth.redirectToLogin(window.location.href);
                           return;
                         }
-                        voteMutation.voteMutation.mutate({
+                        voteMutation.mutate({
                           suggestionId: currentView.data.id,
                           vote: 'pro',
                           currentVote: getUserVote(currentView.data.id)
                         });
                       }}
-                      disabled={voteMutation.voteMutation?.isPending || voteMutation.isInCooldown}
+                      disabled={voteMutation.isPending}
                       className={`text-xs px-2 md:px-3 ${getUserVote(currentView.data.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
                     >
                       <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
@@ -640,13 +694,13 @@ const SectionCarousel = React.memo(function SectionCarousel({
                           base44.auth.redirectToLogin(window.location.href);
                           return;
                         }
-                        voteMutation.voteMutation.mutate({
+                        voteMutation.mutate({
                           suggestionId: currentView.data.id,
                           vote: 'con',
                           currentVote: getUserVote(currentView.data.id)
                         });
                       }}
-                      disabled={voteMutation.voteMutation?.isPending || voteMutation.isInCooldown}
+                      disabled={voteMutation.isPending}
                       className={`text-xs px-2 md:px-3 ${getUserVote(currentView.data.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
                     >
                       <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />

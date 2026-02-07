@@ -57,7 +57,17 @@ export default function SectionDiff({
   // Check if suggestion was written in a different language than original
   const isCrossLanguageSuggestion = originalSourceLang !== modifiedSourceLang;
 
-  // Translation is now manual only - removed auto-translate
+  // Auto-translate if user's language differs from content - always
+  useEffect(() => {
+    if (needsTranslation && !isTranslating) {
+      // Check if we need fresh translation
+      if (!translationResult || 
+          translationResult.sourceLanguages?.original !== originalSourceLang ||
+          translationResult.sourceLanguages?.modified !== modifiedSourceLang) {
+        handleSmartTranslate();
+      }
+    }
+  }, [needsTranslation, originalSourceLang, modifiedSourceLang, language]);
   
   const handleSmartTranslate = async () => {
     if (isTranslating) return;

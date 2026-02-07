@@ -319,24 +319,10 @@ export default function DocumentContent({
       if (!user) throw new Error("יש להתחבר כדי להצביע");
       if (!document) throw new Error("מסמך לא נמצא");
 
-      // מניעת הצבעות כפולות על אותה הצעה - בדיקה בלבד, לא חסימה
+      // מניעת הצבעות כפולות על אותה הצעה
       if (votingInProgressRef.current.has(suggestionId)) {
-        console.log('[VOTE] Already voting on this suggestion, waiting for completion');
-        // המתן עד שההצבעה הקודמת תסתיים
-        await new Promise(resolve => {
-          const checkInterval = setInterval(() => {
-            if (!votingInProgressRef.current.has(suggestionId)) {
-              clearInterval(checkInterval);
-              resolve();
-            }
-          }, 100);
-          // timeout אחרי 5 שניות
-          setTimeout(() => {
-            clearInterval(checkInterval);
-            votingInProgressRef.current.delete(suggestionId);
-            resolve();
-          }, 5000);
-        });
+        console.log('[VOTE] Already voting on this suggestion, ignoring');
+        throw new Error("ההצבעה בתהליך, אנא המתן");
       }
       votingInProgressRef.current.add(suggestionId);
       
@@ -1369,7 +1355,7 @@ Return ONLY the translated text:`;
                               showComments={showComments}
                               getCommentsCount={getCommentsCount}
                               getUserVote={getUserVote}
-                              voteMutation={{ voteMutation, isInCooldown: false, cooldownSeconds: 0 }}
+                              voteMutation={voteMutation}
                               getUserName={getUserName}
                               acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
                               sectionIndex={index}
