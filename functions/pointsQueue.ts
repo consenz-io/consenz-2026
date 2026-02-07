@@ -86,9 +86,10 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Fetch all users and update in parallel
+      // Fetch all users - note: no complex query support, fetch all and filter
       const userIds = [...new Set(transactions.map(t => t.userId))];
-      const users = await base44.asServiceRole.entities.User.filter({ id: { $in: userIds } });
+      const allUsers = await base44.asServiceRole.entities.User.list();
+      const users = allUsers.filter(u => userIds.includes(u.id));
       
       const userUpdates = users.map(user => {
         const userTransactions = transactions.filter(t => t.userId === user.id);
