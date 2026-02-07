@@ -29,12 +29,23 @@ export default function NotificationBell({ user }) {
       return notifs;
     },
     enabled: !!user?.id,
-    staleTime: 30000,
-    refetchInterval: 60000,
-    refetchIntervalInBackground: false,
+    staleTime: Infinity, // Real-time via subscription
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
+
+  // Real-time subscription for notifications
+  React.useEffect(() => {
+    if (!user?.id) return;
+    
+    const unsubscribe = base44.entities.Notification.subscribe((event) => {
+      if (event.data?.userId === user.id) {
+        queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
+      }
+    });
+    
+    return unsubscribe;
+  }, [user?.id, queryClient]);
 
   const markAsReadMutation = useMutation({
     mutationFn: (notificationId) => base44.entities.Notification.update(notificationId, { read: true }),
