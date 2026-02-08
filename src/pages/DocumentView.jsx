@@ -768,11 +768,6 @@ export default function DocumentView() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem disabled>
-                  <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} ${userHasAgreed ? 'text-emerald-600' : ''}`} />
-                  {language === 'he' ? 'חתומים' : language === 'ar' ? 'الموقعون' : 'Signers'} ({documentAgreements.length})
-                </DropdownMenuItem>
-                
                 <DropdownMenuItem onSelect={() => setShowDescriptionComments(!showDescriptionComments)}>
                   <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {t('documentDiscussion')}
