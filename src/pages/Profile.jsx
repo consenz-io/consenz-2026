@@ -589,11 +589,6 @@ export default function Profile() {
                               <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
                             </Link>
                           )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
 
