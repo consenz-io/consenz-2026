@@ -173,22 +173,40 @@ export default function DocumentView() {
     };
   }, [documentId, document, topicsLoading, sectionsLoading, queryClient, topics, sections, suggestions]);
 
-  // Merged queries for better performance - fetch all at once
+  // Merged queries for better performance - fetch only document-specific data
   const { data: aggregatedData } = useQuery({
-    queryKey: ['documentAggregatedData'],
+    queryKey: ['documentAggregatedData', documentId],
     queryFn: async () => {
-      const [votes, users, publicProfiles, args, comments] = await Promise.all([
-        base44.entities.Vote.list(),
-        base44.entities.User.list(),
+      // Get suggestion IDs for this document to filter votes and arguments
+      const suggestionIds = suggestions.map(s => s.id);
+      const sectionIds = sections.map(s => s.id);
+      
+      const [votes, publicProfiles, args, comments] = await Promise.all([
+        // Only votes for suggestions in this document
+        suggestionIds.length > 0 
+          ? base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } })
+          : Promise.resolve([]),
+        // Public profiles - keep all for user lookups
         base44.entities.UserPublicProfile.list(),
-        base44.entities.Argument.list(),
-        base44.entities.Comment.list(),
+        // Only arguments for suggestions in this document
+        suggestionIds.length > 0
+          ? base44.entities.Argument.filter({ suggestionId: { $in: suggestionIds } })
+          : Promise.resolve([]),
+        // Only comments for this document (sections, suggestions, document)
+        base44.entities.Comment.filter({ 
+          $or: [
+            { rootEntityType: 'document', rootEntityId: documentId },
+            { rootEntityType: 'section', rootEntityId: { $in: sectionIds } },
+            { rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } }
+          ]
+        })
       ]);
-      return { votes, users, publicProfiles, args, comments };
+      return { votes, users: publicProfiles, publicProfiles, args, comments };
     },
+    enabled: !!documentId && suggestions.length >= 0 && sections.length >= 0,
     initialData: { votes: [], users: [], publicProfiles: [], args: [], comments: [] },
-    staleTime: 5 * 60 * 1000, // 5 minutes - stable reference data
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    cacheTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const allVotes = aggregatedData?.votes || [];
