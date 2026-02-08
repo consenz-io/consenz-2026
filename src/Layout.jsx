@@ -387,10 +387,14 @@ function LayoutContent({ children, currentPageName }) {
               </div>
 
               {/* Center: Unvoted Suggestions Nudge */}
-              {user && totalUnvotedSuggestions > 0 && (
+              {user && totalUnvotedSuggestions > 0 && showUnvotedNudge && (
                 <Link 
                   to={createPageUrl("MyDocuments")} 
                   className="flex-1 max-w-2xl mx-auto px-4"
+                  onClick={() => {
+                    setShowUnvotedNudge(false);
+                    sessionStorage.setItem('hideUnvotedNudge', 'true');
+                  }}
                 >
                   <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 bg-orange-50 border-2 border-orange-300 rounded-lg hover:bg-orange-100 transition-all shadow-lg hover:shadow-xl cursor-pointer">
                     <div className="w-7 h-7 md:w-8 md:h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm md:text-base font-bold animate-pulse flex-shrink-0">
