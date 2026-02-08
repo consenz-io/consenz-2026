@@ -54,23 +54,24 @@ const SectionCarousel = React.memo(function SectionCarousel({
     select: (data) => {
       if (!data) return [];
       
-      // הצעות ישירות לסעיף הזה
+      // הצעות ישירות לסעיף הזה (כולל accepted - כדי למצוא הצעות edit_suggestion)
       const directSuggestions = data.filter(s => 
         s.sectionId === section.id && 
         (s.type === 'edit_section' || s.type === 'delete_section')
       );
       
-      // מצא IDs של ההצעות השייכות לסעיף
+      // מצא IDs של כל ההצעות השייכות לסעיף (גם accepted)
       const sectionSuggestionIds = new Set(directSuggestions.map(s => s.id));
       
-      // הצעות edit_suggestion שמקושרות להצעות של הסעיף הזה
+      // הצעות edit_suggestion שמקושרות להצעות של הסעיף הזה (גם אם האב התקבל)
       const editSuggestions = data.filter(s => 
         s.type === 'edit_suggestion' && 
         s.parentSuggestionId && 
         sectionSuggestionIds.has(s.parentSuggestionId)
       );
       
-      return [...directSuggestions, ...editSuggestions];
+      // מחזיר רק pending מכל הסוגים (directSuggestions + editSuggestions)
+      return [...directSuggestions, ...editSuggestions].filter(s => s.status === 'pending');
     },
     staleTime: 0,
   });
