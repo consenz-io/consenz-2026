@@ -54,7 +54,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
     select: (data) => {
       if (!data) return [];
       
-      // הצעות ישירות לסעיף הזה
+      // הצעות ישירות לסעיף הזה - רק edit_section או delete_section
       const directSuggestions = data.filter(s => 
         s.sectionId === section.id && 
         (s.type === 'edit_section' || s.type === 'delete_section')
@@ -63,11 +63,12 @@ const SectionCarousel = React.memo(function SectionCarousel({
       // מצא IDs של ההצעות השייכות לסעיף
       const sectionSuggestionIds = new Set(directSuggestions.map(s => s.id));
       
-      // הצעות edit_suggestion שמקושרות להצעות של הסעיף הזה
+      // הצעות edit_suggestion שמקושרות להצעות של הסעיף הזה בלבד
       const editSuggestions = data.filter(s => 
         s.type === 'edit_suggestion' && 
         s.parentSuggestionId && 
-        sectionSuggestionIds.has(s.parentSuggestionId)
+        sectionSuggestionIds.has(s.parentSuggestionId) &&
+        s.status === 'pending' // רק הצעות עריכה פעילות
       );
       
       return [...directSuggestions, ...editSuggestions];
