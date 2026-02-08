@@ -543,11 +543,20 @@ export default function Profile() {
               </div>
             </div>
 
-            {showPointsHistory && pointsTransactions.length > 0 && (
+            {showPointsHistory && (
               <div className="border-t pt-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-yellow-800">
+                    {language === 'he' ? 'בפיתוח' : '...'}
+                  </p>
+                </div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-3">
                   {language === 'he' ? 'היסטוריית נקודות' : language === 'ar' ? 'تاريخ النقاط' : 'Points History'}
                 </h3>
+                <p className="text-slate-500 text-sm text-center py-8">
+                  {language === 'he' ? '...' : language === 'ar' ? '...' : '...'}
+                </p>
+                {/* DISABLED FOR TESTING
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {pointsTransactions.map((transaction) => (
                     <div 
@@ -590,11 +599,20 @@ export default function Profile() {
               </div>
             )}
 
-            {showAcceptedSuggestions && acceptedSuggestions.length > 0 && (
+            {showAcceptedSuggestions && (
               <div className="border-t pt-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-yellow-800">
+                    {language === 'he' ? 'בפיתוח' : '...'}
+                  </p>
+                </div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-3">
                   {language === 'he' ? 'הצעות עריכה שהתקבלו' : language === 'ar' ? 'مقترحات مقبولة' : 'Accepted Suggestions'}
                 </h3>
+                <p className="text-slate-500 text-sm text-center py-8">
+                  {language === 'he' ? '...' : language === 'ar' ? '...' : '...'}
+                </p>
+                {/* DISABLED FOR TESTING
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {acceptedSuggestions.map((suggestion) => (
                     <Link 
