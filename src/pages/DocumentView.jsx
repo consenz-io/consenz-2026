@@ -705,8 +705,8 @@ export default function DocumentView() {
     <TranslationProvider>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-1 md:p-6 w-full max-w-full overflow-x-hidden pb-24">
       <div className="max-w-6xl mx-auto space-y-2 md:space-y-6 px-1 md:px-4 w-full max-w-full">
-        <div className="flex flex-col gap-1.5 md:gap-4 w-full max-w-full">
-          <div className={`flex items-center justify-between gap-1 w-full max-w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
+        <div className="flex flex-col gap-2 md:gap-4 w-full max-w-full">
+          <div className={`flex items-center gap-2 w-full max-w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
             <h1 id="document-title" className="text-lg md:text-3xl font-bold text-slate-900 flex-1 min-w-0 break-words leading-tight max-w-full">
               {(() => {
                 const translatedTitle = document.translations?.[language]?.title;
@@ -745,8 +745,6 @@ export default function DocumentView() {
                 </div>
               );
             })()}
-          </div>
-          <div className="flex gap-2 items-center justify-end w-full">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="text-xs md:text-sm px-2 h-8">
