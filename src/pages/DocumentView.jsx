@@ -762,6 +762,7 @@ export default function DocumentView() {
                   <Languages className={`w-3.5 h-3.5 md:w-5 md:h-5 ${showTranslated ? 'text-slate-600' : 'text-blue-600'}`} aria-hidden="true" />
                 </button>
               )}
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="text-xs md:text-sm px-2 h-8">
