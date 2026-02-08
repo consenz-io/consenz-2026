@@ -25,7 +25,6 @@ const CreateSuggestionModal = React.lazy(() => import("../components/document/Cr
 const ContributorsModal = React.lazy(() => import("../components/document/ContributorsModal"));
 const SuggestionSidebar = React.lazy(() => import("../components/document/SuggestionSidebar"));
 const DocumentAgreementModal = React.lazy(() => import("../components/document/DocumentAgreementModal"));
-const SignersListModal = React.lazy(() => import("../components/document/SignersListModal"));
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -57,7 +56,6 @@ export default function DocumentView() {
   const [openSuggestionId, setOpenSuggestionId] = useState(null);
   const [newlyCreatedSuggestion, setNewlyCreatedSuggestion] = useState(null);
   const [showAgreementModal, setShowAgreementModal] = useState(false);
-  const [showSignersListModal, setShowSignersListModal] = useState(false);
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
   const [targetSuggestionId, setTargetSuggestionId] = useState(null);
   const [showSuggestionNav, setShowSuggestionNav] = useState(false);
@@ -770,11 +768,6 @@ export default function DocumentView() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onSelect={() => setShowSignersListModal(true)}>
-                  <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} ${userHasAgreed ? 'text-emerald-600' : ''}`} />
-                  {language === 'he' ? 'חתומים' : language === 'ar' ? 'الموقعون' : 'Signers'} ({documentAgreements.length})
-                </DropdownMenuItem>
-                
                 <DropdownMenuItem onSelect={() => setShowDescriptionComments(!showDescriptionComments)}>
                   <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {t('documentDiscussion')}
@@ -1149,23 +1142,6 @@ export default function DocumentView() {
             onClose={() => setShowAgreementModal(false)}
             onConfirm={() => signAgreementMutation.mutate()}
             isLoading={signAgreementMutation.isPending}
-          />
-        )}
-
-        {showSignersListModal && (
-          <SignersListModal
-            isOpen={showSignersListModal}
-            onClose={() => setShowSignersListModal(false)}
-            signers={documentAgreements}
-            allUsers={allUsers}
-            user={user}
-            userHasAgreed={userHasAgreed}
-            onJoinClick={() => {
-              setShowSignersListModal(false);
-              setShowAgreementModal(true);
-            }}
-            onRemoveSignature={() => removeSignatureMutation.mutate()}
-            isRemoving={removeSignatureMutation.isPending}
           />
         )}
       </React.Suspense>
