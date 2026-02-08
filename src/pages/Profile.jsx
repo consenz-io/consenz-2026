@@ -556,39 +556,6 @@ export default function Profile() {
                 <p className="text-slate-500 text-sm text-center py-8">
                   {language === 'he' ? '...' : language === 'ar' ? '...' : '...'}
                 </p>
-
-                    <div 
-                      key={transaction.id}
-                      className={`p-3 rounded-lg border ${
-                        transaction.amount > 0 
-                          ? 'bg-green-50 border-green-200' 
-                          : 'bg-red-50 border-red-200'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="outline" className={`text-xs font-semibold ${
-                              transaction.amount > 0 
-                                ? 'bg-green-100 text-green-800 border-green-300' 
-                                : 'bg-red-100 text-red-800 border-red-300'
-                            }`}>
-                              {transaction.amount > 0 ? '+' : ''}{transaction.amount}
-                            </Badge>
-                            <span className="text-xs text-slate-500">
-                              {formatLocalDate(transaction.created_date, 'DD/MM/YYYY HH:mm')}
-                            </span>
-                          </div>
-                          <p className="text-sm text-slate-700">{transaction.description}</p>
-                          {transaction.relatedEntityId && transaction.relatedEntityType === 'suggestion' && (
-                            <Link 
-                              to={`${createPageUrl("SuggestionDetail")}?id=${transaction.relatedEntityId}`}
-                              className="text-blue-600 hover:underline inline-flex items-center gap-1 text-xs mt-1"
-                            >
-                              {language === 'he' ? 'צפה בהצעה' : language === 'ar' ? 'عرض المقترح' : 'View suggestion'}
-                              <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
-                            </Link>
-                          )}
               </div>
             )}
 
@@ -605,31 +572,6 @@ export default function Profile() {
                 <p className="text-slate-500 text-sm text-center py-8">
                   {language === 'he' ? '...' : language === 'ar' ? '...' : '...'}
                 </p>
-
-                    <Link 
-                      key={suggestion.id}
-                      to={`${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`}
-                      className="block p-4 rounded-lg border-2 bg-green-50 border-green-200 hover:border-green-300 transition-all hover:shadow-md"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="outline" className="text-xs font-semibold bg-green-100 text-green-800 border-green-300">
-                              {t('accepted')}
-                            </Badge>
-                            <span className="text-xs text-slate-500">
-                              {formatLocalDate(suggestion.created_date, 'DD/MM/YYYY')}
-                            </span>
-                          </div>
-                          <p className="text-sm font-medium text-slate-900 mb-1">{suggestion.title}</p>
-                          <div className="flex items-center gap-3 text-xs text-slate-600">
-                            <span>{suggestion.proVotes || 0} {t('pro')}</span>
-                            <span>{suggestion.conVotes || 0} {t('con')}</span>
-                          </div>
-                        </div>
-                        <ArrowRight className={`w-4 h-4 text-slate-400 shrink-0 ${isRTL ? 'rotate-180' : ''}`} />
-                      </div>
-                    </Link>
               </div>
             )}
 
