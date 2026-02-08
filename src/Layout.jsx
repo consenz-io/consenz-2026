@@ -43,29 +43,7 @@ function LayoutContent({ children, currentPageName }) {
     cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
-  const { data: userSuggestions = [] } = useQuery({
-    queryKey: ['userSuggestions', user?.email],
-    queryFn: () => base44.entities.Suggestion.filter({ created_by: user.email }),
-    enabled: !!user?.email,
-    initialData: [],
-    staleTime: Infinity, // Real-time via subscription
-  });
 
-  const { data: userVotes = [] } = useQuery({
-    queryKey: ['userProVotes', user?.id],
-    queryFn: () => base44.entities.Vote.filter({ userId: user.id, vote: 'pro' }),
-    enabled: !!user?.id,
-    initialData: [],
-    staleTime: Infinity, // Real-time via subscription
-  });
-
-  const { data: userInteractions = [] } = useQuery({
-    queryKey: ['userInteractions', user?.id],
-    queryFn: () => base44.entities.UserInteraction.filter({ userId: user.id }),
-    enabled: !!user?.id,
-    initialData: [],
-    staleTime: Infinity, // Real-time via subscription
-  });
 
   const { data: allDocuments = [] } = useQuery({
     queryKey: ['allDocuments'],
@@ -91,42 +69,9 @@ function LayoutContent({ children, currentPageName }) {
     staleTime: 30000, // 30 seconds - subscriptions will update faster
   });
 
-  // Real-time subscriptions for layout queries
-  React.useEffect(() => {
-    if (!user?.id) return;
-    
-    console.log('[REALTIME LAYOUT] Setting up subscriptions for user:', user.id);
-    
-    const unsubscribeSuggestion = base44.entities.Suggestion.subscribe((event) => {
-      console.log('[REALTIME LAYOUT] Suggestion event:', event.type);
-      queryClient.invalidateQueries({ queryKey: ['userSuggestions', user.email] });
-      queryClient.invalidateQueries({ queryKey: ['allSuggestions'] });
-    });
-    
-    const unsubscribeVote = base44.entities.Vote.subscribe((event) => {
-      console.log('[REALTIME LAYOUT] Vote event:', event.type);
-      queryClient.invalidateQueries({ queryKey: ['userProVotes', user.id] });
-      queryClient.invalidateQueries({ queryKey: ['allVotes'] });
-    });
-    
-    const unsubscribeInteraction = base44.entities.UserInteraction.subscribe((event) => {
-      console.log('[REALTIME LAYOUT] UserInteraction event:', event.type);
-      queryClient.invalidateQueries({ queryKey: ['userInteractions', user.id] });
-    });
-    
-    return () => {
-      console.log('[REALTIME LAYOUT] Cleaning up subscriptions');
-      unsubscribeSuggestion();
-      unsubscribeVote();
-      unsubscribeInteraction();
-    };
-  }, [user?.id, user?.email, queryClient]);
 
-  const acceptedSuggestionsCount = React.useMemo(() => 
-    userSuggestions.filter(s => s.status === 'accepted').length, 
-    [userSuggestions]
-  );
-  const proVotesCount = React.useMemo(() => userVotes.length, [userVotes]);
+
+
 
   // Calculate unvoted suggestions - simple real-time count
   const totalUnvotedSuggestions = React.useMemo(() => {
@@ -357,33 +302,7 @@ function LayoutContent({ children, currentPageName }) {
               </SidebarGroupContent>
             </SidebarGroup>
 
-            {user && (
-              <SidebarGroup>
-                <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
-                  {t('yourStats')}
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <div className="px-3 py-2 space-y-3">
-                    <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg border border-green-200">
-                      <span className="text-slate-700 font-medium text-sm">{t('acceptedSuggestions')}</span>
-                      <span className="font-bold text-xl text-green-600">{acceptedSuggestionsCount}</span>
-                    </div>
-                    <Link to={createPageUrl("Profile")} className="flex items-center justify-between text-sm hover:bg-blue-50 p-2 rounded-lg transition-colors cursor-pointer">
-                      <span className="text-slate-600">{language === 'he' ? 'נקודות שצברת' : language === 'ar' ? 'النقاط المكتسبة' : 'Points earned'}</span>
-                      <span className="font-bold text-lg text-blue-600">{user.points || 1000}</span>
-                    </Link>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">{t('suggestionsCreatedByYou')}</span>
-                      <span className="font-semibold">{user.suggestionsCreated || 0}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">{t('proVotesOnYourSuggestions')}</span>
-                      <span className="font-semibold">{proVotesCount}</span>
-                    </div>
-                  </div>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            )}
+
 
 
 
