@@ -805,6 +805,7 @@ export default function Profile() {
                 )}
               </TabsContent>
             </Tabs>
+            </div>
             </CardContent>
           </Card>
 
