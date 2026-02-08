@@ -201,76 +201,7 @@ async function batchCreateNotifications(notifications) {
   return sendNotificationsBatch(validatedNotifications);
 }
 
-/**
- * Send notification email to user - queued to prevent rate limiting
- */
-async function sendNotificationEmail({ userId, title, message, actionUrl }) {
-  // Queue the email to avoid rate limiting
-  notificationQueue.add(async () => {
-    try {
-      // Fetch user to get email
-      const users = await base44.entities.User.filter({ id: userId });
-      if (!users || users.length === 0) return;
-      
-      const user = users[0];
-      if (!user.email) return;
-      
-      // Build email HTML
-      const fullUrl = actionUrl?.startsWith('http') 
-        ? actionUrl 
-        : `${window.location.origin}${actionUrl}`;
-      
-      const emailHtml = `
-        <!DOCTYPE html>
-        <html dir="${user.preferredLanguage === 'he' || user.preferredLanguage === 'ar' ? 'rtl' : 'ltr'}">
-        <head>
-          <meta charset="UTF-8">
-          <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
-            .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
-            .header h1 { margin: 0; font-size: 24px; }
-            .content { padding: 30px; }
-            .message { background: #f8f9fa; border-left: 4px solid #667eea; padding: 15px; margin: 20px 0; border-radius: 4px; }
-            .button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-            .button:hover { background: #5568d3; }
-            .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #e9ecef; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1>Consenz</h1>
-            </div>
-            <div class="content">
-              <h2>${title}</h2>
-              <div class="message">
-                ${message}
-              </div>
-              ${actionUrl ? `<a href="${fullUrl}" class="button">צפה במסמך</a>` : ''}
-            </div>
-            <div class="footer">
-              <p>התראה זו נשלחה מפלטפורמת Consenz</p>
-              <p>לניהול הגדרות התראות, היכנס לפרופיל שלך</p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `;
-      
-      // Send email using base44 integration
-      await base44.integrations.Core.SendEmail({
-        to: user.email,
-        subject: title,
-        body: emailHtml
-      });
-      
-      console.log('[EMAIL] ✓ Sent to:', user.email);
-    } catch (error) {
-      console.error('[EMAIL] Error sending:', error);
-    }
-  });
-}
+
 
 /**
  * Create single notification for user + add to EmailDigest + browser notification + email
@@ -320,28 +251,6 @@ export async function createNotification({
       actionUrl: validActionUrl,
       read: false
     });
-    
-    // Add to email digest (don't wait - run in background)
-    const { addToEmailDigest } = await import('./addToEmailDigest');
-    addToEmailDigest({
-      userId,
-      notificationType: type,
-      title,
-      message,
-      actionUrl: validActionUrl,
-      relatedEntityType,
-      relatedEntityId,
-      documentId,
-      documentTitle
-    }).catch(err => console.error('[EMAIL DIGEST] Error:', err));
-    
-    // Send immediate email notification (fire-and-forget)
-    sendNotificationEmail({
-      userId,
-      title,
-      message,
-      actionUrl: validActionUrl
-    }).catch(err => console.error('[EMAIL] Error:', err));
     
     // Show browser notification (if page is not focused)
     showBrowserNotification({

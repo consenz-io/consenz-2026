@@ -55,7 +55,6 @@ import DocumentCleanView from './pages/DocumentCleanView';
 import DocumentComments from './pages/DocumentComments';
 import DocumentView from './pages/DocumentView';
 import EmailLogs from './pages/EmailLogs';
-import EmailSettings from './pages/EmailSettings';
 import GroupView from './pages/GroupView';
 import Groups from './pages/Groups';
 import Home from './pages/Home';
@@ -79,7 +78,6 @@ export const PAGES = {
     "DocumentComments": DocumentComments,
     "DocumentView": DocumentView,
     "EmailLogs": EmailLogs,
-    "EmailSettings": EmailSettings,
     "GroupView": GroupView,
     "Groups": Groups,
     "Home": Home,
