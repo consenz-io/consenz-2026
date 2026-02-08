@@ -295,9 +295,9 @@ export default function DocumentView() {
   const [versionCount, setVersionCount] = React.useState(1);
   
   React.useEffect(() => {
-    if (!document || !documentVersions) return;
+    if (!document?.id) return;
     
-    if (documentVersions.length === 0) {
+    if (!documentVersions || documentVersions.length === 0) {
       setVersionCount(1);
       return;
     }
@@ -309,7 +309,7 @@ export default function DocumentView() {
         .map(v => v.suggestionId)
     );
     setVersionCount(uniqueSuggestions.size + 1); // +1 for current version
-  }, [document?.id]); // Only recalculate when document changes
+  }, [document?.id, documentVersions]); // Calculate when document loads and versions are fetched
 
   // Count all section comments for this document
   const sectionCommentsCount = React.useMemo(() => {
