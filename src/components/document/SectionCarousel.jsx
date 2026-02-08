@@ -474,7 +474,12 @@ const SectionCarousel = React.memo(function SectionCarousel({
                 className="text-slate-600 hover:text-blue-600 h-7 md:h-8 text-xs px-2"
               >
                 <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                {t('comments')} ({getCommentsCount('section', section.id)})
+                {t('comments')} ({(() => {
+                  // Count from aggregated data instead of loading all comments
+                  return typeof getCommentsCount === 'function' 
+                    ? getCommentsCount('section', section.id) 
+                    : 0;
+                })()})
               </Button>
             </div>
             {showComments[`section-${section.id}`] && (
