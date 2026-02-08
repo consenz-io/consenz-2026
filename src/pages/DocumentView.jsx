@@ -311,9 +311,13 @@ export default function DocumentView() {
     ).length;
   }, [allComments, sections]);
 
-  // Calculate real contributors count using shared logic
-  const contributorsCount = React.useMemo(() => {
-    return calculateContributorsFromData({
+  // Calculate real contributors count using shared logic - only once on load
+  const [contributorsCount, setContributorsCount] = React.useState(0);
+  
+  React.useEffect(() => {
+    if (!document || !aggregatedData) return;
+    
+    const count = calculateContributorsFromData({
       document,
       suggestions,
       allVotes,
@@ -322,7 +326,9 @@ export default function DocumentView() {
       sections,
       documentAgreements
     });
-  }, [document, suggestions, allVotes, publicProfiles, allUsers, allComments, sections, documentAgreements]);
+    
+    setContributorsCount(count);
+  }, [document?.id]); // Only recalculate when document changes
 
   // Get pending suggestions ordered by section appearance
   const pendingSuggestions = React.useMemo(() => {
