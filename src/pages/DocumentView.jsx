@@ -291,25 +291,17 @@ export default function DocumentView() {
   const documentAgreements = documentMetadata?.agreements || [];
   const documentVersions = documentMetadata?.versions || [];
 
-  // Calculate version count matching DocumentCleanView logic - only once on load
-  const [versionCount, setVersionCount] = React.useState(1);
-  
-  React.useEffect(() => {
-    if (!document?.id) return;
-    
-    if (!documentVersions || documentVersions.length === 0) {
-      setVersionCount(1);
-      return;
-    }
-    
+  // Calculate version count matching DocumentCleanView logic
+  const versionCount = React.useMemo(() => {
+    if (!documentVersions || documentVersions.length === 0) return 1;
     // Count unique suggestions (each creates one snapshot in DocumentCleanView)
     const uniqueSuggestions = new Set(
       documentVersions
         .filter(v => v.suggestionId)
         .map(v => v.suggestionId)
     );
-    setVersionCount(uniqueSuggestions.size + 1); // +1 for current version
-  }, [document?.id, documentVersions]); // Calculate when document loads and versions are fetched
+    return uniqueSuggestions.size + 1; // +1 for current version
+  }, [documentVersions]);
 
   // Count all section comments for this document
   const sectionCommentsCount = React.useMemo(() => {
