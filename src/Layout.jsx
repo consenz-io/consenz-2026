@@ -34,6 +34,10 @@ function LayoutContent({ children, currentPageName }) {
   const { language, setLanguage, t, isRTL } = useLanguage();
   const [showScrollTop, setShowScrollTop] = React.useState(false);
   const mainContentRef = React.useRef(null);
+  const [showUnvotedNudge, setShowUnvotedNudge] = React.useState(() => {
+    if (typeof window === 'undefined') return true;
+    return sessionStorage.getItem('hideUnvotedNudge') !== 'true';
+  });
   
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
