@@ -767,44 +767,28 @@ Return ONLY the translated text:`;
                             
                             {/* Action buttons - fixed on the side */}
                             <div className={`flex items-center gap-1 flex-shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                              {/* Translate button */}
-                              {(() => {
-                                const detectLanguage = (text) => {
-                                  const hebrewPattern = /[\u0590-\u05FF]/;
-                                  const arabicPattern = /[\u0600-\u06FF]/;
-                                  if (hebrewPattern.test(text)) return 'he';
-                                  if (arabicPattern.test(text)) return 'ar';
-                                  return 'en';
-                                };
-                                const topicOriginalLang = topic.originalLanguage || detectLanguage(topic.title);
-                                const needsTranslation = topicOriginalLang !== language;
-                                
-                                if (!needsTranslation) return null;
-                                
-                                if (translateTopicMutation.isPending && translateTopicMutation.variables?.id === topic.id) {
-                                  return <Loader2 className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />;
-                                }
-                                
-                                return (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      if (showTranslatedTopics[topic.id] && topic.translations?.[language]?.title) {
-                                        setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: false }));
-                                      } else if (topic.translations?.[language]?.title) {
-                                        setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: true }));
-                                      } else {
-                                        translateTopicMutation.mutate(topic);
-                                      }
-                                    }}
-                                    className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                    title={showTranslatedTopics[topic.id] && topic.translations?.[language]?.title ? `${languageNames[topicOriginalLang]} (מקור)` : `תרגם ל${languageNames[language]}`}
-                                  >
-                                    <Languages className="w-4 h-4" />
-                                  </Button>
-                                );
-                              })()}
+                              {/* Translate button - always visible */}
+                              {translateTopicMutation.isPending && translateTopicMutation.variables?.id === topic.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (showTranslatedTopics[topic.id] && topic.translations?.[language]?.title) {
+                                      setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: false }));
+                                    } else if (topic.translations?.[language]?.title) {
+                                      setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: true }));
+                                    } else {
+                                      translateTopicMutation.mutate(topic);
+                                    }
+                                  }}
+                                  className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                  title={showTranslatedTopics[topic.id] ? t('showOriginal') : t('translate')}
+                                >
+                                  <Languages className="w-4 h-4" />
+                                </Button>
+                              )}
                               
                               {/* Edit button */}
                               <Button
