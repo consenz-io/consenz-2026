@@ -97,20 +97,18 @@ export default function DocumentView() {
     };
   }, [documentId, document, queryClient]);
 
-  const { data: topics, isLoading: topicsLoading } = useQuery({
+  const { data: topics = [], isLoading: topicsLoading } = useQuery({
     queryKey: ['topics', documentId],
     queryFn: () => base44.entities.Topic.filter({ documentId }, 'order'),
-    initialData: [],
     enabled: !!documentId,
     staleTime: Infinity, // Real-time via subscription
     retry: 3,
     retryDelay: 1000,
   });
 
-  const { data: sections, isLoading: sectionsLoading } = useQuery({
+  const { data: sections = [], isLoading: sectionsLoading } = useQuery({
     queryKey: ['sections', documentId],
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order'),
-    initialData: [],
     enabled: !!documentId,
     staleTime: Infinity, // Real-time via subscription
     retry: 3,
@@ -675,7 +673,10 @@ export default function DocumentView() {
     }
   });
 
-  if (docLoading || topicsLoading || sectionsLoading) {
+  // Show loading only if document itself is still loading OR if we have no data yet
+  const isInitialLoading = docLoading || (!document && topicsLoading) || (!document && sectionsLoading);
+  
+  if (isInitialLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6">
         <div className="max-w-6xl mx-auto space-y-4 md:space-y-6">
