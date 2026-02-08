@@ -30,25 +30,7 @@ export default function TranslateAllButton({ document, topics, sections }) {
   const [progress, setProgress] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
 
-  // Check what needs translation
-  const documentNeedsTranslation = (document.originalLanguage || detectLanguage(document.title)) !== language;
-  const topicsNeedingTranslation = topics.filter(topic => 
-    (topic.originalLanguage || detectLanguage(topic.title)) !== language && 
-    !topic.translations?.[language]?.title
-  );
-  const sectionsNeedingTranslation = sections.filter(section => 
-    (section.originalLanguage || detectLanguage(section.content)) !== language && 
-    !section.translations?.[language]?.content
-  );
-
-  const itemsToTranslate = (documentNeedsTranslation && !document.translations?.[language]?.title ? 1 : 0) +
-    (documentNeedsTranslation && document.description && !document.translations?.[language]?.description ? 1 : 0) +
-    topicsNeedingTranslation.length + 
-    sectionsNeedingTranslation.length;
-
-  const hasUntranslatedContent = itemsToTranslate > 0;
-  
-  // Check if any content has translations
+  // Check if any content has translations (no language detection needed)
   const hasAnyTranslations = 
     document.translations?.[language]?.title ||
     topics.some(t => t.translations?.[language]?.title) ||
@@ -61,6 +43,9 @@ export default function TranslateAllButton({ document, topics, sections }) {
       
       const items = [];
       
+      // Check what needs translation (only on click)
+      const documentNeedsTranslation = (document.originalLanguage || detectLanguage(document.title)) !== language;
+      
       // Document title
       if (documentNeedsTranslation && !document.translations?.[language]?.title) {
         items.push({ type: 'document-title', entity: document });
@@ -72,13 +57,19 @@ export default function TranslateAllButton({ document, topics, sections }) {
       }
       
       // Topics
-      topicsNeedingTranslation.forEach(topic => {
-        items.push({ type: 'topic', entity: topic });
+      topics.forEach(topic => {
+        const topicNeedsTranslation = (topic.originalLanguage || detectLanguage(topic.title)) !== language;
+        if (topicNeedsTranslation && !topic.translations?.[language]?.title) {
+          items.push({ type: 'topic', entity: topic });
+        }
       });
       
       // Sections
-      sectionsNeedingTranslation.forEach(section => {
-        items.push({ type: 'section', entity: section });
+      sections.forEach(section => {
+        const sectionNeedsTranslation = (section.originalLanguage || detectLanguage(section.content)) !== language;
+        if (sectionNeedsTranslation && !section.translations?.[language]?.content) {
+          items.push({ type: 'section', entity: section });
+        }
       });
       
       setTotalItems(items.length);
@@ -183,13 +174,6 @@ export default function TranslateAllButton({ document, topics, sections }) {
     }
   });
 
-  // Don't show if content is in user's language
-  const anyContentNeedsTranslation = documentNeedsTranslation || 
-    topics.some(t => (t.originalLanguage || detectLanguage(t.title)) !== language) ||
-    sections.some(s => (s.originalLanguage || detectLanguage(s.content)) !== language);
-
-  if (!anyContentNeedsTranslation) return null;
-
   return (
     <div className={`flex items-center gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
       {isTranslatingAll ? (
@@ -205,20 +189,15 @@ export default function TranslateAllButton({ document, topics, sections }) {
         </div>
       ) : (
         <>
-          {hasUntranslatedContent && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => translateAllMutation.mutate()}
-              className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100 gap-2"
-            >
-              <Languages className="w-4 h-4" />
-              {t('translateAll')}
-              <Badge variant="secondary" className="bg-blue-200 text-blue-800 text-xs">
-                {itemsToTranslate}
-              </Badge>
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => translateAllMutation.mutate()}
+            className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100 gap-2"
+          >
+            <Languages className="w-4 h-4" />
+            {t('translateAll')}
+          </Button>
           
           {hasAnyTranslations && (
             <Button

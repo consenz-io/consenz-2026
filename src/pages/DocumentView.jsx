@@ -740,35 +740,28 @@ export default function DocumentView() {
                 return document.title;
               })()}
             </h1>
-            {(() => {
-              const detectedLanguage = document.originalLanguage || detectLanguage(document.title);
-              const needsTranslation = detectedLanguage && detectedLanguage !== language;
-              return needsTranslation && (
-                <div className="flex-shrink-0">
-                  {isTranslating ? (
-                    <Loader2 className="w-3.5 h-3.5 md:w-5 md:h-5 animate-spin text-blue-600" />
-                  ) : !(typeof document.translations?.[language]?.title === 'string') ? (
-                    <button
-                      type="button"
-                      onClick={() => translateDocumentMutation.mutate()}
-                      className="p-0.5 md:p-1.5 hover:bg-blue-50 rounded transition-colors"
-                      aria-label={t('translate')}
-                    >
-                      <Languages className="w-3.5 h-3.5 md:w-5 md:h-5 text-blue-600" aria-hidden="true" />
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setShowTranslated(!showTranslated)}
-                      className="p-0.5 md:p-1.5 hover:bg-slate-100 rounded transition-colors"
-                      aria-label={showTranslated ? t('showOriginal') : t('showTranslation')}
-                    >
-                      <Languages className={`w-3.5 h-3.5 md:w-5 md:h-5 ${showTranslated ? 'text-slate-600' : 'text-blue-600'}`} aria-hidden="true" />
-                    </button>
-                  )}
-                </div>
-              );
-            })()}
+            <div className="flex-shrink-0">
+              {isTranslating ? (
+                <Loader2 className="w-3.5 h-3.5 md:w-5 md:h-5 animate-spin text-blue-600" />
+              ) : !(typeof document.translations?.[language]?.title === 'string') ? (
+                <button
+                  type="button"
+                  onClick={() => translateDocumentMutation.mutate()}
+                  className="p-0.5 md:p-1.5 hover:bg-blue-50 rounded transition-colors"
+                  aria-label={t('translate')}
+                >
+                  <Languages className="w-3.5 h-3.5 md:w-5 md:h-5 text-blue-600" aria-hidden="true" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowTranslated(!showTranslated)}
+                  className="p-0.5 md:p-1.5 hover:bg-slate-100 rounded transition-colors"
+                  aria-label={showTranslated ? t('showOriginal') : t('showTranslation')}
+                >
+                  <Languages className={`w-3.5 h-3.5 md:w-5 md:h-5 ${showTranslated ? 'text-slate-600' : 'text-blue-600'}`} aria-hidden="true" />
+                </button>
+              )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="text-xs md:text-sm px-2 h-8">
@@ -830,7 +823,7 @@ export default function DocumentView() {
 
           {/* Document Discussion and Comments */}
           <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-4 relative">
-              {document.originalLanguage && document.originalLanguage !== language && !isEditingDescription && (
+              {!isEditingDescription && (
                 <div className="absolute top-2 left-2 z-10">
                   {isTranslatingDescription ? (
                     <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
