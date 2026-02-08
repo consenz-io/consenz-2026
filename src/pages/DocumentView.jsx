@@ -256,9 +256,9 @@ export default function DocumentView() {
       ]);
       return { agreements, versions };
     },
-    initialData: { agreements: [], versions: [] },
     enabled: !!documentId,
-    staleTime: Infinity, // Real-time via subscription
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    cacheTime: 5 * 60 * 1000,
   });
 
   // Real-time subscriptions for metadata - wait for document to load
