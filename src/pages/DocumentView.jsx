@@ -288,8 +288,8 @@ export default function DocumentView() {
     };
   }, [documentId, document, queryClient, documentMetadata]);
 
-  const documentAgreements = documentMetadata?.agreements || [];
-  const documentVersions = documentMetadata?.versions || [];
+  const documentAgreements = React.useMemo(() => documentMetadata?.agreements || [], [documentMetadata?.agreements]);
+  const documentVersions = React.useMemo(() => documentMetadata?.versions || [], [documentMetadata?.versions]);
 
   // Calculate version count matching DocumentCleanView logic
   const versionCount = React.useMemo(() => {
