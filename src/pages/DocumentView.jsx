@@ -1030,14 +1030,7 @@ export default function DocumentView() {
             }}
             aria-label={`${pendingSuggestions.length} ${language === 'he' ? 'הצעות פתוחות' : 'open suggestions'}. ${pendingSuggestions.length > 0 ? (language === 'he' ? 'לחץ לניווט להצעות' : 'Click to navigate to suggestions') : ''}`}
           >
-            {pendingSuggestions.length > 0 && (
-              <div className="absolute top-1 right-1">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
-                </span>
-              </div>
-            )}
+
             <MessageSquare className="w-5 h-5 md:w-7 md:h-7 text-orange-600" aria-hidden="true" />
             <div className="text-lg md:text-2xl font-bold text-orange-900">{pendingSuggestions.length}</div>
             <div className="text-[10px] md:text-sm text-orange-700 text-center leading-tight font-medium">{language === 'he' ? 'הצעות פתוחות' : language === 'ar' ? 'مقترحات مفتوحة' : 'Open Suggestions'}</div>
