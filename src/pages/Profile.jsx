@@ -556,9 +556,7 @@ export default function Profile() {
                 <p className="text-slate-500 text-sm text-center py-8">
                   {language === 'he' ? '...' : language === 'ar' ? '...' : '...'}
                 </p>
-                {/* DISABLED FOR TESTING
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {pointsTransactions.map((transaction) => (
+
                     <div 
                       key={transaction.id}
                       className={`p-3 rounded-lg border ${
@@ -612,9 +610,7 @@ export default function Profile() {
                 <p className="text-slate-500 text-sm text-center py-8">
                   {language === 'he' ? '...' : language === 'ar' ? '...' : '...'}
                 </p>
-                {/* DISABLED FOR TESTING
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {acceptedSuggestions.map((suggestion) => (
+
                     <Link 
                       key={suggestion.id}
                       to={`${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`}
@@ -639,8 +635,6 @@ export default function Profile() {
                         <ArrowRight className={`w-4 h-4 text-slate-400 shrink-0 ${isRTL ? 'rotate-180' : ''}`} />
                       </div>
                     </Link>
-                  ))}
-                </div>
               </div>
             )}
 
