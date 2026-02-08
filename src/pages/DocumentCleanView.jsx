@@ -593,9 +593,11 @@ ${text}`;
                           currentSnapshot?.newSectionId === section.id;
                         
                         // Check if this section was deleted in THIS snapshot
+                        const versionSuggestion = suggestions.find(s => s.id === currentSnapshot?.suggestionId);
                         const isDeletedSection = isViewingHistory &&
                           currentSnapshot?.isDeleted &&
-                          currentSnapshot?.deletedSectionId === section.id;
+                          currentSnapshot?.deletedSectionId === section.id &&
+                          versionSuggestion?.type === 'delete_section';
 
                         // Check if this section changed between versions (content edit)
                         // Compare the snapshot's content with the newer version's content
