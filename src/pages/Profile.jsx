@@ -82,10 +82,26 @@ export default function Profile() {
     initialData: [],
   });
 
-  // DISABLED FOR TESTING - Using placeholder data
-  const userComments = [];
-  const userSuggestions = [];
-  const userVotes = [];
+  const { data: userComments } = useQuery({
+    queryKey: ['userComments', user?.email],
+    queryFn: () => base44.entities.Comment.filter({ created_by: user.email }, '-created_date'),
+    enabled: !!user?.email,
+    initialData: [],
+  });
+
+  const { data: userSuggestions } = useQuery({
+    queryKey: ['userSuggestions', user?.email],
+    queryFn: () => base44.entities.Suggestion.filter({ created_by: user.email }, '-created_date'),
+    enabled: !!user?.email,
+    initialData: [],
+  });
+
+  const { data: userVotes } = useQuery({
+    queryKey: ['userVotes', user?.id],
+    queryFn: () => base44.entities.Vote.filter({ userId: user.id }, '-created_date'),
+    enabled: !!user?.id,
+    initialData: [],
+  });
 
   const acceptedSuggestions = React.useMemo(() => {
     return userSuggestions.filter(s => s.status === 'accepted');
