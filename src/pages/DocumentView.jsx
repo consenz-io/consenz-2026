@@ -746,19 +746,7 @@ export default function DocumentView() {
               );
             })()}
           </div>
-          <div className="flex gap-2 items-center justify-between w-full">
-            <Badge variant="outline" className={`text-[7px] md:text-xs px-0.5 py-0.5 ${
-              document.privacy === 'public_view_open_participation' 
-                ? 'bg-green-50 text-green-700 border-green-200'
-                : 'bg-amber-50 text-amber-700 border-amber-200'
-            }`}>
-              {document.privacy === 'public_view_open_participation' 
-                ? t('publicViewOpenParticipation')
-                : document.privacy === 'public_view_closed_participation'
-                ? t('publicViewClosedParticipation')
-                : t('privateInviteOnly')}
-            </Badge>
-            
+          <div className="flex gap-2 items-center justify-end w-full">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="text-xs md:text-sm px-2 h-8">
