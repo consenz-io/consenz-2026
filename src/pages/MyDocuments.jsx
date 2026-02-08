@@ -115,19 +115,6 @@ export default function MyDocuments() {
     );
   }
 
-  if (interactionsLoading || documentsLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="max-w-6xl mx-auto space-y-6">
-          <Skeleton className="h-12 w-64" />
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map(i => <Skeleton key={i} className="h-64 w-full" />)}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // קבלת מסמכים שהמשתמש השתתף בהם
   const interactedDocumentIds = userInteractions.map(ui => ui.documentId);
   const suggestedDocumentIds = suggestions.map(s => s.documentId);
@@ -143,6 +130,21 @@ export default function MyDocuments() {
   ]);
 
   const myDocuments = allDocuments.filter(doc => myDocumentIds.has(doc.id));
+  
+  const isLoading = interactionsLoading || documentsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <Skeleton className="h-12 w-64" />
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-64 w-full" />)}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Check for unvoted suggestions per document
   const getUnvotedSuggestionsCount = (docId) => {
