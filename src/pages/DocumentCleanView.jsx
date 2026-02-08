@@ -470,10 +470,8 @@ ${text}`;
       <div className="max-w-4xl mx-auto p-4 md:p-8 print:p-12">
         {/* Version Metadata */}
         {currentVersionIndex > 0 && currentSnapshot && currentSnapshot.suggestionId && (
-          <Link 
-            to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
-            className="mb-4 p-3 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg text-xs text-slate-700 block hover:border-blue-400 hover:shadow-md transition-all cursor-pointer"
-            title={language === 'he' ? 'לחץ להסבר על הקונצנזוס' : language === 'ar' ? 'انقر للحصول على شرح الإجماع' : 'Click to understand consensus'}
+          <div 
+            className="mb-4 p-3 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg text-xs text-slate-700"
           >
             <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
               <span className="px-2 py-1 bg-white rounded border border-slate-300">
@@ -490,32 +488,8 @@ ${text}`;
                 <span className="font-semibold">{language === 'he' ? 'התנגדו:' : language === 'ar' ? 'معارضون:' : 'Con:'}</span>
                 {' '}<span className="text-red-600 font-bold">{currentSnapshot.conVotes || 0}</span>
               </span>
-              <span className="text-slate-300">|</span>
-              <span className="px-2 py-1 bg-white rounded border border-blue-200">
-                <span className="font-semibold">{language === 'he' ? 'משתתפים:' : language === 'ar' ? 'مشاركون:' : 'Participants:'}</span>
-                {' '}<span className="text-blue-600 font-bold">{currentSnapshot.participantsAtAcceptance || 0}</span>
-              </span>
-              <span className="text-slate-300">|</span>
-              <span className="px-2 py-1 bg-white rounded border border-purple-200">
-                <span className="font-semibold">{language === 'he' ? 'קונצנזוס גרסה:' : language === 'ar' ? 'إجماع الإصدار:' : 'Version consensus:'}</span>
-                {' '}<span className="text-purple-600 font-bold">
-                  {(() => {
-                    const proVotes = currentSnapshot.proVotes || 0;
-                    const conVotes = currentSnapshot.conVotes || 0;
-                    const totalVotes = proVotes + conVotes;
-                    if (totalVotes === 0) return '0';
-                    const percentage = (proVotes / totalVotes) * 100;
-                    return percentage.toFixed(0);
-                  })()}%
-                </span>
-              </span>
-              <span className="text-slate-300">|</span>
-              <span className="px-2 py-1 bg-white rounded border border-indigo-200">
-                <span className="font-semibold">{language === 'he' ? 'קונצנזוס משוקלל:' : language === 'ar' ? 'إجماع موزون:' : 'Weighted consensus:'}</span>
-                {' '}<span className="text-indigo-600 font-bold">{((currentSnapshot.weightedConsensus || 0.5) * 100).toFixed(0)}%</span>
-              </span>
             </div>
-          </Link>
+          </div>
         )}
         
         {/* Topics and Sections */}
