@@ -82,26 +82,10 @@ export default function Profile() {
     initialData: [],
   });
 
-  const { data: userComments } = useQuery({
-    queryKey: ['userComments', user?.email],
-    queryFn: () => base44.entities.Comment.filter({ created_by: user.email }, '-created_date'),
-    enabled: !!user?.email,
-    initialData: [],
-  });
-
-  const { data: userSuggestions } = useQuery({
-    queryKey: ['userSuggestions', user?.email],
-    queryFn: () => base44.entities.Suggestion.filter({ created_by: user.email }, '-created_date'),
-    enabled: !!user?.email,
-    initialData: [],
-  });
-
-  const { data: userVotes } = useQuery({
-    queryKey: ['userVotes', user?.id],
-    queryFn: () => base44.entities.Vote.filter({ userId: user.id }, '-created_date'),
-    enabled: !!user?.id,
-    initialData: [],
-  });
+  // DISABLED FOR TESTING - Using placeholder data
+  const userComments = [];
+  const userSuggestions = [];
+  const userVotes = [];
 
   const acceptedSuggestions = React.useMemo(() => {
     return userSuggestions.filter(s => s.status === 'accepted');
@@ -659,9 +643,14 @@ export default function Profile() {
               </TabsList>
 
               <TabsContent value="comments" className="mt-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-yellow-800">
+                    {language === 'he' ? 'רכיב הפעילות מנוטרל לצורך בדיקה - מוצגים נתוני פלייסהולדר' : 'Activity component disabled for testing - showing placeholder data'}
+                  </p>
+                </div>
                 {userComments.length === 0 ? (
                   <p className="text-slate-500 text-sm text-center py-8">
-                    {language === 'he' ? 'אין תגובות עדיין' : language === 'ar' ? 'لا توجد تعليقات بعد' : 'No comments yet'}
+                    {language === 'he' ? 'נתוני פלייסהולדר - אין תגובות' : language === 'ar' ? 'بيانات بديلة - لا تعليقات' : 'Placeholder data - No comments'}
                   </p>
                 ) : (
                   <div className="space-y-3">
@@ -705,9 +694,14 @@ export default function Profile() {
               </TabsContent>
 
               <TabsContent value="suggestions" className="mt-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-yellow-800">
+                    {language === 'he' ? 'רכיב הפעילות מנוטרל לצורך בדיקה - מוצגים נתוני פלייסהולדר' : 'Activity component disabled for testing - showing placeholder data'}
+                  </p>
+                </div>
                 {userSuggestions.length === 0 ? (
                   <p className="text-slate-500 text-sm text-center py-8">
-                    {language === 'he' ? 'אין הצעות עדיין' : language === 'ar' ? 'لا توجد مقترحات بعد' : 'No suggestions yet'}
+                    {language === 'he' ? 'נתוני פלייסהולדר - אין הצעות' : language === 'ar' ? 'بيانات بديلة - لا مقترحات' : 'Placeholder data - No suggestions'}
                   </p>
                 ) : (
                   <div className="space-y-3">
@@ -750,9 +744,14 @@ export default function Profile() {
               </TabsContent>
 
               <TabsContent value="votes" className="mt-4">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-yellow-800">
+                    {language === 'he' ? 'רכיב הפעילות מנוטרל לצורך בדיקה - מוצגים נתוני פלייסהולדר' : 'Activity component disabled for testing - showing placeholder data'}
+                  </p>
+                </div>
                 {userVotes.length === 0 ? (
                   <p className="text-slate-500 text-sm text-center py-8">
-                    {language === 'he' ? 'אין הצבעות עדיין' : language === 'ar' ? 'لا توجد تصويتات بعد' : 'No votes yet'}
+                    {language === 'he' ? 'נתוני פלייסהולדר - אין הצבעות' : language === 'ar' ? 'بيانات بديلة - لا تصويتات' : 'Placeholder data - No votes'}
                   </p>
                 ) : (
                   <div className="space-y-3">
