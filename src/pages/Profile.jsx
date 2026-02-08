@@ -645,12 +645,12 @@ export default function Profile() {
               <TabsContent value="comments" className="mt-4">
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <p className="text-sm text-yellow-800">
-                    {language === 'he' ? 'רכיב הפעילות מנוטרל לצורך בדיקה - מוצגים נתוני פלייסהולדר' : 'Activity component disabled for testing - showing placeholder data'}
+                    {language === 'he' ? 'בפיתוח' : '...'}
                   </p>
                 </div>
                 {userComments.length === 0 ? (
                   <p className="text-slate-500 text-sm text-center py-8">
-                    {language === 'he' ? 'נתוני פלייסהולדר - אין תגובות' : language === 'ar' ? 'بيانات بديلة - لا تعليقات' : 'Placeholder data - No comments'}
+                    {language === 'he' ? '...' : language === 'ar' ? '...' : '...'}
                   </p>
                 ) : (
                   <div className="space-y-3">
