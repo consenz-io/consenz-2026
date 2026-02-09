@@ -62,10 +62,10 @@ import LearnMore from './pages/LearnMore';
 import LoadTesting from './pages/LoadTesting';
 import MyDocuments from './pages/MyDocuments';
 import NotificationQA from './pages/NotificationQA';
+import Profile from './pages/Profile';
 import SectionHistory from './pages/SectionHistory';
 import UnderstandingConsensus from './pages/UnderstandingConsensus';
 import suggestiondetail from './pages/suggestiondetail';
-import Profile from './pages/Profile';
 import __Layout from './Layout.jsx';
 
 
@@ -85,10 +85,10 @@ export const PAGES = {
     "LoadTesting": LoadTesting,
     "MyDocuments": MyDocuments,
     "NotificationQA": NotificationQA,
+    "Profile": Profile,
     "SectionHistory": SectionHistory,
     "UnderstandingConsensus": UnderstandingConsensus,
     "suggestiondetail": suggestiondetail,
-    "Profile": Profile,
 }
 
 export const pagesConfig = {

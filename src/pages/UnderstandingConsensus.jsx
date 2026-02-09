@@ -6,11 +6,10 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, TrendingUp, ThumbsUp, ThumbsDown, Info, CheckCircle2, Target, Scale, Gauge } from "lucide-react";
+import { Users, Info, Scale, Gauge } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
-import { calculateContributorsFromData } from "../components/document/calculateContributors";
 
 export default function UnderstandingConsensus() {
   const { t, isRTL, language } = useLanguage();
@@ -31,52 +30,8 @@ export default function UnderstandingConsensus() {
     enabled: !!documentId,
   });
 
-  const { data: sections } = useQuery({
-    queryKey: ['sections', documentId],
-    queryFn: () => base44.entities.Section.filter({ documentId }),
-    initialData: [],
-    enabled: !!documentId,
-  });
-
-  const { data: allVotes } = useQuery({
-    queryKey: ['allVotes'],
-    queryFn: () => base44.entities.Vote.list(),
-    initialData: [],
-  });
-
-  const { data: allUsers } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
-    initialData: [],
-  });
-
-  const { data: allArguments } = useQuery({
-    queryKey: ['allArguments'],
-    queryFn: () => base44.entities.Argument.list(),
-    initialData: [],
-  });
-
-  const { data: allComments } = useQuery({
-    queryKey: ['allComments'],
-    queryFn: () => base44.entities.Comment.list(),
-    initialData: [],
-  });
-
-  const acceptedSuggestions = suggestions.filter(s => s.status === 'accepted');
-  
-  // Calculate real contributors count using shared logic
-  const totalUsers = React.useMemo(() => {
-    const count = calculateContributorsFromData({
-      document,
-      suggestions,
-      allVotes,
-      allUsers,
-      allArguments,
-      allComments,
-      sections
-    });
-    return count > 0 ? count : 1;
-  }, [document, suggestions, allVotes, allUsers, allArguments, allComments, sections]);
+  // Use totalUsersInteracted from document instead of heavy calculations
+  const totalUsers = document?.totalUsersInteracted || 1;
   const consensuses = document?.consensuses || [];
   
   // מד הקונצנזוס הממוצע - ערך בין 0 ל-1 (מוגבל למקסימום 1)
@@ -250,160 +205,7 @@ export default function UnderstandingConsensus() {
           </CardContent>
         </Card>
 
-        {/* היסטוריית ההצעות שאושרו */}
-        <Card>
-          <CardHeader>
-            <CardTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
-              {t('acceptedSuggestionsHistory')}
-            </CardTitle>
-            <p className="text-sm text-slate-500 mt-1">{t('eachSuggestionAffectsThreshold')}</p>
-          </CardHeader>
-          <CardContent>
-            {acceptedSuggestions.length === 0 ? (
-              <div className="text-center py-8 text-slate-500">
-                <Target className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                <p className="font-medium">{t('noAcceptedSuggestionsYet')}</p>
-                <p className="text-sm mt-1">{t('defaultThresholdUsed')}</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {[...acceptedSuggestions].reverse().map((suggestion, index) => {
-                const originalIndex = acceptedSuggestions.length - 1 - index;
-                  const proVotes = suggestion.proVotes || 0;
-                  const conVotes = suggestion.conVotes || 0;
-                  const delta = proVotes - conVotes;
-                  // מד קונצנזוס של ההצעה = הפרש קולות / מספר משתתפים (ערך בין 0 ל-1)
-                  const suggestionConsensusMeter = consensuses[originalIndex] !== undefined 
-                    ? consensuses[originalIndex] 
-                    : Math.min(1, Math.max(0, delta / totalUsers));
-                  
-                  return (
-                    <Link 
-                      key={suggestion.id}
-                      to={`${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`}
-                      className="block relative bg-white rounded-xl border-2 border-slate-100 hover:border-green-200 hover:shadow-md transition-all overflow-hidden cursor-pointer"
-                    >
-                      {/* Header with number */}
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-4 py-3 border-b border-green-100">
-                        <div className="flex items-center gap-3">
-                          {isRTL ? (
-                            <>
-                              <div className="flex-1 text-right">
-                                <h4 className="font-semibold text-slate-900">{suggestion.title}</h4>
-                                <p className="text-xs text-slate-500">
-                                  {new Date(suggestion.created_date).toLocaleDateString(
-                                    language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-EG' : 'en-US'
-                                  )}
-                                </p>
-                                {suggestion.newContent && (
-                                  <p className="text-xs text-slate-600 mt-1 line-clamp-2">
-                                    {suggestion.newContent.replace(/<[^>]*>/g, '').substring(0, 150)}...
-                                  </p>
-                                )}
-                              </div>
-                              <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow">
-                                {originalIndex + 1}
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow">
-                                {originalIndex + 1}
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="font-semibold text-slate-900">{suggestion.title}</h4>
-                                <p className="text-xs text-slate-500">
-                                  {new Date(suggestion.created_date).toLocaleDateString(
-                                    language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-EG' : 'en-US'
-                                  )}
-                                </p>
-                                {suggestion.newContent && (
-                                  <p className="text-xs text-slate-600 mt-1 line-clamp-2">
-                                    {suggestion.newContent.replace(/<[^>]*>/g, '').substring(0, 150)}...
-                                  </p>
-                                )}
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="p-4">
-                        {/* Votes visualization - horizontal */}
-                        <div className={`flex items-center justify-center gap-3 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          {/* Pro votes */}
-                          <div className="flex items-center gap-2 bg-green-50 rounded-lg px-3 py-2">
-                            <ThumbsUp className="w-4 h-4 text-green-600" />
-                            <span className="font-bold text-green-700">{proVotes}</span>
-                            <span className="text-xs text-green-600">{t('pro')}</span>
-                          </div>
 
-                          <span className="text-xl text-slate-300">−</span>
-
-                          {/* Con votes */}
-                          <div className="flex items-center gap-2 bg-red-50 rounded-lg px-3 py-2">
-                            <ThumbsDown className="w-4 h-4 text-red-600" />
-                            <span className="font-bold text-red-700">{conVotes}</span>
-                            <span className="text-xs text-red-600">{t('con')}</span>
-                          </div>
-
-                          <span className="text-xl text-slate-300">=</span>
-
-                          {/* Delta */}
-                          <div className="flex items-center gap-2 bg-blue-50 rounded-lg px-3 py-2">
-                            <span className="font-bold text-blue-700">{delta}</span>
-                            <span className="text-xs text-blue-600">{t('votesDelta')}</span>
-                          </div>
-                        </div>
-
-                        {/* Consensus meter for this suggestion */}
-                        <div className={`mt-4 bg-gradient-to-r rounded-lg p-4 ${isRTL ? 'from-purple-50 to-indigo-50' : 'from-indigo-50 to-purple-50'}`}>
-                          <div className={`flex items-center justify-between mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                            <span className="text-sm font-medium text-indigo-800">{t('suggestionConsensusMeter')}</span>
-                            <Badge className="bg-indigo-600 text-white">
-                              {(suggestionConsensusMeter * 100).toFixed(0)}%
-                            </Badge>
-                          </div>
-                          <div className={`h-2 bg-indigo-200 rounded-full overflow-hidden ${isRTL ? 'transform scale-x-[-1]' : ''}`}>
-                            <div 
-                              className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-500"
-                              style={{ width: `${Math.min(100, suggestionConsensusMeter * 100)}%` }}
-                            />
-                          </div>
-                          <p className="text-xs text-indigo-600 mt-2 text-center">
-                            {delta} ÷ {totalUsers} = {suggestionConsensusMeter.toFixed(2)} ({(suggestionConsensusMeter * 100).toFixed(0)}%)
-                          </p>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-
-                {/* Average calculation summary */}
-                <div className="mt-6 p-5 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border-2 border-indigo-200">
-                  <div className={`flex items-start gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <TrendingUp className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-indigo-900 text-lg">{t('averageCalculation')}</h4>
-                      <p className="text-sm text-indigo-700 mt-1">
-                        {t('avgConsensusResult', { 
-                          count: acceptedSuggestions.length,
-                          avg: (documentConsensusMeter * 100).toFixed(0)
-                        })}
-                      </p>
-                      <div className="mt-3 text-sm text-indigo-600">
-                        ({consensuses.map(c => c.toFixed(2)).join(' + ')}) ÷ {consensuses.length} = {documentConsensusMeter.toFixed(2)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
