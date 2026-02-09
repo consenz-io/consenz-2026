@@ -118,11 +118,13 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
         snapshotAfterChange.newSectionContent = afterVersion.content;
       }
       
-      if (afterVersion.content === '' && beforeVersion) {
+      if (afterVersion.content === '') {
         snapshotAfterChange.isDeleted = true;
         snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
-        snapshotAfterChange.deletedSectionContent = beforeVersion.content;
-        snapshotAfterChange.sectionContents[afterVersion.sectionId] = beforeVersion.content;
+        // Get content from current state or beforeVersion
+        const deletedContent = currentSectionContents[afterVersion.sectionId] || beforeVersion?.content || '';
+        snapshotAfterChange.deletedSectionContent = deletedContent;
+        snapshotAfterChange.sectionContents[afterVersion.sectionId] = deletedContent;
         snapshotAfterChange.existingSections.add(afterVersion.sectionId);
       }
       
@@ -132,9 +134,13 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
       if (afterVersion.changeType === 'section_created') {
         delete currentSectionContents[afterVersion.sectionId];
         currentExistingSections.delete(afterVersion.sectionId);
-      } else if (afterVersion.content === '' && beforeVersion) {
-        currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
-        currentExistingSections.add(afterVersion.sectionId);
+      } else if (afterVersion.content === '') {
+        // For deletions, keep the content from before the delete
+        const contentBeforeDelete = beforeVersion?.content || snapshotAfterChange.deletedSectionContent;
+        if (contentBeforeDelete) {
+          currentSectionContents[afterVersion.sectionId] = contentBeforeDelete;
+          currentExistingSections.add(afterVersion.sectionId);
+        }
       } else if (beforeVersion) {
         currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
       }
