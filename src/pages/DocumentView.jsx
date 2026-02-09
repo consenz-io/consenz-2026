@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle, ChevronLeft, ChevronRight, MoreVertical, Clock } from "lucide-react";
+import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle, ChevronLeft, ChevronRight, MoreVertical, Clock, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLanguage } from "@/components/LanguageContext";
 import ReactQuill from "react-quill";
 
@@ -62,6 +63,7 @@ export default function DocumentView() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState(null);
+  const [showVersionUpdateModal, setShowVersionUpdateModal] = useState(false);
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
@@ -275,6 +277,10 @@ export default function DocumentView() {
     const unsubscribeVersion = base44.entities.DocumentVersion.subscribe((event) => {
       console.log('[REALTIME] DocumentVersion event:', event.type);
       if (event.data?.documentId === documentId) {
+        // Check if this is a new suggestion_accepted version
+        if (event.type === 'create' && event.data?.changeType === 'suggestion_accepted') {
+          setShowVersionUpdateModal(true);
+        }
         queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
       }
     });
@@ -581,6 +587,23 @@ export default function DocumentView() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Restore scroll position after page reload
+  useEffect(() => {
+    const savedScrollPosition = sessionStorage.getItem('documentScrollPosition');
+    if (savedScrollPosition) {
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedScrollPosition, 10));
+        sessionStorage.removeItem('documentScrollPosition');
+      }, 100);
+    }
+  }, []);
+
+  // Handle page refresh with scroll position preservation
+  const handleRefreshPage = () => {
+    sessionStorage.setItem('documentScrollPosition', window.scrollY.toString());
+    window.location.reload();
+  };
 
   const handleEditSection = React.useCallback((section, isDirectEdit = false) => {
     setEditingSection(isDirectEdit ? { ...section, isDirectEdit: true } : section);
@@ -1145,6 +1168,40 @@ export default function DocumentView() {
           />
         )}
       </React.Suspense>
+
+      {/* Version Update Modal */}
+      <Dialog open={showVersionUpdateModal} onOpenChange={setShowVersionUpdateModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              {language === 'he' ? 'המסמך עודכן' : language === 'ar' ? 'تم تحديث المستند' : 'Document Updated'}
+            </DialogTitle>
+            <DialogDescription dir={isRTL ? 'rtl' : 'ltr'}>
+              {language === 'he' 
+                ? 'הצעה התקבלה והמסמך עודכן. רענן את העמוד כדי לצפות בגרסה החדשה.'
+                : language === 'ar'
+                ? 'تم قبول الاقتراح وتم تحديث المستند. قم بتحديث الصفحة لعرض الإصدار الجديد.'
+                : 'A suggestion was accepted and the document was updated. Refresh the page to view the new version.'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowVersionUpdateModal(false)}
+            >
+              {language === 'he' ? 'אחר כך' : language === 'ar' ? 'لاحقاً' : 'Later'}
+            </Button>
+            <Button
+              onClick={handleRefreshPage}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {language === 'he' ? 'רענן עמוד' : language === 'ar' ? 'تحديث الصفحة' : 'Refresh Page'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Floating navigation for suggestions */}
       {pendingSuggestions.length > 0 && showSuggestionNav && showScrollTop && (
