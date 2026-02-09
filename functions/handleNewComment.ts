@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
         notificationMessage = `${commenterName} הגיב על ההצעה שלך`;
       }
 
-      actionUrl = `/suggestiondetail?id=${suggestion.id}#comment-${comment.id}`;
+      actionUrl = `/suggestiondetail?id=${suggestion.id}&commentId=${comment.id}`;
     }
 
     // אם זו תגובה על סעיף
@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
       }
 
       const document = await base44.asServiceRole.entities.Document.filter({ id: section.documentId }).then(d => d[0]);
-      actionUrl = `/document-view?id=${section.documentId}#section-${section.id}`;
+      actionUrl = `/document-view?id=${section.documentId}&commentId=${comment.id}`;
     }
 
     // יצירת התראות
