@@ -724,9 +724,9 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
 
      let actionUrl;
      if (targetEntityType === 'suggestion') {
-       actionUrl = `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${targetEntity.id}#comment-${comment.id}`;
+       actionUrl = `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${targetEntity.id}&commentId=${comment.id}`;
      } else if (targetEntityType === 'section') {
-       actionUrl = `${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${documentId}#section-${targetEntity.id}-comment-${comment.id}`;
+       actionUrl = `${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${documentId}&commentId=${comment.id}`;
      }
     
     // 1. Parent comment author (if this is a reply) - FIRST PRIORITY!
@@ -934,7 +934,7 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
           message: translate('notifReplyMessage', userLang, { name: commenterName }),
           relatedEntityId: comment.id,
           relatedEntityType: 'comment',
-          actionUrl: `${actionUrl}#comment-${comment.id}`,
+          actionUrl: `${actionUrl}&commentId=${comment.id}`,
           documentId: doc.id,
           documentTitle: doc.title
         });
@@ -952,7 +952,7 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
         message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: doc.title }),
         relatedEntityId: comment.id,
         relatedEntityType: 'comment',
-        actionUrl: actionUrl + `#comment-${comment.id}`,
+        actionUrl: actionUrl + `&commentId=${comment.id}`,
         documentId: doc.id,
         documentTitle: doc.title
       });
@@ -974,7 +974,7 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
         message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: doc.title }),
         relatedEntityId: comment.id,
         relatedEntityType: 'comment',
-        actionUrl: actionUrl + `#comment-${comment.id}`,
+        actionUrl: actionUrl + `&commentId=${comment.id}`,
         documentId: doc.id,
         documentTitle: doc.title
       });
