@@ -607,28 +607,41 @@ export default function SuggestionDetail() {
 
   // useEffect to scroll to comment from notification
   React.useEffect(() => {
-    if (commentId && comments && comments.length > 0 && typeof window !== 'undefined') {
-      // Wait a bit to ensure DOM is fully rendered
-      const scrollTimer = setTimeout(() => {
-        const commentElement = window.document.getElementById(`comment-${commentId}`);
-        if (commentElement) {
-          // Scroll to comment
-          commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          // Add highlight effect with animation
-          commentElement.style.transition = 'background-color 0.3s ease';
-          commentElement.style.backgroundColor = '#dbeafe'; // light blue
-          
-          // Remove highlight after 3 seconds
-          const highlightTimer = setTimeout(() => {
-            commentElement.style.backgroundColor = '';
-          }, 3000);
-          
-          return () => clearTimeout(highlightTimer);
-        }
-      }, 1000);
+    if (!commentId || !comments || comments.length === 0 || typeof window === 'undefined') return;
+
+    // Try multiple times with increasing delays to handle async rendering
+    let scrollTimer;
+    let highlightTimer;
+    let attempts = 0;
+    const maxAttempts = 5;
+
+    const attemptScroll = () => {
+      const commentElement = window.document.getElementById(`comment-${commentId}`);
       
-      return () => clearTimeout(scrollTimer);
-    }
+      if (commentElement) {
+        // Found the element - scroll and highlight
+        commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        commentElement.style.transition = 'background-color 0.3s ease';
+        commentElement.style.backgroundColor = '#dbeafe';
+        
+        // Remove highlight after 3 seconds
+        highlightTimer = setTimeout(() => {
+          commentElement.style.backgroundColor = '';
+        }, 3000);
+      } else if (attempts < maxAttempts) {
+        // Element not found yet - try again with exponential backoff
+        attempts++;
+        scrollTimer = setTimeout(attemptScroll, 300 * attempts);
+      }
+    };
+
+    // Start attempting to scroll
+    scrollTimer = setTimeout(attemptScroll, 500);
+
+    return () => {
+      clearTimeout(scrollTimer);
+      clearTimeout(highlightTimer);
+    };
   }, [commentId, comments]);
 
   // useMemo ALWAYS runs - before any conditional returns
