@@ -30,7 +30,7 @@ export default function UnderstandingConsensus() {
     enabled: !!documentId,
   });
 
-  // Use totalUsersInteracted from document instead of heavy calculations
+  // Use totalUsersInteracted from document (for display purposes)
   const totalUsers = document?.totalUsersInteracted || 1;
   const consensuses = document?.consensuses || [];
   
@@ -39,11 +39,9 @@ export default function UnderstandingConsensus() {
     ? Math.min(1, consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length)
     : 0;
   
-  // רף התמיכה הדרוש = מד הקונצנזוס × מספר המשתתפים
-  // CRITICAL: כאשר consensuses קיימים, threshold MUST חייב להיות 1 לפחות (לא מעגלים למטה)
-  const threshold = consensuses.length > 0 
-    ? Math.max(1, Math.round(documentConsensusMeter * totalUsers))
-    : (document?.threshold || 2);
+  // ה-threshold הקבוע מהמסמך - לא מחשבים אותו מחדש!
+  // הוא מתעדכן רק כשהצעה מתקבלת
+  const threshold = Math.max(2, document?.threshold || 2);
 
   if (docLoading || suggestionsLoading) {
     return (
@@ -199,7 +197,7 @@ export default function UnderstandingConsensus() {
                 </div>
               </div>
               <p className="text-center text-sm text-slate-500 mt-4">
-                {documentConsensusMeter.toFixed(2)} × {totalUsers} = {(documentConsensusMeter * totalUsers).toFixed(1)} ≈ {threshold}
+                {language === 'he' ? 'הסף הנוכחי חושב בעת קבלת ההצעה האחרונה' : 'Current threshold calculated when last suggestion was accepted'}
               </p>
             </div>
           </CardContent>
