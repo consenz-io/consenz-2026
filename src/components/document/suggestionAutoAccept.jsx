@@ -51,34 +51,14 @@ export async function checkSuggestionConsensus(suggestion, document) {
   console.log('[CONSENSUS CHECK] - Con votes:', conVotes);
   console.log('[CONSENSUS CHECK] - Total users interacted:', totalUsers);
   
-  // חישוב threshold דינמי על בסיס consensuses של המסמך
-  let threshold;
-  const consensuses = document.consensuses || [];
+  // שימוש ב-threshold הקיים של המסמך (לא חישוב דינמי!)
+  // ה-threshold מתעדכן רק כשהצעה מתקבלת, לא בזמן אמת
+  const threshold = Math.max(2, document.threshold || 2);
   
   console.log('[CONSENSUS CHECK] Document consensus data:');
-  console.log('[CONSENSUS CHECK] - Consensuses array:', consensuses);
-  console.log('[CONSENSUS CHECK] - Consensuses length:', consensuses.length);
-  console.log('[CONSENSUS CHECK] - Document default threshold:', document.threshold);
-  
-  if (consensuses.length > 0) {
-    // document_consensus_meter = ממוצע כל ה-section_consensus_meter
-    // מגבילים כל ערך ל-1 מקסימום (כי consensuses אמורים להיות בין 0 ל-1)
-    const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-    // document_threshold = document_consensus_meter * totalUsers
-    // מינימום threshold הוא 2 תמיד
-    threshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
-    
-    console.log('[CONSENSUS CHECK] Threshold calculation (dynamic):');
-    console.log('[CONSENSUS CHECK] - Consensus meter average:', consensusMeterAverage);
-    console.log('[CONSENSUS CHECK] - Formula: Math.max(2, Math.round(' + consensusMeterAverage + ' * ' + totalUsers + '))');
-    console.log('[CONSENSUS CHECK] - Calculated threshold:', threshold);
-  } else {
-    // אם אין consensuses, משתמשים ב-threshold של המסמך (מינימום 2)
-    threshold = Math.max(2, document.threshold || 2);
-    console.log('[CONSENSUS CHECK] Threshold calculation (default):');
-    console.log('[CONSENSUS CHECK] - Using document.threshold:', document.threshold);
-    console.log('[CONSENSUS CHECK] - Calculated threshold:', threshold);
-  }
+  console.log('[CONSENSUS CHECK] - Using FIXED document.threshold:', threshold);
+  console.log('[CONSENSUS CHECK] - Total users (for info only):', totalUsers);
+  console.log('[CONSENSUS CHECK] - Threshold updates ONLY when suggestion is accepted');
   
   // חישוב הדלתא הנוכחית
   const currentDelta = proVotes - conVotes;
