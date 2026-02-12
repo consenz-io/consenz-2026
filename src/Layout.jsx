@@ -73,16 +73,25 @@ function LayoutContent({ children, currentPageName }) {
     staleTime: 30000, // 30 seconds - subscriptions will update faster
   });
 
+  const { data: userInteractions = [] } = useQuery({
+    queryKey: ['userInteractions', user?.id],
+    queryFn: () => base44.entities.UserInteraction.filter({ userId: user.id }),
+    enabled: !!user?.id,
+    initialData: [],
+    staleTime: 60000, // 1 minute
+  });
 
-
-
-
-  // Calculate unvoted suggestions - simple real-time count
+  // Calculate unvoted suggestions - only from documents the user is associated with
   const totalUnvotedSuggestions = React.useMemo(() => {
     if (!user?.id) return 0;
     
-    // Get all pending suggestions
-    const pendingSuggestions = allSuggestions.filter(s => s.status === 'pending');
+    // Get document IDs where the user has interacted
+    const userDocumentIds = new Set(userInteractions.map(ui => ui.documentId));
+    
+    // Get all pending suggestions from user's documents
+    const pendingSuggestions = allSuggestions.filter(s => 
+      s.status === 'pending' && userDocumentIds.has(s.documentId)
+    );
     
     // Filter out suggestions the user already voted on
     const unvotedSuggestions = pendingSuggestions.filter(s => 
@@ -90,7 +99,7 @@ function LayoutContent({ children, currentPageName }) {
     );
     
     return unvotedSuggestions.length;
-  }, [user?.id, allSuggestions, allVotes]);
+  }, [user?.id, allSuggestions, allVotes, userInteractions]);
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
