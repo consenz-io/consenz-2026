@@ -72,17 +72,9 @@ const VotesNeededCounter = React.memo(function VotesNeededCounter({ suggestion, 
     const proVotes = suggestion.proVotes || 0;
     const conVotes = suggestion.conVotes || 0;
     
-    // חישוב threshold דינמי על בסיס consensuses של המסמך
-    let threshold;
-    const consensuses = document.consensuses || [];
-    
-    if (consensuses.length > 0) {
-      // מגבילים כל ערך ל-1 מקסימום (כי consensuses אמורים להיות בין 0 ל-1)
-      const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-      threshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
-    } else {
-      threshold = Math.max(2, document.threshold || 2);
-    }
+    // שימוש ב-threshold הקבוע של המסמך (לא חישוב דינמי!)
+    // ה-threshold מתעדכן רק כשהצעה מתקבלת
+    const threshold = Math.max(2, document.threshold || 2);
 
     // חישוב הדלתא הנוכחית
     const currentDelta = proVotes - conVotes;
