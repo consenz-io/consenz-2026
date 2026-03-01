@@ -296,25 +296,16 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
               {currentVersion.conVotes || 0}
             </Button>
           </>
-        ) : (
-          <>
-            <div className="flex items-center gap-1 text-green-600 text-xs md:text-sm">
-              <ThumbsUp className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="font-medium">{currentVersion.proVotes || 0}</span>
-            </div>
-            <div className="flex items-center gap-1 text-red-600 text-xs md:text-sm">
-              <ThumbsDown className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="font-medium">{currentVersion.conVotes || 0}</span>
-            </div>
-          </>
+        ) : null}
+        {doc?.votingButtonsEnabled && (
+          <div className="flex-shrink-0">
+            <VotesNeededCounter 
+              suggestion={currentVersion}
+              document={doc}
+              acceptedSuggestions={acceptedSuggestions}
+            />
+          </div>
         )}
-        <div className="flex-shrink-0">
-          <VotesNeededCounter 
-            suggestion={currentVersion}
-            document={doc}
-            acceptedSuggestions={acceptedSuggestions}
-          />
-        </div>
         <Button 
           size="sm" 
           variant="outline" 
