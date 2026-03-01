@@ -156,15 +156,9 @@ Deno.serve(async (req) => {
     let accepted = false;
     const delta = newProVotes - newConVotes;
     
-    // Calculate threshold
-    const consensuses = document.consensuses || [];
-    let threshold;
-    if (consensuses.length > 0) {
-      const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-      threshold = Math.max(2, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
-    } else {
-      threshold = Math.max(2, document.threshold || 2);
-    }
+    // Use the document's stored threshold (same logic as checkSuggestionConsensus on the frontend)
+    // threshold is updated only when a suggestion is accepted, not dynamically during voting
+    const threshold = Math.max(2, document.threshold || 2);
 
     const shouldAccept = delta >= threshold;
 
