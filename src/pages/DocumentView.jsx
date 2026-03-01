@@ -205,39 +205,9 @@ export default function DocumentView() {
     },
     enabled: !!documentId && suggestions.length >= 0 && sections.length >= 0,
     initialData: { votes: [], users: [], publicProfiles: [], args: [], comments: [] },
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 2 * 60 * 1000,
     cacheTime: 5 * 60 * 1000,
   });
-
-  // Invalidate aggregatedData when votes or comments change (to keep contributors count accurate)
-  React.useEffect(() => {
-    if (!documentId || !document) return;
-    const suggestionIds = new Set(suggestions.map(s => s.id));
-    const sectionIds = new Set(sections.map(s => s.id));
-
-    const unsubVote = base44.entities.Vote.subscribe((event) => {
-      if (event.data?.suggestionId && suggestionIds.has(event.data.suggestionId)) {
-        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
-      }
-    });
-
-    const unsubComment = base44.entities.Comment.subscribe((event) => {
-      const d = event.data;
-      if (!d) return;
-      if (
-        (d.rootEntityType === 'document' && d.rootEntityId === documentId) ||
-        (d.rootEntityType === 'suggestion' && suggestionIds.has(d.rootEntityId)) ||
-        (d.rootEntityType === 'section' && sectionIds.has(d.rootEntityId))
-      ) {
-        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
-      }
-    });
-
-    return () => {
-      unsubVote();
-      unsubComment();
-    };
-  }, [documentId, document, suggestions, sections, queryClient]);
 
   const allVotes = aggregatedData?.votes || [];
   const allUsers = aggregatedData?.users || [];
