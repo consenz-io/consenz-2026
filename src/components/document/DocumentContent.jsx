@@ -245,11 +245,29 @@ export default function DocumentContent({
     checkAndAutoAccept();
   }, [topicEditSuggestions, document, user, queryClient, suggestions]);
 
-  // Comments are now lazy-loaded in CommentsSection component
+  // Fetch all comments for this document's suggestions and sections to show counts
+  const { data: allDocumentComments = [] } = useQuery({
+    queryKey: ['allDocumentComments', document?.id],
+    queryFn: async () => {
+      const suggestionIds = suggestions.map(s => s.id);
+      const sectionIds = sections.map(s => s.id);
+      return await base44.entities.Comment.filter({
+        $or: [
+          { rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } },
+          { rootEntityType: 'section', rootEntityId: { $in: sectionIds } },
+        ]
+      });
+    },
+    enabled: !!document?.id && suggestions.length > 0,
+    initialData: [],
+    staleTime: 60 * 1000,
+  });
+
   const getCommentsCount = React.useCallback((entityType, entityId) => {
-    // Return null to hide count until comments are opened
-    return null;
-  }, []);
+    return allDocumentComments.filter(
+      c => c.rootEntityType === entityType && c.rootEntityId === entityId
+    ).length;
+  }, [allDocumentComments]);
 
   const { data: userVotes = [] } = useQuery({
     queryKey: ['userVotes', document?.id, user?.id],
