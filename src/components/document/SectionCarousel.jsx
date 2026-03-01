@@ -486,12 +486,9 @@ const SectionCarousel = React.memo(function SectionCarousel({
             {showComments[`section-${section.id}`] && (
               <div className="mt-4 pt-4 border-t border-slate-200">
                 <CommentsSection
-                  rootEntityType="section"
-                  rootEntityId={section.id}
+                  entityType="section"
+                  entityId={section.id}
                   user={user}
-                  documentId={document?.id}
-                  documentTitle={document?.title}
-                  isOpen={showComments[`section-${section.id}`]}
                 />
               </div>
             )}
