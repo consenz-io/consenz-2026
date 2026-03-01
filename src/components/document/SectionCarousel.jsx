@@ -735,21 +735,30 @@ const SectionCarousel = React.memo(function SectionCarousel({
                   />
                 </div>
                 {(() => {
-                  const creatorEmail = currentView?.data?.created_by;
-                  if (!creatorEmail) return null;
-                  const userId = users?.find(u => u.email === creatorEmail)?.id;
-                  if (!userId) return (
-                    <Badge variant="outline" className="text-[10px] md:text-xs whitespace-nowrap">
-                      {t('by')} {getUserName(creatorEmail)}
-                    </Badge>
-                  );
-                  return (
-                    <Link to={`${createPageUrl("Profile")}?userId=${userId}`} className="flex-shrink-0">
-                      <Badge variant="outline" className="text-[10px] md:text-xs hover:bg-slate-50 cursor-pointer whitespace-nowrap">
-                        {t('by')} {getUserName(creatorEmail)}
-                      </Badge>
-                    </Link>
-                  );
+                 const creatorEmail = currentView?.data?.created_by;
+                 if (!creatorEmail) return null;
+                 const profile = publicProfiles?.find(p => p.email === creatorEmail);
+                 const userId = profile?.userId || users?.find(u => u.email === creatorEmail)?.id;
+                 const name = getUserName(creatorEmail);
+                 const createdDate = currentView?.data?.created_date 
+                   ? new Date(currentView.data.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                   : null;
+                 return (
+                   <div className="flex flex-col items-start gap-0.5 flex-shrink-0">
+                     {userId ? (
+                       <Link to={`${createPageUrl("Profile")}?userId=${userId}`}>
+                         <Badge variant="outline" className="text-[10px] md:text-xs hover:bg-slate-50 cursor-pointer whitespace-nowrap">
+                           {t('by')} {name}
+                         </Badge>
+                       </Link>
+                     ) : (
+                       <Badge variant="outline" className="text-[10px] md:text-xs whitespace-nowrap">
+                         {t('by')} {name}
+                       </Badge>
+                     )}
+                     {createdDate && <span className="text-[9px] text-slate-400 whitespace-nowrap">{createdDate}</span>}
+                   </div>
+                 );
                 })()}
                 <Button 
                   size="sm" 
