@@ -149,7 +149,7 @@ export default function MyDocuments() {
   // Check for unvoted suggestions per document
   const getUnvotedSuggestionsCount = (docId) => {
     if (!user?.id) return 0;
-    const docSuggestions = allSuggestions.filter(s => s.documentId === docId && s.status === 'pending');
+    const docSuggestions = allSuggestions.filter(s => s.documentId === docId && s.status === 'pending' && s.type !== 'edit_suggestion');
     const unvoted = docSuggestions.filter(s => !votes.some(v => v.suggestionId === s.id));
     return unvoted.length;
   };
