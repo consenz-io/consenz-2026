@@ -402,7 +402,7 @@ export default function GroupView() {
                         document: doc,
                         suggestions: allSuggestions.filter(s => s.documentId === doc.id),
                         allVotes,
-                        allUsers,
+                        allUsers: publicProfiles,
                         allComments,
                         sections: allSections.filter(s => s.documentId === doc.id),
                         documentAgreements: allAgreements.filter(a => a.documentId === doc.id)
