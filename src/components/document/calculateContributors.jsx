@@ -140,13 +140,17 @@ export function calculateContributorsFromData({
     }
   });
   
-  // 3. Commenters on sections
+  // 3. Commenters on sections (legacy: stored directly on section)
   const sectionIds = new Set(sections.map(s => s.id));
   allComments.forEach(c => {
     if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId) && c.created_by) {
       uniqueEmails.add(c.created_by);
     }
   });
+  
+  // 3b. Commenters on accepted suggestions linked to sections (unified threading)
+  // Comments on accepted suggestions that correspond to sections count as section commenters
+  // (already counted in step 2 since those suggestion IDs are in suggestionIds)
   
   // 4. Commenters on document
   if (document?.id) {
