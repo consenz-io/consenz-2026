@@ -81,8 +81,8 @@ function LayoutContent({ children, currentPageName }) {
   const totalUnvotedSuggestions = React.useMemo(() => {
     if (!user?.id) return 0;
     
-    // Get all pending suggestions
-    const pendingSuggestions = allSuggestions.filter(s => s.status === 'pending');
+    // Get all pending suggestions (exclude edit_suggestion - those aren't visible as standalone cards)
+    const pendingSuggestions = allSuggestions.filter(s => s.status === 'pending' && s.type !== 'edit_suggestion');
     
     // Filter out suggestions the user already voted on
     const unvotedSuggestions = pendingSuggestions.filter(s => 
