@@ -125,14 +125,31 @@ export default function NotificationBell({ user }) {
       
       // Navigate only if we have a valid actionUrl
       if (notification.actionUrl && typeof notification.actionUrl === 'string' && notification.actionUrl.length > 0) {
+        // Normalize legacy kebab-case URLs that were stored in DB before the fix
+        const normalizeUrl = (url) => {
+          return url
+            .replace(/\/document-view(\?|#|$)/, '/documentview$1')
+            .replace(/\/suggestion-detail(\?|#|$)/, '/suggestiondetail$1')
+            .replace(/\/my-documents(\?|#|$)/, '/mydocuments$1')
+            .replace(/\/create-document(\?|#|$)/, '/createdocument$1')
+            .replace(/\/document-admin(\?|#|$)/, '/documentadmin$1')
+            .replace(/\/document-clean-view(\?|#|$)/, '/documentcleanview$1')
+            .replace(/\/document-comments(\?|#|$)/, '/documentcomments$1')
+            .replace(/\/section-history(\?|#|$)/, '/sectionhistory$1')
+            .replace(/\/understanding-consensus(\?|#|$)/, '/understandingconsensus$1')
+            .replace(/\/group-view(\?|#|$)/, '/groupview$1')
+            .replace(/\/create-group(\?|#|$)/, '/creategroup$1')
+            .replace(/\/learn-more(\?|#|$)/, '/learnmore$1')
+            .replace(/\/email-logs(\?|#|$)/, '/emaillogs$1');
+        };
+        const normalizedUrl = normalizeUrl(notification.actionUrl);
         // Small delay to ensure popover closes smoothly
         setTimeout(() => {
           try {
-            navigate(notification.actionUrl);
+            navigate(normalizedUrl);
           } catch (navError) {
             console.error('[NAVIGATION ERROR] React Router failed:', navError);
-            // Fallback to window.location for external or problematic URLs
-            window.location.href = notification.actionUrl;
+            window.location.href = normalizedUrl;
           }
         }, 100);
       }
