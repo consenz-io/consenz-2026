@@ -216,8 +216,13 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
           <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
             <Plus className="w-5 h-5 text-white" />
           </div>
-          <div className="text-sm md:text-base font-semibold text-slate-900 break-words">
-            {`הצעה לסעיף חדש מאת ${getUserName(currentVersion.created_by)}`}
+          <div>
+            <div className="text-sm md:text-base font-semibold text-slate-900 break-words">
+              {`הצעה לסעיף חדש מאת ${getUserName(currentVersion.created_by)}`}
+            </div>
+            <div className="text-xs text-slate-400 mt-0.5">
+              {currentVersion.created_date && new Date(currentVersion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            </div>
           </div>
         </div>
       </div>
