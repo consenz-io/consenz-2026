@@ -233,7 +233,7 @@ export default function DocumentComments() {
   const groupedComments = React.useMemo(() => {
     const groups = [];
 
-    // Group section comments
+    // Group legacy section comments (stored directly on sections)
     const sectionGroups = {};
     sectionComments.forEach(comment => {
       if (!sectionGroups[comment.rootEntityId]) {
@@ -251,20 +251,48 @@ export default function DocumentComments() {
     Object.values(sectionGroups).forEach(g => groups.push(g));
 
     // Group suggestion comments
+    // Accepted suggestions that link to sections → show as section comments (unified threading)
+    // Pending/other suggestions → show as suggestion comments
     const suggestionGroups = {};
     suggestionComments.forEach(comment => {
-      if (!suggestionGroups[comment.rootEntityId]) {
-        const suggestion = suggestions.find(s => s.id === comment.rootEntityId);
-        suggestionGroups[comment.rootEntityId] = {
-          type: 'suggestion',
-          entityId: comment.rootEntityId,
-          suggestion,
-          comments: []
-        };
+      const suggestionId = comment.rootEntityId;
+      const linkedSectionId = acceptedSuggestionToSectionMap[suggestionId];
+
+      if (linkedSectionId) {
+        // This comment is on an accepted suggestion linked to a section → treat as section comment
+        const groupKey = `section-${linkedSectionId}`;
+        if (!sectionGroups[linkedSectionId]) {
+          const section = sections.find(s => s.id === linkedSectionId);
+          sectionGroups[linkedSectionId] = {
+            type: 'section',
+            entityId: linkedSectionId,
+            section,
+            topicName: section ? getTopicName(section.topicId) : '',
+            comments: []
+          };
+          // Only add if not already in groups
+          groups.push(sectionGroups[linkedSectionId]);
+        }
+        // Avoid duplicate comments
+        const alreadyAdded = sectionGroups[linkedSectionId].comments.some(c => c.id === comment.id);
+        if (!alreadyAdded) {
+          sectionGroups[linkedSectionId].comments.push(comment);
+        }
+      } else {
+        // Regular suggestion comment
+        if (!suggestionGroups[suggestionId]) {
+          const suggestion = suggestions.find(s => s.id === suggestionId);
+          suggestionGroups[suggestionId] = {
+            type: 'suggestion',
+            entityId: suggestionId,
+            suggestion,
+            comments: []
+          };
+          groups.push(suggestionGroups[suggestionId]);
+        }
+        suggestionGroups[suggestionId].comments.push(comment);
       }
-      suggestionGroups[comment.rootEntityId].comments.push(comment);
     });
-    Object.values(suggestionGroups).forEach(g => groups.push(g));
 
     // Sort groups by most recent comment
     groups.sort((a, b) => {
@@ -278,8 +306,8 @@ export default function DocumentComments() {
       g.comments.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     });
 
-    return groups;
-  }, [sectionComments, suggestionComments, sections, suggestions, topics]);
+    return groups.filter(g => g.comments.length > 0);
+  }, [sectionComments, suggestionComments, sections, suggestions, topics, acceptedSuggestionToSectionMap]);
 
   const BackArrow = isRTL ? ArrowRight : ArrowLeft;
 
