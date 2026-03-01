@@ -87,6 +87,17 @@ export default function DocumentComments() {
     enabled: suggestions.length > 0,
   });
 
+  // Map: accepted suggestion ID -> section ID (for comments stored on accepted suggestions)
+  const acceptedSuggestionToSectionMap = React.useMemo(() => {
+    const map = {};
+    suggestions.forEach(s => {
+      if (s.status === 'accepted' && s.sectionId) {
+        map[s.id] = s.sectionId;
+      }
+    });
+    return map;
+  }, [suggestions]);
+
   const { data: publicProfiles } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
