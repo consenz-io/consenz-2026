@@ -76,6 +76,14 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'Already processed' });
     }
 
+    // Re-verify the suggestion actually meets the threshold (using stored document.threshold)
+    const verifyDelta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
+    const verifyThreshold = Math.max(2, document.threshold || 2);
+    if (verifyDelta < verifyThreshold) {
+      console.log('[PROCESS ACCEPTANCE] Suggestion no longer meets threshold, aborting. delta:', verifyDelta, 'threshold:', verifyThreshold);
+      return Response.json({ success: true, message: 'Threshold not met, acceptance aborted' });
+    }
+
     // Calculate contributors and consensus
     const totalUsers = await calculateContributors(base44, documentId);
     
