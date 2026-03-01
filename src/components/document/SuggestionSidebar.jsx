@@ -599,21 +599,26 @@ export default function SuggestionSidebar({
             </Alert>
           )}
 
-          <div className="text-xs text-slate-500">
-            {t('by')} {(() => {
-              const profile = publicProfiles?.find(p => p.email === suggestion.created_by);
-              const userObj = users?.find(u => u.email === suggestion.created_by);
-              const userId = profile?.userId || userObj?.id;
-              const userName = getUserName(suggestion.created_by);
-              
-              return userId ? (
-                <Link to={`${createPageUrl("Profile")}?userId=${userId}`} className="hover:underline text-blue-600">
-                  {userName}
-                </Link>
-              ) : (
-                <span className="text-slate-600">{userName}</span>
-              );
-            })()}
+          <div className="text-xs text-slate-500 flex flex-wrap gap-x-2 gap-y-0.5">
+            <span>
+              {t('by')} {(() => {
+                const profile = publicProfiles?.find(p => p.email === suggestion.created_by);
+                const userObj = users?.find(u => u.email === suggestion.created_by);
+                const userId = profile?.userId || userObj?.id;
+                const userName = getUserName(suggestion.created_by);
+                return userId ? (
+                  <Link to={`${createPageUrl("Profile")}?userId=${userId}`} className="hover:underline text-blue-600">{userName}</Link>
+                ) : (
+                  <span className="text-slate-600">{userName}</span>
+                );
+              })()}
+            </span>
+            {suggestion.created_date && (
+              <span>• {new Date(suggestion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+            )}
+            {suggestion.status === 'accepted' && suggestion.updated_date && (
+              <span className="text-green-600">• ✓ {t('acceptedOn')} {new Date(suggestion.updated_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+            )}
           </div>
 
           {/* Explanation - always show for creator, editable */}
