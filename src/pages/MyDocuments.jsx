@@ -290,26 +290,6 @@ export default function MyDocuments() {
                         </div>
                       </div>
 
-                      <div className="pt-3 border-t border-slate-100">
-                        <div className="flex items-center justify-between text-xs text-slate-500">
-                          <div>
-                            {language === 'ar' 
-                              ? 'مقترحاتي: ' 
-                              : language === 'he' 
-                              ? 'ההצעות שלי: ' 
-                              : 'My suggestions: '}
-                            <span className="font-semibold text-blue-600">{mySuggestionsCount}</span>
-                          </div>
-                          <div>
-                            {language === 'ar' 
-                              ? 'أصواتي: ' 
-                              : language === 'he' 
-                              ? 'ההצבעות שלי: ' 
-                              : 'My votes: '}
-                            <span className="font-semibold text-green-600">{myVotesCount}</span>
-                          </div>
-                        </div>
-                      </div>
 
                       <div className="text-xs text-slate-400">
                         {t('created')} {new Date(doc.created_date).toLocaleDateString()}
