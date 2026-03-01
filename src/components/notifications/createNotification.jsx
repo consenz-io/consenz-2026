@@ -726,14 +726,7 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
      if (targetEntityType === 'suggestion') {
        actionUrl = `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${targetEntity.id}&commentId=${comment.id}`;
      } else if (targetEntityType === 'section') {
-       // For section comments, link to the suggestion detail page of a suggestion related to this section,
-       // or fall back to DocumentView with the section anchor
-       const relatedSuggestions = await base44.entities.Suggestion.filter({ sectionId: targetEntity.id, status: 'pending' });
-       if (relatedSuggestions.length > 0) {
-         actionUrl = `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${relatedSuggestions[0].id}&commentId=${comment.id}`;
-       } else {
-         actionUrl = `${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${documentId}&scrollTo=section-${targetEntity.id}&commentId=${comment.id}`;
-       }
+       actionUrl = `${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${documentId}&commentId=${comment.id}`;
      }
     
     // 1. Parent comment author (if this is a reply) - FIRST PRIORITY!
