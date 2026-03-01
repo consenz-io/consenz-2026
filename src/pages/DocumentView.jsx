@@ -598,6 +598,37 @@ export default function DocumentView() {
     }
   }, [openSuggestionFromUrl]);
 
+  // Scroll to comment from notification
+  useEffect(() => {
+    if (!commentIdFromUrl || typeof window === 'undefined') return;
+
+    let scrollTimer;
+    let highlightTimer;
+    let attempts = 0;
+    const maxAttempts = 6;
+
+    const attemptScroll = () => {
+      const commentElement = window.document.getElementById(`comment-${commentIdFromUrl}`);
+      if (commentElement) {
+        commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        commentElement.style.transition = 'background-color 0.3s ease';
+        commentElement.style.backgroundColor = '#dbeafe';
+        highlightTimer = setTimeout(() => {
+          commentElement.style.backgroundColor = '';
+        }, 3000);
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        scrollTimer = setTimeout(attemptScroll, 400 * attempts);
+      }
+    };
+
+    scrollTimer = setTimeout(attemptScroll, 600);
+    return () => {
+      clearTimeout(scrollTimer);
+      clearTimeout(highlightTimer);
+    };
+  }, [commentIdFromUrl]);
+
   // Track scroll position for showing floating buttons
   useEffect(() => {
     const handleScroll = () => {
