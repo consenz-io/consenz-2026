@@ -38,7 +38,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
   newlyCreatedSuggestionId,
   onClearNewlyCreated,
   targetSuggestionId,
-  publicProfiles
+  publicProfiles = []
 }) {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
