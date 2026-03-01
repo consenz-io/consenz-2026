@@ -874,6 +874,11 @@ export default function SuggestionDetail() {
                 <span className="text-xs text-slate-500">
                   {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
                 </span>
+                {suggestion.created_date && (
+                  <span className="text-xs text-slate-400">
+                    • {new Date(suggestion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
                 {suggestion.status === 'pending' && suggestion.timerEndsAt && (
