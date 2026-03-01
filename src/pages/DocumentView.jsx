@@ -43,6 +43,7 @@ export default function DocumentView() {
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
   const scrollToSectionId = searchParams.get('scrollTo');
+  const commentIdFromUrl = searchParams.get('commentId');
   const openSuggestionFromUrl = searchParams.get('openSuggestion');
   const [showCreateSuggestion, setShowCreateSuggestion] = useState(false);
   const [editingSection, setEditingSection] = useState(null);
