@@ -117,7 +117,10 @@ export function calculateContributorsFromData({
   // 1. Voters on suggestions
   const suggestionIds = new Set(suggestions.map(s => s.id));
   const userIdToEmail = {};
-  allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
+  allUsers.forEach(u => { 
+    // UserPublicProfile uses userId field; fallback to id for other user object types
+    userIdToEmail[u.userId || u.id] = u.email;
+  });
   
   allVotes.forEach(v => {
     if (suggestionIds.has(v.suggestionId)) {
