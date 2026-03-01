@@ -317,16 +317,34 @@ export default function DocumentView() {
 
   // Calculate real contributors count using shared logic
   const contributorsCount = React.useMemo(() => {
-    if (!document || !aggregatedData) return 0;
-    return calculateContributorsFromData({
-      document,
-      suggestions,
-      allVotes,
-      allUsers: publicProfiles.length > 0 ? publicProfiles : allUsers,
-      allComments,
-      sections,
-      documentAgreements
+    if (!document) return 0;
+    // Use same criteria as ContributorsModal: votes, comments, signers
+    const uniqueEmails = new Set();
+    const suggestionIds = new Set(suggestions.map(s => s.id));
+    const sectionIds = new Set(sections.map(s => s.id));
+    const userIdToEmail = {};
+    publicProfiles.forEach(p => { userIdToEmail[p.userId] = p.email; });
+
+    allVotes.forEach(v => {
+      if (suggestionIds.has(v.suggestionId)) {
+        if (userIdToEmail[v.userId]) uniqueEmails.add(userIdToEmail[v.userId]);
+        if (v.created_by) uniqueEmails.add(v.created_by);
+      }
     });
+    allComments.forEach(c => {
+      if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId) && c.created_by)
+        uniqueEmails.add(c.created_by);
+      if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId) && c.created_by)
+        uniqueEmails.add(c.created_by);
+      if (c.rootEntityType === 'document' && c.rootEntityId === document.id && c.created_by)
+        uniqueEmails.add(c.created_by);
+    });
+    documentAgreements.forEach(a => { if (a.userEmail) uniqueEmails.add(a.userEmail); });
+
+    // Count only users who have a public profile
+    const emailsWithProfile = new Set(publicProfiles.map(p => p.email));
+    const countableEmails = [...uniqueEmails].filter(e => emailsWithProfile.has(e));
+    return Math.max(1, countableEmails.length);
   }, [document?.id, allVotes, allComments, documentAgreements, suggestions, sections, publicProfiles]);
 
   // Get pending suggestions ordered by section appearance
