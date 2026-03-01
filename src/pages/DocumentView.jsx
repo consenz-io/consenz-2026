@@ -315,13 +315,10 @@ export default function DocumentView() {
     ).length;
   }, [allComments, sections]);
 
-  // Calculate real contributors count using shared logic - only once on load
-  const [contributorsCount, setContributorsCount] = React.useState(0);
-  
-  React.useEffect(() => {
-    if (!document || !aggregatedData) return;
-    
-    const count = calculateContributorsFromData({
+  // Calculate real contributors count using shared logic
+  const contributorsCount = React.useMemo(() => {
+    if (!document || !aggregatedData) return 0;
+    return calculateContributorsFromData({
       document,
       suggestions,
       allVotes,
@@ -330,9 +327,7 @@ export default function DocumentView() {
       sections,
       documentAgreements
     });
-    
-    setContributorsCount(count);
-  }, [document?.id]); // Only recalculate when document changes
+  }, [document?.id, allVotes, allComments, documentAgreements, suggestions, sections, publicProfiles]);
 
   // Get pending suggestions ordered by section appearance
   // Excludes edit_suggestion type since those are shown inside the parent suggestion's sidebar,
