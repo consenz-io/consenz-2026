@@ -785,12 +785,9 @@ const SectionCarousel = React.memo(function SectionCarousel({
                 {showComments[`suggestion-${currentView.data.id}`] && (
                   <div className="mt-4 pt-4 border-t border-slate-200">
                     <CommentsSection
-                      rootEntityType="suggestion"
-                      rootEntityId={currentView.data.id}
+                      entityType="suggestion"
+                      entityId={currentView.data.id}
                       user={user}
-                      documentId={document?.id}
-                      documentTitle={document?.title}
-                      isOpen={showComments[`suggestion-${currentView.data.id}`]}
                     />
                   </div>
                 )}
