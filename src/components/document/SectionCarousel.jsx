@@ -771,15 +771,25 @@ const SectionCarousel = React.memo(function SectionCarousel({
             {currentView?.data?.id && !['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView.data.id]) && (
               <>
                 <div className="mt-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleComments(`suggestion-${currentView.data.id}`)}
-                    className="h-7 md:h-8 text-xs px-2"
-                  >
-                    <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                    {t('comments')} ({getCommentsCount('suggestion', currentView.data.id)})
-                  </Button>
+                  {(() => {
+                    const count = typeof getCommentsCount === 'function' ? getCommentsCount('suggestion', currentView.data.id) : 0;
+                    const hasComments = count > 0;
+                    return (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleComments(`suggestion-${currentView.data.id}`)}
+                        className={`h-7 md:h-8 text-xs px-2 transition-all ${
+                          hasComments
+                            ? 'font-bold text-blue-700 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 shadow-sm'
+                            : 'text-slate-600 hover:text-blue-600'
+                        }`}
+                      >
+                        <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'} ${hasComments ? 'fill-blue-200' : ''}`} />
+                        {t('comments')}{hasComments ? ` (${count})` : ''}
+                      </Button>
+                    );
+                  })()}
                 </div>
                 {showComments[`suggestion-${currentView.data.id}`] && (
                   <div className="mt-4 pt-4 border-t border-slate-200">
