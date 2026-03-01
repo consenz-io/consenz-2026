@@ -246,35 +246,6 @@ export default function DocumentCleanView() {
     }
   }, [currentVersionIndex, currentSnapshot]);
 
-  if (docLoading || topicsLoading || sectionsLoading || versionsLoading) {
-    return (
-      <div className="min-h-screen bg-white p-8">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <Skeleton className="h-12 w-64" />
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-64 w-full" />
-        </div>
-      </div>
-    );
-  }
-
-  if (!document) {
-    return (
-      <div className="min-h-screen bg-white p-8">
-        <div className="max-w-4xl mx-auto text-center py-20">
-          <h1 className="text-2xl font-bold text-slate-900">{t('documentNotFound')}</h1>
-          <Link to={createPageUrl("Home")}>
-            <Button className="mt-4">{t('goHome')}</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const handlePrint = () => {
-    window.print();
-  };
-
   const translateTextMutation = useMutation({
     mutationFn: async ({ text, targetLanguage, isHtml = false }) => {
       const languageNames = { en: 'English', he: 'Hebrew', ar: 'Arabic' };
