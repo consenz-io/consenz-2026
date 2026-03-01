@@ -335,11 +335,13 @@ export default function DocumentView() {
   }, [document?.id]); // Only recalculate when document changes
 
   // Get pending suggestions ordered by section appearance
+  // Excludes edit_suggestion type since those are shown inside the parent suggestion's sidebar,
+  // not as standalone visible cards in the document
   const pendingSuggestions = React.useMemo(() => {
     if (!suggestions || !sections || !topics) return [];
     
     return suggestions
-      .filter(s => s.status === 'pending')
+      .filter(s => s.status === 'pending' && s.type !== 'edit_suggestion')
       .sort((a, b) => {
         // Sort by topic order first
         const topicA = topics.find(t => t.id === a.topicId);
