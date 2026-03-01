@@ -726,7 +726,17 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
      if (targetEntityType === 'suggestion') {
        actionUrl = `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${targetEntity.id}&commentId=${comment.id}`;
      } else if (targetEntityType === 'section') {
-       actionUrl = `${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${documentId}&commentId=${comment.id}`;
+       // Link to the suggestion detail page - find the most relevant pending suggestion for this section
+       // The comment is shown inside SectionCarousel which shows suggestion views
+       const pendingSuggestions = await base44.entities.Suggestion.filter({ sectionId: targetEntity.id, status: 'pending' });
+       if (pendingSuggestions.length > 0) {
+         // Sort by most recently created to get the most relevant one
+         pendingSuggestions.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+         actionUrl = `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${pendingSuggestions[0].id}&commentId=${comment.id}`;
+       } else {
+         // No pending suggestions - link to the document view at the section
+         actionUrl = `${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${documentId}&scrollTo=section-${targetEntity.id}&commentId=${comment.id}`;
+       }
      }
     
     // 1. Parent comment author (if this is a reply) - FIRST PRIORITY!
