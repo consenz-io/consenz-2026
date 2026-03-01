@@ -75,6 +75,29 @@ const SectionCarousel = React.memo(function SectionCarousel({
     },
     staleTime: 0,
   });
+
+  // מצא את ה-accepted suggestion הראשון של הסעיף הזה - לשימוש בתגובות
+  // כך כל התגובות על הסעיף מקושרות להצעה, ולא לסעיף עצמו
+  const { data: sectionAcceptedSuggestion } = useQuery({
+    queryKey: ['sectionAcceptedSuggestion', section?.id],
+    queryFn: async () => {
+      const accepted = await base44.entities.Suggestion.filter({ 
+        sectionId: section.id, 
+        status: 'accepted',
+        type: 'edit_section'
+      });
+      // מחזיר את ההצעה הראשונה שנוצרה (יצירת הסעיף)
+      if (accepted.length === 0) return null;
+      return accepted.sort((a, b) => new Date(a.created_date) - new Date(b.created_date))[0];
+    },
+    enabled: !!section?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // entityType ו-entityId לתגובות על הסעיף הנוכחי:
+  // אם קיימת accepted suggestion - משתמשים בה (suggestion), אחרת section
+  const sectionCommentEntityType = sectionAcceptedSuggestion ? 'suggestion' : 'section';
+  const sectionCommentEntityId = sectionAcceptedSuggestion ? sectionAcceptedSuggestion.id : section.id;
   
   // שומר את ה-ID של ההצעה הנוכחית במקום index
   const [currentSuggestionId, setCurrentSuggestionId] = useState(null);
