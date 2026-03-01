@@ -308,13 +308,30 @@ export default function DocumentView() {
     return uniqueSuggestions.size + 1; // +1 for current version
   }, [documentVersions]);
 
-  // Count all section comments for this document
+  // Count all section-related comments for this document:
+  // Includes both legacy comments stored on sections AND new comments stored on their accepted suggestions
   const sectionCommentsCount = React.useMemo(() => {
-    const sectionIds = sections.map(s => s.id);
-    return allComments.filter(c => 
-      c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)
+    const sectionIds = new Set(sections.map(s => s.id));
+    const suggestionIds = new Set(suggestions.map(s => s.id));
+    
+    // Section comments stored directly on sections (legacy)
+    const directSectionComments = allComments.filter(c => 
+      c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)
     ).length;
-  }, [allComments, sections]);
+    
+    // Comments stored on accepted suggestions that correspond to sections
+    // These are section comments stored under the suggestion for unified threading
+    const acceptedSectionSuggestionIds = new Set(
+      suggestions
+        .filter(s => s.status === 'accepted' && s.sectionId && sectionIds.has(s.sectionId))
+        .map(s => s.id)
+    );
+    const suggestionBasedSectionComments = allComments.filter(c => 
+      c.rootEntityType === 'suggestion' && acceptedSectionSuggestionIds.has(c.rootEntityId)
+    ).length;
+    
+    return directSectionComments + suggestionBasedSectionComments;
+  }, [allComments, sections, suggestions]);
 
   // Calculate contributors count - same logic as ContributorsModal
   const contributorsCount = React.useMemo(() => {
