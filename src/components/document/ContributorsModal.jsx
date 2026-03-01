@@ -61,10 +61,10 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     staleTime: 30000,
   });
 
-  const { data: allArguments = [] } = useQuery({
-    queryKey: ['allArguments'],
-    queryFn: () => base44.entities.Argument.list(),
-    enabled: isOpen && suggestions.length > 0,
+  const { data: allAgreements = [] } = useQuery({
+    queryKey: ['documentAgreements', documentId],
+    queryFn: () => base44.entities.DocumentAgreement.filter({ documentId }),
+    enabled: isOpen && !!documentId,
     staleTime: 30000,
   });
 
@@ -73,78 +73,61 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       return { contributors: [], loading: true };
     }
 
+    // Same criteria as the counter: voters, commenters, signers
     const contributorEmails = new Set();
     
-    // Document creator
-    if (document.created_by) contributorEmails.add(document.created_by);
-
-    // Suggestion creators
-    suggestions.forEach(s => {
-      if (s.created_by) contributorEmails.add(s.created_by);
-    });
-
-    // Voters - convert voter IDs to emails using UserPublicProfile entity
     const suggestionIds = new Set(suggestions.map(s => s.id));
-    const voterIds = new Set();
+    const sectionIds = new Set(sections.map(s => s.id));
+
+    // 1. Voters
     allVotes.forEach(v => {
       if (suggestionIds.has(v.suggestionId)) {
-        voterIds.add(v.userId);
         if (v.created_by) contributorEmails.add(v.created_by);
-      }
-    });
-    
-    publicProfiles.forEach(profile => {
-      if (voterIds.has(profile.userId)) contributorEmails.add(profile.email);
-    });
-
-    // Argument writers
-    allArguments.forEach(arg => {
-      if (suggestionIds.has(arg.suggestionId) && arg.created_by) {
-        contributorEmails.add(arg.created_by);
+        const profile = publicProfiles.find(p => p.userId === v.userId);
+        if (profile?.email) contributorEmails.add(profile.email);
       }
     });
 
-    // Commenters on suggestions
+    // 2. Commenters on suggestions
     allComments.forEach(c => {
       if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId) && c.created_by) {
         contributorEmails.add(c.created_by);
       }
     });
 
-    // Commenters on sections
-    const sectionIds = new Set(sections.map(s => s.id));
+    // 3. Commenters on sections
     allComments.forEach(c => {
       if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId) && c.created_by) {
         contributorEmails.add(c.created_by);
       }
     });
 
-    // Document comments
+    // 4. Commenters on document
     allComments.forEach(c => {
       if (c.rootEntityType === 'document' && c.rootEntityId === documentId && c.created_by) {
         contributorEmails.add(c.created_by);
       }
     });
 
-    // Build contributors list from UserPublicProfile entity (accessible to all)
-    // Use Map to avoid duplicates by userId
+    // 5. Signers
+    allAgreements.forEach(a => {
+      if (a.userEmail) contributorEmails.add(a.userEmail);
+    });
+
+    // Build contributors list
     const contributorsMap = new Map();
-    
     publicProfiles.forEach(profile => {
       if (contributorEmails.has(profile.email) && profile.userId) {
         contributorsMap.set(profile.userId, {
           id: profile.userId,
           email: profile.email,
           full_name: profile.fullName || 'User',
-          role: null // role not available in public profile
         });
       }
     });
     
-    const contributorsList = Array.from(contributorsMap.values());
-    
-    return { contributors: contributorsList, loading: false };
-  }, [document, suggestions, sections, publicProfiles, allVotes, allComments, allArguments, documentId]);
+    return { contributors: Array.from(contributorsMap.values()), loading: false };
+  }, [document, suggestions, sections, publicProfiles, allVotes, allComments, allAgreements, documentId]);
 
   const filteredContributors = useMemo(() => {
     if (!searchQuery || !contributors) return contributors || [];
