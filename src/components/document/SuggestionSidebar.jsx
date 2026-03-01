@@ -22,6 +22,7 @@ import { notifySuggestionStatusChange } from "../notifications/createNotificatio
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { PAGE_NAMES } from "@/components/pageNames";
+// v2
 
 export default function SuggestionSidebar({ 
   suggestionId, 
