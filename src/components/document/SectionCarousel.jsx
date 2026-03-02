@@ -22,6 +22,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
   pendingSuggestions,
   document,
   user,
+  canParticipate = true,
   onEditSection,
   onDirectEdit,
   toggleComments,
