@@ -187,6 +187,12 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
           <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300 text-xs">
             {suggestion.status === 'accepted' ? t('accepted') : t(suggestion.status)}
           </Badge>
+          {suggestion.approvedByAdmin && suggestion.status === 'accepted' && (
+            <Badge variant="outline" className="flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
+              <ShieldCheck className="w-3 h-3" />
+              {isRTL ? 'אושר ע״י מנהל' : 'Admin Approved'}
+            </Badge>
+          )}
         </div>
         <Button
           variant="ghost"
