@@ -470,7 +470,7 @@ Return ONLY the translated text:`;
       try {
         const topicSuggestion = topicEditSuggestions.find(s => s.id === suggestionId);
         
-        // שלב 1: קריאת המצב העדכני מהשרת (source of truth)
+        // קריאה אחת לשרת - הצבעה קיימת + הצעה עדכנית במקביל
         const [freshVotes, freshSuggestions] = await Promise.all([
           base44.entities.TopicEditVote.filter({ suggestionId, userId: user.id }),
           base44.entities.TopicEditSuggestion.filter({ id: suggestionId })
@@ -485,7 +485,6 @@ Return ONLY the translated text:`;
         
         let newProVotes = freshSuggestion.proVotes || 0;
         let newConVotes = freshSuggestion.conVotes || 0;
-        let updatedSuggestion;
 
         if (serverVote) {
           if (serverVote.vote === vote) {
@@ -505,135 +504,89 @@ Return ONLY the translated text:`;
             }
           }
         } else {
-          // בדיקה כפולה לפני יצירת הצבעה חדשה
-          const doubleCheck = await base44.entities.TopicEditVote.filter({ suggestionId, userId: user.id });
-          if (doubleCheck.length > 0) {
-            const existingVote = doubleCheck[0];
-            if (existingVote.vote !== vote) {
-              await base44.entities.TopicEditVote.update(existingVote.id, { vote });
-              if (vote === 'pro') {
-                newProVotes += 1;
-                newConVotes = Math.max(0, newConVotes - 1);
-              } else {
-                newConVotes += 1;
-                newProVotes = Math.max(0, newProVotes - 1);
-              }
-            } else {
-              await base44.entities.TopicEditVote.delete(existingVote.id);
-              if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
-              else newConVotes = Math.max(0, newConVotes - 1);
-            }
-          } else {
-            // באמת הצבעה חדשה
-            await base44.entities.TopicEditVote.create({
-              suggestionId,
-              userId: user.id,
-              vote
-            });
-            
-            // Ensure UserPublicProfile exists for display
-            await ensureUserPublicProfile(user);
-            
-            if (vote === 'pro') newProVotes += 1;
-            else newConVotes += 1;
+          // הצבעה חדשה - ה-lock מבטיח אין כפילות, אין צורך ב-double-check
+          await base44.entities.TopicEditVote.create({ suggestionId, userId: user.id, vote });
+          ensureUserPublicProfile(user).catch(() => {});
+          
+          if (vote === 'pro') newProVotes += 1;
+          else newConVotes += 1;
 
-            // Award points for pro vote
-            if (vote === 'pro' && document.gamificationEnabled && topicSuggestion) {
-              const suggestionCreatorList = await base44.entities.User.filter({ email: topicSuggestion.created_by });
-              if (suggestionCreatorList.length > 0) {
-                const suggestionCreator = suggestionCreatorList[0];
-                const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
-                if (freshUser) {
-                  const newPoints = (freshUser.points || 1000) + 10;
-                  await base44.entities.User.update(freshUser.id, { points: newPoints });
-                  
-                  await base44.entities.PointsTransaction.create({
-                    userId: suggestionCreator.id,
-                    amount: 10,
-                    action: 'vote_received',
-                    description: `קיבל הצבעה בעד על הצעת עריכת כותרת`,
-                    relatedEntityType: 'topic'
-                  });
-                }
-              }
-            }
+          // Award points for pro vote - fire and forget
+          if (vote === 'pro' && document.gamificationEnabled && topicSuggestion) {
+            base44.entities.User.filter({ email: topicSuggestion.created_by }).then(list => {
+              const creator = list[0];
+              if (!creator) return;
+              const newPoints = (creator.points || 1000) + 10;
+              return Promise.all([
+                base44.entities.User.update(creator.id, { points: newPoints }),
+                base44.entities.PointsTransaction.create({
+                  userId: creator.id,
+                  amount: 10,
+                  action: 'vote_received',
+                  description: `קיבל הצבעה בעד על הצעת עריכת כותרת`,
+                  relatedEntityType: 'topic'
+                })
+              ]);
+            }).catch(() => {});
           }
         }
         
-        // עדכון ההצעה עם הערכים החדשים
-        updatedSuggestion = await base44.entities.TopicEditSuggestion.update(suggestionId, {
+        // עדכון ספירת הצבעות
+        const updatedSuggestion = await base44.entities.TopicEditSuggestion.update(suggestionId, {
           proVotes: newProVotes,
           conVotes: newConVotes
         });
 
-      // Check consensus and auto-accept - שימוש בחישוב דינמי של הסף
-      const delta = updatedSuggestion.proVotes - updatedSuggestion.conVotes;
-      const consensuses = document.consensuses || [];
-      const totalUsers = document.totalUsersInteracted || 1;
-      let dynamicThreshold;
-      if (consensuses.length > 0) {
-        const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-        dynamicThreshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
-      } else {
-        dynamicThreshold = Math.max(2, document.threshold || 2);
-      }
-      
-      if (delta >= dynamicThreshold && topicSuggestion) {
-        // Get current topic for version tracking
-        const currentTopic = topics.find(t => t.id === topicSuggestion.topicId);
-        
-        // Accept suggestion - update topic title
-        await base44.entities.Topic.update(topicSuggestion.topicId, {
-          title: topicSuggestion.newTitle
-        });
-        
-        // שינויי כותרות נושאים לא נספרים במד הקונצנזוס - רק עריכות תוכן סעיפים
-        console.log('[TOPIC VOTE ACCEPTANCE] Skipping consensus meter update for topic title changes');
-        
-        await base44.entities.TopicEditSuggestion.update(suggestionId, {
-          status: 'accepted'
-        });
-
-        // Award points to creator
-        if (document.gamificationEnabled) {
-          const suggestionCreatorList = await base44.entities.User.filter({ email: topicSuggestion.created_by });
-          if (suggestionCreatorList.length > 0) {
-            const suggestionCreator = suggestionCreatorList[0];
-            const freshUser = await base44.entities.User.filter({ id: suggestionCreator.id }).then(u => u[0]);
-            if (freshUser) {
-              const newPoints = (freshUser.points || 1000) + 100;
-              await base44.entities.User.update(freshUser.id, { points: newPoints });
-              
-              await base44.entities.PointsTransaction.create({
-                userId: suggestionCreator.id,
-                amount: 100,
-                action: 'suggestion_accepted',
-                description: `ההצעה שלך לעריכת כותרת נושא התקבלה`,
-                relatedEntityType: 'topic'
-              });
-            }
-          }
+        // בדיקת קונצנזוס ואישור אוטומטי
+        const delta = updatedSuggestion.proVotes - updatedSuggestion.conVotes;
+        const consensuses = document.consensuses || [];
+        const totalUsers = document.totalUsersInteracted || 1;
+        let dynamicThreshold;
+        if (consensuses.length > 0) {
+          const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
+          dynamicThreshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
+        } else {
+          dynamicThreshold = Math.max(2, document.threshold || 2);
         }
-
-        // Show success notification immediately
-        toast.success('🎉 ההצעה לעריכת כותרת התקבלה!', {
-          description: 'הכותרת עודכנה במסמך',
-          duration: 4000,
-        });
         
-        // Refresh all relevant queries in parallel - don't await
-        Promise.all([
-          queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
-          queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
-          queryClient.invalidateQueries({ queryKey: ['document', document.id] }),
-          queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
-          queryClient.invalidateQueries({ queryKey: ['versions', document.id] })
-        ]);
-      }
+        if (delta >= dynamicThreshold && topicSuggestion) {
+          await Promise.all([
+            base44.entities.Topic.update(topicSuggestion.topicId, { title: topicSuggestion.newTitle }),
+            base44.entities.TopicEditSuggestion.update(suggestionId, { status: 'accepted' })
+          ]);
+
+          // Award acceptance points - fire and forget
+          if (document.gamificationEnabled) {
+            base44.entities.User.filter({ email: topicSuggestion.created_by }).then(list => {
+              const creator = list[0];
+              if (!creator) return;
+              const newPoints = (creator.points || 1000) + 100;
+              return Promise.all([
+                base44.entities.User.update(creator.id, { points: newPoints }),
+                base44.entities.PointsTransaction.create({
+                  userId: creator.id,
+                  amount: 100,
+                  action: 'suggestion_accepted',
+                  description: `ההצעה שלך לעריכת כותרת נושא התקבלה`,
+                  relatedEntityType: 'topic'
+                })
+              ]);
+            }).catch(() => {});
+          }
+
+          toast.success('🎉 ההצעה לעריכת כותרת התקבלה!', { description: 'הכותרת עודכנה במסמך', duration: 4000 });
+          
+          Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
+            queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
+            queryClient.invalidateQueries({ queryKey: ['document', document.id] }),
+            queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
+            queryClient.invalidateQueries({ queryKey: ['versions', document.id] })
+          ]);
+        }
       } catch (err) {
         throw err;
       } finally {
-        // מסירים מהרשימה אחרי שהפעולה הסתיימה
         topicVotingInProgressRef.current.delete(suggestionId);
       }
     },
