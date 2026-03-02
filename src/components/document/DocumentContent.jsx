@@ -989,6 +989,7 @@ Return ONLY the translated text:`;
                               onClearNewlyCreated={onClearNewlyCreated}
                               targetSuggestionId={targetSuggestionId}
                               publicProfiles={publicProfiles}
+                              allDocumentSuggestions={suggestions}
                             />
                           </div>
                             {/* Show suggestions after the last section */}
