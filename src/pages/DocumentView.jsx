@@ -538,7 +538,7 @@ export default function DocumentView() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documentAgreements', documentId] });
+      queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
       setShowAgreementModal(false);
     },
   });
@@ -552,7 +552,7 @@ export default function DocumentView() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documentAgreements', documentId] });
+      queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
     },
   });
 
