@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   X, ThumbsUp, ThumbsDown, MessageSquare, Clock, 
-  CheckCircle, XCircle, AlertCircle, Trash2, ExternalLink, Edit2, Save, Loader2
+  CheckCircle, XCircle, AlertCircle, Trash2, ExternalLink, Edit2, Save, Loader2, ShieldCheck
 } from "lucide-react";
 import VotesNeededCounter from "./VotesNeededCounter";
 import CommentsSection from "./CommentsSection";
