@@ -521,6 +521,10 @@ export default function GroupView() {
           groupId={groupId}
           isOpen={showManageMembers}
           onClose={() => setShowManageMembers(false)}
+          onGroupDeleted={() => {
+            queryClient.invalidateQueries({ queryKey: ['groups'] });
+            navigate(createPageUrl("Groups"));
+          }}
         />
 
         <InviteMemberDialog
