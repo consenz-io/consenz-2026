@@ -1273,7 +1273,7 @@ export default function DocumentView() {
       </div>
 
       <React.Suspense fallback={<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"><div className="bg-white p-4 rounded-lg shadow-lg">טוען...</div></div>}>
-        {showCreateSuggestion && (
+        {showCreateSuggestion && canParticipate && (
           <CreateSuggestionModal
             document={document}
             topics={topics}
