@@ -850,12 +850,13 @@ Return ONLY the translated text:`;
                               </div>
                             )}
                             <SectionCarousel
-                              section={section}
-                              pendingSuggestions={allSectionSuggestions}
-                              document={document}
-                              user={user}
-                              onEditSection={onEditSection}
-                              onDirectEdit={onDirectEdit}
+                             section={section}
+                             pendingSuggestions={allSectionSuggestions}
+                             document={document}
+                             user={user}
+                             canParticipate={canParticipate}
+                             onEditSection={onEditSection}
+                             onDirectEdit={onDirectEdit}
                               toggleComments={toggleComments}
                               showComments={showComments}
                               getCommentsCount={getCommentsCount}
