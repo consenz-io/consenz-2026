@@ -62,7 +62,7 @@ function LayoutContent({ children, currentPageName }) {
     queryFn: () => base44.entities.Suggestion.list(),
     enabled: !!user?.id,
     initialData: [],
-    staleTime: 30000, // 30 seconds - subscriptions will update faster
+    staleTime: 0,
   });
 
   const { data: allVotes = [] } = useQuery({
@@ -70,7 +70,7 @@ function LayoutContent({ children, currentPageName }) {
     queryFn: () => base44.entities.Vote.list(),
     enabled: !!user?.id,
     initialData: [],
-    staleTime: 30000, // 30 seconds - subscriptions will update faster
+    staleTime: 0,
   });
 
 
