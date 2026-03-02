@@ -380,6 +380,28 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
           </div>
         </form>
 
+        <div className="space-y-3 border-b pb-4">
+          <h3 className="font-semibold text-sm text-red-700">
+            {language === 'he' ? 'מחיקת קבוצה' : 'Delete Group'}
+          </h3>
+          <p className="text-xs text-slate-500">
+            {language === 'he' ? 'פעולה זו אינה הפיכה. כל הנתונים יימחקו לצמיתות.' : 'This action is irreversible. All data will be permanently deleted.'}
+          </p>
+          <Button
+            variant="outline"
+            className="text-red-600 border-red-200 hover:bg-red-50"
+            onClick={async () => {
+              if (!confirm(language === 'he' ? 'האם למחוק את הקבוצה לצמיתות? פעולה זו אינה הפיכה.' : 'Permanently delete this group? This cannot be undone.')) return;
+              await base44.entities.Group.delete(groupId);
+              onClose();
+              onGroupDeleted?.();
+            }}
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            {language === 'he' ? 'מחק קבוצה' : 'Delete Group'}
+          </Button>
+        </div>
+
         <div className="space-y-3">
           <h3 className="font-semibold text-sm text-slate-700">
             {language === 'he' ? 'חברי הקבוצה' : 'Group Members'} ({groupMembers.length})
