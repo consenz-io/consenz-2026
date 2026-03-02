@@ -679,15 +679,9 @@ const SectionCarousel = React.memo(function SectionCarousel({
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (!user) {
-                          base44.auth.redirectToLogin(window.location.href);
-                          return;
-                        }
-                        voteMutation.mutate({
-                          suggestionId: currentView.data.id,
-                          vote: 'pro',
-                          currentVote: getUserVote(currentView.data.id)
-                        });
+                        if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
+                        if (!canParticipate) { toast.error(language === 'he' ? 'אינך חבר בקבוצה זו' : 'You are not a member of this group'); return; }
+                        voteMutation.mutate({ suggestionId: currentView.data.id, vote: 'pro', currentVote: getUserVote(currentView.data.id) });
                       }}
                       disabled={voteMutation.isPending}
                       className={`text-xs px-2 md:px-3 ${getUserVote(currentView.data.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
@@ -700,15 +694,9 @@ const SectionCarousel = React.memo(function SectionCarousel({
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (!user) {
-                          base44.auth.redirectToLogin(window.location.href);
-                          return;
-                        }
-                        voteMutation.mutate({
-                          suggestionId: currentView.data.id,
-                          vote: 'con',
-                          currentVote: getUserVote(currentView.data.id)
-                        });
+                        if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
+                        if (!canParticipate) { toast.error(language === 'he' ? 'אינך חבר בקבוצה זו' : 'You are not a member of this group'); return; }
+                        voteMutation.mutate({ suggestionId: currentView.data.id, vote: 'con', currentVote: getUserVote(currentView.data.id) });
                       }}
                       disabled={voteMutation.isPending}
                       className={`text-xs px-2 md:px-3 ${getUserVote(currentView.data.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
