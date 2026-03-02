@@ -459,7 +459,7 @@ export default function CommentsSection({ entityType, entityId, user }) {
       };
       
       queryClient.setQueryData(['comments', entityType, entityId], (old = []) => {
-        return [tempComment, ...old];
+        return [...old, tempComment];
       });
       
       setNewComment("");
