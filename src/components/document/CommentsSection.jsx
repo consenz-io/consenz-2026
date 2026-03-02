@@ -354,42 +354,29 @@ export default function CommentsSection({ entityType, entityId, user }) {
   const [error, setError] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: allComments, isLoading } = useQuery({
+  // Single query: fetch all comments for this entity (top-level + replies) in one call
+  const { data: comments = [], isLoading } = useQuery({
     queryKey: ['comments', entityType, entityId],
-    queryFn: () => base44.entities.Comment.filter({ 
-      rootEntityType: entityType, 
-      rootEntityId: entityId 
-    }, 'created_date'),
+    queryFn: async () => {
+      // Fetch top-level comments first, then all replies by rootEntityId in parallel
+      const topLevel = await base44.entities.Comment.filter(
+        { rootEntityType: entityType, rootEntityId: entityId },
+        'created_date'
+      );
+      if (topLevel.length === 0) return [];
+      const parentIds = topLevel.map(c => c.id);
+      const replies = await base44.entities.Comment.filter(
+        { parentCommentId: { $in: parentIds } },
+        'created_date'
+      );
+      const all = [...topLevel, ...replies];
+      // Deduplicate by id and sort chronologically
+      const unique = Array.from(new Map(all.map(c => [c.id, c])).values());
+      return unique.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+    },
     initialData: [],
     enabled: !!entityType && !!entityId,
   });
-
-  const allParentIds = React.useMemo(() => {
-    return allComments.map(c => c.id);
-  }, [allComments]);
-
-  const { data: repliesComments, isLoading: repliesLoading } = useQuery({
-    queryKey: ['replies', allParentIds],
-    queryFn: async () => {
-      if (allParentIds.length === 0) return [];
-      // Fetch replies for each parent ID in parallel
-      const repliesArrays = await Promise.all(
-        allParentIds.map(parentId => 
-          base44.entities.Comment.filter({ parentCommentId: parentId }, 'created_date')
-        )
-      );
-      return repliesArrays.flat();
-    },
-    initialData: [],
-    enabled: allParentIds.length > 0,
-  });
-
-  const comments = React.useMemo(() => {
-    const existingIds = new Set(allComments.map(c => c.id));
-    const newReplies = repliesComments.filter(r => !existingIds.has(r.id));
-    const combined = [...allComments, ...newReplies];
-    return combined.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-  }, [allComments, repliesComments]);
 
   const { data: users } = useQuery({
     queryKey: ['users'],
