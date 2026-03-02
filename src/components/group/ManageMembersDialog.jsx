@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
-export default function ManageMembersDialog({ groupId, isOpen, onClose }) {
+export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupDeleted }) {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [inviteEmail, setInviteEmail] = useState("");
