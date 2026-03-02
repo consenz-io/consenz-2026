@@ -423,7 +423,12 @@ export default function SuggestionSidebar({
         });
       }
 
-      await base44.entities.Suggestion.update(suggestionId, { status });
+      await base44.entities.Suggestion.update(suggestionId, { 
+        status,
+        // סימון מפורש שהצעה זו אושרה על ידי אדמין ולא עברה את רף ההצבעות
+        // מונע השפעה על מד הקונסנזוס
+        ...(status === 'accepted' ? { approvedByAdmin: true } : {})
+      });
       
       // שליחת התראה על שינוי סטטוס - חובה לחכות שתסתיים
       console.log('[UPDATE STATUS] Sending status change notifications...');
