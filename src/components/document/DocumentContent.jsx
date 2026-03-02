@@ -688,17 +688,21 @@ Return ONLY the translated text:`;
                               
                               {/* Edit button */}
                               <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  if (!user) {
-                                    base44.auth.redirectToLogin(window.location.href);
-                                    return;
-                                  }
-                                  setEditingTopic(topic);
-                                }}
-                                className="h-8 w-8 p-0 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
-                                title="הצע עריכה לכותרת"
+                               variant="ghost"
+                               size="sm"
+                               onClick={() => {
+                                 if (!user) {
+                                   base44.auth.redirectToLogin(window.location.href);
+                                   return;
+                                 }
+                                 if (!canParticipate) {
+                                   toast.error(language === 'he' ? 'אינך חבר בקבוצה זו' : 'You are not a member of this group');
+                                   return;
+                                 }
+                                 setEditingTopic(topic);
+                               }}
+                               className="h-8 w-8 p-0 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
+                               title="הצע עריכה לכותרת"
                               >
                                 <Edit className="w-4 h-4" />
                               </Button>
