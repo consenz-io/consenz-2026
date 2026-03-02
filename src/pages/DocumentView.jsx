@@ -125,7 +125,7 @@ export default function DocumentView() {
     },
     enabled: !!documentId,
     initialData: [],
-    staleTime: Infinity, // Real-time via subscription
+    staleTime: 0,
     retry: 2,
   });
 
