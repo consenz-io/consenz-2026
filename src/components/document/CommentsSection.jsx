@@ -358,19 +358,22 @@ export default function CommentsSection({ entityType, entityId, user }) {
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ['comments', entityType, entityId],
     queryFn: async () => {
-      // Fetch top-level comments first, then all replies by rootEntityId in parallel
+      // Fetch all top-level comments for this entity
       const topLevel = await base44.entities.Comment.filter(
         { rootEntityType: entityType, rootEntityId: entityId },
         'created_date'
       );
       if (topLevel.length === 0) return [];
+      // Fetch replies in a single $in query using parent IDs
       const parentIds = topLevel.map(c => c.id);
-      const replies = await base44.entities.Comment.filter(
-        { parentCommentId: { $in: parentIds } },
-        'created_date'
-      );
+      const [replies] = await Promise.all([
+        base44.entities.Comment.filter(
+          { parentCommentId: { $in: parentIds } },
+          'created_date'
+        )
+      ]);
+      // Deduplicate and sort chronologically
       const all = [...topLevel, ...replies];
-      // Deduplicate by id and sort chronologically
       const unique = Array.from(new Map(all.map(c => [c.id, c])).values());
       return unique.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
     },
