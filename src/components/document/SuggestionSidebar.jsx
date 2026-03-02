@@ -625,6 +625,11 @@ export default function SuggestionSidebar({
             {suggestion.status === 'accepted' && suggestion.updated_date && (
               <span className="text-green-600">• ✓ {t('acceptedOn')} {new Date(suggestion.updated_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
             )}
+            {suggestion.approvedByAdmin && suggestion.status === 'accepted' && (
+              <span className="inline-flex items-center gap-1 text-indigo-700 font-medium">
+                • <ShieldCheck className="w-3 h-3" /> {language === 'he' ? 'אושר ע״י מנהל' : language === 'ar' ? 'تمت الموافقة من المشرف' : 'Admin Approved'}
+              </span>
+            )}
           </div>
 
           {/* Explanation - always show for creator, editable */}

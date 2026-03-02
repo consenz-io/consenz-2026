@@ -547,7 +547,10 @@ export default function SuggestionDetail() {
       await new Promise(resolve => setTimeout(resolve, 300));
 
       await retryWithBackoff(() =>
-        base44.entities.Suggestion.update(suggestionId, { status })
+        base44.entities.Suggestion.update(suggestionId, { 
+          status,
+          ...(status === 'accepted' ? { approvedByAdmin: true } : {})
+        })
       );
       
       // קבלת ההצעה המעודכנת מהשרת
