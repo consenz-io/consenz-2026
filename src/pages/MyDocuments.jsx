@@ -55,6 +55,7 @@ export default function MyDocuments() {
     queryFn: () => base44.entities.Suggestion.list(),
     enabled: !!user?.id,
     initialData: [],
+    staleTime: 0, // Always fresh - needed for accurate unvoted count
   });
 
   const { data: allVotes } = useQuery({
@@ -62,6 +63,7 @@ export default function MyDocuments() {
     queryFn: () => base44.entities.Vote.list(),
     enabled: !!user?.id,
     initialData: [],
+    staleTime: 0, // Always fresh - needed for accurate unvoted count
   });
 
   const { data: allUsers } = useQuery({
