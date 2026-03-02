@@ -45,7 +45,7 @@ export default function DocumentContent({
   const [showComments, setShowComments] = useState({});
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
   const [editingTopic, setEditingTopic] = useState(null);
-  const [autoAcceptingIds, setAutoAcceptingIds] = useState({});
+
   const queryClient = useQueryClient();
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
