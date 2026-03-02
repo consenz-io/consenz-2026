@@ -521,6 +521,40 @@ export default function DocumentView() {
     enabled: !!user?.id && !!documentId,
   });
 
+  // Fetch group info for privacy enforcement
+  const { data: groupData } = useQuery({
+    queryKey: ['documentGroup', document?.groupId],
+    queryFn: async () => {
+      if (!document?.groupId) return null;
+      const [groups, members] = await Promise.all([
+        base44.entities.Group.filter({ id: document.groupId }),
+        base44.entities.GroupMember.filter({ groupId: document.groupId }),
+      ]);
+      return { group: groups[0] || null, members };
+    },
+    enabled: !!document?.groupId,
+    staleTime: 2 * 60 * 1000,
+  });
+
+  // Derived privacy checks
+  const groupPrivacy = React.useMemo(() => {
+    if (!groupData?.group) return { canView: true, canParticipate: true };
+    const group = groupData.group;
+    const members = groupData.members || [];
+    const isSystemAdmin = user?.role === 'admin';
+    const isGroupMember = user?.id && members.some(m => m.userId === user.id);
+    const isGroupCreator = user?.email && group.created_by === user.email;
+    const hasAccess = isSystemAdmin || isGroupMember || isGroupCreator;
+
+    if (group.status === 'hidden') {
+      return { canView: hasAccess, canParticipate: hasAccess };
+    }
+    if (group.status === 'private') {
+      return { canView: true, canParticipate: hasAccess };
+    }
+    return { canView: true, canParticipate: true };
+  }, [groupData, user]);
+
 
 
   const userHasAgreed = React.useMemo(() => {
