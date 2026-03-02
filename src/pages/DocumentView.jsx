@@ -861,6 +861,43 @@ export default function DocumentView() {
     );
   }
 
+  // Group privacy enforcement
+  if (!groupPrivacy.canView) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6">
+        <div className="max-w-6xl mx-auto text-center py-12 md:py-20">
+          <div className="bg-white rounded-xl shadow p-8 max-w-md mx-auto space-y-4">
+            <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
+              <Settings className="w-7 h-7 text-slate-500" />
+            </div>
+            <h1 className="text-xl font-bold text-slate-900">
+              {language === 'he' ? 'מסמך חסוי' : language === 'ar' ? 'مستند محظور' : 'Document Restricted'}
+            </h1>
+            <p className="text-slate-500 text-sm">
+              {language === 'he'
+                ? 'מסמך זה שייך לקבוצה חסויה. רק חברי הקבוצה יכולים לצפות בו.'
+                : language === 'ar'
+                ? 'هذا المستند ينتمي إلى مجموعة مخفية. فقط أعضاء المجموعة يمكنهم الوصول إليه.'
+                : 'This document belongs to a hidden group. Only group members can view it.'}
+            </p>
+            {!user && (
+              <Button onClick={() => base44.auth.redirectToLogin()} className="bg-gradient-to-r from-blue-600 to-indigo-600">
+                {t('signIn')}
+              </Button>
+            )}
+            <Link to={createPageUrl("Groups")}>
+              <Button variant="outline" className="w-full">
+                {language === 'he' ? 'לעמוד הקבוצות' : language === 'ar' ? 'إلى المجموعات' : 'Go to Groups'}
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const canParticipate = groupPrivacy.canParticipate;
+
   return (
     <TranslationProvider>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-1 md:p-6 w-full max-w-full overflow-x-hidden pb-24">
