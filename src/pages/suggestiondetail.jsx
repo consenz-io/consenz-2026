@@ -1093,6 +1093,7 @@ export default function SuggestionDetail() {
             )}
 
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 pt-4 border-t">
+              {document?.votingButtonsEnabled && (
               <div className="flex gap-3 md:gap-6 flex-wrap items-center">
                 <div className="text-center">
                   <div className="text-xl md:text-2xl font-bold text-green-600">{suggestion.proVotes || 0}</div>
@@ -1114,6 +1115,7 @@ export default function SuggestionDetail() {
                   />
                 </div>
               </div>
+              )}
 
               {suggestion.status === 'pending' && document?.votingButtonsEnabled && (
                 <div className="flex gap-2 w-full md:w-auto relative">
