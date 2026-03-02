@@ -25,6 +25,17 @@ Deno.serve(async (req) => {
       return Response.json({ message: 'Document not found' }, { status: 200 });
     }
 
+    // אם הצעה אושרה על ידי אדמין (לא דרך הצבעות) - עדכן מד קונסנזוס רק להצעות שעברו את רף ההצבעות
+    // הצעות שאושרו על ידי אדמין מסומנות עם approvedByAdmin=true ולא משפיעות על המד
+    if (suggestion.status === 'accepted' && suggestion.approvedByAdmin === true) {
+      console.log('[AUTOMATION] Suggestion approved by admin override - skipping consensus meter update');
+    } else if (suggestion.status === 'accepted' && !suggestion.approvedByAdmin) {
+      // הצעה שהגיעה לסטטוס accepted ללא סימון approvedByAdmin -
+      // כלומר אושרה דרך processAcceptance או autoAcceptSuggestion (עברה הצבעות)
+      // החישוב כבר בוצע שם, אין צורך לעשות כלום כאן
+      console.log('[AUTOMATION] Suggestion accepted via vote threshold - consensus already updated by processAcceptance');
+    }
+
     // קבלת יוצר ההצעה
     const creatorUser = await base44.asServiceRole.entities.User.filter({ email: suggestion.created_by }).then(u => u[0]);
     if (!creatorUser) {
