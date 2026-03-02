@@ -519,10 +519,7 @@ export default function Home() {
                           <Users className="w-4 h-4" aria-hidden="true" />
                           <span>{groupParticipantsCount} {language === 'he' ? 'משתתפים' : 'participants'}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-slate-600">
-                          <Clock className="w-4 h-4" aria-hidden="true" />
-                          <span>{new Date(group.created_date).toLocaleDateString()}</span>
-                        </div>
+
                       </div>
                     </CardContent>
                   </Card>
