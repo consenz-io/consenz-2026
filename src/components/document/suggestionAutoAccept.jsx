@@ -207,6 +207,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
   });
   
   // עדכון המסמך עם הערכים החדשים
+  // (הצעה זו הגיעה לכאן רק דרך autoAcceptSuggestion - כלומר עברה את רף ההצבעות, לא אדמין)
   await base44.entities.Document.update(document.id, {
     consensuses: updatedConsensuses,
     threshold: newThreshold
