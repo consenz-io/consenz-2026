@@ -35,6 +35,7 @@ export default function DocumentContent({
   onNewSection,
   isAdmin,
   user,
+  canParticipate = true,
   onDirectEdit,
   onOpenSuggestionSidebar,
   newlyCreatedSuggestion,
