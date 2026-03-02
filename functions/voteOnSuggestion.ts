@@ -100,10 +100,6 @@ Deno.serve(async (req) => {
     const documentResults = await base44.asServiceRole.entities.Document.filter({ id: suggestion.documentId });
     const document = documentResults[0];
 
-    if (!suggestion) {
-      return Response.json({ error: 'Suggestion not found' }, { status: 404 });
-    }
-
     if (!document) {
       return Response.json({ error: 'Document not found' }, { status: 404 });
     }
