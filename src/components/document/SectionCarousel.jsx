@@ -705,26 +705,17 @@ const SectionCarousel = React.memo(function SectionCarousel({
                       {currentView.data.conVotes || 0}
                     </Button>
                   </>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-1 text-green-600 text-xs md:text-sm">
-                      <ThumbsUp className="w-3 h-3 md:w-4 md:h-4" />
-                      <span className="font-medium">{currentView.data.proVotes || 0}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-red-600 text-xs md:text-sm">
-                      <ThumbsDown className="w-3 h-3 md:w-4 md:h-4" />
-                      <span className="font-medium">{currentView.data.conVotes || 0}</span>
-                    </div>
-                  </>
+                ) : null}
+                {document?.votingButtonsEnabled && (
+                  <div className="flex-shrink-0">
+                    <VotesNeededCounter 
+                      suggestion={currentView.data} 
+                      document={document} 
+                      acceptedSuggestions={acceptedSuggestions}
+                      sectionId={section.id}
+                    />
+                  </div>
                 )}
-                <div className="flex-shrink-0">
-                  <VotesNeededCounter 
-                    suggestion={currentView.data} 
-                    document={document} 
-                    acceptedSuggestions={acceptedSuggestions}
-                    sectionId={section.id}
-                  />
-                </div>
                 {(() => {
                  const creatorEmail = currentView?.data?.created_by;
                  if (!creatorEmail) return null;
