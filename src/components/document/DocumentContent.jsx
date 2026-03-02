@@ -91,10 +91,8 @@ export default function DocumentContent({
     initialData: [],
   });
 
-  // בדיקה ואישור אוטומטי של הצעות שעברו את רף הקונסנזוס
+  // מעקב לשימוש ב-hook של הצבעה
   const hasCheckedRef = React.useRef(new Set());
-  // מעקב אחרי הצעות שכבר ראינו כ-accepted כדי להציג toast רק פעם אחת
-  const shownAcceptedToastsRef = React.useRef(new Set());
 
   // Scroll to newly created suggestion
   React.useEffect(() => {
