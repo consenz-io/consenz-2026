@@ -38,61 +38,44 @@ const SectionCarousel = React.memo(function SectionCarousel({
   newlyCreatedSuggestionId,
   onClearNewlyCreated,
   targetSuggestionId,
-  publicProfiles = []
+  publicProfiles = [],
+  allDocumentSuggestions = []
 }) {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  // שליפת כל ההצעות של הסעיף (לא רק pending) כדי לעקוב אחרי שינויי סטטוס
-  const { data: allSectionSuggestions = [] } = useQuery({
-    queryKey: ['suggestions', document?.id],
-    queryFn: () => base44.entities.Suggestion.filter({ documentId: document?.id }),
-    enabled: !!document?.id,
-    initialData: [],
-    select: (data) => {
-      if (!data) return [];
-      
-      // הצעות ישירות לסעיף הזה (כולל accepted - כדי למצוא הצעות edit_suggestion)
-      const directSuggestions = data.filter(s => 
-        s.sectionId === section.id && 
-        (s.type === 'edit_section' || s.type === 'delete_section')
-      );
-      
-      // מצא IDs של כל ההצעות השייכות לסעיף (גם accepted)
-      const sectionSuggestionIds = new Set(directSuggestions.map(s => s.id));
-      
-      // הצעות edit_suggestion שמקושרות להצעות של הסעיף הזה (גם אם האב התקבל)
-      const editSuggestions = data.filter(s => 
-        s.type === 'edit_suggestion' && 
-        s.parentSuggestionId && 
-        sectionSuggestionIds.has(s.parentSuggestionId)
-      );
-      
-      // מחזיר רק pending מכל הסוגים (directSuggestions + editSuggestions)
-      return [...directSuggestions, ...editSuggestions].filter(s => s.status === 'pending');
-    },
-    staleTime: 0,
-  });
+  // חישוב מקומי של הצעות הסעיף מתוך allDocumentSuggestions שהועבר כ-prop
+  const allSectionSuggestions = React.useMemo(() => {
+    if (!allDocumentSuggestions || allDocumentSuggestions.length === 0) return [];
+    
+    const directSuggestions = allDocumentSuggestions.filter(s => 
+      s.sectionId === section.id && 
+      (s.type === 'edit_section' || s.type === 'delete_section')
+    );
+    
+    const sectionSuggestionIds = new Set(directSuggestions.map(s => s.id));
+    
+    const editSuggestions = allDocumentSuggestions.filter(s => 
+      s.type === 'edit_suggestion' && 
+      s.parentSuggestionId && 
+      sectionSuggestionIds.has(s.parentSuggestionId)
+    );
+    
+    return [...directSuggestions, ...editSuggestions].filter(s => s.status === 'pending');
+  }, [allDocumentSuggestions, section.id]);
 
-  // מצא את ה-accepted suggestion הראשון של הסעיף הזה - לשימוש בתגובות
-  // כך כל התגובות על הסעיף מקושרות להצעה, ולא לסעיף עצמו
-  const { data: sectionAcceptedSuggestion } = useQuery({
-    queryKey: ['sectionAcceptedSuggestion', section?.id],
-    queryFn: async () => {
-      const accepted = await base44.entities.Suggestion.filter({ 
-        sectionId: section.id, 
-        status: 'accepted',
-        type: 'edit_section'
-      });
-      // מחזיר את ההצעה הראשונה שנוצרה (יצירת הסעיף)
-      if (accepted.length === 0) return null;
-      return accepted.sort((a, b) => new Date(a.created_date) - new Date(b.created_date))[0];
-    },
-    enabled: !!section?.id,
-    staleTime: 5 * 60 * 1000,
-  });
+  // חישוב מקומי של accepted suggestion לצורך תגובות
+  const sectionAcceptedSuggestion = React.useMemo(() => {
+    const accepted = allDocumentSuggestions.filter(s => 
+      s.sectionId === section.id && 
+      s.status === 'accepted' && 
+      s.type === 'edit_section'
+    );
+    if (accepted.length === 0) return null;
+    return accepted.sort((a, b) => new Date(a.created_date) - new Date(b.created_date))[0];
+  }, [allDocumentSuggestions, section.id]);
 
   // entityType ו-entityId לתגובות על הסעיף הנוכחי:
   // אם קיימת accepted suggestion - משתמשים בה (suggestion), אחרת section
