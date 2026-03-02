@@ -982,20 +982,19 @@ Return ONLY the translated text:`;
                               isAdmin={isAdmin}
                               onEditSuggestion={onEditSuggestion}
                               allDocumentSuggestions={suggestions}
-                              isAutoAccepting={!!autoAcceptingIds[suggestion.id]}
                               targetSuggestionId={targetSuggestionId}
-                            />
-                            </CardContent>
-                            </Card>
-                            ))}
-                            </div>
-                            )}
-                            </Draggable>
-                            );
-                            })}
-                            {provided.placeholder}
+                              />
+                              </CardContent>
+                              </Card>
+                              ))}
+                              </div>
+                              )}
+                              </Draggable>
+                              );
+                              })}
+                              {provided.placeholder}
 
-                            {/* הצעות לנושאים חדשים בסוף (שלא שויכו לנושא מסוים) */}
+                              {/* הצעות לנושאים חדשים בסוף (שלא שויכו לנושא מסוים) */}
                             {getNewTopicSuggestions()
                             .filter(s => {
                             // אם אין newTopicOrder - הצג בסוף
