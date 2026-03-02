@@ -1262,6 +1262,7 @@ export default function DocumentView() {
             onNewSection={handleNewSection}
             isAdmin={isAdmin}
             user={user}
+            canParticipate={canParticipate}
             onDirectEdit={(section) => handleEditSection(section, true)}
             onOpenSuggestionSidebar={(suggestionId) => setOpenSuggestionId(suggestionId)}
             newlyCreatedSuggestion={newlyCreatedSuggestion}
