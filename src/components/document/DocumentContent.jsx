@@ -21,7 +21,7 @@ import EditTopicModal from "./EditTopicModal";
 import TopicTitleCarousel from "./TopicTitleCarousel";
 
 import { useLanguage } from "@/components/LanguageContext";
-import { checkSuggestionConsensus, autoAcceptSuggestion, autoAcceptTopicEditSuggestion, checkTopicEditConsensus } from "./suggestionAutoAccept";
+import { autoAcceptTopicEditSuggestion, checkTopicEditConsensus } from "./suggestionAutoAccept";
 import { votingQueue } from "./VotingQueue";
 import { useVoteMutation } from "./hooks/useVoteMutation";
 import { toast } from "sonner";
