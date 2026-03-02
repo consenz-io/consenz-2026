@@ -341,28 +341,13 @@ export default function GroupView() {
 
           <div className="flex gap-2">
             {isAdmin && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowManageMembers(true)}
-                >
-                  <Settings className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {language === 'he' ? 'ניהול' : 'Manage'}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="text-red-600 border-red-200 hover:bg-red-50"
-                  onClick={async () => {
-                    if (!confirm(language === 'he' ? 'האם למחוק את הקבוצה לצמיתות? פעולה זו אינה הפיכה.' : 'Permanently delete this group? This cannot be undone.')) return;
-                    await base44.entities.Group.delete(groupId);
-                    queryClient.invalidateQueries({ queryKey: ['groups'] });
-                    navigate(createPageUrl("Groups"));
-                  }}
-                >
-                  <Trash2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {language === 'he' ? 'מחק קבוצה' : 'Delete Group'}
-                </Button>
-              </>
+              <Button
+                variant="outline"
+                onClick={() => setShowManageMembers(true)}
+              >
+                <Settings className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {language === 'he' ? 'ניהול' : 'Manage'}
+              </Button>
             )}
             {currentUser && !isMember && group.status === 'public' && (
               <Button
