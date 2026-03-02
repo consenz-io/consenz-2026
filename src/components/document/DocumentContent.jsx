@@ -128,110 +128,36 @@ export default function DocumentContent({
     }
   }, [newlyCreatedSuggestion, onClearNewlyCreated, suggestions, topics]);
 
-  // Auto-accept runs only when vote counts change - not on every render
-  const lastCheckRef = React.useRef(Date.now());
-  
+  // Auto-accept for section suggestions is handled entirely by the backend (voteOnSuggestion → processAcceptance).
+  // Frontend only handles topic-edit suggestions auto-accept (no backend equivalent for those).
   React.useEffect(() => {
-    if (!document || !suggestions) return;
+    if (!document || !topicEditSuggestions || topicEditSuggestions.length === 0) return;
 
-    // Throttle checks to max once per 5 seconds to avoid rate limits
-    const now = Date.now();
-    if (now - lastCheckRef.current < 5000) {
-      return;
-    }
-    lastCheckRef.current = now;
+    const checkTopicSuggestions = async () => {
+      for (const topicSuggestion of topicEditSuggestions) {
+        if (topicSuggestion.status !== 'pending') continue;
 
-    const checkAndAutoAccept = async () => {
-      // בדיקת הצעות סעיפים שעברו את הסף אבל לא התקבלו - עבור edit_section, delete_section, edit_suggestion, ו-new_section
-      const pendingSuggestions = suggestions.filter(s => s.status === 'pending' && (s.type === 'edit_section' || s.type === 'delete_section' || s.type === 'edit_suggestion' || s.type === 'new_section'));
-      for (const suggestion of pendingSuggestions) {
-        const consensuses = document.consensuses || [];
-        let threshold;
-        if (consensuses.length > 0) {
-          const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-          threshold = Math.max(2, Math.round(consensusMeterAverage * (document.totalUsersInteracted || 1)));
-        } else {
-          threshold = Math.max(2, document.threshold || 2);
-        }
-        const delta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
-        const shouldAccept = delta >= threshold;
+        const checkKey = `topic-${topicSuggestion.id}-${topicSuggestion.proVotes}-${topicSuggestion.conVotes}`;
+        if (hasCheckedRef.current.has(checkKey)) continue;
+        hasCheckedRef.current.add(checkKey);
 
-        if (shouldAccept && !hasCheckedRef.current.has(`${suggestion.id}-accepted`)) {
-          console.log('[AUTO-ACCEPT SECTION] Auto-accepting section suggestion:', suggestion.id);
-          hasCheckedRef.current.add(`${suggestion.id}-accepted`);
-          
-          // סמן את ההצעה כעומדת לאישור
-          setAutoAcceptingIds(prev => ({ ...prev, [suggestion.id]: true }));
-          
-          try {
-            const acceptingUserId = user?.id || suggestion.created_by;
-            const accepted = await autoAcceptSuggestion(suggestion, acceptingUserId, document);
+        try {
+          const { shouldAccept } = await checkTopicEditConsensus(topicSuggestion, document);
+          if (shouldAccept) {
+            console.log('[AUTO-ACCEPT TOPIC] Auto-accepting topic suggestion:', topicSuggestion.id);
+            const acceptingUserId = user?.id || topicSuggestion.created_by;
+            const accepted = await autoAcceptTopicEditSuggestion(topicSuggestion, acceptingUserId, document);
             if (accepted) {
-              // עדכון מיידי של הקאש - optimistic update
-              queryClient.setQueryData(['suggestions', document.id], (old) => {
-                if (!old) return old;
-                return old.map(s => 
-                  s.id === suggestion.id 
-                    ? { ...s, status: 'accepted' }
-                    : s
-                );
-              });
-
-              // רענון מיידי של כל הקווריז
               Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['sections', document.id] }),
-                queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] }),
-                queryClient.invalidateQueries({ queryKey: ['document', document.id] }),
                 queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
-                queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
-                queryClient.invalidateQueries({ queryKey: ['versions', document.id] })
+                queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
+                queryClient.invalidateQueries({ queryKey: ['document', document.id] })
               ]);
             }
-          } catch (err) {
-            console.error('[AUTO-ACCEPT SECTION] Error:', err);
-            console.error('[AUTO-ACCEPT SECTION] Error message:', err.message);
-            console.error('[AUTO-ACCEPT SECTION] Error stack:', err.stack);
-            hasCheckedRef.current.delete(`${suggestion.id}-accepted`);
-            toast.error('שגיאה באישור ההצעה: ' + err.message);
-          } finally {
-            // הסר את הסמון של עומד לאישור
-            setAutoAcceptingIds(prev => {
-              const next = { ...prev };
-              delete next[suggestion.id];
-              return next;
-            });
           }
-        }
-      }
-      
-      // בדיקת הצעות עריכת כותרות נושאים
-      if (topicEditSuggestions && topicEditSuggestions.length > 0) {
-        for (const topicSuggestion of topicEditSuggestions) {
-          if (topicSuggestion.status !== 'pending') continue;
-
-          const checkKey = `topic-${topicSuggestion.id}-${topicSuggestion.proVotes}-${topicSuggestion.conVotes}`;
-          if (hasCheckedRef.current.has(checkKey)) continue;
-          hasCheckedRef.current.add(checkKey);
-
-          try {
-            const { shouldAccept, threshold } = await checkTopicEditConsensus(topicSuggestion, document);
-
-            if (shouldAccept) {
-              console.log('[AUTO-ACCEPT TOPIC] Auto-accepting topic suggestion:', topicSuggestion.id);
-              const acceptingUserId = user?.id || topicSuggestion.created_by;
-              const accepted = await autoAcceptTopicEditSuggestion(topicSuggestion, acceptingUserId, document);
-              if (accepted) {
-                Promise.all([
-                  queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
-                  queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
-                  queryClient.invalidateQueries({ queryKey: ['document', document.id] })
-                ]);
-              }
-            }
-          } catch (err) {
-            console.error('[AUTO-ACCEPT TOPIC] Error:', err);
-            hasCheckedRef.current.delete(checkKey);
-          }
+        } catch (err) {
+          console.error('[AUTO-ACCEPT TOPIC] Error:', err);
+          hasCheckedRef.current.delete(checkKey);
         }
       }
 
@@ -240,8 +166,8 @@ export default function DocumentContent({
       }
     };
 
-    checkAndAutoAccept();
-  }, [topicEditSuggestions, document, user, queryClient, suggestions]);
+    checkTopicSuggestions();
+  }, [topicEditSuggestions, document, user, queryClient]);
 
   // Fetch all comments for this document's suggestions and sections to show counts
   const { data: allDocumentComments = [] } = useQuery({
