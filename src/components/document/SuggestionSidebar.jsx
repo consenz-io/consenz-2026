@@ -726,6 +726,7 @@ export default function SuggestionSidebar({
           )}
 
           {/* Voting stats */}
+          {(document || parentDocument)?.votingButtonsEnabled && (
           <div className="flex items-center gap-4 py-3 border-y border-slate-200">
             <div className="text-center">
               <div className="text-xl font-bold text-green-600">{suggestion.proVotes || 0}</div>
@@ -747,6 +748,7 @@ export default function SuggestionSidebar({
               />
             </div>
           </div>
+          )}
 
           {/* Vote buttons */}
           {user && suggestion.status === 'pending' && (document || parentDocument)?.votingButtonsEnabled && (
