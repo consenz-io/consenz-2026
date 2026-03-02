@@ -333,41 +333,54 @@ export default function DocumentView() {
     return directSectionComments + suggestionBasedSectionComments;
   }, [allComments, sections, suggestions]);
 
-  // Calculate contributors count - same logic as ContributorsModal
-  const contributorsCount = React.useMemo(() => {
-    if (!document || !publicProfiles.length) return 0;
+  // Calculate contributors count - fetched once on page load using exact same logic as ContributorsModal
+  const { data: contributorsCount = 0 } = useQuery({
+    queryKey: ['contributorsCount', documentId],
+    queryFn: async () => {
+      const [docSuggestions, docSections, allVotesRaw, publicProfilesRaw, allCommentsRaw, allAgreementsRaw] = await Promise.all([
+        base44.entities.Suggestion.filter({ documentId }),
+        base44.entities.Section.filter({ documentId }),
+        base44.entities.Vote.list(),
+        base44.entities.UserPublicProfile.list(),
+        base44.entities.Comment.list(),
+        base44.entities.DocumentAgreement.filter({ documentId }),
+      ]);
 
-    const suggestionIds = new Set(suggestions.map(s => s.id));
-    const sectionIds = new Set(sections.map(s => s.id));
-    const contributorEmails = new Set();
+      const contributorEmails = new Set();
+      const suggestionIds = new Set(docSuggestions.map(s => s.id));
+      const sectionIds = new Set(docSections.map(s => s.id));
 
-    // 1. Voters
-    allVotes.forEach(v => {
-      if (suggestionIds.has(v.suggestionId)) {
-        if (v.created_by) contributorEmails.add(v.created_by);
-        const profile = publicProfiles.find(p => p.userId === v.userId);
-        if (profile?.email) contributorEmails.add(profile.email);
-      }
-    });
-    // 2. Commenters
-    allComments.forEach(c => {
-      if (!c.created_by) return;
-      if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) contributorEmails.add(c.created_by);
-      if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) contributorEmails.add(c.created_by);
-      if (c.rootEntityType === 'document' && c.rootEntityId === document.id) contributorEmails.add(c.created_by);
-    });
-    // 3. Signers
-    documentAgreements.forEach(a => { if (a.userEmail) contributorEmails.add(a.userEmail); });
+      // 1. Voters
+      allVotesRaw.forEach(v => {
+        if (suggestionIds.has(v.suggestionId)) {
+          if (v.created_by) contributorEmails.add(v.created_by);
+          const profile = publicProfilesRaw.find(p => p.userId === v.userId);
+          if (profile?.email) contributorEmails.add(profile.email);
+        }
+      });
+      // 2. Commenters
+      allCommentsRaw.forEach(c => {
+        if (!c.created_by) return;
+        if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) contributorEmails.add(c.created_by);
+        if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) contributorEmails.add(c.created_by);
+        if (c.rootEntityType === 'document' && c.rootEntityId === documentId) contributorEmails.add(c.created_by);
+      });
+      // 3. Signers
+      allAgreementsRaw.forEach(a => { if (a.userEmail) contributorEmails.add(a.userEmail); });
 
-    // Count unique users who have a public profile (same as modal)
-    const contributorsMap = new Map();
-    publicProfiles.forEach(profile => {
-      if (contributorEmails.has(profile.email) && profile.userId) {
-        contributorsMap.set(profile.userId, true);
-      }
-    });
-    return contributorsMap.size;
-  }, [document?.id, allVotes, allComments, documentAgreements, suggestions, sections, publicProfiles]);
+      // Count unique users who have a public profile (same as modal)
+      const contributorsMap = new Map();
+      publicProfilesRaw.forEach(profile => {
+        if (contributorEmails.has(profile.email) && profile.userId) {
+          contributorsMap.set(profile.userId, true);
+        }
+      });
+      return contributorsMap.size;
+    },
+    enabled: !!documentId,
+    staleTime: Infinity, // Only fetch once per page load
+    cacheTime: 5 * 60 * 1000,
+  });
 
   // Get pending suggestions ordered by section appearance
   // Excludes edit_suggestion type since those are shown inside the parent suggestion's sidebar,
