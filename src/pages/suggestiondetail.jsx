@@ -1106,12 +1106,10 @@ export default function SuggestionDetail() {
                   <div className="flex items-center gap-1">
                     <ThumbsUp className="w-4 h-4 text-green-500" />
                     <span className="text-xl font-bold text-green-600">{suggestion.proVotes || 0}</span>
-                    <span className="text-xs text-slate-500 ml-1">{t('proVotes')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <ThumbsDown className="w-4 h-4 text-red-500" />
                     <span className="text-xl font-bold text-red-600">{suggestion.conVotes || 0}</span>
-                    <span className="text-xs text-slate-500 ml-1">{t('conVotes')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <span className="text-xl font-bold text-blue-600">{consensusScore}%</span>
