@@ -765,13 +765,20 @@ const SectionCarousel = React.memo(function SectionCarousel({
                         variant="ghost"
                         size="sm"
                         onClick={() => toggleComments(`suggestion-${currentView.data.id}`)}
-                        className={`h-7 md:h-8 text-xs px-2 transition-all ${
+                        className={`h-7 md:h-8 text-xs px-2 transition-all relative ${
                           hasComments
                             ? 'font-bold text-blue-700 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 shadow-sm'
                             : 'text-slate-600 hover:text-blue-600'
                         }`}
                       >
-                        <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'} ${hasComments ? 'fill-blue-200' : ''}`} />
+                        <div className="relative">
+                          <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'} ${hasComments ? 'fill-blue-200' : ''}`} />
+                          {hasComments && (
+                            <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-blue-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center leading-none">
+                              {count > 9 ? '9+' : count}
+                            </span>
+                          )}
+                        </div>
                         {t('comments')}{hasComments ? ` (${count})` : ''}
                       </Button>
                     );
