@@ -823,20 +823,18 @@ export default function SuggestionDetail() {
             />
           </div>
           {user && user.email === suggestion.created_by && suggestion.status !== 'accepted' && (
-            <Button
-              variant="destructive"
-              size="sm"
+            <button
               onClick={() => {
                 if (confirm(t('confirmDeleteSuggestion'))) {
                   deleteSuggestionMutation.mutate();
                 }
               }}
               disabled={deleteSuggestionMutation.isPending}
-              className="w-full md:w-auto shrink-0"
+              className="shrink-0 p-1 text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors"
+              title={t('deleteSuggestion')}
             >
-              <Trash2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {t('deleteSuggestion')}
-            </Button>
+              <Trash2 className="w-4 h-4" />
+            </button>
           )}
         </div>
         
