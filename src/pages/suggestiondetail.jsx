@@ -1099,109 +1099,100 @@ export default function SuggestionDetail() {
               </div>
             )}
 
-            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 pt-4 border-t">
-              {document?.votingButtonsEnabled && (
-              <div className="flex gap-3 md:gap-6 flex-wrap items-center">
-                <div className="text-center">
-                  <div className="text-xl md:text-2xl font-bold text-green-600">{suggestion.proVotes || 0}</div>
-                  <div className="text-[10px] md:text-xs text-slate-500">{t('proVotes')}</div>
+            {document?.votingButtonsEnabled && (
+              <div className="pt-4 border-t space-y-4">
+                {/* Stats row */}
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-1">
+                    <ThumbsUp className="w-4 h-4 text-green-500" />
+                    <span className="text-xl font-bold text-green-600">{suggestion.proVotes || 0}</span>
+                    <span className="text-xs text-slate-500 ml-1">{t('proVotes')}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <ThumbsDown className="w-4 h-4 text-red-500" />
+                    <span className="text-xl font-bold text-red-600">{suggestion.conVotes || 0}</span>
+                    <span className="text-xs text-slate-500 ml-1">{t('conVotes')}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xl font-bold text-blue-600">{consensusScore}%</span>
+                    <span className="text-xs text-slate-500 ml-1">{t('consensus')}</span>
+                  </div>
+                  <div className="flex-1">
+                    <VotesNeededCounter 
+                      suggestion={suggestion} 
+                      document={document}
+                      acceptedSuggestions={allDocumentSuggestions.filter(s => s.status === 'accepted')}
+                    />
+                  </div>
                 </div>
-                <div className="text-center">
-                  <div className="text-xl md:text-2xl font-bold text-red-600">{suggestion.conVotes || 0}</div>
-                  <div className="text-[10px] md:text-xs text-slate-500">{t('conVotes')}</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl md:text-2xl font-bold text-blue-600">{consensusScore}%</div>
-                  <div className="text-[10px] md:text-xs text-slate-500">{t('consensus')}</div>
-                </div>
-                <div className="flex-1">
-                  <VotesNeededCounter 
-                    suggestion={suggestion} 
-                    document={document}
-                    acceptedSuggestions={allDocumentSuggestions.filter(s => s.status === 'accepted')}
-                  />
-                </div>
-              </div>
-              )}
 
-              {suggestion.status === 'pending' && document?.votingButtonsEnabled && (
-                <div className="flex gap-2 w-full md:w-auto relative">
-                  {voteMutation.isPending && !rateLimitRetryAfter && (
-                    <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10">
-                      <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-                    </div>
-                  )}
-                  {rateLimitRetryAfter && (
-                    <div className="absolute inset-0 bg-amber-50/95 rounded-lg flex flex-col items-center justify-center z-10 gap-2 p-2">
-                      <Clock className="w-5 h-5 text-amber-600 animate-pulse" />
-                      <p className="text-xs font-medium text-amber-800 text-center">
-                        {language === 'he' ? `אנא המתן ${rateLimitRetryAfter} שניות` : 
-                         language === 'ar' ? `يرجى الانتظار ${rateLimitRetryAfter} ثانية` :
-                         `Please wait ${rateLimitRetryAfter} seconds`}
-                      </p>
-                    </div>
-                  )}
-                  <Button
-                    variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
-                    onClick={() => {
-                      if (!user) {
-                        base44.auth.redirectToLogin(window.location.href);
-                        return;
-                      }
-                      voteMutation.mutate('pro');
-                    }}
-                    disabled={voteMutation.isPending || rateLimitRetryAfter !== null}
-                    className={`flex-1 md:flex-initial text-xs md:text-sm ${userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
-                  >
-                    <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
-                    {t('votePro')}
-                  </Button>
-                  <Button
-                    variant={userVote?.vote === 'con' ? 'default' : 'outline'}
-                    onClick={() => {
-                      if (!user) {
-                        base44.auth.redirectToLogin(window.location.href);
-                        return;
-                      }
-                      voteMutation.mutate('con');
-                    }}
-                    disabled={voteMutation.isPending || rateLimitRetryAfter !== null}
-                    className={`flex-1 md:flex-initial text-xs md:text-sm ${userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
-                  >
-                    <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1 md:ml-2' : 'mr-1 md:mr-2'}`} />
-                    {t('voteCon')}
-                  </Button>
-                </div>
-              )}
-            </div>
+                {/* Vote buttons row */}
+                {suggestion.status === 'pending' && (
+                  <div className="flex gap-3 relative">
+                    {voteMutation.isPending && !rateLimitRetryAfter && (
+                      <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10">
+                        <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                      </div>
+                    )}
+                    {rateLimitRetryAfter && (
+                      <div className="absolute inset-0 bg-amber-50/95 rounded-lg flex items-center justify-center z-10 gap-2 p-2">
+                        <Clock className="w-4 h-4 text-amber-600 animate-pulse" />
+                        <p className="text-xs font-medium text-amber-800">
+                          {language === 'he' ? `אנא המתן ${rateLimitRetryAfter} שניות` : 
+                           language === 'ar' ? `يرجى الانتظار ${rateLimitRetryAfter} ثانية` :
+                           `Please wait ${rateLimitRetryAfter} seconds`}
+                        </p>
+                      </div>
+                    )}
+                    <Button
+                      variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
+                      onClick={() => {
+                        if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
+                        voteMutation.mutate('pro');
+                      }}
+                      disabled={voteMutation.isPending || rateLimitRetryAfter !== null}
+                      className={`flex-1 ${userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700 border-green-600' : 'border-green-300 text-green-700 hover:bg-green-50'}`}
+                    >
+                      <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {t('votePro')}
+                    </Button>
+                    <Button
+                      variant={userVote?.vote === 'con' ? 'default' : 'outline'}
+                      onClick={() => {
+                        if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
+                        voteMutation.mutate('con');
+                      }}
+                      disabled={voteMutation.isPending || rateLimitRetryAfter !== null}
+                      className={`flex-1 ${userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700 border-red-600' : 'border-red-300 text-red-700 hover:bg-red-50'}`}
+                    >
+                      <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                      {t('voteCon')}
+                    </Button>
+                  </div>
+                )}
 
-            {isAdmin && suggestion.status === 'pending' && (
-              <div className="flex flex-col md:flex-row gap-2 pt-4 border-t">
-                <Button
-                  onClick={() => updateStatusMutation.mutate('accepted')}
-                  disabled={updateStatusMutation.isPending}
-                  className="bg-green-600 hover:bg-green-700 w-full md:w-auto text-xs md:text-sm"
-                >
-                  {updateStatusMutation.isPending ? (
-                    <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
-                  ) : (
-                    <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  )}
-                  {t('acceptSuggestion')}
-                </Button>
-                <Button
-                  onClick={() => updateStatusMutation.mutate('rejected')}
-                  disabled={updateStatusMutation.isPending}
-                  variant="destructive"
-                  className="w-full md:w-auto text-xs md:text-sm"
-                >
-                  {updateStatusMutation.isPending ? (
-                    <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
-                  ) : (
-                    <XCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  )}
-                  {t('rejectSuggestion')}
-                </Button>
+                {/* Admin actions */}
+                {isAdmin && suggestion.status === 'pending' && (
+                  <div className="flex gap-2 pt-3 border-t">
+                    <Button
+                      onClick={() => updateStatusMutation.mutate('accepted')}
+                      disabled={updateStatusMutation.isPending}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                    >
+                      {updateStatusMutation.isPending ? <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} /> : <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
+                      {t('acceptSuggestion')}
+                    </Button>
+                    <Button
+                      onClick={() => updateStatusMutation.mutate('rejected')}
+                      disabled={updateStatusMutation.isPending}
+                      variant="destructive"
+                      className="flex-1"
+                    >
+                      {updateStatusMutation.isPending ? <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} /> : <XCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
+                      {t('rejectSuggestion')}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
