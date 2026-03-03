@@ -112,7 +112,7 @@ const VotesNeededCounter = React.memo(function VotesNeededCounter({ suggestion, 
 
   return (
     <Link to={`${createPageUrl("UnderstandingConsensus")}?id=${document?.id}&returnUrl=${encodeURIComponent(returnUrl)}`}>
-      <Badge variant="outline" className="flex items-center gap-1 cursor-pointer hover:bg-slate-100 transition-colors">
+      <Badge variant="outline" className="flex items-center gap-1 cursor-pointer hover:bg-slate-100 transition-colors w-full justify-center">
         <Target className="w-3 h-3" />
         {t('votesNeededToPass').replace('{count}', votesNeeded)}
       </Badge>
