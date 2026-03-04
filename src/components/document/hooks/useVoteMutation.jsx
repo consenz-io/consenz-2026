@@ -119,10 +119,13 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef) {
         queryClient.setQueryData(['userVotes', document?.id, user?.id], context.previousVotes);
       }
       
-      // Handle rate limit errors with countdown
-      if (err.response?.status === 429 || err.message?.includes('המתן') || err.message?.toLowerCase().includes('wait')) {
-        const remainingSeconds = err.response?.data?.remainingSeconds || 30;
-        toast.error(`נא להמתין ${remainingSeconds} שניות לפני הצבעה נוספת`, { duration: remainingSeconds * 1000 });
+      // Handle rate limit errors
+      const isRateLimit = err.response?.status === 429 
+        || err.message?.toLowerCase().includes('rate limit')
+        || err.message?.toLowerCase().includes('too many')
+        || err.message?.includes('המתן');
+      if (isRateLimit) {
+        toast.error('ההצבעה לא נקלטה. נסו שוב בעוד 15 שניות', { duration: 15000 });
       } else {
         const errorMessage = err.response?.data?.error || err.message || 'שגיאה בהצבעה, נסה שוב';
         toast.error(errorMessage);
