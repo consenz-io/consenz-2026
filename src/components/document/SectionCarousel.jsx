@@ -714,24 +714,33 @@ const SectionCarousel = React.memo(function SectionCarousel({
                   </>
                 ) : null}
                 {document?.votingButtonsEnabled && (
-                  <div className="flex-shrink-0">
+                  <div className="flex-shrink-0 flex items-center gap-2">
                     <VotesNeededCounter 
                       suggestion={currentView.data} 
                       document={document} 
                       acceptedSuggestions={acceptedSuggestions}
                       sectionId={section.id}
                     />
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="text-[10px] md:text-xs h-7 md:h-8 px-2 md:px-3 flex-shrink-0"
+                      onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
+                    >
+                      {t('viewDetails')}
+                    </Button>
                   </div>
                 )}
-
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="text-[10px] md:text-xs h-7 md:h-8 px-2 md:px-3 flex-shrink-0"
-                  onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
-                >
-                  {t('viewDetails')}
-                </Button>
+                {!document?.votingButtonsEnabled && (
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-[10px] md:text-xs h-7 md:h-8 px-2 md:px-3 flex-shrink-0"
+                    onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
+                  >
+                    {t('viewDetails')}
+                  </Button>
+                )}
               </div>
             )}
 
