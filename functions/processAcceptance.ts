@@ -198,7 +198,7 @@ Deno.serve(async (req) => {
         status: 'accepted',
         originalContent: suggestion.newContent,
         suggestionConsensus: boundedConsensus,
-        participantsAtAcceptance: totalUsers,
+        participantsAtAcceptance: participantsAtAcceptance,
         threshold: newThreshold,
         parentSuggestionId: null
       });
@@ -257,7 +257,7 @@ Deno.serve(async (req) => {
         base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
           status: 'accepted',
           suggestionConsensus: boundedConsensus,
-          participantsAtAcceptance: totalUsers
+          participantsAtAcceptance: participantsAtAcceptance
         })
       );
     }
@@ -314,11 +314,13 @@ Deno.serve(async (req) => {
     
     // Fetch all users by email
     let allUsers = [];
+    let creator = null;
     if (contributorEmails.size > 0) {
-      const emailArray = Array.from(contributorEmails);
-      allUsers = await base44.asServiceRole.entities.User.filter({ email: { $in: emailArray } });
+     const emailArray = Array.from(contributorEmails);
+     allUsers = await base44.asServiceRole.entities.User.filter({ email: { $in: emailArray } });
+     creator = allUsers.find(u => u.email === suggestion.created_by);
     }
-    
+
     // Build notifications
     for (const user of allUsers) {
       if (user.email === suggestion.created_by) {
