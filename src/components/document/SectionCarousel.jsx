@@ -16,6 +16,7 @@ import TranslatableContent from "./TranslatableContent";
 import DocumentTextContent from "./DocumentTextContent";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import JoinGroupDialog from "@/components/group/JoinGroupDialog";
 
 const SectionCarousel = React.memo(function SectionCarousel({
   section,
