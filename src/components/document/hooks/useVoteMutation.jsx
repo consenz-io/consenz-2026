@@ -119,6 +119,14 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
         queryClient.setQueryData(['userVotes', document?.id, user?.id], context.previousVotes);
       }
       
+      // Handle "not a group member" error - show join dialog instead of toast
+      const errorMessage = err.response?.data?.error || err.message || '';
+      const isNotMember = errorMessage.includes('אינך חבר') || errorMessage.includes('not a member') || errorMessage.toLowerCase().includes('group member');
+      if (isNotMember && onNotMember) {
+        onNotMember();
+        return;
+      }
+
       // Handle rate limit errors
       const isRateLimit = err.response?.status === 429 
         || err.message?.toLowerCase().includes('rate limit')
@@ -127,8 +135,7 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
       if (isRateLimit) {
         toast.error('ההצבעה לא נקלטה. נסו שוב בעוד 15 שניות', { duration: 15000 });
       } else {
-        const errorMessage = err.response?.data?.error || err.message || 'שגיאה בהצבעה, נסה שוב';
-        toast.error(errorMessage);
+        toast.error(errorMessage || 'שגיאה בהצבעה, נסה שוב');
       }
     },
     onSuccess: (data, variables) => {
