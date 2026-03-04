@@ -991,7 +991,7 @@ export default function DocumentView() {
           </div>
 
           {/* Document Discussion and Comments */}
-          <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-4 relative">
+          <div className={`relative ${document.description || isAdmin || showDescriptionComments ? 'bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-4' : ''}`}>
               {!isEditingDescription && (
                 <div className="absolute top-2 left-2 z-10">
                   {isTranslatingDescription ? (
