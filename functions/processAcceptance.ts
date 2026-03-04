@@ -12,10 +12,9 @@ const detectLanguage = (text) => {
 
 // Calculate contributors efficiently - single batch query
 async function calculateContributors(base44, documentId) {
-  const [suggestions, votes, profiles, comments, sections, agreements] = await Promise.all([
+  const [suggestions, votes, comments, sections, agreements] = await Promise.all([
     base44.entities.Suggestion.filter({ documentId }),
     base44.entities.Vote.list(),
-    base44.entities.UserPublicProfile.list(),
     base44.entities.Comment.list(),
     base44.entities.Section.filter({ documentId }),
     base44.entities.DocumentAgreement.filter({ documentId })
@@ -23,11 +22,15 @@ async function calculateContributors(base44, documentId) {
 
   const uniqueEmails = new Set();
   
+  // Collect from suggestion creators
+  suggestions.forEach(s => {
+    if (s.created_by) uniqueEmails.add(s.created_by);
+  });
+  
   // Collect from votes
   const suggestionIds = suggestions.map(s => s.id);
   votes.filter(v => suggestionIds.includes(v.suggestionId)).forEach(v => {
-    const profile = profiles.find(p => p.userId === v.userId);
-    if (profile?.email) uniqueEmails.add(profile.email);
+    if (v.created_by) uniqueEmails.add(v.created_by);
   });
   
   // Collect from comments
