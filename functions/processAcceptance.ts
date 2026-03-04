@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
     // Update document consensus
     const updatedConsensuses = [...(document.consensuses || []), boundedConsensus];
     const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / updatedConsensuses.length;
-    const newThreshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
+    const newThreshold = Math.max(1, Math.round(consensusMeterAverage * totalUsers));
 
     console.log('[PROCESS ACCEPTANCE] Calculated:', { totalUsers, boundedConsensus, newThreshold });
 
