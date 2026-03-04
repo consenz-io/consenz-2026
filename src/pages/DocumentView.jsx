@@ -1330,7 +1330,7 @@ export default function DocumentView() {
               <CheckCircle className="w-5 h-5 text-green-600" />
               {language === 'he' ? 'המסמך עודכן' : language === 'ar' ? 'تم تحديث المستند' : 'Document Updated'}
             </DialogTitle>
-            <DialogDescription dir={isRTL ? 'rtl' : 'ltr'}>
+            <DialogDescription dir={isRTL ? 'rtl' : 'ltr'} className={isRTL ? 'text-right' : 'text-left'}>
               {language === 'he' 
                 ? 'הצעה התקבלה והמסמך עודכן. רענן את העמוד כדי לצפות בגרסה החדשה.'
                 : language === 'ar'
