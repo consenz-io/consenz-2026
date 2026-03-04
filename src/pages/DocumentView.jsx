@@ -1164,9 +1164,9 @@ export default function DocumentView() {
                         }
                       })()}
                     </>
-                  ) : (
+                  ) : isAdmin ? (
                     <p className="text-slate-400 text-sm italic">{t('noDescription')}</p>
-                  )}
+                  ) : null}
                   {isAdmin && (
                     <Button
                       variant="ghost"
