@@ -800,7 +800,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
             size="sm"
             onClick={() => {
               if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
-              if (!canParticipate) { toast.error(language === 'he' ? 'אינך חבר בקבוצה זו' : 'You are not a member of this group'); return; }
+              if (!canParticipate) { setShowJoinGroupDialog(true); return; }
               onEditSection(section);
             }}
             className="opacity-0 group-hover:opacity-100 transition-opacity"
