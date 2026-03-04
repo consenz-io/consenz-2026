@@ -120,7 +120,7 @@ export default function Profile() {
   });
 
   React.useEffect(() => {
-    if (user) {
+    if (user && !isEditing) {
       setFormData({ 
         full_name: user.full_name || "",
         bio: user.bio || "",
@@ -131,7 +131,7 @@ export default function Profile() {
         website: user.website || "",
       });
     }
-  }, [user]);
+  }, [user?.full_name, user?.bio, user?.linkedin, user?.twitter, user?.facebook, user?.instagram, user?.website, isEditing]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data) => {
