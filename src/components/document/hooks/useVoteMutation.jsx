@@ -157,15 +157,11 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
         });
       }
       
-      if (data?.accepted) {
-        toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', { duration: 4000 });
-      }
-      
       // Emit event for layout to update unvoted count (optimistic decrement)
       window.dispatchEvent(new CustomEvent('consenz:vote-cast'));
       
-      // Real-time subscriptions handle all updates - no manual invalidation needed
-      // This prevents cascading invalidations and rate limit issues
+      // Real-time subscriptions (in DocumentView) will handle all further updates
+      // (section content, suggestion status, document threshold) once processAcceptance completes.
     },
   });
 
