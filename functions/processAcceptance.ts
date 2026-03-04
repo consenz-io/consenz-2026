@@ -23,6 +23,11 @@ async function calculateContributors(base44, documentId) {
 
   const uniqueEmails = new Set();
   
+  // Collect from suggestion creators
+  suggestions.forEach(s => {
+    if (s.created_by) uniqueEmails.add(s.created_by);
+  });
+  
   // Collect from votes
   const suggestionIds = suggestions.map(s => s.id);
   votes.filter(v => suggestionIds.includes(v.suggestionId)).forEach(v => {
@@ -85,18 +90,19 @@ Deno.serve(async (req) => {
     }
 
     // Calculate contributors and consensus
-    const totalUsers = await calculateContributors(base44, documentId);
+    const participantsAtAcceptance = await calculateContributors(base44, documentId);
     
     const delta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
-    const sectionConsensus = (delta + totalUsers) / (2 * totalUsers);
+    const sectionConsensus = (delta + participantsAtAcceptance) / (2 * participantsAtAcceptance);
     const boundedConsensus = Math.min(1, Math.max(0, sectionConsensus));
 
     // Update document consensus
     const updatedConsensuses = [...(document.consensuses || []), boundedConsensus];
     const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / updatedConsensuses.length;
-    const newThreshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
+    // Threshold is locked to the participants count at acceptance time (NOT current totalUsers)
+    const newThreshold = Math.max(2, Math.round(consensusMeterAverage * participantsAtAcceptance));
 
-    console.log('[PROCESS ACCEPTANCE] Calculated:', { totalUsers, boundedConsensus, newThreshold });
+    console.log('[PROCESS ACCEPTANCE] Calculated:', { participantsAtAcceptance, boundedConsensus, newThreshold });
 
     // Process based on suggestion type
     if (suggestion.type === 'edit_section' && suggestion.sectionId) {
@@ -229,7 +235,7 @@ Deno.serve(async (req) => {
       base44.asServiceRole.entities.Document.update(document.id, {
         consensuses: updatedConsensuses,
         threshold: newThreshold,
-        totalUsersInteracted: totalUsers
+        totalUsersInteracted: participantsAtAcceptance
       }),
       // Update threshold on all other pending suggestions
       ...pendingSuggestions
