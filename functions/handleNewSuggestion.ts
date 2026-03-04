@@ -50,6 +50,17 @@ Deno.serve(async (req) => {
     const creatorName = creatorProfile?.fullName || 'User';
     console.log('[SUGGESTION AUTOMATION] Creator:', creatorName);
 
+    // Update new suggestion with current document threshold
+    const currentThreshold = document.threshold || 2;
+    try {
+      await base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
+        threshold: currentThreshold
+      });
+      console.log('[SUGGESTION AUTOMATION] ✅ Set suggestion threshold to:', currentThreshold);
+    } catch (err) {
+      console.error('[SUGGESTION AUTOMATION] ⚠️ Failed to set threshold:', err.message);
+    }
+
     // OPTIMIZED: Batch notifications - skip if no users to notify
     if (uniqueUserIds.length === 0) {
       console.log('[SUGGESTION AUTOMATION] ⏭️ No users to notify, skipping notification creation');
