@@ -8,7 +8,7 @@ import React from "react";
  * OPTIMIZED: Custom hook for voting on suggestions
  * Now uses backend function to reduce API calls from 45+ to 1-2
  */
-export function useVoteMutation(document, user, suggestions, hasCheckedRef) {
+export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNotMember) {
   const queryClient = useQueryClient();
   const votingInProgressRef = React.useRef(new Set());
   
