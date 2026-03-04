@@ -220,17 +220,35 @@ Deno.serve(async (req) => {
     }
 
     // Update document and suggestion status (if not new_section which was already handled)
+    const pendingSuggestions = await base44.asServiceRole.entities.Suggestion.filter({
+      documentId: document.id,
+      status: 'pending'
+    });
+
     const updates = [
       base44.asServiceRole.entities.Document.update(document.id, {
         consensuses: updatedConsensuses,
         threshold: newThreshold,
         totalUsersInteracted: totalUsers
-      })
+      }),
+      // Update threshold on all other pending suggestions
+      ...pendingSuggestions
+        .filter(p => p.id !== suggestionId)
+        .map(p => {
+          // If same section, also update originalContent
+          if (p.type === 'edit_section' && p.sectionId === suggestion.sectionId && suggestion.type === 'edit_section') {
+            return base44.asServiceRole.entities.Suggestion.update(p.id, {
+              threshold: newThreshold,
+              originalContent: suggestion.newContent
+            });
+          }
+          return base44.asServiceRole.entities.Suggestion.update(p.id, { threshold: newThreshold });
+        })
     ];
 
     if (suggestion.type !== 'new_section') {
       updates.push(
-        base44.entities.Suggestion.update(suggestion.id, {
+        base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
           status: 'accepted',
           suggestionConsensus: boundedConsensus,
           participantsAtAcceptance: totalUsers
