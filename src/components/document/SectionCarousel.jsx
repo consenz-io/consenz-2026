@@ -864,6 +864,13 @@ const SectionCarousel = React.memo(function SectionCarousel({
         isOpen={showHistorySidebar}
         onClose={() => setShowHistorySidebar(false)}
       />
+
+      <JoinGroupDialog
+        isOpen={showJoinGroupDialog}
+        onClose={() => setShowJoinGroupDialog(false)}
+        groupId={document?.groupId}
+        groupName={document?.groupId ? undefined : undefined}
+      />
     </div>
   );
 });
