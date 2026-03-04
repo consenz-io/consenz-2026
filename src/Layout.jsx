@@ -85,12 +85,19 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
-  // Calculate unvoted suggestions - simple real-time count
+  // Calculate unvoted suggestions - only in documents the user participated in
   const totalUnvotedSuggestions = React.useMemo(() => {
     if (!user?.id) return 0;
     
-    // Get all pending suggestions (exclude edit_suggestion - those aren't visible as standalone cards)
-    const pendingSuggestions = allSuggestions.filter(s => s.status === 'pending' && s.type !== 'edit_suggestion');
+    // Get document IDs the user participated in
+    const participatedDocumentIds = new Set(userInteractions.map(i => i.documentId));
+    
+    // Get pending suggestions only in documents the user participated in
+    const pendingSuggestions = allSuggestions.filter(s => 
+      s.status === 'pending' && 
+      s.type !== 'edit_suggestion' &&
+      participatedDocumentIds.has(s.documentId)
+    );
     
     // Filter out suggestions the user already voted on
     const unvotedSuggestions = pendingSuggestions.filter(s => 
@@ -98,7 +105,7 @@ function LayoutContent({ children, currentPageName }) {
     );
     
     return unvotedSuggestions.length;
-  }, [user?.id, allSuggestions, allVotes]);
+  }, [user?.id, allSuggestions, allVotes, userInteractions]);
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
