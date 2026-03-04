@@ -258,59 +258,90 @@ Deno.serve(async (req) => {
 
     await Promise.all(updates);
 
-    // Send notifications in batch - optimized single query
+    // Send notifications in batch - fetch all document participants
     console.log('[PROCESS ACCEPTANCE] Preparing notifications...');
     const notifications = [];
     
-    // Fetch all data in one parallel query
-    const [participants, creatorUsers] = await Promise.all([
-      base44.entities.UserInteraction.filter({ documentId: document.id }),
-      suggestion.created_by ? base44.asServiceRole.entities.User.filter({ email: suggestion.created_by }) : []
+    // Fetch all contributors (same logic as DocumentView modal)
+    const [allSuggestions, allVotes, allComments, agreements, allSections] = await Promise.all([
+      base44.entities.Suggestion.filter({ documentId: document.id }),
+      base44.entities.Vote.list(),
+      base44.entities.Comment.list(),
+      base44.entities.DocumentAgreement.filter({ documentId: document.id }),
+      base44.entities.Section.filter({ documentId: document.id })
     ]);
     
-    const participantUserIds = participants.map(p => p.userId).filter(Boolean);
+    // Collect unique contributor emails
+    const contributorEmails = new Set();
     
-    // Single query for all users (creator + participants)
-    const allUserIds = [...new Set([
-      ...(creatorUsers[0] ? [creatorUsers[0].id] : []),
-      ...participantUserIds
-    ])];
+    // From agreements
+    agreements.forEach(a => {
+      if (a.userEmail) contributorEmails.add(a.userEmail);
+    });
     
-    const allUsers = allUserIds.length > 0 
-      ? await base44.asServiceRole.entities.User.filter({ id: { $in: allUserIds } })
-      : [];
+    // From votes on suggestions in this document
+    const suggestionIds = allSuggestions.map(s => s.id);
+    allVotes.forEach(v => {
+      const votedOnThisSuggestion = allSuggestions.some(s => s.id === v.suggestionId);
+      if (votedOnThisSuggestion) {
+        const userEmail = v.created_by;
+        if (userEmail) contributorEmails.add(userEmail);
+      }
+    });
     
-    // Build notifications
-    const creator = creatorUsers[0];
-    if (creator) {
-      notifications.push({
-        userId: creator.id,
-        type: 'suggestion_accepted',
-        title: '🎉 ההצעה שלך התקבלה!',
-        message: `ההצעה "${suggestion.title || 'הצעה'}" התקבלה ונוספה למסמך`,
-        relatedEntityId: suggestion.id,
-        relatedEntityType: 'suggestion',
-        actionUrl: `/document-view?id=${document.id}`,
-        documentId: document.id,
-        documentTitle: document.title
-      });
+    // From comments on suggestions/sections/document
+    const sectionIds = allSections.map(s => s.id);
+    allComments.forEach(c => {
+      if (c.created_by) {
+        const isRelevant = 
+          (c.rootEntityType === 'suggestion' && suggestionIds.includes(c.rootEntityId)) ||
+          (c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)) ||
+          (c.rootEntityType === 'document' && c.rootEntityId === document.id);
+        if (isRelevant) contributorEmails.add(c.created_by);
+      }
+    });
+    
+    // From suggestion creators
+    allSuggestions.forEach(s => {
+      if (s.created_by) contributorEmails.add(s.created_by);
+    });
+    
+    // Fetch all users by email
+    let allUsers = [];
+    if (contributorEmails.size > 0) {
+      const emailArray = Array.from(contributorEmails);
+      allUsers = await base44.asServiceRole.entities.User.filter({ email: { $in: emailArray } });
     }
     
-    // Participants
+    // Build notifications
     for (const user of allUsers) {
-      if (user.email === suggestion.created_by) continue;
-      
-      notifications.push({
-        userId: user.id,
-        type: 'suggestion_accepted',
-        title: 'הצעה התקבלה במסמך',
-        message: `ההצעה "${suggestion.title || 'הצעה'}" התקבלה במסמך "${document.title}"`,
-        relatedEntityId: suggestion.id,
-        relatedEntityType: 'suggestion',
-        actionUrl: `/document-view?id=${document.id}`,
-        documentId: document.id,
-        documentTitle: document.title
-      });
+      if (user.email === suggestion.created_by) {
+        // Creator gets special message
+        notifications.push({
+          userId: user.id,
+          type: 'suggestion_accepted',
+          title: '🎉 ההצעה שלך התקבלה!',
+          message: `ההצעה "${suggestion.title || 'הצעה'}" התקבלה ונוספה למסמך`,
+          relatedEntityId: suggestion.id,
+          relatedEntityType: 'suggestion',
+          actionUrl: `/document-view?id=${document.id}`,
+          documentId: document.id,
+          documentTitle: document.title
+        });
+      } else {
+        // Other participants
+        notifications.push({
+          userId: user.id,
+          type: 'suggestion_accepted',
+          title: 'הצעה התקבלה במסמך',
+          message: `ההצעה "${suggestion.title || 'הצעה'}" התקבלה במסמך "${document.title}"`,
+          relatedEntityId: suggestion.id,
+          relatedEntityType: 'suggestion',
+          actionUrl: `/document-view?id=${document.id}`,
+          documentId: document.id,
+          documentTitle: document.title
+        });
+      }
     }
     
     // Send in one batch
