@@ -66,8 +66,8 @@ function LayoutContent({ children, currentPageName }) {
   });
 
   const { data: allVotes = [] } = useQuery({
-    queryKey: ['allVotes'],
-    queryFn: () => base44.entities.Vote.list(),
+    queryKey: ['allVotes', user?.id],
+    queryFn: () => base44.entities.Vote.filter({ userId: user.id }),
     enabled: !!user?.id,
     initialData: [],
     staleTime: 0,
