@@ -79,9 +79,8 @@ export default function UnderstandingConsensus() {
     ? Math.min(1, consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length)
     : 0;
   
-  // ה-threshold הקבוע מהמסמך - לא מחשבים אותו מחדש!
-  // הוא מתעדכן רק כשהצעה מתקבלת
-  const threshold = Math.max(2, document?.threshold || 2);
+  // חישוב הרף הנוכחי בהתאם לקונסנזוס ומספר משתתפים
+  const threshold = Math.max(1, Math.round(documentConsensusMeter * totalUsers));
 
   if (docLoading || suggestionsLoading) {
     return (
