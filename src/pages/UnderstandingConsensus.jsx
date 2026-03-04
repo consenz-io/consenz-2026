@@ -30,8 +30,48 @@ export default function UnderstandingConsensus() {
     enabled: !!documentId,
   });
 
-  // Use totalUsersInteracted from document (for display purposes)
-  const totalUsers = document?.totalUsersInteracted || 1;
+  // Reuse contributorsCount from DocumentView cache (same query key), fallback to fresh fetch
+  const { data: contributorsCount } = useQuery({
+    queryKey: ['contributorsCount', documentId],
+    queryFn: async () => {
+      const [docSuggestions, docSections, allVotesRaw, publicProfilesRaw, allCommentsRaw, allAgreementsRaw] = await Promise.all([
+        base44.entities.Suggestion.filter({ documentId }),
+        base44.entities.Section.filter({ documentId }),
+        base44.entities.Vote.list(),
+        base44.entities.UserPublicProfile.list(),
+        base44.entities.Comment.list(),
+        base44.entities.DocumentAgreement.filter({ documentId }),
+      ]);
+      const contributorEmails = new Set();
+      const suggestionIds = new Set(docSuggestions.map(s => s.id));
+      const sectionIds = new Set(docSections.map(s => s.id));
+      allVotesRaw.forEach(v => {
+        if (suggestionIds.has(v.suggestionId)) {
+          if (v.created_by) contributorEmails.add(v.created_by);
+          const profile = publicProfilesRaw.find(p => p.userId === v.userId);
+          if (profile?.email) contributorEmails.add(profile.email);
+        }
+      });
+      allCommentsRaw.forEach(c => {
+        if (!c.created_by) return;
+        if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) contributorEmails.add(c.created_by);
+        if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) contributorEmails.add(c.created_by);
+        if (c.rootEntityType === 'document' && c.rootEntityId === documentId) contributorEmails.add(c.created_by);
+      });
+      allAgreementsRaw.forEach(a => { if (a.userEmail) contributorEmails.add(a.userEmail); });
+      const contributorsMap = new Map();
+      publicProfilesRaw.forEach(profile => {
+        if (contributorEmails.has(profile.email) && profile.userId) {
+          contributorsMap.set(profile.userId, true);
+        }
+      });
+      return contributorsMap.size;
+    },
+    enabled: !!documentId,
+    staleTime: Infinity,
+  });
+
+  const totalUsers = contributorsCount || 1;
   const consensuses = document?.consensuses || [];
   
   // מד הקונצנזוס הממוצע - ערך בין 0 ל-1 (מוגבל למקסימום 1)
