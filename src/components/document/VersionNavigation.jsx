@@ -17,18 +17,19 @@ export default function VersionNavigation({
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20 print:hidden">
       <div className="bg-white/95 backdrop-blur-sm border-2 border-slate-300 rounded-full shadow-lg px-4 py-2">
         <div className="flex items-center gap-3">
+          {/* Older version button (index increases = older) */}
           <Button
             variant="outline"
             size="sm"
             onClick={() => onNavigate(Math.min(currentIndex + 1, totalVersions - 1))}
             disabled={currentIndex >= totalVersions - 1}
-            title={language === 'he' ? 'גרסה קודמת' : 'Previous version'}
+            title={language === 'he' ? 'גרסה ישנה יותר' : language === 'ar' ? 'إصدار أقدم' : 'Older version'}
             className="h-9 w-9 p-0 rounded-full"
           >
-            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            <ChevronLeft className="w-4 h-4" />
           </Button>
           
-          <div className="flex flex-col items-center min-w-[80px]">
+          <div className="flex flex-col items-center min-w-[100px]">
             <Badge 
               variant="outline" 
               className={`px-3 text-xs font-semibold ${
@@ -40,7 +41,11 @@ export default function VersionNavigation({
               {currentIndex === 0 ? (
                 language === 'he' ? 'נוכחית' : language === 'ar' ? 'حالية' : 'Current'
               ) : (
-                `${totalVersions - currentIndex}/${totalVersions}`
+                language === 'he' 
+                  ? `גרסה ${totalVersions - currentIndex} מתוך ${totalVersions - 1}`
+                  : language === 'ar'
+                  ? `إصدار ${totalVersions - currentIndex} من ${totalVersions - 1}`
+                  : `Version ${totalVersions - currentIndex} of ${totalVersions - 1}`
               )}
             </Badge>
             {currentSnapshot?.changeDescription && currentIndex > 0 && (
@@ -53,15 +58,16 @@ export default function VersionNavigation({
             )}
           </div>
           
+          {/* Newer version button (index decreases = newer) */}
           <Button
             variant="outline"
             size="sm"
             onClick={() => onNavigate(Math.max(0, currentIndex - 1))}
             disabled={currentIndex === 0}
-            title={language === 'he' ? 'גרסה חדשה יותר' : 'Newer version'}
+            title={language === 'he' ? 'גרסה חדשה יותר' : language === 'ar' ? 'إصدار أحدث' : 'Newer version'}
             className="h-9 w-9 p-0 rounded-full"
           >
-            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
       </div>
