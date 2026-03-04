@@ -57,13 +57,6 @@ export default function Profile() {
     retry: false,
   });
 
-  // Fetch own public profile to get the editable fullName
-  const { data: ownPublicProfile } = useQuery({
-    queryKey: ['ownPublicProfile', currentUser?.id],
-    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: currentUser.id }).then(p => p[0]),
-    enabled: !!currentUser?.id && !viewUserId,
-  });
-
   // Use viewUser if available (own profile or admin), otherwise use viewUserProfile
   const user = viewUserId 
     ? (viewUser || (viewUserProfile ? {
@@ -78,18 +71,7 @@ export default function Profile() {
         instagram: viewUserProfile.instagram,
         website: viewUserProfile.website,
       } : null))
-    : currentUser
-      ? { 
-          ...currentUser, 
-          full_name: ownPublicProfile?.fullName || currentUser.full_name,
-          bio: ownPublicProfile?.bio ?? currentUser.bio,
-          linkedin: ownPublicProfile?.linkedin ?? currentUser.linkedin,
-          twitter: ownPublicProfile?.twitter ?? currentUser.twitter,
-          facebook: ownPublicProfile?.facebook ?? currentUser.facebook,
-          instagram: ownPublicProfile?.instagram ?? currentUser.instagram,
-          website: ownPublicProfile?.website ?? currentUser.website,
-        }
-      : null;
+    : currentUser;
   const isOwnProfile = !viewUserId || (currentUser && viewUserId === currentUser.id);
   const isLoading = viewUserId ? (viewUserLoading || viewUserProfileLoading) : false;
 
