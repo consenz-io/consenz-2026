@@ -5,8 +5,9 @@ import { toast } from "sonner";
 import React from "react";
 
 /**
- * OPTIMIZED: Custom hook for voting on suggestions
- * Now uses backend function to reduce API calls from 45+ to 1-2
+ * Custom hook for voting on suggestions.
+ * All acceptance logic is handled exclusively by the backend (voteOnSuggestion → processAcceptance).
+ * Frontend only handles optimistic updates and UI feedback.
  */
 export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNotMember) {
   const queryClient = useQueryClient();
