@@ -194,7 +194,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
                 onClick={() => setCurrentVersionId('original')}
                 className="text-sm font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer transition-colors"
               >
-                {`${isRTL ? 'עריכה מאת' : 'Edit by'} ${getUserName(currentVersion.created_by)}`}
+                {`${language === 'he' ? 'עריכה מאת' : language === 'ar' ? 'تعديل بواسطة' : 'Edit by'} ${getUserName(currentVersion.created_by)}`}
               </button>
             )}
           </div>
