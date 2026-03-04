@@ -179,15 +179,30 @@ export default function GroupView() {
         ? `שלום,\n\n${userName} מבקש/ת להצטרף לקבוצה "${group?.name}".\n\nאימייל המשתמש: ${currentUser.email}\n\nכדי לאשר או לדחות את הבקשה, היכנס לעמוד ניהול החברים:\n${manageUrl}\n\nתודה!`
         : `Hello,\n\n${userName} would like to join the group "${group?.name}".\n\nUser email: ${currentUser.email}\n\nTo approve or reject this request, go to the member management page:\n${manageUrl}\n\nThank you!`;
 
-      await Promise.all(
-        adminProfiles.map(admin =>
+      // Send email + in-app notification to all admins
+      await Promise.all([
+        ...adminProfiles.map(admin =>
           base44.integrations.Core.SendEmail({
             to: admin.email,
             subject,
             body,
           })
+        ),
+        ...admins.map(admin =>
+          base44.entities.Notification.create({
+            userId: admin.userId,
+            type: 'group_join_request',
+            title: language === 'he' ? `בקשת הצטרפות לקבוצה` : `New join request`,
+            message: language === 'he'
+              ? `${userName} מבקש/ת להצטרף לקבוצה "${group?.name}"`
+              : `${userName} wants to join the group "${group?.name}"`,
+            relatedEntityId: group.id,
+            relatedEntityType: 'document',
+            actionUrl: createPageUrl("GroupView") + `?id=${group.id}`,
+            read: false,
+          })
         )
-      );
+      ]);
     },
   });
 
