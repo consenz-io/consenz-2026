@@ -199,6 +199,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
   const [showTranslated, setShowTranslated] = useState({});
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showHistorySidebar, setShowHistorySidebar] = useState(false);
+  const [showJoinGroupDialog, setShowJoinGroupDialog] = useState(false);
   
   // Effect to scroll to newly created suggestion
   React.useEffect(() => {
