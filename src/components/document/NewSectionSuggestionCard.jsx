@@ -235,7 +235,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       <div className="min-h-[100px]">
         {currentVersion.explanation && typeof currentVersion.explanation === 'string' && (
           <div className="mb-3 text-sm">
-            <div className="font-semibold text-slate-700 mb-1">הסבר:</div>
+            <div className="font-semibold text-slate-700 mb-1">{language === 'he' ? 'הסבר:' : language === 'ar' ? 'الشرح:' : 'Explanation:'}</div>
             <TranslatableContent
               content={currentVersion.explanation}
               entity={currentVersion}
