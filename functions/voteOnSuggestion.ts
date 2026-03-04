@@ -95,6 +95,7 @@ Deno.serve(async (req) => {
     }
 
     const documentResults = await base44.asServiceRole.entities.Document.filter({ id: suggestion.documentId });
+    
     const document = documentResults[0];
 
     if (!document) {
