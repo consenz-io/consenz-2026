@@ -26,7 +26,7 @@ export default function VersionNavigation({
             title={language === 'he' ? 'גרסה ישנה יותר' : language === 'ar' ? 'إصدار أقدم' : 'Older version'}
             className="h-9 w-9 p-0 rounded-full"
           >
-            <ChevronLeft className="w-4 h-4" />
+            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </Button>
           
           <div className="flex flex-col items-center min-w-[100px]">
