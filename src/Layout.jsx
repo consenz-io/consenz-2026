@@ -87,10 +87,23 @@ function LayoutContent({ children, currentPageName }) {
 
   // Calculate unvoted suggestions - only in documents the user participated in
   const totalUnvotedSuggestions = React.useMemo(() => {
-    if (!user?.id) return 0;
+    if (!user?.id || !user?.email) return 0;
     
-    // Get document IDs the user participated in
-    const participatedDocumentIds = new Set(userInteractions.map(i => i.documentId));
+    // Get document IDs the user participated in:
+    // 1. Documents where user created suggestions
+    // 2. Documents where user voted
+    const participatedDocumentIds = new Set();
+    
+    // Add documents from user's own suggestions
+    userSuggestions.forEach(s => {
+      if (s.documentId) participatedDocumentIds.add(s.documentId);
+    });
+    
+    // Add documents from suggestions the user voted on
+    allVotes.forEach(v => {
+      const suggestion = allSuggestions.find(s => s.id === v.suggestionId);
+      if (suggestion?.documentId) participatedDocumentIds.add(suggestion.documentId);
+    });
     
     // Get pending suggestions only in documents the user participated in
     const pendingSuggestions = allSuggestions.filter(s => 
@@ -99,13 +112,14 @@ function LayoutContent({ children, currentPageName }) {
       participatedDocumentIds.has(s.documentId)
     );
     
-    // Filter out suggestions the user already voted on
+    // Filter out suggestions the user already voted on or created themselves
     const unvotedSuggestions = pendingSuggestions.filter(s => 
+      s.created_by !== user.email &&
       !allVotes.some(v => v.suggestionId === s.id && v.userId === user.id)
     );
     
     return unvotedSuggestions.length;
-  }, [user?.id, allSuggestions, allVotes, userInteractions]);
+  }, [user?.id, user?.email, allSuggestions, allVotes, userSuggestions]);
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
