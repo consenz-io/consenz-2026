@@ -73,6 +73,14 @@ function LayoutContent({ children, currentPageName }) {
     staleTime: 0,
   });
 
+  const { data: userInteractions = [] } = useQuery({
+    queryKey: ['userInteractions', user?.id],
+    queryFn: () => base44.entities.UserInteraction.filter({ userId: user.id }),
+    enabled: !!user?.id,
+    initialData: [],
+    staleTime: 5 * 60 * 1000,
+  });
+
 
 
 
