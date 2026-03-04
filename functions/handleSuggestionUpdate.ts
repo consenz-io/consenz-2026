@@ -36,38 +36,35 @@ Deno.serve(async (req) => {
       console.log('[AUTOMATION] Suggestion accepted via vote threshold - consensus already updated by processAcceptance');
     }
 
-    // קבלת יוצר ההצעה
+    // Accepted suggestions: notification is already sent by processAcceptance.
+    // This automation only handles rejected suggestions (admin override).
+    if (suggestion.status === 'accepted') {
+      console.log('[AUTOMATION] Accepted - notification already sent by processAcceptance, skipping');
+      return Response.json({ message: 'Accepted notifications handled by processAcceptance' }, { status: 200 });
+    }
+
+    if (suggestion.status !== 'rejected') {
+      return Response.json({ message: 'Status not rejected, skipping' }, { status: 200 });
+    }
+
+    // שליחת התראה רק על דחייה על ידי אדמין
     const creatorUser = await base44.asServiceRole.entities.User.filter({ email: suggestion.created_by }).then(u => u[0]);
     if (!creatorUser) {
       console.log('[AUTOMATION] Creator not found');
       return Response.json({ message: 'Creator not found' }, { status: 200 });
     }
 
-    let title = '';
-    let message = '';
-    
-    if (suggestion.status === 'accepted') {
-      title = '🎉 ההצעה שלך התקבלה!';
-      message = `ההצעה "${suggestion.title}" התקבלה ונוספה למסמך "${document.title}"`;
-    } else if (suggestion.status === 'rejected') {
-      title = 'ההצעה שלך נדחתה';
-      message = `ההצעה "${suggestion.title}" נדחתה במסמך "${document.title}"`;
-    } else {
-      return Response.json({ message: 'Status not accepted or rejected' }, { status: 200 });
-    }
-
-    // שליחת התראה ליוצר ההצעה
     await base44.asServiceRole.entities.Notification.create({
       userId: creatorUser.id,
-      type: suggestion.status === 'accepted' ? 'suggestion_accepted' : 'suggestion_rejected',
-      title,
-      message,
+      type: 'suggestion_rejected',
+      title: 'ההצעה שלך נדחתה',
+      message: `ההצעה "${suggestion.title}" נדחתה במסמך "${document.title}"`,
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
       actionUrl: `/suggestiondetail?id=${suggestion.id}`
     });
 
-    console.log('[AUTOMATION] Status change notification sent');
+    console.log('[AUTOMATION] Rejection notification sent');
     return Response.json({ success: true });
   } catch (error) {
     console.error('[AUTOMATION ERROR]', error);
