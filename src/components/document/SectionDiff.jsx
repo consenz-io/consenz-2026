@@ -142,27 +142,67 @@ export default function SectionDiff({
   };
 
   // Render inline diff
-  const renderInlineDiff = () => (
-    <div style={contentStyle}>
-      {diff.map((part, idx) => {
-        if (part.type === 'removed') {
-          return (
-            <span key={idx} className="bg-[#fef2f2] text-red-700 line-through opacity-70">
-              {part.value}
-            </span>
-          );
-        } else if (part.type === 'added') {
-          return (
-            <span key={idx} className="bg-[#dcfce7] text-green-800 border-b-2 border-green-500 font-medium">
-              {part.value}
-            </span>
-          );
-        } else {
-          return <span key={idx}>{part.value}</span>;
+  const renderInlineDiff = () => {
+    // Group changed spans with their adjacent whitespace to prevent mid-word line breaks
+    const wrappedParts = [];
+    let i = 0;
+    while (i < diff.length) {
+      const part = diff[i];
+      if (part.type === 'removed' || part.type === 'added') {
+        // Look for adjacent whitespace before (from previous unchanged part)
+        let leadingSpace = '';
+        let trailingSpace = '';
+        
+        // Check if previous part ends with a space — split it
+        if (wrappedParts.length > 0) {
+          const prevPart = wrappedParts[wrappedParts.length - 1];
+          if (prevPart.type === 'unchanged' && prevPart.value.endsWith(' ')) {
+            wrappedParts[wrappedParts.length - 1] = { ...prevPart, value: prevPart.value.slice(0, -1) };
+            leadingSpace = ' ';
+          }
         }
-      })}
-    </div>
-  );
+        
+        // Check if next part starts with a space — include it
+        if (i + 1 < diff.length && diff[i + 1].type === 'unchanged' && diff[i + 1].value.startsWith(' ')) {
+          trailingSpace = ' ';
+          // Will consume one space from next part
+          const nextPart = diff[i + 1];
+          diff[i + 1] = { ...nextPart, value: nextPart.value.slice(1) };
+        }
+        
+        wrappedParts.push({ ...part, leadingSpace, trailingSpace });
+      } else {
+        wrappedParts.push(part);
+      }
+      i++;
+    }
+
+    return (
+      <div style={contentStyle}>
+        {wrappedParts.map((part, idx) => {
+          if (part.type === 'removed') {
+            return (
+              <span key={idx} style={{ whiteSpace: 'nowrap', display: 'inline' }}>
+                {part.leadingSpace}
+                <span className="bg-[#fef2f2] text-red-700 line-through opacity-70">{part.value}</span>
+                {part.trailingSpace}
+              </span>
+            );
+          } else if (part.type === 'added') {
+            return (
+              <span key={idx} style={{ whiteSpace: 'nowrap', display: 'inline' }}>
+                {part.leadingSpace}
+                <span className="bg-[#dcfce7] text-green-800 border-b-2 border-green-500 font-medium">{part.value}</span>
+                {part.trailingSpace}
+              </span>
+            );
+          } else {
+            return <span key={idx}>{part.value}</span>;
+          }
+        })}
+      </div>
+    );
+  };
 
   // Render split view (stacked)
   const renderSplitDiff = () => (
