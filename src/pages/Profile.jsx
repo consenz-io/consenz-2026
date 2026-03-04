@@ -101,8 +101,11 @@ export default function Profile() {
     website: user?.website || "",
   });
 
+  // Initialize form only once when user data first loads
+  const formInitialized = React.useRef(false);
   React.useEffect(() => {
-    if (user && !isEditing) {
+    if (user && !formInitialized.current) {
+      formInitialized.current = true;
       setFormData({ 
         full_name: user.full_name || "",
         bio: user.bio || "",
@@ -113,7 +116,7 @@ export default function Profile() {
         website: user.website || "",
       });
     }
-  }, [user?.full_name, user?.bio, user?.linkedin, user?.twitter, user?.facebook, user?.instagram, user?.website, isEditing]);
+  }, [user]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data) => {
