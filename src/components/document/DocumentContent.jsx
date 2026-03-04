@@ -185,8 +185,16 @@ export default function DocumentContent({
     },
     enabled: !!document?.id && suggestions.length > 0,
     initialData: [],
-    staleTime: 60 * 1000,
+    staleTime: 0,
   });
+
+  // Invalidate comment counts when any comment is added/deleted
+  React.useEffect(() => {
+    const unsubscribe = base44.entities.Comment.subscribe(() => {
+      queryClient.invalidateQueries({ queryKey: ['allDocumentComments', document?.id] });
+    });
+    return unsubscribe;
+  }, [document?.id, queryClient]);
 
   const getCommentsCount = React.useCallback((entityType, entityId) => {
     return allDocumentComments.filter(
