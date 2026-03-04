@@ -45,12 +45,8 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
       return snapshots;
     }
     
-    // Sort versions newest first
-    const sortedVersions = [...allVersions].sort((a, b) => {
-      const dateA = new Date(a.created_date || 0).getTime();
-      const dateB = new Date(b.created_date || 0).getTime();
-      return dateB - dateA;
-    });
+    // Sort versions newest first by version number (more reliable than created_date)
+    const sortedVersions = [...allVersions].sort((a, b) => (b.version || 0) - (a.version || 0));
     
     // Track section states as we go backwards
     let currentSectionContents = { ...currentSnapshot.sectionContents };
