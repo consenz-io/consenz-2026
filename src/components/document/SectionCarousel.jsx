@@ -413,19 +413,26 @@ const SectionCarousel = React.memo(function SectionCarousel({
                 <span className="font-bold text-amber-700 text-lg">{sortedSuggestions.length}</span> <span className="font-bold text-slate-800">{t('editSuggestions')}</span>
               </p>
             ) : (
-              <button 
-                onClick={() => setCurrentSuggestionId('current')}
-                className={`text-sm font-bold hover:underline cursor-pointer transition-colors ${
-                  currentView?.data?.type === 'delete_section' 
-                    ? 'text-red-700 hover:text-red-900' 
-                    : 'text-blue-700 hover:text-blue-900'
-                }`}
-              >
-                {currentView?.data?.type === 'delete_section' 
-                 ? ((language || 'he') === 'he' ? 'הצעה למחיקת הסעיף' : (language || 'he') === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion')
-                 : `${(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح تعديل بواسطة' : 'Edit suggestion by'} ${getUserName(currentView?.data?.created_by)}`
-                }
-              </button>
+              <div className="flex flex-col items-center gap-0.5">
+                <button 
+                  onClick={() => setCurrentSuggestionId('current')}
+                  className={`text-sm font-bold hover:underline cursor-pointer transition-colors ${
+                    currentView?.data?.type === 'delete_section' 
+                      ? 'text-red-700 hover:text-red-900' 
+                      : 'text-blue-700 hover:text-blue-900'
+                  }`}
+                >
+                  {currentView?.data?.type === 'delete_section' 
+                   ? ((language || 'he') === 'he' ? 'הצעה למחיקת הסעיף' : (language || 'he') === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion')
+                   : `${(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح תعديل בواسطة' : 'Edit suggestion by'} ${getUserName(currentView?.data?.created_by)}`
+                  }
+                </button>
+                {currentView?.data?.created_date && (
+                  <span className="text-[10px] text-slate-400">
+                    {new Date(currentView.data.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
+              </div>
             )}
           </div>
 
