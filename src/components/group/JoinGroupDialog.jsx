@@ -8,7 +8,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
 
-export default function JoinGroupDialog({ isOpen, onClose, groupId, groupName }) {
+export default function JoinGroupDialog({ isOpen, onClose, groupId, groupName: groupNameProp }) {
   const { language, isRTL } = useLanguage();
 
   const { data: user } = useQuery({
