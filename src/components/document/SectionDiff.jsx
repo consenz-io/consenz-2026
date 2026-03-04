@@ -143,55 +143,34 @@ export default function SectionDiff({
 
   // Render inline diff
   const renderInlineDiff = () => {
-    // Group changed spans with their adjacent whitespace to prevent mid-word line breaks
-    const wrappedParts = [];
-    let i = 0;
-    while (i < diff.length) {
-      const part = diff[i];
-      if (part.type === 'removed' || part.type === 'added') {
-        // Look for adjacent whitespace before (from previous unchanged part)
-        let leadingSpace = '';
-        let trailingSpace = '';
-        
-        // Check if previous part ends with a space — split it
-        if (wrappedParts.length > 0) {
-          const prevPart = wrappedParts[wrappedParts.length - 1];
-          if (prevPart.type === 'unchanged' && prevPart.value.endsWith(' ')) {
-            wrappedParts[wrappedParts.length - 1] = { ...prevPart, value: prevPart.value.slice(0, -1) };
-            leadingSpace = ' ';
-          }
+    // Build a stable copy to work with (avoid mutating the memoized diff)
+    const parts = diff.map(p => ({ ...p }));
+
+    // For each changed part, absorb the trailing space from the next unchanged part
+    // so that `whiteSpace: nowrap` keeps the word + space together and prevents breaks
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i].type === 'removed' || parts[i].type === 'added') {
+        parts[i].trailingSpace = '';
+        if (i + 1 < parts.length && parts[i + 1].type === 'unchanged' && parts[i + 1].value.startsWith(' ')) {
+          parts[i].trailingSpace = ' ';
+          parts[i + 1].value = parts[i + 1].value.slice(1);
         }
-        
-        // Check if next part starts with a space — include it
-        if (i + 1 < diff.length && diff[i + 1].type === 'unchanged' && diff[i + 1].value.startsWith(' ')) {
-          trailingSpace = ' ';
-          // Will consume one space from next part
-          const nextPart = diff[i + 1];
-          diff[i + 1] = { ...nextPart, value: nextPart.value.slice(1) };
-        }
-        
-        wrappedParts.push({ ...part, leadingSpace, trailingSpace });
-      } else {
-        wrappedParts.push(part);
       }
-      i++;
     }
 
     return (
       <div style={contentStyle}>
-        {wrappedParts.map((part, idx) => {
+        {parts.map((part, idx) => {
           if (part.type === 'removed') {
             return (
-              <span key={idx} style={{ whiteSpace: 'nowrap', display: 'inline' }}>
-                {part.leadingSpace}
+              <span key={idx} style={{ whiteSpace: 'nowrap' }}>
                 <span className="bg-[#fef2f2] text-red-700 line-through opacity-70">{part.value}</span>
                 {part.trailingSpace}
               </span>
             );
           } else if (part.type === 'added') {
             return (
-              <span key={idx} style={{ whiteSpace: 'nowrap', display: 'inline' }}>
-                {part.leadingSpace}
+              <span key={idx} style={{ whiteSpace: 'nowrap' }}>
                 <span className="bg-[#dcfce7] text-green-800 border-b-2 border-green-500 font-medium">{part.value}</span>
                 {part.trailingSpace}
               </span>
