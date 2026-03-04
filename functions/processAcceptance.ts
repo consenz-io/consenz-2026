@@ -61,8 +61,8 @@ Deno.serve(async (req) => {
 
     // Fetch all needed data in parallel
     const [suggestion, document] = await Promise.all([
-      base44.asServiceRole.entities.Suggestion.filter({ id: suggestionId }).then(r => r[0]),
-      base44.asServiceRole.entities.Document.filter({ id: documentId }).then(r => r[0])
+      base44.asServiceRole.entities.Suggestion.get(suggestionId),
+      base44.asServiceRole.entities.Document.get(documentId)
     ]);
 
     if (!suggestion || !document) {
