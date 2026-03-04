@@ -110,6 +110,16 @@ function LayoutContent({ children, currentPageName }) {
     initBrowserNotifications();
   }, []);
 
+  // Listen for vote-cast events to refresh unvoted count
+  React.useEffect(() => {
+    const handleVoteCast = () => {
+      queryClient.invalidateQueries({ queryKey: ['allVotes', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['allSuggestions'] });
+    };
+    window.addEventListener('consenz:vote-cast', handleVoteCast);
+    return () => window.removeEventListener('consenz:vote-cast', handleVoteCast);
+  }, [user?.id, queryClient]);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
