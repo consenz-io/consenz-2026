@@ -39,6 +39,7 @@ export default function JoinGroupDialog({ isOpen, onClose, groupId, groupName: g
   });
 
   const isPublicGroup = groupData?.status === 'public';
+  const groupName = groupNameProp || groupData?.name || '';
 
   const joinMutation = useMutation({
     mutationFn: async () => {
