@@ -355,18 +355,35 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
 
       {/* תגובות */}
       <div className="mt-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleComments && toggleComments(`suggestion-${currentVersion.id}`);
-          }}
-          className="h-7 md:h-8 text-xs px-2"
-        >
-          <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-          {t('comments')} ({getCommentsCount ? getCommentsCount('suggestion', currentVersion.id) : 0})
-        </Button>
+        {(() => {
+          const count = getCommentsCount ? getCommentsCount('suggestion', currentVersion.id) : 0;
+          const hasComments = count > 0;
+          return (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleComments && toggleComments(`suggestion-${currentVersion.id}`);
+              }}
+              className={`h-7 md:h-8 text-xs px-2 transition-all ${
+                hasComments
+                  ? 'font-bold text-blue-700 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 shadow-sm'
+                  : 'text-slate-600 hover:text-blue-600'
+              }`}
+            >
+              <div className="relative">
+                <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'} ${hasComments ? 'fill-blue-200' : ''}`} />
+                {hasComments && (
+                  <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-blue-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center leading-none">
+                    {count > 9 ? '9+' : count}
+                  </span>
+                )}
+              </div>
+              {t('comments')}{hasComments ? ` (${count})` : ''}
+            </Button>
+          );
+        })()}
       </div>
       {showComments && showComments[`suggestion-${currentVersion.id}`] && (
         <div className="mt-4 pt-4 border-t border-amber-200">
