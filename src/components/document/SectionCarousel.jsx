@@ -689,7 +689,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
                       onClick={(e) => {
                         e.stopPropagation();
                         if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
-                        if (!canParticipate) { toast.error(language === 'he' ? 'אינך חבר בקבוצה זו' : 'You are not a member of this group'); return; }
+                        if (!canParticipate) { setShowJoinGroupDialog(true); return; }
                         voteMutation.mutate({ suggestionId: currentView.data.id, vote: 'pro', currentVote: getUserVote(currentView.data.id) });
                       }}
                       disabled={voteMutation.isPending}
