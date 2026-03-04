@@ -67,7 +67,7 @@ export default function VersionNavigation({
             title={language === 'he' ? 'גרסה חדשה יותר' : language === 'ar' ? 'إصدار أحدث' : 'Newer version'}
             className="h-9 w-9 p-0 rounded-full"
           >
-            <ChevronRight className="w-4 h-4" />
+            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </Button>
         </div>
       </div>
