@@ -709,12 +709,6 @@ export default function DocumentView() {
     }
   }, []);
 
-  // Handle page refresh with scroll position preservation
-  const handleRefreshPage = () => {
-    sessionStorage.setItem('documentScrollPosition', window.scrollY.toString());
-    window.location.reload();
-  };
-
   const handleEditSection = React.useCallback((section, isDirectEdit = false) => {
     setEditingSection(isDirectEdit ? { ...section, isDirectEdit: true } : section);
     setShowCreateSuggestion(true);
