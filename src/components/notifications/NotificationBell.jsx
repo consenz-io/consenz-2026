@@ -123,6 +123,14 @@ export default function NotificationBell({ user }) {
         markAsReadMutation.mutate(notification.id);
       }
       
+      // For suggestion_accepted notifications, always navigate to suggestion detail
+      if (notification.type === 'suggestion_accepted' && notification.relatedEntityId) {
+        setTimeout(() => {
+          navigate(`/suggestiondetail?id=${notification.relatedEntityId}`);
+        }, 100);
+        return;
+      }
+
       // Navigate only if we have a valid actionUrl
       if (notification.actionUrl && typeof notification.actionUrl === 'string' && notification.actionUrl.length > 0) {
         // Normalize legacy kebab-case URLs that were stored in DB before the fix
