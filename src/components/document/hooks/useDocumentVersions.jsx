@@ -170,6 +170,56 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
       }
     });
     
+    // Process direct_edit pairs
+    directEditPairs.forEach(({ afterVersion, beforeVersion }) => {
+      const relatedSuggestion = suggestions?.find(s => s.id === afterVersion.suggestionId);
+
+      const snapshotAfterChange = {
+        version: afterVersion.version,
+        label: `עריכה ישירה`,
+        timestamp: afterVersion.created_date,
+        changeDescription: afterVersion.changeDescription,
+        changeType: 'direct_edit',
+        isDirectEdit: true,
+        suggestionId: null,
+        sectionContents: { ...currentSectionContents },
+        existingSections: new Set(currentExistingSections),
+        changedSectionId: afterVersion.sectionId,
+        newContent: afterVersion.content,
+        allSectionIds,
+        proVotes: 0,
+        conVotes: 0,
+        weightedConsensus: null,
+        documentThresholdAtTime: null
+      };
+
+      if (afterVersion.content === '') {
+        snapshotAfterChange.isDeleted = true;
+        snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
+        const deletedContent = currentSectionContents[afterVersion.sectionId] || beforeVersion?.content || '';
+        snapshotAfterChange.deletedSectionContent = deletedContent;
+        snapshotAfterChange.sectionContents[afterVersion.sectionId] = deletedContent;
+        snapshotAfterChange.existingSections.add(afterVersion.sectionId);
+      }
+
+      snapshots.push(snapshotAfterChange);
+
+      // Update state for older view
+      if (beforeVersion) {
+        currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
+        currentExistingSections.add(afterVersion.sectionId);
+      } else if (afterVersion.changeType === 'section_created') {
+        delete currentSectionContents[afterVersion.sectionId];
+        currentExistingSections.delete(afterVersion.sectionId);
+      }
+    });
+
+    // Re-sort all snapshots (index 0 = current, rest by timestamp descending)
+    const [currentSnap, ...historySnaps] = snapshots;
+    historySnaps.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    snapshots.length = 0;
+    snapshots.push(currentSnap, ...historySnaps);
+
     // Add original version
     if (Object.keys(currentSectionContents).length > 0) {
       snapshots.push({
