@@ -337,7 +337,7 @@ Deno.serve(async (req) => {
           message: `ההצעה "${suggestion.title || 'הצעה'}" התקבלה במסמך "${document.title}"`,
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
-          actionUrl: `/document-view?id=${document.id}`,
+          actionUrl: `/suggestiondetail?id=${suggestion.id}`,
           documentId: document.id,
           documentTitle: document.title
         });
