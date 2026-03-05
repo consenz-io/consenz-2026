@@ -277,10 +277,6 @@ export default function DocumentView() {
     const unsubscribeVersion = base44.entities.DocumentVersion.subscribe((event) => {
       console.log('[REALTIME] DocumentVersion event:', event.type);
       if (event.data?.documentId === documentId) {
-        // Check if this is a new suggestion_accepted version
-        if (event.type === 'create' && event.data?.changeType === 'suggestion_accepted') {
-          setShowVersionUpdateModal(true);
-        }
         queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
       }
     });
