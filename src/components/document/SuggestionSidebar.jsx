@@ -308,27 +308,11 @@ export default function SuggestionSidebar({
       setError(err.message);
       setTimeout(() => setError(null), 5000);
     },
-    onSuccess: (data) => {
-      const doc = document || parentDocument;
-      // תמיד רענן את ההצעה כדי לקבל את הסטטוס האמיתי מהשרת
+    onSuccess: () => {
+      // Real-time subscriptions in DocumentView handle all further updates automatically.
+      // No manual invalidations or toasts needed here.
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
       queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
-      
-      // רק אם ההצעה באמת התקבלה (data.accepted === true) - נרענן את כל הנתונים ונציג הודעת הצלחה
-      if (data?.accepted === true) {
-        // הצגת הודעת טוסט
-        toast.success(isRTL ? 'ההצעה התקבלה! ✓' : 'Suggestion accepted! ✓', {
-          duration: 4000,
-        });
-        
-        // רענון כל הנתונים הרלוונטיים כשההצעה התקבלה
-        queryClient.invalidateQueries({ queryKey: ['sections', doc?.id] });
-        queryClient.invalidateQueries({ queryKey: ['suggestions', doc?.id] });
-        queryClient.invalidateQueries({ queryKey: ['allDocumentSuggestions', doc?.id] });
-        queryClient.invalidateQueries({ queryKey: ['allVersions'] });
-        queryClient.invalidateQueries({ queryKey: ['document', doc?.id] });
-        queryClient.invalidateQueries({ queryKey: ['publicDocuments'] });
-      }
     },
   });
 
