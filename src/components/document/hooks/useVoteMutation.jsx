@@ -159,6 +159,10 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
           });
         });
       }
+
+      if (data?.accepted === true) {
+        toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', { duration: 5000 });
+      }
       
       // Emit event for layout to update unvoted count (optimistic decrement)
       window.dispatchEvent(new CustomEvent('consenz:vote-cast'));
