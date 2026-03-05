@@ -129,10 +129,13 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
       }
 
       // Handle rate limit errors
-      const isRateLimit = err.response?.status === 429 
+      const isRateLimit = err.response?.status === 429
+        || err.status === 429
         || err.message?.toLowerCase().includes('rate limit')
         || err.message?.toLowerCase().includes('too many')
-        || err.message?.includes('המתן');
+        || err.message?.includes('המתן')
+        || errorMessage?.includes('המתן')
+        || errorMessage?.toLowerCase().includes('rate limit');
       if (isRateLimit) {
         toast.error('ההצבעה לא נקלטה. נסו שוב בעוד 15 שניות', { duration: 15000 });
       } else {
