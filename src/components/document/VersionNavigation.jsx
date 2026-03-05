@@ -48,6 +48,11 @@ export default function VersionNavigation({
                   : `Version ${totalVersions - currentIndex} of ${totalVersions - 1}`
               )}
             </Badge>
+            {currentIndex > 0 && currentSnapshot?.isDirectEdit && (
+              <span className="text-[10px] text-amber-600 font-semibold mt-0.5">
+                {language === 'he' ? 'עריכת אדמין' : language === 'ar' ? 'تعديل المسؤول' : 'Admin Edit'}
+              </span>
+            )}
             {currentSnapshot?.changeDescription && currentIndex > 0 && (
               <span 
                 className="text-[10px] text-slate-500 mt-0.5 max-w-[150px] truncate text-center" 
