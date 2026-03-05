@@ -450,7 +450,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
       )}
 
       {/* תוכן */}
-      <div className="min-h-[200px]">
+      <div className="min-h-[40px]">
         {!currentView ? null : currentView.type === 'current' ? (
           // תצוגת תוכן נוכחי
           <>
