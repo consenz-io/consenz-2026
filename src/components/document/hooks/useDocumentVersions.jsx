@@ -45,23 +45,51 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
       return snapshots;
     }
     
-    // Sort versions newest first by version number (more reliable than created_date)
-    const sortedVersions = [...allVersions].sort((a, b) => (b.version || 0) - (a.version || 0));
+    // Sort versions newest first by created_date (reflects actual acceptance time)
+    const sortedVersions = [...allVersions].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     // Track section states as we go backwards
     let currentSectionContents = { ...currentSnapshot.sectionContents };
     let currentExistingSections = new Set(currentSnapshot.existingSections);
     
-    // Group versions by suggestionId
+    // Group versions by suggestionId (or by a unique direct_edit key per sectionId+version pair)
     const versionsBySuggestion = new Map();
     sortedVersions.forEach(v => {
-      if (v.suggestionId) {
-        if (!versionsBySuggestion.has(v.suggestionId)) {
-          versionsBySuggestion.set(v.suggestionId, []);
+      const groupKey = v.suggestionId || `direct_edit_${v.sectionId}_${v.version}`;
+      if (!versionsBySuggestion.has(groupKey)) {
+        versionsBySuggestion.set(groupKey, []);
+      }
+      versionsBySuggestion.get(groupKey).push(v);
+    });
+
+    // For direct_edit (no suggestionId), pair "before" and "after" records by sectionId proximity
+    // Group direct_edits by sectionId so we can pair them
+    const directEditsBySectionId = new Map();
+    sortedVersions.forEach(v => {
+      if (!v.suggestionId && v.changeType === 'direct_edit') {
+        if (!directEditsBySectionId.has(v.sectionId)) {
+          directEditsBySectionId.set(v.sectionId, []);
         }
-        versionsBySuggestion.get(v.suggestionId).push(v);
+        directEditsBySectionId.get(v.sectionId).push(v);
       }
     });
+
+    // Build grouped edit pairs for direct_edits: each pair = [afterVersion, beforeVersion]
+    const directEditPairs = [];
+    directEditsBySectionId.forEach((versions, sectionId) => {
+      // sort ascending by version number to pair them
+      const sorted = [...versions].sort((a, b) => (a.version || 0) - (b.version || 0));
+      // pair: even index = before (לפני:), odd = after
+      for (let i = 1; i < sorted.length; i += 2) {
+        directEditPairs.push({ afterVersion: sorted[i], beforeVersion: sorted[i - 1] });
+      }
+      // if odd count, last one is unpaired after
+      if (sorted.length % 2 === 1) {
+        directEditPairs.push({ afterVersion: sorted[sorted.length - 1], beforeVersion: null });
+      }
+    });
+    // Sort pairs by afterVersion.created_date descending
+    directEditPairs.sort((a, b) => new Date(b.afterVersion.created_date) - new Date(a.afterVersion.created_date));
     
     // Process each suggestion
     const processedSuggestions = new Set();

@@ -216,6 +216,17 @@ Deno.serve(async (req) => {
         });
 
         await base44.entities.Section.delete(section.id);
+
+        // Create a second version record marking the deletion (content='')
+        await base44.entities.DocumentVersion.create({
+          documentId: suggestion.documentId,
+          sectionId: section.id,
+          content: '',
+          changeDescription: suggestion.title || 'מחיקת סעיף',
+          version: nextVersion + 1,
+          changeType: 'suggestion_accepted',
+          suggestionId: suggestion.id
+        });
       }
     }
 
