@@ -1311,40 +1311,6 @@ export default function DocumentView() {
         )}
       </React.Suspense>
 
-      {/* Version Update Modal */}
-      <Dialog open={showVersionUpdateModal} onOpenChange={setShowVersionUpdateModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              {language === 'he' ? 'המסמך עודכן' : language === 'ar' ? 'تم تحديث المستند' : 'Document Updated'}
-            </DialogTitle>
-            <DialogDescription dir={isRTL ? 'rtl' : 'ltr'} className={isRTL ? 'text-right' : 'text-left'}>
-              {language === 'he' 
-                ? 'הצעה התקבלה והמסמך עודכן. רענן את העמוד כדי לצפות בגרסה החדשה.'
-                : language === 'ar'
-                ? 'تم قبول الاقتراح وتم تحديث المستند. قم بتحديث الصفحة لعرض الإصدار الجديد.'
-                : 'A suggestion was accepted and the document was updated. Refresh the page to view the new version.'}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setShowVersionUpdateModal(false)}
-            >
-              {language === 'he' ? 'אחר כך' : language === 'ar' ? 'لاحقاً' : 'Later'}
-            </Button>
-            <Button
-              onClick={handleRefreshPage}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-            >
-              <RefreshCw className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {language === 'he' ? 'רענן עמוד' : language === 'ar' ? 'تحديث الصفحة' : 'Refresh Page'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Floating navigation for suggestions */}
       {pendingSuggestions.length > 0 && showSuggestionNav && showScrollTop && (
         <nav 
