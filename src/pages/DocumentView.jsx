@@ -64,7 +64,6 @@ export default function DocumentView() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState(null);
-  const [showVersionUpdateModal, setShowVersionUpdateModal] = useState(false);
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
