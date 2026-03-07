@@ -1,5 +1,39 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+const TRANSLATIONS = {
+  en: {
+    rejectedTitle: "Your suggestion was rejected",
+    rejectedMessage: "The suggestion \"{title}\" was rejected in the document \"{doc}\"",
+  },
+  he: {
+    rejectedTitle: "ההצעה שלך נדחתה",
+    rejectedMessage: "ההצעה \"{title}\" נדחתה במסמך \"{doc}\"",
+  },
+  ar: {
+    rejectedTitle: "تم رفض اقتراحك",
+    rejectedMessage: "تم رفض الاقتراح \"{title}\" في المستند \"{doc}\"",
+  }
+};
+
+function t(lang, key, replacements = {}) {
+  let text = TRANSLATIONS[lang]?.[key] || TRANSLATIONS['he'][key] || key;
+  for (const [k, v] of Object.entries(replacements)) {
+    text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+  }
+  return text;
+}
+
+function buildTranslations(titleKey, messageKey, replacements = {}) {
+  const result = {};
+  for (const lang of ['en', 'he', 'ar']) {
+    result[lang] = {
+      title: t(lang, titleKey, replacements),
+      message: t(lang, messageKey, replacements),
+    };
+  }
+  return result;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
