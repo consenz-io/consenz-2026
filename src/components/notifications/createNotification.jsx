@@ -683,18 +683,17 @@ async function _notifyNewSuggestion({ suggestion, document: doc, currentUser, re
       }
       
       const userLang = user.preferredLanguage || 'he';
-
       const isEditOfSuggestion = suggestion.type === 'edit_suggestion';
-      const title = isEditOfSuggestion ? translate('notifNewEditSuggestionTitle', userLang) : translate('notifNewSuggestionTitle', userLang);
-      const message = isEditOfSuggestion 
-        ? translate('notifNewEditSuggestionMessage', userLang, { name: currentUser.full_name, title: doc.title })
-        : translate('notifNewSuggestionMessage', userLang, { name: currentUser.full_name, title: doc.title });
+      const titleKey = isEditOfSuggestion ? 'notifNewEditSuggestionTitle' : 'notifNewSuggestionTitle';
+      const messageKey = isEditOfSuggestion ? 'notifNewEditSuggestionMessage' : 'notifNewSuggestionMessage';
+      const newSuggReplacements = { name: currentUser.full_name, title: doc.title };
 
       notifications.push({
         userId: user.id,
         type: 'new_suggestion_in_followed_document',
-        title: title,
-        message: message,
+        title: translate(titleKey, userLang, newSuggReplacements),
+        message: translate(messageKey, userLang, newSuggReplacements),
+        translations: buildNotificationTranslations(titleKey, messageKey, newSuggReplacements),
         relatedEntityId: suggestion.id,
         relatedEntityType: relatedEntityType,
         actionUrl,
