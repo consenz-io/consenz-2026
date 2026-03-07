@@ -1,5 +1,51 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+const TRANSLATIONS = {
+  en: {
+    replyTitle: "Reply to your comment",
+    replyMessage: "{name} replied to your comment",
+    suggestionCommentTitle: "New comment on your suggestion",
+    suggestionCommentMessage: "{name} commented on your suggestion",
+    sectionCommentTitle: "New comment on your section",
+    sectionCommentMessage: "{name} commented on your section",
+  },
+  he: {
+    replyTitle: "תשובה לתגובה שלך",
+    replyMessage: "{name} השיב לתגובה שלך",
+    suggestionCommentTitle: "תגובה חדשה על ההצעה שלך",
+    suggestionCommentMessage: "{name} הגיב על ההצעה שלך",
+    sectionCommentTitle: "תגובה חדשה על הסעיף שלך",
+    sectionCommentMessage: "{name} הגיב על הסעיף שלך",
+  },
+  ar: {
+    replyTitle: "رد على تعليقك",
+    replyMessage: "{name} رد على تعليقك",
+    suggestionCommentTitle: "تعليق جديد على اقتراحك",
+    suggestionCommentMessage: "{name} علق على اقتراحك",
+    sectionCommentTitle: "تعليق جديد على قسمك",
+    sectionCommentMessage: "{name} علق على قسمك",
+  }
+};
+
+function t(lang, key, replacements = {}) {
+  let text = TRANSLATIONS[lang]?.[key] || TRANSLATIONS['he'][key] || key;
+  for (const [k, v] of Object.entries(replacements)) {
+    text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+  }
+  return text;
+}
+
+function buildTranslations(titleKey, messageKey, replacements = {}) {
+  const result = {};
+  for (const lang of ['en', 'he', 'ar']) {
+    result[lang] = {
+      title: t(lang, titleKey, replacements),
+      message: t(lang, messageKey, replacements),
+    };
+  }
+  return result;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -11,96 +57,112 @@ Deno.serve(async (req) => {
 
     console.log('[AUTOMATION] New comment created:', comment.id);
 
-    // קבלת פרטי המגיב
     const commenterProfile = await base44.asServiceRole.entities.UserPublicProfile.filter({ email: comment.created_by }).then(p => p[0]);
     const commenterName = commenterProfile?.fullName || 'User';
     const commenterUser = await base44.asServiceRole.entities.User.filter({ email: comment.created_by }).then(u => u[0]);
 
-    let recipientUserIds = [];
-    let notificationTitle = '';
-    let notificationMessage = '';
-    let actionUrl = '';
+    const notifications = [];
 
-    // אם זו תגובה על הצעה
     if (comment.rootEntityType === 'suggestion') {
       const suggestion = await base44.asServiceRole.entities.Suggestion.filter({ id: comment.rootEntityId }).then(s => s[0]);
       if (!suggestion) {
-        console.log('[AUTOMATION] Suggestion not found');
         return Response.json({ message: 'Suggestion not found' }, { status: 200 });
       }
 
-      // התראה ליוצר ההצעה (אם המגיב לא הוא)
-      const creatorUser = await base44.asServiceRole.entities.User.filter({ email: suggestion.created_by }).then(u => u[0]);
-      if (creatorUser && creatorUser.id !== commenterUser?.id) {
-        recipientUserIds.push(creatorUser.id);
-      }
+      const actionUrl = `/suggestiondetail?id=${suggestion.id}&commentId=${comment.id}`;
+      const nameReplacements = { name: commenterName };
 
-      // אם זו תשובה לתגובה אחרת, שלח התראה גם ליוצר התגובה המקורית
+      // Reply notification
       if (comment.parentCommentId) {
         const parentComment = await base44.asServiceRole.entities.Comment.filter({ id: comment.parentCommentId }).then(c => c[0]);
-        if (parentComment) {
-          const parentCommenterUser = await base44.asServiceRole.entities.User.filter({ email: parentComment.created_by }).then(u => u[0]);
-          if (parentCommenterUser && parentCommenterUser.id !== commenterUser?.id && !recipientUserIds.includes(parentCommenterUser.id)) {
-            recipientUserIds.push(parentCommenterUser.id);
-            notificationTitle = 'תשובה לתגובה שלך';
-            notificationMessage = `${commenterName} השיב לתגובה שלך`;
+        if (parentComment && parentComment.created_by !== comment.created_by) {
+          const parentUser = await base44.asServiceRole.entities.User.filter({ email: parentComment.created_by }).then(u => u[0]);
+          if (parentUser) {
+            const userLang = parentUser.preferredLanguage || 'he';
+            notifications.push({
+              userId: parentUser.id,
+              type: 'comment_reply',
+              title: t(userLang, 'replyTitle', nameReplacements),
+              message: t(userLang, 'replyMessage', nameReplacements),
+              translations: buildTranslations('replyTitle', 'replyMessage', nameReplacements),
+              relatedEntityId: comment.id,
+              relatedEntityType: 'comment',
+              actionUrl,
+              read: false
+            });
           }
         }
       }
 
-      if (!comment.parentCommentId) {
-        notificationTitle = 'תגובה חדשה על ההצעה שלך';
-        notificationMessage = `${commenterName} הגיב על ההצעה שלך`;
+      // Suggestion creator notification (if not the commenter and not already notified)
+      const creatorUser = await base44.asServiceRole.entities.User.filter({ email: suggestion.created_by }).then(u => u[0]);
+      const alreadyNotified = notifications.some(n => n.userId === creatorUser?.id);
+      if (creatorUser && creatorUser.id !== commenterUser?.id && !alreadyNotified) {
+        const userLang = creatorUser.preferredLanguage || 'he';
+        notifications.push({
+          userId: creatorUser.id,
+          type: 'suggestion_comment',
+          title: t(userLang, 'suggestionCommentTitle', nameReplacements),
+          message: t(userLang, 'suggestionCommentMessage', nameReplacements),
+          translations: buildTranslations('suggestionCommentTitle', 'suggestionCommentMessage', nameReplacements),
+          relatedEntityId: suggestion.id,
+          relatedEntityType: 'suggestion',
+          actionUrl,
+          read: false
+        });
       }
 
-      actionUrl = `/suggestiondetail?id=${suggestion.id}&commentId=${comment.id}`;
-    }
-
-    // אם זו תגובה על סעיף
-    if (comment.rootEntityType === 'section') {
+    } else if (comment.rootEntityType === 'section') {
       const section = await base44.asServiceRole.entities.Section.filter({ id: comment.rootEntityId }).then(s => s[0]);
       if (!section) {
-        console.log('[AUTOMATION] Section not found');
         return Response.json({ message: 'Section not found' }, { status: 200 });
       }
 
-      // התראה לעורך האחרון של הסעיף (אם המגיב לא הוא)
-      if (section.lastEditedBy && section.lastEditedBy !== commenterUser?.id) {
-        recipientUserIds.push(section.lastEditedBy);
-      }
+      const actionUrl = `/documentview?id=${section.documentId}&commentId=${comment.id}`;
+      const nameReplacements = { name: commenterName };
 
-      // אם זו תשובה לתגובה אחרת
+      // Reply notification
       if (comment.parentCommentId) {
         const parentComment = await base44.asServiceRole.entities.Comment.filter({ id: comment.parentCommentId }).then(c => c[0]);
-        if (parentComment) {
-          const parentCommenterUser = await base44.asServiceRole.entities.User.filter({ email: parentComment.created_by }).then(u => u[0]);
-          if (parentCommenterUser && parentCommenterUser.id !== commenterUser?.id && !recipientUserIds.includes(parentCommenterUser.id)) {
-            recipientUserIds.push(parentCommenterUser.id);
-            notificationTitle = 'תשובה לתגובה שלך';
-            notificationMessage = `${commenterName} השיב לתגובה שלך`;
+        if (parentComment && parentComment.created_by !== comment.created_by) {
+          const parentUser = await base44.asServiceRole.entities.User.filter({ email: parentComment.created_by }).then(u => u[0]);
+          if (parentUser) {
+            const userLang = parentUser.preferredLanguage || 'he';
+            notifications.push({
+              userId: parentUser.id,
+              type: 'comment_reply',
+              title: t(userLang, 'replyTitle', nameReplacements),
+              message: t(userLang, 'replyMessage', nameReplacements),
+              translations: buildTranslations('replyTitle', 'replyMessage', nameReplacements),
+              relatedEntityId: comment.id,
+              relatedEntityType: 'comment',
+              actionUrl,
+              read: false
+            });
           }
         }
       }
 
-      if (!comment.parentCommentId) {
-        notificationTitle = 'תגובה חדשה על הסעיף שלך';
-        notificationMessage = `${commenterName} הגיב על הסעיף שלך`;
+      // Section last editor notification
+      if (section.lastEditedBy && section.lastEditedBy !== commenterUser?.id) {
+        const editorUser = await base44.asServiceRole.entities.User.filter({ id: section.lastEditedBy }).then(u => u[0]);
+        const alreadyNotified = notifications.some(n => n.userId === editorUser?.id);
+        if (editorUser && !alreadyNotified) {
+          const userLang = editorUser.preferredLanguage || 'he';
+          notifications.push({
+            userId: editorUser.id,
+            type: 'section_comment',
+            title: t(userLang, 'sectionCommentTitle', nameReplacements),
+            message: t(userLang, 'sectionCommentMessage', nameReplacements),
+            translations: buildTranslations('sectionCommentTitle', 'sectionCommentMessage', nameReplacements),
+            relatedEntityId: section.id,
+            relatedEntityType: 'section',
+            actionUrl,
+            read: false
+          });
+        }
       }
-
-      const document = await base44.asServiceRole.entities.Document.filter({ id: section.documentId }).then(d => d[0]);
-      actionUrl = `/document-view?id=${section.documentId}&commentId=${comment.id}`;
     }
-
-    // יצירת התראות
-    const notifications = recipientUserIds.map(userId => ({
-      userId,
-      type: comment.parentCommentId ? 'reply_to_my_comment' : 'section_comment',
-      title: notificationTitle,
-      message: notificationMessage,
-      relatedEntityId: comment.id,
-      relatedEntityType: 'comment',
-      actionUrl
-    }));
 
     if (notifications.length > 0) {
       await base44.asServiceRole.entities.Notification.bulkCreate(notifications);
