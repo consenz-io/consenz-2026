@@ -843,11 +843,11 @@ export default function SuggestionDetail() {
           <CardHeader className="p-4 md:p-6">
             <div className="flex flex-col md:flex-row items-start md:justify-between gap-3">
               <div className="flex flex-wrap gap-2 items-center">
-                {suggestion.status === 'rejected' && suggestion.approvedByAdmin ? (
+                {suggestion.status === 'rejected' && suggestion.rejectedByAdmin ? (
                   <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200 text-xs">
                     {language === 'he' ? 'נדחתה על ידי אדמין' : language === 'ar' ? 'مرفوضة من المشرف' : 'Rejected by Admin'}
                   </Badge>
-                ) : suggestion.status === 'rejected' && !suggestion.approvedByAdmin ? (
+                ) : suggestion.status === 'rejected' && !suggestion.rejectedByAdmin ? (
                   <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
                     {language === 'he' ? 'פג תוקפה' : language === 'ar' ? 'انتهت صلاحيتها' : 'Expired'}
                   </Badge>
