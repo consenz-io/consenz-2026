@@ -20,17 +20,37 @@ Deno.serve(async (req) => {
       console.log('[EXPIRE SUGGESTIONS] Expiring:', suggestion.id, suggestion.title);
       await base44.asServiceRole.entities.Suggestion.update(suggestion.id, { status: 'rejected' });
 
-      const recipientIds = new Set();
-      if (suggestion.created_by_id) recipientIds.add(suggestion.created_by_id);
+      const recipientEmails = new Set();
+      if (suggestion.created_by) recipientEmails.add(suggestion.created_by);
 
       const votes = await base44.asServiceRole.entities.Vote.filter({ suggestionId: suggestion.id });
-      votes.forEach(v => { if (v.userId) recipientIds.add(v.userId); });
+      
+      // Get userIds from votes for notification recipients
+      const voterUserIds = votes.map(v => v.userId).filter(Boolean);
+      
+      // Get user profiles to map emails for vote recipients
+      const allProfiles = voterUserIds.length > 0
+        ? await base44.asServiceRole.entities.UserPublicProfile.list()
+        : [];
+      
+      votes.forEach(v => {
+        if (v.userId) {
+          const profile = allProfiles.find(p => p.userId === v.userId);
+          if (profile?.email) recipientEmails.add(profile.email);
+        }
+      });
 
-      for (const userId of Array.from(recipientIds)) {
+      // Get userId for each recipient email to create notifications
+      for (const email of Array.from(recipientEmails)) {
+        const profile = allProfiles.find(p => p.email === email);
+        const userId = profile?.userId;
+        if (!userId) continue;
+        
+        const isCreator = email === suggestion.created_by;
         await base44.asServiceRole.entities.Notification.create({
           userId,
           type: 'suggestion_rejected',
-          title: userId === suggestion.created_by_id ? 'ההצעה שלך פגה תוקף' : 'הצעה פגה תוקף',
+          title: isCreator ? 'ההצעה שלך פגה תוקף' : 'הצעה פגה תוקף',
           message: `"${suggestion.title || 'הצעה'}" לא קיבלה מספיק תמיכה בזמן הקצוב ונדחתה.`,
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',

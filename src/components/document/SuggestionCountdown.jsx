@@ -12,7 +12,7 @@ export default function SuggestionCountdown({ timerEndsAt, size = "sm" }) {
     const calculate = () => {
       const diff = new Date(timerEndsAt) - new Date();
       if (diff <= 0) {
-        setTimeLeft(null);
+        setTimeLeft({ expired: true });
         return;
       }
       const hours = Math.floor(diff / (1000 * 60 * 60));
