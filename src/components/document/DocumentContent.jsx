@@ -315,7 +315,15 @@ Return ONLY the translated text:`;
   });
 
   const getSectionsForTopic = React.useCallback((topicId) => {
-    return sections.filter(s => s.topicId === topicId).sort((a, b) => a.order - b.order);
+    const filtered = sections.filter(s => s.topicId === topicId).sort((a, b) => a.order - b.order);
+    // Deduplicate by order - keep only the first (most recently created based on sort) per order value
+    // This prevents suggestions from being displayed multiple times when duplicate orders exist in DB
+    const seen = new Set();
+    return filtered.filter(s => {
+      if (seen.has(s.order)) return false;
+      seen.add(s.order);
+      return true;
+    });
   }, [sections]);
 
   const getSuggestionsForSection = React.useCallback((sectionId) => {
