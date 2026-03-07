@@ -815,8 +815,9 @@ Return ONLY the translated text:`;
                                       return;
                                       }
                                       if (!canParticipate) return;
-                                      onNewSection(topic.id, section.order);
-                                  }}
+                                      // Insert before the first section: use -1 so it shows before order=0
+                                      onNewSection(topic.id, -1);
+                                      }}
                                   className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
                                 >
                                   <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
