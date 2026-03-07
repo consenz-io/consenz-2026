@@ -776,35 +776,7 @@ Return ONLY the translated text:`;
                           className={snapshot.isDragging ? 'opacity-70' : ''}
                         >
                           <React.Fragment>
-                            {/* Show new section suggestions that should appear before this section.
-                                Only for index > 0, to avoid duplication with the "after last section" block
-                                which handles all remaining suggestions (including before index=0). */}
-                            {index > 0 && newSectionSuggestions
-                              .filter(s => {
-                                const pos = s.insertPosition;
-                                if (pos === undefined || pos === null) return false;
-                                return pos === section.order;
-                              })
-                              .map((suggestion) => (
-                                <NewSectionSuggestionCard
-                                  key={suggestion.id}
-                                  suggestion={suggestion}
-                                  document={document}
-                                  getUserName={getUserName}
-                                  acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
-                                  user={user}
-                                  getUserVote={getUserVote}
-                                  voteMutation={voteMutation}
-                                  onOpenSidebar={onOpenSuggestionSidebar}
-                                  getCommentsCount={getCommentsCount}
-                                  toggleComments={toggleComments}
-                                  showComments={showComments}
-                                  isAdmin={isAdmin}
-                                  onEditSuggestion={onEditSuggestion}
-                                  allDocumentSuggestions={suggestions}
-                                  targetSuggestionId={targetSuggestionId}
-                                />
-                              ))}
+                            {/* intentionally empty - new section suggestions are rendered AFTER each section below */}
 
                             {index > 0 && (
                               <div className="group relative h-4 flex items-center justify-center -my-2 -mb-4 z-10">
