@@ -338,9 +338,8 @@ Return ONLY the translated text:`;
       if (s.type !== 'new_section') return false;
       if (s.parentSuggestionId) return false; // דלג על הצעות עריכה - נציג אותן בקרוסלה
       
-      // דלג על הצעות שכבר התקבלו והסעיף נוצר (בודקים את ה-type שהוא עכשיו edit_section)
-      // כאשר new_section מתקבלת, היא הופכת ל-edit_section, לכן לא צריכה להופיע כאן
-      if (s.status === 'accepted' && s.type === 'edit_section') return false;
+      // הצג רק הצעות pending
+      if (s.status !== 'pending') return false;
       
       // דלג גם על pending שכבר יש להן sectionId (הסעיף נוצר אבל הן עדיין pending)
       if (s.type === 'new_section' && s.sectionId) return false;
