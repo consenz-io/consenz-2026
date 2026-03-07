@@ -1013,18 +1013,17 @@ Return ONLY the translated text:`;
                               {/* הצעות לנושאים חדשים בסוף (שלא שויכו לנושא מסוים) */}
                             {getNewTopicSuggestions()
                             .filter(s => {
-                            // אם אין newTopicOrder - הצג בסוף
-                            if (!s.newTopicOrder && s.newTopicOrder !== 0) return true;
-
-                            // אם יש נושאים - הצג רק הצעות שמעבר לנושא האחרון
-                            if (topics.length > 0) {
-                            const maxTopicOrder = Math.max(...topics.map(t => t.order));
-                            // הצג רק אם newTopicOrder גדול מ-maxTopicOrder+1 (כלומר לא מוצג אחרי נושא קיים)
-                            return s.newTopicOrder > maxTopicOrder + 1;
-                            }
-
                             // אם אין נושאים - הצג הכל
-                            return true;
+                            if (topics.length === 0) return true;
+
+                            // אם אין newTopicOrder - הצג בסוף (לא שויך לנושא ספציפי)
+                            if (s.newTopicOrder === undefined || s.newTopicOrder === null) return true;
+
+                            // הצג רק אם newTopicOrder לא שויך לאף נושא קיים (כלומר לא הוצג כבר ע"י getNewTopicSuggestionsAfterTopic)
+                            const topicOrders = topics.map(t => t.order);
+                            // getNewTopicSuggestionsAfterTopic מציג הצעות עם newTopicOrder === topicOrder + 1
+                            const alreadyShown = topicOrders.some(order => s.newTopicOrder === order + 1);
+                            return !alreadyShown;
                             })
                             .map((suggestion) => (
                             <Card key={suggestion.id} className="bg-white border-slate-200 w-full overflow-hidden">
