@@ -169,21 +169,21 @@ export default function SectionDiff({
   // Render split view (stacked)
   const renderSplitDiff = () => (
     <div className="space-y-3">
-      <div className="p-3 bg-red-50/50 border border-red-200 rounded-lg">
+      <div className="p-3 bg-red-50/50 border border-red-200 rounded-lg overflow-hidden">
         <div className="text-xs font-medium text-red-600 mb-2 flex items-center gap-1">
           <span className="w-2 h-2 bg-red-500 rounded-full"></span>
           {t('originalContent') || 'מקור'}
         </div>
-        <div style={contentStyle} className="text-slate-700">
+        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700">
           {extractText(displayOriginal)}
         </div>
       </div>
-      <div className="p-3 bg-green-50/50 border border-green-200 rounded-lg">
+      <div className="p-3 bg-green-50/50 border border-green-200 rounded-lg overflow-hidden">
         <div className="text-xs font-medium text-green-600 mb-2 flex items-center gap-1">
           <span className="w-2 h-2 bg-green-500 rounded-full"></span>
           {t('proposedContent') || 'מוצע'}
         </div>
-        <div style={contentStyle} className="text-slate-700">
+        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700">
           {extractText(displayNew)}
         </div>
       </div>
