@@ -212,7 +212,7 @@ export default function NotificationBell({ user }) {
               onDelete={(id) => deleteNotificationMutation.mutate(id)}
               onNotificationClick={handleNotificationClick}
               isRTL={isRTL}
-              language={t('language')}
+              language={language}
             />
           )}
         </div>
