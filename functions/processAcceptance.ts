@@ -1,5 +1,45 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+const NOTIF_TRANSLATIONS = {
+  en: {
+    creatorTitle: "🎉 Your suggestion was accepted!",
+    creatorMessage: "The suggestion \"{title}\" was accepted and added to the document",
+    participantTitle: "A suggestion was accepted in the document",
+    participantMessage: "The suggestion \"{title}\" was accepted in the document \"{doc}\"",
+  },
+  he: {
+    creatorTitle: "🎉 ההצעה שלך התקבלה!",
+    creatorMessage: "ההצעה \"{title}\" התקבלה ונוספה למסמך",
+    participantTitle: "הצעה התקבלה במסמך",
+    participantMessage: "ההצעה \"{title}\" התקבלה במסמך \"{doc}\"",
+  },
+  ar: {
+    creatorTitle: "🎉 تم قبول اقتراحك!",
+    creatorMessage: "تم قبول الاقتراح \"{title}\" وإضافته إلى المستند",
+    participantTitle: "تم قبول اقتراح في المستند",
+    participantMessage: "تم قبول الاقتراح \"{title}\" في المستند \"{doc}\"",
+  }
+};
+
+function nt(lang, key, replacements = {}) {
+  let text = NOTIF_TRANSLATIONS[lang]?.[key] || NOTIF_TRANSLATIONS['he'][key] || key;
+  for (const [k, v] of Object.entries(replacements)) {
+    text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+  }
+  return text;
+}
+
+function buildNotifTranslations(titleKey, messageKey, replacements = {}) {
+  const result = {};
+  for (const lang of ['en', 'he', 'ar']) {
+    result[lang] = {
+      title: nt(lang, titleKey, replacements),
+      message: nt(lang, messageKey, replacements),
+    };
+  }
+  return result;
+}
+
 // Detect language helper
 const detectLanguage = (text) => {
   if (!text) return 'he';
