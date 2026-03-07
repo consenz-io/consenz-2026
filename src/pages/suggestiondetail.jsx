@@ -805,6 +805,7 @@ export default function SuggestionDetail() {
           <div className="flex-1 min-w-0 w-full">
             <PageHeader 
               title={suggestion.title}
+              documentTitle={document?.title}
               backUrl={`${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${suggestion.documentId}`}
             />
           </div>
@@ -823,14 +824,6 @@ export default function SuggestionDetail() {
             </button>
           )}
         </div>
-        
-        {document && (
-          <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>
-            <Link to={`${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${document.id}`} className="hover:underline">
-              {document.title}
-            </Link>
-          </p>
-        )}
 
         {error && (
           <Alert variant="destructive">
