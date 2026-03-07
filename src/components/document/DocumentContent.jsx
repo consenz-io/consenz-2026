@@ -791,7 +791,8 @@ Return ONLY the translated text:`;
                                           return;
                                         }
                                         if (!canParticipate) return;
-                                        onNewSection(topic.id, section.order);
+                                        // Insert AFTER the previous section (index-1)
+                                        onNewSection(topic.id, topicSections[index - 1].order);
                                       }}
                                       className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
                                       >
