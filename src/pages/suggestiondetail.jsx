@@ -843,6 +843,18 @@ export default function SuggestionDetail() {
           <CardHeader className="p-4 md:p-6">
             <div className="flex flex-col md:flex-row items-start md:justify-between gap-3">
               <div className="flex flex-wrap gap-2 items-center">
+                <Badge variant="outline" className={`text-xs ${
+                  suggestion.type === 'delete_section' ? 'bg-red-100 text-red-800 border-red-200' : ''
+                }`}>
+                  {suggestion.type === 'new_section' 
+                    ? t('newSection') 
+                    : suggestion.type === 'delete_section'
+                    ? (language === 'he' ? 'מחיקת סעיף' : language === 'ar' ? 'حذف قسم' : 'Delete Section')
+                    : suggestion.type === 'edit_suggestion'
+                    ? (isRTL ? 'הצעה לעריכת הצעה' : 'Edit Suggestion')
+                    : t('suggestionToEditSection')}
+                </Badge>
+
                 {suggestion.status === 'rejected' && suggestion.rejectedByAdmin ? (
                   <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200 text-xs">
                     {language === 'he' ? 'נדחתה על ידי אדמין' : language === 'ar' ? 'مرفوضة من المشرف' : 'Rejected by Admin'}
@@ -856,17 +868,6 @@ export default function SuggestionDetail() {
                     {t(suggestion.status)}
                   </Badge>
                 )}
-                <Badge variant="outline" className={`text-xs ${
-                  suggestion.type === 'delete_section' ? 'bg-red-100 text-red-800 border-red-200' : ''
-                }`}>
-                  {suggestion.type === 'new_section' 
-                    ? t('newSection') 
-                    : suggestion.type === 'delete_section'
-                    ? (language === 'he' ? 'מחיקת סעיף' : language === 'ar' ? 'حذف قسم' : 'Delete Section')
-                    : suggestion.type === 'edit_suggestion'
-                    ? (isRTL ? 'הצעה לעריכת הצעה' : 'Edit Suggestion')
-                    : t('suggestionToEditSection')}
-                </Badge>
 
                 <span className="text-xs text-slate-500">
                   {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
