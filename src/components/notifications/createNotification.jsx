@@ -979,6 +979,10 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
       }
     });
     
+    const docCommentReplacements = { name: commenterName, title: doc.title };
+    const docReplyTranslations = buildNotificationTranslations('notifReplyTitle', 'notifReplyMessage', { name: commenterName });
+    const docCommentTranslations = buildNotificationTranslations('notifDocumentCommentTitle', 'notifDocumentCommentMessage', docCommentReplacements);
+
     // Parent commenter notification (reply)
     if (parentComment && parentComment.created_by && parentComment.created_by !== comment.created_by) {
       const parentCommenter = emailToUser[parentComment.created_by];
@@ -987,8 +991,9 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
         notifications.push({
           userId: parentCommenter.id,
           type: 'comment_reply',
-          title: translate('notifReplyTitle', userLang),
+          title: translate('notifReplyTitle', userLang, { name: commenterName }),
           message: translate('notifReplyMessage', userLang, { name: commenterName }),
+          translations: docReplyTranslations,
           relatedEntityId: comment.id,
           relatedEntityType: 'comment',
           actionUrl: `${actionUrl}&commentId=${comment.id}`,
@@ -1005,8 +1010,9 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
       notifications.push({
         userId: creator.id,
         type: 'document_comment',
-        title: translate('notifDocumentCommentTitle', userLang),
-        message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: doc.title }),
+        title: translate('notifDocumentCommentTitle', userLang, docCommentReplacements),
+        message: translate('notifDocumentCommentMessage', userLang, docCommentReplacements),
+        translations: docCommentTranslations,
         relatedEntityId: comment.id,
         relatedEntityType: 'comment',
         actionUrl: actionUrl + `&commentId=${comment.id}`,
@@ -1017,18 +1023,16 @@ export async function notifyNewDocumentComment({ comment, document: doc, parentC
     
     // Admins and other participants notifications
     emailsArray.forEach(email => {
-      // Skip if already notified as parent commenter or doc creator
       if (email === parentComment?.created_by || email === doc.created_by) return;
-
       const user = emailToUser[email];
       if (!user) return;
-
       const userLang = user.preferredLanguage || 'he';
       notifications.push({
         userId: user.id,
         type: 'document_comment',
-        title: translate('notifDocumentCommentTitle', userLang),
-        message: translate('notifDocumentCommentMessage', userLang, { name: commenterName, title: doc.title }),
+        title: translate('notifDocumentCommentTitle', userLang, docCommentReplacements),
+        message: translate('notifDocumentCommentMessage', userLang, docCommentReplacements),
+        translations: docCommentTranslations,
         relatedEntityId: comment.id,
         relatedEntityType: 'comment',
         actionUrl: actionUrl + `&commentId=${comment.id}`,
