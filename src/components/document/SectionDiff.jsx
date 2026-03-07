@@ -193,21 +193,21 @@ export default function SectionDiff({
   // Render side-by-side view
   const renderSideBySideDiff = () => (
     <div className={`grid grid-cols-2 gap-3 ${isRTL ? 'direction-rtl' : ''}`}>
-      <div className="p-3 bg-red-50/50 border border-red-200 rounded-lg">
+      <div className="p-3 bg-red-50/50 border border-red-200 rounded-lg overflow-hidden">
         <div className="text-xs font-medium text-red-600 mb-2 flex items-center gap-1">
           <span className="w-2 h-2 bg-red-500 rounded-full"></span>
           {t('originalContent') || 'מקור'}
         </div>
-        <div style={contentStyle} className="text-slate-700 text-sm">
+        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700 text-sm">
           {extractText(displayOriginal)}
         </div>
       </div>
-      <div className="p-3 bg-green-50/50 border border-green-200 rounded-lg">
+      <div className="p-3 bg-green-50/50 border border-green-200 rounded-lg overflow-hidden">
         <div className="text-xs font-medium text-green-600 mb-2 flex items-center gap-1">
           <span className="w-2 h-2 bg-green-500 rounded-full"></span>
           {t('proposedContent') || 'מוצע'}
         </div>
-        <div style={contentStyle} className="text-slate-700 text-sm">
+        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700 text-sm">
           {extractText(displayNew)}
         </div>
       </div>
