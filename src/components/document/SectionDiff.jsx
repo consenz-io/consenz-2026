@@ -337,7 +337,8 @@ export default function SectionDiff({
       )}
       
       <div 
-        className="prose prose-sm max-w-none rounded-lg p-2 -m-2 overflow-x-auto break-words"
+        className="prose prose-sm max-w-none rounded-lg p-2 -m-2"
+        style={{ minWidth: 0, wordWrap: 'break-word', overflowWrap: 'break-word' }}
         onClick={(e) => e.stopPropagation()}
       >
         {isTranslating ? (
