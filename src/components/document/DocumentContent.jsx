@@ -776,16 +776,14 @@ Return ONLY the translated text:`;
                           className={snapshot.isDragging ? 'opacity-70' : ''}
                         >
                           <React.Fragment>
-                            {/* Show new section suggestions that should appear before this section */}
-                            {/* Only show "before" suggestions for sections that are NOT the first section,
-                                OR for the first section only if it won't be duplicated by the "after last" block */}
-                            {newSectionSuggestions
+                            {/* Show new section suggestions that should appear before this section.
+                                Only for index > 0, to avoid duplication with the "after last section" block
+                                which handles all remaining suggestions (including before index=0). */}
+                            {index > 0 && newSectionSuggestions
                               .filter(s => {
                                 const pos = s.insertPosition;
                                 if (pos === undefined || pos === null) return false;
-                                // Show only if insertPosition matches this section's order
-                                // AND this is not the only section (to avoid duplicate with "after last" block)
-                                return pos === section.order && !(index === 0 && topicSections.length === 1);
+                                return pos === section.order;
                               })
                               .map((suggestion) => (
                                 <NewSectionSuggestionCard
