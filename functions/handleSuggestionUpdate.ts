@@ -2,16 +2,16 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 const TRANSLATIONS = {
   en: {
-    rejectedTitle: "Your suggestion was rejected",
-    rejectedMessage: "The suggestion \"{title}\" was rejected in the document \"{doc}\"",
+    notifRejectedTitle: "Your suggestion was rejected",
+    notifRejectedMessage: "The suggestion \"{title}\" was rejected by the document admin",
   },
   he: {
-    rejectedTitle: "ההצעה שלך נדחתה",
-    rejectedMessage: "ההצעה \"{title}\" נדחתה במסמך \"{doc}\"",
+    notifRejectedTitle: "ההצעה שלך נדחתה",
+    notifRejectedMessage: "ההצעה \"{title}\" נדחתה על ידי מנהל המסמך",
   },
   ar: {
-    rejectedTitle: "تم رفض اقتراحك",
-    rejectedMessage: "تم رفض الاقتراح \"{title}\" في المستند \"{doc}\"",
+    notifRejectedTitle: "تم رفض اقتراحك",
+    notifRejectedMessage: "تم رفض الاقتراح \"{title}\" من قبل مدير المستند",
   }
 };
 
@@ -89,13 +89,13 @@ Deno.serve(async (req) => {
     }
 
     const userLang = creatorUser.preferredLanguage || 'he';
-    const replacements = { title: suggestion.title || '', doc: document.title || '' };
+    const replacements = { title: suggestion.title || '' };
     await base44.asServiceRole.entities.Notification.create({
       userId: creatorUser.id,
       type: 'suggestion_rejected',
-      title: t(userLang, 'rejectedTitle', replacements),
-      message: t(userLang, 'rejectedMessage', replacements),
-      translations: buildTranslations('rejectedTitle', 'rejectedMessage', replacements),
+      title: t(userLang, 'notifRejectedTitle', replacements),
+      message: t(userLang, 'notifRejectedMessage', replacements),
+      translations: buildTranslations('notifRejectedTitle', 'notifRejectedMessage', replacements),
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
       actionUrl: `/suggestiondetail?id=${suggestion.id}`
