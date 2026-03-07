@@ -13,7 +13,7 @@ import {
   ArrowLeft, ArrowRight, ThumbsUp, ThumbsDown, MessageSquare, Clock, 
   CheckCircle, XCircle, AlertCircle, Loader2, Trash2, ChevronLeft, ChevronRight, Edit2, X, Save, FileText, ShieldCheck
 } from "lucide-react";
-import SuggestionCountdown from "../components/document/SuggestionCountdown";
+import SuggestionCountdown from "@/components/document/SuggestionCountdown";
 import VotesNeededCounter from "../components/document/VotesNeededCounter";
 import { Skeleton } from "@/components/ui/skeleton";
 import CommentsSection from "../components/document/CommentsSection";
