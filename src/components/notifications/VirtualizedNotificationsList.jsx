@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { X, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatLocalDateTime } from "@/components/utils/dateFormatter";
+import { useLanguage } from "@/components/LanguageContext";
 
 const NotificationItem = React.memo(({ 
   notification, 
@@ -14,6 +15,9 @@ const NotificationItem = React.memo(({
   isRTL,
   language 
 }) => {
+  // Use translated title/message if available for current language
+  const displayTitle = notification.translations?.[language]?.title || notification.title;
+  const displayMessage = notification.translations?.[language]?.message || notification.message;
   const getTypeColor = (type) => {
     switch (type) {
       case 'vote_on_suggestion': return 'bg-blue-50 border-blue-200';
