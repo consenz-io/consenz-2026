@@ -899,6 +899,17 @@ export default function SuggestionDetail() {
                     {language === 'he' ? 'אושר ע״י מנהל' : language === 'ar' ? 'تمت الموافقة من المشرف' : 'Admin Approved'}
                   </Badge>
                 )}
+                {suggestion.status === 'rejected' && suggestion.rejectedByAdmin && suggestion.updated_date && (
+                  <span className="text-xs text-slate-500">
+                    {language === 'he' ? 'נדחתה ב-' : language === 'ar' ? 'تم الرفض في' : 'Rejected on'} {new Date(suggestion.updated_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                )}
               </div>
             </div>
           </CardHeader>
