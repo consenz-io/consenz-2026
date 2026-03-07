@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import VotesNeededCounter from "./VotesNeededCounter";
 import CommentsSection from "./CommentsSection";
+import SuggestionCountdown from "./SuggestionCountdown";
 import SectionDiff from "./SectionDiff";
 import TranslatableContent from "./TranslatableContent";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAutoAccept";

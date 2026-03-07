@@ -6,10 +6,11 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, ThumbsUp, ThumbsDown, MessageSquare, ArrowRight } from "lucide-react";
+import { ThumbsUp, ThumbsDown, MessageSquare, ArrowRight } from "lucide-react";
 import VotesNeededCounter from "./VotesNeededCounter";
 import TranslatableContent from "./TranslatableContent";
 import { useLanguage } from "@/components/LanguageContext";
+import SuggestionCountdown from "./SuggestionCountdown";
 
 export default function SuggestionsList({ suggestions, document, user, isAdmin }) {
   const { t, isRTL } = useLanguage();
