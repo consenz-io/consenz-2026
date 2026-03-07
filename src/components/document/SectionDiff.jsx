@@ -143,40 +143,23 @@ export default function SectionDiff({
 
   // Render inline diff
   const renderInlineDiff = () => {
-    // Build a stable copy to work with (avoid mutating the memoized diff)
-    const parts = diff.map(p => ({ ...p }));
-
-    // For each changed part, absorb the trailing space from the next unchanged part
-    // so that `whiteSpace: nowrap` keeps the word + space together and prevents breaks
-    for (let i = 0; i < parts.length; i++) {
-      if (parts[i].type === 'removed' || parts[i].type === 'added') {
-        parts[i].trailingSpace = '';
-        if (i + 1 < parts.length && parts[i + 1].type === 'unchanged' && parts[i + 1].value.startsWith(' ')) {
-          parts[i].trailingSpace = ' ';
-          parts[i + 1].value = parts[i + 1].value.slice(1);
-        }
-      }
-    }
-
     return (
-      <div style={contentStyle}>
-        {parts.map((part, idx) => {
+      <div style={{...contentStyle, display: 'flex', flexWrap: 'wrap', gap: '0' }}>
+        {diff.map((part, idx) => {
           if (part.type === 'removed') {
             return (
-              <span key={idx} style={{ whiteSpace: 'nowrap' }}>
-                <span className="bg-[#fef2f2] text-red-700 line-through opacity-70">{part.value}</span>
-                {part.trailingSpace}
+              <span key={idx} className="bg-[#fef2f2] text-red-700 line-through opacity-70 inline">
+                {part.value}
               </span>
             );
           } else if (part.type === 'added') {
             return (
-              <span key={idx} style={{ whiteSpace: 'nowrap' }}>
-                <span className="bg-[#dcfce7] text-green-800 border-b-2 border-green-500 font-medium">{part.value}</span>
-                {part.trailingSpace}
+              <span key={idx} className="bg-[#dcfce7] text-green-800 border-b-2 border-green-500 font-medium inline">
+                {part.value}
               </span>
             );
           } else {
-            return <span key={idx}>{part.value}</span>;
+            return <span key={idx} className="inline">{part.value}</span>;
           }
         })}
       </div>
