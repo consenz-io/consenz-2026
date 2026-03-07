@@ -378,28 +378,35 @@ Deno.serve(async (req) => {
       allUsers = await base44.asServiceRole.entities.User.filter({ email: { $in: emailArray } });
     }
     
+    const suggTitle = suggestion.title || 'הצעה';
+    const creatorReplacements = { title: suggTitle };
+    const participantReplacements = { title: suggTitle, doc: document.title };
+    const creatorTranslations = buildNotifTranslations('creatorTitle', 'creatorMessage', creatorReplacements);
+    const participantTranslations = buildNotifTranslations('participantTitle', 'participantMessage', participantReplacements);
+
     // Build notifications
     for (const user of allUsers) {
+      const userLang = user.preferredLanguage || 'he';
       if (user.email === suggestion.created_by) {
-        // Creator gets special message
         notifications.push({
           userId: user.id,
           type: 'suggestion_accepted',
-          title: '🎉 ההצעה שלך התקבלה!',
-          message: `ההצעה "${suggestion.title || 'הצעה'}" התקבלה ונוספה למסמך`,
+          title: nt(userLang, 'creatorTitle', creatorReplacements),
+          message: nt(userLang, 'creatorMessage', creatorReplacements),
+          translations: creatorTranslations,
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
-          actionUrl: `/document-view?id=${document.id}`,
+          actionUrl: `/documentview?id=${document.id}`,
           documentId: document.id,
           documentTitle: document.title
         });
       } else {
-        // Other participants
         notifications.push({
           userId: user.id,
           type: 'suggestion_accepted',
-          title: 'הצעה התקבלה במסמך',
-          message: `ההצעה "${suggestion.title || 'הצעה'}" התקבלה במסמך "${document.title}"`,
+          title: nt(userLang, 'participantTitle', participantReplacements),
+          message: nt(userLang, 'participantMessage', participantReplacements),
+          translations: participantTranslations,
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
           actionUrl: `/suggestiondetail?id=${suggestion.id}`,
