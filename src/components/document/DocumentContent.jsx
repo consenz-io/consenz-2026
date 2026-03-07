@@ -889,6 +889,9 @@ Return ONLY the translated text:`;
                                 {newSectionSuggestions
                                     .filter(s => {
                                       const pos = s.insertPosition;
+                                      // Show only suggestions not already shown before any existing section
+                                      const alreadyShownBeforeSection = topicSections.some(sec => pos !== undefined && pos !== null && pos === sec.order);
+                                      if (alreadyShownBeforeSection) return false;
                                       // Show suggestions with insertPosition > last section order, or undefined/null (default to end)
                                       return (pos !== undefined && pos !== null && pos > section.order) || (pos === undefined || pos === null);
                                     })
