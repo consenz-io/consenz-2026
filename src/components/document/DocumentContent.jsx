@@ -857,44 +857,41 @@ Return ONLY the translated text:`;
                               allDocumentSuggestions={suggestions}
                             />
                           </div>
-                            {/* Show suggestions after the last section.
-                                Shows ALL suggestions not already shown in "before" blocks (index > 0).
-                                "Before" blocks only render for index > 0, so any suggestion for index=0
-                                section's order, or suggestions with no matching section, all appear here. */}
-                            {index === topicSections.length - 1 && (
-                              <>
-                                {newSectionSuggestions
-                                    .filter(s => {
-                                      const pos = s.insertPosition;
-                                      // A suggestion was shown in a "before" block only if:
-                                      // its insertPosition matches a section's order AND that section's index > 0
-                                      const shownInBeforeBlock = topicSections.some((sec, secIndex) =>
-                                        secIndex > 0 && pos !== undefined && pos !== null && pos === sec.order
-                                      );
-                                      return !shownInBeforeBlock;
-                                    })
-                                    .map((suggestion) => (
-                                      <NewSectionSuggestionCard
-                                                      key={suggestion.id}
-                                                      suggestion={suggestion}
-                                                      document={document}
-                                                      getUserName={getUserName}
-                                                      acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
-                                                      user={user}
-                                                      getUserVote={getUserVote}
-                                                      voteMutation={voteMutation}
-                                                      onOpenSidebar={onOpenSuggestionSidebar}
-                                                      getCommentsCount={getCommentsCount}
-                                                      toggleComments={toggleComments}
-                                                      showComments={showComments}
-                                                      isAdmin={isAdmin}
-                                                      onEditSuggestion={onEditSuggestion}
-                                                      allDocumentSuggestions={suggestions}
-                                                      targetSuggestionId={targetSuggestionId}
-                                                    />
-                                    ))}
-                              </>
-                            )}
+                            {/* Show new section suggestions AFTER this section:
+                                - For every section: show suggestions where insertPosition === section.order
+                                - For the last section only: also show suggestions with no matching section (pos null/undefined or > max order) */}
+                            {newSectionSuggestions
+                              .filter(s => {
+                                const pos = s.insertPosition;
+                                // Show after this section if insertPosition matches this section's order
+                                if (pos !== undefined && pos !== null && pos === section.order) return true;
+                                // Show after the last section if no existing section matches this insertPosition
+                                if (index === topicSections.length - 1) {
+                                  const matchesAnySectionOrder = topicSections.some(sec => pos !== undefined && pos !== null && pos === sec.order);
+                                  return !matchesAnySectionOrder;
+                                }
+                                return false;
+                              })
+                              .map((suggestion) => (
+                                <NewSectionSuggestionCard
+                                  key={suggestion.id}
+                                  suggestion={suggestion}
+                                  document={document}
+                                  getUserName={getUserName}
+                                  acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                                  user={user}
+                                  getUserVote={getUserVote}
+                                  voteMutation={voteMutation}
+                                  onOpenSidebar={onOpenSuggestionSidebar}
+                                  getCommentsCount={getCommentsCount}
+                                  toggleComments={toggleComments}
+                                  showComments={showComments}
+                                  isAdmin={isAdmin}
+                                  onEditSuggestion={onEditSuggestion}
+                                  allDocumentSuggestions={suggestions}
+                                  targetSuggestionId={targetSuggestionId}
+                                />
+                              ))}
 
                             {index === topicSections.length - 1 && (
                               <>
