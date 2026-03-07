@@ -337,7 +337,7 @@ export default function SectionDiff({
       )}
       
       <div 
-        className="prose prose-sm max-w-none rounded-lg p-2 -m-2"
+        className="prose prose-sm max-w-none rounded-lg p-2 -m-2 overflow-x-auto break-words"
         onClick={(e) => e.stopPropagation()}
       >
         {isTranslating ? (
