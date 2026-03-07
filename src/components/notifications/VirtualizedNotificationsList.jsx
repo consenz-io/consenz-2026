@@ -7,6 +7,46 @@ import { Link } from "react-router-dom";
 import { formatLocalDateTime } from "@/components/utils/dateFormatter";
 import { useLanguage } from "@/components/LanguageContext";
 
+// Fallback translations for legacy notifications that were stored without translations
+const LEGACY_FALLBACKS = {
+  en: {
+    suggestion_accepted: { title: "A suggestion was accepted", message: "A suggestion in a document you follow was accepted" },
+    suggestion_rejected: { title: "Your suggestion was rejected", message: "Your suggestion was rejected by the document admin" },
+    suggestion_comment: { title: "New comment", message: "Someone commented on a suggestion" },
+    section_comment: { title: "New comment", message: "Someone commented on a section" },
+    comment_reply: { title: "Reply to your comment", message: "Someone replied to your comment" },
+    new_suggestion_in_followed_document: { title: "New suggestion in document", message: "A new suggestion was added to a document you follow" },
+    suggestion_expiring: { title: "Voting period ended", message: "The voting period for a suggestion has ended" },
+    document_comment: { title: "New comment in document", message: "Someone commented in a document discussion" },
+  },
+  ar: {
+    suggestion_accepted: { title: "تم قبول اقتراح", message: "تم قبول اقتراح في مستند تتابعه" },
+    suggestion_rejected: { title: "تم رفض اقتراحك", message: "تم رفض اقتراحك من قبل مدير المستند" },
+    suggestion_comment: { title: "تعليق جديد", message: "علق أحدهم على اقتراح" },
+    section_comment: { title: "تعليق جديد", message: "علق أحدهم على قسم" },
+    comment_reply: { title: "رد على تعليقك", message: "رد أحدهم على تعليقك" },
+    new_suggestion_in_followed_document: { title: "اقتراح جديد في المستند", message: "تمت إضافة اقتراح جديد إلى مستند تتابعه" },
+    suggestion_expiring: { title: "انتهت فترة التصويت", message: "انتهت فترة التصويت على اقتراح" },
+    document_comment: { title: "تعليق جديد في المستند", message: "علق أحدهم في نقاش المستند" },
+  }
+};
+
+function getLocalizedNotification(notification, language) {
+  // 1. If translations exist for the current language - use them
+  if (notification.translations?.[language]?.title) {
+    return {
+      title: notification.translations[language].title,
+      message: notification.translations[language].message,
+    };
+  }
+  // 2. For non-Hebrew languages, use legacy fallback by type
+  if (language !== 'he' && LEGACY_FALLBACKS[language]?.[notification.type]) {
+    return LEGACY_FALLBACKS[language][notification.type];
+  }
+  // 3. Default: show stored title/message (Hebrew or whatever was stored)
+  return { title: notification.title, message: notification.message };
+}
+
 const NotificationItem = React.memo(({ 
   notification, 
   onMarkAsRead, 
@@ -15,9 +55,7 @@ const NotificationItem = React.memo(({
   isRTL,
   language 
 }) => {
-  // Use translated title/message if available for current language
-  const displayTitle = notification.translations?.[language]?.title || notification.title;
-  const displayMessage = notification.translations?.[language]?.message || notification.message;
+  const { title: displayTitle, message: displayMessage } = getLocalizedNotification(notification, language);
   const getTypeColor = (type) => {
     switch (type) {
       case 'vote_on_suggestion': return 'bg-blue-50 border-blue-200';
