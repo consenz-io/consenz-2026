@@ -177,6 +177,21 @@ async function getDocumentCreator(documentId, users, publicProfiles, docList = n
 }
 
 /**
+ * Build all translations for a notification given titleKey, messageKey, and replacements
+ */
+function buildNotificationTranslations(titleKey, messageKey, replacements = {}) {
+  const langs = ['en', 'he', 'ar'];
+  const result = {};
+  for (const lang of langs) {
+    result[lang] = {
+      title: translate(titleKey, lang, replacements),
+      message: translate(messageKey, lang, replacements),
+    };
+  }
+  return result;
+}
+
+/**
  * Batch create notifications - now using backend function for async processing
  */
 async function batchCreateNotifications(notifications) {
