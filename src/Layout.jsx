@@ -139,6 +139,17 @@ function LayoutContent({ children, currentPageName }) {
     initBrowserNotifications();
   }, []);
 
+  // Sync preferredLanguage whenever app language changes
+  React.useEffect(() => {
+    if (!user?.id) return;
+    const currentAppLanguage = localStorage.getItem('consenz_language') || 'he';
+    if (user.preferredLanguage !== currentAppLanguage) {
+      base44.auth.updateMe({ preferredLanguage: currentAppLanguage }).then(() => {
+        queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+      });
+    }
+  }, [language, user?.id]);
+
   // Listen for vote-cast events to refresh unvoted count
   React.useEffect(() => {
     const handleVoteCast = () => {
