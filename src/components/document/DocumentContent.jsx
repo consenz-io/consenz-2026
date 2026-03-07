@@ -317,7 +317,11 @@ Return ONLY the translated text:`;
   const getSectionsForTopic = React.useCallback((topicId) => {
     return sections
       .filter(s => s.topicId === topicId)
-      .sort((a, b) => a.order - b.order);
+      .sort((a, b) => {
+        if (a.order !== b.order) return a.order - b.order;
+        // Tiebreaker: earlier created_date comes first
+        return new Date(a.created_date) - new Date(b.created_date);
+      });
   }, [sections]);
 
   const getSuggestionsForSection = React.useCallback((sectionId) => {
