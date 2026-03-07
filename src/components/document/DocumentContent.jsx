@@ -859,16 +859,20 @@ Return ONLY the translated text:`;
                               allDocumentSuggestions={suggestions}
                             />
                           </div>
-                            {/* Show new section suggestions AFTER this section:
-                                - For every section: show suggestions where insertPosition === section.order
-                                - For the last section only: also show suggestions with no matching section (pos null/undefined or > max order) */}
+                            {/* Show new section suggestions in their correct position:
+                                - BEFORE the first section (index=0): insertPosition === -1
+                                - AFTER section at index i: insertPosition === topicSections[i].order
+                                - AFTER the last section: insertPosition is null/undefined or doesn't match any section order */}
                             {newSectionSuggestions
                               .filter(s => {
                                 const pos = s.insertPosition;
-                                // Show after this section if insertPosition matches this section's order
+                                // Show BEFORE first section: pos === -1
+                                if (index === 0 && pos === -1) return true;
+                                // Show AFTER this section: pos matches this section's order
                                 if (pos !== undefined && pos !== null && pos === section.order) return true;
-                                // Show after the last section if no existing section matches this insertPosition
+                                // Show after the last section: pos doesn't match any section's order and pos !== -1
                                 if (index === topicSections.length - 1) {
+                                  if (pos === -1) return false; // already handled above
                                   const matchesAnySectionOrder = topicSections.some(sec => pos !== undefined && pos !== null && pos === sec.order);
                                   return !matchesAnySectionOrder;
                                 }
