@@ -184,7 +184,9 @@ export default function NotificationBell({ user }) {
       </PopoverTrigger>
       <PopoverContent className={`w-[95vw] max-w-md p-0 ${isRTL ? 'ml-2' : 'mr-2'}`} align={isRTL ? 'start' : 'end'}>
         <div className="flex items-center justify-between p-3 md:p-4 border-b">
-          <h3 className="font-semibold text-sm md:text-base">התראות</h3>
+          <h3 className="font-semibold text-sm md:text-base">
+            {t('language') === 'he' ? 'התראות' : t('language') === 'ar' ? 'الإشعارات' : 'Notifications'}
+          </h3>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -193,7 +195,7 @@ export default function NotificationBell({ user }) {
               disabled={markAllAsReadMutation.isPending}
               className="text-xs md:text-sm h-8"
             >
-              סמן הכל כנקרא
+              {t('language') === 'he' ? 'סמן הכל כנקרא' : t('language') === 'ar' ? 'تعليم الكل كمقروء' : 'Mark all as read'}
             </Button>
           )}
         </div>
@@ -201,7 +203,7 @@ export default function NotificationBell({ user }) {
           {notifications.length === 0 ? (
             <div className="p-8 text-center text-slate-500">
               <Bell className="w-12 h-12 mx-auto mb-2 opacity-30" />
-              <p>אין התראות חדשות</p>
+              <p>{t('language') === 'he' ? 'אין התראות חדשות' : t('language') === 'ar' ? 'لا إشعارات جديدة' : 'No new notifications'}</p>
             </div>
           ) : (
             <VirtualizedNotificationsList
