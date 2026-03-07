@@ -436,6 +436,8 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
       const allUsers = [...voterUsers, ...commenterUsers];
       
       // Deduplicate and notify
+      const expiredReplacements = { title: suggestion.title || '' };
+      const expiredTranslations = buildNotificationTranslations('notifExpiredTitle', 'notifExpiredMessage', expiredReplacements);
       for (const user of allUsers) {
         if (notifiedUserIds.has(user.id)) continue;
         notifiedUserIds.add(user.id);
@@ -443,8 +445,9 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
         notifications.push({
           userId: user.id,
           type: 'suggestion_expiring',
-          title: translate('notifExpiredTitle', userLang),
-          message: translate('notifExpiredMessage', userLang, { title: suggestion.title || 'הצעה' }),
+          title: translate('notifExpiredTitle', userLang, expiredReplacements),
+          message: translate('notifExpiredMessage', userLang, expiredReplacements),
+          translations: expiredTranslations,
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
           actionUrl,
