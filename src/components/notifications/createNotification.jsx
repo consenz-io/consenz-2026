@@ -387,6 +387,8 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
       if (participantUserIds.length > 0) {
         const allUsers = await base44.entities.User.filter({ id: { $in: participantUserIds } });
         
+        const acceptedReplacements = { title: suggestion.title || '' };
+        const acceptedTranslations = buildNotificationTranslations('notifAcceptedTitle', 'notifAcceptedMessage', acceptedReplacements);
         for (const user of allUsers) {
           if (notifiedUserIds.has(user.id)) continue;
           notifiedUserIds.add(user.id);
@@ -394,8 +396,9 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
           notifications.push({
             userId: user.id,
             type: 'suggestion_accepted',
-            title: translate('notifAcceptedTitle', userLang),
-            message: translate('notifAcceptedMessage', userLang, { title: suggestion.title || 'הצעה' }),
+            title: translate('notifAcceptedTitle', userLang, acceptedReplacements),
+            message: translate('notifAcceptedMessage', userLang, acceptedReplacements),
+            translations: acceptedTranslations,
             relatedEntityId: suggestion.id,
             relatedEntityType: 'suggestion',
             actionUrl,
