@@ -889,11 +889,11 @@ Return ONLY the translated text:`;
                                 {newSectionSuggestions
                                     .filter(s => {
                                       const pos = s.insertPosition;
-                                      // Show only suggestions not already shown before any existing section
-                                      const alreadyShownBeforeSection = topicSections.some(sec => pos !== undefined && pos !== null && pos === sec.order);
-                                      if (alreadyShownBeforeSection) return false;
+                                      // Show only suggestions not shown before any existing section (no section has this order)
+                                      const shownBeforeSomeSection = topicSections.some(sec => pos !== undefined && pos !== null && pos === sec.order);
+                                      if (shownBeforeSomeSection) return false;
                                       // Show suggestions with insertPosition > last section order, or undefined/null (default to end)
-                                      return (pos !== undefined && pos !== null && pos > section.order) || (pos === undefined || pos === null);
+                                      return pos === undefined || pos === null || pos > section.order;
                                     })
                                     .map((suggestion) => (
                                       <NewSectionSuggestionCard
