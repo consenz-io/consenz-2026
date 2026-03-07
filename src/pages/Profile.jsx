@@ -327,17 +327,32 @@ export default function Profile() {
                   </div>
 
                   {isOwnProfile && (
-                    <div>
-                      <Label className="flex items-center gap-2">
-                        <Bell className="w-4 h-4" />
-                        {language === 'he' ? 'הגדרות התראות' : 'Notification Settings'}
-                      </Label>
-                      <Link to={createPageUrl("EmailSettings")}>
-                        <Button variant="outline" size="sm" className="mt-2 w-full">
-                          <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                          {language === 'he' ? 'נהל עדכונים במייל' : 'Manage Email Digest'}
-                        </Button>
-                      </Link>
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <Bell className="w-4 h-4" />
+                          {language === 'he' ? 'שפת התראות' : language === 'ar' ? 'لغة الإشعارات' : 'Notification Language'}
+                        </Label>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {language === 'he'
+                            ? `ההתראות יישלחו ב: ${user?.preferredLanguage === 'en' ? 'English' : user?.preferredLanguage === 'ar' ? 'العربية' : 'עברית'} (לפי הגדרת השפה שלך במערכת)`
+                            : language === 'ar'
+                            ? `سيتم إرسال الإشعارات بـ: ${user?.preferredLanguage === 'en' ? 'English' : user?.preferredLanguage === 'ar' ? 'العربية' : 'עברית'} (حسب إعداد اللغة في النظام)`
+                            : `Notifications will be sent in: ${user?.preferredLanguage === 'en' ? 'English' : user?.preferredLanguage === 'ar' ? 'العربية' : 'עברית'} (based on your app language setting)`}
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <Bell className="w-4 h-4" />
+                          {language === 'he' ? 'הגדרות התראות' : language === 'ar' ? 'إعدادات الإشعارات' : 'Notification Settings'}
+                        </Label>
+                        <Link to={createPageUrl("EmailSettings")}>
+                          <Button variant="outline" size="sm" className="mt-2 w-full">
+                            <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                            {language === 'he' ? 'נהל עדכונים במייל' : language === 'ar' ? 'إدارة ملخص البريد' : 'Manage Email Digest'}
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
                   )}
                 </div>
