@@ -359,14 +359,14 @@ Return ONLY the translated text:`;
     return suggestions.filter(s => {
       // רק הצעות new_section (לא edit_section)
       if (s.type !== 'new_section') return false;
+      // רק pending
+      if (s.status !== 'pending') return false;
       // לא topicId - כלומר נושא חדש
       if (s.topicId) return false;
       // חייב newTopicTitle
       if (!s.newTopicTitle) return false;
       // רק ROOT suggestions
       if (s.parentSuggestionId) return false;
-      // רק pending או accepted שעדיין לא נוצר הסעיף
-      if (s.status === 'accepted' && s.type === 'edit_section') return false;
       if (s.sectionId) return false;
       
       return true;
