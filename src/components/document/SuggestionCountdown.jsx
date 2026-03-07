@@ -27,6 +27,16 @@ export default function SuggestionCountdown({ timerEndsAt, size = "sm" }) {
 
   if (!timerEndsAt || !timeLeft) return null;
 
+  if (timeLeft.expired) {
+    const expiredLabel = language === 'he' ? 'הצבעה הסתיימה' : language === 'ar' ? 'انتهى التصويت' : 'Voting ended';
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500">
+        <Clock className="w-3 h-3" />
+        {expiredLabel}
+      </span>
+    );
+  }
+
   const isUrgent = timeLeft.diff < 6 * 60 * 60 * 1000; // less than 6 hours
 
   const label = language === 'he'

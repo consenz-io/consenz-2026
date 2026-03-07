@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
           actionUrl: `/suggestiondetail?id=${suggestion.id}`
         });
       }
-      console.log('[EXPIRE SUGGESTIONS] Done:', suggestion.id, 'notified', recipientIds.size);
+      console.log('[EXPIRE SUGGESTIONS] Done:', suggestion.id, 'notified', recipientEmails.size);
     }
 
     return Response.json({ success: true, expired: expired.length });
