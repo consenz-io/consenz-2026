@@ -575,6 +575,12 @@ export default function SuggestionSidebar({
             </Alert>
           )}
 
+          {suggestion.status === 'pending' && suggestion.timerEndsAt && (
+            <div className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2">
+              <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="sm" />
+            </div>
+          )}
+
           <div className="text-xs text-slate-500 flex flex-wrap gap-x-2 gap-y-0.5">
             <span>
               {t('by')} {(() => {

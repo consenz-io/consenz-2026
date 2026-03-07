@@ -869,10 +869,7 @@ export default function SuggestionDetail() {
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
                 {suggestion.status === 'pending' && suggestion.timerEndsAt && (
-                  <Badge variant="outline" className="flex items-center gap-1 text-xs">
-                    <Clock className="w-3 h-3" />
-                    {getTimeRemaining(suggestion.timerEndsAt)}
-                  </Badge>
+                  <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="sm" />
                 )}
                 {suggestion.status === 'accepted' && suggestion.updated_date && (
                   <span className="text-xs text-slate-500">

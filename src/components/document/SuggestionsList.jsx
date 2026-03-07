@@ -122,10 +122,7 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
                       <span className="font-medium">{suggestion.conVotes || 0}</span>
                     </div>
                     {suggestion.status === 'pending' && suggestion.timerEndsAt && (
-                      <div className="flex items-center gap-2 text-slate-600">
-                        <Clock className="w-4 h-4" />
-                        <span>{getTimeRemaining(suggestion.timerEndsAt)} {t('left')}</span>
-                      </div>
+                      <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="xs" />
                     )}
                     <VotesNeededCounter suggestion={suggestion} document={document} />
                   </div>
