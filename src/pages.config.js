@@ -64,8 +64,8 @@ import MyDocuments from './pages/MyDocuments';
 import NotificationQA from './pages/NotificationQA';
 import Profile from './pages/Profile';
 import SectionHistory from './pages/SectionHistory';
-import suggestiondetail from './pages/suggestiondetail';
 import UnderstandingConsensus from './pages/UnderstandingConsensus';
+import suggestiondetail from './pages/suggestiondetail';
 import __Layout from './Layout.jsx';
 
 
@@ -87,8 +87,8 @@ export const PAGES = {
     "NotificationQA": NotificationQA,
     "Profile": Profile,
     "SectionHistory": SectionHistory,
-    "suggestiondetail": suggestiondetail,
     "UnderstandingConsensus": UnderstandingConsensus,
+    "suggestiondetail": suggestiondetail,
 }
 
 export const pagesConfig = {

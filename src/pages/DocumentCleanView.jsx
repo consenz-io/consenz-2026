@@ -529,7 +529,10 @@ ${text}`;
                   
                   return sectionExistsInSnapshot || isDeletedInThisSnapshot;
                 })
-                .sort((a, b) => (a.order || 0) - (b.order || 0));
+                .sort((a, b) => {
+                  if ((a.order || 0) !== (b.order || 0)) return (a.order || 0) - (b.order || 0);
+                  return new Date(a.created_date || 0) - new Date(b.created_date || 0);
+                });
               
               // Don't show topics without sections in clean view
               if (topicSections.length === 0) {
