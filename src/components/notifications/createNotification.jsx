@@ -356,12 +356,14 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     
     notifiedUserIds.add(creator.id);
     const userLang = creator.preferredLanguage || 'he';
+    const replacements = { title: suggestion.title || '' };
     
     notifications.push({
       userId: creator.id,
       type: newStatus === 'accepted' ? 'suggestion_accepted' : newStatus === 'rejected' ? 'suggestion_rejected' : 'suggestion_expiring',
-      title: translate(statusKey.titleKey, userLang),
-      message: translate(statusKey.messageKey, userLang, { title: suggestion.title || 'הצעה' }),
+      title: translate(statusKey.titleKey, userLang, replacements),
+      message: translate(statusKey.messageKey, userLang, replacements),
+      translations: buildNotificationTranslations(statusKey.titleKey, statusKey.messageKey, replacements),
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
       actionUrl,
