@@ -24,10 +24,10 @@ const translateTitle = (title, t, language) => {
   return title;
 };
 
-export default function PageHeader({ title }) {
+export default function PageHeader({ title, documentTitle }) {
   const { isRTL, t, language } = useLanguage();
   const navigate = useNavigate();
-  const translatedTitle = translateTitle(title, t, language);
+  const translatedTitle = documentTitle || translateTitle(title, t, language);
 
   const handleBack = () => {
     navigate(-1);
