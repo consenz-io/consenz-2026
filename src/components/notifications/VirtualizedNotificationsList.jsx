@@ -39,13 +39,13 @@ const NotificationItem = React.memo(({
               onClick={() => onNotificationClick(notification)} 
               className="block hover:opacity-80 text-right w-full"
             >
-              <h4 className="font-medium text-sm text-slate-900 mb-1">{notification.title}</h4>
-              <p className="text-xs text-slate-600">{notification.message}</p>
+              <h4 className="font-medium text-sm text-slate-900 mb-1">{displayTitle}</h4>
+              <p className="text-xs text-slate-600">{displayMessage}</p>
             </button>
           ) : (
             <>
-              <h4 className="font-medium text-sm text-slate-900 mb-1">{notification.title}</h4>
-              <p className="text-xs text-slate-600">{notification.message}</p>
+              <h4 className="font-medium text-sm text-slate-900 mb-1">{displayTitle}</h4>
+              <p className="text-xs text-slate-600">{displayMessage}</p>
             </>
           )}
           <span className="text-[10px] text-slate-400 mt-1 block">
