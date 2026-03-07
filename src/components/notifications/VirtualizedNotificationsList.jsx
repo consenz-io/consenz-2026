@@ -94,11 +94,11 @@ export default function VirtualizedNotificationsList({
   onNotificationClick,
   formatTimeAgo,
   getNotificationIcon,
-  isRTL
+  isRTL,
+  language
 }) {
   if (!notifications || notifications.length === 0) return null;
 
-  // Use virtualization for lists with >15 items
   if (notifications.length <= 15) {
     return (
       <div className="space-y-2">
@@ -109,9 +109,8 @@ export default function VirtualizedNotificationsList({
             onMarkAsRead={onMarkAsRead}
             onDelete={onDelete}
             onNotificationClick={onNotificationClick}
-            formatTimeAgo={formatTimeAgo}
-            getNotificationIcon={getNotificationIcon}
             isRTL={isRTL}
+            language={language}
           />
         ))}
       </div>
@@ -128,9 +127,8 @@ export default function VirtualizedNotificationsList({
           onMarkAsRead={onMarkAsRead}
           onDelete={onDelete}
           onNotificationClick={onNotificationClick}
-          formatTimeAgo={formatTimeAgo}
-          getNotificationIcon={getNotificationIcon}
           isRTL={isRTL}
+          language={language}
         />
       )}
     />
