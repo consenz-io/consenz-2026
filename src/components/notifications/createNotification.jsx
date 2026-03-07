@@ -829,6 +829,13 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
       }
     });
     
+    const replyReplacements = { name: commenterName };
+    const replyTranslations = buildNotificationTranslations('notifReplyTitle', 'notifReplyMessage', replyReplacements);
+    const commentTitleTranslations = buildNotificationTranslations('notifCommentTitle', 'notifCommentTitle', {});
+    const ownerMessageKey = targetEntityType === 'suggestion' ? 'notifCommentMessageSuggestion' : 'notifCommentMessageSection';
+    const ownerTranslations = buildNotificationTranslations('notifCommentTitle', ownerMessageKey, replyReplacements);
+    const discussionTranslations = buildNotificationTranslations('notifCommentTitle', 'notifCommentOnDiscussion', replyReplacements);
+
     // 1. Parent comment author notification (reply) - FIRST PRIORITY
     if (parentCommentAuthorEmail && emailToUser[parentCommentAuthorEmail]) {
       const parentAuthor = emailToUser[parentCommentAuthorEmail];
@@ -836,8 +843,9 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
       notifications.push({
         userId: parentAuthor.id,
         type: 'comment_reply',
-        title: translate('notifReplyTitle', userLang),
-        message: translate('notifReplyMessage', userLang, { name: commenterName }),
+        title: translate('notifReplyTitle', userLang, replyReplacements),
+        message: translate('notifReplyMessage', userLang, replyReplacements),
+        translations: replyTranslations,
         relatedEntityId: comment.id,
         relatedEntityType: 'comment',
         actionUrl,
@@ -850,12 +858,12 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
     if (ownerEmail && emailToUser[ownerEmail] && ownerEmail !== parentCommentAuthorEmail) {
       const owner = emailToUser[ownerEmail];
       const userLang = owner.preferredLanguage || 'he';
-      const messageKey = targetEntityType === 'suggestion' ? 'notifCommentMessageSuggestion' : 'notifCommentMessageSection';
       notifications.push({
         userId: owner.id,
         type: targetEntityType === 'suggestion' ? 'suggestion_comment' : 'section_comment',
-        title: translate('notifCommentTitle', userLang),
-        message: translate(messageKey, userLang, { name: commenterName }),
+        title: translate('notifCommentTitle', userLang, {}),
+        message: translate(ownerMessageKey, userLang, replyReplacements),
+        translations: ownerTranslations,
         relatedEntityId: targetEntity.id,
         relatedEntityType: targetEntityType,
         actionUrl,
@@ -872,8 +880,9 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
         notifications.push({
           userId: user.id,
           type: targetEntityType === 'suggestion' ? 'suggestion_comment' : 'section_comment',
-          title: translate('notifCommentTitle', userLang),
-          message: translate('notifCommentOnDiscussion', userLang, { name: commenterName }),
+          title: translate('notifCommentTitle', userLang, {}),
+          message: translate('notifCommentOnDiscussion', userLang, replyReplacements),
+          translations: discussionTranslations,
           relatedEntityId: targetEntity.id,
           relatedEntityType: targetEntityType,
           actionUrl,
