@@ -24,17 +24,22 @@ Deno.serve(async (req) => {
     }
 
     await base44.asServiceRole.entities.Notification.bulkCreate(
-      valid.map(n => ({
-        userId: n.userId,
-        type: n.type,
-        title: n.title,
-        message: n.message,
-        translations: n.translations || {},
-        relatedEntityId: n.relatedEntityId || null,
-        relatedEntityType: n.relatedEntityType || null,
-        actionUrl: n.actionUrl || null,
-        read: false
-      }))
+      valid.map(n => {
+        const notif = {
+          userId: n.userId,
+          type: n.type,
+          title: n.title,
+          message: n.message,
+          relatedEntityId: n.relatedEntityId || null,
+          relatedEntityType: n.relatedEntityType || null,
+          actionUrl: n.actionUrl || null,
+          read: false
+        };
+        if (n.translations && Object.keys(n.translations).length > 0) {
+          notif.translations = n.translations;
+        }
+        return notif;
+      })
     );
 
     console.log('[BATCH NOTIFICATIONS] ✓ Created', valid.length, 'notifications');
