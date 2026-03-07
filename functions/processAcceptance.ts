@@ -161,7 +161,21 @@ Deno.serve(async (req) => {
 
       const allSections = await base44.entities.Section.filter({ documentId: suggestion.documentId, topicId: targetTopicId }, 'order');
       const maxOrder = allSections.length > 0 ? Math.max(...allSections.map(s => s.order || 0)) : -1;
-      const newOrder = suggestion.insertPosition ?? (maxOrder + 1);
+
+      // Determine insertion order and shift existing sections if needed to avoid duplicates
+      let newOrder;
+      if (suggestion.insertPosition !== undefined && suggestion.insertPosition !== null) {
+        newOrder = suggestion.insertPosition;
+        // Shift all sections with order >= newOrder up by 1 to make room
+        const sectionsToShift = allSections.filter(s => s.order >= newOrder);
+        if (sectionsToShift.length > 0) {
+          await Promise.all(
+            sectionsToShift.map(s => base44.entities.Section.update(s.id, { order: s.order + 1 }))
+          );
+        }
+      } else {
+        newOrder = maxOrder + 1;
+      }
 
       const newContentLanguage = detectLanguage(suggestion.newContent || '');
       const newSection = await base44.entities.Section.create({
