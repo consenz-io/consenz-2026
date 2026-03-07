@@ -50,23 +50,23 @@ Deno.serve(async (req) => {
        // Award points based on suggestion type
        switch (suggestion.type) {
          case 'new_section':
-           pointsAmount = 200;
+           pointsAmount = 500;
            description = `הצעה לסעיף חדש התקבלה: ${suggestion.title || 'הצעה'}`;
            break;
          case 'edit_section':
-           pointsAmount = 200;
+           pointsAmount = 300;
            description = `הצעה לשינוי סעיף התקבלה: ${suggestion.title || 'הצעה'}`;
            break;
          case 'delete_section':
-           pointsAmount = 200;
+           pointsAmount = 300;
            description = `הצעה למחיקת סעיף התקבלה: ${suggestion.title || 'הצעה'}`;
            break;
          case 'edit_suggestion':
-           pointsAmount = 200;
+           pointsAmount = 300;
            description = `הצעה לשינוי הצעה התקבלה: ${suggestion.title || 'הצעה'}`;
            break;
          default:
-           pointsAmount = 200;
+           pointsAmount = 300;
            description = `ההצעה שלך התקבלה: ${suggestion.title || 'הצעה'}`;
        }
      } else if (action === 'topic_edit_accepted') {
