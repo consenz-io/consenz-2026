@@ -315,15 +315,17 @@ Return ONLY the translated text:`;
   });
 
   const getSectionsForTopic = React.useCallback((topicId) => {
-    const filtered = sections.filter(s => s.topicId === topicId).sort((a, b) => a.order - b.order);
-    // Deduplicate by order - keep only the first (most recently created based on sort) per order value
+    const filtered = sections.filter(s => s.topicId === topicId);
+    // Deduplicate by order - keep the most recently updated section per order value
     // This prevents suggestions from being displayed multiple times when duplicate orders exist in DB
-    const seen = new Set();
-    return filtered.filter(s => {
-      if (seen.has(s.order)) return false;
-      seen.add(s.order);
-      return true;
+    const byOrder = new Map();
+    filtered.forEach(s => {
+      const existing = byOrder.get(s.order);
+      if (!existing || new Date(s.updated_date) > new Date(existing.updated_date)) {
+        byOrder.set(s.order, s);
+      }
     });
+    return Array.from(byOrder.values()).sort((a, b) => a.order - b.order);
   }, [sections]);
 
   const getSuggestionsForSection = React.useCallback((sectionId) => {
