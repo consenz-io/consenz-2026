@@ -59,20 +59,6 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
     }
   };
 
-  const getTimeRemaining = (timerEndsAt) => {
-    const now = new Date();
-    const end = new Date(timerEndsAt);
-    const diff = end - now;
-    
-    if (diff <= 0) return t('votingEnded');
-    
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(hours / 24);
-    
-    if (days > 0) return `${days}d ${hours % 24}h`;
-    return `${hours}h`;
-  };
-
   return (
     <div className="space-y-4">
       {suggestions.length === 0 ? (

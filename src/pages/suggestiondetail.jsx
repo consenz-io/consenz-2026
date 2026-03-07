@@ -678,21 +678,6 @@ export default function SuggestionDetail() {
     }
   };
 
-  const getTimeRemaining = (timerEndsAt) => {
-    if (!timerEndsAt) return null;
-    const now = new Date();
-    const end = new Date(timerEndsAt);
-    const diff = end - now;
-    
-    if (diff <= 0) return t('votingEnded');
-    
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(hours / 24);
-    
-    if (days > 0) return `${days}d ${hours % 24}h ${t('remaining')}`;
-    return `${hours}h ${t('remaining')}`;
-  };
-
   const handleNavigateToVersion = (direction) => {
     const currentIndex = suggestionVersions.findIndex(v => v.suggestionId === suggestionId);
     let targetIndex;
