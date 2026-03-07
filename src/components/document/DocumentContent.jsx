@@ -315,17 +315,9 @@ Return ONLY the translated text:`;
   });
 
   const getSectionsForTopic = React.useCallback((topicId) => {
-    const filtered = sections.filter(s => s.topicId === topicId);
-    // Deduplicate by order - keep the most recently updated section per order value
-    // This prevents suggestions from being displayed multiple times when duplicate orders exist in DB
-    const byOrder = new Map();
-    filtered.forEach(s => {
-      const existing = byOrder.get(s.order);
-      if (!existing || new Date(s.updated_date) > new Date(existing.updated_date)) {
-        byOrder.set(s.order, s);
-      }
-    });
-    return Array.from(byOrder.values()).sort((a, b) => a.order - b.order);
+    return sections
+      .filter(s => s.topicId === topicId)
+      .sort((a, b) => a.order - b.order);
   }, [sections]);
 
   const getSuggestionsForSection = React.useCallback((sectionId) => {
