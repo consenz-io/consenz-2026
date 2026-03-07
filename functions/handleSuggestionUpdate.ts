@@ -88,11 +88,14 @@ Deno.serve(async (req) => {
       return Response.json({ message: 'Creator not found' }, { status: 200 });
     }
 
+    const userLang = creatorUser.preferredLanguage || 'he';
+    const replacements = { title: suggestion.title || '', doc: document.title || '' };
     await base44.asServiceRole.entities.Notification.create({
       userId: creatorUser.id,
       type: 'suggestion_rejected',
-      title: 'ההצעה שלך נדחתה',
-      message: `ההצעה "${suggestion.title}" נדחתה במסמך "${document.title}"`,
+      title: t(userLang, 'rejectedTitle', replacements),
+      message: t(userLang, 'rejectedMessage', replacements),
+      translations: buildTranslations('rejectedTitle', 'rejectedMessage', replacements),
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
       actionUrl: `/suggestiondetail?id=${suggestion.id}`
