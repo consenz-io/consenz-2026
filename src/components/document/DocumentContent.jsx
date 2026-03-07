@@ -885,17 +885,21 @@ Return ONLY the translated text:`;
                               allDocumentSuggestions={suggestions}
                             />
                           </div>
-                            {/* Show suggestions after the last section */}
+                            {/* Show suggestions after the last section.
+                                Shows ALL suggestions not already shown in "before" blocks (index > 0).
+                                "Before" blocks only render for index > 0, so any suggestion for index=0
+                                section's order, or suggestions with no matching section, all appear here. */}
                             {index === topicSections.length - 1 && (
                               <>
                                 {newSectionSuggestions
                                     .filter(s => {
                                       const pos = s.insertPosition;
-                                      // Show only suggestions not shown before any existing section (no section has this order)
-                                      const shownBeforeSomeSection = topicSections.some(sec => pos !== undefined && pos !== null && pos === sec.order);
-                                      if (shownBeforeSomeSection) return false;
-                                      // Show suggestions with insertPosition > last section order, or undefined/null (default to end)
-                                      return pos === undefined || pos === null || pos > section.order;
+                                      // A suggestion was shown in a "before" block only if:
+                                      // its insertPosition matches a section's order AND that section's index > 0
+                                      const shownInBeforeBlock = topicSections.some((sec, secIndex) =>
+                                        secIndex > 0 && pos !== undefined && pos !== null && pos === sec.order
+                                      );
+                                      return !shownInBeforeBlock;
                                     })
                                     .map((suggestion) => (
                                       <NewSectionSuggestionCard
