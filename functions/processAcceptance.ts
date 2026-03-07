@@ -366,39 +366,16 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Points - reuse creator from notifications query
+    // Points - award to suggestion creator
     if (document.gamificationEnabled) {
-      const pointsOperations = [];
-      
-      if (creator) {
-        pointsOperations.push({
-          userId: creator.id,
-          amount: 200,
-          action: 'suggestion_accepted',
-          description: `ההצעה שלך התקבלה: ${suggestion.title || 'הצעה'}`,
-          relatedEntityId: suggestion.id,
-          relatedEntityType: 'suggestion'
+      try {
+        await base44.asServiceRole.functions.invoke('awardSuggestionPoints', {
+          suggestionId: suggestion.id,
+          action: 'suggestion_accepted'
         });
-      }
-      
-      if (wasNewVote) {
-        pointsOperations.push({
-          userId: voterId,
-          amount: 50,
-          action: 'vote_influenced_acceptance',
-          description: 'ההצבעה שלך השפיעה על קבלת ההצעה',
-          relatedEntityId: suggestionId,
-          relatedEntityType: 'suggestion'
-        });
-      }
-      
-      if (pointsOperations.length > 0) {
-        setTimeout(() => {
-          base44.asServiceRole.functions.invoke('pointsQueue', {
-            operations: pointsOperations,
-            processImmediate: true
-          }).catch(err => console.error('[POINTS QUEUE]', err));
-        }, 1000);
+        console.log('[PROCESS ACCEPTANCE] ✓ Points awarded to creator');
+      } catch (err) {
+        console.error('[PROCESS ACCEPTANCE] Points award failed:', err);
       }
     }
 
