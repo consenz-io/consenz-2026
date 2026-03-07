@@ -175,12 +175,6 @@ function LayoutContent({ children, currentPageName }) {
           queryClient.invalidateQueries({ queryKey: ['currentUser'] });
         }
 
-        // Sync preferredLanguage from app language setting
-        const currentAppLanguage = localStorage.getItem('consenz_language') || 'he';
-        if (user.preferredLanguage !== currentAppLanguage) {
-          await base44.auth.updateMe({ preferredLanguage: currentAppLanguage });
-        }
-
         // Create or update UserPublicProfile automatically
         try {
           const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });

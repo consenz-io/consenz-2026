@@ -16,7 +16,7 @@ import VirtualizedNotificationsList from "./VirtualizedNotificationsList";
 import { formatRelativeTime } from "@/components/utils/dateFormatter";
 
 export default function NotificationBell({ user }) {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
