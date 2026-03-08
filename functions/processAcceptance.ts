@@ -271,6 +271,17 @@ Deno.serve(async (req) => {
 
         await base44.entities.Section.delete(section.id);
 
+        // Reject any orphaned suggestions targeting this deleted section
+        try {
+          await base44.asServiceRole.functions.invoke('rejectOrphanedSuggestions', {
+            sectionIds: [section.id],
+            documentId: suggestion.documentId,
+            gamificationEnabled: !!document.gamificationEnabled
+          });
+        } catch (orphanErr) {
+          console.error('[PROCESS ACCEPTANCE] Failed to reject orphaned suggestions:', orphanErr);
+        }
+
         // Create a second version record marking the deletion (content='')
         await base44.entities.DocumentVersion.create({
           documentId: suggestion.documentId,
