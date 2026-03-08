@@ -555,6 +555,12 @@ ${text}`;
                       {topicIndex + 1}. {(topic.originalLanguage || 'he') !== language && showTranslatedTopics[topic.id]
                         ? (translatedTopics[topic.id] || (typeof topic.translations?.[language] === 'string' ? topic.translations[language] : topic.translations?.[language]?.title) || getTopicTitleAtVersion(topic.id, currentVersionIndex))
                         : getTopicTitleAtVersion(topic.id, currentVersionIndex)}
+                      {/* Highlight topic whose title changed in this version */}
+                      {currentSnapshot?.isTopicTitleChange && currentSnapshot?.topicTitleChangeMeta?.topicId === topic.id && (
+                        <span className="ml-2 text-sm font-normal text-purple-600 bg-purple-100 px-2 py-0.5 rounded">
+                          {language === 'he' ? '← שונה בגרסה זו' : language === 'ar' ? '← تغيّر في هذا الإصدار' : '← changed in this version'}
+                        </span>
+                      )}
                     </h2>
                     {(topic.originalLanguage || 'he') !== language && (
                       <Button
