@@ -59,6 +59,36 @@ Deno.serve(async (req) => {
         });
       }
       console.log('[EXPIRE SUGGESTIONS] Done:', suggestion.id, 'notified', recipientEmails.size);
+
+      // Award points to con voters if gamification is enabled
+      try {
+        const documents = await base44.asServiceRole.entities.Document.filter({ id: suggestion.documentId });
+        const document = documents[0];
+        if (document?.gamificationEnabled) {
+          const conVoters = votes.filter(v => v.vote === 'con');
+          if (conVoters.length > 0) {
+            const conVoterUsers = await base44.asServiceRole.entities.User.filter({
+              id: { $in: conVoters.map(v => v.userId).filter(Boolean) }
+            });
+            await Promise.all(conVoterUsers.map(u =>
+              Promise.all([
+                base44.asServiceRole.entities.User.update(u.id, { points: (u.points || 1000) + 50 }),
+                base44.asServiceRole.entities.PointsTransaction.create({
+                  userId: u.id,
+                  amount: 50,
+                  action: 'vote_influenced_acceptance',
+                  description: `הצבעתך השפיעה על דחיית ההצעה: ${suggestion.title || 'הצעה'}`,
+                  relatedEntityId: suggestion.id,
+                  relatedEntityType: 'suggestion'
+                })
+              ])
+            ));
+            console.log('[EXPIRE SUGGESTIONS] ✓ Awarded 50 points to', conVoterUsers.length, 'con voters');
+          }
+        }
+      } catch (pointsErr) {
+        console.error('[EXPIRE SUGGESTIONS] Points award failed (non-critical):', pointsErr.message);
+      }
     }
 
     return Response.json({ success: true, expired: expired.length });
