@@ -55,16 +55,8 @@ const TopicTitleCarousel = React.memo(function TopicTitleCarousel({
     ar: "العربية"
   };
   
-  // חישוב threshold דינמי
-  const consensuses = document.consensuses || [];
-  const totalUsers = document.totalUsersInteracted || 1;
-  let threshold;
-  if (consensuses.length > 0) {
-    const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-    threshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
-  } else {
-    threshold = Math.max(2, document.threshold || 2);
-  }
+  // threshold - זהה ל-VotesNeededCounter: משתמשים ב-document.threshold הקבוע
+  const threshold = Math.max(2, document.threshold || 2);
   
   return (
     <div className="flex items-center gap-2 w-full">
