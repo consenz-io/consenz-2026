@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
         const isCreator = email === suggestion.created_by;
         await base44.asServiceRole.entities.Notification.create({
           userId,
-          type: 'suggestion_rejected',
+          type: 'suggestion_expiring',
           title: isCreator ? 'ההצעה שלך פגה תוקף' : 'הצעה פגה תוקף',
           message: `"${suggestion.title || 'הצעה'}" לא קיבלה מספיק תמיכה בזמן הקצוב ונדחתה.`,
           relatedEntityId: suggestion.id,
