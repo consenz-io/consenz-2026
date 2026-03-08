@@ -314,5 +314,6 @@ export default function FloatingPointsBadge() {
     </Popover>
 
     <PointsInfoModal open={showInfoModal} onClose={() => setShowInfoModal(false)} />
+    </>
   );
 }
