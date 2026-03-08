@@ -36,8 +36,10 @@ const TopicTitleCarousel = React.memo(function TopicTitleCarousel({
     { type: 'current', data: topic, id: 'current' },
     ...topicEditSuggestions.map(s => ({ type: 'suggestion', data: s, id: s.id }))
   ];
-  
-  const currentView = allViews[currentIndex];
+
+  // אפס index אם הוא חורג מהגבולות (למשל כשהצעה נמחקת)
+  const safeIndex = currentIndex >= allViews.length ? 0 : currentIndex;
+  const currentView = allViews[safeIndex];
   
   const handleNext = () => {
     setCurrentIndex((prev) => (prev + 1) % allViews.length);
