@@ -296,9 +296,9 @@ const notifiedStatusChanges = new Set();
 /**
  * Create notification for suggestion status change
  */
-export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
+export async function notifySuggestionStatusChange({ suggestion, newStatus, rejectedByAdmin = true }) {
   console.log('[NOTIFY STATUS] ===== START =====');
-  console.log('[NOTIFY STATUS] Suggestion:', suggestion.id, 'Status:', newStatus);
+  console.log('[NOTIFY STATUS] Suggestion:', suggestion.id, 'Status:', newStatus, 'rejectedByAdmin:', rejectedByAdmin);
   
   try {
     if (!suggestion?.id || !suggestion?.created_by) {
