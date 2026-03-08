@@ -548,9 +548,26 @@ export default function SuggestionSidebar({
                   </Badge>
                 </motion.div>
               ) : (
-                <Badge variant="outline" className={`${getStatusColor(suggestion.status)} text-xs shrink-0`}>
-                  {t(suggestion.status)}
-                </Badge>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className={`${getStatusColor(suggestion.status)} text-xs shrink-0 cursor-default`}>
+                        {t(suggestion.status)}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {suggestion.status === 'pending'
+                        ? (language === 'he' ? 'ממתינה להצבעה' : language === 'ar' ? 'في انتظار التصويت' : 'Awaiting votes')
+                        : suggestion.status === 'accepted'
+                        ? (language === 'he' ? 'ההצעה התקבלה ויושמה במסמך' : language === 'ar' ? 'تمت الموافقة على الاقتراح' : 'Proposal accepted and applied')
+                        : suggestion.status === 'rejected'
+                        ? (language === 'he' ? 'ההצעה נדחתה' : language === 'ar' ? 'تم رفض الاقتراح' : 'Proposal rejected')
+                        : suggestion.status === 'discussion'
+                        ? (language === 'he' ? 'בדיון פתוח' : language === 'ar' ? 'قيد النقاش' : 'Open for discussion')
+                        : suggestion.status}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </AnimatePresence>
             <h2 className="font-semibold text-slate-900 truncate">{suggestion.title}</h2>
