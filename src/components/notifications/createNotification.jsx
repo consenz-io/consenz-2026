@@ -385,7 +385,7 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus, reje
     
     notifications.push({
       userId: creator.id,
-      type: newStatus === 'accepted' ? 'suggestion_accepted' : newStatus === 'rejected' ? 'suggestion_rejected' : 'suggestion_expiring',
+      type: newStatus === 'accepted' ? 'suggestion_accepted' : (newStatus === 'rejected' && rejectedByAdmin) ? 'suggestion_rejected' : 'suggestion_expiring',
       title: translate(statusKey.titleKey, userLang, replacements),
       message: translate(statusKey.messageKey, userLang, replacements),
       translations: buildNotificationTranslations(statusKey.titleKey, statusKey.messageKey, replacements),
