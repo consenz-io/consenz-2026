@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
 
     for (const suggestion of expired) {
       console.log('[EXPIRE SUGGESTIONS] Expiring:', suggestion.id, suggestion.title);
-      await base44.asServiceRole.entities.Suggestion.update(suggestion.id, { status: 'rejected' });
+      await base44.asServiceRole.entities.Suggestion.update(suggestion.id, { status: 'rejected', rejectedByAdmin: false });
 
       const recipientEmails = new Set();
       if (suggestion.created_by) recipientEmails.add(suggestion.created_by);
