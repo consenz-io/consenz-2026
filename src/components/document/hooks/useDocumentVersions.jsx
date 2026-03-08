@@ -116,6 +116,24 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
           return sum + Math.min(1, consensus);
         }, 0) / acceptedSuggestionsUpToHere.length;
 
+      // Detect topic title change versions
+      const isTopicTitleChange = afterVersion.content?.startsWith('topic_title_change:');
+      let topicTitleChangeMeta = null;
+      if (isTopicTitleChange) {
+        const parts = afterVersion.content.split(':');
+        // format: topic_title_change:topicId:originalTitle:newTitle
+        topicTitleChangeMeta = {
+          topicId: parts[1],
+          originalTitle: parts.slice(2, parts.length - 1).join(':'),
+          newTitle: parts[parts.length - 1]
+        };
+        // Try smarter split since titles may contain colons
+        const match = afterVersion.content.match(/^topic_title_change:([^:]+):(.+):([^:]+)$/);
+        if (match) {
+          topicTitleChangeMeta = { topicId: match[1], originalTitle: match[2], newTitle: match[3] };
+        }
+      }
+
       const snapshotAfterChange = {
         version: afterVersion.version,
         label: `גרסה ${afterVersion.version}`,
@@ -125,8 +143,10 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
         suggestionId: afterVersion.suggestionId,
         sectionContents: { ...currentSectionContents },
         existingSections: new Set(currentExistingSections),
-        changedSectionId: afterVersion.sectionId,
-        newContent: afterVersion.content,
+        changedSectionId: isTopicTitleChange ? null : afterVersion.sectionId,
+        newContent: isTopicTitleChange ? null : afterVersion.content,
+        isTopicTitleChange: isTopicTitleChange || false,
+        topicTitleChangeMeta,
         allSectionIds,
         proVotes: relatedSuggestion?.proVotes || 0,
         conVotes: relatedSuggestion?.conVotes || 0,
