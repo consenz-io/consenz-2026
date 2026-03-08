@@ -9,18 +9,18 @@ const translateTitle = (title, t, language) => {
   if (typeof title !== 'string') {
     return title;
   }
-  
+
   // Translate suggestion titles dynamically
   const newSectionMatch = title.match(/^New section in (.+)$/i);
   const editSectionMatch = title.match(/^Edit section in (.+)$/i);
-  
+
   if (newSectionMatch) {
     return t('newSectionIn', { topic: newSectionMatch[1] });
   }
   if (editSectionMatch) {
     return t('editSectionIn', { topic: editSectionMatch[1] });
   }
-  
+
   return title;
 };
 
@@ -35,18 +35,18 @@ export default function PageHeader({ title, documentTitle }) {
 
   return (
     <div className="flex items-center mb-6 gap-3">
-      <Button 
-        variant="outline" 
-        size="icon" 
+      <Button
+        variant="outline"
+        size="icon"
         onClick={handleBack}
-        className="shrink-0"
-      >
+        className="shrink-0">
+
         {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
       </Button>
-      <h1 className="text-lg md:text-3xl font-bold text-slate-900 flex-1 text-center">
-        {documentTitle ? (language === 'he' ? `הצעה לעריכה במסמך "${documentTitle}"` : language === 'ar' ? `اقتراح تعديل في الوثيقة "${documentTitle}"` : `Suggestion to edit document "${documentTitle}"`) : translatedTitle}
+      <h1 className="text-slate-900 text-sm font-bold text-center md:text-3xl flex-1">
+        {documentTitle ? language === 'he' ? `הצעה לעריכה במסמך "${documentTitle}"` : language === 'ar' ? `اقتراح تعديل في الوثيقة "${documentTitle}"` : `Suggestion to edit document "${documentTitle}"` : translatedTitle}
       </h1>
       <div className="w-10 shrink-0" /> {/* Spacer to balance the button */}
-    </div>
-  );
+    </div>);
+
 }
