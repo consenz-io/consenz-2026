@@ -71,7 +71,7 @@ export default function PointsCostConfirmDialog({
               <span className="text-2xl font-bold text-slate-900">{currentPoints}</span>
             </div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-slate-600">עלות {actionText}:</span>
+              <span className="text-sm text-slate-600">{strings.actionCost}</span>
               <span className="text-xl font-bold text-red-600">-{cost}</span>
             </div>
             <div className="border-t border-slate-300 my-2"></div>
