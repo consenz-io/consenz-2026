@@ -109,10 +109,10 @@ export default function PointsCostConfirmDialog({
 
         <DialogFooter className="gap-2">
           <Button onClick={onClose} variant="outline">
-            ביטול
+            {strings.cancel}
           </Button>
           <Button onClick={handleConfirm} className="bg-gradient-to-r from-blue-600 to-indigo-600">
-            אישור
+            {strings.ok}
           </Button>
         </DialogFooter>
       </DialogContent>
