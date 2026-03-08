@@ -84,6 +84,7 @@ function AnimatedCounter({ value }) {
 export default function FloatingPointsBadge() {
   const { language, isRTL } = useLanguage();
   const queryClient = useQueryClient();
+  const [showInfoModal, setShowInfoModal] = React.useState(false);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
