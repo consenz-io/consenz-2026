@@ -91,12 +91,26 @@ export default function DocumentAdmin() {
 
   const updateDocMutation = useMutation({
     mutationFn: async (data) => {
-      return await base44.entities.Document.update(documentId, data);
+      const lifetimeChanged = document && data.defaultSuggestionLifetimeHours !== document.defaultSuggestionLifetimeHours;
+      await base44.entities.Document.update(documentId, data);
+      if (lifetimeChanged) {
+        const newTimerEndsAt = new Date(Date.now() + data.defaultSuggestionLifetimeHours * 60 * 60 * 1000).toISOString();
+        const pendingSuggestions = await base44.entities.Suggestion.filter({ documentId, status: 'pending' });
+        await Promise.all(pendingSuggestions.map(s =>
+          base44.entities.Suggestion.update(s.id, { timerEndsAt: newTimerEndsAt })
+        ));
+        return { resetCount: pendingSuggestions.length };
+      }
+      return { resetCount: 0 };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['document', documentId] });
-      setSuccess("Document settings updated successfully!");
-      setTimeout(() => setSuccess(null), 3000);
+      queryClient.invalidateQueries({ queryKey: ['suggestions', documentId] });
+      const msg = result.resetCount > 0
+        ? `ההגדרות נשמרו. הטיימרים של ${result.resetCount} הצעות ממתינות אופסו.`
+        : "Document settings updated successfully!";
+      setSuccess(msg);
+      setTimeout(() => setSuccess(null), 4000);
     },
     onError: (err) => {
       setError(err.message || "Failed to update document");
