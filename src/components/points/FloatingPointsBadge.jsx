@@ -81,45 +81,6 @@ function AnimatedCounter({ value }) {
   return <span className="font-bold text-sm tabular-nums">{displayValue}</span>;
 }
 
-const EARN_POINTS_CONTENT = {
-  he: {
-    title: 'איך צוברים נקודות?',
-    subtitle: 'ככה עובד מנגנון הנקודות במערכת:',
-    items: [
-      { icon: ThumbsUp, color: 'text-blue-500', bg: 'bg-blue-50', label: 'הצביעו על הצעות', desc: 'כשמישהו מצביע בעד ההצעה שלכם, אתם מרוויחים נקודות. ככל שתקבלו יותר הצבעות — תרוויחו יותר!', points: '+10 לכל הצבעה בעד' },
-      { icon: Lightbulb, color: 'text-amber-500', bg: 'bg-amber-50', label: 'הציעו הצעות', desc: 'הגשת הצעה עולה נקודות, אך אם ההצעה תתקבל — תקבלו הרבה יותר חזרה.', points: '−200 ליצירה' },
-      { icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50', label: 'הצעת עריכה / מחיקה התקבלה', desc: 'ההצעה שלכם לעריכה או מחיקת סעיף השיגה מספיק הצבעות והתקבלה!', points: '+300 בונוס' },
-      { icon: Star, color: 'text-purple-500', bg: 'bg-purple-50', label: 'הצעה לסעיף חדש התקבלה', desc: 'הצעתם סעיף חדש שהקהילה אישרה? זה השיא — בונוס הכי גדול!', points: '+500 בונוס' },
-    ],
-    cta: 'קדימה להצביע!',
-    note: 'הצביעו על הצעות של אחרים כדי לעזור להם לצבור נקודות — ולעודד אותם להציע עוד.',
-  },
-  ar: {
-    title: 'كيف تكسب النقاط؟',
-    subtitle: 'هكذا يعمل نظام النقاط في المنصة:',
-    items: [
-      { icon: ThumbsUp, color: 'text-blue-500', bg: 'bg-blue-50', label: 'صوّت على اقتراحات الآخرين', desc: 'عندما يصوّت أحدهم لصالح اقتراحك، تربح نقاطاً. كلما حصلت على أصوات أكثر، ربحت أكثر!', points: '+10 لكل تصويت مؤيد' },
-      { icon: Lightbulb, color: 'text-amber-500', bg: 'bg-amber-50', label: 'قدّم اقتراحات', desc: 'تقديم اقتراح يكلّف نقاطاً، لكن إن قُبِل ستحصل على أكثر بكثير.', points: '−200 للإنشاء' },
-      { icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50', label: 'اقتراح تعديل / حذف قُبِل', desc: 'اقتراحك لتعديل أو حذف فقرة نال أصواتاً كافية وقُبِل!', points: '+300 مكافأة' },
-      { icon: Star, color: 'text-purple-500', bg: 'bg-purple-50', label: 'اقتراح فقرة جديدة قُبِل', desc: 'اقترحت فقرة جديدة وافق عليها المجتمع؟ هذه أعلى مكافأة!', points: '+500 مكافأة' },
-    ],
-    cta: 'اذهب للتصويت الآن!',
-    note: 'صوّت على اقتراحات الآخرين لمساعدتهم على كسب نقاط — وتشجيعهم على تقديم المزيد.',
-  },
-  en: {
-    title: 'How to Earn Points?',
-    subtitle: 'Here\'s how the points system actually works:',
-    items: [
-      { icon: ThumbsUp, color: 'text-blue-500', bg: 'bg-blue-50', label: 'Get Votes on Your Suggestions', desc: 'Every time someone votes in favor of your suggestion, you earn points. More votes = more points!', points: '+10 per pro vote' },
-      { icon: Lightbulb, color: 'text-amber-500', bg: 'bg-amber-50', label: 'Submit Suggestions', desc: 'Creating a suggestion costs points, but if it gets accepted you\'ll earn far more back.', points: '−200 to create' },
-      { icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50', label: 'Edit / Delete Suggestion Accepted', desc: 'Your edit or delete suggestion received enough votes and was accepted!', points: '+300 bonus' },
-      { icon: Star, color: 'text-purple-500', bg: 'bg-purple-50', label: 'New Section Suggestion Accepted', desc: 'You proposed a new section that the community approved? That\'s the biggest reward!', points: '+500 bonus' },
-    ],
-    cta: 'Go Vote Now!',
-    note: 'Vote on others\' suggestions to help them earn points — and encourage more participation.',
-  },
-};
-
 export default function FloatingPointsBadge() {
   const { language, isRTL } = useLanguage();
   const [showEarnModal, setShowEarnModal] = React.useState(false);
