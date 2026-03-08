@@ -151,6 +151,7 @@ export default function FloatingPointsBadge() {
   if (!user) return null;
 
   return (
+    <>
     <Popover onOpenChange={(open) => {
       if (open && hasNewPoints) {
         markAsViewedMutation.mutate();
