@@ -174,44 +174,34 @@ export default function FloatingPointsBadge() {
         </button>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-80 max-h-96 overflow-y-auto" 
+        className="w-80 p-0 flex flex-col" 
+        style={{ maxHeight: '24rem' }}
         align={isRTL ? 'start' : 'end'}
         side="top"
       >
-        <div className="space-y-3">
+        {/* Scrollable feed */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-0">
           <div className="flex items-center justify-between border-b pb-2">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-slate-900">
-                {hasNewPoints 
-                  ? (language === 'he' ? 'נקודות חדשות' : language === 'ar' ? 'نقاط جديدة' : 'New Points')
-                  : (language === 'he' ? 'הנקודות שלך' : language === 'ar' ? 'نقاطك' : 'Your Points')
-                }
-              </h3>
-              <a 
-                href={createPageUrl('LearnMore') + '#gamification'}
-                className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {language === 'he' ? '?' : '?'}
-              </a>
-            </div>
+            <h3 className="font-semibold text-slate-900">
+              {hasNewPoints 
+                ? (language === 'he' ? 'נקודות חדשות' : language === 'ar' ? 'نقاط جديدة' : 'New Points')
+                : (language === 'he' ? 'הנקודות שלך' : language === 'ar' ? 'نقاطك' : 'Your Points')
+              }
+            </h3>
             <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-lg font-bold">
               {currentPoints}
             </Badge>
           </div>
 
           {hasNewPoints && (
-            <>
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg border border-green-200">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-green-800">
-                    {language === 'he' ? 'נקודות חדשות' : language === 'ar' ? 'نقاط جديدة' : 'New Points'}
-                  </span>
-                  <span className="text-xl font-bold text-green-600">+{totalNewPoints}</span>
-                </div>
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-3 rounded-lg border border-green-200">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-green-800">
+                  {language === 'he' ? 'נקודות חדשות' : language === 'ar' ? 'نقاط جديدة' : 'New Points'}
+                </span>
+                <span className="text-xl font-bold text-green-600">+{totalNewPoints}</span>
               </div>
-            </>
+            </div>
           )}
 
           {isLoadingTransactions && (
@@ -223,7 +213,6 @@ export default function FloatingPointsBadge() {
           {!isLoadingTransactions && newPointsTransactions.length > 0 && (
             <div className="space-y-2">
               {newPointsTransactions.slice(0, 10).map((transaction, index) => {
-                // Calculate balance at time of transaction
                 const transactionsAfter = newPointsTransactions.slice(0, index);
                 const pointsAfter = transactionsAfter.reduce((sum, t) => sum + (t.amount || 0), 0);
                 const balanceAtTime = currentPoints - pointsAfter;
@@ -277,38 +266,31 @@ export default function FloatingPointsBadge() {
           )}
 
           {!isLoadingTransactions && newPointsTransactions.length === 0 && pointsTransactions.length === 0 && (
-            <div className="space-y-2">
-              <div className="block p-3 rounded-lg border bg-green-50 border-green-200">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge variant="outline" className="text-xs font-semibold bg-green-100 text-green-800 border-green-300">
-                        +1000
-                      </Badge>
-                      <span className="text-xs text-slate-400">
-                        (1000)
-                      </span>
-                    </div>
-                    <p className="text-sm text-slate-700 font-medium">
-                      {language === 'he' ? 'מענק הצטרפות' : language === 'ar' ? 'مكافأة الانضمام' : 'Welcome bonus'}
-                    </p>
-                  </div>
-                </div>
+            <div className="block p-3 rounded-lg border bg-green-50 border-green-200">
+              <div className="flex items-center gap-2 mb-1">
+                <Badge variant="outline" className="text-xs font-semibold bg-green-100 text-green-800 border-green-300">
+                  +1000
+                </Badge>
+                <span className="text-xs text-slate-400">(1000)</span>
               </div>
+              <p className="text-sm text-slate-700 font-medium">
+                {language === 'he' ? 'מענק הצטרפות' : language === 'ar' ? 'مكافأة الانضمام' : 'Welcome bonus'}
+              </p>
             </div>
           )}
+        </div>
 
-          <div className="border-t pt-2">
-            <Button
-              variant="outline"
-              className="w-full"
-              size="sm"
-              onClick={() => setShowInfoModal(true)}
-            >
-              <HelpCircle className="w-4 h-4 mr-1" />
-              {language === 'he' ? 'איך צוברים נקודות?' : language === 'ar' ? 'كيف تكسب النقاط؟' : 'How to Earn Points?'}
-            </Button>
-          </div>
+        {/* Fixed footer button */}
+        <div className="border-t p-2 bg-white shrink-0">
+          <Button
+            variant="outline"
+            className="w-full"
+            size="sm"
+            onClick={() => setShowInfoModal(true)}
+          >
+            <HelpCircle className="w-4 h-4 mr-1" />
+            {language === 'he' ? 'איך צוברים נקודות?' : language === 'ar' ? 'كيف تكسب النقاط؟' : 'How to Earn Points?'}
+          </Button>
         </div>
       </PopoverContent>
     </Popover>
