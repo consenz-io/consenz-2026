@@ -551,19 +551,11 @@ Return ONLY the translated text:`;
           conVotes: newConVotes
         });
 
-        // בדיקת קונצנזוס ואישור אוטומטי
+        // בדיקת קונצנזוס ואישור אוטומטי - זהה ל-voteOnSuggestion: משתמשים ב-document.threshold הקבוע
         const delta = updatedSuggestion.proVotes - updatedSuggestion.conVotes;
-        const consensuses = document.consensuses || [];
-        const totalUsers = document.totalUsersInteracted || 1;
-        let dynamicThreshold;
-        if (consensuses.length > 0) {
-          const consensusMeterAverage = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-          dynamicThreshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
-        } else {
-          dynamicThreshold = Math.max(2, document.threshold || 2);
-        }
+        const thresholdForAcceptance = Math.max(2, document.threshold || 2);
         
-        if (delta >= dynamicThreshold && topicSuggestion) {
+        if (delta >= thresholdForAcceptance && topicSuggestion) {
           await Promise.all([
             base44.entities.Topic.update(topicSuggestion.topicId, { title: topicSuggestion.newTitle }),
             base44.entities.TopicEditSuggestion.update(suggestionId, { status: 'accepted' })
