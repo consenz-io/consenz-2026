@@ -556,6 +556,16 @@ Return ONLY the translated text:`;
         const thresholdForAcceptance = Math.max(2, document.threshold || 2);
         
         if (delta >= thresholdForAcceptance && topicSuggestion) {
+          // Optimistically update UI immediately before server calls
+          queryClient.setQueryData(['topics', document.id], (oldTopics) => {
+            if (!oldTopics) return oldTopics;
+            return oldTopics.map(t => t.id === topicSuggestion.topicId ? { ...t, title: topicSuggestion.newTitle } : t);
+          });
+          queryClient.setQueryData(['topicEditSuggestions', document.id], (oldSuggestions) => {
+            if (!oldSuggestions) return oldSuggestions;
+            return oldSuggestions.map(s => s.id === suggestionId ? { ...s, status: 'accepted' } : s);
+          });
+
           // Update topic title and mark suggestion accepted
           await Promise.all([
             base44.entities.Topic.update(topicSuggestion.topicId, { title: topicSuggestion.newTitle }),
