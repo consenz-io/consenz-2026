@@ -12,47 +12,58 @@ import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
 import PointsInfoModal from "./PointsInfoModal";
 
+// Extract title suffix after the first colon
+const extractTitle = (description) => description.split(':').slice(1).join(':').trim() || '';
+
 // Translation helper for transaction descriptions
-const translateTransactionDescription = (description, language) => {
-  if (!description) return '';
-  
-  // Hebrew patterns
-  if (description.includes('הצעה לסעיף חדש התקבלה')) {
-    const title = description.split(':')[1]?.trim() || '';
-    return language === 'en' ? `New section suggestion accepted: ${title}` : 
-           language === 'ar' ? `تم قبول اقتراح قسم جديد: ${title}` : description;
+const translateTransactionDescription = (transaction, language) => {
+  const description = transaction?.description || transaction || '';
+  const action = transaction?.action;
+  const title = extractTitle(description);
+
+  // Use action enum for reliable translation
+  if (action === 'suggestion_accepted' || action === 'suggestion_created') {
+    const label = action === 'suggestion_accepted'
+      ? { en: 'Suggestion accepted', he: 'הצעה התקבלה', ar: 'تم قبول الاقتراح' }
+      : { en: 'Created suggestion', he: 'יצירת הצעה', ar: 'تم إنشاء اقتراح' };
+    const l = label[language] || label.en;
+    return title ? `${l}: ${title}` : l;
   }
-  if (description.includes('הצעה לשינוי סעיף התקבלה')) {
-    const title = description.split(':')[1]?.trim() || '';
-    return language === 'en' ? `Section edit suggestion accepted: ${title}` :
-           language === 'ar' ? `تم قبول اقتراح تعديل قسم: ${title}` : description;
+  if (action === 'vote_received') {
+    return language === 'he' ? 'קיבלת הצבעה בעד' : language === 'ar' ? 'تلقيت تصويتًا مع' : 'Received a pro vote';
   }
-  if (description.includes('הצעה למחיקת סעיף התקבלה')) {
-    const title = description.split(':')[1]?.trim() || '';
-    return language === 'en' ? `Section deletion suggestion accepted: ${title}` :
-           language === 'ar' ? `تم قبول اقتراح حذف قسم: ${title}` : description;
+  if (action === 'vote_canceled') {
+    return language === 'he' ? 'הצבעה בוטלה' : language === 'ar' ? 'تم إلغاء التصويت' : 'Vote canceled';
   }
-  if (description.includes('הצעה לשינוי הצעה התקבלה')) {
-    const title = description.split(':')[1]?.trim() || '';
-    return language === 'en' ? `Suggestion edit accepted: ${title}` :
-           language === 'ar' ? `تم قبول تعديل اقتراح: ${title}` : description;
+  if (action === 'vote_influenced_acceptance') {
+    return language === 'he' ? 'הצבעתך השפיעה על קבלת הצעה' : language === 'ar' ? 'أثّر تصويتك على قبول اقتراح' : 'Your vote influenced suggestion acceptance';
   }
-  if (description.includes('ההצעה שלך התקבלה')) {
-    const title = description.split(':')[1]?.trim() || '';
-    return language === 'en' ? `Your suggestion was accepted: ${title}` :
-           language === 'ar' ? `تم قبول اقتراحك: ${title}` : description;
+
+  // Fallback: pattern matching on stored description text (any language)
+  const d = description;
+  if (d.includes('הצעה לסעיף חדש התקבלה') || d.includes('new section suggestion accepted')) {
+    return language === 'he' ? `הצעה לסעיף חדש התקבלה: ${title}` : language === 'ar' ? `تم قبول اقتراح قسم جديد: ${title}` : `New section suggestion accepted: ${title}`;
   }
-  if (description.includes('הצעתך לעריכת כותרת נושא התקבלה')) {
-    return language === 'en' ? 'Your topic title edit was accepted' :
-           language === 'ar' ? 'تم قبول تعديل عنوان الموضوع' : description;
+  if (d.includes('הצעה לשינוי סעיף התקבלה') || d.includes('section edit')) {
+    return language === 'he' ? `הצעה לעריכת סעיף התקבלה: ${title}` : language === 'ar' ? `تم قبول اقتراح تعديل قسم: ${title}` : `Section edit accepted: ${title}`;
   }
-  if (description.includes('יצירת הצעה')) {
-    const title = description.split(':')[1]?.trim() || '';
-    return language === 'en' ? `Created suggestion: ${title}` :
-           language === 'ar' ? `تم إنشاء اقتراح: ${title}` : description;
+  if (d.includes('הצעה למחיקת סעיף')) {
+    return language === 'he' ? `הצעה למחיקת סעיף התקבלה: ${title}` : language === 'ar' ? `تم قبول اقتراح حذف قسم: ${title}` : `Section deletion accepted: ${title}`;
   }
-  
-  return description;
+  if (d.includes('ההצעה שלך התקבלה') || d.includes('your suggestion was accepted')) {
+    return language === 'he' ? `ההצעה שלך התקבלה: ${title}` : language === 'ar' ? `تم قبول اقتراحك: ${title}` : `Your suggestion was accepted: ${title}`;
+  }
+  if (d.includes('הצעתך לעריכת כותרת נושא התקבלה')) {
+    return language === 'he' ? 'עריכת כותרת נושא התקבלה' : language === 'ar' ? 'تم قبول تعديل عنوان الموضوع' : 'Topic title edit accepted';
+  }
+  if (d.includes('יצירת הצעה') || d.includes('created suggestion')) {
+    return language === 'he' ? `יצירת הצעה: ${title}` : language === 'ar' ? `تم إنشاء اقتراح: ${title}` : `Created suggestion: ${title}`;
+  }
+  if (d.includes('מענק הצטרפות') || d.includes('welcome bonus')) {
+    return language === 'he' ? 'מענק הצטרפות' : language === 'ar' ? 'مكافأة الانضمام' : 'Welcome bonus';
+  }
+
+  return d;
 };
 
 function AnimatedCounter({ value }) {
