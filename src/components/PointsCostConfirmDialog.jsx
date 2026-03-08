@@ -56,9 +56,9 @@ export default function PointsCostConfirmDialog({
               <Coins className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <DialogTitle className="text-xl">אישור {actionText}</DialogTitle>
+              <DialogTitle className="text-xl">{strings.confirm}</DialogTitle>
               <DialogDescription className="text-sm text-slate-600">
-                פעולה זו תנכה {cost} נקודות
+                {strings.deduct}
               </DialogDescription>
             </div>
           </div>
