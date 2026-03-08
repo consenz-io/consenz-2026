@@ -92,7 +92,7 @@ export default function PointsCostConfirmDialog({
                 htmlFor="dontShowAgain"
                 className="text-sm text-blue-900 cursor-pointer"
               >
-                אל תציג הודעה זו שוב
+                {strings.dontShow}
               </label>
             </div>
             <a
