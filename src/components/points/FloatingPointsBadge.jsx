@@ -267,7 +267,7 @@ export default function FloatingPointsBadge() {
                             {formatLocalDateTime(transaction.created_date, 'DD/MM HH:mm')}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-700 font-medium">{translateTransactionDescription(transaction.description, language)}</p>
+                        <p className="text-sm text-slate-700 font-medium">{translateTransactionDescription(transaction, language)}</p>
                       </div>
                     </div>
                   </Component>
