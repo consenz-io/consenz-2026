@@ -1,10 +1,11 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Coins } from "lucide-react";
+import { Coins, ThumbsUp, Lightbulb, CheckCircle2, Star, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useLanguage } from "@/components/LanguageContext";
 import { formatLocalDateTime } from "@/components/utils/dateFormatter";
 import { Link } from "react-router-dom";
