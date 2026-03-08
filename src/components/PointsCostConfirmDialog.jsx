@@ -76,7 +76,7 @@ export default function PointsCostConfirmDialog({
             </div>
             <div className="border-t border-slate-300 my-2"></div>
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-slate-700">יתרה לאחר הפעולה:</span>
+              <span className="text-sm font-medium text-slate-700">{strings.balanceAfter}</span>
               <span className="text-2xl font-bold text-green-600">{currentPoints - cost}</span>
             </div>
           </div>
