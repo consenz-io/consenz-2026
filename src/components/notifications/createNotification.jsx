@@ -343,7 +343,10 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus, reje
     
     const statusKeys = {
       accepted: { titleKey: 'notifAcceptedTitle', messageKey: 'notifAcceptedMessage' },
-      rejected: { titleKey: 'notifRejectedTitle', messageKey: 'notifRejectedMessage' },
+      // rejected by admin uses rejection message, expired uses expiry message
+      rejected: rejectedByAdmin
+        ? { titleKey: 'notifRejectedTitle', messageKey: 'notifRejectedMessage' }
+        : { titleKey: 'notifExpiredTitle', messageKey: 'notifExpiredMessage' },
       expired: { titleKey: 'notifExpiredTitle', messageKey: 'notifExpiredMessage' }
     };
     
