@@ -478,7 +478,15 @@ ${text}`;
             }`}
           >
             <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
-              {currentSnapshot.isDirectEdit ? (
+              {currentSnapshot.isTopicTitleChange ? (
+                <span className="px-2 py-1 bg-purple-100 rounded border border-purple-300 font-semibold text-purple-800">
+                  {language === 'he'
+                    ? `📝 שינוי כותרת נושא: "${currentSnapshot.topicTitleChangeMeta?.originalTitle}" → "${currentSnapshot.topicTitleChangeMeta?.newTitle}"`
+                    : language === 'ar'
+                    ? `📝 تغيير عنوان الموضوع: "${currentSnapshot.topicTitleChangeMeta?.originalTitle}" → "${currentSnapshot.topicTitleChangeMeta?.newTitle}"`
+                    : `📝 Topic title change: "${currentSnapshot.topicTitleChangeMeta?.originalTitle}" → "${currentSnapshot.topicTitleChangeMeta?.newTitle}"`}
+                </span>
+              ) : currentSnapshot.isDirectEdit ? (
                 <span className="px-2 py-1 bg-amber-100 rounded border border-amber-300 font-semibold text-amber-800">
                   {language === 'he' ? '✏️ עריכה ישירה על ידי מנהל' : language === 'ar' ? '✏️ تعديل مباشر من المسؤول' : '✏️ Direct Admin Edit'}
                 </span>
