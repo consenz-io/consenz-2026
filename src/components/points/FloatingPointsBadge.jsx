@@ -6,7 +6,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
-import EarnPointsModal from "./EarnPointsModal";
 import { formatLocalDateTime } from "@/components/utils/dateFormatter";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -83,7 +82,6 @@ function AnimatedCounter({ value }) {
 
 export default function FloatingPointsBadge() {
   const { language, isRTL } = useLanguage();
-  const [showEarnModal, setShowEarnModal] = React.useState(false);
   const queryClient = useQueryClient();
 
   const { data: user } = useQuery({
@@ -298,14 +296,14 @@ export default function FloatingPointsBadge() {
           )}
 
           <div className="border-t pt-2">
-            <Button variant="outline" className="w-full" size="sm" onClick={() => setShowEarnModal(true)}>
-              {language === 'he' ? 'איך צוברים נקודות?' : language === 'ar' ? 'كيف تكسب النقاط؟' : 'How to Earn Points?'}
-            </Button>
+            <Link to={createPageUrl("LearnMore") + '#gamification'}>
+              <Button variant="outline" className="w-full" size="sm">
+                {language === 'he' ? 'איך צוברים נקודות?' : language === 'ar' ? 'كيف تكسب النقاط؟' : 'How to Earn Points?'}
+              </Button>
+            </Link>
           </div>
         </div>
       </PopoverContent>
-
-      <EarnPointsModal open={showEarnModal} onClose={() => setShowEarnModal(false)} />
     </Popover>
   );
 }
