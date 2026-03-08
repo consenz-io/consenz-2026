@@ -1123,10 +1123,11 @@ export async function autoAcceptTopicEditSuggestion(suggestion, userId, document
     await base44.entities.DocumentVersion.create({
       documentId: document.id,
       sectionId: firstSectionId,
-      content: `כותרת נושא עודכנה: ${freshSuggestion.originalTitle} → ${freshSuggestion.newTitle}`,
+      content: `topic_title_change:${freshSuggestion.topicId}:${freshSuggestion.originalTitle}:${freshSuggestion.newTitle}`,
       changeDescription: `כותרת נושא עודכנה: ${freshSuggestion.originalTitle} → ${freshSuggestion.newTitle}`,
       version: nextVersion,
       changeType: 'suggestion_accepted',
+      suggestionId: freshSuggestion.id,
       originalLanguage: 'he',
       translations: {}
     });
