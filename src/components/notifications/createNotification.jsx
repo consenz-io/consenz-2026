@@ -307,11 +307,33 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus }) {
     }
     
     // Prevent duplicate notifications for the same suggestion status change
+    // Check in DB to survive page refreshes
     const notificationKey = `${suggestion.id}-${newStatus}`;
     if (notifiedStatusChanges.has(notificationKey)) {
-      console.log('[NOTIFY STATUS] ⚠️ Already sent notification for this status change, skipping');
+      console.log('[NOTIFY STATUS] ⚠️ Already sent notification for this status change (memory cache), skipping');
       return;
     }
+    
+    // Also check DB for recent notifications (last 10 minutes) for this suggestion+status
+    try {
+      const creatorList = await base44.entities.User.filter({ email: suggestion.created_by });
+      const creator = creatorList[0];
+      if (creator?.id) {
+        const recentNotifs = await base44.entities.Notification.filter({
+          userId: creator.id,
+          relatedEntityId: suggestion.id,
+          type: newStatus === 'accepted' ? 'suggestion_accepted' : newStatus === 'rejected' ? 'suggestion_rejected' : 'suggestion_expiring'
+        });
+        if (recentNotifs.length > 0) {
+          console.log('[NOTIFY STATUS] ⚠️ Notification already exists in DB for this suggestion+status, skipping');
+          notifiedStatusChanges.add(notificationKey);
+          return;
+        }
+      }
+    } catch (dupCheckErr) {
+      console.warn('[NOTIFY STATUS] Could not check for duplicate notifications:', dupCheckErr.message);
+    }
+    
     notifiedStatusChanges.add(notificationKey);
     
     // Clean cache periodically to prevent memory leaks
