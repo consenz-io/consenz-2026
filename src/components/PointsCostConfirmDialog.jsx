@@ -21,12 +21,23 @@ export default function PointsCostConfirmDialog({
   currentPoints,
   actionType // "document" or "suggestion"
 }) {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
-  const actionText = actionType === "document" 
-    ? "יצירת מסמך חדש" 
-    : "יצירת הצעה";
+  const actionText = actionType === "document"
+    ? (language === 'he' ? 'יצירת מסמך חדש' : language === 'ar' ? 'إنشاء مستند جديد' : 'Create new document')
+    : (language === 'he' ? 'יצירת הצעה' : language === 'ar' ? 'إنشاء اقتراح' : 'Create suggestion');
+
+  const strings = {
+    confirm: language === 'he' ? `אישור ${actionText}` : language === 'ar' ? `تأكيد ${actionText}` : `Confirm ${actionText}`,
+    deduct: language === 'he' ? `פעולה זו תנכה ${cost} נקודות` : language === 'ar' ? `ستخصم هذه العملية ${cost} نقطة` : `This action will deduct ${cost} points`,
+    currentPoints: language === 'he' ? 'הנקודות שלך כרגע:' : language === 'ar' ? 'نقاطك الحالية:' : 'Your current points:',
+    actionCost: language === 'he' ? `עלות ${actionText}:` : language === 'ar' ? `تكلفة ${actionText}:` : `Cost of ${actionText}:`,
+    balanceAfter: language === 'he' ? 'יתרה לאחר הפעולה:' : language === 'ar' ? 'الرصيد بعد العملية:' : 'Balance after action:',
+    dontShow: language === 'he' ? 'אל תציג הודעה זו שוב' : language === 'ar' ? 'لا تعرض هذه الرسالة مجددًا' : "Don't show this again",
+    cancel: language === 'he' ? 'ביטול' : language === 'ar' ? 'إلغاء' : 'Cancel',
+    ok: language === 'he' ? 'אישור' : language === 'ar' ? 'تأكيد' : 'Confirm',
+  };
 
   const handleConfirm = () => {
     if (dontShowAgain) {
