@@ -337,14 +337,57 @@ export default function FloatingPointsBadge() {
           )}
 
           <div className="border-t pt-2">
-            <Link to={createPageUrl("LearnMore") + '#gamification'}>
-              <Button variant="outline" className="w-full" size="sm">
-                {language === 'he' ? 'איך צוברים נקודות?' : language === 'ar' ? 'كيف تكسب النقاط؟' : 'How to Earn Points?'}
-              </Button>
-            </Link>
+            <Button variant="outline" className="w-full" size="sm" onClick={() => setShowEarnModal(true)}>
+              {language === 'he' ? 'איך צוברים נקודות?' : language === 'ar' ? 'كيف تكسب النقاط؟' : 'How to Earn Points?'}
+            </Button>
           </div>
         </div>
       </PopoverContent>
+
+      <Dialog open={showEarnModal} onOpenChange={setShowEarnModal}>
+        <DialogContent className="max-w-md" dir={isRTL ? 'rtl' : 'ltr'}>
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <Coins className="w-5 h-5 text-amber-500" />
+              {EARN_POINTS_CONTENT[language]?.title || EARN_POINTS_CONTENT.en.title}
+            </DialogTitle>
+          </DialogHeader>
+          {(() => {
+            const content = EARN_POINTS_CONTENT[language] || EARN_POINTS_CONTENT.en;
+            return (
+              <div className="space-y-4">
+                <p className="text-sm text-slate-600">{content.subtitle}</p>
+                <div className="space-y-3">
+                  {content.items.map((item, i) => (
+                    <div key={i} className={`flex items-start gap-3 p-3 rounded-lg ${item.bg}`}>
+                      <item.icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${item.color}`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-semibold text-slate-800 text-sm">{item.label}</span>
+                          <Badge variant="outline" className={`text-xs font-bold flex-shrink-0 ${item.color} border-current bg-white`}>
+                            {item.points}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-slate-600 mt-0.5">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-3">
+                  <p className="text-xs text-amber-800">{content.note}</p>
+                </div>
+                <Button
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold"
+                  onClick={() => setShowEarnModal(false)}
+                >
+                  <ThumbsUp className="w-4 h-4 mr-2" />
+                  {content.cta}
+                </Button>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </Popover>
   );
 }
