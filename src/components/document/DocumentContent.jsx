@@ -440,12 +440,22 @@ Return ONLY the translated text:`;
     mutationFn: async (topicId) => {
       // Delete all sections in this topic
       const topicSections = sections.filter(s => s.topicId === topicId);
+      const sectionIds = topicSections.map(s => s.id);
       await Promise.all(
         topicSections.map(section => base44.entities.Section.delete(section.id))
       );
       
       // Delete the topic
       await base44.entities.Topic.delete(topicId);
+
+      // Reject any orphaned suggestions targeting the deleted sections
+      if (sectionIds.length > 0) {
+        base44.functions.invoke('rejectOrphanedSuggestions', {
+          sectionIds,
+          documentId: document.id,
+          gamificationEnabled: !!document.gamificationEnabled
+        }).catch(err => console.error('[DELETE TOPIC] Failed to reject orphaned suggestions:', err));
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['topics', document?.id] });
