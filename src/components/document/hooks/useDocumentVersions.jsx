@@ -120,17 +120,26 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
       const isTopicTitleChange = afterVersion.content?.startsWith('topic_title_change:');
       let topicTitleChangeMeta = null;
       if (isTopicTitleChange) {
-        const parts = afterVersion.content.split(':');
-        // format: topic_title_change:topicId:originalTitle:newTitle
-        topicTitleChangeMeta = {
-          topicId: parts[1],
-          originalTitle: parts.slice(2, parts.length - 1).join(':'),
-          newTitle: parts[parts.length - 1]
-        };
-        // Try smarter split since titles may contain colons
-        const match = afterVersion.content.match(/^topic_title_change:([^:]+):(.+):([^:]+)$/);
-        if (match) {
-          topicTitleChangeMeta = { topicId: match[1], originalTitle: match[2], newTitle: match[3] };
+        // format: topic_title_change:<topicId>:<originalTitle>:<newTitle>
+        // topicId is a fixed-length DB ID (no colons), so we split on first 2 colons only
+        const raw = afterVersion.content.slice('topic_title_change:'.length); // "topicId:originalTitle:newTitle"
+        const firstColon = raw.indexOf(':');
+        if (firstColon !== -1) {
+          const topicId = raw.slice(0, firstColon);
+          const rest = raw.slice(firstColon + 1); // "originalTitle:newTitle"
+          // changeDescription has the full readable form, use it to extract titles
+          const descMatch = afterVersion.changeDescription?.match(/^כותרת נושא עודכנה: (.+) → (.+)$/);
+          if (descMatch) {
+            topicTitleChangeMeta = { topicId, originalTitle: descMatch[1], newTitle: descMatch[2] };
+          } else {
+            // fallback: split rest on last colon
+            const lastColon = rest.lastIndexOf(':');
+            topicTitleChangeMeta = {
+              topicId,
+              originalTitle: lastColon !== -1 ? rest.slice(0, lastColon) : rest,
+              newTitle: lastColon !== -1 ? rest.slice(lastColon + 1) : ''
+            };
+          }
         }
       }
 
