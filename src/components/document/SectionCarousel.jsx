@@ -259,6 +259,14 @@ const SectionCarousel = React.memo(function SectionCarousel({
 
   const deleteSectionMutation = useMutation({
     mutationFn: async (saveToHistory) => {
+      // Reject all pending suggestions for this section (orphan prevention)
+      const pendingSectionSuggestions = await base44.entities.Suggestion.filter({ sectionId: section.id, status: 'pending' });
+      await Promise.all(
+        pendingSectionSuggestions.map(s =>
+          base44.entities.Suggestion.update(s.id, { status: 'rejected', rejectedByAdmin: true })
+        )
+      );
+
       // Get existing versions to calculate next version number
       const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
       const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
