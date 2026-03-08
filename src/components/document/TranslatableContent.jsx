@@ -54,53 +54,24 @@ export default function TranslatableContent({
       }
       
       const translations = entity?.translations || {};
-      
-      // DISABLED: Automatic LLM translation creates hallucinations
-      // Users must manually review translations
-      throw new Error('תרגום אוטומטי מושבת כעת. אנא השתמש בתרגום ידני או בעדכן מערכת הנושא.');
 
-      console.log('[TRANSLATE DEBUG] Raw result:', result);
-      console.log('[TRANSLATE DEBUG] Result type:', typeof result);
-      console.log('[TRANSLATE DEBUG] Result keys:', result && typeof result === 'object' ? Object.keys(result) : 'N/A');
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Translate the following HTML content to ${languagePrompts[language]}. 
+Preserve all HTML tags exactly as-is. Only translate the text content between tags.
+Return only the translated HTML with no additional commentary or markdown.
+
+Content to translate:
+${content}`,
+      });
 
       let translatedText;
       if (typeof result === 'string') {
         translatedText = result;
       } else if (result && typeof result === 'object') {
-        // Try common response structures
-        if (typeof result.content === 'string') {
-          translatedText = result.content;
-        } else if (typeof result.text === 'string') {
-          translatedText = result.text;
-        } else if (typeof result.translation === 'string') {
-          translatedText = result.translation;
-        } else if (typeof result.output === 'string') {
-          translatedText = result.output;
-        } else if (typeof result.result === 'string') {
-          translatedText = result.result;
-        } else if (typeof result.message === 'string') {
-          translatedText = result.message;
-        } else {
-          // Last resort - find any string value
-          const findString = (obj) => {
-            for (const key of Object.keys(obj)) {
-              if (typeof obj[key] === 'string' && obj[key].length > 0) {
-                return obj[key];
-              }
-              if (obj[key] && typeof obj[key] === 'object') {
-                const nested = findString(obj[key]);
-                if (nested) return nested;
-              }
-            }
-            return null;
-          };
-          translatedText = findString(result) || content; // fallback to original content
-        }
+        translatedText = result.content || result.text || result.translation || result.output || result.result || result.message || content;
       } else {
-        translatedText = content; // fallback to original content
+        translatedText = content;
       }
-      
-      console.log('[TRANSLATE DEBUG] Final translatedText:', translatedText);
       
       // Clean up any markdown code blocks that might be added
       translatedText = translatedText.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
