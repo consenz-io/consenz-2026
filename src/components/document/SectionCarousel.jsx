@@ -275,6 +275,13 @@ const SectionCarousel = React.memo(function SectionCarousel({
 
       // Delete the section
       await base44.entities.Section.delete(section.id);
+
+      // Reject any orphaned suggestions targeting this deleted section
+      base44.functions.invoke('rejectOrphanedSuggestions', {
+        sectionIds: [section.id],
+        documentId: section.documentId,
+        gamificationEnabled: !!document.gamificationEnabled
+      }).catch(err => console.error('[DELETE SECTION] Failed to reject orphaned suggestions:', err));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
