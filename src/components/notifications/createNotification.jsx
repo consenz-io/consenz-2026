@@ -319,10 +319,14 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus, reje
       const creatorList = await base44.entities.User.filter({ email: suggestion.created_by });
       const creator = creatorList[0];
       if (creator?.id) {
+        // For rejected status, check both suggestion_rejected and suggestion_expiring (expire job may have already sent)
+        const typeToCheck = newStatus === 'accepted' ? 'suggestion_accepted' 
+          : newStatus === 'rejected' ? (rejectedByAdmin ? 'suggestion_rejected' : 'suggestion_expiring')
+          : 'suggestion_expiring';
         const recentNotifs = await base44.entities.Notification.filter({
           userId: creator.id,
           relatedEntityId: suggestion.id,
-          type: newStatus === 'accepted' ? 'suggestion_accepted' : newStatus === 'rejected' ? 'suggestion_rejected' : 'suggestion_expiring'
+          type: typeToCheck
         });
         if (recentNotifs.length > 0) {
           console.log('[NOTIFY STATUS] ⚠️ Notification already exists in DB for this suggestion+status, skipping');
