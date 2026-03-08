@@ -298,14 +298,20 @@ export default function FloatingPointsBadge() {
           )}
 
           <div className="border-t pt-2">
-            <Link to={createPageUrl("LearnMore") + '#gamification'}>
-              <Button variant="outline" className="w-full" size="sm">
-                {language === 'he' ? 'איך צוברים נקודות?' : language === 'ar' ? 'كيف تكسب النقاط؟' : 'How to Earn Points?'}
-              </Button>
-            </Link>
+            <Button
+              variant="outline"
+              className="w-full"
+              size="sm"
+              onClick={() => setShowInfoModal(true)}
+            >
+              <HelpCircle className="w-4 h-4 mr-1" />
+              {language === 'he' ? 'איך צוברים נקודות?' : language === 'ar' ? 'كيف تكسب النقاط؟' : 'How to Earn Points?'}
+            </Button>
           </div>
         </div>
       </PopoverContent>
     </Popover>
+
+    <PointsInfoModal open={showInfoModal} onClose={() => setShowInfoModal(false)} />
   );
 }
