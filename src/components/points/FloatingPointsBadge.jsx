@@ -81,8 +81,48 @@ function AnimatedCounter({ value }) {
   return <span className="font-bold text-sm tabular-nums">{displayValue}</span>;
 }
 
+const EARN_POINTS_CONTENT = {
+  he: {
+    title: 'איך צוברים נקודות?',
+    subtitle: 'השתתפות פעילה מתגמלת — ככה תרוויחו יותר:',
+    items: [
+      { icon: ThumbsUp, color: 'text-blue-500', bg: 'bg-blue-50', label: 'הצביעו על הצעות', desc: 'כל הצבעה מזכה אתכם בנקודות. ככל שתצביעו יותר — תרוויחו יותר!', points: '+5 לכל הצבעה' },
+      { icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50', label: 'הצבעה מנצחת', desc: 'אם הצעה שהצבעתם בעדה התקבלה — תקבלו בונוס!', points: '+20 בונוס' },
+      { icon: Lightbulb, color: 'text-amber-500', bg: 'bg-amber-50', label: 'הציעו הצעות', desc: 'הגשת הצעה שמשפרת את המסמך עולה נקודות — אבל אם תתקבל תקבלו הרבה יותר.', points: '+50 אם התקבלה' },
+      { icon: Star, color: 'text-purple-500', bg: 'bg-purple-50', label: 'הצעה מנצחת', desc: 'הצעה שהגשתם התקבלה על ידי הקהילה? בונוס גדול!', points: '+100 בונוס' },
+    ],
+    cta: 'צאו להצביע עכשיו!',
+    note: 'ככל שתהיו פעילים יותר, כך תצברו יותר נקודות ותשפיעו יותר על המסמכים.',
+  },
+  ar: {
+    title: 'كيف تكسب النقاط؟',
+    subtitle: 'المشاركة الفعّالة تُكافأ — إليك الطريقة:',
+    items: [
+      { icon: ThumbsUp, color: 'text-blue-500', bg: 'bg-blue-50', label: 'صوّت على الاقتراحات', desc: 'كل تصويت يمنحك نقاطاً. كلما صوّتت أكثر، ربحت أكثر!', points: '+5 لكل تصويت' },
+      { icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50', label: 'تصويت رابح', desc: 'إذا قُبِل اقتراح صوّتت له — تحصل على مكافأة!', points: '+20 مكافأة' },
+      { icon: Lightbulb, color: 'text-amber-500', bg: 'bg-amber-50', label: 'قدّم اقتراحات', desc: 'تقديم اقتراح يكلّف نقاطاً، لكن إن قُبِل ستحصل على أكثر بكثير.', points: '+50 عند القبول' },
+      { icon: Star, color: 'text-purple-500', bg: 'bg-purple-50', label: 'اقتراح رابح', desc: 'اقتراحك قُبِل من المجتمع؟ مكافأة كبيرة!', points: '+100 مكافأة' },
+    ],
+    cta: 'اذهب للتصويت الآن!',
+    note: 'كلما كنت أكثر نشاطاً، كلما جمعت نقاطاً أكثر وأثّرت في الوثائق.',
+  },
+  en: {
+    title: 'How to Earn Points?',
+    subtitle: 'Active participation is rewarded — here\'s how:',
+    items: [
+      { icon: ThumbsUp, color: 'text-blue-500', bg: 'bg-blue-50', label: 'Vote on Suggestions', desc: 'Every vote earns you points. The more you vote, the more you earn!', points: '+5 per vote' },
+      { icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50', label: 'Winning Vote', desc: 'If a suggestion you voted for gets accepted — you get a bonus!', points: '+20 bonus' },
+      { icon: Lightbulb, color: 'text-amber-500', bg: 'bg-amber-50', label: 'Submit Suggestions', desc: 'Submitting a suggestion costs points, but if it\'s accepted you\'ll earn far more.', points: '+50 if accepted' },
+      { icon: Star, color: 'text-purple-500', bg: 'bg-purple-50', label: 'Winning Suggestion', desc: 'Your suggestion was accepted by the community? Big bonus!', points: '+100 bonus' },
+    ],
+    cta: 'Go Vote Now!',
+    note: 'The more active you are, the more points you earn and the more you shape the documents.',
+  },
+};
+
 export default function FloatingPointsBadge() {
   const { language, isRTL } = useLanguage();
+  const [showEarnModal, setShowEarnModal] = React.useState(false);
   const queryClient = useQueryClient();
 
   const { data: user } = useQuery({
