@@ -415,9 +415,13 @@ export default function SuggestionSidebar({
         ...(status === 'rejected' ? { rejectedByAdmin: true } : {})
       });
       
-      // שליחת התראה על שינוי סטטוס - חובה לחכות שתסתיים
-      console.log('[UPDATE STATUS] Sending status change notifications...');
-      await notifySuggestionStatusChange({ suggestion, newStatus: status });
+      // שליחת התראה על שינוי סטטוס - רק אם ההצעה עדיין pending (לא פגה תוקף כבר)
+      if (suggestion.status === 'pending') {
+        console.log('[UPDATE STATUS] Sending status change notifications...');
+        await notifySuggestionStatusChange({ suggestion, newStatus: status });
+      } else {
+        console.log('[UPDATE STATUS] Suggestion already in status:', suggestion.status, '- skipping notification');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
