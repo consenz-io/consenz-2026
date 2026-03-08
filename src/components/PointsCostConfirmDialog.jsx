@@ -67,7 +67,7 @@ export default function PointsCostConfirmDialog({
         <div className="space-y-4 py-4">
           <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-slate-600">הנקודות שלך כרגע:</span>
+              <span className="text-sm text-slate-600">{strings.currentPoints}</span>
               <span className="text-2xl font-bold text-slate-900">{currentPoints}</span>
             </div>
             <div className="flex justify-between items-center mb-2">
