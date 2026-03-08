@@ -1092,7 +1092,7 @@ export default function SuggestionDetail() {
                   className="w-full"
                 >
                   <Edit2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {isRTL ? 'הצע עריכה להצעה זו' : 'Suggest an Edit to this Suggestion'}
+                  {language === 'he' ? 'הצע עריכה להצעה זו' : language === 'ar' ? 'اقترح تعديلاً على هذا الاقتراح' : 'Suggest an Edit to this Suggestion'}
                 </Button>
               </div>
             )}
