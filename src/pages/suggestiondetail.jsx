@@ -858,9 +858,28 @@ export default function SuggestionDetail() {
                     {language === 'he' ? 'פג תוקפה' : language === 'ar' ? 'انتهت صلاحيتها' : 'Expired'}
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className={`${getStatusColor(suggestion.status)} text-xs`}>
-                    {t(suggestion.status)}
-                  </Badge>
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <Badge variant="outline" className={`${getStatusColor(suggestion.status)} text-xs cursor-default`}>
+                            {t(suggestion.status)}
+                          </Badge>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        {suggestion.status === 'pending'
+                          ? (language === 'he' ? 'ממתינה להצבעה' : language === 'ar' ? 'في انتظار التصويت' : 'Awaiting votes')
+                          : suggestion.status === 'accepted'
+                          ? (language === 'he' ? 'ההצעה התקבלה ויושמה במסמך' : language === 'ar' ? 'تمت الموافقة على الاقتراح' : 'Proposal accepted and applied')
+                          : suggestion.status === 'rejected'
+                          ? (language === 'he' ? 'ההצעה נדחתה' : language === 'ar' ? 'تم رفض الاقتراح' : 'Proposal rejected')
+                          : suggestion.status === 'discussion'
+                          ? (language === 'he' ? 'בדיון פתוח' : language === 'ar' ? 'قيد النقاش' : 'Open for discussion')
+                          : suggestion.status}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
 
                 <span className="text-xs text-slate-500">
