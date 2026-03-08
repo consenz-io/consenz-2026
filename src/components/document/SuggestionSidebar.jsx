@@ -418,7 +418,11 @@ export default function SuggestionSidebar({
       // שליחת התראה על שינוי סטטוס - רק אם ההצעה עדיין pending (לא פגה תוקף כבר)
       if (suggestion.status === 'pending') {
         console.log('[UPDATE STATUS] Sending status change notifications...');
-        await notifySuggestionStatusChange({ suggestion, newStatus: status });
+        await notifySuggestionStatusChange({ 
+          suggestion, 
+          newStatus: status,
+          rejectedByAdmin: status === 'rejected' ? true : undefined
+        });
       } else {
         console.log('[UPDATE STATUS] Suggestion already in status:', suggestion.status, '- skipping notification');
       }
