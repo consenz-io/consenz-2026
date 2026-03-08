@@ -556,10 +556,34 @@ Return ONLY the translated text:`;
         const thresholdForAcceptance = Math.max(2, document.threshold || 2);
         
         if (delta >= thresholdForAcceptance && topicSuggestion) {
+          // Update topic title and mark suggestion accepted
           await Promise.all([
             base44.entities.Topic.update(topicSuggestion.topicId, { title: topicSuggestion.newTitle }),
             base44.entities.TopicEditSuggestion.update(suggestionId, { status: 'accepted' })
           ]);
+
+          // Create a DocumentVersion record so the change appears in version history
+          try {
+            const allVersions = await base44.entities.DocumentVersion.filter({ documentId: document.id });
+            const nextVersion = allVersions.length > 0 ? Math.max(...allVersions.map(v => v.version || 0)) + 1 : 1;
+            const topicSections = await base44.entities.Section.filter({ topicId: topicSuggestion.topicId });
+            const firstSectionId = topicSections.length > 0 ? topicSections[0].id : null;
+            if (firstSectionId) {
+              await base44.entities.DocumentVersion.create({
+                documentId: document.id,
+                sectionId: firstSectionId,
+                content: `topic_title_change:${topicSuggestion.topicId}:${topicSuggestion.originalTitle}:${topicSuggestion.newTitle}`,
+                changeDescription: `כותרת נושא עודכנה: ${topicSuggestion.originalTitle} → ${topicSuggestion.newTitle}`,
+                version: nextVersion,
+                changeType: 'suggestion_accepted',
+                suggestionId: topicSuggestion.id,
+                originalLanguage: 'he',
+                translations: {}
+              });
+            }
+          } catch (versionErr) {
+            console.error('[TOPIC VOTE] Error creating version record:', versionErr);
+          }
 
           // Award acceptance points - fire and forget
           if (document.gamificationEnabled) {
@@ -582,12 +606,13 @@ Return ONLY the translated text:`;
 
           toast.success('🎉 ההצעה לעריכת כותרת התקבלה!', { description: 'הכותרת עודכנה במסמך', duration: 4000 });
           
-          Promise.all([
+          await Promise.all([
             queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
             queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
+            queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions'] }),
             queryClient.invalidateQueries({ queryKey: ['document', document.id] }),
+            queryClient.invalidateQueries({ queryKey: ['allVersions', document.id] }),
             queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
-            queryClient.invalidateQueries({ queryKey: ['versions', document.id] })
           ]);
         }
       } catch (err) {
