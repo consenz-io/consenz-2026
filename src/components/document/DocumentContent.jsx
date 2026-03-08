@@ -438,17 +438,8 @@ Return ONLY the translated text:`;
 
   const deleteTopicMutation = useMutation({
     mutationFn: async (topicId) => {
-      // Reject all pending suggestions for sections in this topic (orphan prevention)
-      const topicSections = sections.filter(s => s.topicId === topicId);
-      const sectionIds = topicSections.map(s => s.id);
-      const pendingSuggestions = suggestions.filter(s => sectionIds.includes(s.sectionId) && s.status === 'pending');
-      await Promise.all(
-        pendingSuggestions.map(s =>
-          base44.entities.Suggestion.update(s.id, { status: 'rejected', rejectedByAdmin: true })
-        )
-      );
-
       // Delete all sections in this topic
+      const topicSections = sections.filter(s => s.topicId === topicId);
       await Promise.all(
         topicSections.map(section => base44.entities.Section.delete(section.id))
       );
