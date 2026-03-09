@@ -115,7 +115,7 @@ export default function DocumentView() {
     retryDelay: 1000,
   });
 
-  const { data: suggestions = [], isLoading: suggestionsLoading } = useQuery({
+  const { data: suggestions = [], isLoading: suggestionsLoading, isFetched: suggestionsFetched } = useQuery({
     queryKey: ['suggestions', documentId],
     queryFn: async () => {
       if (!documentId) return [];
