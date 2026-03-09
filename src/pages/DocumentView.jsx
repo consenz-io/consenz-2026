@@ -215,35 +215,21 @@ export default function DocumentView() {
   const allArguments = aggregatedData?.args || [];
   const allComments = aggregatedData?.comments || [];
 
-  const { data: documentComments } = useQuery({
-    queryKey: ['documentComments', documentId],
-    queryFn: () => base44.entities.Comment.filter({ 
-      rootEntityType: 'document',
-      rootEntityId: documentId 
-    }),
-    initialData: [],
-    enabled: !!documentId,
-    staleTime: Infinity, // Real-time via subscription
-  });
+  // Derived from aggregatedData — no extra query needed
+  const documentComments = React.useMemo(() =>
+    allComments.filter(c => c.rootEntityType === 'document' && c.rootEntityId === documentId),
+    [allComments, documentId]
+  );
 
-  // Real-time subscription for comments - wait for document to load
+  // Real-time: invalidate aggregatedData when a document-level comment is added
   React.useEffect(() => {
     if (!documentId || !document) return;
-    
-    console.log('[REALTIME] Setting up Comment subscription');
-    
     const unsubscribe = base44.entities.Comment.subscribe((event) => {
-      console.log('[REALTIME] Comment event:', event.type);
-      // Only invalidate if it's related to this document
       if (event.data?.rootEntityType === 'document' && event.data?.rootEntityId === documentId) {
-        queryClient.invalidateQueries({ queryKey: ['documentComments', documentId] });
+        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
       }
     });
-    
-    return () => {
-      console.log('[REALTIME] Cleaning up Comment subscription');
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, [documentId, document, queryClient]);
 
   // Merge agreements and versions into one query
@@ -328,54 +314,34 @@ export default function DocumentView() {
     return directSectionComments + suggestionBasedSectionComments;
   }, [allComments, sections, suggestions]);
 
-  // Calculate contributors count - fetched once on page load using exact same logic as ContributorsModal
-  const { data: contributorsCount = 0 } = useQuery({
-    queryKey: ['contributorsCount', documentId],
-    queryFn: async () => {
-      const [docSuggestions, docSections, allVotesRaw, publicProfilesRaw, allCommentsRaw, allAgreementsRaw] = await Promise.all([
-        base44.entities.Suggestion.filter({ documentId }),
-        base44.entities.Section.filter({ documentId }),
-        base44.entities.Vote.list(),
-        base44.entities.UserPublicProfile.list(),
-        base44.entities.Comment.list(),
-        base44.entities.DocumentAgreement.filter({ documentId }),
-      ]);
+  // Derived from already-fetched data — no extra queries needed
+  const contributorsCount = React.useMemo(() => {
+    const contributorEmails = new Set();
 
-      const contributorEmails = new Set();
-      const suggestionIds = new Set(docSuggestions.map(s => s.id));
-      const sectionIds = new Set(docSections.map(s => s.id));
+    // 1. Voters (allVotes is already filtered to this document's suggestions)
+    allVotes.forEach(v => {
+      if (v.created_by) contributorEmails.add(v.created_by);
+      const profile = publicProfiles.find(p => p.userId === v.userId);
+      if (profile?.email) contributorEmails.add(profile.email);
+    });
 
-      // 1. Voters
-      allVotesRaw.forEach(v => {
-        if (suggestionIds.has(v.suggestionId)) {
-          if (v.created_by) contributorEmails.add(v.created_by);
-          const profile = publicProfilesRaw.find(p => p.userId === v.userId);
-          if (profile?.email) contributorEmails.add(profile.email);
-        }
-      });
-      // 2. Commenters
-      allCommentsRaw.forEach(c => {
-        if (!c.created_by) return;
-        if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) contributorEmails.add(c.created_by);
-        if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) contributorEmails.add(c.created_by);
-        if (c.rootEntityType === 'document' && c.rootEntityId === documentId) contributorEmails.add(c.created_by);
-      });
-      // 3. Signers
-      allAgreementsRaw.forEach(a => { if (a.userEmail) contributorEmails.add(a.userEmail); });
+    // 2. Commenters (allComments is already filtered to this document)
+    allComments.forEach(c => {
+      if (c.created_by) contributorEmails.add(c.created_by);
+    });
 
-      // Count unique users who have a public profile (same as modal)
-      const contributorsMap = new Map();
-      publicProfilesRaw.forEach(profile => {
-        if (contributorEmails.has(profile.email) && profile.userId) {
-          contributorsMap.set(profile.userId, true);
-        }
-      });
-      return contributorsMap.size;
-    },
-    enabled: !!documentId,
-    staleTime: Infinity, // Only fetch once per page load
-    cacheTime: 5 * 60 * 1000,
-  });
+    // 3. Signers
+    documentAgreements.forEach(a => { if (a.userEmail) contributorEmails.add(a.userEmail); });
+
+    // Count unique users who have a public profile
+    const contributorsMap = new Map();
+    publicProfiles.forEach(profile => {
+      if (contributorEmails.has(profile.email) && profile.userId) {
+        contributorsMap.set(profile.userId, true);
+      }
+    });
+    return contributorsMap.size;
+  }, [allVotes, allComments, publicProfiles, documentAgreements]);
 
   // Get pending suggestions ordered by section appearance
   // Excludes edit_suggestion type since those are shown inside the parent suggestion's sidebar,
