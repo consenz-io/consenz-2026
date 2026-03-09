@@ -29,12 +29,12 @@ export default function PointsInfoModal({ open, onClose }) {
       amount: +10,
     },
     {
-      label: t("Suggestion accepted by community", "הצעה שהתקבלה על ידי הקהילה", "اقتراح قبله المجتمع"),
-      sub: t("Suggestion reaches consensus threshold", "ההצעה עוברת את סף הקונצנזוס", "الاقتراح يتجاوز عتبة الإجماع"),
-      amount: +100,
+      label: t("Suggestion accepted by community", "הצעה שהתקבלה", "اقتراح قبله المجتمع"),
+      sub: t("Suggestion reaches consensus threshold", "ההצעה קיבלה מספיק תמיכה ועברה את סף הקונצנזוס", "الاقتراح يتجاوز عتبة الإجماع"),
+      amount: +500,
     },
     {
-      label: t("Your vote aligned with outcome", "הצבעתך תאמה לתוצאה הסופית", "تصويتك توافق مع النتيجة النهائية"),
+      label: t("Your vote aligned with outcome", "הצבעתך תרמה לתוצאה הסופית", "تصويتك توافق مع النتيجة النهائية"),
       sub: t("Voted pro on an accepted suggestion", "הצבעת בעד על הצעה שהתקבלה", "صوّتت مع على اقتراح تم قبوله"),
       amount: +5,
     },
