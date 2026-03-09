@@ -76,7 +76,7 @@ export default function PointsInfoModal({ open, onClose }) {
         <p className="text-sm text-slate-600 leading-relaxed">
           {t(
             "A reputation and incentive system designed to filter noise, build credibility, and reward contributions measured by community consensus — not mere participation.",
-            "מערכת מוניטין ותמריצים שנועדה לסנן רעשים, לבנות אמינות ולתגמל תרומות הנמדדות בהסכמת הקהילה — לא בהשתתפות גרידא.",
+            "מערכת מוניטין ותמריצים שנועדה לסנן רעשים, לבנות אמינות ולתגמל תרומה חיובית לתהליך הנמדדת בהסכמת הקהילה.",
             "نظام سمعة وحوافز مصمم لتصفية الضوضاء وبناء المصداقية ومكافأة المساهمات المقاسة بإجماع المجتمع — وليس بمجرد المشاركة."
           )}
         </p>
