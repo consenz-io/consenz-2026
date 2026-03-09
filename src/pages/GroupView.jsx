@@ -89,14 +89,12 @@ export default function GroupView() {
   const { data: allAgreements = [] } = useQuery({
     queryKey: ['allAgreements'],
     queryFn: () => base44.entities.DocumentAgreement.list(),
-    initialData: [],
   });
 
   const { data: userVotes = [] } = useQuery({
     queryKey: ['userVotes', currentUser?.id],
     queryFn: () => base44.entities.Vote.filter({ userId: currentUser.id }),
     enabled: !!currentUser?.id,
-    initialData: [],
   });
 
   const isAdmin = currentUser && groupMembers.some(
