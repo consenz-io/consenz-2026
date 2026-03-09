@@ -40,7 +40,7 @@ export default function SuggestionCountdown({ timerEndsAt, size = "sm" }) {
   const isUrgent = timeLeft.diff < 6 * 60 * 60 * 1000; // less than 6 hours
 
   const label = language === 'he'
-    ? `${timeLeft.hours > 0 ? `${timeLeft.hours}ש׳ ` : ''}${timeLeft.minutes}ד׳ נותרו`
+    ? `${timeLeft.hours > 0 ? `${timeLeft.hours}ש׳ ` : ''}${timeLeft.minutes}  דקות נותרו לסגירת ההצבעה`
     : language === 'ar'
     ? `${timeLeft.hours > 0 ? `${timeLeft.hours}س ` : ''}${timeLeft.minutes}د متبقية`
     : `${timeLeft.hours > 0 ? `${timeLeft.hours}h ` : ''}${timeLeft.minutes}m left`;
