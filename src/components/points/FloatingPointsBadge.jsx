@@ -36,7 +36,10 @@ const translateTransactionDescription = (transaction, language) => {
     return language === 'he' ? 'הצבעה בוטלה' : language === 'ar' ? 'تم إلغاء التصويت' : 'Vote canceled';
   }
   if (action === 'vote_influenced_acceptance') {
-    return language === 'he' ? 'הצבעתך השפיעה על קבלת הצעה' : language === 'ar' ? 'أثّر تصويتك على قبول اقتراح' : 'Your vote influenced suggestion acceptance';
+    const isRejection = description.includes('דחיית') || description.includes('rejection') || description.includes('rejected') || description.includes('رفض');
+    return isRejection
+      ? (language === 'he' ? 'הצבעתך השפיעה על דחיית הצעה' : language === 'ar' ? 'أثّر تصويتك على رفض اقتراح' : 'Your vote influenced suggestion rejection')
+      : (language === 'he' ? 'הצבעתך השפיעה על קבלת הצעה' : language === 'ar' ? 'أثّر تصويتك على قبول اقتراح' : 'Your vote influenced suggestion acceptance');
   }
 
   // Fallback: pattern matching on stored description text (any language)
