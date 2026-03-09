@@ -22,18 +22,16 @@ export default function MyDocuments() {
     retry: false,
   });
 
-  const { data: userInteractions, isLoading: interactionsLoading } = useQuery({
+  const { data: userInteractions = [], isLoading: interactionsLoading } = useQuery({
     queryKey: ['userInteractions', user?.id],
     queryFn: () => base44.entities.UserInteraction.filter({ userId: user.id }),
     enabled: !!user?.id,
-    initialData: [],
   });
 
-  const { data: allDocuments, isLoading: documentsLoading } = useQuery({
+  const { data: allDocuments = [], isLoading: documentsLoading } = useQuery({
     queryKey: ['allDocuments'],
     queryFn: () => base44.entities.Document.list('-created_date'),
     enabled: !!user?.id,
-    initialData: [],
   });
 
   const { data: suggestions } = useQuery({

@@ -20,22 +20,19 @@ export default function Groups() {
     retry: false
   });
 
-  const { data: groups, isLoading: groupsLoading } = useQuery({
+  const { data: groups = [], isLoading: groupsLoading } = useQuery({
     queryKey: ['groups'],
     queryFn: () => base44.entities.Group.list('-created_date'),
-    initialData: []
   });
 
-  const { data: groupMembers, isLoading: membersLoading } = useQuery({
+  const { data: groupMembers = [], isLoading: membersLoading } = useQuery({
     queryKey: ['groupMembers'],
     queryFn: () => base44.entities.GroupMember.list(),
-    initialData: []
   });
 
-  const { data: documents } = useQuery({
+  const { data: documents = [] } = useQuery({
     queryKey: ['documents'],
     queryFn: () => base44.entities.Document.list(),
-    initialData: []
   });
 
   // Filter groups based on visibility and membership
