@@ -22,12 +22,11 @@ const translateTransactionDescription = (transaction, language) => {
   const title = extractTitle(description);
 
   // Use action enum for reliable translation
-  if (action === 'suggestion_accepted' || action === 'suggestion_created') {
-    const label = action === 'suggestion_accepted'
-      ? { en: 'Suggestion accepted', he: 'הצעה התקבלה', ar: 'تم قبول الاقتراح' }
-      : { en: 'Created suggestion', he: 'יצירת הצעה', ar: 'تم إنشاء اقتراح' };
-    const l = label[language] || label.en;
-    return title ? `${l}: ${title}` : l;
+  if (action === 'suggestion_created') {
+    return language === 'he' ? 'יצירת הצעה חדשה' : language === 'ar' ? 'تم إنشاء اقتراح' : 'Created suggestion';
+  }
+  if (action === 'suggestion_accepted') {
+    return language === 'he' ? 'הצעתך התקבלה' : language === 'ar' ? 'تم قبول اقتراحك' : 'Your suggestion was accepted';
   }
   if (action === 'vote_received') {
     return language === 'he' ? 'קיבלת הצבעה בעד' : language === 'ar' ? 'تلقيت تصويتًا مع' : 'Received a pro vote';
