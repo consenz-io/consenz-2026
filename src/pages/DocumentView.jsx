@@ -123,7 +123,6 @@ export default function DocumentView() {
       return results || [];
     },
     enabled: !!documentId,
-    initialData: [],
     staleTime: 0,
     retry: 2,
   });
