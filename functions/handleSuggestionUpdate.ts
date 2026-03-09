@@ -82,24 +82,24 @@ Deno.serve(async (req) => {
     }
 
     // שליחת התראה רק על דחייה על ידי אדמין (לא על פקיעת תוקף)
-    // בדיקה 1: rejectedByAdmin חייב להיות true במפורש
+
+    // בדיקה 1: אם timerEndsAt עבר - זו פקיעת תוקף, לא דחיית אדמין (הכי אמינה)
+    if (suggestion.timerEndsAt && new Date(suggestion.timerEndsAt) <= new Date()) {
+      console.log('[AUTOMATION] timerEndsAt has passed - this is an expiry rejection, not admin rejection. Skipping.');
+      return Response.json({ message: 'Expiry rejection (timer passed) - skipping' }, { status: 200 });
+    }
+
+    // בדיקה 2: rejectedByAdmin חייב להיות true במפורש
     if (suggestion.rejectedByAdmin !== true) {
       console.log('[AUTOMATION] rejectedByAdmin !== true, skipping admin rejection notification');
       return Response.json({ message: 'Expiry rejection - skipping' }, { status: 200 });
     }
 
-    // בדיקה 2: בדוק אם כבר נשלחה התראת פקיעה עבור הצעה זו (double-safety)
-    const creatorForCheck = await base44.asServiceRole.entities.User.filter({ email: suggestion.created_by }).then(u => u[0]);
-    if (creatorForCheck?.id) {
-      const existingExpiryNotifs = await base44.asServiceRole.entities.Notification.filter({
-        userId: creatorForCheck.id,
-        relatedEntityId: suggestion.id,
-        type: 'suggestion_expiring'
-      });
-      if (existingExpiryNotifs.length > 0) {
-        console.log('[AUTOMATION] suggestion_expiring notification already exists for this suggestion - skipping admin rejection notification to avoid duplicate');
-        return Response.json({ message: 'Expiry notification already sent - skipping duplicate' }, { status: 200 });
-      }
+    // בדיקה 3: double-safety - re-fetch מ-DB לוודא שאין כבר התראת פקיעה (מונע race condition)
+    const freshSuggestion = await base44.asServiceRole.entities.Suggestion.filter({ id: suggestion.id }).then(s => s[0]);
+    if (freshSuggestion?.timerEndsAt && new Date(freshSuggestion.timerEndsAt) <= new Date()) {
+      console.log('[AUTOMATION] Fresh DB data: timerEndsAt has passed - expiry rejection. Skipping.');
+      return Response.json({ message: 'Expiry rejection (fresh DB check) - skipping' }, { status: 200 });
     }
 
     const creatorUser = await base44.asServiceRole.entities.User.filter({ email: suggestion.created_by }).then(u => u[0]);
