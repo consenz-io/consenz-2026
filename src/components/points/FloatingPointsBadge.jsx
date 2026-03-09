@@ -115,50 +115,6 @@ export default function FloatingPointsBadge() {
     refetchOnMount: true,
   });
 
-  // Fetch document titles for transactions
-  const suggestionIds = React.useMemo(() => 
-    [...new Set(pointsTransactions
-      .filter(t => t.relatedEntityType === 'suggestion' && t.relatedEntityId)
-      .map(t => t.relatedEntityId)
-    )],
-    [pointsTransactions]
-  );
-
-  const { data: relatedSuggestions = [] } = useQuery({
-    queryKey: ['transactionSuggestions', suggestionIds],
-    queryFn: async () => {
-      if (suggestionIds.length === 0) return [];
-      return base44.entities.Suggestion.filter({ id: { $in: suggestionIds } });
-    },
-    enabled: suggestionIds.length > 0,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const documentIds = React.useMemo(() =>
-    [...new Set(relatedSuggestions.map(s => s.documentId).filter(Boolean))],
-    [relatedSuggestions]
-  );
-
-  const { data: relatedDocuments = [] } = useQuery({
-    queryKey: ['transactionDocuments', documentIds],
-    queryFn: async () => {
-      if (documentIds.length === 0) return [];
-      return base44.entities.Document.filter({ id: { $in: documentIds } });
-    },
-    enabled: documentIds.length > 0,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // Map: suggestionId → document title
-  const suggestionDocumentTitleMap = React.useMemo(() => {
-    const map = {};
-    for (const suggestion of relatedSuggestions) {
-      const doc = relatedDocuments.find(d => d.id === suggestion.documentId);
-      if (doc) map[suggestion.id] = doc.title;
-    }
-    return map;
-  }, [relatedSuggestions, relatedDocuments]);
-
   const lastPointsVisit = user?.lastPointsVisit;
 
   const newPointsTransactions = React.useMemo(() => {
@@ -314,15 +270,7 @@ export default function FloatingPointsBadge() {
                             {formatLocalDateTime(transaction.created_date, 'DD/MM HH:mm')}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-700 font-medium">{(() => {
-                          const docTitle = transaction.relatedEntityId ? suggestionDocumentTitleMap[transaction.relatedEntityId] : null;
-                          const desc = translateTransactionDescription(transaction, language);
-                          if (!docTitle) return desc;
-                          // Replace the suggestion title suffix with the document title
-                          const colonIdx = desc.indexOf(':');
-                          if (colonIdx !== -1) return `${desc.slice(0, colonIdx + 1)} ${docTitle}`;
-                          return `${desc}: ${docTitle}`;
-                        })()}</p>
+                        <p className="text-sm text-slate-700 font-medium">{translateTransactionDescription(transaction, language)}</p>
                       </div>
                     </div>
                   </Component>
