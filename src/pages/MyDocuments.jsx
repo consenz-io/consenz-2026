@@ -34,62 +34,54 @@ export default function MyDocuments() {
     enabled: !!user?.id,
   });
 
-  const { data: suggestions } = useQuery({
+  const { data: suggestions = [] } = useQuery({
     queryKey: ['mySuggestions', user?.id],
     queryFn: () => base44.entities.Suggestion.filter({ created_by: user.email }),
     enabled: !!user?.email,
-    initialData: [],
   });
 
-  const { data: votes } = useQuery({
+  const { data: votes = [] } = useQuery({
     queryKey: ['myVotes', user?.id],
     queryFn: () => base44.entities.Vote.filter({ userId: user.id }),
     enabled: !!user?.id,
-    initialData: [],
   });
 
-  const { data: allSuggestions } = useQuery({
+  const { data: allSuggestions = [] } = useQuery({
     queryKey: ['allSuggestions'],
     queryFn: () => base44.entities.Suggestion.list(),
     enabled: !!user?.id,
-    initialData: [],
-    staleTime: 0, // Always fresh - needed for accurate unvoted count
+    staleTime: 0,
   });
 
-  const { data: allVotes } = useQuery({
+  const { data: allVotes = [] } = useQuery({
     queryKey: ['allVotes'],
     queryFn: () => base44.entities.Vote.list(),
     enabled: !!user?.id,
-    initialData: [],
-    staleTime: 0, // Always fresh - needed for accurate unvoted count
+    staleTime: 0,
   });
 
-  const { data: allUsers } = useQuery({
+  const { data: allUsers = [] } = useQuery({
     queryKey: ['allUsers'],
     queryFn: () => base44.entities.User.list(),
     enabled: !!user?.id,
-    initialData: [],
   });
 
-  const { data: allArguments } = useQuery({
+  const { data: allArguments = [] } = useQuery({
     queryKey: ['allArguments'],
     queryFn: () => base44.entities.Argument.list(),
     enabled: !!user?.id,
-    initialData: [],
   });
 
-  const { data: allComments } = useQuery({
+  const { data: allComments = [] } = useQuery({
     queryKey: ['allComments'],
     queryFn: () => base44.entities.Comment.list(),
     enabled: !!user?.id,
-    initialData: [],
   });
 
-  const { data: allSections } = useQuery({
+  const { data: allSections = [] } = useQuery({
     queryKey: ['allSections'],
     queryFn: () => base44.entities.Section.list(),
     enabled: !!user?.id,
-    initialData: [],
   });
 
   // Calculate real contributors per document using shared logic
