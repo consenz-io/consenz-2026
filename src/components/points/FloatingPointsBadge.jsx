@@ -314,7 +314,15 @@ export default function FloatingPointsBadge() {
                             {formatLocalDateTime(transaction.created_date, 'DD/MM HH:mm')}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-700 font-medium">{translateTransactionDescription(transaction, language)}</p>
+                        <p className="text-sm text-slate-700 font-medium">{(() => {
+                          const docTitle = transaction.relatedEntityId ? suggestionDocumentTitleMap[transaction.relatedEntityId] : null;
+                          const desc = translateTransactionDescription(transaction, language);
+                          if (!docTitle) return desc;
+                          // Replace the suggestion title suffix with the document title
+                          const colonIdx = desc.indexOf(':');
+                          if (colonIdx !== -1) return `${desc.slice(0, colonIdx + 1)} ${docTitle}`;
+                          return `${desc}: ${docTitle}`;
+                        })()}</p>
                       </div>
                     </div>
                   </Component>
