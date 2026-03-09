@@ -39,49 +39,42 @@ export default function GroupView() {
     enabled: !!groupId,
   });
 
-  const { data: groupMembers, isLoading: membersLoading } = useQuery({
+  const { data: groupMembers = [], isLoading: membersLoading } = useQuery({
     queryKey: ['groupMembers', groupId],
     queryFn: () => base44.entities.GroupMember.filter({ groupId }),
-    initialData: [],
     enabled: !!groupId,
   });
 
-  const { data: documents, isLoading: documentsLoading } = useQuery({
+  const { data: documents = [], isLoading: documentsLoading } = useQuery({
     queryKey: ['groupDocuments', groupId],
     queryFn: () => base44.entities.Document.filter({ groupId }, '-created_date'),
-    initialData: [],
     enabled: !!groupId,
   });
 
-  const { data: publicProfiles } = useQuery({
+  const { data: publicProfiles = [] } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
-    initialData: [],
   });
 
   // Fetch data needed for participant count calculation
   const { data: allSuggestions = [] } = useQuery({
     queryKey: ['allSuggestions'],
     queryFn: () => base44.entities.Suggestion.list(),
-    initialData: [],
   });
 
   const { data: allVotes = [] } = useQuery({
     queryKey: ['allVotes'],
     queryFn: () => base44.entities.Vote.list(),
-    initialData: [],
   });
 
   const { data: allComments = [] } = useQuery({
     queryKey: ['allComments'],
     queryFn: () => base44.entities.Comment.list(),
-    initialData: [],
   });
 
   const { data: allSections = [] } = useQuery({
     queryKey: ['allSections'],
     queryFn: () => base44.entities.Section.list(),
-    initialData: [],
   });
 
   const { data: allUsers = [] } = useQuery({
