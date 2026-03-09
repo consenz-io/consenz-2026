@@ -333,14 +333,7 @@ export default function DocumentView() {
     // 3. Signers
     documentAgreements.forEach(a => { if (a.userEmail) contributorEmails.add(a.userEmail); });
 
-    // Count unique users who have a public profile
-    const contributorsMap = new Map();
-    publicProfiles.forEach(profile => {
-      if (contributorEmails.has(profile.email) && profile.userId) {
-        contributorsMap.set(profile.userId, true);
-      }
-    });
-    return contributorsMap.size;
+    return contributorEmails.size;
   }, [allVotes, allComments, publicProfiles, documentAgreements]);
 
   // Get pending suggestions ordered by section appearance
