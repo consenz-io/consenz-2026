@@ -30,7 +30,7 @@ export default function PointsInfoModal({ open, onClose }) {
     },
     {
       label: t("Suggestion accepted by community", "הצעה שהתקבלה", "اقتراح قبله المجتمع"),
-      sub: t("Suggestion reaches consensus threshold", "ההצעה קיבלה מספיק תמיכה ועברה את סף הקונצנזוס", "الاقتراح يتجاوز عتبة الإجماع"),
+      sub: t("Suggestion reaches consensus threshold", "הצעה שלך קיבלה מספיק תמיכה ועברה את סף הקונצנזוס", "الاقتراح يتجاوز عتبة الإجماع"),
       amount: +500,
     },
     {
