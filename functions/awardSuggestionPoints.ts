@@ -54,19 +54,19 @@ Deno.serve(async (req) => {
            description = `הצעה לסעיף חדש התקבלה: ${suggestion.title || 'הצעה'}`;
            break;
          case 'edit_section':
-           pointsAmount = 300;
+           pointsAmount = 500;
            description = `הצעה לשינוי סעיף התקבלה: ${suggestion.title || 'הצעה'}`;
            break;
          case 'delete_section':
-           pointsAmount = 300;
+           pointsAmount = 500;
            description = `הצעה למחיקת סעיף התקבלה: ${suggestion.title || 'הצעה'}`;
            break;
          case 'edit_suggestion':
-           pointsAmount = 300;
+           pointsAmount = 500;
            description = `הצעה לשינוי הצעה התקבלה: ${suggestion.title || 'הצעה'}`;
            break;
          default:
-           pointsAmount = 300;
+           pointsAmount = 500;
            description = `ההצעה שלך התקבלה: ${suggestion.title || 'הצעה'}`;
        }
      } else if (action === 'topic_edit_accepted') {
