@@ -82,10 +82,24 @@ Deno.serve(async (req) => {
     }
 
     // שליחת התראה רק על דחייה על ידי אדמין (לא על פקיעת תוקף)
-    // פקיעת תוקף מסומנת עם rejectedByAdmin: false ושולחת התראה משלה ב-expireSuggestions
+    // בדיקה 1: rejectedByAdmin חייב להיות true במפורש
     if (suggestion.rejectedByAdmin !== true) {
-      console.log('[AUTOMATION] Suggestion rejected by expiry (not admin) - notification already sent by expireSuggestions, skipping');
-      return Response.json({ message: 'Expiry rejection - notification handled by expireSuggestions' }, { status: 200 });
+      console.log('[AUTOMATION] rejectedByAdmin !== true, skipping admin rejection notification');
+      return Response.json({ message: 'Expiry rejection - skipping' }, { status: 200 });
+    }
+
+    // בדיקה 2: בדוק אם כבר נשלחה התראת פקיעה עבור הצעה זו (double-safety)
+    const creatorForCheck = await base44.asServiceRole.entities.User.filter({ email: suggestion.created_by }).then(u => u[0]);
+    if (creatorForCheck?.id) {
+      const existingExpiryNotifs = await base44.asServiceRole.entities.Notification.filter({
+        userId: creatorForCheck.id,
+        relatedEntityId: suggestion.id,
+        type: 'suggestion_expiring'
+      });
+      if (existingExpiryNotifs.length > 0) {
+        console.log('[AUTOMATION] suggestion_expiring notification already exists for this suggestion - skipping admin rejection notification to avoid duplicate');
+        return Response.json({ message: 'Expiry notification already sent - skipping duplicate' }, { status: 200 });
+      }
     }
 
     const creatorUser = await base44.asServiceRole.entities.User.filter({ email: suggestion.created_by }).then(u => u[0]);
