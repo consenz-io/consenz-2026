@@ -36,7 +36,7 @@ export default function PointsInfoModal({ open, onClose }) {
     {
       label: t("Your vote aligned with outcome", "הצבעתך תרמה לתוצאה הסופית", "تصويتك توافق مع النتيجة النهائية"),
       sub: t("Voted pro on an accepted suggestion", "הצבעת בעד על הצעה שהתקבלה", "صوّتت مع على اقتراح تم قبوله"),
-      amount: +5,
+      amount: +50,
     },
   ];
 
