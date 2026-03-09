@@ -315,23 +315,28 @@ export default function DocumentView() {
   const contributorsCount = React.useMemo(() => {
     const contributorEmails = new Set();
 
-    // 1. Voters (allVotes is already filtered to this document's suggestions)
+    // 1. Suggestion creators
+    suggestions.forEach(s => {
+      if (s.created_by) contributorEmails.add(s.created_by);
+    });
+
+    // 2. Voters (allVotes is already filtered to this document's suggestions)
     allVotes.forEach(v => {
       if (v.created_by) contributorEmails.add(v.created_by);
       const profile = publicProfiles.find(p => p.userId === v.userId);
       if (profile?.email) contributorEmails.add(profile.email);
     });
 
-    // 2. Commenters (allComments is already filtered to this document)
+    // 3. Commenters (allComments is already filtered to this document)
     allComments.forEach(c => {
       if (c.created_by) contributorEmails.add(c.created_by);
     });
 
-    // 3. Signers
+    // 4. Signers
     documentAgreements.forEach(a => { if (a.userEmail) contributorEmails.add(a.userEmail); });
 
     return contributorEmails.size;
-  }, [allVotes, allComments, publicProfiles, documentAgreements]);
+  }, [suggestions, allVotes, allComments, publicProfiles, documentAgreements]);
 
   // Get pending suggestions ordered by section appearance
   // Excludes edit_suggestion type since those are shown inside the parent suggestion's sidebar,
