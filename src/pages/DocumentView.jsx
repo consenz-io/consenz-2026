@@ -203,7 +203,7 @@ export default function DocumentView() {
       ]);
       return { votes, users: publicProfiles, publicProfiles, args, comments };
     },
-    enabled: !!documentId && suggestions.length >= 0 && sections.length >= 0,
+    enabled: !!documentId && !suggestionsLoading && !sectionsLoading,
     initialData: { votes: [], users: [], publicProfiles: [], args: [], comments: [] },
     staleTime: 2 * 60 * 1000,
     cacheTime: 5 * 60 * 1000,
