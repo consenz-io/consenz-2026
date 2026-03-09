@@ -81,7 +81,13 @@ Deno.serve(async (req) => {
       return Response.json({ message: 'Status not rejected, skipping' }, { status: 200 });
     }
 
-    // שליחת התראה רק על דחייה על ידי אדמין
+    // שליחת התראה רק על דחייה על ידי אדמין (לא על פקיעת תוקף)
+    // פקיעת תוקף מסומנת עם rejectedByAdmin: false ושולחת התראה משלה ב-expireSuggestions
+    if (suggestion.rejectedByAdmin !== true) {
+      console.log('[AUTOMATION] Suggestion rejected by expiry (not admin) - notification already sent by expireSuggestions, skipping');
+      return Response.json({ message: 'Expiry rejection - notification handled by expireSuggestions' }, { status: 200 });
+    }
+
     const creatorUser = await base44.asServiceRole.entities.User.filter({ email: suggestion.created_by }).then(u => u[0]);
     if (!creatorUser) {
       console.log('[AUTOMATION] Creator not found');
