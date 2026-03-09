@@ -106,7 +106,7 @@ export default function DocumentView() {
     retryDelay: 1000,
   });
 
-  const { data: sections = [], isLoading: sectionsLoading } = useQuery({
+  const { data: sections = [], isLoading: sectionsLoading, isFetched: sectionsFetched } = useQuery({
     queryKey: ['sections', documentId],
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order'),
     enabled: !!documentId,
