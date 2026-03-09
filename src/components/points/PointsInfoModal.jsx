@@ -25,7 +25,7 @@ export default function PointsInfoModal({ open, onClose }) {
   const rewards = [
     {
       label: t("Pro vote on your suggestion", "הצבעת בעד על ההצעה שלך", "تصويت مع على مقترحك"),
-      sub: t("Each pro vote received", "כל הצבעת בעד שהתקבלה", "كل تصويت مع تلقيته"),
+      sub: t("Each pro vote received", "כל הצבעת בעד עבור הצעותיך", "كل تصويت مع تلقيته"),
       amount: +10,
     },
     {
