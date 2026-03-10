@@ -309,7 +309,7 @@ function LayoutContent({ children, currentPageName }) {
                           location.pathname === item.url ? 'bg-blue-50 text-blue-700' : ''
                         }`}
                       >
-                        <Link to={item.url} className="flex items-center gap-3 px-3 py-3 relative min-h-[44px]">
+                        <Link to={item.url} onClick={() => setOpenMobile(false)} className="flex items-center gap-3 px-3 py-3 relative min-h-[44px]">
                           <item.icon className="w-4 h-4" />
                           <span className="font-medium">{item.title}</span>
                           {item.badge && (
