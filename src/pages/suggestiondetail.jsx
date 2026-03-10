@@ -10,10 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  ArrowLeft, ArrowRight, ThumbsUp, ThumbsDown, MessageSquare, Clock, 
-  CheckCircle, XCircle, AlertCircle, Loader2, Trash2, ChevronLeft, ChevronRight, Edit2, X, Save, FileText, ShieldCheck
-} from "lucide-react";
+import {
+  ArrowLeft, ArrowRight, ThumbsUp, ThumbsDown, MessageSquare, Clock,
+  CheckCircle, XCircle, AlertCircle, Loader2, Trash2, ChevronLeft, ChevronRight, Edit2, X, Save, FileText, ShieldCheck } from
+"lucide-react";
 import SuggestionCountdown from "@/components/document/SuggestionCountdown";
 import VotesNeededCounter from "../components/document/VotesNeededCounter";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -60,15 +60,15 @@ export default function SuggestionDetail() {
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
     throwOnError: false,
-    staleTime: Infinity, // Real-time via subscription
+    staleTime: Infinity // Real-time via subscription
   });
 
   // Real-time subscription for suggestion updates
   React.useEffect(() => {
     if (!suggestionId) return;
-    
+
     console.log('[REALTIME] Setting up Suggestion subscription for:', suggestionId);
-    
+
     const unsubscribe = base44.entities.Suggestion.subscribe((event) => {
       console.log('[REALTIME] Suggestion event:', event.type, event.id);
       if (event.id === suggestionId || event.data?.id === suggestionId) {
@@ -76,7 +76,7 @@ export default function SuggestionDetail() {
         queryClient.invalidateQueries({ queryKey: ['allDocumentSuggestions', suggestion?.documentId] });
       }
     });
-    
+
     return () => {
       console.log('[REALTIME] Cleaning up Suggestion subscription');
       unsubscribe();
@@ -88,7 +88,7 @@ export default function SuggestionDetail() {
     queryFn: () => base44.entities.Suggestion.filter({ documentId: suggestion.documentId }),
     enabled: !!suggestion?.documentId,
     initialData: [],
-    staleTime: Infinity, // Real-time via subscription
+    staleTime: Infinity // Real-time via subscription
   });
 
   const { data: document } = useQuery({
@@ -100,7 +100,7 @@ export default function SuggestionDetail() {
     enabled: !!suggestion?.documentId,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
-    staleTime: Infinity, // Real-time via subscription
+    staleTime: Infinity // Real-time via subscription
   });
 
   const { data: section } = useQuery({
@@ -112,7 +112,7 @@ export default function SuggestionDetail() {
     enabled: !!suggestion?.sectionId,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
-    staleTime: Infinity, // Real-time via subscription
+    staleTime: Infinity // Real-time via subscription
   });
 
   const { data: topic } = useQuery({
@@ -124,26 +124,26 @@ export default function SuggestionDetail() {
     enabled: !!suggestion?.topicId,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
-    staleTime: 5000,
+    staleTime: 5000
   });
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    retry: false,
+    retry: false
   });
 
   const { data: isAdmin } = useQuery({
     queryKey: ['isAdmin', document?.id, user?.id],
     queryFn: async () => {
       if (!user?.id || !document?.id) return false;
-      const admins = await base44.entities.DocumentAdmin.filter({ 
-        documentId: document.id, 
-        userId: user.id 
+      const admins = await base44.entities.DocumentAdmin.filter({
+        documentId: document.id,
+        userId: user.id
       });
       return admins.length > 0;
     },
-    enabled: !!user?.id && !!document?.id,
+    enabled: !!user?.id && !!document?.id
   });
 
   const { data: userVote } = useQuery({
@@ -152,19 +152,19 @@ export default function SuggestionDetail() {
       if (!user?.id) return null;
       // Fetch all votes for this suggestion and filter client-side
       const allVotes = await base44.entities.Vote.filter({ suggestionId });
-      const userVotes = allVotes.filter(v => v.userId === user.id);
+      const userVotes = allVotes.filter((v) => v.userId === user.id);
       return userVotes.length > 0 ? userVotes[0] : null;
     },
     enabled: !!suggestionId && !!user?.id,
-    staleTime: Infinity, // Real-time via subscription
+    staleTime: Infinity // Real-time via subscription
   });
 
   // Real-time subscription for votes
   React.useEffect(() => {
     if (!suggestionId || !user?.id) return;
-    
+
     console.log('[REALTIME] Setting up Vote subscription for:', suggestionId);
-    
+
     // Debounced to prevent rate limits
     let voteTimer;
     const unsubscribe = base44.entities.Vote.subscribe((event) => {
@@ -175,7 +175,7 @@ export default function SuggestionDetail() {
         queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
       }, 500);
     });
-    
+
     return () => {
       console.log('[REALTIME] Cleaning up Vote subscription');
       unsubscribe();
@@ -186,17 +186,17 @@ export default function SuggestionDetail() {
     queryKey: ['arguments', suggestionId],
     queryFn: () => base44.entities.Argument.filter({ suggestionId }, '-created_date'),
     initialData: [],
-    enabled: !!suggestionId,
+    enabled: !!suggestionId
   });
 
   const { data: comments = [] } = useQuery({
     queryKey: ['comments', 'suggestion', suggestionId],
-    queryFn: () => base44.entities.Comment.filter({ 
+    queryFn: () => base44.entities.Comment.filter({
       rootEntityType: 'suggestion',
-      rootEntityId: suggestionId 
+      rootEntityId: suggestionId
     }),
     initialData: [],
-    enabled: !!suggestionId,
+    enabled: !!suggestionId
   });
 
   const totalCommentsCount = React.useMemo(() => {
@@ -205,37 +205,37 @@ export default function SuggestionDetail() {
 
   const { data: sectionVersions } = useQuery({
     queryKey: ['sectionVersions', suggestion?.sectionId],
-    queryFn: () => base44.entities.DocumentVersion.filter({ 
-      sectionId: suggestion.sectionId 
+    queryFn: () => base44.entities.DocumentVersion.filter({
+      sectionId: suggestion.sectionId
     }, '-version'),
     initialData: [],
-    enabled: !!suggestion?.sectionId && suggestion?.type === 'edit_section',
+    enabled: !!suggestion?.sectionId && suggestion?.type === 'edit_section'
   });
 
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: () => base44.entities.User.list(),
-    initialData: [],
+    initialData: []
   });
 
   const { data: publicProfiles } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
-    initialData: [],
+    initialData: []
   });
 
   const { data: topics } = useQuery({
     queryKey: ['topics', suggestion?.documentId],
     queryFn: () => base44.entities.Topic.filter({ documentId: suggestion.documentId }, 'order'),
     enabled: !!suggestion?.documentId,
-    initialData: [],
+    initialData: []
   });
 
   const { data: sections } = useQuery({
     queryKey: ['sections', suggestion?.documentId],
     queryFn: () => base44.entities.Section.filter({ documentId: suggestion.documentId }),
     enabled: !!suggestion?.documentId,
-    initialData: [],
+    initialData: []
   });
 
   // פונקציית עזר לטיפול בנקודות ברקע - fire-and-forget
@@ -269,62 +269,62 @@ export default function SuggestionDetail() {
       return await votingQueue.add(async () => {
         await queryClient.cancelQueries({ queryKey: ['suggestion', suggestionId] });
         await queryClient.cancelQueries({ queryKey: ['userVote', suggestionId, user?.id] });
-        
+
         const previousSuggestion = queryClient.getQueryData(['suggestion', suggestionId]);
         const previousVote = queryClient.getQueryData(['userVote', suggestionId, user?.id]);
-      
-      // עדכון אופטימיסטי של ההצעה - רק ספירת הצבעות, לא סטטוס!
-      queryClient.setQueryData(['suggestion', suggestionId], (old) => {
-        if (!old) return old;
-        
-        let newProVotes = old.proVotes || 0;
-        let newConVotes = old.conVotes || 0;
-        
-        if (userVote) {
-          if (userVote.vote === vote) {
-            // ביטול
-            if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
-            else newConVotes = Math.max(0, newConVotes - 1);
-          } else {
-            // שינוי
-            if (vote === 'pro') {
-              newProVotes += 1;
+
+        // עדכון אופטימיסטי של ההצעה - רק ספירת הצבעות, לא סטטוס!
+        queryClient.setQueryData(['suggestion', suggestionId], (old) => {
+          if (!old) return old;
+
+          let newProVotes = old.proVotes || 0;
+          let newConVotes = old.conVotes || 0;
+
+          if (userVote) {
+            if (userVote.vote === vote) {
+              // ביטול
+              if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);else
               newConVotes = Math.max(0, newConVotes - 1);
             } else {
-              newConVotes += 1;
-              newProVotes = Math.max(0, newProVotes - 1);
+              // שינוי
+              if (vote === 'pro') {
+                newProVotes += 1;
+                newConVotes = Math.max(0, newConVotes - 1);
+              } else {
+                newConVotes += 1;
+                newProVotes = Math.max(0, newProVotes - 1);
+              }
             }
-          }
-        } else {
-          // חדש
-          if (vote === 'pro') newProVotes += 1;
-          else newConVotes += 1;
-        }
-        
-        // לא משנים סטטוס באופטימיסטי - רק השרת יקבע אם ההצעה התקבלה
-        return { 
-          ...old, 
-          proVotes: newProVotes, 
-          conVotes: newConVotes
-        };
-      });
-      
-      // עדכון אופטימיסטי של ההצבעה
-      queryClient.setQueryData(['userVote', suggestionId, user?.id], (old) => {
-        if (userVote) {
-          if (userVote.vote === vote) {
-            // ביטול
-            return null;
           } else {
-            // שינוי
-            return { ...old, vote };
+            // חדש
+            if (vote === 'pro') newProVotes += 1;else
+            newConVotes += 1;
           }
-        } else {
-          // הצבעה חדשה
-          return { id: 'temp-' + Date.now(), suggestionId, userId: user.id, vote };
-        }
-      });
-      
+
+          // לא משנים סטטוס באופטימיסטי - רק השרת יקבע אם ההצעה התקבלה
+          return {
+            ...old,
+            proVotes: newProVotes,
+            conVotes: newConVotes
+          };
+        });
+
+        // עדכון אופטימיסטי של ההצבעה
+        queryClient.setQueryData(['userVote', suggestionId, user?.id], (old) => {
+          if (userVote) {
+            if (userVote.vote === vote) {
+              // ביטול
+              return null;
+            } else {
+              // שינוי
+              return { ...old, vote };
+            }
+          } else {
+            // הצבעה חדשה
+            return { id: 'temp-' + Date.now(), suggestionId, userId: user.id, vote };
+          }
+        });
+
         return { previousSuggestion, previousVote };
       });
     },
@@ -335,16 +335,16 @@ export default function SuggestionDetail() {
       if (context?.previousVote !== undefined) {
         queryClient.setQueryData(['userVote', suggestionId, user?.id], context.previousVote);
       }
-      
+
       // Handle rate limit with countdown from server response
       if (err.response?.status === 429 || err.response?.data?.remainingSeconds) {
         const retrySeconds = err.response.data.remainingSeconds || 30;
-        
+
         setRateLimitRetryAfter(retrySeconds);
-        
+
         // Countdown timer
         const interval = setInterval(() => {
-          setRateLimitRetryAfter(prev => {
+          setRateLimitRetryAfter((prev) => {
             if (prev <= 1) {
               clearInterval(interval);
               return null;
@@ -356,9 +356,9 @@ export default function SuggestionDetail() {
         const match = err.message.match(/(\d+)\s*(?:שניות|seconds)/);
         const retrySeconds = match ? parseInt(match[1]) : 30;
         setRateLimitRetryAfter(retrySeconds);
-        
+
         const interval = setInterval(() => {
-          setRateLimitRetryAfter(prev => {
+          setRateLimitRetryAfter((prev) => {
             if (prev <= 1) {
               clearInterval(interval);
               return null;
@@ -374,12 +374,12 @@ export default function SuggestionDetail() {
     },
     onSuccess: (data) => {
       console.log('[VOTE SUCCESS]', { accepted: data?.accepted });
-      
+
       // Real-time subscriptions will handle data refresh
       // Only show toast and minimal invalidations
       if (data?.accepted === true) {
         toast.success(isRTL ? 'ההצעה התקבלה! ✓' : 'Suggestion accepted! ✓', {
-          duration: 4000,
+          duration: 4000
         });
         // Delay invalidations to prevent rate limits - subscriptions will update most data
         setTimeout(() => {
@@ -387,7 +387,7 @@ export default function SuggestionDetail() {
           queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
         }, 2000);
       }
-    },
+    }
   });
 
   const addArgumentMutation = useMutation({
@@ -401,14 +401,14 @@ export default function SuggestionDetail() {
         content: content.trim(),
         convincedCount: 0
       });
-      
+
       // עדכון מספר התורמים למסמך
       if (suggestion?.documentId) {
         try {
           const { calculateDocumentContributors } = await import('../components/document/calculateContributors');
           const contributorsCount = await calculateDocumentContributors(suggestion.documentId);
           await base44.entities.Document.update(suggestion.documentId, {
-            totalUsersInteracted: contributorsCount,
+            totalUsersInteracted: contributorsCount
           });
         } catch (err) {
           console.error('[UPDATE CONTRIBUTORS ERROR]', err);
@@ -436,7 +436,7 @@ export default function SuggestionDetail() {
         if (attempt < maxAttempts - 1) {
           // Rate limit exceeded? Add backoff
           const delayMs = initialDelayMs * Math.pow(2, attempt);
-          await new Promise(resolve => setTimeout(resolve, delayMs));
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
         }
       }
     }
@@ -446,126 +446,126 @@ export default function SuggestionDetail() {
   const updateStatusMutation = useMutation({
     mutationFn: async (status) => {
       if (!isAdmin) throw new Error(t('adminAccessRequired'));
-      
+
       if (status === 'accepted' && suggestion.type === 'edit_section' && section) {
         // Get existing versions to calculate next version number
-        const versions = await retryWithBackoff(() => 
-          base44.entities.DocumentVersion.filter({ sectionId: section.id })
+        const versions = await retryWithBackoff(() =>
+        base44.entities.DocumentVersion.filter({ sectionId: section.id })
         );
-        const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
-        
+        const nextVersion = versions.length > 0 ? Math.max(...versions.map((v) => v.version)) + 1 : 1;
+
         // Save version with OLD content before updating
         await retryWithBackoff(() =>
-          base44.entities.DocumentVersion.create({
-            documentId: suggestion.documentId,
-            sectionId: section.id,
-            content: section.content,
-            changeDescription: `לפני: ${suggestion.title}`,
-            version: nextVersion,
-            changeType: 'suggestion_accepted',
-            suggestionId: suggestion.id
-          })
+        base44.entities.DocumentVersion.create({
+          documentId: suggestion.documentId,
+          sectionId: section.id,
+          content: section.content,
+          changeDescription: `לפני: ${suggestion.title}`,
+          version: nextVersion,
+          changeType: 'suggestion_accepted',
+          suggestionId: suggestion.id
+        })
         );
-        
+
         // Small delay between operations to avoid rate limits
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
         // Update section with new content
         await retryWithBackoff(() =>
-          base44.entities.Section.update(section.id, {
-            content: suggestion.newContent,
-            lastEditedBy: user.id
-          })
+        base44.entities.Section.update(section.id, {
+          content: suggestion.newContent,
+          lastEditedBy: user.id
+        })
         );
-        
+
         // Small delay between operations
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
         // Save version with NEW content after updating
         await retryWithBackoff(() =>
-          base44.entities.DocumentVersion.create({
-            documentId: suggestion.documentId,
-            sectionId: section.id,
-            content: suggestion.newContent,
-            changeDescription: suggestion.title,
-            version: nextVersion + 1,
-            changeType: 'suggestion_accepted',
-            suggestionId: suggestion.id
-          })
+        base44.entities.DocumentVersion.create({
+          documentId: suggestion.documentId,
+          sectionId: section.id,
+          content: suggestion.newContent,
+          changeDescription: suggestion.title,
+          version: nextVersion + 1,
+          changeType: 'suggestion_accepted',
+          suggestionId: suggestion.id
+        })
         );
       } else if (status === 'accepted' && suggestion.type === 'new_section') {
         const sections = await retryWithBackoff(() =>
-          base44.entities.Section.filter({ 
-            documentId: suggestion.documentId,
-            topicId: suggestion.topicId 
-          }, 'order')
+        base44.entities.Section.filter({
+          documentId: suggestion.documentId,
+          topicId: suggestion.topicId
+        }, 'order')
         );
-        
+
         let newOrder;
         if (suggestion.insertPosition !== undefined && suggestion.insertPosition !== null) {
           // Insert at specific position - update orders of sections after this position
-          const sectionsToUpdate = sections.filter(s => s.order >= suggestion.insertPosition);
+          const sectionsToUpdate = sections.filter((s) => s.order >= suggestion.insertPosition);
           for (const section of sectionsToUpdate) {
             await retryWithBackoff(() =>
-              base44.entities.Section.update(section.id, { order: section.order + 1 })
+            base44.entities.Section.update(section.id, { order: section.order + 1 })
             );
             // Small delay between sequential updates
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise((resolve) => setTimeout(resolve, 200));
           }
           newOrder = suggestion.insertPosition;
         } else {
           // Insert at end
-          const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order)) : -1;
+          const maxOrder = sections.length > 0 ? Math.max(...sections.map((s) => s.order)) : -1;
           newOrder = maxOrder + 1;
         }
-        
+
         const newSection = await retryWithBackoff(() =>
-          base44.entities.Section.create({
-            documentId: suggestion.documentId,
-            topicId: suggestion.topicId,
-            content: suggestion.newContent,
-            order: newOrder,
-            lastEditedBy: user.id
-          })
+        base44.entities.Section.create({
+          documentId: suggestion.documentId,
+          topicId: suggestion.topicId,
+          content: suggestion.newContent,
+          order: newOrder,
+          lastEditedBy: user.id
+        })
         );
-        
+
         // Small delay before creating version
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
         // Create initial version for new section
         await retryWithBackoff(() =>
-          base44.entities.DocumentVersion.create({
-            documentId: suggestion.documentId,
-            sectionId: newSection.id,
-            content: suggestion.newContent,
-            changeDescription: suggestion.title,
-            version: 1,
-            changeType: 'section_created',
-            suggestionId: suggestion.id
-          })
+        base44.entities.DocumentVersion.create({
+          documentId: suggestion.documentId,
+          sectionId: newSection.id,
+          content: suggestion.newContent,
+          changeDescription: suggestion.title,
+          version: 1,
+          changeType: 'section_created',
+          suggestionId: suggestion.id
+        })
         );
       }
 
       // Small delay before updating suggestion status
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       await retryWithBackoff(() =>
-        base44.entities.Suggestion.update(suggestionId, { 
-          status,
-          ...(status === 'accepted' ? { approvedByAdmin: true } : {}),
-          ...(status === 'rejected' ? { rejectedByAdmin: true } : {})
-        })
+      base44.entities.Suggestion.update(suggestionId, {
+        status,
+        ...(status === 'accepted' ? { approvedByAdmin: true } : {}),
+        ...(status === 'rejected' ? { rejectedByAdmin: true } : {})
+      })
       );
-      
+
       // קבלת ההצעה המעודכנת מהשרת
       const updatedSuggestions = await retryWithBackoff(() =>
-        base44.entities.Suggestion.filter({ id: suggestionId })
+      base44.entities.Suggestion.filter({ id: suggestionId })
       );
       const updatedSuggestion = updatedSuggestions[0] || { ...suggestion, status };
-      
+
       // Small delay before sending notifications
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
       // שליחת התראה על שינוי סטטוס - חובה לחכות שתסתיים
       console.log('[UPDATE STATUS] Sending status change notifications...');
       console.log('[UPDATE STATUS] Updated suggestion:', updatedSuggestion);
@@ -624,13 +624,13 @@ export default function SuggestionDetail() {
 
     const attemptScroll = () => {
       const commentElement = window.document.getElementById(`comment-${commentId}`);
-      
+
       if (commentElement) {
         // Found the element - scroll and highlight
         commentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         commentElement.style.transition = 'background-color 0.3s ease';
         commentElement.style.backgroundColor = '#dbeafe';
-        
+
         // Remove highlight after 3 seconds
         highlightTimer = setTimeout(() => {
           commentElement.style.backgroundColor = '';
@@ -662,112 +662,112 @@ export default function SuggestionDetail() {
   // Helper functions
   const getUserName = (email) => {
     // First try public profile (accessible to all)
-    const profile = publicProfiles.find(p => p.email === email);
+    const profile = publicProfiles.find((p) => p.email === email);
     if (profile?.fullName) return profile.fullName;
-    
+
     // Fallback to User entity (requires permissions)
-    const user = users.find(u => u.email === email);
+    const user = users.find((u) => u.email === email);
     if (user?.full_name) return user.full_name;
-    
+
     return 'User';
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'pending': return 'bg-amber-100 text-amber-800 border-amber-200';
-      case 'accepted': return 'bg-green-100 text-green-800 border-green-200';
-      case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-slate-100 text-slate-800 border-slate-200';
+      case 'pending':return 'bg-amber-100 text-amber-800 border-amber-200';
+      case 'accepted':return 'bg-green-100 text-green-800 border-green-200';
+      case 'rejected':return 'bg-red-100 text-red-800 border-red-200';
+      default:return 'bg-slate-100 text-slate-800 border-slate-200';
     }
   };
 
   const handleNavigateToVersion = (direction) => {
-    const currentIndex = suggestionVersions.findIndex(v => v.suggestionId === suggestionId);
+    const currentIndex = suggestionVersions.findIndex((v) => v.suggestionId === suggestionId);
     let targetIndex;
-    
+
     if (direction === 'newer') {
       targetIndex = currentIndex - 1;
     } else {
       targetIndex = currentIndex + 1;
     }
-    
+
     if (targetIndex >= 0 && targetIndex < suggestionVersions.length) {
       const targetVersion = suggestionVersions[targetIndex];
       navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${targetVersion.suggestionId}`);
     }
   };
 
-  const proArgs = args.filter(a => a.type === 'pro');
-  const conArgs = args.filter(a => a.type === 'con');
-  const consensusScore = suggestion && suggestion.proVotes + suggestion.conVotes > 0 
-    ? (suggestion.proVotes / (suggestion.proVotes + suggestion.conVotes) * 100).toFixed(0)
-    : 50;
+  const proArgs = args.filter((a) => a.type === 'pro');
+  const conArgs = args.filter((a) => a.type === 'con');
+  const consensusScore = suggestion && suggestion.proVotes + suggestion.conVotes > 0 ?
+  (suggestion.proVotes / (suggestion.proVotes + suggestion.conVotes) * 100).toFixed(0) :
+  50;
 
-  const suggestionVersions = sectionVersions.filter(v => v.suggestionId);
-  const currentVersionIndex = suggestionVersions.findIndex(v => v.suggestionId === suggestionId);
+  const suggestionVersions = sectionVersions.filter((v) => v.suggestionId);
+  const currentVersionIndex = suggestionVersions.findIndex((v) => v.suggestionId === suggestionId);
   const isNewestVersion = currentVersionIndex === 0;
   const isOldestVersion = currentVersionIndex === suggestionVersions.length - 1 || currentVersionIndex === -1;
 
   const suggestionChain = useMemo(() => {
-      if (!suggestion || !allDocumentSuggestions || allDocumentSuggestions.length === 0) return [];
+    if (!suggestion || !allDocumentSuggestions || allDocumentSuggestions.length === 0) return [];
 
-      let chain = [];
-      let current = allDocumentSuggestions.find(s => s.id === suggestion.id);
+    let chain = [];
+    let current = allDocumentSuggestions.find((s) => s.id === suggestion.id);
 
-      // Go up to find the root
-      while (current && current.parentSuggestionId) {
-          const parent = allDocumentSuggestions.find(s => s.id === current.parentSuggestionId);
-          if (!parent || chain.some(item => item.id === parent.id)) { // Prevent infinite loops
-              break;
-          }
-          chain.unshift(parent);
-          current = parent;
+    // Go up to find the root
+    while (current && current.parentSuggestionId) {
+      const parent = allDocumentSuggestions.find((s) => s.id === current.parentSuggestionId);
+      if (!parent || chain.some((item) => item.id === parent.id)) {// Prevent infinite loops
+        break;
       }
-       if (current && !chain.some(item => item.id === current.id)) {
-          chain.unshift(current);
+      chain.unshift(parent);
+      current = parent;
+    }
+    if (current && !chain.some((item) => item.id === current.id)) {
+      chain.unshift(current);
+    }
+
+    const root = chain[0];
+    if (!root) {
+      // This suggestion might be a root itself
+      if (suggestion.type === 'new_section' || suggestion.type === 'edit_suggestion') {
+        return [suggestion];
       }
+      return [];
+    }
 
-      const root = chain[0];
-      if (!root) {
-           // This suggestion might be a root itself
-          if (suggestion.type === 'new_section' || suggestion.type === 'edit_suggestion'){
-              return [suggestion];
-          }
-          return [];
+    // Go down to find all descendants in a linear path
+    let fullChain = [...chain];
+    let head = chain[chain.length - 1];
+
+    let visitedIds = new Set(fullChain.map((s) => s.id));
+
+    while (head) {
+      // Find the next suggestion in the chain (assuming one edit at a time)
+      const nextInChain = allDocumentSuggestions.
+      filter((s) => s.parentSuggestionId === head.id).
+      sort((a, b) => new Date(a.created_date) - new Date(b.created_date))[0];
+
+      if (nextInChain && !visitedIds.has(nextInChain.id)) {
+        fullChain.push(nextInChain);
+        visitedIds.add(nextInChain.id);
+        head = nextInChain;
+      } else {
+        head = null;
       }
+    }
 
-      // Go down to find all descendants in a linear path
-      let fullChain = [...chain];
-      let head = chain[chain.length - 1];
+    // Ensure the current suggestion is in the chain if it was missed
+    if (!visitedIds.has(suggestion.id)) {
 
-      let visitedIds = new Set(fullChain.map(s => s.id));
 
-      while (head) {
-          // Find the next suggestion in the chain (assuming one edit at a time)
-          const nextInChain = allDocumentSuggestions
-              .filter(s => s.parentSuggestionId === head.id)
-              .sort((a, b) => new Date(a.created_date) - new Date(b.created_date))[0];
-
-          if (nextInChain && !visitedIds.has(nextInChain.id)) {
-              fullChain.push(nextInChain);
-              visitedIds.add(nextInChain.id);
-              head = nextInChain;
-          } else {
-              head = null;
-          }
-      }
-
-      // Ensure the current suggestion is in the chain if it was missed
-      if (!visitedIds.has(suggestion.id)) {
-          // This case can happen if there are branches, for now, we just add it.
-          // A more robust solution might be needed for branching histories.
-      }
-
-      return fullChain.filter(s => s.type === 'new_section' || s.type === 'edit_suggestion');
+      // This case can happen if there are branches, for now, we just add it.
+      // A more robust solution might be needed for branching histories.
+    }return fullChain.filter((s) => s.type === 'new_section' || s.type === 'edit_suggestion');
   }, [suggestion, allDocumentSuggestions]);
 
   const currentSuggestionIndexInChain = useMemo(() => {
-      return suggestionChain.findIndex(s => s.id === suggestionId);
+    return suggestionChain.findIndex((s) => s.id === suggestionId);
   }, [suggestionChain, suggestionId]);
 
   // NOW check for loading/error states - AFTER all hooks
@@ -778,11 +778,11 @@ export default function SuggestionDetail() {
           <Skeleton className="h-12 w-64" />
           <Skeleton className="h-96 w-full" />
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
-  if (suggestionError || (!suggestion && !suggestionLoading)) {
+  if (suggestionError || !suggestion && !suggestionLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-5xl mx-auto text-center py-20">
@@ -795,8 +795,8 @@ export default function SuggestionDetail() {
             {t('goHome')}
           </Button>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   // Continue with JSX rendering
@@ -806,61 +806,61 @@ export default function SuggestionDetail() {
       <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 w-full overflow-x-hidden">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
           <div className="flex-1 min-w-0 w-full">
-            <PageHeader 
+            <PageHeader
               title={suggestion.title}
               documentTitle={document?.title}
-              backUrl={`${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${suggestion.documentId}`}
-            />
+              backUrl={`${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${suggestion.documentId}`} />
+
           </div>
-          {user && user.email === suggestion.created_by && suggestion.status !== 'accepted' && (
-            <button
-              onClick={() => {
-                if (confirm(t('confirmDeleteSuggestion'))) {
-                  deleteSuggestionMutation.mutate();
-                }
-              }}
-              disabled={deleteSuggestionMutation.isPending}
-              className="shrink-0 p-1 text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors"
-              title={t('deleteSuggestion')}
-            >
+          {user && user.email === suggestion.created_by && suggestion.status !== 'accepted' &&
+          <button
+            onClick={() => {
+              if (confirm(t('confirmDeleteSuggestion'))) {
+                deleteSuggestionMutation.mutate();
+              }
+            }}
+            disabled={deleteSuggestionMutation.isPending}
+            className="shrink-0 p-1 text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors"
+            title={t('deleteSuggestion')}>
+
               <Trash2 className="w-4 h-4" />
             </button>
-          )}
+          }
         </div>
 
-        {error && (
-          <Alert variant="destructive">
+        {error &&
+        <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
-        )}
+        }
 
         <Card className="bg-white border-slate-200 w-full overflow-hidden">
           <CardHeader className="p-4 md:p-6">
             <div className="flex flex-col md:flex-row items-start md:justify-between gap-3">
               <div className="flex flex-wrap gap-2 items-center">
                 <Badge variant="outline" className={`text-xs ${
-                  suggestion.type === 'delete_section' ? 'bg-red-100 text-red-800 border-red-200' : ''
-                }`}>
-                  {suggestion.type === 'new_section' 
-                    ? t('newSection') 
-                    : suggestion.type === 'delete_section'
-                    ? (language === 'he' ? 'מחיקת סעיף' : language === 'ar' ? 'حذف قسم' : 'Delete Section')
-                    : suggestion.type === 'edit_suggestion'
-                    ? (isRTL ? 'הצעה לעריכת הצעה' : 'Edit Suggestion')
-                    : t('suggestionToEditSection')}
+                suggestion.type === 'delete_section' ? 'bg-red-100 text-red-800 border-red-200' : ''}`
+                }>
+                  {suggestion.type === 'new_section' ?
+                  t('newSection') :
+                  suggestion.type === 'delete_section' ?
+                  language === 'he' ? 'מחיקת סעיף' : language === 'ar' ? 'حذف قسم' : 'Delete Section' :
+                  suggestion.type === 'edit_suggestion' ?
+                  isRTL ? 'הצעה לעריכת הצעה' : 'Edit Suggestion' :
+                  t('suggestionToEditSection')}
                 </Badge>
 
-                {suggestion.status === 'rejected' && suggestion.rejectedByAdmin ? (
-                  <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200 text-xs">
+                {suggestion.status === 'rejected' && suggestion.rejectedByAdmin ?
+                <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200 text-xs">
                     {language === 'he' ? 'נדחתה על ידי אדמין' : language === 'ar' ? 'مرفوضة من المشرف' : 'Rejected by Admin'}
-                  </Badge>
-                ) : suggestion.status === 'rejected' && !suggestion.rejectedByAdmin ? (
-                  <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
+                  </Badge> :
+                suggestion.status === 'rejected' && !suggestion.rejectedByAdmin ?
+                <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
                     {language === 'he' ? 'פג תוקפה' : language === 'ar' ? 'انتهت صلاحيتها' : 'Expired'}
-                  </Badge>
-                ) : (
-                  <TooltipProvider delayDuration={200}>
+                  </Badge> :
+
+                <TooltipProvider delayDuration={200}>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span>
@@ -870,260 +870,260 @@ export default function SuggestionDetail() {
                         </span>
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
-                        {suggestion.status === 'pending'
-                          ? (language === 'he' ? 'ממתינה להצבעה' : language === 'ar' ? 'في انتظار التصويت' : 'Awaiting votes')
-                          : suggestion.status === 'accepted'
-                          ? (language === 'he' ? 'ההצעה התקבלה ויושמה במסמך' : language === 'ar' ? 'تمت الموافقة على الاقتراح' : 'Proposal accepted and applied')
-                          : suggestion.status === 'rejected'
-                          ? (language === 'he' ? 'ההצעה נדחתה' : language === 'ar' ? 'تم رفض الاقتراح' : 'Proposal rejected')
-                          : suggestion.status === 'discussion'
-                          ? (language === 'he' ? 'בדיון פתוח' : language === 'ar' ? 'قيد النقاش' : 'Open for discussion')
-                          : suggestion.status}
+                        {suggestion.status === 'pending' ?
+                      language === 'he' ? 'ממתינה להצבעה' : language === 'ar' ? 'في انتظار التصويت' : 'Awaiting votes' :
+                      suggestion.status === 'accepted' ?
+                      language === 'he' ? 'ההצעה התקבלה ויושמה במסמך' : language === 'ar' ? 'تمت الموافقة على الاقتراح' : 'Proposal accepted and applied' :
+                      suggestion.status === 'rejected' ?
+                      language === 'he' ? 'ההצעה נדחתה' : language === 'ar' ? 'تم رفض الاقتراح' : 'Proposal rejected' :
+                      suggestion.status === 'discussion' ?
+                      language === 'he' ? 'בדיון פתוח' : language === 'ar' ? 'قيد النقاش' : 'Open for discussion' :
+                      suggestion.status}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                )}
+                }
 
                 <span className="text-xs text-slate-500">
-                  {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
+                  {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${users.find((u) => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
                 </span>
-                {suggestion.created_date && (
-                  <span className="text-xs text-slate-400">
+                {suggestion.created_date &&
+                <span className="text-xs text-slate-400">
                     • {new Date(suggestion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </span>
-                )}
+                }
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
-                {suggestion.status === 'pending' && suggestion.timerEndsAt && (
-                  <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="sm" />
-                )}
-                {suggestion.status === 'accepted' && suggestion.updated_date && (
-                  <span className="text-xs text-slate-500">
+                {suggestion.status === 'pending' && suggestion.timerEndsAt &&
+                <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="sm" />
+                }
+                {suggestion.status === 'accepted' && suggestion.updated_date &&
+                <span className="text-xs text-slate-500">
                     {t('acceptedOn')} {new Date(suggestion.updated_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
                   </span>
-                )}
-                {suggestion.approvedByAdmin && suggestion.status === 'accepted' && (
-                  <Badge variant="outline" className="flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
+                }
+                {suggestion.approvedByAdmin && suggestion.status === 'accepted' &&
+                <Badge variant="outline" className="flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
                     <ShieldCheck className="w-3 h-3" />
                     {language === 'he' ? 'אושר ע״י מנהל' : language === 'ar' ? 'تمت الموافقة من المشرف' : 'Admin Approved'}
                   </Badge>
-                )}
-                {suggestion.status === 'rejected' && suggestion.rejectedByAdmin && suggestion.updated_date && (
-                  <span className="text-xs text-slate-500">
+                }
+                {suggestion.status === 'rejected' && suggestion.rejectedByAdmin && suggestion.updated_date &&
+                <span className="text-xs text-slate-500">
                     {language === 'he' ? 'נדחתה ב-' : language === 'ar' ? 'تم الرفض في' : 'Rejected on'} {new Date(suggestion.updated_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
                   </span>
-                )}
+                }
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4 md:space-y-6 p-3 md:p-6 overflow-x-hidden">
-            {(suggestion.explanation || (user && user.email === suggestion.created_by)) && (
-                <div>
+            {(suggestion.explanation || user && user.email === suggestion.created_by) &&
+            <div>
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-sm font-semibold text-slate-700">{t('explanation')}</h3>
-                    {user && user.email === suggestion.created_by && !isEditingExplanation && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEditedExplanation(suggestion.explanation || "");
-                          setIsEditingExplanation(true);
-                        }}
-                        className="h-7 px-2"
-                      >
+                    {user && user.email === suggestion.created_by && !isEditingExplanation &&
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setEditedExplanation(suggestion.explanation || "");
+                    setIsEditingExplanation(true);
+                  }}
+                  className="h-7 px-2">
+
                         <Edit2 className="w-3 h-3" />
                       </Button>
-                    )}
+                }
                   </div>
-                  {isEditingExplanation ? (
-                    <div className="space-y-2">
+                  {isEditingExplanation ?
+              <div className="space-y-2">
                       <Textarea
-                        value={editedExplanation}
-                        onChange={(e) => setEditedExplanation(e.target.value)}
-                        placeholder={t('explainChange')}
-                        rows={3}
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                      />
+                  value={editedExplanation}
+                  onChange={(e) => setEditedExplanation(e.target.value)}
+                  placeholder={t('explainChange')}
+                  rows={3}
+                  dir={isRTL ? 'rtl' : 'ltr'} />
+
                       <div className="flex gap-2">
                         <Button
-                          size="sm"
-                          onClick={() => updateExplanationMutation.mutate(editedExplanation)}
-                          disabled={updateExplanationMutation.isPending}
-                        >
+                    size="sm"
+                    onClick={() => updateExplanationMutation.mutate(editedExplanation)}
+                    disabled={updateExplanationMutation.isPending}>
+
                           <Save className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                           {t('saveChanges')}
                         </Button>
                         <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setIsEditingExplanation(false)}
-                        >
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsEditingExplanation(false)}>
+
                           <X className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                           {t('cancel')}
                         </Button>
                       </div>
-                    </div>
-                  ) : suggestion.explanation && typeof suggestion.explanation === 'string' ? (
-                    <TranslatableContent
-                      content={suggestion.explanation}
-                      entity={suggestion}
-                      entityType="Suggestion"
-                      fieldName="explanation"
-                      onUpdate={(updated) => {
-                        queryClient.setQueryData(['suggestion', suggestionId], updated);
-                      }}
-                      className="text-slate-600"
-                    />
-                  ) : (
-                    <p className="text-slate-400 text-sm italic">{t('noDescription')}</p>
-                  )}
+                    </div> :
+              suggestion.explanation && typeof suggestion.explanation === 'string' ?
+              <TranslatableContent
+                content={suggestion.explanation}
+                entity={suggestion}
+                entityType="Suggestion"
+                fieldName="explanation"
+                onUpdate={(updated) => {
+                  queryClient.setQueryData(['suggestion', suggestionId], updated);
+                }}
+                className="text-slate-600" /> :
+
+
+              <p className="text-slate-400 text-sm italic">{t('noDescription')}</p>
+              }
                 </div>
-              )}
+            }
 
 
 
-            {suggestion.type === 'delete_section' ? (
-              <div>
+            {suggestion.type === 'delete_section' ?
+            <div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-semibold text-red-700">
                     {language === 'he' ? 'סעיף שמוצע למחיקה' : language === 'ar' ? 'القسم المقترح حذفه' : 'Section to be deleted'}
                   </h3>
                   <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#suggestion-${suggestionId}`);
-                      setTimeout(() => {
-                        if (typeof window !== 'undefined' && window.document?.getElementById) {
-                          const element = window.document.getElementById(`suggestion-${suggestionId}`);
-                          if (element) {
-                            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#suggestion-${suggestionId}`);
+                    setTimeout(() => {
+                      if (typeof window !== 'undefined' && window.document?.getElementById) {
+                        const element = window.document.getElementById(`suggestion-${suggestionId}`);
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }
-                      }, 300);
-                    }}
-                    className="h-7 px-2 text-xs"
-                  >
+                      }
+                    }, 300);
+                  }}
+                  className="h-7 px-2 text-xs">
+
                     <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
                     {isRTL ? 'חזרה למסמך' : 'Back to Document'}
                   </Button>
                 </div>
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <div 
-                    className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
-                    dangerouslySetInnerHTML={{ __html: suggestion.originalContent }}
-                  />
+                  <div
+                  className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
+                  dangerouslySetInnerHTML={{ __html: suggestion.originalContent }} />
+
                 </div>
-              </div>
-            ) : (suggestion.type === 'edit_section' || (suggestion.type === 'edit_suggestion' && suggestion.originalContent)) ? (
-              <div>
+              </div> :
+            suggestion.type === 'edit_section' || suggestion.type === 'edit_suggestion' && suggestion.originalContent ?
+            <div>
                <div className="flex items-center justify-between mb-2">
                  <h3 className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</h3>
                  <Button
-                   variant="outline"
-                   size="sm"
-                   onClick={() => {
-                     navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);
-                     setTimeout(() => {
-                       if (typeof window !== 'undefined') {
-                         const element = window.document.getElementById(`section-${suggestion.sectionId}`);
-                         if (element) {
-                           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                         }
-                       }
-                     }, 300);
-                   }}
-                   className="h-7 px-2 text-xs"
-                 >
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);
+                    setTimeout(() => {
+                      if (typeof window !== 'undefined') {
+                        const element = window.document.getElementById(`section-${suggestion.sectionId}`);
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                      }
+                    }, 300);
+                  }}
+                  className="h-7 px-2 text-xs">
+
                    <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
                    {isRTL ? 'חזרה למסמך' : 'Back to Document'}
                  </Button>
                </div>
                <div className="relative">
-                 {isAutoAccepting && (
-                   <div className="absolute inset-0 bg-white/50 rounded-lg flex flex-col items-center justify-center z-10 gap-3">
+                 {isAutoAccepting &&
+                <div className="absolute inset-0 bg-white/50 rounded-lg flex flex-col items-center justify-center z-10 gap-3">
                      <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
                      <p className="text-sm font-medium text-slate-700">{isRTL ? 'מעבד הצעה...' : 'Processing suggestion...'}</p>
                    </div>
-                 )}
+                }
                  <SectionDiff
-                   originalContent={suggestion.originalContent}
-                   newContent={suggestion.newContent}
-                   suggestion={suggestion}
-                   documentId={suggestion.documentId}
-                   sectionId={suggestion.sectionId}
-                   section={section}
-                 />
+                  originalContent={suggestion.originalContent}
+                  newContent={suggestion.newContent}
+                  suggestion={suggestion}
+                  documentId={suggestion.documentId}
+                  sectionId={suggestion.sectionId}
+                  section={section} />
+
                </div>
-              </div>
-            ) : suggestion.type === 'new_section' ? (
-              <div>
+              </div> :
+            suggestion.type === 'new_section' ?
+            <div>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-semibold text-slate-700">{t('proposedContent')}</h3>
                   <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#suggestion-${suggestionId}`);
-                      setTimeout(() => {
-                        if (typeof window !== 'undefined') {
-                          const element = window.document.getElementById(`suggestion-${suggestionId}`);
-                          if (element) {
-                            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                          }
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#suggestion-${suggestionId}`);
+                    setTimeout(() => {
+                      if (typeof window !== 'undefined') {
+                        const element = window.document.getElementById(`suggestion-${suggestionId}`);
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }
-                      }, 300);
-                    }}
-                    className="h-7 px-2 text-xs"
-                  >
+                      }
+                    }, 300);
+                  }}
+                  className="h-7 px-2 text-xs">
+
                     <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />
                     {isRTL ? 'חזרה למסמך' : 'Back to Document'}
                   </Button>
                 </div>
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                   <TranslatableContent
-                    content={suggestion.newContent}
-                    entity={suggestion}
-                    entityType="Suggestion"
-                    onUpdate={(updated) => {
-                      queryClient.setQueryData(['suggestion', suggestionId], updated);
-                    }}
-                    className="prose prose-sm max-w-none"
-                    renderContent={(content) => (
-                      <DocumentTextContent content={content} />
-                    )}
-                  />
-                </div>
-              </div>
-            ) : null}
+                  content={suggestion.newContent}
+                  entity={suggestion}
+                  entityType="Suggestion"
+                  onUpdate={(updated) => {
+                    queryClient.setQueryData(['suggestion', suggestionId], updated);
+                  }}
+                  className="prose prose-sm max-w-none"
+                  renderContent={(content) =>
+                  <DocumentTextContent content={content} />
+                  } />
 
-            {(suggestion.type === 'new_section' && suggestion.status === 'pending') && (
-              <div className="pt-4">
+                </div>
+              </div> :
+            null}
+
+            {suggestion.type === 'new_section' && suggestion.status === 'pending' &&
+            <div className="pt-4">
                 <Button
-                  variant="outline"
-                  onClick={() => setShowEditSuggestionModal(true)}
-                  className="w-full"
-                >
+                variant="outline"
+                onClick={() => setShowEditSuggestionModal(true)}
+                className="w-full">
+
                   <Edit2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {language === 'he' ? 'הצע עריכה להצעה זו' : language === 'ar' ? 'اقترح تعديلاً على هذا الاقتراح' : 'Suggest an Edit to this Suggestion'}
                 </Button>
               </div>
-            )}
+            }
 
-            {document?.votingButtonsEnabled && (
-              <div className="pt-4 border-t space-y-4">
+            {document?.votingButtonsEnabled &&
+            <div className="pt-4 border-t space-y-4">
                 {/* Stats row */}
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-1">
@@ -1139,246 +1139,246 @@ export default function SuggestionDetail() {
                     <span className="text-xs text-slate-500 ml-1">{t('consensus')}</span>
                   </div>
                   <div className="flex-1">
-                    <VotesNeededCounter 
-                      suggestion={suggestion} 
-                      document={document}
-                      acceptedSuggestions={allDocumentSuggestions.filter(s => s.status === 'accepted')}
-                    />
+                    <VotesNeededCounter
+                    suggestion={suggestion}
+                    document={document}
+                    acceptedSuggestions={allDocumentSuggestions.filter((s) => s.status === 'accepted')} />
+
                   </div>
                 </div>
 
                 {/* Vote buttons row */}
-                {suggestion.status === 'pending' && (
-                  <div className="flex gap-3 relative">
-                    {voteMutation.isPending && !rateLimitRetryAfter && (
-                      <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10">
+                {suggestion.status === 'pending' &&
+              <div className="flex gap-3 relative">
+                    {voteMutation.isPending && !rateLimitRetryAfter &&
+                <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10">
                         <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
                       </div>
-                    )}
-                    {rateLimitRetryAfter && (
-                      <div className="absolute inset-0 bg-amber-50/95 rounded-lg flex items-center justify-center z-10 gap-2 p-2">
+                }
+                    {rateLimitRetryAfter &&
+                <div className="absolute inset-0 bg-amber-50/95 rounded-lg flex items-center justify-center z-10 gap-2 p-2">
                         <Clock className="w-4 h-4 text-amber-600 animate-pulse" />
                         <p className="text-xs font-medium text-amber-800">
-                          {language === 'he' ? `אנא המתן ${rateLimitRetryAfter} שניות` : 
-                           language === 'ar' ? `يرجى الانتظار ${rateLimitRetryAfter} ثانية` :
-                           `Please wait ${rateLimitRetryAfter} seconds`}
+                          {language === 'he' ? `אנא המתן ${rateLimitRetryAfter} שניות` :
+                    language === 'ar' ? `يرجى الانتظار ${rateLimitRetryAfter} ثانية` :
+                    `Please wait ${rateLimitRetryAfter} seconds`}
                         </p>
                       </div>
-                    )}
+                }
                     <Button
-                      variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
-                      onClick={() => {
-                        if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
-                        voteMutation.mutate('pro');
-                      }}
-                      disabled={voteMutation.isPending || rateLimitRetryAfter !== null}
-                      className={`flex-1 ${userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700 border-green-600' : 'border-green-300 text-green-700 hover:bg-green-50'}`}
-                    >
+                  variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
+                  onClick={() => {
+                    if (!user) {base44.auth.redirectToLogin(window.location.href);return;}
+                    voteMutation.mutate('pro');
+                  }}
+                  disabled={voteMutation.isPending || rateLimitRetryAfter !== null}
+                  className={`flex-1 ${userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700 border-green-600' : 'border-green-300 text-green-700 hover:bg-green-50'}`}>
+
                       <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                       {t('votePro')}
                     </Button>
                     <Button
-                      variant={userVote?.vote === 'con' ? 'default' : 'outline'}
-                      onClick={() => {
-                        if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
-                        voteMutation.mutate('con');
-                      }}
-                      disabled={voteMutation.isPending || rateLimitRetryAfter !== null}
-                      className={`flex-1 ${userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700 border-red-600' : 'border-red-300 text-red-700 hover:bg-red-50'}`}
-                    >
+                  variant={userVote?.vote === 'con' ? 'default' : 'outline'}
+                  onClick={() => {
+                    if (!user) {base44.auth.redirectToLogin(window.location.href);return;}
+                    voteMutation.mutate('con');
+                  }}
+                  disabled={voteMutation.isPending || rateLimitRetryAfter !== null}
+                  className={`flex-1 ${userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700 border-red-600' : 'border-red-300 text-red-700 hover:bg-red-50'}`}>
+
                       <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                       {t('voteCon')}
                     </Button>
                   </div>
-                )}
+              }
 
                 {/* Admin actions */}
-                {isAdmin && suggestion.status === 'pending' && (
-                  <div className="flex gap-2 pt-3 border-t">
+                {isAdmin && suggestion.status === 'pending' &&
+              <div className="flex gap-2 pt-3 border-t">
                     <Button
-                      onClick={() => updateStatusMutation.mutate('accepted')}
-                      disabled={updateStatusMutation.isPending}
-                      className="flex-1 bg-green-600 hover:bg-green-700"
-                    >
+                  onClick={() => updateStatusMutation.mutate('accepted')}
+                  disabled={updateStatusMutation.isPending}
+                  className="flex-1 bg-green-600 hover:bg-green-700">
+
                       {updateStatusMutation.isPending ? <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} /> : <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
                       {t('acceptSuggestion')}
                     </Button>
                     <Button
-                      onClick={() => updateStatusMutation.mutate('rejected')}
-                      disabled={updateStatusMutation.isPending}
-                      variant="destructive"
-                      className="flex-1"
-                    >
+                  onClick={() => updateStatusMutation.mutate('rejected')}
+                  disabled={updateStatusMutation.isPending}
+                  variant="destructive"
+                  className="flex-1">
+
                       {updateStatusMutation.isPending ? <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} /> : <XCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
                       {t('rejectSuggestion')}
                     </Button>
                   </div>
-                )}
+              }
               </div>
-            )}
+            }
           </CardContent>
         </Card>
 
-        {suggestionChain && suggestionChain.length > 1 && (
-            <Card className="bg-white border-slate-200 w-full overflow-hidden">
+        {suggestionChain && suggestionChain.length > 1 &&
+        <Card className="bg-white border-slate-200 w-full overflow-hidden">
                 <CardHeader className="p-4 md:p-6">
                     <CardTitle className="text-base md:text-lg">{isRTL ? 'היסטוריית עריכה של ההצעה' : 'Suggestion Edit History'}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 md:p-6 flex justify-between items-center">
-                    <Button 
-                        variant="outline"
-                        onClick={() => navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${suggestionChain[currentSuggestionIndexInChain - 1].id}`)}
-                        disabled={currentSuggestionIndexInChain <= 0}
-                    >
+                    <Button
+              variant="outline"
+              onClick={() => navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${suggestionChain[currentSuggestionIndexInChain - 1].id}`)}
+              disabled={currentSuggestionIndexInChain <= 0}>
+
                         <ChevronLeft className="w-4 h-4" />
                         {isRTL ? 'גרסה קודמת' : 'Previous Version'}
                     </Button>
                     <span className="text-sm text-slate-600">
                         {isRTL ? 'גרסה' : 'Version'} {currentSuggestionIndexInChain + 1} / {suggestionChain.length}
                     </span>
-                    <Button 
-                        variant="outline"
-                        onClick={() => navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${suggestionChain[currentSuggestionIndexInChain + 1].id}`)}
-                        disabled={currentSuggestionIndexInChain >= suggestionChain.length - 1}
-                    >
+                    <Button
+              variant="outline"
+              onClick={() => navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${suggestionChain[currentSuggestionIndexInChain + 1].id}`)}
+              disabled={currentSuggestionIndexInChain >= suggestionChain.length - 1}>
+
                         {isRTL ? 'גרסה הבאה' : 'Next Version'}
                         <ChevronRight className="w-4 h-4" />
                     </Button>
                 </CardContent>
             </Card>
-        )}
+        }
 
-        <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-          <Card className="bg-white border-slate-200 w-full overflow-hidden">
-            <CardHeader className="p-4 md:p-6">
-              <CardTitle className="flex items-center gap-2 text-green-700 text-base md:text-lg">
-                <ThumbsUp className="w-4 h-4 md:w-5 md:h-5" />
-                {t('proArguments')} ({proArgs.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 p-3 md:p-6 overflow-x-hidden">
-              {proArgs.length === 0 ? (
-                <p className="text-sm text-slate-500">{t('noProArgumentsYet')}</p>
-              ) : (
-                proArgs.map(arg => (
-                  <div key={arg.id} className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-sm text-slate-700">{arg.content}</p>
-                    <div className="text-xs text-slate-500 mt-2">
-                      {t('by')} {getUserName(arg.created_by)} • {new Date(arg.created_date).toLocaleDateString()}
-                    </div>
-                  </div>
-                ))
-              )}
-              {newArgument.type !== 'pro' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    if (!user) {
-                      base44.auth.redirectToLogin(window.location.href);
-                      return;
-                    }
-                    setNewArgument({ type: 'pro', content: "" });
-                  }}
-                  className="w-full"
-                >
-                  {t('addProArgument')}
-                </Button>
-              )}
-              {newArgument.type === 'pro' && (
-                <div className="space-y-2">
-                  <Textarea
-                    value={newArgument.content}
-                    onChange={(e) => setNewArgument({ ...newArgument, content: e.target.value })}
-                    placeholder={t('writeProArgument')}
-                    rows={3}
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => addArgumentMutation.mutate(newArgument)}
-                      disabled={addArgumentMutation.isPending || !newArgument.content.trim()}
-                    >
-                      {t('submit')}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setNewArgument({ type: null, content: "" })}
-                    >
-                      {t('cancel')}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        
 
-          <Card className="bg-white border-slate-200 w-full overflow-hidden">
-            <CardHeader className="p-4 md:p-6">
-              <CardTitle className="flex items-center gap-2 text-red-700 text-base md:text-lg">
-                <ThumbsDown className="w-4 h-4 md:w-5 md:h-5" />
-                {t('conArguments')} ({conArgs.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 p-3 md:p-6 overflow-x-hidden">
-              {conArgs.length === 0 ? (
-                <p className="text-sm text-slate-500">{t('noConArgumentsYet')}</p>
-              ) : (
-                conArgs.map(arg => (
-                  <div key={arg.id} className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-slate-700">{arg.content}</p>
-                    <div className="text-xs text-slate-500 mt-2">
-                      {t('by')} {getUserName(arg.created_by)} • {new Date(arg.created_date).toLocaleDateString()}
-                    </div>
-                  </div>
-                ))
-              )}
-              {newArgument.type !== 'con' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    if (!user) {
-                      base44.auth.redirectToLogin(window.location.href);
-                      return;
-                    }
-                    setNewArgument({ type: 'con', content: "" });
-                  }}
-                  className="w-full"
-                >
-                  {t('addConArgument')}
-                </Button>
-              )}
-              {newArgument.type === 'con' && (
-                <div className="space-y-2">
-                  <Textarea
-                    value={newArgument.content}
-                    onChange={(e) => setNewArgument({ ...newArgument, content: e.target.value })}
-                    placeholder={t('writeConArgument')}
-                    rows={3}
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => addArgumentMutation.mutate(newArgument)}
-                      disabled={addArgumentMutation.isPending || !newArgument.content.trim()}
-                    >
-                      {t('submit')}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setNewArgument({ type: null, content: "" })}
-                    >
-                      {t('cancel')}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         <Card className="bg-white border-slate-200 w-full overflow-hidden">
           <CardHeader className="p-4 md:p-6">
@@ -1388,42 +1388,42 @@ export default function SuggestionDetail() {
             <CommentsSection
               entityType="suggestion"
               entityId={suggestionId}
-              user={user}
-            />
+              user={user} />
+
           </CardContent>
         </Card>
       </div>
 
-      {showEditSectionModal && section && (
-        <CreateSuggestionModal
-          document={document}
-          topics={topics}
-          sections={sections}
-          editingSection={{ id: section.id, topicId: section.topicId }}
-          user={user}
-          onClose={() => setShowEditSectionModal(false)}
-          isAdmin={isAdmin}
-          onSuggestionCreated={(newSuggestionId) => {
-            setShowEditSectionModal(false);
-            navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${newSuggestionId}`);
-          }}
-          />
-          )}
-          {showEditSuggestionModal && (
-          <CreateSuggestionModal
-          document={document}
-          topics={topics}
-          sections={sections}
-          editingSuggestion={suggestion}
-          user={user}
-          onClose={() => setShowEditSuggestionModal(false)}
-          isAdmin={isAdmin}
-          onSuggestionCreated={(newSuggestionId) => {
-            setShowEditSuggestionModal(false);
-            navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${newSuggestionId}`);
-          }}
-          />
-          )}
-          </div>
-  );
+      {showEditSectionModal && section &&
+      <CreateSuggestionModal
+        document={document}
+        topics={topics}
+        sections={sections}
+        editingSection={{ id: section.id, topicId: section.topicId }}
+        user={user}
+        onClose={() => setShowEditSectionModal(false)}
+        isAdmin={isAdmin}
+        onSuggestionCreated={(newSuggestionId) => {
+          setShowEditSectionModal(false);
+          navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${newSuggestionId}`);
+        }} />
+
+      }
+          {showEditSuggestionModal &&
+      <CreateSuggestionModal
+        document={document}
+        topics={topics}
+        sections={sections}
+        editingSuggestion={suggestion}
+        user={user}
+        onClose={() => setShowEditSuggestionModal(false)}
+        isAdmin={isAdmin}
+        onSuggestionCreated={(newSuggestionId) => {
+          setShowEditSuggestionModal(false);
+          navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${newSuggestionId}`);
+        }} />
+
+      }
+          </div>);
+
 }
