@@ -428,7 +428,7 @@ function LayoutContent({ children, currentPageName }) {
               {/* Left side: Sidebar Trigger + Logo */}
               <div className={`flex items-center gap-2 md:gap-4 ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'md:absolute md:inset-inline-start-6' : ''}`}>
                 <SidebarTrigger 
-                  className="md:hidden hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200 touch-manipulation"
+                  className="md:hidden hover:bg-slate-100 p-3 rounded-lg transition-colors duration-200 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
                   aria-label={isRTL ? 'פתיחת תפריט ניווט' : 'Open navigation menu'}
                   aria-expanded="false"
                   aria-controls="sidebar"
