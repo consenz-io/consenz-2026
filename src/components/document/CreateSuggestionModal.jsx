@@ -37,40 +37,8 @@ const detectLanguage = (text) => {
 const POINTS_COST_EDIT = 200;
 const POINTS_COST_NEW = 350;
 
-// Background function for sending notifications
-const sendNotificationsInBackground = async (doc, suggestion, currentUser) => {
-  try {
-    console.log('[CREATE SUGGESTION MODAL] Preparing to send notifications...');
-    console.log('[CREATE SUGGESTION MODAL] Current user:', currentUser);
-    console.log('[CREATE SUGGESTION MODAL] Suggestion:', suggestion);
-    console.log('[CREATE SUGGESTION MODAL] Document:', doc);
-    
-    if (!currentUser?.email) {
-      console.error('[CREATE SUGGESTION MODAL] ERROR: No current user email');
-      return;
-    }
-    
-    if (!currentUser?.full_name) {
-      console.warn('[CREATE SUGGESTION MODAL] WARNING: No full_name, trying to get from DB...');
-      // Fetch fresh user data if full_name is missing
-      const freshUser = await base44.auth.me();
-      currentUser = { ...currentUser, full_name: freshUser.full_name || currentUser.email.split('@')[0] };
-      console.log('[CREATE SUGGESTION MODAL] Updated current user:', currentUser);
-    }
-    
-    const { notifyNewSuggestion } = await import('@/components/notifications/createNotification');
-    console.log('[CREATE SUGGESTION MODAL] Calling notifyNewSuggestion...');
-    await notifyNewSuggestion({
-      suggestion,
-      document: doc,
-      currentUser
-    });
-    console.log('[CREATE SUGGESTION MODAL] Notifications sent successfully');
-  } catch (err) {
-    console.error('[CREATE SUGGESTION MODAL] Error sending notifications:', err);
-    console.error('[CREATE SUGGESTION MODAL] Stack:', err.stack);
-  }
-};
+// Notifications for new suggestions are handled by the handleNewSuggestion backend automation (entity trigger on create).
+// No frontend notification call needed here.
 
 // Background function for updating contributors
 const updateContributorsInBackground = async (docId) => {
