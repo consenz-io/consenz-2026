@@ -378,7 +378,7 @@ function LayoutContent({ children, currentPageName }) {
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Link to={createPageUrl("Profile")} className="flex-1">
-                    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer min-h-[44px]">
                       <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
                         <span className="text-white font-medium text-sm">
                           {user.full_name?.charAt(0) || 'U'}
