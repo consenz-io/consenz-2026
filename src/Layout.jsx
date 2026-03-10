@@ -19,6 +19,7 @@ import {
   SidebarFooter,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
