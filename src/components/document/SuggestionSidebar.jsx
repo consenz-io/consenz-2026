@@ -729,6 +729,9 @@ export default function SuggestionSidebar({
                   entity={suggestion}
                   entityType="Suggestion"
                   className="prose prose-sm max-w-none"
+                  renderContent={(content) => (
+                    <DocumentTextContent content={content} />
+                  )}
                 />
               </div>
             </div>

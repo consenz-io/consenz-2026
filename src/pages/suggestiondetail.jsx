@@ -1101,6 +1101,9 @@ export default function SuggestionDetail() {
                       queryClient.setQueryData(['suggestion', suggestionId], updated);
                     }}
                     className="prose prose-sm max-w-none"
+                    renderContent={(content) => (
+                      <DocumentTextContent content={content} />
+                    )}
                   />
                 </div>
               </div>

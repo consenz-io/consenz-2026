@@ -253,7 +253,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
             entityType="Suggestion"
             className="prose prose-sm max-w-none"
             renderContent={(content) => (
-              <div dangerouslySetInnerHTML={{ __html: content }} />
+              <DocumentTextContent content={content} />
             )}
           />
         </div>
