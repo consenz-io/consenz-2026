@@ -845,27 +845,31 @@ Return ONLY the translated text:`;
                                       </div>
                                       </div>
                                       )}
-                                      <div className="space-y-3 relative group/section">
                                       {index === 0 && (
-                                        <div className="group/insert-before absolute -top-5 left-0 right-0 h-7 z-20 flex items-center justify-center">
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => {
-                                              if (!user) {
-                                                base44.auth.redirectToLogin(window.location.href);
-                                                return;
-                                              }
-                                              if (!canParticipate) return;
-                                              onNewSection(topic.id, -1);
-                                            }}
-                                            className="opacity-0 group-hover/insert-before:opacity-100 transition-opacity bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
-                                          >
-                                            <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                            {t('insertSectionHere')}
-                                          </Button>
+                                        <div className="group relative h-4 flex items-center justify-center -mt-2 -mb-2 z-10">
+                                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <div className="h-full flex items-center justify-center">
+                                              <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => {
+                                                  if (!user) {
+                                                    base44.auth.redirectToLogin(window.location.href);
+                                                    return;
+                                                  }
+                                                  if (!canParticipate) return;
+                                                  onNewSection(topic.id, -1);
+                                                }}
+                                                className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
+                                              >
+                                                <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                {t('insertSectionHere')}
+                                              </Button>
+                                            </div>
+                                          </div>
                                         </div>
                                       )}
+                                      <div className="space-y-3 relative group/section">
                             {isAdmin && (
                               <div 
                                 {...provided.dragHandleProps}
