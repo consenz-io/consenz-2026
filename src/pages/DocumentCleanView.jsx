@@ -551,7 +551,7 @@ ${text}`;
                 <div key={topic.id} className="space-y-4 md:space-y-6 break-inside-avoid">
                   {/* Topic Title */}
                   <div className="border-b border-slate-300 pb-2 mb-4 md:mb-6">
-                    <h2 className="text-xl md:text-2xl font-bold text-slate-800 leading-tight">
+                    <h2 className="text-xl md:text-2xl font-bold text-slate-800 leading-tight" style={{ fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif" }}>
                       {topicIndex + 1}. {(topic.originalLanguage || 'he') !== language && showTranslatedTopics[topic.id]
                         ? (translatedTopics[topic.id] || (typeof topic.translations?.[language] === 'string' ? topic.translations[language] : topic.translations?.[language]?.title) || getTopicTitleAtVersion(topic.id, currentVersionIndex))
                         : getTopicTitleAtVersion(topic.id, currentVersionIndex)}

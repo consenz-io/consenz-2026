@@ -79,7 +79,7 @@ const TopicTitleCarousel = React.memo(function TopicTitleCarousel({
         {isFirstView ? (
           // הכותרת הנוכחית
           <div className="flex items-center gap-2">
-            <h3 className={`text-lg md:text-2xl font-semibold break-words ${isRTL ? 'text-right' : 'text-left'}`}>
+            <h3 className={`text-lg md:text-2xl font-semibold break-words ${isRTL ? 'text-right' : 'text-left'}`} style={{ fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif" }}>
               {(() => {
                 const translatedTitle = topic.translations?.[language]?.title;
                 if (showTranslatedTopics[topic.id] && typeof translatedTitle === 'string') {
@@ -105,7 +105,7 @@ const TopicTitleCarousel = React.memo(function TopicTitleCarousel({
                 <div className="space-y-2">
                   <div>
                     <span className="text-xs text-slate-600">כותרת מוצעת:</span>
-                    <p className="font-semibold text-slate-900 break-words">{currentView.data.newTitle}</p>
+                    <p className="font-semibold text-slate-900 break-words" style={{ fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif" }}>{currentView.data.newTitle}</p>
                   </div>
                   {currentView.data.explanation && (
                     <div>
