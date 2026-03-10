@@ -221,12 +221,10 @@ function LayoutContent({ children, currentPageName }) {
               queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
             }
           } else {
-            // Always update existing profile to ensure sync
+            // Only sync email if it changed - do NOT overwrite the user's custom fullName
             const existingProfile = existingProfiles[0];
-            const trimmedFullName = fullName.trim();
-            if (trimmedFullName.length >= 2 && trimmedFullName !== existingProfile.fullName) {
+            if (existingProfile.email !== user.email) {
               await base44.entities.UserPublicProfile.update(existingProfile.id, {
-                fullName: trimmedFullName,
                 email: user.email
               });
               queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
