@@ -828,13 +828,13 @@ Return ONLY the translated text:`;
                                       size="sm"
                                       variant="outline"
                                       onClick={() => {
-                                        if (!user) {
-                                          base44.auth.redirectToLogin(window.location.href);
-                                          return;
-                                        }
-                                        if (!canParticipate) return;
-                                        // Insert AFTER the previous section (index-1)
-                                        onNewSection(topic.id, topicSections[index - 1].order);
+                                       if (!user) {
+                                         base44.auth.redirectToLogin(window.location.href);
+                                         return;
+                                       }
+                                       if (!canParticipate) return;
+                                       // Insert AFTER the previous section (index-1): pass order+1 so backend places it at the correct position
+                                       onNewSection(topic.id, topicSections[index - 1].order + 1);
                                       }}
                                       className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
                                       >
