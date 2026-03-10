@@ -29,6 +29,24 @@ import FloatingPointsBadge from "@/components/points/FloatingPointsBadge";
 import { AccessibilityAnnouncer } from "@/components/AccessibilityAnnouncer";
 import { AccessibilityToolbarContent } from "@/components/AccessibilityToolbar";
 
+function MobileMenuButton({ isRTL, nudgeActive }) {
+  const { toggleSidebar } = useSidebar();
+  return (
+    <button
+      onClick={toggleSidebar}
+      className={`md:hidden flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 active:bg-slate-200 transition-colors touch-manipulation min-h-[44px] ${nudgeActive ? 'md:absolute md:inset-inline-start-6' : ''}`}
+      aria-label={isRTL ? 'פתיחת תפריט ניווט' : 'Open navigation menu'}
+      aria-controls="sidebar"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-700" aria-hidden="true">
+        <rect width="18" height="18" x="3" y="3" rx="2"/>
+        <path d="M9 3v18"/>
+      </svg>
+      <span className="text-base font-bold text-slate-900">Consenz</span>
+    </button>
+  );
+}
+
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
   const queryClient = useQueryClient();
