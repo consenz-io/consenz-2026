@@ -1,128 +1,33 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
-const TRANSLATIONS = {
-  en: {
-    notifRejectedTitle: "Your suggestion was rejected",
-    notifRejectedMessage: "The suggestion \"{title}\" was rejected by the document admin",
-  },
-  he: {
-    notifRejectedTitle: "ההצעה שלך נדחתה",
-    notifRejectedMessage: "ההצעה \"{title}\" נדחתה על ידי מנהל המסמך",
-  },
-  ar: {
-    notifRejectedTitle: "تم رفض اقتراحك",
-    notifRejectedMessage: "تم رفض الاقتراح \"{title}\" من قبل مدير المستند",
-  }
-};
-
-function t(lang, key, replacements = {}) {
-  let text = TRANSLATIONS[lang]?.[key] || TRANSLATIONS['he'][key] || key;
-  for (const [k, v] of Object.entries(replacements)) {
-    text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
-  }
-  return text;
-}
-
-function buildTranslations(titleKey, messageKey, replacements = {}) {
-  const result = {};
-  for (const lang of ['en', 'he', 'ar']) {
-    result[lang] = {
-      title: t(lang, titleKey, replacements),
-      message: t(lang, messageKey, replacements),
-    };
-  }
-  return result;
-}
+// This automation handles suggestion status changes.
+// 
+// IMPORTANT - Notification responsibility per status:
+// - 'accepted': Notifications are sent by processAcceptance (backend function). NOT handled here.
+// - 'rejected' by admin: Notifications are sent directly by the frontend (SuggestionSidebar / suggestiondetail)
+//                        via notifySuggestionStatusChange. NOT handled here.
+// - 'rejected' by expiry: Notifications are sent by expireSuggestions (backend function). NOT handled here.
+//
+// This automation is kept active for future use (e.g., logging, analytics),
+// but does NOT send any notifications to avoid duplicates.
 
 Deno.serve(async (req) => {
   try {
-    const base44 = createClientFromRequest(req);
     const { event, data: suggestion, old_data: oldSuggestion } = await req.json();
 
     if (!suggestion || event.type !== 'update') {
       return Response.json({ message: 'Not an update event' }, { status: 200 });
     }
 
-    // בדיקה אם הסטטוס השתנה
     const statusChanged = oldSuggestion?.status !== suggestion.status;
     if (!statusChanged) {
-      console.log('[AUTOMATION] Status not changed, skipping');
       return Response.json({ message: 'Status not changed' }, { status: 200 });
     }
 
     console.log('[AUTOMATION] Suggestion status changed:', suggestion.id, oldSuggestion.status, '->', suggestion.status);
+    console.log('[AUTOMATION] rejectedByAdmin:', suggestion.rejectedByAdmin, '| Notifications handled by frontend/expireSuggestions. No action needed.');
 
-    // קבלת המסמך
-    const document = await base44.asServiceRole.entities.Document.filter({ id: suggestion.documentId }).then(d => d[0]);
-    if (!document) {
-      console.log('[AUTOMATION] Document not found');
-      return Response.json({ message: 'Document not found' }, { status: 200 });
-    }
-
-    // אם הצעה אושרה על ידי אדמין (לא דרך הצבעות) - עדכן מד קונסנזוס רק להצעות שעברו את רף ההצבעות
-    // הצעות שאושרו על ידי אדמין מסומנות עם approvedByAdmin=true ולא משפיעות על המד
-    if (suggestion.status === 'accepted' && suggestion.approvedByAdmin === true) {
-      console.log('[AUTOMATION] Suggestion approved by admin override - skipping consensus meter update');
-    } else if (suggestion.status === 'accepted' && !suggestion.approvedByAdmin) {
-      // הצעה שהגיעה לסטטוס accepted ללא סימון approvedByAdmin -
-      // כלומר אושרה דרך processAcceptance או autoAcceptSuggestion (עברה הצבעות)
-      // החישוב כבר בוצע שם, אין צורך לעשות כלום כאן
-      console.log('[AUTOMATION] Suggestion accepted via vote threshold - consensus already updated by processAcceptance');
-    }
-
-    // Accepted suggestions: notification is already sent by processAcceptance.
-    // This automation only handles rejected suggestions (admin override).
-    if (suggestion.status === 'accepted') {
-      console.log('[AUTOMATION] Accepted - notification already sent by processAcceptance, skipping');
-      return Response.json({ message: 'Accepted notifications handled by processAcceptance' }, { status: 200 });
-    }
-
-    if (suggestion.status !== 'rejected') {
-      return Response.json({ message: 'Status not rejected, skipping' }, { status: 200 });
-    }
-
-    // שליחת התראה רק על דחייה על ידי אדמין (לא על פקיעת תוקף)
-
-    // בדיקה 1: אם timerEndsAt עבר - זו פקיעת תוקף, לא דחיית אדמין (הכי אמינה)
-    if (suggestion.timerEndsAt && new Date(suggestion.timerEndsAt) <= new Date()) {
-      console.log('[AUTOMATION] timerEndsAt has passed - this is an expiry rejection, not admin rejection. Skipping.');
-      return Response.json({ message: 'Expiry rejection (timer passed) - skipping' }, { status: 200 });
-    }
-
-    // בדיקה 2: rejectedByAdmin חייב להיות true במפורש
-    if (suggestion.rejectedByAdmin !== true) {
-      console.log('[AUTOMATION] rejectedByAdmin !== true, skipping admin rejection notification');
-      return Response.json({ message: 'Expiry rejection - skipping' }, { status: 200 });
-    }
-
-    // בדיקה 3: double-safety - re-fetch מ-DB לוודא שאין כבר התראת פקיעה (מונע race condition)
-    const freshSuggestion = await base44.asServiceRole.entities.Suggestion.filter({ id: suggestion.id }).then(s => s[0]);
-    if (freshSuggestion?.timerEndsAt && new Date(freshSuggestion.timerEndsAt) <= new Date()) {
-      console.log('[AUTOMATION] Fresh DB data: timerEndsAt has passed - expiry rejection. Skipping.');
-      return Response.json({ message: 'Expiry rejection (fresh DB check) - skipping' }, { status: 200 });
-    }
-
-    const creatorUser = await base44.asServiceRole.entities.User.filter({ email: suggestion.created_by }).then(u => u[0]);
-    if (!creatorUser) {
-      console.log('[AUTOMATION] Creator not found');
-      return Response.json({ message: 'Creator not found' }, { status: 200 });
-    }
-
-    const userLang = creatorUser.preferredLanguage || 'he';
-    const replacements = { title: suggestion.title || '' };
-    await base44.asServiceRole.entities.Notification.create({
-      userId: creatorUser.id,
-      type: 'suggestion_rejected',
-      title: t(userLang, 'notifRejectedTitle', replacements),
-      message: t(userLang, 'notifRejectedMessage', replacements),
-      translations: buildTranslations('notifRejectedTitle', 'notifRejectedMessage', replacements),
-      relatedEntityId: suggestion.id,
-      relatedEntityType: 'suggestion',
-      actionUrl: `/suggestiondetail?id=${suggestion.id}`
-    });
-
-    console.log('[AUTOMATION] Rejection notification sent');
-    return Response.json({ success: true });
+    return Response.json({ message: 'Status change logged. Notifications handled elsewhere.' });
   } catch (error) {
     console.error('[AUTOMATION ERROR]', error);
     return Response.json({ error: error.message }, { status: 500 });
