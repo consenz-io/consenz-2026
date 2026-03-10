@@ -312,10 +312,7 @@ export default function CreateSuggestionModal({
       
       updateContributorsInBackground(document.id);
       
-      // ===== Send notifications - MUST WAIT =====
-      console.log('[CREATE SUGGESTION] Sending notifications...');
-      await sendNotificationsInBackground(document, suggestion, currentUser);
-      console.log('[CREATE SUGGESTION] ✓ Notifications sent');
+      // Notifications are sent by handleNewSuggestion backend automation (entity trigger on create).
 
       return suggestion;
     },
