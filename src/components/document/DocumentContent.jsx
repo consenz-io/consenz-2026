@@ -957,27 +957,29 @@ Return ONLY the translated text:`;
                                             base44.auth.redirectToLogin(window.location.href);
                                             return;
                                           }
+                                          if (!canParticipate) return;
                                           onNewSection(topic.id, section.order + 1);
                                         }}
                                         className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
-                                      >
+                                        >
                                         <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                         {t('insertSectionHere')}
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="opacity-0 group-hover/section:opacity-100 transition-opacity absolute -bottom-4 left-1/2 -translate-x-1/2 z-10">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      if (!user) {
+                                        </Button>
+                                        </div>
+                                        </div>
+                                        </div>
+                                        <div className="opacity-0 group-hover/section:opacity-100 transition-opacity absolute -bottom-4 left-1/2 -translate-x-1/2 z-10">
+                                        <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                        if (!user) {
                                         base44.auth.redirectToLogin(window.location.href);
                                         return;
-                                      }
-                                      onNewSection(topic.id, section.order + 1);
-                                    }}
+                                        }
+                                        if (!canParticipate) return;
+                                        onNewSection(topic.id, section.order + 1);
+                                        }}
                                     className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
                                   >
                                     <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
