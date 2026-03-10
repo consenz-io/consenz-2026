@@ -551,7 +551,8 @@ export default function SuggestionDetail() {
       await retryWithBackoff(() =>
         base44.entities.Suggestion.update(suggestionId, { 
           status,
-          ...(status === 'accepted' ? { approvedByAdmin: true } : {})
+          ...(status === 'accepted' ? { approvedByAdmin: true } : {}),
+          ...(status === 'rejected' ? { rejectedByAdmin: true } : {})
         })
       );
       
