@@ -673,6 +673,9 @@ const SectionCarousel = React.memo(function SectionCarousel({
                         entity={currentView.data}
                         entityType="Suggestion"
                         className="prose prose-sm max-w-none"
+                        renderContent={(content) => (
+                          <DocumentTextContent content={content} />
+                        )}
                       />
                     </div>
                   )}
