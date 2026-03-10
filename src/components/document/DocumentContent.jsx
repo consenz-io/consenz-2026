@@ -847,26 +847,25 @@ Return ONLY the translated text:`;
                                       )}
                                       <div className="space-y-3 relative group/section">
                                       {index === 0 && (
-                                      <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10 opacity-0 group-hover/section:opacity-100 transition-opacity">
-                                      <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => {
-                                      if (!user) {
-                                      base44.auth.redirectToLogin(window.location.href);
-                                      return;
-                                      }
-                                      if (!canParticipate) return;
-                                      // Insert before the first section: use -1 so it shows before order=0
-                                      onNewSection(topic.id, -1);
-                                      }}
-                                  className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
-                                >
-                                  <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                  {t('insertSectionHere')}
-                                </Button>
-                              </div>
-                            )}
+                                        <div className="group/insert-before absolute -top-5 left-0 right-0 h-7 z-20 flex items-center justify-center">
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => {
+                                              if (!user) {
+                                                base44.auth.redirectToLogin(window.location.href);
+                                                return;
+                                              }
+                                              if (!canParticipate) return;
+                                              onNewSection(topic.id, -1);
+                                            }}
+                                            className="opacity-0 group-hover/insert-before:opacity-100 transition-opacity bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
+                                          >
+                                            <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                            {t('insertSectionHere')}
+                                          </Button>
+                                        </div>
+                                      )}
                             {isAdmin && (
                               <div 
                                 {...provided.dragHandleProps}
