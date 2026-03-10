@@ -51,7 +51,6 @@ function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
   const queryClient = useQueryClient();
   const { language, setLanguage, t, isRTL } = useLanguage();
-  const { setOpenMobile } = useSidebar();
   const [showScrollTop, setShowScrollTop] = React.useState(false);
   const mainContentRef = React.useRef(null);
   const [showUnvotedNudge, setShowUnvotedNudge] = React.useState(() => {
