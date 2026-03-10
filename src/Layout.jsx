@@ -200,6 +200,9 @@ function LayoutContent({ children, currentPageName }) {
         if (user.points === undefined) {
           needsUpdate.points = 1000;
         }
+        if (user.lastPointsVisit === undefined) {
+          needsUpdate.lastPointsVisit = new Date().toISOString();
+        }
         if (Object.keys(needsUpdate).length > 0) {
           await base44.auth.updateMe(needsUpdate);
           queryClient.invalidateQueries({ queryKey: ['currentUser'] });
