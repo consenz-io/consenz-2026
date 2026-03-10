@@ -43,7 +43,7 @@ export default function PageHeader({ title, documentTitle }) {
 
         {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
       </Button>
-      <h1 className="text-slate-900 text-sm font-bold text-center md:text-3xl flex-1">
+      <h1 className="text-slate-900 text-sm font-bold text-center md:text-3xl flex-1" style={{ fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif" }}>
         {documentTitle ? language === 'he' ? `הצעה לעריכה במסמך "${documentTitle}"` : language === 'ar' ? `اقتراح تعديل في الوثيقة "${documentTitle}"` : `Suggestion to edit document "${documentTitle}"` : translatedTitle}
       </h1>
       <div className="w-10 shrink-0" /> {/* Spacer to balance the button */}
