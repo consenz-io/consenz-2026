@@ -913,12 +913,12 @@ Return ONLY the translated text:`;
                                 const pos = s.insertPosition;
                                 // Show BEFORE first section: pos === -1
                                 if (index === 0 && pos === -1) return true;
-                                // Show AFTER this section: pos matches this section's order
-                                if (pos !== undefined && pos !== null && pos === section.order) return true;
-                                // Show after the last section: pos doesn't match any section's order and pos !== -1
+                                // Show AFTER this section: insertPosition === section.order + 1
+                                if (pos !== undefined && pos !== null && pos === section.order + 1) return true;
+                                // Show after the last section: pos doesn't match any section.order+1 and pos !== -1
                                 if (index === topicSections.length - 1) {
                                   if (pos === -1) return false; // already handled above
-                                  const matchesAnySectionOrder = topicSections.some(sec => pos !== undefined && pos !== null && pos === sec.order);
+                                  const matchesAnySectionOrder = topicSections.some(sec => pos !== undefined && pos !== null && pos === sec.order + 1);
                                   return !matchesAnySectionOrder;
                                 }
                                 return false;
