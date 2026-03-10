@@ -9,6 +9,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import VotesNeededCounter from "./VotesNeededCounter";
 import TranslatableContent from "./TranslatableContent";
 import CommentsSection from "./CommentsSection";
+import DocumentTextContent from "./DocumentTextContent";
 import { motion, AnimatePresence } from "framer-motion";
 
 const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({ 

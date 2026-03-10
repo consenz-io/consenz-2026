@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import CommentsSection from "../components/document/CommentsSection";
 import SectionDiff from "../components/document/SectionDiff";
 import TranslatableContent from "../components/document/TranslatableContent";
+import DocumentTextContent from "../components/document/DocumentTextContent";
 import { checkSuggestionConsensus, autoAcceptSuggestion } from "../components/document/suggestionAutoAccept";
 import { votingQueue } from "../components/document/VotingQueue";
 import { useLanguage } from "@/components/LanguageContext";
