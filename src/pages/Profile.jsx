@@ -124,8 +124,9 @@ export default function Profile() {
         throw new Error("Display name must be at least 2 characters");
       }
       
-      // Update main user profile (full_name is read-only from auth provider, skip it)
+      // Update main user profile
       await base44.auth.updateMe({ 
+        full_name: data.full_name.trim(),
         bio: data.bio?.trim() || "",
         linkedin: data.linkedin?.trim() || "",
         twitter: data.twitter?.trim() || "",
