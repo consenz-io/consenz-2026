@@ -68,21 +68,10 @@ const SectionCarousel = React.memo(function SectionCarousel({
     return [...directSuggestions, ...editSuggestions].filter(s => s.status === 'pending');
   }, [allDocumentSuggestions, section.id]);
 
-  // חישוב מקומי של accepted suggestion לצורך תגובות
-  const sectionAcceptedSuggestion = React.useMemo(() => {
-    const accepted = allDocumentSuggestions.filter(s => 
-      s.sectionId === section.id && 
-      s.status === 'accepted' && 
-      s.type === 'edit_section'
-    );
-    if (accepted.length === 0) return null;
-    return accepted.sort((a, b) => new Date(a.created_date) - new Date(b.created_date))[0];
-  }, [allDocumentSuggestions, section.id]);
-
-  // entityType ו-entityId לתגובות על הסעיף הנוכחי:
-  // אם קיימת accepted suggestion - משתמשים בה (suggestion), אחרת section
-  const sectionCommentEntityType = sectionAcceptedSuggestion ? 'suggestion' : 'section';
-  const sectionCommentEntityId = sectionAcceptedSuggestion ? sectionAcceptedSuggestion.id : section.id;
+  // תגובות הסעיף הנוכחי תמיד משויכות לסעיף עצמו.
+  // תגובות על הצעות ספציפיות משויכות להצעה - ולא לסעיף.
+  const sectionCommentEntityType = 'section';
+  const sectionCommentEntityId = section.id;
   
   // שומר את ה-ID של ההצעה הנוכחית במקום index
   const [currentSuggestionId, setCurrentSuggestionId] = useState(null);
