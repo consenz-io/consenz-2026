@@ -818,7 +818,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
 
       {/* כפתורים מרכזיים - ערוך/תגובה בתצוגה נוכחית */}
       {isFirstView && (
-        <div className={`flex gap-2 mt-4 pt-4 border-t border-slate-200 ${isRTL ? 'justify-end' : 'justify-start'}`}>
+        <div className={`flex flex-wrap gap-1 mt-4 pt-4 border-t border-slate-200 ${isRTL ? 'justify-end' : 'justify-start'}`}>
           <Button
             variant="ghost"
             size="sm"
@@ -827,20 +827,20 @@ const SectionCarousel = React.memo(function SectionCarousel({
               if (!canParticipate) { setShowJoinGroupDialog(true); return; }
               onEditSection(section);
             }}
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-xs min-w-0"
           >
-            <Edit className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-            {t('suggestEditSection')}
+            <Edit className={`w-3.5 h-3.5 shrink-0 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+            <span className="truncate">{t('suggestEditSection')}</span>
           </Button>
           {isAdmin && onDirectEdit && (
             <Button
               variant="default"
               size="sm"
               onClick={() => onDirectEdit(section)}
-              className="bg-purple-600 hover:bg-purple-700 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="bg-purple-600 hover:bg-purple-700 opacity-0 group-hover:opacity-100 transition-opacity text-xs min-w-0"
             >
-              <Edit className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-              עריכה ישירה
+              <Edit className={`w-3.5 h-3.5 shrink-0 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              <span className="truncate">עריכה ישירה</span>
             </Button>
           )}
           {!pendingSuggestions.some(s => s.type === 'delete_section') && (
@@ -854,11 +854,11 @@ const SectionCarousel = React.memo(function SectionCarousel({
                 }
                 onEditSection({ ...section, isDeletingSuggestion: true });
               }}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity text-xs min-w-0"
               title={(language || 'he') === 'he' ? 'הצע מחיקת סעיף' : 'Suggest Section Deletion'}
             >
-              <Trash2 className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-              <span className="hidden md:inline">{(language || 'he') === 'he' ? 'הצע מחיקה' : 'Suggest Delete'}</span>
+              <Trash2 className={`w-3.5 h-3.5 shrink-0 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              <span className="hidden sm:inline">{(language || 'he') === 'he' ? 'הצע מחיקה' : 'Suggest Delete'}</span>
             </Button>
           )}
           {isAdmin && (
@@ -866,11 +866,11 @@ const SectionCarousel = React.memo(function SectionCarousel({
               variant="ghost"
               size="sm"
               onClick={() => setShowDeleteDialog(true)}
-              className="text-red-700 hover:text-red-900 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="text-red-700 hover:text-red-900 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity text-xs min-w-0"
               title={t('deleteSection')}
             >
-              <Trash2 className="w-4 h-4" />
-              <span className="hidden md:inline text-xs">{(language || 'he') === 'he' ? 'מחק (מנהל)' : 'Delete (Admin)'}</span>
+              <Trash2 className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">{(language || 'he') === 'he' ? 'מחק (מנהל)' : 'Delete (Admin)'}</span>
             </Button>
           )}
         </div>
