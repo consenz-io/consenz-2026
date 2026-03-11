@@ -225,9 +225,47 @@ export default function DocumentView() {
       if (event.data?.rootEntityType === 'document' && event.data?.rootEntityId === documentId) {
         queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
       }
+      // Also invalidate the specific comment query cache for the affected entity
+      if (event.data?.rootEntityType && event.data?.rootEntityId) {
+        queryClient.invalidateQueries({ queryKey: ['comments', event.data.rootEntityType, event.data.rootEntityId] });
+      }
     });
     return () => unsubscribe();
   }, [documentId, document, queryClient]);
+
+  // Seed individual comment/profile caches from aggregatedData to avoid redundant fetches
+  React.useEffect(() => {
+    if (!aggregatedData || !documentId) return;
+
+    const { comments = [], publicProfiles: profiles = [] } = aggregatedData;
+
+    // Seed publicProfiles so CommentsSection doesn't re-fetch
+    if (profiles.length > 0) {
+      queryClient.setQueryData(['publicProfiles'], profiles);
+    }
+
+    // Seed document-level comments
+    const docComments = comments.filter(
+      c => c.rootEntityType === 'document' && c.rootEntityId === documentId
+    );
+    queryClient.setQueryData(['comments', 'document', documentId], docComments);
+
+    // Seed per-section comment caches
+    sections.forEach(section => {
+      const sectionComments = comments.filter(
+        c => c.rootEntityType === 'section' && c.rootEntityId === section.id
+      );
+      queryClient.setQueryData(['comments', 'section', section.id], sectionComments);
+    });
+
+    // Seed per-suggestion comment caches
+    suggestions.forEach(suggestion => {
+      const suggestionComments = comments.filter(
+        c => c.rootEntityType === 'suggestion' && c.rootEntityId === suggestion.id
+      );
+      queryClient.setQueryData(['comments', 'suggestion', suggestion.id], suggestionComments);
+    });
+  }, [aggregatedData, documentId, sections, suggestions, queryClient]);
 
   // Merge agreements and versions into one query
   const { data: documentMetadata } = useQuery({
