@@ -67,15 +67,17 @@ export default function DocumentCleanView() {
     enabled: !!documentId,
   });
 
-  const { data: allVersions, isLoading: versionsLoading } = useQuery({
+  const { data: allVersions, isLoading: versionsLoading, isFetching: versionsFetching } = useQuery({
     queryKey: ['allVersions', documentId],
     queryFn: () => base44.entities.DocumentVersion.filter({ documentId }, '-version'),
+    initialData: [],
     enabled: !!documentId,
   });
 
-  const { data: suggestions, isLoading: suggestionsLoading } = useQuery({
+  const { data: suggestions, isLoading: suggestionsLoading, isFetching: suggestionsFetching } = useQuery({
     queryKey: ['suggestions', documentId],
     queryFn: () => base44.entities.Suggestion.filter({ documentId }),
+    initialData: [],
     enabled: !!documentId,
   });
 
