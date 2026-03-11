@@ -1126,12 +1126,12 @@ export default function SuggestionDetail() {
             <div className="pt-4 border-t space-y-4">
                 {/* Stats row */}
                 <div className="flex items-center gap-6">
-                  <div className={`flex items-center gap-1 ${suggestion.status !== 'pending' && userVote?.vote === 'pro' ? 'ring-2 ring-green-400 bg-green-50 rounded-lg px-2 py-1' : ''}`}>
-                    <ThumbsUp className={`w-4 h-4 ${suggestion.status !== 'pending' && userVote?.vote === 'pro' ? 'text-green-600 fill-green-500' : 'text-green-500'}`} />
+                  <div className="flex items-center gap-1">
+                    <ThumbsUp className="w-4 h-4 text-green-500" />
                     <span className="text-xl font-bold text-green-600">{suggestion.proVotes || 0}</span>
                   </div>
-                  <div className={`flex items-center gap-1 ${suggestion.status !== 'pending' && userVote?.vote === 'con' ? 'ring-2 ring-red-400 bg-red-50 rounded-lg px-2 py-1' : ''}`}>
-                    <ThumbsDown className={`w-4 h-4 ${suggestion.status !== 'pending' && userVote?.vote === 'con' ? 'text-red-600 fill-red-500' : 'text-red-500'}`} />
+                  <div className="flex items-center gap-1">
+                    <ThumbsDown className="w-4 h-4 text-red-500" />
                     <span className="text-xl font-bold text-red-600">{suggestion.conVotes || 0}</span>
                   </div>
                   <div className="flex items-center gap-1">
