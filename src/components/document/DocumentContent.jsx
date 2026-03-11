@@ -934,8 +934,8 @@ Return ONLY the translated text:`;
                             {newSectionSuggestions
                               .filter(s => {
                                 const pos = s.insertPosition;
-                                // Show BEFORE first section: pos === -1
-                                if (index === 0 && pos === -1) return true;
+                                // pos === -1 is handled separately (rendered BEFORE section carousel)
+                                if (pos === -1) return false;
                                 // Show AFTER this section: insertPosition === section.order + 1
                                 if (pos !== undefined && pos !== null && pos === section.order + 1) return true;
                                 // Show after the last section: pos doesn't match any section.order+1 and pos !== -1
