@@ -677,6 +677,19 @@ ${text}`;
                                      dangerouslySetInnerHTML={{ __html: currentSnapshot?.deletedSectionContent || displayedContent }}
                                    />
                                  </div>
+                                ) : isDirectlyEdited ? (
+                                  <div
+                                    id={`change-${section.id}`}
+                                    className="border-l-4 border-amber-500 pl-3 py-2 bg-amber-50 rounded"
+                                  >
+                                    <Badge className="mb-2 bg-amber-100 text-amber-800 text-xs">
+                                      {language === 'he' ? '✏️ עריכה ישירה של מנהל' : language === 'ar' ? '✏️ تعديل مباشر من المسؤول' : '✏️ Direct Admin Edit'}
+                                    </Badge>
+                                    <InlineDiff
+                                      originalContent={olderContent || displayedContent}
+                                      newContent={currentSnapshot?.newContent || displayedContent}
+                                    />
+                                  </div>
                                 ) : isViewingHistory && isNewlyCreatedSection ? (
                                   <div 
                                     id={`change-${section.id}`} 
