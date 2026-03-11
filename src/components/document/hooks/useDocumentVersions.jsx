@@ -91,155 +91,161 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
     // Sort pairs by afterVersion.created_date descending
     directEditPairs.sort((a, b) => new Date(b.afterVersion.created_date) - new Date(a.afterVersion.created_date));
     
-    // Process each suggestion
+    // Build all events (suggestion groups + direct edit pairs) and process them chronologically
+    const allEvents = [];
+
+    // Suggestion events
     const processedSuggestions = new Set();
     sortedVersions.forEach(v => {
       if (!v.suggestionId || processedSuggestions.has(v.suggestionId)) return;
       processedSuggestions.add(v.suggestionId);
-      
       const versionsForSuggestion = versionsBySuggestion.get(v.suggestionId);
       versionsForSuggestion.sort((a, b) => (b.version || 0) - (a.version || 0));
       const afterVersion = versionsForSuggestion[0];
       const beforeVersion = versionsForSuggestion[1];
-      
-      const relatedSuggestion = suggestions?.find(s => s.id === afterVersion.suggestionId);
-      
-      // Calculate weighted consensus at this point
-      const acceptedSuggestionsUpToHere = suggestions
-        ?.filter(s => s.status === 'accepted' && new Date(s.created_date) <= new Date(afterVersion.created_date))
-        .sort((a, b) => new Date(a.created_date) - new Date(b.created_date)) || [];
+      allEvents.push({ eventType: 'suggestion', afterVersion, beforeVersion, timestamp: new Date(afterVersion.created_date) });
+    });
 
-      const weightedConsensusAtTime = acceptedSuggestionsUpToHere.length === 0 ? 0.5 : 
-        acceptedSuggestionsUpToHere.reduce((sum, s) => {
-          const total = (s.proVotes || 0) + (s.conVotes || 0);
-          const consensus = total > 0 ? (s.proVotes || 0) / total : 0;
-          return sum + Math.min(1, consensus);
-        }, 0) / acceptedSuggestionsUpToHere.length;
+    // Direct edit events
+    directEditPairs.forEach(pair => {
+      allEvents.push({ eventType: 'direct_edit', ...pair, timestamp: new Date(pair.afterVersion.created_date) });
+    });
 
-      // Detect topic title change versions
-      const isTopicTitleChange = afterVersion.content?.startsWith('topic_title_change:');
-      let topicTitleChangeMeta = null;
-      if (isTopicTitleChange) {
-        // format: topic_title_change:<topicId>:<originalTitle>:<newTitle>
-        // topicId is a fixed-length DB ID (no colons), so we split on first 2 colons only
-        const raw = afterVersion.content.slice('topic_title_change:'.length); // "topicId:originalTitle:newTitle"
-        const firstColon = raw.indexOf(':');
-        if (firstColon !== -1) {
-          const topicId = raw.slice(0, firstColon);
-          const rest = raw.slice(firstColon + 1); // "originalTitle:newTitle"
-          // changeDescription has the full readable form, use it to extract titles
-          const descMatch = afterVersion.changeDescription?.match(/^כותרת נושא עודכנה: (.+) → (.+)$/);
-          if (descMatch) {
-            topicTitleChangeMeta = { topicId, originalTitle: descMatch[1], newTitle: descMatch[2] };
-          } else {
-            // fallback: split rest on last colon
-            const lastColon = rest.lastIndexOf(':');
-            topicTitleChangeMeta = {
-              topicId,
-              originalTitle: lastColon !== -1 ? rest.slice(0, lastColon) : rest,
-              newTitle: lastColon !== -1 ? rest.slice(lastColon + 1) : ''
-            };
+    // Sort all events newest first so we walk backwards through history
+    allEvents.sort((a, b) => b.timestamp - a.timestamp);
+
+    // Process all events in one chronological pass
+    allEvents.forEach(event => {
+      const { afterVersion, beforeVersion } = event;
+
+      if (event.eventType === 'suggestion') {
+        const relatedSuggestion = suggestions?.find(s => s.id === afterVersion.suggestionId);
+
+        const acceptedSuggestionsUpToHere = suggestions
+          ?.filter(s => s.status === 'accepted' && new Date(s.created_date) <= new Date(afterVersion.created_date))
+          .sort((a, b) => new Date(a.created_date) - new Date(b.created_date)) || [];
+
+        const weightedConsensusAtTime = acceptedSuggestionsUpToHere.length === 0 ? 0.5 :
+          acceptedSuggestionsUpToHere.reduce((sum, s) => {
+            const total = (s.proVotes || 0) + (s.conVotes || 0);
+            const consensus = total > 0 ? (s.proVotes || 0) / total : 0;
+            return sum + Math.min(1, consensus);
+          }, 0) / acceptedSuggestionsUpToHere.length;
+
+        const isTopicTitleChange = afterVersion.content?.startsWith('topic_title_change:');
+        let topicTitleChangeMeta = null;
+        if (isTopicTitleChange) {
+          const raw = afterVersion.content.slice('topic_title_change:'.length);
+          const firstColon = raw.indexOf(':');
+          if (firstColon !== -1) {
+            const topicId = raw.slice(0, firstColon);
+            const rest = raw.slice(firstColon + 1);
+            const descMatch = afterVersion.changeDescription?.match(/^כותרת נושא עודכנה: (.+) → (.+)$/);
+            if (descMatch) {
+              topicTitleChangeMeta = { topicId, originalTitle: descMatch[1], newTitle: descMatch[2] };
+            } else {
+              const lastColon = rest.lastIndexOf(':');
+              topicTitleChangeMeta = {
+                topicId,
+                originalTitle: lastColon !== -1 ? rest.slice(0, lastColon) : rest,
+                newTitle: lastColon !== -1 ? rest.slice(lastColon + 1) : ''
+              };
+            }
           }
         }
-      }
 
-      const snapshotAfterChange = {
-        version: afterVersion.version,
-        label: `גרסה ${afterVersion.version}`,
-        timestamp: afterVersion.created_date,
-        changeDescription: afterVersion.changeDescription,
-        changeType: afterVersion.changeType,
-        suggestionId: afterVersion.suggestionId,
-        sectionContents: { ...currentSectionContents },
-        existingSections: new Set(currentExistingSections),
-        changedSectionId: isTopicTitleChange ? null : afterVersion.sectionId,
-        newContent: isTopicTitleChange ? null : afterVersion.content,
-        isTopicTitleChange: isTopicTitleChange || false,
-        topicTitleChangeMeta,
-        allSectionIds,
-        proVotes: relatedSuggestion?.proVotes || 0,
-        conVotes: relatedSuggestion?.conVotes || 0,
-        participantsAtAcceptance: relatedSuggestion?.participantsAtAcceptance || 0,
-        suggestionConsensus: relatedSuggestion?.suggestionConsensus || 0,
-        weightedConsensus: weightedConsensusAtTime,
-        documentThresholdAtTime: document.threshold || 2
-      };
-      
-      if (afterVersion.changeType === 'section_created') {
-        snapshotAfterChange.isNewSection = true;
-        snapshotAfterChange.newSectionId = afterVersion.sectionId;
-        snapshotAfterChange.newSectionContent = afterVersion.content;
-      }
-      
-      if (afterVersion.content === '') {
-        snapshotAfterChange.isDeleted = true;
-        snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
-        // Get content from current state or beforeVersion
-        const deletedContent = currentSectionContents[afterVersion.sectionId] || beforeVersion?.content || '';
-        snapshotAfterChange.deletedSectionContent = deletedContent;
-        snapshotAfterChange.sectionContents[afterVersion.sectionId] = deletedContent;
-        snapshotAfterChange.existingSections.add(afterVersion.sectionId);
-      }
-      
-      snapshots.push(snapshotAfterChange);
-      
-      // Update state for older version
-      if (afterVersion.changeType === 'section_created') {
-        delete currentSectionContents[afterVersion.sectionId];
-        currentExistingSections.delete(afterVersion.sectionId);
-      } else if (afterVersion.content === '') {
-        // For deletions, keep the content from before the delete
-        const contentBeforeDelete = beforeVersion?.content || snapshotAfterChange.deletedSectionContent;
-        if (contentBeforeDelete) {
-          currentSectionContents[afterVersion.sectionId] = contentBeforeDelete;
-          currentExistingSections.add(afterVersion.sectionId);
+        const snapshotAfterChange = {
+          version: afterVersion.version,
+          label: `גרסה ${afterVersion.version}`,
+          timestamp: afterVersion.created_date,
+          changeDescription: afterVersion.changeDescription,
+          changeType: afterVersion.changeType,
+          suggestionId: afterVersion.suggestionId,
+          sectionContents: { ...currentSectionContents },
+          existingSections: new Set(currentExistingSections),
+          changedSectionId: isTopicTitleChange ? null : afterVersion.sectionId,
+          newContent: isTopicTitleChange ? null : afterVersion.content,
+          isTopicTitleChange: isTopicTitleChange || false,
+          topicTitleChangeMeta,
+          allSectionIds,
+          proVotes: relatedSuggestion?.proVotes || 0,
+          conVotes: relatedSuggestion?.conVotes || 0,
+          participantsAtAcceptance: relatedSuggestion?.participantsAtAcceptance || 0,
+          suggestionConsensus: relatedSuggestion?.suggestionConsensus || 0,
+          weightedConsensus: weightedConsensusAtTime,
+          documentThresholdAtTime: document.threshold || 2
+        };
+
+        if (afterVersion.changeType === 'section_created') {
+          snapshotAfterChange.isNewSection = true;
+          snapshotAfterChange.newSectionId = afterVersion.sectionId;
+          snapshotAfterChange.newSectionContent = afterVersion.content;
         }
-      } else if (beforeVersion) {
-        currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
-      }
-    });
-    
-    // Process direct_edit pairs
-    directEditPairs.forEach(({ afterVersion, beforeVersion }) => {
-      const relatedSuggestion = suggestions?.find(s => s.id === afterVersion.suggestionId);
 
-      const snapshotAfterChange = {
-        version: afterVersion.version,
-        label: `עריכה ישירה`,
-        timestamp: afterVersion.created_date,
-        changeDescription: afterVersion.changeDescription,
-        changeType: 'direct_edit',
-        isDirectEdit: true,
-        suggestionId: null,
-        sectionContents: { ...currentSectionContents },
-        existingSections: new Set(currentExistingSections),
-        changedSectionId: afterVersion.sectionId,
-        newContent: afterVersion.content,
-        allSectionIds,
-        proVotes: 0,
-        conVotes: 0,
-        weightedConsensus: null,
-        documentThresholdAtTime: null
-      };
+        if (afterVersion.content === '') {
+          snapshotAfterChange.isDeleted = true;
+          snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
+          const deletedContent = currentSectionContents[afterVersion.sectionId] || beforeVersion?.content || '';
+          snapshotAfterChange.deletedSectionContent = deletedContent;
+          snapshotAfterChange.sectionContents[afterVersion.sectionId] = deletedContent;
+          snapshotAfterChange.existingSections.add(afterVersion.sectionId);
+        }
 
-      if (afterVersion.content === '') {
-        snapshotAfterChange.isDeleted = true;
-        snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
-        const deletedContent = currentSectionContents[afterVersion.sectionId] || beforeVersion?.content || '';
-        snapshotAfterChange.deletedSectionContent = deletedContent;
-        snapshotAfterChange.sectionContents[afterVersion.sectionId] = deletedContent;
-        snapshotAfterChange.existingSections.add(afterVersion.sectionId);
-      }
+        snapshots.push(snapshotAfterChange);
 
-      snapshots.push(snapshotAfterChange);
+        // Update state for older version
+        if (afterVersion.changeType === 'section_created') {
+          delete currentSectionContents[afterVersion.sectionId];
+          currentExistingSections.delete(afterVersion.sectionId);
+        } else if (afterVersion.content === '') {
+          const contentBeforeDelete = beforeVersion?.content || snapshotAfterChange.deletedSectionContent;
+          if (contentBeforeDelete) {
+            currentSectionContents[afterVersion.sectionId] = contentBeforeDelete;
+            currentExistingSections.add(afterVersion.sectionId);
+          }
+        } else if (beforeVersion) {
+          currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
+        }
 
-      // Update state for older view
-      if (beforeVersion) {
-        currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
-        currentExistingSections.add(afterVersion.sectionId);
-      } else if (afterVersion.changeType === 'section_created') {
-        delete currentSectionContents[afterVersion.sectionId];
-        currentExistingSections.delete(afterVersion.sectionId);
+      } else if (event.eventType === 'direct_edit') {
+        const snapshotAfterChange = {
+          version: afterVersion.version,
+          label: `עריכה ישירה`,
+          timestamp: afterVersion.created_date,
+          changeDescription: afterVersion.changeDescription,
+          changeType: 'direct_edit',
+          isDirectEdit: true,
+          suggestionId: null,
+          sectionContents: { ...currentSectionContents },
+          existingSections: new Set(currentExistingSections),
+          changedSectionId: afterVersion.sectionId,
+          newContent: afterVersion.content,
+          allSectionIds,
+          proVotes: 0,
+          conVotes: 0,
+          weightedConsensus: null,
+          documentThresholdAtTime: null
+        };
+
+        if (afterVersion.content === '') {
+          snapshotAfterChange.isDeleted = true;
+          snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
+          const deletedContent = currentSectionContents[afterVersion.sectionId] || beforeVersion?.content || '';
+          snapshotAfterChange.deletedSectionContent = deletedContent;
+          snapshotAfterChange.sectionContents[afterVersion.sectionId] = deletedContent;
+          snapshotAfterChange.existingSections.add(afterVersion.sectionId);
+        }
+
+        snapshots.push(snapshotAfterChange);
+
+        // Update state for older view
+        if (beforeVersion) {
+          currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
+          currentExistingSections.add(afterVersion.sectionId);
+        } else if (afterVersion.changeType === 'section_created') {
+          delete currentSectionContents[afterVersion.sectionId];
+          currentExistingSections.delete(afterVersion.sectionId);
+        }
       }
     });
 
