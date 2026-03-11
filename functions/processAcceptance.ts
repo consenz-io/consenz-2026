@@ -209,9 +209,34 @@ Deno.serve(async (req) => {
         // Shift all sections with order >= newOrder up by 1 to make room
         const sectionsToShift = allSections.filter(s => s.order >= newOrder);
         if (sectionsToShift.length > 0) {
+          // Shift sections
           await Promise.all(
             sectionsToShift.map(s => base44.entities.Section.update(s.id, { order: s.order + 1 }))
           );
+
+          // Also shift insertPosition of pending new_section suggestions in the same topic
+          // so they don't get displaced by the newly inserted section
+          const pendingNewSectionSuggs = await base44.asServiceRole.entities.Suggestion.filter({
+            documentId: suggestion.documentId,
+            topicId: targetTopicId,
+            type: 'new_section',
+            status: 'pending'
+          });
+          const suggsToShift = pendingNewSectionSuggs.filter(s =>
+            s.id !== suggestionId &&
+            s.insertPosition !== undefined &&
+            s.insertPosition !== null &&
+            s.insertPosition !== -1 &&
+            s.insertPosition >= newOrder
+          );
+          if (suggsToShift.length > 0) {
+            await Promise.all(
+              suggsToShift.map(s =>
+                base44.asServiceRole.entities.Suggestion.update(s.id, { insertPosition: s.insertPosition + 1 })
+              )
+            );
+            console.log('[PROCESS ACCEPTANCE] Shifted insertPosition for', suggsToShift.length, 'pending suggestions');
+          }
         }
       } else {
         newOrder = maxOrder + 1;
