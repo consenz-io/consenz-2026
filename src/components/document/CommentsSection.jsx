@@ -355,6 +355,7 @@ export default function CommentsSection({ entityType, entityId, user }) {
   const queryClient = useQueryClient();
 
   // Single query: fetch all comments for this entity (top-level + replies) in one call
+  // Note: DocumentView pre-seeds this cache from aggregatedData, so this will often be instant
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ['comments', entityType, entityId],
     queryFn: async () => {
@@ -366,12 +367,10 @@ export default function CommentsSection({ entityType, entityId, user }) {
       if (topLevel.length === 0) return [];
       // Fetch replies in a single $in query using parent IDs
       const parentIds = topLevel.map(c => c.id);
-      const [replies] = await Promise.all([
-        base44.entities.Comment.filter(
-          { parentCommentId: { $in: parentIds } },
-          'created_date'
-        )
-      ]);
+      const replies = await base44.entities.Comment.filter(
+        { parentCommentId: { $in: parentIds } },
+        'created_date'
+      );
       // Deduplicate and sort chronologically
       const all = [...topLevel, ...replies];
       const unique = Array.from(new Map(all.map(c => [c.id, c])).values());
@@ -379,6 +378,7 @@ export default function CommentsSection({ entityType, entityId, user }) {
     },
     initialData: [],
     enabled: !!entityType && !!entityId,
+    staleTime: 30 * 1000, // 30 seconds — seeded data stays fresh, avoids immediate re-fetch
   });
 
   const { data: users } = useQuery({
