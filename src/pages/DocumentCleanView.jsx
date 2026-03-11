@@ -174,11 +174,15 @@ export default function DocumentCleanView() {
             }
           }
           
+          // Prefer topicId/sectionOrder stored directly on the version record
+          const topicIdFromVersion = latestVersion.topicId || earliestVersion.topicId;
+          const orderFromVersion = latestVersion.sectionOrder ?? earliestVersion.sectionOrder;
+
           sectionMap.set(v.sectionId, {
             id: v.sectionId,
             content: latestVersion.content,
-            topicId: topicId,
-            order: order,
+            topicId: topicIdFromVersion || topicId,
+            order: orderFromVersion ?? order,
             isDeleted: true
           });
         }
