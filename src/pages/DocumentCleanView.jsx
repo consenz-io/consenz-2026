@@ -626,7 +626,12 @@ ${text}`;
                         const isDeletedSection = isViewingHistory &&
                           currentSnapshot?.isDeleted &&
                           currentSnapshot?.deletedSectionId === section.id &&
-                          versionSuggestion?.type === 'delete_section';
+                          (versionSuggestion?.type === 'delete_section' || currentSnapshot?.isDirectEdit);
+
+                        // Check if this section was directly edited by admin in this snapshot
+                        const isDirectlyEdited = isViewingHistory &&
+                          currentSnapshot?.isDirectEdit &&
+                          currentSnapshot?.changedSectionId === section.id;
 
                         // Check if this section changed between versions (content edit)
                         // Compare the snapshot's content with the newer version's content
