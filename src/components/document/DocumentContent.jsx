@@ -870,15 +870,38 @@ Return ONLY the translated text:`;
                                         </div>
                                       )}
                                       <div className="space-y-3 relative group/section">
-                            {isAdmin && (
-                              <div 
-                                {...provided.dragHandleProps}
-                                className="absolute top-2 left-2 z-10 p-1 bg-white rounded border border-slate-300 cursor-move hover:bg-slate-50 transition-colors"
-                              >
-                                <GripVertical className="w-4 h-4 text-slate-400" />
-                              </div>
-                            )}
-                            <SectionCarousel
+                                      {isAdmin && (
+                                      <div 
+                                      {...provided.dragHandleProps}
+                                      className="absolute top-2 left-2 z-10 p-1 bg-white rounded border border-slate-300 cursor-move hover:bg-slate-50 transition-colors"
+                                      >
+                                      <GripVertical className="w-4 h-4 text-slate-400" />
+                                      </div>
+                                      )}
+                                      {/* הצעות להוספת סעיף לפני הסעיף הראשון */}
+                                      {index === 0 && newSectionSuggestions
+                                      .filter(s => s.insertPosition === -1)
+                                      .map((suggestion) => (
+                                      <NewSectionSuggestionCard
+                                      key={suggestion.id}
+                                      suggestion={suggestion}
+                                      document={document}
+                                      getUserName={getUserName}
+                                      acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                                      user={user}
+                                      getUserVote={getUserVote}
+                                      voteMutation={voteMutation}
+                                      onOpenSidebar={onOpenSuggestionSidebar}
+                                      getCommentsCount={getCommentsCount}
+                                      toggleComments={toggleComments}
+                                      showComments={showComments}
+                                      isAdmin={isAdmin}
+                                      onEditSuggestion={onEditSuggestion}
+                                      allDocumentSuggestions={suggestions}
+                                      targetSuggestionId={targetSuggestionId}
+                                      />
+                                      ))}
+                                      <SectionCarousel
                              section={section}
                              pendingSuggestions={allSectionSuggestions}
                              document={document}
