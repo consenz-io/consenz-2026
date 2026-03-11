@@ -408,7 +408,7 @@ ${text}`;
     window.print();
   };
 
-  if (docLoading || topicsLoading || sectionsLoading || versionsLoading || suggestionsLoading) {
+  if (docLoading || topicsLoading || sectionsLoading || versionsLoading || suggestionsLoading || versionsFetching || suggestionsFetching) {
     return (
       <div className="min-h-screen bg-white p-8">
         <div className="max-w-4xl mx-auto space-y-6">
