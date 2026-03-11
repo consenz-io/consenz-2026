@@ -263,13 +263,27 @@ const SectionCarousel = React.memo(function SectionCarousel({
       const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
       const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
 
-      // Always save the section as deleted (empty content) to version history
+      // Save the section content BEFORE deletion (the "before" record)
       await base44.entities.DocumentVersion.create({
         documentId: section.documentId,
         sectionId: section.id,
+        topicId: section.topicId,
+        sectionOrder: section.order,
+        content: section.content,
+        changeDescription: `לפני: ${saveToHistory ? t('deleteSection') : 'Section deletion'}`,
+        version: nextVersion,
+        changeType: 'direct_edit',
+      });
+
+      // Save the deletion record (empty content)
+      await base44.entities.DocumentVersion.create({
+        documentId: section.documentId,
+        sectionId: section.id,
+        topicId: section.topicId,
+        sectionOrder: section.order,
         content: '',
         changeDescription: saveToHistory ? t('deleteSection') : 'Section deletion',
-        version: nextVersion,
+        version: nextVersion + 1,
         changeType: 'direct_edit',
       });
 
