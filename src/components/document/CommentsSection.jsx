@@ -401,6 +401,7 @@ export default function CommentsSection({ entityType, entityId, user }) {
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
     initialData: [],
+    staleTime: 2 * 60 * 1000, // 2 minutes — seeded by DocumentView, avoid redundant fetch
   });
 
   const createCommentMutation = useMutation({
