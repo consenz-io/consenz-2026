@@ -70,14 +70,12 @@ export default function DocumentCleanView() {
   const { data: allVersions, isLoading: versionsLoading } = useQuery({
     queryKey: ['allVersions', documentId],
     queryFn: () => base44.entities.DocumentVersion.filter({ documentId }, '-version'),
-    initialData: [],
     enabled: !!documentId,
   });
 
-  const { data: suggestions } = useQuery({
+  const { data: suggestions, isLoading: suggestionsLoading } = useQuery({
     queryKey: ['suggestions', documentId],
     queryFn: () => base44.entities.Suggestion.filter({ documentId }),
-    initialData: [],
     enabled: !!documentId,
   });
 
