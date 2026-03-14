@@ -510,7 +510,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
                 {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString('en-GB')}
               </div>
               {(() => {
-                const count = typeof getCommentsCount === 'function' ? getCommentsCount(sectionCommentEntityType, sectionCommentEntityId) : 0;
+                const count = typeof getCommentsCount === 'function' ? getCommentsCount(activeCommentEntity.entityType, activeCommentEntity.entityId) : 0;
                 const hasComments = count > 0;
                 return (
                   <Button
@@ -532,8 +532,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
             {showComments[`section-${section.id}`] && (
               <div className="mt-4 pt-4 border-t border-slate-200">
                 <CommentsSection
-                  entityType={sectionCommentEntityType}
-                  entityId={sectionCommentEntityId}
+                  entityType={activeCommentEntity.entityType}
+                  entityId={activeCommentEntity.entityId}
                   user={user}
                 />
               </div>
