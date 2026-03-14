@@ -828,15 +828,15 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
     // For sections, the "owner" is the creator of the accepted suggestion (unified threading)
     let ownerEmail = targetEntityType === 'suggestion' ? targetEntity.created_by : null;
     if (targetEntityType === 'section') {
-      // First try the accepted suggestion's creator (unified comment threading)
+      // Find the most recent accepted suggestion's creator for this section
       const acceptedSuggsForSection = await base44.entities.Suggestion.filter({ 
         sectionId: targetEntity.id, 
-        status: 'accepted',
-        type: 'edit_section'
+        status: 'accepted'
       });
       if (acceptedSuggsForSection.length > 0) {
-        acceptedSuggsForSection.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-        ownerEmail = acceptedSuggsForSection[0].created_by;
+        acceptedSuggsForSection.sort((a, b) => new Date(b.updated_date || b.created_date) - new Date(a.updated_date || a.created_date));
+        const bestSugg = acceptedSuggsForSection.find(s => s.type === 'edit_section') || acceptedSuggsForSection.find(s => s.type === 'new_section') || acceptedSuggsForSection[0];
+        ownerEmail = bestSugg.created_by;
       } else if (targetEntity.lastEditedBy) {
         // Fallback: fetch user by ID to get email
         const ownerUsers = await base44.entities.User.filter({ id: targetEntity.lastEditedBy });
