@@ -68,10 +68,31 @@ const SectionCarousel = React.memo(function SectionCarousel({
     return [...directSuggestions, ...editSuggestions].filter(s => s.status === 'pending');
   }, [allDocumentSuggestions, section.id]);
 
-  // תגובות הסעיף הנוכחי תמיד משויכות לסעיף עצמו.
-  // תגובות על הצעות ספציפיות משויכות להצעה - ולא לסעיף.
-  const sectionCommentEntityType = 'section';
-  const sectionCommentEntityId = section.id;
+  // קביעת הישות שאליה משויכות תגובות כרטיס הסעיף הנוכחי:
+  // אם תוכן הסעיף הגיע מהצעה שהתקבלה (edit_section / new_section) — התגובות הן של ההצעה.
+  // אחרת (עריכת אדמין / יצירה ישירה) — התגובות הן של הסעיף.
+  const activeCommentEntity = React.useMemo(() => {
+    // הצעות edit_section שהתקבלו לסעיף זה — מחפש את האחרונה ביותר
+    const acceptedEdits = allDocumentSuggestions
+      .filter(s => s.sectionId === section.id && s.status === 'accepted' && s.type === 'edit_section')
+      .sort((a, b) => new Date(b.updated_date || b.created_date) - new Date(a.updated_date || a.created_date));
+
+    if (acceptedEdits.length > 0) {
+      return { entityType: 'suggestion', entityId: acceptedEdits[0].id };
+    }
+
+    // הצעת new_section שיצרה את הסעיף הזה
+    const creationSuggestion = allDocumentSuggestions.find(
+      s => s.sectionId === section.id && s.status === 'accepted' && s.type === 'new_section'
+    );
+
+    if (creationSuggestion) {
+      return { entityType: 'suggestion', entityId: creationSuggestion.id };
+    }
+
+    // fallback: סעיף שנוצר ישירות ללא הצעה
+    return { entityType: 'section', entityId: section.id };
+  }, [allDocumentSuggestions, section.id]);
   
   // שומר את ה-ID של ההצעה הנוכחית במקום index
   const [currentSuggestionId, setCurrentSuggestionId] = useState(null);
