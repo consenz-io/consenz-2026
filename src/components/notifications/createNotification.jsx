@@ -777,20 +777,43 @@ export async function notifyNewComment({ comment, targetEntity, targetEntityType
      if (targetEntityType === 'suggestion') {
        actionUrl = `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${targetEntity.id}&commentId=${comment.id}`;
      } else if (targetEntityType === 'section') {
-       // Try to find the accepted suggestion that created this section (initial creation suggestion)
-       // Comments on sections are stored under the accepted suggestion for unified threading
-       const acceptedSuggestions = await base44.entities.Suggestion.filter({ 
+       // Find the most recent accepted suggestion associated with this section
+       // (edit_section takes priority as it's the "latest" change; fallback to new_section)
+       const allSectionSuggestions = await base44.entities.Suggestion.filter({ 
          sectionId: targetEntity.id, 
-         status: 'accepted',
-         type: 'edit_section'
+         status: 'accepted'
        });
-       if (acceptedSuggestions.length > 0) {
-         // Use the earliest accepted suggestion (the one that created the section)
-         acceptedSuggestions.sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-         actionUrl = `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${acceptedSuggestions[0].id}&commentId=${comment.id}`;
+
+       // Sort by date descending — most recent edit takes priority
+       allSectionSuggestions.sort((a, b) => new Date(b.updated_date || b.created_date) - new Date(a.updated_date || a.created_date));
+
+       const editSuggestion = allSectionSuggestions.find(s => s.type === 'edit_section');
+       const newSectionSuggestion = allSectionSuggestions.find(s => s.type === 'new_section');
+       const bestSuggestion = editSuggestion || newSectionSuggestion;
+
+       if (bestSuggestion) {
+         actionUrl = `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${bestSuggestion.id}&commentId=${comment.id}`;
        } else {
-         // Fallback: link to the document view at the section
-         actionUrl = `${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${documentId}&scrollTo=section-${targetEntity.id}&commentId=${comment.id}`;
+         // Section was created directly (no suggestion) — create a synthetic accepted suggestion
+         // so it has a permanent SuggestionDetail page for notifications to link to
+         try {
+           const newSugg = await base44.entities.Suggestion.create({
+             documentId: targetEntity.documentId,
+             sectionId: targetEntity.id,
+             topicId: targetEntity.topicId,
+             type: 'new_section',
+             title: 'סעיף ישיר',
+             newContent: targetEntity.content,
+             status: 'accepted',
+             approvedByAdmin: true,
+             proVotes: 0,
+             conVotes: 0,
+           });
+           actionUrl = `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${newSugg.id}&commentId=${comment.id}`;
+         } catch (createErr) {
+           console.error('[NOTIFY COMMENT] Failed to create synthetic suggestion:', createErr);
+           actionUrl = `${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${documentId}&scrollTo=section-${targetEntity.id}&commentId=${comment.id}`;
+         }
        }
      }
     
