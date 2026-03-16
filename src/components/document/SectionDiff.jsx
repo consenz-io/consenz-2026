@@ -144,7 +144,7 @@ export default function SectionDiff({
   // Render inline diff
   const renderInlineDiff = () => {
     return (
-      <div style={{...contentStyle, display: 'flex', flexWrap: 'wrap', gap: '0' }}>
+      <div style={{...contentStyle, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
         {diff.map((part, idx) => {
           if (part.type === 'removed') {
             return (
