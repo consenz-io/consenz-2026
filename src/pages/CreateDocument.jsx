@@ -309,7 +309,7 @@ Return JSON with title, topics array (each with title and sections array with co
         throw new Error('User not authenticated');
       }
       
-      const isAdmin = user.role === 'admin';
+      const isAdmin = user.role === 'admin' || isGroupAdmin;
       
       if (!isAdmin) {
         // Check if user has enough points (1001 required to create document)
