@@ -52,6 +52,18 @@ export default function CreateDocument() {
     initialData: [],
   });
 
+  // Check if user is group admin for the target group
+  const { data: isGroupAdmin } = useQuery({
+    queryKey: ['isGroupAdmin', groupId, user?.id],
+    queryFn: async () => {
+      if (!groupId || !user?.id) return false;
+      const members = await base44.entities.GroupMember.filter({ groupId, userId: user.id });
+      return members.length > 0 && members[0].role === 'admin';
+    },
+    enabled: !!groupId && !!user?.id,
+    initialData: false,
+  });
+
   const [formData, setFormData] = useState({
     title: "",
     urlName: "",
