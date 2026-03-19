@@ -32,6 +32,10 @@ const translateTransactionDescription = (transaction, language) => {
     return language === 'he' ? 'קיבלת הצבעה בעד' : language === 'ar' ? 'تلقيت تصويتًا مع' : 'Received a pro vote';
   }
   if (action === 'vote_canceled') {
+    // Check if this is actually a points refund for a rejected suggestion
+    if (description.includes('החזר נקודות') || description.includes('refund') || description.includes('Refund')) {
+      return language === 'he' ? 'החזר נקודות — הצעה נדחתה' : language === 'ar' ? 'استرداد نقاط — تم رفض الاقتراح' : 'Points refunded — suggestion rejected';
+    }
     return language === 'he' ? 'הצבעה בוטלה' : language === 'ar' ? 'تم إلغاء التصويت' : 'Vote canceled';
   }
   if (action === 'vote_influenced_acceptance') {
