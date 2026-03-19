@@ -456,8 +456,8 @@ Return JSON with title, topics array (each with title and sections array with co
       return;
     }
 
-    // Check if should show points confirmation dialog (skip for admins)
-    const isAdmin = user?.role === 'admin';
+    // Check if should show points confirmation dialog (skip for admins and group admins)
+    const isAdmin = user?.role === 'admin' || isGroupAdmin;
     const skipConfirm = localStorage.getItem('consenz_skip_points_confirm_document') === 'true';
     const currentPoints = user?.points || 1000;
     
