@@ -402,7 +402,7 @@ ${text}`;
 
   const needsTranslation = sections.some(s => (s.originalLanguage || 'he') !== language) || 
     topics.some(t => (t.originalLanguage || 'he') !== language) ||
-    ((document.originalLanguage || 'he') !== language);
+    ((document?.originalLanguage || 'he') !== language);
     
   const handlePrint = () => {
     window.print();
