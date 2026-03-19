@@ -122,7 +122,7 @@ export default function CreateDocument() {
       setShowPointsConfirm(true);
       setPointsCheckCompleted(false);
     }
-  }, [user, userLoading]);
+  }, [user, userLoading, isGroupAdmin]);
 
   const validateUrlName = (urlName) => {
     if (!urlName || urlName.trim() === "") {
