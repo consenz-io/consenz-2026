@@ -123,6 +123,7 @@ function translate(key, lang, replacements = {}) {
       notifAcceptedVoterMessage: "تم قبول الاقتراح \"{title}\" الذي صوتت له",
       notifRejectedTitle: "تم رفض اقتراحك",
       notifRejectedMessage: "تم رفض الاقتراح \"{title}\" من قبل مدير المستند",
+      notifRejectedWithRefundMessage: "تم رفض الاقتراح \"{title}\" من قبل مدير المستند. تم إعادة {points} نقطة إلى حسابك.",
       notifExpiredTitle: "انتهت فترة التصويت",
       notifExpiredMessage: "انتهت فترة التصويت على الاقتراح \"{title}\"",
       notifNewSuggestionTitle: "اقتراح جديد في المستند",
