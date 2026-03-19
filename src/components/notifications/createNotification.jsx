@@ -73,6 +73,7 @@ function translate(key, lang, replacements = {}) {
       notifAcceptedVoterMessage: "The suggestion \"{title}\" you voted for was accepted",
       notifRejectedTitle: "Your suggestion was rejected",
       notifRejectedMessage: "The suggestion \"{title}\" was rejected by the document admin",
+      notifRejectedWithRefundMessage: "The suggestion \"{title}\" was rejected by the document admin. {points} points have been refunded to your account.",
       notifExpiredTitle: "Suggestion voting period ended",
       notifExpiredMessage: "The voting period for suggestion \"{title}\" has ended",
       notifNewSuggestionTitle: "New suggestion in document",
