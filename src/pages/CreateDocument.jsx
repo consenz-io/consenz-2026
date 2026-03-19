@@ -621,7 +621,7 @@ Return JSON with title, topics array (each with title and sections array with co
           <>
         <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>{t('fillDetailsBelow')}</p>
 
-        {user && user.role !== 'admin' && (
+        {user && user.role !== 'admin' && !isGroupAdmin && (
           <Alert className="bg-blue-50 border-blue-200">
             <AlertDescription className="text-blue-900">
               <strong>עלות יצירת מסמך:</strong> 1001 נקודות | <strong>הנקודות שלך:</strong> {user.points || 1000}
@@ -629,10 +629,13 @@ Return JSON with title, topics array (each with title and sections array with co
           </Alert>
         )}
         
-        {user && user.role === 'admin' && (
+        {user && (user.role === 'admin' || isGroupAdmin) && (
           <Alert className="bg-green-50 border-green-200">
             <AlertDescription className="text-green-900">
-              <strong>מצב אדמין:</strong> אין עלות ליצירת מסמכים עבור משתמשי Admin
+              {user.role === 'admin'
+                ? <><strong>מצב אדמין:</strong> אין עלות ליצירת מסמכים עבור משתמשי Admin</>
+                : <><strong>מנהל/ת קבוצה:</strong> אין עלות ליצירת מסמכים עבור מנהלי הקבוצה</>
+              }
             </AlertDescription>
           </Alert>
         )}
