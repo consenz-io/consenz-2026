@@ -99,8 +99,8 @@ export default function CreateDocument() {
   useEffect(() => {
     if (!user || userLoading) return;
 
-    // If admin - skip points check
-    if (user.role === 'admin') {
+    // If admin or group admin - skip points check
+    if (user.role === 'admin' || isGroupAdmin) {
       setPointsCheckCompleted(true);
       return;
     }
