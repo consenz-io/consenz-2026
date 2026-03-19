@@ -389,13 +389,19 @@ export async function notifySuggestionStatusChange({ suggestion, newStatus, reje
     notifiedUserIds.add(creator.id);
     const userLang = creator.preferredLanguage || 'he';
     const replacements = { title: suggestion.title || '' };
+
+    // If rejected by admin with points refund, use the refund message
+    const isRejectedWithRefund = newStatus === 'rejected' && rejectedByAdmin && refundAmount > 0;
+    const refundReplacements = { ...replacements, points: String(refundAmount) };
+    const effectiveMessageKey = isRejectedWithRefund ? 'notifRejectedWithRefundMessage' : statusKey.messageKey;
+    const effectiveReplacements = isRejectedWithRefund ? refundReplacements : replacements;
     
     notifications.push({
       userId: creator.id,
       type: newStatus === 'accepted' ? 'suggestion_accepted' : (newStatus === 'rejected' && rejectedByAdmin) ? 'suggestion_rejected' : 'suggestion_expiring',
       title: translate(statusKey.titleKey, userLang, replacements),
-      message: translate(statusKey.messageKey, userLang, replacements),
-      translations: buildNotificationTranslations(statusKey.titleKey, statusKey.messageKey, replacements),
+      message: translate(effectiveMessageKey, userLang, effectiveReplacements),
+      translations: buildNotificationTranslations(statusKey.titleKey, effectiveMessageKey, effectiveReplacements),
       relatedEntityId: suggestion.id,
       relatedEntityType: 'suggestion',
       actionUrl,
