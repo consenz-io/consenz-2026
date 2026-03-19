@@ -98,6 +98,7 @@ function translate(key, lang, replacements = {}) {
       notifAcceptedVoterMessage: "ההצעה \"{title}\" שהצבעת בעדה התקבלה",
       notifRejectedTitle: "ההצעה שלך נדחתה",
       notifRejectedMessage: "ההצעה \"{title}\" נדחתה על ידי מנהל המסמך",
+      notifRejectedWithRefundMessage: "ההצעה \"{title}\" נדחתה על ידי מנהל המסמך. {points} נקודות הוחזרו לחשבונך.",
       notifExpiredTitle: "תקופת ההצבעה הסתיימה",
       notifExpiredMessage: "תקופת ההצבעה על ההצעה \"{title}\" הסתיימה",
       notifNewSuggestionTitle: "הצעה חדשה במסמך",
