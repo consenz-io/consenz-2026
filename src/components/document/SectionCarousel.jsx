@@ -361,7 +361,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
   }, [targetSuggestionId]);
 
   // האם יש flash ירוק פעיל — בדוק על כל ההצעות של הסעיף הזה
-  const isFlashing = allSectionSuggestions.some(s => acceptedFlash[s.id]);
+  const isFlashing = allDirectSectionSuggestions.some(s => acceptedFlash[s.id]);
 
   return (
     <div
