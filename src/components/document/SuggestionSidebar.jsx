@@ -19,7 +19,6 @@ import SuggestionCountdown from "./SuggestionCountdown";
 import SectionDiff from "./SectionDiff";
 import TranslatableContent from "./TranslatableContent";
 import DocumentTextContent from "./DocumentTextContent";
-import { checkSuggestionConsensus, autoAcceptSuggestion } from "./suggestionAutoAccept";
 import { useLanguage } from "@/components/LanguageContext";
 import { notifySuggestionStatusChange } from "../notifications/createNotification";
 import { motion, AnimatePresence } from "framer-motion";
