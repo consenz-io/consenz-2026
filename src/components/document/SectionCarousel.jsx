@@ -390,8 +390,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
         </div>
       </div>
 
-      {/* כפתורי דפדוף - רק אם לא באנימציה */}
-      {allViews.length > 1 && !['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView?.data?.id]) && (
+      {/* כפתורי דפדוף */}
+      {allViews.length > 1 && (
         <div className={`flex items-center justify-between mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm ${
           currentView?.data?.type === 'delete_section' 
             ? 'border-red-300 bg-gradient-to-r from-red-50 to-pink-50' 
