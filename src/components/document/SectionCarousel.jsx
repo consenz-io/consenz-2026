@@ -119,10 +119,18 @@ const SectionCarousel = React.memo(function SectionCarousel({
   });
   
   // זיהוי מעבר pending → accepted והפעלת אנימציה פשוטה
-  React.useEffect(() => {
-    if (!allSectionSuggestions || allSectionSuggestions.length === 0 || !document?.id) return;
+  // בודק את כל הצעות הסעיף (לא רק pending) כדי לזהות מעבר סטטוס
+  const allDirectSectionSuggestions = React.useMemo(() => {
+    return allDocumentSuggestions.filter(s =>
+      s.sectionId === section.id &&
+      (s.type === 'edit_section' || s.type === 'delete_section' || s.type === 'new_section')
+    );
+  }, [allDocumentSuggestions, section.id]);
 
-    allSectionSuggestions.forEach(sug => {
+  React.useEffect(() => {
+    if (!allDirectSectionSuggestions || allDirectSectionSuggestions.length === 0 || !document?.id) return;
+
+    allDirectSectionSuggestions.forEach(sug => {
       const prevStatus = prevSuggestionsStatusRef.current[sug.id];
 
       if (prevStatus === 'pending' && sug.status === 'accepted' && !hasAnimatedRef.current.has(sug.id)) {
