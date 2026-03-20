@@ -159,17 +159,15 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
         '🎉 New section suggestion accepted!',
         { duration: 4000 }
       );
+      // Invalidate sections so the new section appears immediately
+      queryClient.invalidateQueries({ queryKey: ['sections', doc?.id] });
+      queryClient.invalidateQueries({ queryKey: ['suggestions', doc?.id] });
       setTimeout(() => setAcceptedFlash(false), 2500);
     }
     prevStatusRef.current = suggestion.status;
   }, [suggestion.status]);
 
-  // Hide if accepted and converted to edit_section - will appear in section carousel
-  if (suggestion.type === 'edit_section' && suggestion.status === 'accepted' && !acceptedFlash) {
-    return null;
-  }
-  
-  // Hide if accepted - real-time subscriptions will show it as a section
+  // Hide if accepted (after flash completes) - real-time subscriptions will show it as a section
   if (suggestion.status === 'accepted' && !acceptedFlash) {
     return null;
   }
