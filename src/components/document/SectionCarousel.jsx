@@ -139,6 +139,24 @@ const SectionCarousel = React.memo(function SectionCarousel({
         // הפעל flash ירוק על ה-container
         setAcceptedFlash(prev => ({ ...prev, [sug.id]: true }));
 
+        // Toast feedback
+        const lang = language || 'he';
+        if (sug.type === 'delete_section') {
+          toast.success(
+            lang === 'he' ? '🗑️ ההצעה למחיקת הסעיף התקבלה!' :
+            lang === 'ar' ? '🗑️ تم قبول اقتراح حذف القسم!' :
+            '🗑️ Delete section suggestion accepted!',
+            { duration: 4000 }
+          );
+        } else {
+          toast.success(
+            lang === 'he' ? '🎉 הצעת העריכה התקבלה!' :
+            lang === 'ar' ? '🎉 تم قبول اقتراح التعديل!' :
+            '🎉 Edit suggestion accepted!',
+            { duration: 4000 }
+          );
+        }
+
         // חזרה לתצוגת הסעיף המעודכן אחרי 2 שניות
         setTimeout(() => {
           setCurrentSuggestionId('current');
