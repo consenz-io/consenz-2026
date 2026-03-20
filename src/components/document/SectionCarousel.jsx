@@ -154,7 +154,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
 
       prevSuggestionsStatusRef.current[sug.id] = sug.status;
     });
-  }, [allSectionSuggestions, document.id, queryClient]);
+  }, [allDirectSectionSuggestions, document.id, queryClient]);
 
   // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות
   const allViews = React.useMemo(() => {
