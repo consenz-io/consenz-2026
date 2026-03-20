@@ -118,62 +118,35 @@ const SectionCarousel = React.memo(function SectionCarousel({
     return new Date(b.created_date) - new Date(a.created_date);
   });
   
-  // מעקב אחרי שינוי סטטוס להצגת אנימציה - עובד על כל ההצעות
+  // זיהוי מעבר pending → accepted והפעלת אנימציה פשוטה
   React.useEffect(() => {
     if (!allSectionSuggestions || allSectionSuggestions.length === 0 || !document?.id) return;
-    
+
     allSectionSuggestions.forEach(sug => {
       const prevStatus = prevSuggestionsStatusRef.current[sug.id];
-      
-      // זיהוי מעבר מ-pending ל-accepted
+
       if (prevStatus === 'pending' && sug.status === 'accepted' && !hasAnimatedRef.current.has(sug.id)) {
         hasAnimatedRef.current.add(sug.id);
-        console.log('[EDIT ANIMATION] Starting celebration for suggestion:', sug.id);
-        
-        // אם המשתמש לא צופה בהצעה הזו - מעביר אותו אליה
-        if (currentSuggestionId !== sug.id) {
-          setCurrentSuggestionId(sug.id);
-        }
-        
-        // שלב 0: הכרזה (1 שניה)
-        setAnimationPhases(prev => ({ ...prev, [sug.id]: 'announcing' }));
-        
+
+        // הפעל flash ירוק על ה-container
+        setAcceptedFlash(prev => ({ ...prev, [sug.id]: true }));
+
+        // חזרה לתצוגת הסעיף המעודכן אחרי 2 שניות
         setTimeout(() => {
-          console.log('[EDIT ANIMATION] Starting celebration for suggestion:', sug.id);
-          setAnimationPhases(prev => ({ ...prev, [sug.id]: 'celebrating' }));
-        }, 1000);
-        
-        // שלב 1: חגיגה (2.5 שניות)
+          setCurrentSuggestionId('current');
+          queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
+          queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
+        }, 2000);
+
+        // הסרת ה-flash אחרי 2.5 שניות
         setTimeout(() => {
-          console.log('[EDIT ANIMATION] Transitioning to normal for suggestion:', sug.id);
-          setAnimationPhases(prev => ({ ...prev, [sug.id]: 'transitioning' }));
-        }, 3500);
-        
-        // שלב 2: מיד חזרה לסעיף עם תוכן מעודכן
-        setTimeout(() => {
-        console.log('[EDIT ANIMATION] Completed, showing as updated section:', sug.id);
-        setAnimationPhases(prev => ({ ...prev, [sug.id]: 'completed' }));
-        // סימון הסעיף כעדכן לאחרונה
-        setRecentlyUpdatedSections(prev => ({ ...prev, [section.id]: Date.now() }));
-        // חוזרים לתצוגת הסעיף הנוכחי - עכשיו הוא מעודכן
-        setCurrentSuggestionId('current');
-        // רענון הסעיפים כדי לקבל את השינוי
-        queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
-        }, 1000);
-        
-        // שלב 3: הסרת badge "עודכן עכשיו" (אחרי 10 שניות מהתחלה)
-        setTimeout(() => {
-          setRecentlyUpdatedSections(prev => {
-            const updated = { ...prev };
-            delete updated[section.id];
-            return updated;
-          });
-        }, 10000);
+          setAcceptedFlash(prev => { const n = { ...prev }; delete n[sug.id]; return n; });
+        }, 2500);
       }
-      
+
       prevSuggestionsStatusRef.current[sug.id] = sug.status;
     });
-  }, [allSectionSuggestions, currentSuggestionId, document.id, queryClient]);
+  }, [allSectionSuggestions, document.id, queryClient]);
 
   // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות + הצעות באנימציה
   const allViews = React.useMemo(() => {
