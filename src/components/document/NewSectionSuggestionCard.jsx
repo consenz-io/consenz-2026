@@ -183,7 +183,11 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   return (
     <div 
       id={`suggestion-${suggestion.id}`}
-      className="group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50"
+      className={`group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 ${
+        acceptedFlash
+          ? 'border-green-400 shadow-green-200 shadow-lg animate-pulse bg-gradient-to-br from-green-50 to-emerald-50'
+          : 'border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50'
+      }`}
     >
       {/* כפתורי דפדוף בין גרסאות - מעגלי כמו SectionCarousel */}
       {allViews.length > 1 && (
