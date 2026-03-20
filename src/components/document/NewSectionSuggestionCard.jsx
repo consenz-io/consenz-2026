@@ -6,6 +6,7 @@ import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, Edit2, ChevronLeft, 
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import VotesNeededCounter from "./VotesNeededCounter";
 import TranslatableContent from "./TranslatableContent";
 import CommentsSection from "./CommentsSection";
