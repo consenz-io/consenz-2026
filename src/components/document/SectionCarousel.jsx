@@ -100,9 +100,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
   // שומר הצעות שהתקבלו בזמן שהיוזר צופה בהן - כדי שלא ייעלמו פתאום
   const [recentlyAcceptedSuggestions, setRecentlyAcceptedSuggestions] = useState({});
   
-  // מעקב אחרי אנימציות של הצעות מקובלות
-  const [animationPhases, setAnimationPhases] = useState({});
-  const [recentlyUpdatedSections, setRecentlyUpdatedSections] = useState({});
+  // מעקב אחרי הצעות שהתקבלו לצורך אנימציה
+  const [acceptedFlash, setAcceptedFlash] = useState({}); // suggestionId -> true
   const prevSuggestionsStatusRef = React.useRef({});
   const hasAnimatedRef = React.useRef(new Set());
   
