@@ -640,8 +640,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
               </div>
             )}
 
-            {/* תגובות להצעה - רק אם לא באנימציה */}
-            {currentView?.data?.id && !['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView.data.id]) && (
+            {/* תגובות להצעה */}
+            {currentView?.data?.id && (
               <>
                 <div className="mt-3">
                   {(() => {
