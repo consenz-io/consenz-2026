@@ -352,8 +352,18 @@ const SectionCarousel = React.memo(function SectionCarousel({
     }
   }, [targetSuggestionId]);
 
+  // האם יש flash ירוק פעיל — בדוק על כל ההצעות של הסעיף הזה
+  const isFlashing = allSectionSuggestions.some(s => acceptedFlash[s.id]);
+
   return (
-    <div id={currentSuggestionDisplayId} className="group relative p-3 md:p-6 border-2 border-slate-300 rounded-lg hover:border-blue-400 hover:shadow-md transition-all bg-gradient-to-br from-white to-slate-50/30">
+    <div
+      id={currentSuggestionDisplayId}
+      className={`group relative p-3 md:p-6 border-2 rounded-lg transition-all bg-gradient-to-br from-white to-slate-50/30 ${
+        isFlashing
+          ? 'border-green-400 shadow-green-200 shadow-lg animate-pulse'
+          : 'border-slate-300 hover:border-blue-400 hover:shadow-md'
+      }`}
+    >
       {/* כותרת סעיף עם אינדיקטור */}
       <div className="flex items-center justify-between mb-3 md:mb-4">
         <div className="flex items-center gap-2 md:gap-3">
