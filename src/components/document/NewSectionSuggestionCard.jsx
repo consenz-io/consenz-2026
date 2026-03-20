@@ -142,15 +142,27 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
     return html;
   };
 
+  // Flash green when suggestion transitions pending → accepted
+  const [acceptedFlash, setAcceptedFlash] = React.useState(false);
+  const prevStatusRef = React.useRef(suggestion.status);
+  const hasFlashedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (prevStatusRef.current === 'pending' && suggestion.status === 'accepted' && !hasFlashedRef.current) {
+      hasFlashedRef.current = true;
+      setAcceptedFlash(true);
+      setTimeout(() => setAcceptedFlash(false), 2500);
+    }
+    prevStatusRef.current = suggestion.status;
+  }, [suggestion.status]);
+
   // Hide if accepted and converted to edit_section - will appear in section carousel
-  if (suggestion.type === 'edit_section' && suggestion.status === 'accepted') {
-    console.log('[NEW SECTION CARD] Suggestion converted to edit_section, hiding from new section view:', suggestion.id);
+  if (suggestion.type === 'edit_section' && suggestion.status === 'accepted' && !acceptedFlash) {
     return null;
   }
   
   // Hide if accepted - real-time subscriptions will show it as a section
-  if (suggestion.status === 'accepted') {
-    console.log('[NEW SECTION CARD] Suggestion accepted, hiding card - will appear as section:', suggestion.id);
+  if (suggestion.status === 'accepted' && !acceptedFlash) {
     return null;
   }
 
