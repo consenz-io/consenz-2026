@@ -451,17 +451,6 @@ const SectionCarousel = React.memo(function SectionCarousel({
         {!currentView ? null : currentView.type === 'current' ? (
           // תצוגת תוכן נוכחי
           <>
-            {recentlyUpdatedSections[section.id] && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="mb-3 inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg text-sm font-medium text-green-700"
-              >
-                <Sparkles className="w-4 h-4" />
-                עודכן עכשיו ✓
-              </motion.div>
-            )}
             <TranslatableContent
               content={section.content}
               entity={section}
