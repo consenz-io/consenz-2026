@@ -14,7 +14,7 @@ import VotesNeededCounter from "./VotesNeededCounter";
 import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
 import DocumentTextContent from "./DocumentTextContent";
-import { motion } from "framer-motion";
+
 import { toast } from "sonner";
 import JoinGroupDialog from "@/components/group/JoinGroupDialog";
 
