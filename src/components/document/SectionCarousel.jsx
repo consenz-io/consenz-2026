@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, ThumbsUp, ThumbsDown, Languages, Loader2, Trash2, CheckCircle, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, ThumbsUp, ThumbsDown, Languages, Loader2, Trash2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import DeleteSectionDialog from "./DeleteSectionDialog";
