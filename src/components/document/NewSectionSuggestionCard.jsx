@@ -152,6 +152,13 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
     if (prevStatusRef.current === 'pending' && suggestion.status === 'accepted' && !hasFlashedRef.current) {
       hasFlashedRef.current = true;
       setAcceptedFlash(true);
+      const lang = suggestion.originalLanguage || 'he';
+      toast.success(
+        lang === 'he' ? '🎉 ההצעה לסעיף חדש התקבלה!' :
+        lang === 'ar' ? '🎉 تم قبول اقتراح القسم الجديد!' :
+        '🎉 New section suggestion accepted!',
+        { duration: 4000 }
+      );
       setTimeout(() => setAcceptedFlash(false), 2500);
     }
     prevStatusRef.current = suggestion.status;
