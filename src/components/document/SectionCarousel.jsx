@@ -148,29 +148,13 @@ const SectionCarousel = React.memo(function SectionCarousel({
     });
   }, [allSectionSuggestions, document.id, queryClient]);
 
-  // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות + הצעות באנימציה
+  // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות
   const allViews = React.useMemo(() => {
-    const views = [
+    return [
       { type: 'current', data: section, id: 'current' },
       ...sortedSuggestions.map(s => ({ type: 'suggestion', data: s, id: s.id }))
     ];
-    
-    // אם יש הצעה באנימציה שכבר לא ב-pending - נוסיף אותה לתצוגה
-    if (allSectionSuggestions && allSectionSuggestions.length > 0) {
-      allSectionSuggestions.forEach(sug => {
-        const animationPhase = animationPhases[sug.id];
-        if (animationPhase && animationPhase !== 'hidden' && !views.find(v => v.id === sug.id)) {
-          views.push({
-            type: 'suggestion',
-            data: sug,
-            id: sug.id
-          });
-        }
-      });
-    }
-    
-    return views;
-  }, [section, sortedSuggestions, allSectionSuggestions, animationPhases]);
+  }, [section, sortedSuggestions]);
   
   // מחשב את ה-index הנוכחי לפי ה-ID
   const currentIndex = React.useMemo(() => {
