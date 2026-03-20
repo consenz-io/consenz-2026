@@ -179,74 +179,25 @@ export default function SuggestionSidebar({
       if (!user || !user.id) throw new Error(t('mustBeLoggedInToVote'));
       if (!suggestion || !suggestion.id) throw new Error('Suggestion not found');
 
-      const doc = document || parentDocument;
-      if (!doc || !doc.id) throw new Error('Document not found');
-      
-      let newProVotes = suggestion.proVotes || 0;
-      let newConVotes = suggestion.conVotes || 0;
-      let voteAction = null;
-      
-      if (userVote) {
-        if (userVote.vote === vote) {
-          // ביטול הצבעה
-          await base44.entities.Vote.delete(userVote.id);
-          if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
-          else newConVotes = Math.max(0, newConVotes - 1);
-          voteAction = 'delete';
-        } else {
-          // שינוי כיוון הצבעה
-          await base44.entities.Vote.update(userVote.id, { vote });
-          if (vote === 'pro') {
-            newProVotes += 1;
-            newConVotes = Math.max(0, newConVotes - 1);
-          } else {
-            newConVotes += 1;
-            newProVotes = Math.max(0, newProVotes - 1);
-          }
-          voteAction = 'update';
-        }
-      } else {
-        // הצבעה חדשה
-        await base44.entities.Vote.create({
-          suggestionId,
-          userId: user.id,
-          vote
-        });
-        
-        if (vote === 'pro') newProVotes += 1;
-        else newConVotes += 1;
-        voteAction = 'create';
+      // Call backend function - handles race conditions by re-counting from DB
+      const response = await base44.functions.invoke('voteOnSuggestion', { suggestionId, vote });
+      const result = response.data;
+
+      if (!result.success) {
+        throw new Error(result.error || 'שגיאה בעיבוד ההצבעה');
       }
 
-      // עדכון ההצעה
-      await base44.entities.Suggestion.update(suggestionId, {
-        proVotes: newProVotes,
-        conVotes: newConVotes
-      });
-
-      const updatedSuggestion = { ...suggestion, proVotes: newProVotes, conVotes: newConVotes };
-
-      // בדיקת קונסנזוס רק אם ההצעה עדיין ממתינה
-      let accepted = false;
-      if (suggestion.status === 'pending') {
-        const { shouldAccept } = await checkSuggestionConsensus(updatedSuggestion, doc);
-        if (shouldAccept) {
-          accepted = await autoAcceptSuggestion(updatedSuggestion, user.id, doc);
-        }
-      }
-      
-      // פעולות רקע - fire-and-forget (רק עבור הצבעה חדשה)
-      if (voteAction === 'create') {
+      // Background: update contributor count if new vote
+      if (result.voteAction === 'created') {
         ensureUserPublicProfile(user).catch(() => {});
-        
-        import('./calculateContributors').then(({ calculateDocumentContributors }) => 
-          calculateDocumentContributors(suggestion.documentId).then(count => 
+        import('./calculateContributors').then(({ calculateDocumentContributors }) =>
+          calculateDocumentContributors(suggestion.documentId).then(count =>
             base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count })
           )
         ).catch(() => {});
       }
-      
-      return { accepted };
+
+      return { accepted: result.accepted, newProVotes: result.newProVotes, newConVotes: result.newConVotes };
     },
     // Optimistic update - only for vote counts, NOT for status
     onMutate: async (vote) => {
@@ -256,40 +207,26 @@ export default function SuggestionSidebar({
       const previousSuggestion = queryClient.getQueryData(['suggestion', suggestionId]);
       const previousVote = queryClient.getQueryData(['userVote', suggestionId, user?.id]);
       
-      // עדכון אופטימיסטי של ההצעה - רק ספירת הצבעות, לא סטטוס!
+      // Optimistic update - vote counts only, status stays unchanged
       queryClient.setQueryData(['suggestion', suggestionId], (old) => {
         if (!old) return old;
-        
         let newProVotes = old.proVotes || 0;
         let newConVotes = old.conVotes || 0;
-        
         if (userVote) {
           if (userVote.vote === vote) {
             if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
             else newConVotes = Math.max(0, newConVotes - 1);
           } else {
-            if (vote === 'pro') {
-              newProVotes += 1;
-              newConVotes = Math.max(0, newConVotes - 1);
-            } else {
-              newConVotes += 1;
-              newProVotes = Math.max(0, newProVotes - 1);
-            }
+            if (vote === 'pro') { newProVotes += 1; newConVotes = Math.max(0, newConVotes - 1); }
+            else { newConVotes += 1; newProVotes = Math.max(0, newProVotes - 1); }
           }
         } else {
           if (vote === 'pro') newProVotes += 1;
           else newConVotes += 1;
         }
-        
-        // לא משנים סטטוס באופטימיסטי - רק השרת יקבע אם ההצעה התקבלה
-        return { 
-          ...old, 
-          proVotes: newProVotes, 
-          conVotes: newConVotes
-        };
+        return { ...old, proVotes: newProVotes, conVotes: newConVotes };
       });
-      
-      // עדכון אופטימיסטי של ההצבעה
+
       queryClient.setQueryData(['userVote', suggestionId, user?.id], (old) => {
         if (userVote) {
           if (userVote.vote === vote) return null;
@@ -312,8 +249,6 @@ export default function SuggestionSidebar({
       setTimeout(() => setError(null), 5000);
     },
     onSuccess: () => {
-      // Real-time subscriptions in DocumentView handle all further updates automatically.
-      // No manual invalidations or toasts needed here.
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
       queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
     },
