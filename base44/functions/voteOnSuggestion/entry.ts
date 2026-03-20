@@ -111,39 +111,31 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
-    // Calculate new vote counts
-    let newProVotes = suggestion.proVotes || 0;
-    let newConVotes = suggestion.conVotes || 0;
     let voteAction = null;
 
     if (existingVote) {
       if (existingVote.vote === vote) {
         // Cancel vote
         await base44.entities.Vote.delete(existingVote.id);
-        if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
-        else newConVotes = Math.max(0, newConVotes - 1);
         voteAction = 'canceled';
       } else {
         // Change vote direction
         await base44.entities.Vote.update(existingVote.id, { vote });
-        if (vote === 'pro') {
-          newProVotes += 1;
-          newConVotes = Math.max(0, newConVotes - 1);
-        } else {
-          newConVotes += 1;
-          newProVotes = Math.max(0, newProVotes - 1);
-        }
         voteAction = 'changed';
       }
     } else {
       // New vote
       await base44.entities.Vote.create({ suggestionId, userId: user.id, vote });
-      if (vote === 'pro') newProVotes += 1;
-      else newConVotes += 1;
       voteAction = 'created';
     }
 
-    // Update suggestion vote counts
+    // Re-read the actual votes from DB after mutation - this is the source of truth
+    // This prevents race conditions: count from reality, not from a stale cached number
+    const freshVotes = await base44.entities.Vote.filter({ suggestionId });
+    const newProVotes = freshVotes.filter(v => v.vote === 'pro').length;
+    const newConVotes = freshVotes.filter(v => v.vote === 'con').length;
+
+    // Update suggestion vote counts based on actual DB count
     await base44.entities.Suggestion.update(suggestionId, {
       proVotes: newProVotes,
       conVotes: newConVotes
