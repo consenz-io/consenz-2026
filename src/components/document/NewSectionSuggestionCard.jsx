@@ -160,13 +160,11 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
 
   // Hide if accepted and converted to edit_section - will appear in section carousel
   if (suggestion.type === 'edit_section' && suggestion.status === 'accepted') {
-    console.log('[NEW SECTION CARD] Suggestion converted to edit_section, hiding from new section view:', suggestion.id);
     return null;
   }
   
-  // Hide if accepted - real-time subscriptions will show it as a section
-  if (suggestion.status === 'accepted') {
-    console.log('[NEW SECTION CARD] Suggestion accepted, hiding card - will appear as section:', suggestion.id);
+  // Hide if accepted - but only after animation completes
+  if (suggestion.status === 'accepted' && !justAccepted) {
     return null;
   }
 
