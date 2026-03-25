@@ -311,7 +311,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       </div>
 
       {/* כפתורי הצבעה והערות */}
-      <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap">
+      <div className={`flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap ${justAccepted ? 'hidden' : ''}`}>
         {doc?.votingButtonsEnabled ? (
           <>
             <Button
