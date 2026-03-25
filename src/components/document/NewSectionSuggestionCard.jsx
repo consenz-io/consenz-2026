@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, Edit2, ChevronLeft, ChevronRight } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, Edit2, ChevronLeft, ChevronRight, CheckCircle } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
