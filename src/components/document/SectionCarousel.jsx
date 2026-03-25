@@ -65,7 +65,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
       sectionSuggestionIds.has(s.parentSuggestionId)
     );
     
-    return [...directSuggestions, ...editSuggestions].filter(s => s.status === 'pending');
+    return [...directSuggestions, ...editSuggestions];
   }, [allDocumentSuggestions, section.id]);
 
   // קביעת הישות שאליה משויכות תגובות כרטיס הסעיף הנוכחי:
