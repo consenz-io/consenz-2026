@@ -246,8 +246,45 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
         </div>
       </div>
 
+      {/* אנימציית קבלה */}
+      {justAccepted && animationPhase === 'announcing' && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className="rounded-lg p-8 text-center mb-4"
+          style={{ background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(220 252 231) 100%)', border: '2px solid rgb(34 197 94)' }}
+        >
+          <div className="text-2xl font-bold text-green-700">🎉 ההצעה עברה את סף התמיכה!</div>
+        </motion.div>
+      )}
+      {justAccepted && animationPhase === 'celebrating' && (
+        <motion.div
+          initial={{ scale: 1 }}
+          animate={{ scale: [1, 1.02, 1] }}
+          transition={{ duration: 0.6 }}
+          className="rounded-lg p-4 mb-4 relative overflow-hidden"
+          style={{ background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(220 252 231) 100%)', border: '2px solid rgb(34 197 94)' }}
+        >
+          <div className="flex items-center gap-3">
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', duration: 0.6 }}
+              className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0"
+            >
+              <CheckCircle className="w-5 h-5 text-white" />
+            </motion.div>
+            <div className="text-lg font-bold text-green-700">ההצעה התקבלה!</div>
+          </div>
+          <div className="mt-3 prose prose-sm max-w-none">
+            <DocumentTextContent content={currentVersion.newContent} className="text-slate-700" />
+          </div>
+        </motion.div>
+      )}
+
       {/* תוכן ההצעה */}
-      <div className="min-h-[100px]">
+      <div className={`min-h-[100px] ${justAccepted ? 'hidden' : ''}`}>
         {currentVersion.explanation && typeof currentVersion.explanation === 'string' && (
           <div className="mb-3 text-sm">
             <div className="font-semibold text-slate-700 mb-1">{language === 'he' ? 'הסבר:' : language === 'ar' ? 'الشرح:' : 'Explanation:'}</div>
