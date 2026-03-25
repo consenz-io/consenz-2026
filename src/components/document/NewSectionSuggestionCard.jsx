@@ -33,6 +33,19 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   const language = rawLanguage || 'he';
   const queryClient = useQueryClient();
   const [currentVersionId, setCurrentVersionId] = React.useState('original');
+  const [animationPhase, setAnimationPhase] = React.useState('none');
+  const prevStatusRef = React.useRef(suggestion.status);
+
+  // Watch for pending -> accepted transition to trigger animation
+  React.useEffect(() => {
+    if (prevStatusRef.current === 'pending' && suggestion.status === 'accepted' && animationPhase === 'none') {
+      setAnimationPhase('announcing');
+      setTimeout(() => setAnimationPhase('celebrating'), 1000);
+      setTimeout(() => setAnimationPhase('transitioning'), 3500);
+      setTimeout(() => setAnimationPhase('completed'), 4500);
+    }
+    prevStatusRef.current = suggestion.status;
+  }, [suggestion.status]);
 
   const deleteSuggestionMutation = useMutation({
     mutationFn: async () => {
@@ -144,14 +157,79 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
 
   // Hide if accepted and converted to edit_section - will appear in section carousel
   if (suggestion.type === 'edit_section' && suggestion.status === 'accepted') {
-    console.log('[NEW SECTION CARD] Suggestion converted to edit_section, hiding from new section view:', suggestion.id);
     return null;
   }
   
-  // Hide if accepted - real-time subscriptions will show it as a section
-  if (suggestion.status === 'accepted') {
-    console.log('[NEW SECTION CARD] Suggestion accepted, hiding card - will appear as section:', suggestion.id);
+  // Hide if accepted and animation is done
+  if (suggestion.status === 'accepted' && (animationPhase === 'completed' || animationPhase === 'none')) {
     return null;
+  }
+
+  // Show animation if accepted and animating
+  if (suggestion.status === 'accepted' && ['announcing', 'celebrating', 'transitioning'].includes(animationPhase)) {
+    return (
+      <div id={`suggestion-${suggestion.id}`} className="group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 border-green-400 bg-gradient-to-br from-green-50 to-emerald-50">
+        {animationPhase === 'announcing' && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="relative overflow-hidden rounded-lg p-8 text-center"
+          >
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
+              className="text-2xl font-bold text-green-700"
+            >
+              🎉 ההצעה עברה את סף התמיכה!
+            </motion.div>
+          </motion.div>
+        )}
+        {animationPhase === 'celebrating' && (
+          <motion.div
+            initial={{ scale: 1 }}
+            animate={{ scale: [1, 1.02, 1] }}
+            transition={{ duration: 0.6, ease: 'easeInOut' }}
+            className="relative overflow-hidden rounded-lg p-4"
+          >
+            <div className="flex items-start gap-3 mb-3">
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: 'spring', duration: 0.6 }}
+                className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0"
+              >
+                <CheckCircle className="w-5 h-5 text-white" />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-lg font-bold text-green-700"
+              >
+                ההצעה התקבלה!
+              </motion.div>
+            </div>
+            <div className="prose prose-sm max-w-none">
+              <DocumentTextContent content={suggestion.newContent} className="text-slate-700" />
+            </div>
+          </motion.div>
+        )}
+        {animationPhase === 'transitioning' && (
+          <motion.div
+            initial={{ background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(220 252 231) 100%)' }}
+            animate={{ background: 'rgb(255 255 255)' }}
+            transition={{ duration: 1, ease: 'easeInOut' }}
+            className="rounded-lg p-4"
+          >
+            <div className="prose prose-sm max-w-none">
+              <DocumentTextContent content={suggestion.newContent} className="text-slate-700" />
+            </div>
+          </motion.div>
+        )}
+      </div>
+    );
   }
 
   const handlePrev = () => {
