@@ -65,26 +65,6 @@ export default function DocumentView() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState(null);
 
-  // Track accepted suggestions to flash them when status changes to 'accepted'
-  const prevSuggestionStatusesRef = React.useRef({});
-  React.useEffect(() => {
-    if (!suggestions || suggestions.length === 0) return;
-    const prev = prevSuggestionStatusesRef.current;
-    suggestions.forEach(s => {
-      if (prev[s.id] && prev[s.id] !== 'accepted' && s.status === 'accepted') {
-        // Flash the card for this suggestion
-        setTimeout(() => {
-          const el = window.document?.getElementById(`suggestion-${s.id}`);
-          if (el) {
-            el.classList.add('suggestion-accepted-flash');
-            setTimeout(() => el.classList.remove('suggestion-accepted-flash'), 2800);
-          }
-        }, 100);
-      }
-      prev[s.id] = s.status;
-    });
-  }, [suggestions]);
-
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
     queryFn: async () => {
@@ -146,6 +126,25 @@ export default function DocumentView() {
     staleTime: 0,
     retry: 2,
   });
+
+  // Track accepted suggestions to flash them when status changes to 'accepted'
+  const prevSuggestionStatusesRef = React.useRef({});
+  React.useEffect(() => {
+    if (!suggestions || suggestions.length === 0) return;
+    const prev = prevSuggestionStatusesRef.current;
+    suggestions.forEach(s => {
+      if (prev[s.id] && prev[s.id] !== 'accepted' && s.status === 'accepted') {
+        setTimeout(() => {
+          const el = window.document?.getElementById(`suggestion-${s.id}`);
+          if (el) {
+            el.classList.add('suggestion-accepted-flash');
+            setTimeout(() => el.classList.remove('suggestion-accepted-flash'), 2800);
+          }
+        }, 100);
+      }
+      prev[s.id] = s.status;
+    });
+  }, [suggestions]);
 
   // Real-time subscriptions for topics, sections, suggestions - wait for initial data
   React.useEffect(() => {
