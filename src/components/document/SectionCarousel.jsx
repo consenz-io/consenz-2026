@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, ThumbsUp, ThumbsDown, Languages, Loader2, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, ThumbsUp, ThumbsDown, Languages, Loader2, Trash2, CheckCircle, Sparkles } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import DeleteSectionDialog from "./DeleteSectionDialog";
@@ -14,7 +14,7 @@ import VotesNeededCounter from "./VotesNeededCounter";
 import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
 import DocumentTextContent from "./DocumentTextContent";
-
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import JoinGroupDialog from "@/components/group/JoinGroupDialog";
 
@@ -100,8 +100,9 @@ const SectionCarousel = React.memo(function SectionCarousel({
   // שומר הצעות שהתקבלו בזמן שהיוזר צופה בהן - כדי שלא ייעלמו פתאום
   const [recentlyAcceptedSuggestions, setRecentlyAcceptedSuggestions] = useState({});
   
-  // מעקב אחרי הצעות שהתקבלו לצורך אנימציה
-  const [acceptedFlash, setAcceptedFlash] = useState({}); // suggestionId -> true
+  // מעקב אחרי אנימציות של הצעות מקובלות
+  const [animationPhases, setAnimationPhases] = useState({});
+  const [recentlyUpdatedSections, setRecentlyUpdatedSections] = useState({});
   const prevSuggestionsStatusRef = React.useRef({});
   const hasAnimatedRef = React.useRef(new Set());
   
@@ -118,69 +119,86 @@ const SectionCarousel = React.memo(function SectionCarousel({
     return new Date(b.created_date) - new Date(a.created_date);
   });
   
-  // זיהוי מעבר pending → accepted והפעלת אנימציה פשוטה
-  // בודק את כל הצעות הסעיף (לא רק pending) כדי לזהות מעבר סטטוס
-  const allDirectSectionSuggestions = React.useMemo(() => {
-    return allDocumentSuggestions.filter(s =>
-      s.sectionId === section.id &&
-      (s.type === 'edit_section' || s.type === 'delete_section' || s.type === 'new_section')
-    );
-  }, [allDocumentSuggestions, section.id]);
-
+  // מעקב אחרי שינוי סטטוס להצגת אנימציה - עובד על כל ההצעות
   React.useEffect(() => {
-    if (!allDirectSectionSuggestions || allDirectSectionSuggestions.length === 0 || !document?.id) return;
-
-    allDirectSectionSuggestions.forEach(sug => {
+    if (!allSectionSuggestions || allSectionSuggestions.length === 0 || !document?.id) return;
+    
+    allSectionSuggestions.forEach(sug => {
       const prevStatus = prevSuggestionsStatusRef.current[sug.id];
-
+      
+      // זיהוי מעבר מ-pending ל-accepted
       if (prevStatus === 'pending' && sug.status === 'accepted' && !hasAnimatedRef.current.has(sug.id)) {
         hasAnimatedRef.current.add(sug.id);
-
-        // הפעל flash ירוק על ה-container
-        setAcceptedFlash(prev => ({ ...prev, [sug.id]: true }));
-
-        // Toast feedback
-        const lang = language || 'he';
-        if (sug.type === 'delete_section') {
-          toast.success(
-            lang === 'he' ? '🗑️ ההצעה למחיקת הסעיף התקבלה!' :
-            lang === 'ar' ? '🗑️ تم قبول اقتراح حذف القسم!' :
-            '🗑️ Delete section suggestion accepted!',
-            { duration: 4000 }
-          );
-        } else {
-          toast.success(
-            lang === 'he' ? '🎉 הצעת העריכה התקבלה!' :
-            lang === 'ar' ? '🎉 تم قبول اقتراح التعديل!' :
-            '🎉 Edit suggestion accepted!',
-            { duration: 4000 }
-          );
+        console.log('[EDIT ANIMATION] Starting celebration for suggestion:', sug.id);
+        
+        // אם המשתמש לא צופה בהצעה הזו - מעביר אותו אליה
+        if (currentSuggestionId !== sug.id) {
+          setCurrentSuggestionId(sug.id);
         }
-
-        // חזרה לתצוגת הסעיף המעודכן אחרי 2 שניות
+        
+        // שלב 0: הכרזה (1 שניה)
+        setAnimationPhases(prev => ({ ...prev, [sug.id]: 'announcing' }));
+        
         setTimeout(() => {
-          setCurrentSuggestionId('current');
-          queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
-          queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
-        }, 2000);
-
-        // הסרת ה-flash אחרי 2.5 שניות
+          console.log('[EDIT ANIMATION] Starting celebration for suggestion:', sug.id);
+          setAnimationPhases(prev => ({ ...prev, [sug.id]: 'celebrating' }));
+        }, 1000);
+        
+        // שלב 1: חגיגה (2.5 שניות)
         setTimeout(() => {
-          setAcceptedFlash(prev => { const n = { ...prev }; delete n[sug.id]; return n; });
-        }, 2500);
+          console.log('[EDIT ANIMATION] Transitioning to normal for suggestion:', sug.id);
+          setAnimationPhases(prev => ({ ...prev, [sug.id]: 'transitioning' }));
+        }, 3500);
+        
+        // שלב 2: מיד חזרה לסעיף עם תוכן מעודכן
+        setTimeout(() => {
+        console.log('[EDIT ANIMATION] Completed, showing as updated section:', sug.id);
+        setAnimationPhases(prev => ({ ...prev, [sug.id]: 'completed' }));
+        // סימון הסעיף כעדכן לאחרונה
+        setRecentlyUpdatedSections(prev => ({ ...prev, [section.id]: Date.now() }));
+        // חוזרים לתצוגת הסעיף הנוכחי - עכשיו הוא מעודכן
+        setCurrentSuggestionId('current');
+        // רענון הסעיפים כדי לקבל את השינוי
+        queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
+        }, 1000);
+        
+        // שלב 3: הסרת badge "עודכן עכשיו" (אחרי 10 שניות מהתחלה)
+        setTimeout(() => {
+          setRecentlyUpdatedSections(prev => {
+            const updated = { ...prev };
+            delete updated[section.id];
+            return updated;
+          });
+        }, 10000);
       }
-
+      
       prevSuggestionsStatusRef.current[sug.id] = sug.status;
     });
-  }, [allDirectSectionSuggestions, document.id, queryClient]);
+  }, [allSectionSuggestions, currentSuggestionId, document.id, queryClient]);
 
-  // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות
+  // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות + הצעות באנימציה
   const allViews = React.useMemo(() => {
-    return [
+    const views = [
       { type: 'current', data: section, id: 'current' },
       ...sortedSuggestions.map(s => ({ type: 'suggestion', data: s, id: s.id }))
     ];
-  }, [section, sortedSuggestions]);
+    
+    // אם יש הצעה באנימציה שכבר לא ב-pending - נוסיף אותה לתצוגה
+    if (allSectionSuggestions && allSectionSuggestions.length > 0) {
+      allSectionSuggestions.forEach(sug => {
+        const animationPhase = animationPhases[sug.id];
+        if (animationPhase && animationPhase !== 'hidden' && !views.find(v => v.id === sug.id)) {
+          views.push({
+            type: 'suggestion',
+            data: sug,
+            id: sug.id
+          });
+        }
+      });
+    }
+    
+    return views;
+  }, [section, sortedSuggestions, allSectionSuggestions, animationPhases]);
   
   // מחשב את ה-index הנוכחי לפי ה-ID
   const currentIndex = React.useMemo(() => {
@@ -378,18 +396,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
     }
   }, [targetSuggestionId]);
 
-  // האם יש flash ירוק פעיל — בדוק על כל ההצעות של הסעיף הזה
-  const isFlashing = allDirectSectionSuggestions.some(s => acceptedFlash[s.id]);
-
   return (
-    <div
-      id={currentSuggestionDisplayId}
-      className={`group relative p-3 md:p-6 border-2 rounded-lg transition-all bg-gradient-to-br from-white to-slate-50/30 ${
-        isFlashing
-          ? 'border-green-400 shadow-green-200 shadow-lg animate-pulse'
-          : 'border-slate-300 hover:border-blue-400 hover:shadow-md'
-      }`}
-    >
+    <div id={currentSuggestionDisplayId} className="group relative p-3 md:p-6 border-2 border-slate-300 rounded-lg hover:border-blue-400 hover:shadow-md transition-all bg-gradient-to-br from-white to-slate-50/30">
       {/* כותרת סעיף עם אינדיקטור */}
       <div className="flex items-center justify-between mb-3 md:mb-4">
         <div className="flex items-center gap-2 md:gap-3">
@@ -416,8 +424,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
         </div>
       </div>
 
-      {/* כפתורי דפדוף */}
-      {allViews.length > 1 && (
+      {/* כפתורי דפדוף - רק אם לא באנימציה */}
+      {allViews.length > 1 && !['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView?.data?.id]) && (
         <div className={`flex items-center justify-between mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm ${
           currentView?.data?.type === 'delete_section' 
             ? 'border-red-300 bg-gradient-to-r from-red-50 to-pink-50' 
@@ -477,6 +485,17 @@ const SectionCarousel = React.memo(function SectionCarousel({
         {!currentView ? null : currentView.type === 'current' ? (
           // תצוגת תוכן נוכחי
           <>
+            {recentlyUpdatedSections[section.id] && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="mb-3 inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg text-sm font-medium text-green-700"
+              >
+                <Sparkles className="w-4 h-4" />
+                עודכן עכשיו ✓
+              </motion.div>
+            )}
             <TranslatableContent
               content={section.content}
               entity={section}
@@ -524,6 +543,101 @@ const SectionCarousel = React.memo(function SectionCarousel({
           // תצוגת הצעה - diff או אנימציה
           <>
             {(() => {
+              const animationPhase = animationPhases[currentView.data.id] || 'none';
+              
+              // שלב ההכרזה - הודעה גדולה (1 שניה)
+              if (animationPhase === 'announcing') {
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="relative overflow-hidden rounded-lg p-8 text-center"
+                    style={{
+                      background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(220 252 231) 100%)',
+                      border: '2px solid rgb(34 197 94)',
+                    }}
+                  >
+                    <motion.div
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.2, duration: 0.4 }}
+                      className="text-2xl font-bold text-green-700"
+                    >
+                      🎉 ההצעה עברה את סף התמיכה!
+                    </motion.div>
+                  </motion.div>
+                );
+              }
+              
+              // שלב החגיגה - מסגרת ירוקה ואייקון (2.5 שניות)
+              if (animationPhase === 'celebrating') {
+                return (
+                  <motion.div
+                    initial={{ scale: 1 }}
+                    animate={{ scale: [1, 1.02, 1] }}
+                    transition={{ duration: 0.6, ease: "easeInOut" }}
+                    className="relative overflow-hidden rounded-lg p-4"
+                    style={{
+                      background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(220 252 231) 100%)',
+                      border: '2px solid rgb(34 197 94)',
+                    }}
+                  >
+                    <motion.div
+                      className="absolute inset-0 bg-green-500/10"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: [0, 0.3, 0.1] }}
+                      transition={{ duration: 1 }}
+                    />
+                    <div className="relative z-10">
+                      <div className="flex items-start gap-3 mb-3">
+                        <motion.div
+                          initial={{ scale: 0, rotate: -180 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ type: "spring", duration: 0.6 }}
+                          className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0"
+                        >
+                          <CheckCircle className="w-5 h-5 text-white" />
+                        </motion.div>
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="text-lg font-bold text-green-700"
+                        >
+                          ההצעה התקבלה!
+                        </motion.div>
+                      </div>
+                      <div className="prose prose-sm max-w-none">
+                        <DocumentTextContent content={currentView.data.newContent} className="text-slate-700" />
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              }
+              
+              // שלב המעבר - מעבר הדרגתי למראה של סעיף רגיל (1.5 שניות)
+              if (animationPhase === 'transitioning') {
+                return (
+                  <motion.div
+                    initial={{ 
+                      background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(220 252 231) 100%)',
+                      borderColor: 'rgb(34 197 94)',
+                    }}
+                    animate={{ 
+                      background: 'rgb(255 255 255)',
+                      borderColor: 'rgb(226 232 240)',
+                    }}
+                    transition={{ duration: 1.5, ease: "easeInOut" }}
+                    className="relative overflow-hidden rounded-lg p-4 border-2"
+                  >
+                    <div className="prose prose-sm max-w-none">
+                      <DocumentTextContent content={currentView.data.newContent} className="text-slate-700" />
+                    </div>
+                  </motion.div>
+                );
+              }
+              
               // תצוגה רגילה - diff או הצעה
               return (
                 <div 
@@ -593,8 +707,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
               );
             })()}
 
-            {/* כפתורי הצבעה והערות */}
-            {(
+            {/* כפתורי הצבעה והערות - רק אם לא באנימציה */}
+            {!['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView.data.id]) && (
               <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap relative">
                 {voteMutation.isPending && (
                   <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10">
@@ -666,8 +780,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
               </div>
             )}
 
-            {/* תגובות להצעה */}
-            {currentView?.data?.id && (
+            {/* תגובות להצעה - רק אם לא באנימציה */}
+            {currentView?.data?.id && !['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView.data.id]) && (
               <>
                 <div className="mt-3">
                   {(() => {

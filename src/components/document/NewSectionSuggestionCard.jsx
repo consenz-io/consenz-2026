@@ -6,7 +6,6 @@ import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, Edit2, ChevronLeft, 
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import VotesNeededCounter from "./VotesNeededCounter";
 import TranslatableContent from "./TranslatableContent";
 import CommentsSection from "./CommentsSection";
@@ -143,32 +142,15 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
     return html;
   };
 
-  // Flash green when suggestion transitions pending → accepted
-  const [acceptedFlash, setAcceptedFlash] = React.useState(false);
-  const prevStatusRef = React.useRef(suggestion.status);
-  const hasFlashedRef = React.useRef(false);
-
-  React.useEffect(() => {
-    if (prevStatusRef.current === 'pending' && suggestion.status === 'accepted' && !hasFlashedRef.current) {
-      hasFlashedRef.current = true;
-      setAcceptedFlash(true);
-      const lang = suggestion.originalLanguage || 'he';
-      toast.success(
-        lang === 'he' ? '🎉 ההצעה לסעיף חדש התקבלה!' :
-        lang === 'ar' ? '🎉 تم قبول اقتراح القسم الجديد!' :
-        '🎉 New section suggestion accepted!',
-        { duration: 4000 }
-      );
-      // Invalidate sections so the new section appears immediately
-      queryClient.invalidateQueries({ queryKey: ['sections', doc?.id] });
-      queryClient.invalidateQueries({ queryKey: ['suggestions', doc?.id] });
-      setTimeout(() => setAcceptedFlash(false), 2500);
-    }
-    prevStatusRef.current = suggestion.status;
-  }, [suggestion.status]);
-
-  // Hide if accepted (after flash completes) - real-time subscriptions will show it as a section
-  if (suggestion.status === 'accepted' && !acceptedFlash) {
+  // Hide if accepted and converted to edit_section - will appear in section carousel
+  if (suggestion.type === 'edit_section' && suggestion.status === 'accepted') {
+    console.log('[NEW SECTION CARD] Suggestion converted to edit_section, hiding from new section view:', suggestion.id);
+    return null;
+  }
+  
+  // Hide if accepted - real-time subscriptions will show it as a section
+  if (suggestion.status === 'accepted') {
+    console.log('[NEW SECTION CARD] Suggestion accepted, hiding card - will appear as section:', suggestion.id);
     return null;
   }
 
@@ -189,11 +171,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   return (
     <div 
       id={`suggestion-${suggestion.id}`}
-      className={`group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 ${
-        acceptedFlash
-          ? 'border-green-400 shadow-green-200 shadow-lg animate-pulse bg-gradient-to-br from-green-50 to-emerald-50'
-          : 'border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50'
-      }`}
+      className="group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50"
     >
       {/* כפתורי דפדוף בין גרסאות - מעגלי כמו SectionCarousel */}
       {allViews.length > 1 && (
