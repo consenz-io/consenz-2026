@@ -33,6 +33,22 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   const language = rawLanguage || 'he';
   const queryClient = useQueryClient();
   const [currentVersionId, setCurrentVersionId] = React.useState('original');
+  const [justAccepted, setJustAccepted] = React.useState(false);
+  const [animationPhase, setAnimationPhase] = React.useState('none'); // 'none' | 'announcing' | 'celebrating' | 'done'
+  const prevStatusRef = React.useRef(suggestion.status);
+
+  // Detect transition to accepted and trigger animation
+  React.useEffect(() => {
+    if (prevStatusRef.current !== 'accepted' && suggestion.status === 'accepted') {
+      setJustAccepted(true);
+      setAnimationPhase('announcing');
+      setTimeout(() => setAnimationPhase('celebrating'), 1000);
+      setTimeout(() => setAnimationPhase('done'), 3500);
+      // After animation completes, allow normal hide logic
+      setTimeout(() => setJustAccepted(false), 4500);
+    }
+    prevStatusRef.current = suggestion.status;
+  }, [suggestion.status]);
 
   const deleteSuggestionMutation = useMutation({
     mutationFn: async () => {
