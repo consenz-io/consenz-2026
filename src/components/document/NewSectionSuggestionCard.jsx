@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, Edit2, ChevronLeft, ChevronRight, CheckCircle } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, Edit2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -33,22 +33,6 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   const language = rawLanguage || 'he';
   const queryClient = useQueryClient();
   const [currentVersionId, setCurrentVersionId] = React.useState('original');
-  const [justAccepted, setJustAccepted] = React.useState(false);
-  const [animationPhase, setAnimationPhase] = React.useState('none'); // 'none' | 'announcing' | 'celebrating' | 'done'
-  const prevStatusRef = React.useRef(suggestion.status);
-
-  // Detect transition to accepted and trigger animation
-  React.useEffect(() => {
-    if (prevStatusRef.current !== 'accepted' && suggestion.status === 'accepted') {
-      setJustAccepted(true);
-      setAnimationPhase('announcing');
-      setTimeout(() => setAnimationPhase('celebrating'), 1000);
-      setTimeout(() => setAnimationPhase('done'), 3500);
-      // After animation completes, allow normal hide logic
-      setTimeout(() => setJustAccepted(false), 4500);
-    }
-    prevStatusRef.current = suggestion.status;
-  }, [suggestion.status]);
 
   const deleteSuggestionMutation = useMutation({
     mutationFn: async () => {
@@ -160,11 +144,13 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
 
   // Hide if accepted and converted to edit_section - will appear in section carousel
   if (suggestion.type === 'edit_section' && suggestion.status === 'accepted') {
+    console.log('[NEW SECTION CARD] Suggestion converted to edit_section, hiding from new section view:', suggestion.id);
     return null;
   }
   
-  // Hide if accepted - but only after animation completes
-  if (suggestion.status === 'accepted' && !justAccepted) {
+  // Hide if accepted - real-time subscriptions will show it as a section
+  if (suggestion.status === 'accepted') {
+    console.log('[NEW SECTION CARD] Suggestion accepted, hiding card - will appear as section:', suggestion.id);
     return null;
   }
 
@@ -246,45 +232,8 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
         </div>
       </div>
 
-      {/* אנימציית קבלה */}
-      {justAccepted && animationPhase === 'announcing' && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
-          className="rounded-lg p-8 text-center mb-4"
-          style={{ background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(220 252 231) 100%)', border: '2px solid rgb(34 197 94)' }}
-        >
-          <div className="text-2xl font-bold text-green-700">🎉 ההצעה עברה את סף התמיכה!</div>
-        </motion.div>
-      )}
-      {justAccepted && animationPhase === 'celebrating' && (
-        <motion.div
-          initial={{ scale: 1 }}
-          animate={{ scale: [1, 1.02, 1] }}
-          transition={{ duration: 0.6 }}
-          className="rounded-lg p-4 mb-4 relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(220 252 231) 100%)', border: '2px solid rgb(34 197 94)' }}
-        >
-          <div className="flex items-center gap-3">
-            <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', duration: 0.6 }}
-              className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0"
-            >
-              <CheckCircle className="w-5 h-5 text-white" />
-            </motion.div>
-            <div className="text-lg font-bold text-green-700">ההצעה התקבלה!</div>
-          </div>
-          <div className="mt-3 prose prose-sm max-w-none">
-            <DocumentTextContent content={currentVersion.newContent} className="text-slate-700" />
-          </div>
-        </motion.div>
-      )}
-
       {/* תוכן ההצעה */}
-      <div className={`min-h-[100px] ${justAccepted ? 'hidden' : ''}`}>
+      <div className="min-h-[100px]">
         {currentVersion.explanation && typeof currentVersion.explanation === 'string' && (
           <div className="mb-3 text-sm">
             <div className="font-semibold text-slate-700 mb-1">{language === 'he' ? 'הסבר:' : language === 'ar' ? 'الشرح:' : 'Explanation:'}</div>
@@ -311,7 +260,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       </div>
 
       {/* כפתורי הצבעה והערות */}
-      <div className={`flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap ${justAccepted ? 'hidden' : ''}`}>
+      <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap">
         {doc?.votingButtonsEnabled ? (
           <>
             <Button
