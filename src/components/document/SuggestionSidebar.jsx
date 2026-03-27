@@ -121,14 +121,12 @@ export default function SuggestionSidebar({
     queryKey: ['users'],
     queryFn: () => base44.entities.User.list(),
     initialData: [],
-    staleTime: 5 * 60 * 1000,
   });
 
   const { data: publicProfiles } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
     initialData: [],
-    staleTime: 5 * 60 * 1000,
   });
 
   const { data: suggestionComments = [] } = useQuery({
@@ -139,7 +137,6 @@ export default function SuggestionSidebar({
     }),
     initialData: [],
     enabled: !!suggestionId,
-    staleTime: 30 * 1000,
   });
 
   const totalCommentsCount = React.useMemo(() => {

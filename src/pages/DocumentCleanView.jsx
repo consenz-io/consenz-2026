@@ -922,7 +922,6 @@ ${text}`;
             onClose={() => setOpenSuggestionId(null)}
             document={document}
             user={currentUser || null}
-            isAdmin={false}
           />
         )}
       </React.Suspense>
