@@ -13,10 +13,12 @@ import PageHeader from "@/components/PageHeader";
 import VersionNavigation from "@/components/document/VersionNavigation";
 import DocumentSnapshot from "@/components/document/DocumentSnapshot";
 import { useDocumentVersions } from "@/components/document/hooks/useDocumentVersions";
+import { AnimatePresence } from "framer-motion";
 
 // Lazy load sidebars
 const SectionHistorySidebar = React.lazy(() => import("@/components/document/SectionHistorySidebar"));
 const SuggestionSidebar = React.lazy(() => import("@/components/document/SuggestionSidebar"));
+
 
 const detectLanguage = (text) => {
   if (!text) return 'en';
@@ -910,15 +912,18 @@ ${text}`;
           />
         )}
 
-        {openSuggestionId && (
-          <SuggestionSidebar
-            suggestionId={openSuggestionId}
-            onClose={() => setOpenSuggestionId(null)}
-            document={document}
-            user={null}
-            isAdmin={false}
-          />
-        )}
+        <AnimatePresence>
+          {openSuggestionId && (
+            <SuggestionSidebar
+              key={openSuggestionId}
+              suggestionId={openSuggestionId}
+              onClose={() => setOpenSuggestionId(null)}
+              document={document}
+              user={null}
+              isAdmin={false}
+            />
+          )}
+        </AnimatePresence>
       </React.Suspense>
     </div>
   );
