@@ -44,6 +44,12 @@ export default function DocumentCleanView() {
   const [showDiffForSections, setShowDiffForSections] = useState({});
   const [openSuggestionId, setOpenSuggestionId] = useState(null);
   const [searchParams] = useSearchParams();
+
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+    retry: false,
+  });
   const documentId = searchParams.get('id');
   const scrollToSuggestionId = searchParams.get('scrollToSuggestion');
 
@@ -915,8 +921,7 @@ ${text}`;
             suggestionId={openSuggestionId}
             onClose={() => setOpenSuggestionId(null)}
             document={document}
-            user={null}
-            isAdmin={false}
+            user={currentUser || null}
           />
         )}
       </React.Suspense>

@@ -444,9 +444,20 @@ export default function SuggestionSidebar({
 
   if (suggestionLoading || !suggestion) {
     return (
-      <div className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-full md:w-[500px] bg-white shadow-2xl z-50 flex items-center justify-center`}>
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
+      <>
+        <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
+        <div className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-full md:w-[500px] bg-white shadow-2xl z-50 flex flex-col`}>
+          <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
+            <span className="text-sm text-slate-500">{language === 'he' ? 'טוען הצעה...' : 'Loading...'}</span>
+            <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
+              <X className="w-5 h-5" />
+            </Button>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        </div>
+      </>
     );
   }
 
