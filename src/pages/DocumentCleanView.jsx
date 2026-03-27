@@ -414,7 +414,7 @@ ${text}`;
     window.print();
   };
 
-  if (docLoading || topicsLoading || sectionsLoading || versionsLoading || suggestionsLoading || versionsFetching || suggestionsFetching) {
+  if (docLoading || topicsLoading || sectionsLoading || versionsLoading || suggestionsLoading) {
     return (
       <div className="min-h-screen bg-white p-8">
         <div className="max-w-4xl mx-auto space-y-6">
