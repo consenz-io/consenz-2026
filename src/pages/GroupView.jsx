@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Users, Lock, Globe, FileText, Plus, Settings, UserPlus, 
-  AlertCircle, Trash2, Mail, Bell 
+  AlertCircle, Trash2, Mail, Bell, Languages, Loader2
 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "@/components/PageHeader";
@@ -26,6 +26,29 @@ export default function GroupView() {
   const groupId = searchParams.get('id');
   const [showManageMembers, setShowManageMembers] = useState(false);
   const [showInviteMember, setShowInviteMember] = useState(false);
+  const [translations, setTranslations] = useState({});
+  const [translating, setTranslating] = useState({});
+
+  const languageNames = { en: 'English', he: 'Hebrew', ar: 'Arabic' };
+
+  const translateText = async (key, text) => {
+    if (!text || translating[key]) return;
+    if (translations[key]) {
+      // Toggle off
+      setTranslations(prev => { const n = {...prev}; delete n[key]; return n; });
+      return;
+    }
+    setTranslating(prev => ({ ...prev, [key]: true }));
+    try {
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Translate the following text to ${languageNames[language] || 'English'}. Return ONLY the translated text, no explanations:\n${text}`,
+      });
+      const translated = typeof result === 'string' ? result : result?.content || result;
+      setTranslations(prev => ({ ...prev, [key]: translated.trim() }));
+    } finally {
+      setTranslating(prev => { const n = {...prev}; delete n[key]; return n; });
+    }
+  };
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -301,12 +324,32 @@ export default function GroupView() {
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex justify-between items-start">
           <div className="space-y-2">
-            <PageHeader 
-              title={group.name}
-              backUrl={createPageUrl("Groups")}
-            />
+            <div className="flex items-center gap-2">
+              <PageHeader 
+                title={translations['name'] || group.name}
+                backUrl={createPageUrl("Groups")}
+              />
+              <button
+                onClick={() => translateText('name', group.name)}
+                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50 transition-colors shrink-0"
+                title={translations['name'] ? (language === 'he' ? 'הצג מקור' : 'Show original') : (language === 'he' ? 'תרגם' : 'Translate')}
+              >
+                {translating['name'] ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+                <span>{translations['name'] ? (language === 'he' ? 'מקור' : 'Original') : (language === 'he' ? 'תרגם' : 'Translate')}</span>
+              </button>
+            </div>
             {group.description && (
-              <p className="text-slate-600">{group.description}</p>
+              <div className="flex items-start gap-2">
+                <p className="text-slate-600 flex-1">{translations['description'] || group.description}</p>
+                <button
+                  onClick={() => translateText('description', group.description)}
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50 transition-colors shrink-0 mt-0.5"
+                  title={translations['description'] ? (language === 'he' ? 'הצג מקור' : 'Show original') : (language === 'he' ? 'תרגם' : 'Translate')}
+                >
+                  {translating['description'] ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
+                  <span>{translations['description'] ? (language === 'he' ? 'מקור' : 'Original') : (language === 'he' ? 'תרגם' : 'Translate')}</span>
+                </button>
+              </div>
             )}
             <div className="flex items-center gap-2">
               <Badge variant="outline" className={
@@ -437,11 +480,27 @@ export default function GroupView() {
                           <div className="p-4">
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-slate-900">{doc.title}</h3>
+                                <div className="flex items-center gap-2">
+                                  <h3 className="font-semibold text-slate-900">{translations[`doc-title-${doc.id}`] || doc.title}</h3>
+                                  <button
+                                    onClick={(e) => { e.preventDefault(); translateText(`doc-title-${doc.id}`, doc.title); }}
+                                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 px-1.5 py-0.5 rounded border border-blue-200 hover:bg-blue-50 transition-colors shrink-0"
+                                  >
+                                    {translating[`doc-title-${doc.id}`] ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Languages className="w-2.5 h-2.5" />}
+                                  </button>
+                                </div>
                                 {doc.description && (
-                                  <p className="text-sm text-slate-500 mt-1 line-clamp-2" 
-                                     dangerouslySetInnerHTML={{ __html: doc.description }} 
-                                  />
+                                  <div className="flex items-start gap-2 mt-1">
+                                    <p className="text-sm text-slate-500 line-clamp-2 flex-1" 
+                                       dangerouslySetInnerHTML={{ __html: translations[`doc-desc-${doc.id}`] || doc.description }} 
+                                    />
+                                    <button
+                                      onClick={(e) => { e.preventDefault(); const tmp = document.createElement('div'); tmp.innerHTML = doc.description; translateText(`doc-desc-${doc.id}`, tmp.textContent || tmp.innerText || doc.description); }}
+                                      className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 px-1.5 py-0.5 rounded border border-blue-200 hover:bg-blue-50 transition-colors shrink-0 mt-0.5"
+                                    >
+                                      {translating[`doc-desc-${doc.id}`] ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Languages className="w-2.5 h-2.5" />}
+                                    </button>
+                                  </div>
                                 )}
                               </div>
                               <div className="flex items-center gap-1 text-sm text-slate-600 shrink-0">
