@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Printer, Globe, Loader2, ChevronLeft, ChevronRight, Eye, EyeOff, Info } from "lucide-react";
+import { ArrowLeft, Download, Globe, Loader2, ChevronLeft, ChevronRight, Eye, EyeOff, Info } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
@@ -410,8 +410,63 @@ ${text}`;
     topics.some(t => (t.originalLanguage || 'he') !== language) ||
     ((document?.originalLanguage || 'he') !== language);
     
-  const handlePrint = () => {
-    window.print();
+  const handleDownload = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const docTitle = (showTranslatedDoc && translatedDocTitle) || document.title;
+    const isRtlDoc = isRTL;
+    const dir = isRtlDoc ? 'rtl' : 'ltr';
+
+    const topicRows = topics
+      .map((topic, ti) => {
+        const topicSections = Array.from(allSectionsMap.values())
+          .filter(s => s.topicId === topic.id && !s.isDeleted)
+          .sort((a, b) => (a.order || 0) - (b.order || 0));
+        if (topicSections.length === 0) return '';
+
+        const topicTitle = (showTranslatedTopics[topic.id] && (translatedTopics[topic.id] || topic.translations?.[language]))
+          || topic.title;
+
+        const sectionsHtml = topicSections.map((section, si) => {
+          const content = (showTranslatedSections[section.id]
+            ? (translatedSections[section.id] || section.translations?.[language])
+            : null) || section.content || '';
+          return `<div style="margin-bottom:1.5rem">
+            <span style="color:#64748b;font-weight:500;margin-inline-end:0.5rem">${ti + 1}.${si + 1}</span>
+            <span style="font-size:1.1rem;line-height:1.8">${content}</span>
+          </div>`;
+        }).join('');
+
+        return `<div style="margin-bottom:2.5rem">
+          <h2 style="font-size:1.4rem;font-weight:bold;border-bottom:1px solid #cbd5e1;padding-bottom:0.5rem;margin-bottom:1rem">${ti + 1}. ${topicTitle}</h2>
+          ${sectionsHtml}
+        </div>`;
+      })
+      .join('');
+
+    printWindow.document.write(`<!DOCTYPE html>
+<html dir="${dir}" lang="${language}">
+<head>
+  <meta charset="UTF-8">
+  <title>${docTitle}</title>
+  <style>
+    body { font-family: 'Times New Roman', 'David Libre', Georgia, serif; max-width: 800px; margin: 2cm auto; padding: 1rem; color: #1e293b; }
+    h1 { font-size: 2rem; margin-bottom: 2rem; }
+    @page { margin: 2cm; }
+    @media print { body { margin: 0; } }
+  </style>
+</head>
+<body>
+  <h1>${docTitle}</h1>
+  ${topicRows}
+  <footer style="margin-top:3rem;padding-top:1rem;border-top:1px solid #cbd5e1;text-align:center;color:#94a3b8;font-size:0.8rem">
+    <p>מסמך זה נוצר באמצעות פלטפורמת Consenz</p>
+  </footer>
+  <script>window.onload = function() { window.print(); }<\/script>
+</body>
+</html>`);
+    printWindow.document.close();
   };
 
   if (docLoading || topicsLoading || sectionsLoading || versionsLoading || suggestionsLoading) {
@@ -468,9 +523,9 @@ ${text}`;
           />
           <div className="flex items-center gap-2 flex-wrap">
 
-            <Button variant="outline" size="sm" onClick={handlePrint} className="hidden md:flex">
-              <Printer className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {language === 'en' ? 'Print' : language === 'ar' ? 'طباعة' : 'הדפס'}
+            <Button variant="outline" size="sm" onClick={handleDownload} className="hidden md:flex">
+              <Download className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+              {language === 'en' ? 'Download' : language === 'ar' ? 'تنزيل' : 'הורד'}
             </Button>
           </div>
         </div>
