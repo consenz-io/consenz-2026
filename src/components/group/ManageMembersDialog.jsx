@@ -176,13 +176,17 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
 
         // Notify the user that their request was approved
         const groupName = group?.name || '';
+        const joinApprovedTranslations = {
+          en: { title: 'Join request approved!', message: `You have been accepted to the group "${groupName}" - you can now view and participate in the group's documents` },
+          he: { title: 'בקשת ההצטרפות אושרה!', message: `התקבלת לקבוצה "${groupName}" - עכשיו תוכל לצפות ולהשתתף במסמכי הקבוצה` },
+          ar: { title: 'تمت الموافقة على طلب الانضمام!', message: `تم قبولك في المجموعة "${groupName}" - يمكنك الآن عرض المستندات والمشاركة فيها` },
+        };
         await base44.entities.Notification.create({
           userId,
           type: 'group_join_request',
-          title: language === 'he' ? 'בקשת ההצטרפות אושרה!' : 'Join request approved!',
-          message: language === 'he'
-            ? `התקבלת לקבוצה "${groupName}" - עכשיו תוכל לצפות ולהשתתף במסמכי הקבוצה`
-            : `You have been accepted to the group "${groupName}" - you can now view and participate in the group's documents`,
+          title: joinApprovedTranslations.he.title,
+          message: joinApprovedTranslations.he.message,
+          translations: joinApprovedTranslations,
           relatedEntityId: groupId,
           relatedEntityType: 'document',
           actionUrl: `/GroupView?id=${groupId}`,

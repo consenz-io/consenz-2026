@@ -18,6 +18,7 @@ const LEGACY_FALLBACKS = {
     new_suggestion_in_followed_document: { title: "New suggestion in document", message: "A new suggestion was added to a document you follow" },
     suggestion_expiring: { title: "Voting period ended", message: "The voting period for a suggestion has ended" },
     document_comment: { title: "New comment in document", message: "Someone commented in a document discussion" },
+    group_join_request: { title: "Join request approved!", message: "You have been accepted to the group" },
   },
   ar: {
     suggestion_accepted: { title: "تم قبول اقتراح", message: "تم قبول اقتراح في مستند تتابعه" },
@@ -28,6 +29,7 @@ const LEGACY_FALLBACKS = {
     new_suggestion_in_followed_document: { title: "اقتراح جديد في المستند", message: "تمت إضافة اقتراح جديد إلى مستند تتابعه" },
     suggestion_expiring: { title: "انتهت فترة التصويت", message: "انتهت فترة التصويت على اقتراح" },
     document_comment: { title: "تعليق جديد في المستند", message: "علق أحدهم في نقاش المستند" },
+    group_join_request: { title: "تمت الموافقة على طلب الانضمام!", message: "تم قبولك في المجموعة" },
   }
 };
 
