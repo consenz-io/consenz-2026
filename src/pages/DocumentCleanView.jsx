@@ -410,8 +410,19 @@ ${text}`;
     topics.some(t => (t.originalLanguage || 'he') !== language) ||
     ((document?.originalLanguage || 'he') !== language);
     
+  const isPrintMode = searchParams.get('printMode') === 'true';
+
+  React.useEffect(() => {
+    if (isPrintMode && !docLoading && !topicsLoading && !sectionsLoading) {
+      const timer = setTimeout(() => window.print(), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [isPrintMode, docLoading, topicsLoading, sectionsLoading]);
+
   const handlePrint = () => {
-    window.print();
+    const url = new URL(window.location.href);
+    url.searchParams.set('printMode', 'true');
+    window.open(url.toString(), '_blank');
   };
 
   if (docLoading || topicsLoading || sectionsLoading || versionsLoading || suggestionsLoading) {
@@ -447,8 +458,17 @@ ${text}`;
 
   return (
     <div className="min-h-screen bg-white">
+      {isPrintMode && (
+        <style>{`
+          header[role="banner"], nav[role="navigation"], aside, [id="sidebar"],
+          .sidebar-wrapper, [data-sidebar], [data-floating-bell], [data-floating-points] {
+            display: none !important;
+          }
+          main, [role="main"] { padding: 0 !important; }
+        `}</style>
+      )}
       {/* Header - Hidden on print */}
-      <div className="bg-slate-50 border-b border-slate-200 p-3 md:p-4 print:hidden sticky top-0 z-10">
+      <div className={`bg-slate-50 border-b border-slate-200 p-3 md:p-4 print:hidden sticky top-0 z-10 ${isPrintMode ? 'hidden' : ''}`}>
         <div className="max-w-4xl mx-auto">
           <div className="mb-4">
             <PageHeader 
@@ -905,6 +925,21 @@ ${text}`;
             margin: 2cm;
           }
         }
+        ${isPrintMode ? `
+          header[role="banner"],
+          nav[role="navigation"],
+          [data-floating-bell],
+          [data-floating-points],
+          aside,
+          .sidebar-wrapper,
+          [id="sidebar"] {
+            display: none !important;
+          }
+          main, [role="main"] {
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+        ` : ''}
       `}</style>
 
       <React.Suspense fallback={<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"><div className="bg-white p-4 rounded-lg shadow-lg">טוען...</div></div>}>
