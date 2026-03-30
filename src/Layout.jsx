@@ -81,7 +81,7 @@ function LayoutContent({ children, currentPageName }) {
     queryFn: () => base44.entities.Suggestion.list(),
     enabled: !!user?.id,
     initialData: [],
-    staleTime: 0,
+    staleTime: 2 * 60 * 1000, // 2 minutes - refreshed on vote-cast event
   });
 
   const { data: allVotes = [] } = useQuery({
@@ -89,7 +89,7 @@ function LayoutContent({ children, currentPageName }) {
     queryFn: () => base44.entities.Vote.filter({ userId: user.id }),
     enabled: !!user?.id,
     initialData: [],
-    staleTime: 0,
+    staleTime: 2 * 60 * 1000, // 2 minutes - refreshed on vote-cast event
   });
 
   const { data: userSuggestions = [] } = useQuery({

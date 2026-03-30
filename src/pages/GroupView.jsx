@@ -77,6 +77,7 @@ export default function GroupView() {
   const { data: publicProfiles = [] } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
+    staleTime: 5 * 60 * 1000,
   });
 
   // Fetch data needed for participant count calculation
