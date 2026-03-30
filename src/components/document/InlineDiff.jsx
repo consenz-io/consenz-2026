@@ -87,7 +87,31 @@ const computeWordDiff = (oldTokens, newTokens) => {
     }
   }
   
-  return merged;
+  // Reorder each change-block so all removals come before additions.
+  // This prevents the interleaved removed/added pattern.
+  const reordered = [];
+  let i = 0;
+  while (i < merged.length) {
+    const item = merged[i];
+    if (item.type === 'unchanged') {
+      reordered.push(item);
+      i++;
+    } else {
+      // Collect the full change block (consecutive removed/added in any order)
+      const removals = [];
+      const additions = [];
+      while (i < merged.length && merged[i].type !== 'unchanged') {
+        if (merged[i].type === 'removed') removals.push(merged[i]);
+        else additions.push(merged[i]);
+        i++;
+      }
+      // Push removals first, then additions
+      for (const r of removals) reordered.push(r);
+      for (const a of additions) reordered.push(a);
+    }
+  }
+  
+  return reordered;
 };
 
 const InlineDiff = ({ originalContent, newContent, className = "" }) => {
