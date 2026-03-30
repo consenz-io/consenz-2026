@@ -114,7 +114,9 @@ ${content}`,
   useEffect(() => {
     if (entity) {
       const translations = entity?.translations || {};
-      const detectedLanguage = entity?.originalLanguage || detectLanguage(content || '');
+      // Prefer createdByLanguage (set on Suggestions written in a different language),
+      // then detect from actual content, then fall back to originalLanguage.
+      const detectedLanguage = entity?.createdByLanguage || detectLanguage(content || '') || entity?.originalLanguage;
       const needsTranslation = detectedLanguage && language && detectedLanguage !== language;
       
       const langTranslation = translations[language];
@@ -137,7 +139,9 @@ ${content}`,
   }, [globalShowTranslated, entity, language, fieldName, content]);
   
   // Now safe to calculate derived values after all hooks
-  const detectedLanguage = entity?.originalLanguage || detectLanguage(content || '');
+  // Prefer createdByLanguage (actual language of suggestion content),
+  // then detect from content, then fall back to originalLanguage.
+  const detectedLanguage = entity?.createdByLanguage || detectLanguage(content || '') || entity?.originalLanguage;
   const originalLanguage = detectedLanguage;
   const translations = entity?.translations || {};
   

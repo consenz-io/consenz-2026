@@ -150,8 +150,10 @@ export const getDiffInLanguage = async ({
   modifiedFieldName = 'newContent'
 }) => {
   // Determine source languages
-  const originalSourceLang = originalEntity?.originalLanguage || detectLanguage(originalContent);
-  const modifiedSourceLang = modifiedEntity?.originalLanguage || detectLanguage(modifiedContent);
+  // For Suggestions: prefer createdByLanguage (the language the author wrote in),
+  // then detect from actual content, then fall back to entity.originalLanguage (the document's language).
+  const originalSourceLang = originalEntity?.createdByLanguage || detectLanguage(originalContent) || originalEntity?.originalLanguage;
+  const modifiedSourceLang = modifiedEntity?.createdByLanguage || detectLanguage(modifiedContent) || modifiedEntity?.originalLanguage;
   
   // Check if translation is needed
   const originalNeedsTranslation = originalSourceLang !== targetLanguage;
