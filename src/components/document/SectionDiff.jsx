@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -71,8 +72,8 @@ export default function SectionDiff({
   
   const handleSmartTranslate = async () => {
     if (isTranslating) return;
-    
     setIsTranslating(true);
+    const languagePrompts = { en: 'English', he: 'Hebrew', ar: 'Arabic' };
     try {
       const result = await getDiffInLanguage({
         originalContent,
@@ -85,11 +86,35 @@ export default function SectionDiff({
         originalFieldName: 'content',
         modifiedFieldName: suggestion ? 'newContent' : 'content'
       });
-      
       setTranslationResult(result);
       setShowTranslated(true);
     } catch (error) {
-      console.error('Smart translation error:', error);
+      // getDiffInLanguage failed (likely disabled cache-miss paths) — fall back to direct InvokeLLM
+      try {
+        const translateHtml = async (html) => {
+          const res = await base44.integrations.Core.InvokeLLM({
+            prompt: `Translate the following HTML content to ${languagePrompts[language]}. Preserve all HTML tags exactly. Return only the translated HTML with no commentary:\n${html}`
+          });
+          const text = typeof res === 'string' ? res : res?.content || res?.text || html;
+          return text.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+        };
+
+        const [translatedOriginal, translatedNew] = await Promise.all([
+          originalSourceLang !== language ? translateHtml(originalContent) : Promise.resolve(originalContent),
+          modifiedSourceLang !== language ? translateHtml(newContent) : Promise.resolve(newContent)
+        ]);
+
+        setTranslationResult({
+          original: translatedOriginal,
+          modified: translatedNew,
+          fromCache: { original: false, modified: false },
+          strategy: 'direct',
+          sourceLanguages: { original: originalSourceLang, modified: modifiedSourceLang }
+        });
+        setShowTranslated(true);
+      } catch (fallbackError) {
+        console.error('Translation fallback error:', fallbackError);
+      }
     } finally {
       setIsTranslating(false);
     }
