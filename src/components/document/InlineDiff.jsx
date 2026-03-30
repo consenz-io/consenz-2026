@@ -77,7 +77,7 @@ const computeWordDiff = (oldTokens, newTokens) => {
   const dp = computeLCS(oldTokens, newTokens);
   const diff = generateDiff(oldTokens, newTokens, dp);
   
-  // Merge consecutive tokens of same type
+  // First pass: merge consecutive tokens of same type
   const merged = [];
   for (const item of diff) {
     if (merged.length > 0 && merged[merged.length - 1].type === item.type) {
@@ -86,8 +86,29 @@ const computeWordDiff = (oldTokens, newTokens) => {
       merged.push({ ...item });
     }
   }
+
+  // Second pass: absorb whitespace-only "unchanged" tokens that sit between
+  // two consecutive removed (or two consecutive added) chunks.
+  // e.g.  removed("word1") unchanged(" ") removed("word2")  →  removed("word1 word2")
+  const result = [];
+  for (let i = 0; i < merged.length; i++) {
+    const cur = merged[i];
+    const next = merged[i + 1];
+    const afterNext = merged[i + 2];
+    if (
+      cur.type !== 'unchanged' &&
+      next && next.type === 'unchanged' && /^\s+$/.test(next.value) &&
+      afterNext && afterNext.type === cur.type
+    ) {
+      // Absorb the whitespace and the next same-type chunk into cur
+      result.push({ type: cur.type, value: cur.value + next.value + afterNext.value });
+      i += 2; // skip next and afterNext
+    } else {
+      result.push(cur);
+    }
+  }
   
-  return merged;
+  return result;
 };
 
 const InlineDiff = ({ originalContent, newContent, className = "" }) => {
