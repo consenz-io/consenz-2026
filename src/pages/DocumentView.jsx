@@ -128,6 +128,14 @@ export default function DocumentView() {
     retry: 2,
   });
 
+  // Refs to hold latest data for subscriptions without causing re-subscriptions
+  const topicsRef = React.useRef(topics);
+  const sectionsRef = React.useRef(sections);
+  const suggestionsRef = React.useRef(suggestions);
+  React.useEffect(() => { topicsRef.current = topics; }, [topics]);
+  React.useEffect(() => { sectionsRef.current = sections; }, [sections]);
+  React.useEffect(() => { suggestionsRef.current = suggestions; }, [suggestions]);
+
   // Track accepted suggestions to flash them when status changes to 'accepted'
   const prevSuggestionStatusesRef = React.useRef({});
   React.useEffect(() => {
@@ -147,13 +155,13 @@ export default function DocumentView() {
     });
   }, [suggestions]);
 
-  // Real-time subscriptions for topics, sections, suggestions - wait for initial data
+  // Real-time subscriptions for topics, sections, suggestions
+  // Only re-run when documentId or document changes — NOT when data arrays change
   React.useEffect(() => {
-    if (!documentId || !document || topicsLoading || sectionsLoading) return;
+    if (!documentId || !document) return;
     
     console.log('[REALTIME] Setting up Topic/Section/Suggestion subscriptions');
     
-    // Debounced invalidation to prevent rate limits
     let invalidationTimer;
     const debouncedInvalidate = (queryKey) => {
       clearTimeout(invalidationTimer);
@@ -164,21 +172,24 @@ export default function DocumentView() {
     
     const unsubscribeTopic = base44.entities.Topic.subscribe((event) => {
       console.log('[REALTIME] Topic event:', event.type, event.data?.documentId);
-      if (event.data?.documentId === documentId || (event.type === 'update' && event.id && topics?.some(t => t.id === event.id))) {
+      if (event.data?.documentId === documentId || 
+          (event.type === 'update' && event.id && topicsRef.current?.some(t => t.id === event.id))) {
         debouncedInvalidate(['topics', documentId]);
       }
     });
     
     const unsubscribeSection = base44.entities.Section.subscribe((event) => {
       console.log('[REALTIME] Section event:', event.type);
-      if (event.data?.documentId === documentId || (event.type === 'update' && event.id && sections?.some(s => s.id === event.id))) {
+      if (event.data?.documentId === documentId || 
+          (event.type === 'update' && event.id && sectionsRef.current?.some(s => s.id === event.id))) {
         debouncedInvalidate(['sections', documentId]);
       }
     });
     
     const unsubscribeSuggestion = base44.entities.Suggestion.subscribe((event) => {
       console.log('[REALTIME] Suggestion event:', event.type);
-      if (event.data?.documentId === documentId || (event.type === 'update' && event.id && suggestions?.some(s => s.id === event.id))) {
+      if (event.data?.documentId === documentId || 
+          (event.type === 'update' && event.id && suggestionsRef.current?.some(s => s.id === event.id))) {
         debouncedInvalidate(['suggestions', documentId]);
       }
     });
@@ -190,7 +201,7 @@ export default function DocumentView() {
       unsubscribeSection();
       unsubscribeSuggestion();
     };
-  }, [documentId, document, topicsLoading, sectionsLoading, queryClient, topics, sections, suggestions]);
+  }, [documentId, document, queryClient]);
 
   // Merged queries for better performance - fetch only document-specific data
   const { data: aggregatedData } = useQuery({
