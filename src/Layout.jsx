@@ -68,77 +68,22 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
-  const { data: allDocuments = [] } = useQuery({
-    queryKey: ['allDocuments'],
-    queryFn: () => base44.entities.Document.list(),
+  const { data: unvotedData } = useQuery({
+    queryKey: ['unvotedCount'],
+    queryFn: () => base44.functions.invoke('getUnvotedCount', {}),
     enabled: !!user?.id,
-    initialData: [],
-    staleTime: 5 * 60 * 1000, // 5 minutes - documents don't change often
-  });
-
-  const { data: allSuggestions = [] } = useQuery({
-    queryKey: ['allSuggestions'],
-    queryFn: () => base44.entities.Suggestion.list(),
-    enabled: !!user?.id,
-    initialData: [],
-    staleTime: 2 * 60 * 1000, // 2 minutes - refreshed on vote-cast event
-  });
-
-  const { data: allVotes = [] } = useQuery({
-    queryKey: ['allVotes', user?.id],
-    queryFn: () => base44.entities.Vote.filter({ userId: user.id }),
-    enabled: !!user?.id,
-    initialData: [],
-    staleTime: 2 * 60 * 1000, // 2 minutes - refreshed on vote-cast event
-  });
-
-  const { data: userSuggestions = [] } = useQuery({
-    queryKey: ['userSuggestions', user?.email],
-    queryFn: () => base44.entities.Suggestion.filter({ created_by: user.email }),
-    enabled: !!user?.email,
-    initialData: [],
     staleTime: 5 * 60 * 1000,
   });
 
+  const totalUnvotedSuggestions = unvotedData?.data?.count ?? 0;
 
 
 
 
-  // Calculate unvoted suggestions - only in documents the user participated in
-  const totalUnvotedSuggestions = React.useMemo(() => {
-    if (!user?.id || !user?.email) return 0;
-    
-    // Get document IDs the user participated in:
-    // 1. Documents where user created suggestions
-    // 2. Documents where user voted
-    const participatedDocumentIds = new Set();
-    
-    // Add documents from user's own suggestions
-    userSuggestions.forEach(s => {
-      if (s.documentId) participatedDocumentIds.add(s.documentId);
-    });
-    
-    // Add documents from suggestions the user voted on
-    allVotes.forEach(v => {
-      const suggestion = allSuggestions.find(s => s.id === v.suggestionId);
-      if (suggestion?.documentId) participatedDocumentIds.add(suggestion.documentId);
-    });
-    
-    // Get pending suggestions only in documents the user participated in
-    const pendingSuggestions = allSuggestions.filter(s => 
-      s.status === 'pending' && 
-      s.type !== 'edit_suggestion' &&
-      participatedDocumentIds.has(s.documentId)
-    );
-    
-    // Filter out suggestions the user already voted on or created themselves
-    const unvotedSuggestions = pendingSuggestions.filter(s => 
-      s.created_by !== user.email &&
-      !allVotes.some(v => v.suggestionId === s.id && v.userId === user.id)
-    );
-    
-    return unvotedSuggestions.length;
-  }, [user?.id, user?.email, allSuggestions, allVotes, userSuggestions]);
+
+
+
+
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
@@ -172,12 +117,11 @@ function LayoutContent({ children, currentPageName }) {
   // Listen for vote-cast events to refresh unvoted count
   React.useEffect(() => {
     const handleVoteCast = () => {
-      queryClient.invalidateQueries({ queryKey: ['allVotes', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['allSuggestions'] });
+      queryClient.invalidateQueries({ queryKey: ['unvotedCount'] });
     };
     window.addEventListener('consenz:vote-cast', handleVoteCast);
     return () => window.removeEventListener('consenz:vote-cast', handleVoteCast);
-  }, [user?.id, queryClient]);
+  }, [queryClient]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
