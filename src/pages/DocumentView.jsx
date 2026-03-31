@@ -15,6 +15,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import ReactQuill from "react-quill";
 
 import DocumentContent from "../components/document/DocumentContent";
+import ErrorBoundary from "../components/ErrorBoundary";
 import PageHeader from "../components/PageHeader";
 import { calculateContributorsFromData } from "../components/document/calculateContributors";
 import { TranslationProvider } from "../components/document/TranslationContext";
@@ -1245,23 +1246,25 @@ export default function DocumentView() {
           </Link>
         </div>
 
-        <DocumentContent
-            document={document}
-            topics={topics}
-            sections={sections}
-            suggestions={suggestions}
-            onEditSection={handleEditSection}
-            onNewSection={handleNewSection}
-            isAdmin={isAdmin}
-            user={user}
-            canParticipate={canParticipate}
-            onDirectEdit={(section) => handleEditSection(section, true)}
-            onOpenSuggestionSidebar={(suggestionId) => setOpenSuggestionId(suggestionId)}
-            newlyCreatedSuggestion={newlyCreatedSuggestion}
-            onClearNewlyCreated={() => setNewlyCreatedSuggestion(null)}
-            targetSuggestionId={targetSuggestionId}
-            onEditSuggestion={handleEditSuggestion}
+        <ErrorBoundary inline errorMessage="שגיאה בטעינת תוכן המסמך. לחץ לניסיון חוזר.">
+          <DocumentContent
+              document={document}
+              topics={topics}
+              sections={sections}
+              suggestions={suggestions}
+              onEditSection={handleEditSection}
+              onNewSection={handleNewSection}
+              isAdmin={isAdmin}
+              user={user}
+              canParticipate={canParticipate}
+              onDirectEdit={(section) => handleEditSection(section, true)}
+              onOpenSuggestionSidebar={(suggestionId) => setOpenSuggestionId(suggestionId)}
+              newlyCreatedSuggestion={newlyCreatedSuggestion}
+              onClearNewlyCreated={() => setNewlyCreatedSuggestion(null)}
+              targetSuggestionId={targetSuggestionId}
+              onEditSuggestion={handleEditSuggestion}
           />
+        </ErrorBoundary>
       </div>
 
       <React.Suspense fallback={<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"><div className="bg-white p-4 rounded-lg shadow-lg">טוען...</div></div>}>
@@ -1295,13 +1298,15 @@ export default function DocumentView() {
         )}
 
         {openSuggestionId && (
-          <SuggestionSidebar
-            suggestionId={openSuggestionId}
-            onClose={() => setOpenSuggestionId(null)}
-            document={document}
-            user={user}
-            isAdmin={isAdmin}
-          />
+          <ErrorBoundary inline errorMessage="שגיאה בטעינת ההצעה. לחץ לניסיון חוזר.">
+            <SuggestionSidebar
+              suggestionId={openSuggestionId}
+              onClose={() => setOpenSuggestionId(null)}
+              document={document}
+              user={user}
+              isAdmin={isAdmin}
+            />
+          </ErrorBoundary>
         )}
 
         {showAgreementModal && (

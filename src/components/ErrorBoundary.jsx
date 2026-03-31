@@ -56,6 +56,22 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
+      // If a custom inline fallback is provided, use it
+      if (this.props.inline) {
+        return (
+          <div className="flex flex-col items-center justify-center gap-3 p-6 bg-red-50 border border-red-200 rounded-lg text-center">
+            <AlertTriangle className="w-8 h-8 text-red-400" />
+            <p className="text-sm text-red-700 font-medium">
+              {this.props.errorMessage || 'משהו השתבש בטעינת הרכיב'}
+            </p>
+            <Button size="sm" variant="outline" onClick={this.handleReset} className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              נסה שוב
+            </Button>
+          </div>
+        );
+      }
+
       // Show different UI based on error count
       const isCritical = this.state.errorCount > 2;
 
