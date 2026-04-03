@@ -19,11 +19,12 @@ Deno.serve(async (req) => {
     // Fetch all profiles ONCE outside the loop
     const allProfiles = await base44.asServiceRole.entities.UserPublicProfile.list();
 
-    // Process all expired suggestions in parallel
-    await Promise.all(expired.map(async (suggestion) => {
+    // Process expired suggestions sequentially to avoid quota burst
+    let processedCount = 0;
+    for (const suggestion of expired) {
       console.log('[EXPIRE SUGGESTIONS] Expiring:', suggestion.id, suggestion.title);
 
-      // Mark as rejected and fetch votes in parallel
+      // Mark as rejected and fetch votes in parallel (within one suggestion is fine)
       const [, votes] = await Promise.all([
         base44.asServiceRole.entities.Suggestion.update(suggestion.id, { status: 'rejected', rejectedByAdmin: false }),
         base44.asServiceRole.entities.Vote.filter({ suggestionId: suggestion.id })
@@ -32,22 +33,18 @@ Deno.serve(async (req) => {
       // Collect recipient userIds
       const recipientUserIds = new Set();
 
-      // Add creator
       if (suggestion.created_by) {
         const creatorProfile = allProfiles.find(p => p.email === suggestion.created_by);
         if (creatorProfile?.userId) recipientUserIds.add(creatorProfile.userId);
       }
 
-      // Add voters
-      votes.forEach(v => {
-        if (v.userId) recipientUserIds.add(v.userId);
-      });
+      votes.forEach(v => { if (v.userId) recipientUserIds.add(v.userId); });
 
-      // Send notifications in parallel
-      await Promise.all(Array.from(recipientUserIds).map(userId => {
+      // Send notifications sequentially
+      for (const userId of recipientUserIds) {
         const profile = allProfiles.find(p => p.userId === userId);
         const isCreator = profile?.email === suggestion.created_by;
-        return base44.asServiceRole.entities.Notification.create({
+        await base44.asServiceRole.entities.Notification.create({
           userId,
           type: 'suggestion_expiring',
           title: isCreator ? 'ההצעה שלך פגה תוקף' : 'הצעה פגה תוקף',
@@ -57,7 +54,7 @@ Deno.serve(async (req) => {
           read: false,
           actionUrl: `/suggestiondetail?id=${suggestion.id}`
         });
-      }));
+      }
 
       console.log('[EXPIRE SUGGESTIONS] Done:', suggestion.id, 'notified', recipientUserIds.size);
 
@@ -68,11 +65,9 @@ Deno.serve(async (req) => {
         if (document?.gamificationEnabled) {
           const conVoterIds = votes.filter(v => v.vote === 'con').map(v => v.userId).filter(Boolean);
           if (conVoterIds.length > 0) {
-            const conVoterUsers = await base44.asServiceRole.entities.User.filter({
-              id: { $in: conVoterIds }
-            });
-            await Promise.all(conVoterUsers.map(u =>
-              Promise.all([
+            const conVoterUsers = await base44.asServiceRole.entities.User.filter({ id: { $in: conVoterIds } });
+            for (const u of conVoterUsers) {
+              await Promise.all([
                 base44.asServiceRole.entities.User.update(u.id, { points: (u.points || 1000) + 50 }),
                 base44.asServiceRole.entities.PointsTransaction.create({
                   userId: u.id,
@@ -82,17 +77,19 @@ Deno.serve(async (req) => {
                   relatedEntityId: suggestion.id,
                   relatedEntityType: 'suggestion'
                 })
-              ])
-            ));
+              ]);
+            }
             console.log('[EXPIRE SUGGESTIONS] ✓ Awarded 50 points to', conVoterUsers.length, 'con voters');
           }
         }
       } catch (pointsErr) {
         console.error('[EXPIRE SUGGESTIONS] Points award failed (non-critical):', pointsErr.message);
       }
-    }));
 
-    return Response.json({ success: true, expired: expired.length });
+      processedCount++;
+    }
+
+    return Response.json({ success: true, expired: processedCount });
   } catch (error) {
     console.error('[EXPIRE SUGGESTIONS ERROR]', error.message);
     return Response.json({ error: error.message }, { status: 500 });
