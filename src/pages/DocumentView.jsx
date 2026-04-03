@@ -204,26 +204,27 @@ export default function DocumentView() {
   }, [documentId, document, queryClient]);
 
   // Merged queries for better performance - fetch only document-specific data
+  // Refs so queryFn always reads the latest IDs without stale closure
+  const suggestionIdsRef = React.useRef([]);
+  const sectionIdsRef = React.useRef([]);
+  React.useEffect(() => { suggestionIdsRef.current = suggestions.map(s => s.id); }, [suggestions]);
+  React.useEffect(() => { sectionIdsRef.current = sections.map(s => s.id); }, [sections]);
+
   const { data: aggregatedData } = useQuery({
-    queryKey: ['documentAggregatedData', documentId, suggestions.map(s=>s.id).join(','), sections.map(s=>s.id).join(',')],
+    queryKey: ['documentAggregatedData', documentId],
     queryFn: async () => {
-      // Get suggestion IDs for this document to filter votes and arguments
-      const suggestionIds = suggestions.map(s => s.id);
-      const sectionIds = sections.map(s => s.id);
-      
+      const suggestionIds = suggestionIdsRef.current;
+      const sectionIds = sectionIdsRef.current;
+
       const [votes, publicProfiles, args, comments] = await Promise.all([
-        // Only votes for suggestions in this document
-        suggestionIds.length > 0 
+        suggestionIds.length > 0
           ? base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } })
           : Promise.resolve([]),
-        // Public profiles - keep all for user lookups
         base44.entities.UserPublicProfile.list(),
-        // Only arguments for suggestions in this document
         suggestionIds.length > 0
           ? base44.entities.Argument.filter({ suggestionId: { $in: suggestionIds } })
           : Promise.resolve([]),
-        // Only comments for this document (sections, suggestions, document)
-        base44.entities.Comment.filter({ 
+        base44.entities.Comment.filter({
           $or: [
             { rootEntityType: 'document', rootEntityId: documentId },
             { rootEntityType: 'section', rootEntityId: { $in: sectionIds } },
