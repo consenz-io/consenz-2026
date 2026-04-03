@@ -205,7 +205,7 @@ export default function DocumentView() {
 
   // Merged queries for better performance - fetch only document-specific data
   const { data: aggregatedData } = useQuery({
-    queryKey: ['documentAggregatedData', documentId],
+    queryKey: ['documentAggregatedData', documentId, suggestions.map(s=>s.id).join(','), sections.map(s=>s.id).join(',')],
     queryFn: async () => {
       // Get suggestion IDs for this document to filter votes and arguments
       const suggestionIds = suggestions.map(s => s.id);
