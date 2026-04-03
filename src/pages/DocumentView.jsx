@@ -191,9 +191,11 @@ export default function DocumentView() {
       if (event.data?.documentId === documentId || 
           (event.type === 'update' && event.id && suggestionsRef.current?.some(s => s.id === event.id))) {
         debouncedInvalidate(['suggestions', documentId]);
+        // Also refresh aggregated data so votes/comments on new suggestions are fetched
+        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
       }
     });
-    
+
     return () => {
       console.log('[REALTIME] Cleaning up Topic/Section/Suggestion subscriptions');
       clearTimeout(invalidationTimer);
@@ -203,18 +205,13 @@ export default function DocumentView() {
     };
   }, [documentId, document, queryClient]);
 
-  // Merged queries for better performance - fetch only document-specific data
-  // Refs so queryFn always reads the latest IDs without stale closure
-  const suggestionIdsRef = React.useRef([]);
-  const sectionIdsRef = React.useRef([]);
-  React.useEffect(() => { suggestionIdsRef.current = suggestions.map(s => s.id); }, [suggestions]);
-  React.useEffect(() => { sectionIdsRef.current = sections.map(s => s.id); }, [sections]);
-
+  // queryKey includes suggestionsFetched+sectionsFetched so query re-runs exactly once after data loads.
+  // queryFn reads from closure (not refs) — no race condition possible.
   const { data: aggregatedData } = useQuery({
-    queryKey: ['documentAggregatedData', documentId],
+    queryKey: ['documentAggregatedData', documentId, suggestionsFetched, sectionsFetched],
     queryFn: async () => {
-      const suggestionIds = suggestionIdsRef.current;
-      const sectionIds = sectionIdsRef.current;
+      const suggestionIds = suggestions.map(s => s.id);
+      const sectionIds = sections.map(s => s.id);
 
       const [votes, publicProfiles, args, comments] = await Promise.all([
         suggestionIds.length > 0
@@ -224,18 +221,20 @@ export default function DocumentView() {
         suggestionIds.length > 0
           ? base44.entities.Argument.filter({ suggestionId: { $in: suggestionIds } })
           : Promise.resolve([]),
-        base44.entities.Comment.filter({
-          $or: [
-            { rootEntityType: 'document', rootEntityId: documentId },
-            { rootEntityType: 'section', rootEntityId: { $in: sectionIds } },
-            { rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } }
-          ]
-        })
+        sectionIds.length > 0 || suggestionIds.length > 0
+          ? base44.entities.Comment.filter({
+              $or: [
+                { rootEntityType: 'document', rootEntityId: documentId },
+                ...(sectionIds.length > 0 ? [{ rootEntityType: 'section', rootEntityId: { $in: sectionIds } }] : []),
+                ...(suggestionIds.length > 0 ? [{ rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } }] : []),
+              ]
+            })
+          : base44.entities.Comment.filter({ rootEntityType: 'document', rootEntityId: documentId }),
       ]);
       return { votes, users: publicProfiles, publicProfiles, args, comments };
     },
     enabled: !!documentId && suggestionsFetched && sectionsFetched,
-    staleTime: 0,
+    staleTime: 2 * 60 * 1000,
   });
 
   const allVotes = aggregatedData?.votes || [];
