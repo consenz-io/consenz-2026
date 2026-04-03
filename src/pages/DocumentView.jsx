@@ -162,14 +162,15 @@ export default function DocumentView() {
     
     console.log('[REALTIME] Setting up Topic/Section/Suggestion subscriptions');
     
-    let invalidationTimer;
+    const timers = {};
     const debouncedInvalidate = (queryKey) => {
-      clearTimeout(invalidationTimer);
-      invalidationTimer = setTimeout(() => {
+      const key = queryKey.join('_');
+      clearTimeout(timers[key]);
+      timers[key] = setTimeout(() => {
         queryClient.invalidateQueries({ queryKey });
       }, 300);
     };
-    
+
     const unsubscribeTopic = base44.entities.Topic.subscribe((event) => {
       console.log('[REALTIME] Topic event:', event.type, event.data?.documentId);
       if (event.data?.documentId === documentId || 
@@ -206,14 +207,14 @@ export default function DocumentView() {
   }, [documentId, document, queryClient]);
 
   // queryKey includes suggestionsFetched+sectionsFetched so query re-runs exactly once after data loads.
-  // queryFn reads from closure (not refs) — no race condition possible.
+  // queryFn reads from closure — no race condition. 3 separate comment queries (no $or) for SDK compatibility.
   const { data: aggregatedData } = useQuery({
     queryKey: ['documentAggregatedData', documentId, suggestionsFetched, sectionsFetched],
     queryFn: async () => {
       const suggestionIds = suggestions.map(s => s.id);
       const sectionIds = sections.map(s => s.id);
 
-      const [votes, publicProfiles, args, comments] = await Promise.all([
+      const [votes, publicProfiles, args, docComments, sectionComments, suggestionComments] = await Promise.all([
         suggestionIds.length > 0
           ? base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } })
           : Promise.resolve([]),
@@ -221,16 +222,15 @@ export default function DocumentView() {
         suggestionIds.length > 0
           ? base44.entities.Argument.filter({ suggestionId: { $in: suggestionIds } })
           : Promise.resolve([]),
-        sectionIds.length > 0 || suggestionIds.length > 0
-          ? base44.entities.Comment.filter({
-              $or: [
-                { rootEntityType: 'document', rootEntityId: documentId },
-                ...(sectionIds.length > 0 ? [{ rootEntityType: 'section', rootEntityId: { $in: sectionIds } }] : []),
-                ...(suggestionIds.length > 0 ? [{ rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } }] : []),
-              ]
-            })
-          : base44.entities.Comment.filter({ rootEntityType: 'document', rootEntityId: documentId }),
+        base44.entities.Comment.filter({ rootEntityType: 'document', rootEntityId: documentId }),
+        sectionIds.length > 0
+          ? base44.entities.Comment.filter({ rootEntityType: 'section', rootEntityId: { $in: sectionIds } })
+          : Promise.resolve([]),
+        suggestionIds.length > 0
+          ? base44.entities.Comment.filter({ rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } })
+          : Promise.resolve([]),
       ]);
+      const comments = [...docComments, ...sectionComments, ...suggestionComments];
       return { votes, users: publicProfiles, publicProfiles, args, comments };
     },
     enabled: !!documentId && suggestionsFetched && sectionsFetched,
