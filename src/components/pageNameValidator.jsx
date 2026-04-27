@@ -64,8 +64,9 @@ export function createPageUrlSafe(pageName) {
     }
   }
 
-  // Dynamically import to avoid circular dependencies
-  return require('@/utils').createPageUrl(pageName);
+  // Use createPageUrl from utils
+  const { createPageUrl } = await import('@/utils');
+  return createPageUrl(pageName);
 }
 
 /**
@@ -96,7 +97,7 @@ export function auditPageNames() {
 }
 
 // Log audit results on module load (development only)
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env?.DEV) {
   const audit = auditPageNames();
   if (audit.hasIssues) {
     console.warn('[PAGE_NAMES_AUDIT]', audit);
