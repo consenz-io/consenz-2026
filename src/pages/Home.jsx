@@ -8,7 +8,7 @@ export default function Home() {
   const [showContributorsModal, setShowContributorsModal] = useState(false);
 
   const {
-    user, groups, groupsLoading, groupMembers, documents,
+    user, groups, groupsLoading, groupMembers, membersLoading, documents,
     displayedUsers, publicProfilesLoading,
     averageConsensus, groupParticipantCounts,
     contributorsList,
@@ -26,7 +26,7 @@ export default function Home() {
 
       <GroupsSection
         groups={groups}
-        groupsLoading={groupsLoading}
+        groupsLoading={groupsLoading || membersLoading}
         groupMembers={groupMembers}
         documents={documents}
         user={user}

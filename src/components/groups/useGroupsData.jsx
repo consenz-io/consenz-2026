@@ -28,6 +28,8 @@ export function useGroupsData() {
   });
 
   const visibleGroups = useMemo(() => {
+    // Wait until members are loaded before filtering hidden groups
+    if (membersLoading) return [];
     return groups.filter((group) => {
       if (group.status === 'public' || group.status === 'private') return true;
       if (!currentUser) return false;
@@ -36,7 +38,7 @@ export function useGroupsData() {
       const isCreator = group.created_by === currentUser.email;
       return isMember || isAdmin || isCreator;
     });
-  }, [groups, groupMembers, currentUser]);
+  }, [groups, groupMembers, membersLoading, currentUser]);
 
   const getDocCount = (groupId) => documents.filter(d => d.groupId === groupId).length;
   const getMemberCount = (groupId) => groupMembers.filter(m => m.groupId === groupId).length;

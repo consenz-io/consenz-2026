@@ -22,7 +22,7 @@ export function useHomeData() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: groupMembers = [] } = useQuery({
+  const { data: groupMembers = [], isLoading: membersLoading } = useQuery({
     queryKey: ['groupMembers'],
     queryFn: () => base44.entities.GroupMember.list(),
     initialData: [],
@@ -227,7 +227,7 @@ export function useHomeData() {
   });
 
   return {
-    user, groups, groupsLoading, groupMembers, documents,
+    user, groups, groupsLoading, groupMembers, membersLoading, documents,
     displayedUsers, publicProfilesLoading,
     totalUniqueContributors, contributorsList,
     averageConsensus, groupParticipantCounts,
