@@ -51,7 +51,7 @@ export function validatePageName(pageName) {
  * @param {string} pageName - The page name (should come from PAGE_NAMES)
  * @returns {string} - The URL for the page
  */
-export function createPageUrlSafe(pageName) {
+export async function createPageUrlSafe(pageName) {
   const validation = validatePageName(pageName);
   
   if (!validation.isValid) {
@@ -63,7 +63,7 @@ export function createPageUrlSafe(pageName) {
     }
   }
 
-  const { createPageUrl } = require('@/utils');
+  const { createPageUrl } = await import('@/utils');
   return createPageUrl(pageName);
 }
 
