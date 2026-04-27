@@ -6,20 +6,10 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, TrendingUp, Users, Clock, ArrowRight, ArrowLeft, Languages, Loader2, Lock, Globe } from "lucide-react";
+import { FileText, TrendingUp, Users, ArrowRight, ArrowLeft, Loader2, Lock, Globe } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
-import { calculateContributorsFromData } from "@/components/document/calculateContributors";
 import AllContributorsModal from "@/components/home/AllContributorsModal";
-
-const detectLanguage = (text) => {
-  const hebrewPattern = /[\u0590-\u05FF]/;
-  const arabicPattern = /[\u0600-\u06FF]/;
-  
-  if (hebrewPattern.test(text)) return 'he';
-  if (arabicPattern.test(text)) return 'ar';
-  return 'en';
-};
 
 export default function Home() {
   const { t, isRTL, language } = useLanguage();
@@ -55,6 +45,7 @@ export default function Home() {
     queryKey: ['acceptedSuggestions'],
     queryFn: () => base44.entities.Suggestion.filter({ status: 'accepted' }),
     initialData: [],
+    staleTime: 5 * 60 * 1000,
   });
 
   // Fetch all data needed for accurate contributor count
@@ -62,12 +53,14 @@ export default function Home() {
     queryKey: ['allSuggestions'],
     queryFn: () => base44.entities.Suggestion.list(),
     initialData: [],
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: allVotes } = useQuery({
     queryKey: ['allVotes'],
     queryFn: () => base44.entities.Vote.list(),
     initialData: [],
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: allUsers = [] } = useQuery({
@@ -76,7 +69,8 @@ export default function Home() {
     initialData: [],
     retry: false,
     throwOnError: false,
-    enabled: !!user && user?.role === 'admin', // Fetch only for confirmed admins
+    staleTime: 5 * 60 * 1000,
+    enabled: !!user && user?.role === 'admin',
   });
 
   const { data: publicProfiles = [], isLoading: publicProfilesLoading } = useQuery({
@@ -106,42 +100,26 @@ export default function Home() {
     });
   }, [user, allUsers, publicProfiles]);
 
-  const { data: allArguments } = useQuery({
-    queryKey: ['allArguments'],
-    queryFn: () => base44.entities.Argument.list(),
-    initialData: [],
-  });
-
   const { data: allComments } = useQuery({
     queryKey: ['allComments'],
     queryFn: () => base44.entities.Comment.list(),
     initialData: [],
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: allSections } = useQuery({
     queryKey: ['allSections'],
     queryFn: () => base44.entities.Section.list(),
     initialData: [],
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: allAgreements = [] } = useQuery({
     queryKey: ['allAgreements'],
     queryFn: () => base44.entities.DocumentAgreement.list(),
     initialData: [],
+    staleTime: 5 * 60 * 1000,
   });
-
-  // Calculate real contributors per document using shared logic
-  const getDocumentContributors = (doc) => {
-    return calculateContributorsFromData({
-      document: doc,
-      suggestions: allSuggestions.filter(s => s.documentId === doc.id),
-      allVotes,
-      allUsers,
-      allComments,
-      sections: allSections.filter(s => s.documentId === doc.id),
-      documentAgreements: allAgreements.filter(a => a.documentId === doc.id)
-    });
-  };
 
   // Calculate unique participants across all documents and build list
   // CRITERIA: Only users who voted, commented, or signed documents
@@ -200,21 +178,86 @@ export default function Home() {
     };
   }, [allVotes, allUsers, publicProfiles, allComments, allAgreements]);
 
-  const calculateAverageConsensus = () => {
+  const averageConsensus = useMemo(() => {
     if (!acceptedSuggestions || acceptedSuggestions.length === 0) return 0;
-    
     const consensusScores = acceptedSuggestions
       .filter(s => s && typeof s.proVotes === 'number' && typeof s.conVotes === 'number')
       .map(s => {
         const total = s.proVotes + s.conVotes;
         return total > 0 ? (s.proVotes / total) : 0;
       });
-    
     if (consensusScores.length === 0) return 0;
-    
     const sum = consensusScores.reduce((acc, score) => acc + score, 0);
     return (sum / consensusScores.length * 100).toFixed(0);
-  };
+  }, [acceptedSuggestions]);
+
+  // Pre-compute userIdToEmail once for all group participant calculations
+  const userIdToEmail = useMemo(() => {
+    const map = {};
+    publicProfiles.forEach(p => { map[p.userId] = p.email; });
+    allUsers.forEach(u => { map[u.id] = u.email; });
+    return map;
+  }, [publicProfiles, allUsers]);
+
+  // Pre-compute per-group participant counts (memoized, not recalculated in render loop)
+  const groupParticipantCounts = useMemo(() => {
+    const counts = {};
+    if (!groups || groups.length === 0) return counts;
+
+    // Build index maps once
+    const suggestionsByDoc = {};
+    allSuggestions.forEach(s => {
+      if (!suggestionsByDoc[s.documentId]) suggestionsByDoc[s.documentId] = [];
+      suggestionsByDoc[s.documentId].push(s);
+    });
+
+    const sectionsByDoc = {};
+    allSections.forEach(s => {
+      if (!sectionsByDoc[s.documentId]) sectionsByDoc[s.documentId] = [];
+      sectionsByDoc[s.documentId].push(s);
+    });
+
+    const agreementsByDoc = {};
+    allAgreements.forEach(a => {
+      if (!agreementsByDoc[a.documentId]) agreementsByDoc[a.documentId] = [];
+      agreementsByDoc[a.documentId].push(a);
+    });
+
+    groups.forEach(group => {
+      const groupDocs = documents.filter(d => d.groupId === group.id);
+      const emails = new Set();
+
+      groupDocs.forEach(doc => {
+        const docSuggestions = suggestionsByDoc[doc.id] || [];
+        const suggestionIds = new Set(docSuggestions.map(s => s.id));
+        const docSections = sectionsByDoc[doc.id] || [];
+        const sectionIds = new Set(docSections.map(s => s.id));
+
+        allVotes.forEach(v => {
+          if (suggestionIds.has(v.suggestionId)) {
+            if (userIdToEmail[v.userId]) emails.add(userIdToEmail[v.userId]);
+            if (v.created_by) emails.add(v.created_by);
+          }
+        });
+
+        allComments.forEach(c => {
+          if ((c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
+              (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
+              (c.rootEntityType === 'document' && c.rootEntityId === doc.id)) {
+            if (c.created_by) emails.add(c.created_by);
+          }
+        });
+
+        (agreementsByDoc[doc.id] || []).forEach(a => {
+          if (a.userEmail) emails.add(a.userEmail);
+        });
+      });
+
+      counts[group.id] = Math.max(1, emails.size);
+    });
+
+    return counts;
+  }, [groups, documents, allSuggestions, allSections, allVotes, allComments, allAgreements, userIdToEmail]);
 
   const languagePrompts = {
     en: "English",
@@ -358,7 +401,7 @@ export default function Home() {
                 <CardContent className="p-6 text-center">
                   <TrendingUp className="w-8 h-8 mx-auto mb-3 text-purple-600" />
                   <div className="text-3xl font-bold text-slate-900">
-                    {calculateAverageConsensus()}%
+                    {averageConsensus}%
                   </div>
                   <div className="text-sm text-slate-600">{t('avgConsensus')}</div>
                 </CardContent>
@@ -429,45 +472,7 @@ export default function Home() {
               const groupDocs = documents.filter(d => d.groupId === group.id);
               const members = groupMembers.filter(m => m.groupId === group.id);
               const isAdmin = members.some(m => m.userId === user?.id && m.role === 'admin');
-
-              // Calculate total unique participants across all documents in this group
-              const groupParticipantsEmails = new Set();
-              groupDocs.forEach(doc => {
-                const docSuggestions = allSuggestions.filter(s => s.documentId === doc.id);
-                const suggestionIds = new Set(docSuggestions.map(s => s.id));
-                const docSections = allSections.filter(s => s.documentId === doc.id);
-                const sectionIds = new Set(docSections.map(s => s.id));
-                
-                // Voters
-                const userIdToEmail = {};
-                publicProfiles.forEach(p => { userIdToEmail[p.userId] = p.email; });
-                if (allUsers.length > 0) {
-                  allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
-                }
-                allVotes.forEach(v => {
-                  if (suggestionIds.has(v.suggestionId)) {
-                    if (userIdToEmail[v.userId]) groupParticipantsEmails.add(userIdToEmail[v.userId]);
-                    if (v.created_by) groupParticipantsEmails.add(v.created_by);
-                  }
-                });
-                
-                // Commenters
-                allComments.forEach(c => {
-                  if ((c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
-                      (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
-                      (c.rootEntityType === 'document' && c.rootEntityId === doc.id)) {
-                    if (c.created_by) groupParticipantsEmails.add(c.created_by);
-                  }
-                });
-                
-                // Signers
-                allAgreements.forEach(a => {
-                  if (a.documentId === doc.id && a.userEmail) {
-                    groupParticipantsEmails.add(a.userEmail);
-                  }
-                });
-              });
-              const groupParticipantsCount = Math.max(1, groupParticipantsEmails.size);
+              const groupParticipantsCount = groupParticipantCounts[group.id] ?? 1;
 
               return (
                 <Link 
