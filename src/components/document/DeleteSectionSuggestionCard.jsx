@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Eye, ThumbsUp, ThumbsDown, MessageCircle, User, Edit2, Save, X } from "lucide-react";
+import { Trash2, Eye, ThumbsUp, ThumbsDown, MessageCircle, User, Edit2, Save, X, Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/components/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
