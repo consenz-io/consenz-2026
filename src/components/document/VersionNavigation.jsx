@@ -14,7 +14,7 @@ export default function VersionNavigation({
   if (totalVersions <= 1) return null;
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 print:hidden">
+    <div className="flex justify-center w-full mb-4 print:hidden">
       <div className="bg-white/95 backdrop-blur-sm border-2 border-slate-300 rounded-full shadow-lg px-4 py-2">
         <div className="flex items-center gap-3">
           {/* Older version button (index increases = older) */}
