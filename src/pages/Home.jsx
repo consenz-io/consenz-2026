@@ -477,9 +477,9 @@ export default function Home() {
                 >
                   <Card className="bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-200 h-full">
                     <CardHeader>
-                      <div className="flex items-start justify-between gap-2">
+                      <div className="flex flex-col gap-2">
                         <CardTitle className="text-lg break-words">{group.name}</CardTitle>
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex flex-wrap items-center gap-1">
                           {group.status === 'private' ? (
                             <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                               <Lock className="w-3 h-3 mr-1" />
