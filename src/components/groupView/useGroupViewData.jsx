@@ -20,39 +20,45 @@ export function useGroupViewData(groupId) {
     queryKey: ['group', groupId],
     queryFn: () => base44.entities.Group.filter({ id: groupId }).then(g => g[0] || null),
     enabled: !!groupId,
-    staleTime: 2 * 60 * 1000,
-    retry: 2,
+    staleTime: 10 * 60 * 1000,
+    retry: 1,
   });
 
   const { data: groupMembers = [], isLoading: membersLoading } = useQuery({
     queryKey: ['groupMembers', groupId],
     queryFn: () => base44.entities.GroupMember.filter({ groupId }),
     enabled: !!groupId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
   });
 
   const { data: documents = [], isLoading: documentsLoading } = useQuery({
     queryKey: ['groupDocuments', groupId],
     queryFn: () => base44.entities.Document.filter({ groupId }, '-created_date'),
     enabled: !!groupId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
   });
 
   const { data: publicProfiles = [] } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 15 * 60 * 1000,
   });
 
   const docIds = documents.map(d => d.id);
 
+  // Fetch pending suggestions per-doc sequentially to avoid 429
   const { data: groupSuggestions = [] } = useQuery({
     queryKey: ['groupSuggestions', groupId, docIds.join(',')],
-    queryFn: () => Promise.all(
-      docIds.map(id => base44.entities.Suggestion.filter({ documentId: id, status: 'pending' }, null, 50))
-    ).then(results => results.flat()),
+    queryFn: async () => {
+      const results = [];
+      for (const id of docIds) {
+        const sug = await base44.entities.Suggestion.filter({ documentId: id, status: 'pending' }, null, 50);
+        results.push(...sug);
+      }
+      return results;
+    },
     enabled: docIds.length > 0,
-    staleTime: 3 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
   });
 
   const { data: userVotes = [] } = useQuery({
