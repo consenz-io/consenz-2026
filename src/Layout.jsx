@@ -272,19 +272,7 @@ function LayoutContent({ children, currentPageName }) {
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton 
-                        asChild 
-                        className={`hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 rounded-lg mb-1 ${
-                          location.pathname === createPageUrl("EmailLogs") ? 'bg-blue-50 text-blue-700' : ''
-                        }`}
-                      >
-                        <Link to={createPageUrl("EmailLogs")} className="flex items-center gap-3 px-3 py-2">
-                          <Settings className="w-4 h-4" />
-                          <span className="font-medium">{language === 'he' ? 'לוג מיילים' : 'Email Logs'}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+  
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
