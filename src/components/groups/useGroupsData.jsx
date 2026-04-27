@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 
 export function useGroupsData() {
-  const { data: currentUser, isLoading: userLoading } = useQuery({
+  const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     retry: false,
@@ -49,7 +49,7 @@ export function useGroupsData() {
   return {
     currentUser,
     visibleGroups,
-    isLoading: userLoading || groupsLoading || membersLoading,
+    isLoading: groupsLoading || membersLoading,
     getDocCount,
     getMemberCount,
     isGroupAdmin,
