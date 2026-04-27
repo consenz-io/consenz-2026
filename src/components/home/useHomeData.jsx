@@ -25,7 +25,6 @@ export function useHomeData() {
   const { data: groupMembers = [], isLoading: membersLoading } = useQuery({
     queryKey: ['groupMembers'],
     queryFn: () => base44.entities.GroupMember.list(),
-    initialData: [],
     staleTime: 5 * 60 * 1000,
   });
 
