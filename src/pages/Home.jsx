@@ -11,6 +11,7 @@ export default function Home() {
     user, groups, groupsLoading, groupMembers, documents,
     displayedUsers, publicProfilesLoading,
     averageConsensus, groupParticipantCounts,
+    contributorsList,
   } = useHomeData();
 
   return (
@@ -35,7 +36,7 @@ export default function Home() {
       <AllContributorsModal
         isOpen={showContributorsModal}
         onClose={() => setShowContributorsModal(false)}
-        contributors={displayedUsers}
+        contributors={contributorsList}
       />
     </div>
   );

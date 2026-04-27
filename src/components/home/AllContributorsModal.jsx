@@ -24,7 +24,7 @@ export default function AllContributorsModal({
     if (!searchQuery || !contributors) return contributors || [];
     const query = searchQuery.toLowerCase();
     return contributors.filter(c => {
-      const name = c.fullName || c.full_name || '';
+      const name = c.name || c.fullName || c.full_name || '';
       return name.toLowerCase().includes(query);
     });
   }, [contributors, searchQuery]);
@@ -60,7 +60,7 @@ export default function AllContributorsModal({
             <div className="space-y-2">
               {filteredContributors.map((contributor) => {
                 const userId = contributor.userId || contributor.id;
-                const name = contributor.fullName || contributor.full_name || contributor.email;
+                const name = contributor.name || contributor.fullName || contributor.full_name || contributor.email;
                 const isAdmin = contributor.role === 'admin';
                 
                 return (
