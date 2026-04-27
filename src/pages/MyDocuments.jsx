@@ -77,6 +77,15 @@ export default function MyDocuments() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: allSections = [] } = useQuery({
+    queryKey: ['allSections', myDocumentIds],
+    queryFn: () => myDocumentIds.length > 0
+      ? base44.entities.Section.filter({ documentId: { $in: myDocumentIds } })
+      : Promise.resolve([]),
+    enabled: !!user?.id && myDocumentIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const { data: allComments = [] } = useQuery({
     queryKey: ['allComments', myDocumentIds],
     queryFn: async () => {
@@ -88,17 +97,8 @@ export default function MyDocuments() {
         rootEntityId: { $in: [...suggestionIds, ...sectionIds, ...myDocumentIds] }
       });
     },
-    enabled: !!user?.id && allSuggestions.length >= 0 && allSections.length >= 0,
-    staleTime: 2 * 60 * 1000,
-  });
-
-  const { data: allSections = [] } = useQuery({
-    queryKey: ['allSections', myDocumentIds],
-    queryFn: () => myDocumentIds.length > 0
-      ? base44.entities.Section.filter({ documentId: { $in: myDocumentIds } })
-      : Promise.resolve([]),
     enabled: !!user?.id && myDocumentIds.length > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
   });
 
   // Calculate real contributors per document using shared logic

@@ -185,7 +185,7 @@ export default function DocumentContent({
     },
     enabled: !!document?.id && suggestions.length > 0,
     initialData: [],
-    staleTime: 0,
+    staleTime: 60 * 1000,
   });
 
   // Invalidate comment counts when any comment is added/deleted
@@ -206,29 +206,19 @@ export default function DocumentContent({
     queryKey: ['userVotes', document?.id, user?.id],
     queryFn: async () => {
       if (!user?.id || !document?.id) return [];
-      try {
-        const allVotes = await base44.entities.Vote.filter({ userId: user.id });
-        // מחזיר רק הצבעות על הצעות במסמך הזה
-        const relevantVotes = allVotes.filter(v => 
-          suggestions.some(s => s.id === v.suggestionId)
-        );
-        // מסיר כפילויות - שומר רק את ההצבעה האחרונה לכל הצעה
-        const uniqueVotes = [];
-        const seenSuggestionIds = new Set();
-        for (const vote of relevantVotes.reverse()) {
-          if (!seenSuggestionIds.has(vote.suggestionId)) {
-            seenSuggestionIds.add(vote.suggestionId);
-            uniqueVotes.push(vote);
-          }
-        }
-        return uniqueVotes;
-      } catch (err) {
-        console.error('[USER VOTES QUERY ERROR]', err);
-        return [];
-      }
+      const suggestionIds = suggestions.map(s => s.id);
+      if (suggestionIds.length === 0) return [];
+      const votes = await base44.entities.Vote.filter({ userId: user.id, suggestionId: { $in: suggestionIds } });
+      // Remove duplicates — keep last vote per suggestion
+      const seen = new Set();
+      return [...votes].reverse().filter(v => {
+        if (seen.has(v.suggestionId)) return false;
+        seen.add(v.suggestionId);
+        return true;
+      });
     },
     enabled: !!user?.id && !!document?.id && suggestions.length > 0,
-    staleTime: 0,
+    staleTime: 2 * 60 * 1000,
     retry: 1,
   });
 
