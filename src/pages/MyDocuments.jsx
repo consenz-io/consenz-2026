@@ -108,7 +108,6 @@ export default function MyDocuments() {
       suggestions: allSuggestions.filter(s => s.documentId === doc.id),
       allVotes,
       allUsers,
-      allArguments,
       allComments,
       sections: allSections.filter(s => s.documentId === doc.id)
     });

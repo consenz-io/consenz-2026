@@ -56,7 +56,6 @@ export function createPageUrlSafe(pageName) {
   
   if (!validation.isValid) {
     console.error('[CREATE_PAGE_URL_ERROR]', validation.error);
-    // Use canonical name if available, otherwise throw
     if (validation.canonical) {
       pageName = validation.canonical;
     } else {
@@ -64,8 +63,7 @@ export function createPageUrlSafe(pageName) {
     }
   }
 
-  // Use createPageUrl from utils
-  const { createPageUrl } = await import('@/utils');
+  const { createPageUrl } = require('@/utils');
   return createPageUrl(pageName);
 }
 
