@@ -8,11 +8,14 @@ Deno.serve(async (req) => {
     return Response.json({ count: 0 });
   }
 
+  // Use asServiceRole to avoid per-user rate limits on heavy queries
+  const serviceBase44 = base44.asServiceRole;
+
   // Fetch only the data we need, filtered server-side
   const [userVotes, userCreatedSuggestions, pendingSuggestions] = await Promise.all([
-    base44.entities.Vote.filter({ userId: user.id }),
-    base44.entities.Suggestion.filter({ created_by: user.email }),
-    base44.entities.Suggestion.filter({ status: 'pending' }),
+    serviceBase44.entities.Vote.filter({ userId: user.id }, null, 500),
+    serviceBase44.entities.Suggestion.filter({ created_by: user.email }, null, 200),
+    serviceBase44.entities.Suggestion.filter({ status: 'pending' }, null, 300),
   ]);
 
   // Build set of document IDs the user participated in

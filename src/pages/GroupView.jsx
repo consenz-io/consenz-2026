@@ -16,7 +16,6 @@ import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "@/components/PageHeader";
 import ManageMembersDialog from "@/components/group/ManageMembersDialog";
 import InviteMemberDialog from "@/components/group/InviteMemberDialog";
-import { calculateContributorsFromData } from "@/components/document/calculateContributors";
 
 export default function GroupView() {
   const { t, isRTL, language } = useLanguage();
@@ -58,20 +57,24 @@ export default function GroupView() {
 
   const { data: group, isLoading: groupLoading } = useQuery({
     queryKey: ['group', groupId],
-    queryFn: () => base44.entities.Group.filter({ id: groupId }).then(groups => groups[0]),
+    queryFn: () => base44.entities.Group.filter({ id: groupId }).then(groups => groups[0] || null),
     enabled: !!groupId,
+    staleTime: 2 * 60 * 1000,
+    retry: 2,
   });
 
   const { data: groupMembers = [], isLoading: membersLoading } = useQuery({
     queryKey: ['groupMembers', groupId],
     queryFn: () => base44.entities.GroupMember.filter({ groupId }),
     enabled: !!groupId,
+    staleTime: 2 * 60 * 1000,
   });
 
   const { data: documents = [], isLoading: documentsLoading } = useQuery({
     queryKey: ['groupDocuments', groupId],
     queryFn: () => base44.entities.Document.filter({ groupId }, '-created_date'),
     enabled: !!groupId,
+    staleTime: 2 * 60 * 1000,
   });
 
   const { data: publicProfiles = [] } = useQuery({
@@ -80,45 +83,22 @@ export default function GroupView() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch data needed for participant count calculation
-  const { data: allSuggestions = [] } = useQuery({
-    queryKey: ['allSuggestions'],
-    queryFn: () => base44.entities.Suggestion.list(),
-  });
-
-  const { data: allVotes = [] } = useQuery({
-    queryKey: ['allVotes'],
-    queryFn: () => base44.entities.Vote.list(),
-  });
-
-  const { data: allComments = [] } = useQuery({
-    queryKey: ['allComments'],
-    queryFn: () => base44.entities.Comment.list(),
-  });
-
-  const { data: allSections = [] } = useQuery({
-    queryKey: ['allSections'],
-    queryFn: () => base44.entities.Section.list(),
-  });
-
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
-    initialData: [],
-    retry: false,
-    throwOnError: false,
-    enabled: !!currentUser && currentUser?.role === 'admin',
-  });
-
-  const { data: allAgreements = [] } = useQuery({
-    queryKey: ['allAgreements'],
-    queryFn: () => base44.entities.DocumentAgreement.list(),
+  // Lightweight per-document suggestions for unvoted count only
+  const docIds = documents.map(d => d.id);
+  const { data: groupSuggestions = [] } = useQuery({
+    queryKey: ['groupSuggestions', groupId, docIds.join(',')],
+    queryFn: () => Promise.all(
+      docIds.map(id => base44.entities.Suggestion.filter({ documentId: id, status: 'pending' }, null, 50))
+    ).then(results => results.flat()),
+    enabled: docIds.length > 0,
+    staleTime: 3 * 60 * 1000,
   });
 
   const { data: userVotes = [] } = useQuery({
     queryKey: ['userVotes', currentUser?.id],
-    queryFn: () => base44.entities.Vote.filter({ userId: currentUser.id }),
+    queryFn: () => base44.entities.Vote.filter({ userId: currentUser.id }, null, 500),
     enabled: !!currentUser?.id,
+    staleTime: 5 * 60 * 1000,
   });
 
   const isAdmin = currentUser && groupMembers.some(
@@ -128,9 +108,9 @@ export default function GroupView() {
   // Check for unvoted suggestions per document
   const getUnvotedSuggestionsCount = (docId) => {
     if (!currentUser?.id) return 0;
-    const docSuggestions = allSuggestions.filter(s => s.documentId === docId && s.status === 'pending' && s.type !== 'edit_suggestion');
-    const unvoted = docSuggestions.filter(s => !userVotes.some(v => v.suggestionId === s.id));
-    return unvoted.length;
+    const docSuggestions = groupSuggestions.filter(s => s.documentId === docId && s.type !== 'edit_suggestion' && s.created_by !== currentUser.email);
+    const votedIds = new Set(userVotes.map(v => v.suggestionId));
+    return docSuggestions.filter(s => !votedIds.has(s.id)).length;
   };
 
   const isMember = currentUser && groupMembers.some(
@@ -448,16 +428,6 @@ export default function GroupView() {
                 ) : (
                   <div className="space-y-3">
                     {documents.map((doc) => {
-                      const participantsCount = calculateContributorsFromData({
-                        document: doc,
-                        suggestions: allSuggestions.filter(s => s.documentId === doc.id),
-                        allVotes,
-                        allUsers: publicProfiles,
-                        allComments,
-                        sections: allSections.filter(s => s.documentId === doc.id),
-                        documentAgreements: allAgreements.filter(a => a.documentId === doc.id)
-                      });
-                      
                       const unvotedCount = getUnvotedSuggestionsCount(doc.id);
 
                       return (
@@ -506,7 +476,7 @@ export default function GroupView() {
                               </div>
                               <div className="flex items-center gap-1 text-sm text-slate-600 shrink-0">
                                 <Users className="w-4 h-4" />
-                                <span>{participantsCount}</span>
+                                <span>{doc.totalUsersInteracted || 0}</span>
                               </div>
                             </div>
                           </div>
@@ -542,17 +512,8 @@ export default function GroupView() {
               <CardContent>
                 <div className="space-y-2">
                   {(() => {
-                    // Get all section contributors from group documents
-                    const sectionContributors = allSections
-                      .filter(section => documents.some(doc => doc.id === section.documentId))
-                      .map(section => section.lastEditedBy || section.created_by_id)
-                      .filter(Boolean);
-                    
-                    // Get unique user IDs
-                    const uniqueUserIds = [...new Set([
-                      ...groupMembers.map(m => m.userId),
-                      ...sectionContributors
-                    ])];
+                    // Show group members only
+                    const uniqueUserIds = [...new Set(groupMembers.map(m => m.userId))];
                     
                     return uniqueUserIds.map((userId) => {
                       const profile = publicProfiles.find(p => p.userId === userId);

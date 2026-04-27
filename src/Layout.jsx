@@ -72,7 +72,9 @@ function LayoutContent({ children, currentPageName }) {
     queryKey: ['unvotedCount'],
     queryFn: () => base44.functions.invoke('getUnvotedCount', {}),
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 15 * 60 * 1000,
+    gcTime: 20 * 60 * 1000,
+    retry: false,
   });
 
   const totalUnvotedSuggestions = unvotedData?.data?.count ?? 0;
@@ -114,13 +116,20 @@ function LayoutContent({ children, currentPageName }) {
     }
   }, [language, user?.id]);
 
-  // Listen for vote-cast events to refresh unvoted count
+  // Listen for vote-cast events — debounced to avoid hammering the server
   React.useEffect(() => {
+    let timer = null;
     const handleVoteCast = () => {
-      queryClient.invalidateQueries({ queryKey: ['unvotedCount'] });
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['unvotedCount'] });
+      }, 30000); // wait 30s after vote before re-fetching
     };
     window.addEventListener('consenz:vote-cast', handleVoteCast);
-    return () => window.removeEventListener('consenz:vote-cast', handleVoteCast);
+    return () => {
+      window.removeEventListener('consenz:vote-cast', handleVoteCast);
+      clearTimeout(timer);
+    };
   }, [queryClient]);
 
   const scrollToTop = () => {

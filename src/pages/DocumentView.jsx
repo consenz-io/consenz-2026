@@ -102,7 +102,8 @@ export default function DocumentView() {
     queryKey: ['topics', documentId],
     queryFn: () => base44.entities.Topic.filter({ documentId }, 'order'),
     enabled: !!documentId,
-    staleTime: Infinity, // Real-time via subscription
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     retry: 3,
     retryDelay: 1000,
   });
@@ -111,7 +112,8 @@ export default function DocumentView() {
     queryKey: ['sections', documentId],
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order'),
     enabled: !!documentId,
-    staleTime: Infinity, // Real-time via subscription
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     retry: 3,
     retryDelay: 1000,
   });
@@ -124,7 +126,8 @@ export default function DocumentView() {
       return results || [];
     },
     enabled: !!documentId,
-    staleTime: 0,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     retry: 2,
   });
 
@@ -162,9 +165,9 @@ export default function DocumentView() {
     
     console.log('[REALTIME] Setting up Topic/Section/Suggestion subscriptions');
     
-    const timers = {};
+    const timers = { topics: null, sections: null, suggestions: null };
     const debouncedInvalidate = (queryKey) => {
-      const key = queryKey.join('_');
+      const key = queryKey[0]; // 'topics', 'sections', or 'suggestions'
       clearTimeout(timers[key]);
       timers[key] = setTimeout(() => {
         queryClient.invalidateQueries({ queryKey });
@@ -199,7 +202,7 @@ export default function DocumentView() {
 
     return () => {
       console.log('[REALTIME] Cleaning up Topic/Section/Suggestion subscriptions');
-      clearTimeout(invalidationTimer);
+      Object.values(timers).forEach(t => clearTimeout(t));
       unsubscribeTopic();
       unsubscribeSection();
       unsubscribeSuggestion();
