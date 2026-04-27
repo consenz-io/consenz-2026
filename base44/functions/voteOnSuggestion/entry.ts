@@ -171,30 +171,23 @@ Deno.serve(async (req) => {
 
       processingAcceptance.add(lockKey);
 
-      try {
-        console.log('[VOTE FUNCTION] Starting auto-accept process...');
-        
-        // Schedule auto-accept and points in background (fire-and-forget)
-        // This prevents blocking the response
-        base44.asServiceRole.functions.invoke('processAcceptance', {
-          suggestionId,
-          documentId: document.id,
-          voterId: user.id,
-          wasNewVote: voteAction === 'created' && vote === 'pro'
-        }).catch(err => {
-          console.error('[VOTE FUNCTION] Background acceptance error:', err);
-          processingAcceptance.delete(lockKey);
-        });
-
-        accepted = true;
-        console.log('[VOTE FUNCTION] Auto-accept scheduled in background');
-      } catch (err) {
-        console.error('[VOTE FUNCTION] Error scheduling acceptance:', err);
+      // Fire-and-forget: run processAcceptance in background, clean up lock when done
+      base44.asServiceRole.functions.invoke('processAcceptance', {
+        suggestionId,
+        documentId: document.id,
+        voterId: user.id,
+        wasNewVote: voteAction === 'created' && vote === 'pro'
+      }).then(() => {
         processingAcceptance.delete(lockKey);
-      } finally {
-        // Remove lock after 30 seconds to prevent permanent locks
-        setTimeout(() => processingAcceptance.delete(lockKey), 30000);
-      }
+      }).catch(err => {
+        console.error('[VOTE FUNCTION] Background acceptance error:', err);
+        processingAcceptance.delete(lockKey);
+      });
+
+      accepted = true;
+      // Safety net: release lock after 60s in case the promise never settles
+      setTimeout(() => processingAcceptance.delete(lockKey), 60000);
+      console.log('[VOTE FUNCTION] Auto-accept scheduled in background');
     }
 
     return Response.json({

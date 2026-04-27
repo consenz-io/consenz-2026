@@ -140,18 +140,18 @@ Deno.serve(async (req) => {
 
     // Process based on suggestion type
     if (suggestion.type === 'edit_section' && suggestion.sectionId) {
-      const section = await base44.entities.Section.filter({ id: suggestion.sectionId }).then(r => r[0]);
+      const section = await base44.asServiceRole.entities.Section.filter({ id: suggestion.sectionId }).then(r => r[0]);
       if (!section) {
         return Response.json({ error: 'Section not found' }, { status: 404 });
       }
 
-      const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
+      const versions = await base44.asServiceRole.entities.DocumentVersion.filter({ sectionId: section.id });
       const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
       const newContentLanguage = detectLanguage(suggestion.newContent || '');
 
       // Create versions and update section
       await Promise.all([
-        base44.entities.DocumentVersion.create({
+        base44.asServiceRole.entities.DocumentVersion.create({
           documentId: suggestion.documentId,
           sectionId: section.id,
           content: section.content,
@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
           changeType: 'suggestion_accepted',
           suggestionId: suggestion.id
         }),
-        base44.entities.Section.update(section.id, {
+        base44.asServiceRole.entities.Section.update(section.id, {
           content: suggestion.newContent,
           lastEditedBy: voterId,
           originalLanguage: newContentLanguage,
@@ -168,7 +168,7 @@ Deno.serve(async (req) => {
         })
       ]);
 
-      await base44.entities.DocumentVersion.create({
+      await base44.asServiceRole.entities.DocumentVersion.create({
         documentId: suggestion.documentId,
         sectionId: section.id,
         content: suggestion.newContent,
@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
         return Response.json({ error: 'No topicId' }, { status: 400 });
       }
 
-      const allSections = await base44.entities.Section.filter({ documentId: suggestion.documentId, topicId: targetTopicId }, 'order');
+      const allSections = await base44.asServiceRole.entities.Section.filter({ documentId: suggestion.documentId, topicId: targetTopicId }, 'order');
       const maxOrder = allSections.length > 0 ? Math.max(...allSections.map(s => s.order || 0)) : -1;
 
       // Determine insertion order and shift existing sections if needed to avoid duplicates
@@ -243,7 +243,7 @@ Deno.serve(async (req) => {
       }
 
       const newContentLanguage = detectLanguage(suggestion.newContent || '');
-      const newSection = await base44.entities.Section.create({
+      const newSection = await base44.asServiceRole.entities.Section.create({
         documentId: suggestion.documentId,
         topicId: targetTopicId,
         content: suggestion.newContent,
@@ -253,7 +253,7 @@ Deno.serve(async (req) => {
         translations: {}
       });
 
-      await base44.entities.DocumentVersion.create({
+      await base44.asServiceRole.entities.DocumentVersion.create({
         documentId: suggestion.documentId,
         sectionId: newSection.id,
         content: suggestion.newContent,
@@ -265,7 +265,7 @@ Deno.serve(async (req) => {
         translations: {}
       });
 
-      await base44.entities.Suggestion.update(suggestion.id, {
+      await base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
         type: 'edit_section',
         sectionId: newSection.id,
         status: 'accepted',
@@ -277,9 +277,9 @@ Deno.serve(async (req) => {
       });
 
     } else if (suggestion.type === 'delete_section' && suggestion.sectionId) {
-      const section = await base44.entities.Section.filter({ id: suggestion.sectionId }).then(r => r[0]);
+      const section = await base44.asServiceRole.entities.Section.filter({ id: suggestion.sectionId }).then(r => r[0]);
       if (section) {
-        const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
+        const versions = await base44.asServiceRole.entities.DocumentVersion.filter({ sectionId: section.id });
         const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
 
         await base44.entities.DocumentVersion.create({
@@ -365,9 +365,9 @@ Deno.serve(async (req) => {
 
     // Fetch only data scoped to this document (no global scans)
     const [docSuggestions, docSections, agreements] = await Promise.all([
-      base44.entities.Suggestion.filter({ documentId: document.id }),
-      base44.entities.Section.filter({ documentId: document.id }),
-      base44.entities.DocumentAgreement.filter({ documentId: document.id })
+      base44.asServiceRole.entities.Suggestion.filter({ documentId: document.id }),
+      base44.asServiceRole.entities.Section.filter({ documentId: document.id }),
+      base44.asServiceRole.entities.DocumentAgreement.filter({ documentId: document.id })
     ]);
 
     const docSuggestionIds = docSuggestions.map(s => s.id);
@@ -376,9 +376,9 @@ Deno.serve(async (req) => {
     // Fetch votes and comments filtered to this document's entities
     const [docVotes, docComments] = await Promise.all([
       docSuggestionIds.length > 0
-        ? base44.entities.Vote.filter({ suggestionId: { $in: docSuggestionIds } })
+        ? base44.asServiceRole.entities.Vote.filter({ suggestionId: { $in: docSuggestionIds } })
         : Promise.resolve([]),
-      base44.entities.Comment.filter({
+      base44.asServiceRole.entities.Comment.filter({
         rootEntityId: { $in: [...docSuggestionIds, ...docSectionIds, document.id] }
       })
     ]);

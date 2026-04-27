@@ -119,6 +119,16 @@ const SectionCarousel = React.memo(function SectionCarousel({
     return new Date(b.created_date) - new Date(a.created_date);
   });
   
+  // Tracks pending animation timers so we can cancel them on unmount
+  const animationTimersRef = React.useRef([]);
+
+  // Cleanup all pending timers on unmount
+  React.useEffect(() => {
+    return () => {
+      animationTimersRef.current.forEach(clearTimeout);
+    };
+  }, []);
+
   // מעקב אחרי שינוי סטטוס להצגת אנימציה - עובד על כל ההצעות
   React.useEffect(() => {
     if (!allSectionSuggestions || allSectionSuggestions.length === 0 || !document?.id) return;
@@ -129,47 +139,45 @@ const SectionCarousel = React.memo(function SectionCarousel({
       // זיהוי מעבר מ-pending ל-accepted
       if (prevStatus === 'pending' && sug.status === 'accepted' && !hasAnimatedRef.current.has(sug.id)) {
         hasAnimatedRef.current.add(sug.id);
-        console.log('[EDIT ANIMATION] Starting celebration for suggestion:', sug.id);
+        const docId = document.id;
+        const sectionId = section.id;
+        const sugId = sug.id;
         
         // אם המשתמש לא צופה בהצעה הזו - מעביר אותו אליה
-        if (currentSuggestionId !== sug.id) {
-          setCurrentSuggestionId(sug.id);
+        if (currentSuggestionId !== sugId) {
+          setCurrentSuggestionId(sugId);
         }
         
         // שלב 0: הכרזה (1 שניה)
-        setAnimationPhases(prev => ({ ...prev, [sug.id]: 'announcing' }));
+        setAnimationPhases(prev => ({ ...prev, [sugId]: 'announcing' }));
         
-        setTimeout(() => {
-          console.log('[EDIT ANIMATION] Starting celebration for suggestion:', sug.id);
-          setAnimationPhases(prev => ({ ...prev, [sug.id]: 'celebrating' }));
+        const t1 = setTimeout(() => {
+          setAnimationPhases(prev => ({ ...prev, [sugId]: 'celebrating' }));
         }, 1000);
         
         // שלב 1: חגיגה (2.5 שניות)
-        setTimeout(() => {
-          console.log('[EDIT ANIMATION] Transitioning to normal for suggestion:', sug.id);
-          setAnimationPhases(prev => ({ ...prev, [sug.id]: 'transitioning' }));
+        const t2 = setTimeout(() => {
+          setAnimationPhases(prev => ({ ...prev, [sugId]: 'transitioning' }));
         }, 3500);
         
-        // שלב 2: מיד חזרה לסעיף עם תוכן מעודכן
-        setTimeout(() => {
-        console.log('[EDIT ANIMATION] Completed, showing as updated section:', sug.id);
-        setAnimationPhases(prev => ({ ...prev, [sug.id]: 'completed' }));
-        // סימון הסעיף כעדכן לאחרונה
-        setRecentlyUpdatedSections(prev => ({ ...prev, [section.id]: Date.now() }));
-        // חוזרים לתצוגת הסעיף הנוכחי - עכשיו הוא מעודכן
-        setCurrentSuggestionId('current');
-        // רענון הסעיפים כדי לקבל את השינוי
-        queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
-        }, 1000);
+        // שלב 2: חזרה לסעיף עם תוכן מעודכן
+        const t3 = setTimeout(() => {
+          setAnimationPhases(prev => ({ ...prev, [sugId]: 'completed' }));
+          setRecentlyUpdatedSections(prev => ({ ...prev, [sectionId]: Date.now() }));
+          setCurrentSuggestionId('current');
+          queryClient.invalidateQueries({ queryKey: ['sections', docId] });
+        }, 4500);
         
-        // שלב 3: הסרת badge "עודכן עכשיו" (אחרי 10 שניות מהתחלה)
-        setTimeout(() => {
+        // שלב 3: הסרת badge "עודכן עכשיו" (אחרי 14.5 שניות מהתחלה)
+        const t4 = setTimeout(() => {
           setRecentlyUpdatedSections(prev => {
             const updated = { ...prev };
-            delete updated[section.id];
+            delete updated[sectionId];
             return updated;
           });
-        }, 10000);
+        }, 14500);
+
+        animationTimersRef.current.push(t1, t2, t3, t4);
       }
       
       prevSuggestionsStatusRef.current[sug.id] = sug.status;
