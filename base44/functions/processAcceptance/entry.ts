@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 const NOTIF_TRANSLATIONS = {
   en: {
@@ -362,50 +362,41 @@ Deno.serve(async (req) => {
     // Send notifications in batch - fetch all document participants
     console.log('[PROCESS ACCEPTANCE] Preparing notifications...');
     const notifications = [];
-    
-    // Fetch all contributors (same logic as DocumentView modal)
-    const [allSuggestions, allVotes, allComments, agreements, allSections] = await Promise.all([
+
+    // Fetch only data scoped to this document (no global scans)
+    const [docSuggestions, docSections, agreements] = await Promise.all([
       base44.entities.Suggestion.filter({ documentId: document.id }),
-      base44.entities.Vote.list(),
-      base44.entities.Comment.list(),
-      base44.entities.DocumentAgreement.filter({ documentId: document.id }),
-      base44.entities.Section.filter({ documentId: document.id })
+      base44.entities.Section.filter({ documentId: document.id }),
+      base44.entities.DocumentAgreement.filter({ documentId: document.id })
     ]);
-    
+
+    const docSuggestionIds = docSuggestions.map(s => s.id);
+    const docSectionIds = docSections.map(s => s.id);
+
+    // Fetch votes and comments filtered to this document's entities
+    const [docVotes, docComments] = await Promise.all([
+      docSuggestionIds.length > 0
+        ? base44.entities.Vote.filter({ suggestionId: { $in: docSuggestionIds } })
+        : Promise.resolve([]),
+      base44.entities.Comment.filter({
+        rootEntityId: { $in: [...docSuggestionIds, ...docSectionIds, document.id] }
+      })
+    ]);
+
     // Collect unique contributor emails
     const contributorEmails = new Set();
-    
+
     // From agreements
-    agreements.forEach(a => {
-      if (a.userEmail) contributorEmails.add(a.userEmail);
-    });
-    
-    // From votes on suggestions in this document
-    const suggestionIds = allSuggestions.map(s => s.id);
-    allVotes.forEach(v => {
-      const votedOnThisSuggestion = allSuggestions.some(s => s.id === v.suggestionId);
-      if (votedOnThisSuggestion) {
-        const userEmail = v.created_by;
-        if (userEmail) contributorEmails.add(userEmail);
-      }
-    });
-    
-    // From comments on suggestions/sections/document
-    const sectionIds = allSections.map(s => s.id);
-    allComments.forEach(c => {
-      if (c.created_by) {
-        const isRelevant = 
-          (c.rootEntityType === 'suggestion' && suggestionIds.includes(c.rootEntityId)) ||
-          (c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)) ||
-          (c.rootEntityType === 'document' && c.rootEntityId === document.id);
-        if (isRelevant) contributorEmails.add(c.created_by);
-      }
-    });
-    
+    agreements.forEach(a => { if (a.userEmail) contributorEmails.add(a.userEmail); });
+
+    // From votes
+    docVotes.forEach(v => { if (v.created_by) contributorEmails.add(v.created_by); });
+
+    // From comments
+    docComments.forEach(c => { if (c.created_by) contributorEmails.add(c.created_by); });
+
     // From suggestion creators
-    allSuggestions.forEach(s => {
-      if (s.created_by) contributorEmails.add(s.created_by);
-    });
+    docSuggestions.forEach(s => { if (s.created_by) contributorEmails.add(s.created_by); });
     
     // Fetch all users by email
     let allUsers = [];

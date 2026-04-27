@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -46,42 +46,59 @@ export default function MyDocuments() {
     enabled: !!user?.id,
   });
 
+  // Derive the set of document IDs the user participates in
+  const myDocumentIds = React.useMemo(() => {
+    const suggestedDocIds = suggestions.map(s => s.documentId);
+    const interactedDocIds = userInteractions.map(ui => ui.documentId);
+    return [...new Set([...interactedDocIds, ...suggestedDocIds])];
+  }, [suggestions, userInteractions]);
+
+  // Fetch only data scoped to documents the user is involved in
   const { data: allSuggestions = [] } = useQuery({
-    queryKey: ['allSuggestions'],
-    queryFn: () => base44.entities.Suggestion.list(),
-    enabled: !!user?.id,
-    staleTime: 0,
+    queryKey: ['allSuggestions', myDocumentIds],
+    queryFn: () => myDocumentIds.length > 0
+      ? base44.entities.Suggestion.filter({ documentId: { $in: myDocumentIds } })
+      : Promise.resolve([]),
+    enabled: !!user?.id && myDocumentIds.length > 0,
+    staleTime: 2 * 60 * 1000,
   });
 
   const { data: allVotes = [] } = useQuery({
-    queryKey: ['allVotes'],
-    queryFn: () => base44.entities.Vote.list(),
+    queryKey: ['allVotes', user?.id],
+    queryFn: () => base44.entities.Vote.filter({ userId: user.id }),
     enabled: !!user?.id,
-    staleTime: 0,
+    staleTime: 2 * 60 * 1000,
   });
 
   const { data: allUsers = [] } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
+    queryKey: ['publicProfiles'],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
     enabled: !!user?.id,
-  });
-
-  const { data: allArguments = [] } = useQuery({
-    queryKey: ['allArguments'],
-    queryFn: () => base44.entities.Argument.list(),
-    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: allComments = [] } = useQuery({
-    queryKey: ['allComments'],
-    queryFn: () => base44.entities.Comment.list(),
-    enabled: !!user?.id,
+    queryKey: ['allComments', myDocumentIds],
+    queryFn: async () => {
+      if (myDocumentIds.length === 0) return [];
+      const suggestionIds = allSuggestions.map(s => s.id);
+      const sectionIds = allSections.map(s => s.id);
+      if (suggestionIds.length === 0 && sectionIds.length === 0) return [];
+      return base44.entities.Comment.filter({
+        rootEntityId: { $in: [...suggestionIds, ...sectionIds, ...myDocumentIds] }
+      });
+    },
+    enabled: !!user?.id && allSuggestions.length >= 0 && allSections.length >= 0,
+    staleTime: 2 * 60 * 1000,
   });
 
   const { data: allSections = [] } = useQuery({
-    queryKey: ['allSections'],
-    queryFn: () => base44.entities.Section.list(),
-    enabled: !!user?.id,
+    queryKey: ['allSections', myDocumentIds],
+    queryFn: () => myDocumentIds.length > 0
+      ? base44.entities.Section.filter({ documentId: { $in: myDocumentIds } })
+      : Promise.resolve([]),
+    enabled: !!user?.id && myDocumentIds.length > 0,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Calculate real contributors per document using shared logic
@@ -107,21 +124,18 @@ export default function MyDocuments() {
     );
   }
 
-  // קבלת מסמכים שהמשתמש השתתף בהם
-  const interactedDocumentIds = userInteractions.map(ui => ui.documentId);
-  const suggestedDocumentIds = suggestions.map(s => s.documentId);
-  const votedSuggestions = allSuggestions.filter(s => 
-    votes.some(v => v.suggestionId === s.id)
+  // כל הצעות שהמשתמש הצביע עליהן מבוססות על allVotes (מסוננות לפי userId כבר)
+  const votedSuggestions = allSuggestions.filter(s =>
+    allVotes.some(v => v.suggestionId === s.id)
   );
   const votedDocumentIds = votedSuggestions.map(s => s.documentId);
 
-  const myDocumentIds = new Set([
-    ...interactedDocumentIds,
-    ...suggestedDocumentIds,
-    ...votedDocumentIds
+  const myDocumentIdsSet = new Set([
+    ...myDocumentIds,
+    ...votedDocumentIds,
   ]);
 
-  const myDocuments = allDocuments.filter(doc => myDocumentIds.has(doc.id));
+  const myDocuments = allDocuments.filter(doc => myDocumentIdsSet.has(doc.id));
   
   const isLoading = interactionsLoading || documentsLoading;
 
