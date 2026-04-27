@@ -12,18 +12,21 @@ export function useGroupsData() {
   const { data: groups = [], isLoading: groupsLoading } = useQuery({
     queryKey: ['groups'],
     queryFn: () => base44.entities.Group.list('-created_date'),
+    placeholderData: [],
     staleTime: 3 * 60 * 1000,
   });
 
   const { data: groupMembers = [], isLoading: membersLoading } = useQuery({
     queryKey: ['groupMembers'],
     queryFn: () => base44.entities.GroupMember.list(),
+    placeholderData: [],
     staleTime: 3 * 60 * 1000,
   });
 
   const { data: documents = [] } = useQuery({
     queryKey: ['documents'],
     queryFn: () => base44.entities.Document.list(),
+    placeholderData: [],
     staleTime: 3 * 60 * 1000,
   });
 

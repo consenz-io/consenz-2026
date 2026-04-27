@@ -18,42 +18,36 @@ export function useHomeData() {
   const { data: groups = [], isLoading: groupsLoading } = useQuery({
     queryKey: ['groups'],
     queryFn: () => base44.entities.Group.list('-created_date', 20),
-    initialData: [],
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: groupMembers = [], isLoading: membersLoading } = useQuery({
     queryKey: ['groupMembers'],
     queryFn: () => base44.entities.GroupMember.list(),
-    initialData: [],
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: documents = [] } = useQuery({
     queryKey: ['publicDocuments'],
     queryFn: () => base44.entities.Document.list('-created_date', 20),
-    initialData: [],
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: acceptedSuggestions = [] } = useQuery({
     queryKey: ['acceptedSuggestions'],
     queryFn: () => base44.entities.Suggestion.filter({ status: 'accepted' }),
-    initialData: [],
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: allSuggestions = [] } = useQuery({
     queryKey: ['allSuggestions'],
     queryFn: () => base44.entities.Suggestion.list(),
-    initialData: [],
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: allVotes = [] } = useQuery({
     queryKey: ['allVotes'],
     queryFn: () => base44.entities.Vote.list(),
-    initialData: [],
     staleTime: 5 * 60 * 1000,
   });
 
@@ -70,35 +64,30 @@ export function useHomeData() {
   const { data: publicProfiles = [], isLoading: publicProfilesLoading } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
-    initialData: [],
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: allComments = [] } = useQuery({
     queryKey: ['allComments'],
     queryFn: () => base44.entities.Comment.list(),
-    initialData: [],
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: allSections = [] } = useQuery({
     queryKey: ['allSections'],
     queryFn: () => base44.entities.Section.list(),
-    initialData: [],
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: allAgreements = [] } = useQuery({
     queryKey: ['allAgreements'],
     queryFn: () => base44.entities.DocumentAgreement.list(),
-    initialData: [],
     staleTime: 5 * 60 * 1000,
   });
 
   // ── Derived: displayed users list ──────────────────────────────────────────
   const displayedUsers = useMemo(() => {
     if (user?.role === 'admin' && allUsers.length > 0) return allUsers;
-    if (!publicProfiles.length) return [];
     const seen = new Set();
     return publicProfiles.filter(p => {
       if (!p?.userId || seen.has(p.userId)) return false;
