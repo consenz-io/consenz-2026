@@ -253,8 +253,8 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                           </div>
                         </CardHeader>
                         <CardContent className="p-4 space-y-3">
-                          {/* Show content for direct edits or oldest version */}
-                          {(currentVer.changeType === 'direct_edit' || currentVer.changeType === 'section_created' || isOldestVersion) &&
+                          {/* Show content for direct edits, oldest version, or versions without suggestionId (initial sections) */}
+                          {(currentVer.changeType === 'direct_edit' || currentVer.changeType === 'section_created' || isOldestVersion || !currentVer.suggestionId) &&
                         <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
                               <TranslatableContent
                             content={currentVer.content}
