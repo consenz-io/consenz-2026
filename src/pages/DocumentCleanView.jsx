@@ -94,41 +94,37 @@ export default function DocumentCleanView() {
     enabled: !!documentId,
   });
 
+  // Build lookup Map once: topicId → sorted array of accepted edit suggestions
+  // O(n) build, O(1) lookup per topic — replaces the previous O(n²) per-render pattern
+  const topicEditSuggestionsMap = React.useMemo(() => {
+    const map = new Map();
+    topicEditSuggestions.forEach(s => {
+      if (!map.has(s.topicId)) map.set(s.topicId, []);
+      map.get(s.topicId).push(s);
+    });
+    // Sort each topic's list by date ascending (once, not per-call)
+    map.forEach(list => list.sort((a, b) => new Date(a.created_date) - new Date(b.created_date)));
+    return map;
+  }, [topicEditSuggestions]);
+
   // Get topic title as it was at a specific version
   const getTopicTitleAtVersion = (topicId, versionIndex) => {
     const topic = topics.find(t => t.id === topicId);
     if (!topic) return '';
-    
-    if (versionIndex === 0) {
-      // Current version - return current title
-      return topic.title;
-    }
-    
-    // Get timestamp of the displayed version
+    if (versionIndex === 0) return topic.title;
+
     const displayedSnapshot = versionGroups[versionIndex];
-    if (!displayedSnapshot || !displayedSnapshot.timestamp) {
-      return topic.title;
-    }
-    
+    if (!displayedSnapshot?.timestamp) return topic.title;
+
     const versionTimestamp = new Date(displayedSnapshot.timestamp).getTime();
-    
-    // Get all accepted suggestions for this topic that occurred before or at this timestamp
-    const relevantSuggestions = topicEditSuggestions
-      .filter(s => s.topicId === topicId && new Date(s.created_date).getTime() <= versionTimestamp)
-      .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-    
-    // Return the newTitle of the latest relevant suggestion, or the first originalTitle if no suggestions yet
-    if (relevantSuggestions.length === 0) {
-      // Check if there are any suggestions at all for this topic
-      const allSuggestionsForTopic = topicEditSuggestions.filter(s => s.topicId === topicId);
-      if (allSuggestionsForTopic.length > 0) {
-        // Return the originalTitle from the first suggestion (the very first title)
-        return allSuggestionsForTopic[0].originalTitle;
-      }
-      return topic.title;
+    const allForTopic = topicEditSuggestionsMap.get(topicId) || [];
+
+    const relevant = allForTopic.filter(s => new Date(s.created_date).getTime() <= versionTimestamp);
+
+    if (relevant.length === 0) {
+      return allForTopic.length > 0 ? allForTopic[0].originalTitle : topic.title;
     }
-    
-    return relevantSuggestions[relevantSuggestions.length - 1].newTitle;
+    return relevant[relevant.length - 1].newTitle;
   };
 
   // Use custom hook for version management

@@ -432,6 +432,7 @@ export default function Layout({ children, currentPageName }) {
   return (
     <ErrorBoundary>
       <LanguageProvider>
+        <Toaster position="top-center" richColors closeButton />
         <LayoutContent children={children} currentPageName={currentPageName} />
       </LanguageProvider>
     </ErrorBoundary>
