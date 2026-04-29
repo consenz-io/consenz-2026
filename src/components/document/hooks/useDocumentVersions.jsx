@@ -62,11 +62,11 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
       versionsBySuggestion.get(groupKey).push(v);
     });
 
-    // For direct_edit (no suggestionId), pair "before" and "after" records by sectionId proximity
-    // Group direct_edits by sectionId so we can pair them
+    // For versions without a suggestionId (direct_edit, section_created, etc.)
+    // Group by sectionId so we can pair them
     const directEditsBySectionId = new Map();
     sortedVersions.forEach(v => {
-      if (!v.suggestionId && v.changeType === 'direct_edit') {
+      if (!v.suggestionId) {
         if (!directEditsBySectionId.has(v.sectionId)) {
           directEditsBySectionId.set(v.sectionId, []);
         }
@@ -227,7 +227,11 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
           documentThresholdAtTime: null
         };
 
-        if (afterVersion.content === '') {
+        if (afterVersion.changeType === 'section_created') {
+          snapshotAfterChange.isNewSection = true;
+          snapshotAfterChange.newSectionId = afterVersion.sectionId;
+          snapshotAfterChange.newSectionContent = afterVersion.content;
+        } else if (afterVersion.content === '') {
           snapshotAfterChange.isDeleted = true;
           snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
           const deletedContent = currentSectionContents[afterVersion.sectionId] || beforeVersion?.content || '';
@@ -239,12 +243,12 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
         snapshots.push(snapshotAfterChange);
 
         // Update state for older view
-        if (beforeVersion) {
-          currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
-          currentExistingSections.add(afterVersion.sectionId);
-        } else if (afterVersion.changeType === 'section_created') {
+        if (afterVersion.changeType === 'section_created') {
           delete currentSectionContents[afterVersion.sectionId];
           currentExistingSections.delete(afterVersion.sectionId);
+        } else if (beforeVersion) {
+          currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
+          currentExistingSections.add(afterVersion.sectionId);
         }
       }
     });
