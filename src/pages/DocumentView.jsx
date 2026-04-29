@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,8 @@ import { calculateContributorsFromData } from "../components/document/calculateC
 import { TranslationProvider } from "../components/document/TranslationContext";
 import TranslateAllButton from "../components/document/TranslateAllButton";
 import CommentsSection from "../components/document/CommentsSection";
+import { useDocumentData } from "../components/document/hooks/useDocumentData";
+import { useDocumentSubscriptions } from "../components/document/hooks/useDocumentSubscriptions";
 
 // Lazy load heavy components
 const CreateSuggestionModal = React.lazy(() => import("../components/document/CreateSuggestionModal"));
@@ -66,78 +68,23 @@ export default function DocumentView() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState(null);
 
-  const { data: document, isLoading: docLoading } = useQuery({
-    queryKey: ['document', documentId],
-    queryFn: async () => {
-      const docs = await base44.entities.Document.filter({ id: documentId });
-      return docs && docs.length > 0 ? docs[0] : null;
-    },
-    enabled: !!documentId,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
-    staleTime: Infinity, // Real-time via subscription
-  });
+  // ── Data & Subscriptions (extracted to dedicated hooks) ──────────────────
+  const {
+    document, topics, sections, suggestions,
+    allVotes, publicProfiles, allComments,
+    documentAgreements, documentVersions,
+    documentMetadata, user, isAdmin, groupData,
+    isInitialLoading,
+  } = useDocumentData(documentId);
 
-  // Real-time subscription for document updates - wait for initial load
-  React.useEffect(() => {
-    if (!documentId || !document) return;
-    
-    console.log('[REALTIME] Setting up Document subscription for:', documentId);
-    
-    const unsubscribe = base44.entities.Document.subscribe((event) => {
-      console.log('[REALTIME] Document event:', event.type, event.id);
-      if (event.id === documentId) {
-        queryClient.invalidateQueries({ queryKey: ['document', documentId] });
-        queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
-      }
-    });
-    
-    return () => {
-      console.log('[REALTIME] Cleaning up Document subscription');
-      unsubscribe();
-    };
-  }, [documentId, document, queryClient]);
+  const { setTopicsRef, setSectionsRef, setSuggestionsRef } = useDocumentSubscriptions(
+    documentId, document, documentMetadata
+  );
 
-  const { data: topics = [], isLoading: topicsLoading } = useQuery({
-    queryKey: ['topics', documentId],
-    queryFn: () => base44.entities.Topic.filter({ documentId }, 'order'),
-    enabled: !!documentId,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    retry: 3,
-    retryDelay: 1000,
-  });
-
-  const { data: sections = [], isLoading: sectionsLoading, isFetched: sectionsFetched } = useQuery({
-    queryKey: ['sections', documentId],
-    queryFn: () => base44.entities.Section.filter({ documentId }, 'order'),
-    enabled: !!documentId,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    retry: 3,
-    retryDelay: 1000,
-  });
-
-  const { data: suggestions = [], isLoading: suggestionsLoading, isFetched: suggestionsFetched } = useQuery({
-    queryKey: ['suggestions', documentId],
-    queryFn: async () => {
-      if (!documentId) return [];
-      const results = await base44.entities.Suggestion.filter({ documentId }, '-created_date');
-      return results || [];
-    },
-    enabled: !!documentId,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    retry: 2,
-  });
-
-  // Refs to hold latest data for subscriptions without causing re-subscriptions
-  const topicsRef = React.useRef(topics);
-  const sectionsRef = React.useRef(sections);
-  const suggestionsRef = React.useRef(suggestions);
-  React.useEffect(() => { topicsRef.current = topics; }, [topics]);
-  React.useEffect(() => { sectionsRef.current = sections; }, [sections]);
-  React.useEffect(() => { suggestionsRef.current = suggestions; }, [suggestions]);
+  // Keep subscription refs up to date
+  React.useEffect(() => { setTopicsRef(topics); }, [topics]);
+  React.useEffect(() => { setSectionsRef(sections); }, [sections]);
+  React.useEffect(() => { setSuggestionsRef(suggestions); }, [suggestions]);
 
   // Track accepted suggestions to flash them when status changes to 'accepted'
   const prevSuggestionStatusesRef = React.useRef({});
@@ -158,93 +105,7 @@ export default function DocumentView() {
     });
   }, [suggestions]);
 
-  // Real-time subscriptions for topics, sections, suggestions
-  // Only re-run when documentId or document changes — NOT when data arrays change
-  React.useEffect(() => {
-    if (!documentId || !document) return;
-    
-    console.log('[REALTIME] Setting up Topic/Section/Suggestion subscriptions');
-    
-    const timers = { topics: null, sections: null, suggestions: null };
-    const debouncedInvalidate = (queryKey) => {
-      const key = queryKey[0]; // 'topics', 'sections', or 'suggestions'
-      clearTimeout(timers[key]);
-      timers[key] = setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey });
-      }, 300);
-    };
-
-    const unsubscribeTopic = base44.entities.Topic.subscribe((event) => {
-      console.log('[REALTIME] Topic event:', event.type, event.data?.documentId);
-      if (event.data?.documentId === documentId || 
-          (event.type === 'update' && event.id && topicsRef.current?.some(t => t.id === event.id))) {
-        debouncedInvalidate(['topics', documentId]);
-      }
-    });
-    
-    const unsubscribeSection = base44.entities.Section.subscribe((event) => {
-      console.log('[REALTIME] Section event:', event.type);
-      if (event.data?.documentId === documentId || 
-          (event.type === 'update' && event.id && sectionsRef.current?.some(s => s.id === event.id))) {
-        debouncedInvalidate(['sections', documentId]);
-      }
-    });
-    
-    const unsubscribeSuggestion = base44.entities.Suggestion.subscribe((event) => {
-      console.log('[REALTIME] Suggestion event:', event.type);
-      if (event.data?.documentId === documentId || 
-          (event.type === 'update' && event.id && suggestionsRef.current?.some(s => s.id === event.id))) {
-        debouncedInvalidate(['suggestions', documentId]);
-        // Also refresh aggregated data so votes/comments on new suggestions are fetched
-        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
-      }
-    });
-
-    return () => {
-      console.log('[REALTIME] Cleaning up Topic/Section/Suggestion subscriptions');
-      Object.values(timers).forEach(t => clearTimeout(t));
-      unsubscribeTopic();
-      unsubscribeSection();
-      unsubscribeSuggestion();
-    };
-  }, [documentId, document, queryClient]);
-
-  // queryKey includes suggestionsFetched+sectionsFetched so query re-runs exactly once after data loads.
-  // queryFn reads from closure — no race condition. 3 separate comment queries (no $or) for SDK compatibility.
-  const { data: aggregatedData } = useQuery({
-    queryKey: ['documentAggregatedData', documentId, suggestionsFetched, sectionsFetched],
-    queryFn: async () => {
-      const suggestionIds = suggestions.map(s => s.id);
-      const sectionIds = sections.map(s => s.id);
-
-      const [votes, publicProfiles, args, docComments, sectionComments, suggestionComments] = await Promise.all([
-        suggestionIds.length > 0
-          ? base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } })
-          : Promise.resolve([]),
-        base44.entities.UserPublicProfile.list(),
-        suggestionIds.length > 0
-          ? base44.entities.Argument.filter({ suggestionId: { $in: suggestionIds } })
-          : Promise.resolve([]),
-        base44.entities.Comment.filter({ rootEntityType: 'document', rootEntityId: documentId }),
-        sectionIds.length > 0
-          ? base44.entities.Comment.filter({ rootEntityType: 'section', rootEntityId: { $in: sectionIds } })
-          : Promise.resolve([]),
-        suggestionIds.length > 0
-          ? base44.entities.Comment.filter({ rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } })
-          : Promise.resolve([]),
-      ]);
-      const comments = [...docComments, ...sectionComments, ...suggestionComments];
-      return { votes, users: publicProfiles, publicProfiles, args, comments };
-    },
-    enabled: !!documentId && suggestionsFetched && sectionsFetched,
-    staleTime: 2 * 60 * 1000,
-  });
-
-  const allVotes = aggregatedData?.votes || [];
-  const allUsers = aggregatedData?.users || [];
-  const publicProfiles = aggregatedData?.publicProfiles || [];
-  const allArguments = aggregatedData?.args || [];
-  const allComments = aggregatedData?.comments || [];
+  const allUsers = publicProfiles;
 
   // Derived from aggregatedData — no extra query needed
   const documentComments = React.useMemo(() =>
@@ -252,152 +113,35 @@ export default function DocumentView() {
     [allComments, documentId]
   );
 
-  // Real-time: invalidate aggregatedData when a document-level comment is added
-  React.useEffect(() => {
-    if (!documentId || !document) return;
-    const unsubscribe = base44.entities.Comment.subscribe((event) => {
-      if (event.data?.rootEntityType === 'document' && event.data?.rootEntityId === documentId) {
-        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
-      }
-      // Also invalidate the specific comment query cache for the affected entity
-      if (event.data?.rootEntityType && event.data?.rootEntityId) {
-        queryClient.invalidateQueries({ queryKey: ['comments', event.data.rootEntityType, event.data.rootEntityId] });
-      }
-    });
-    return () => unsubscribe();
-  }, [documentId, document, queryClient]);
-
-  // Seed individual comment/profile caches from aggregatedData to avoid redundant fetches
-  React.useEffect(() => {
-    if (!aggregatedData || !documentId) return;
-
-    const { comments = [], publicProfiles: profiles = [] } = aggregatedData;
-
-    // Seed publicProfiles so CommentsSection doesn't re-fetch
-    if (profiles.length > 0) {
-      queryClient.setQueryData(['publicProfiles'], profiles);
-    }
-
-    // Seed document-level comments
-    const docComments = comments.filter(
-      c => c.rootEntityType === 'document' && c.rootEntityId === documentId
-    );
-    queryClient.setQueryData(['comments', 'document', documentId], docComments);
-
-    // Seed per-section comment caches
-    sections.forEach(section => {
-      const sectionComments = comments.filter(
-        c => c.rootEntityType === 'section' && c.rootEntityId === section.id
-      );
-      queryClient.setQueryData(['comments', 'section', section.id], sectionComments);
-    });
-
-    // Seed per-suggestion comment caches
-    suggestions.forEach(suggestion => {
-      const suggestionComments = comments.filter(
-        c => c.rootEntityType === 'suggestion' && c.rootEntityId === suggestion.id
-      );
-      queryClient.setQueryData(['comments', 'suggestion', suggestion.id], suggestionComments);
-    });
-  }, [aggregatedData, documentId, sections, suggestions, queryClient]);
-
-  // Merge agreements and versions into one query
-  const { data: documentMetadata } = useQuery({
-    queryKey: ['documentMetadata', documentId],
-    queryFn: async () => {
-      const [agreements, versions] = await Promise.all([
-        base44.entities.DocumentAgreement.filter({ documentId }),
-        base44.entities.DocumentVersion.filter({ documentId }),
-      ]);
-      return { agreements, versions };
-    },
-    enabled: !!documentId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    cacheTime: 5 * 60 * 1000,
-  });
-
-  // Real-time subscriptions for metadata - wait for document to load
-  React.useEffect(() => {
-    if (!documentId || !document) return;
-    
-    console.log('[REALTIME] Setting up Agreement/Version subscriptions');
-    
-    const unsubscribeAgreement = base44.entities.DocumentAgreement.subscribe((event) => {
-      console.log('[REALTIME] DocumentAgreement event:', event.type);
-      if (event.data?.documentId === documentId || (event.type === 'delete' && documentMetadata?.agreements?.some(a => a.id === event.id))) {
-        queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
-      }
-    });
-    
-    const unsubscribeVersion = base44.entities.DocumentVersion.subscribe((event) => {
-      console.log('[REALTIME] DocumentVersion event:', event.type);
-      if (event.data?.documentId === documentId) {
-        queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
-      }
-    });
-    
-    return () => {
-      console.log('[REALTIME] Cleaning up Agreement/Version subscriptions');
-      unsubscribeAgreement();
-      unsubscribeVersion();
-    };
-  }, [documentId, document, queryClient, documentMetadata]);
-
-  const documentAgreements = React.useMemo(() => documentMetadata?.agreements || [], [documentMetadata?.agreements]);
-  const documentVersions = React.useMemo(() => documentMetadata?.versions || [], [documentMetadata?.versions]);
-
   // Calculate version count matching DocumentCleanView logic
   const versionCount = React.useMemo(() => {
     if (!documentVersions || documentVersions.length === 0) return 1;
-    // Count unique suggestions (each creates one snapshot in DocumentCleanView)
     const uniqueSuggestions = new Set(
-      documentVersions
-        .filter(v => v.suggestionId)
-        .map(v => v.suggestionId)
+      documentVersions.filter(v => v.suggestionId).map(v => v.suggestionId)
     );
-    return uniqueSuggestions.size + 1; // +1 for current version
+    return uniqueSuggestions.size + 1;
   }, [documentVersions]);
 
-  // Count all section-related comments for this document:
-  // Section comments are always stored directly on the section entity.
-  // Comments on suggestions (including accepted ones) are separate and belong to that suggestion only.
   const sectionCommentsCount = React.useMemo(() => {
     const sectionIds = new Set(sections.map(s => s.id));
-    return allComments.filter(c => 
+    return allComments.filter(c =>
       c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)
     ).length;
   }, [allComments, sections]);
 
-  // Derived from already-fetched data — no extra queries needed
   const contributorsCount = React.useMemo(() => {
     const contributorEmails = new Set();
-
-    // 1. Suggestion creators
-    suggestions.forEach(s => {
-      if (s.created_by) contributorEmails.add(s.created_by);
-    });
-
-    // 2. Voters (allVotes is already filtered to this document's suggestions)
+    suggestions.forEach(s => { if (s.created_by) contributorEmails.add(s.created_by); });
     allVotes.forEach(v => {
       if (v.created_by) contributorEmails.add(v.created_by);
       const profile = publicProfiles.find(p => p.userId === v.userId);
       if (profile?.email) contributorEmails.add(profile.email);
     });
-
-    // 3. Commenters (allComments is already filtered to this document)
-    allComments.forEach(c => {
-      if (c.created_by) contributorEmails.add(c.created_by);
-    });
-
-    // 4. Signers
+    allComments.forEach(c => { if (c.created_by) contributorEmails.add(c.created_by); });
     documentAgreements.forEach(a => { if (a.userEmail) contributorEmails.add(a.userEmail); });
-
     return contributorEmails.size;
   }, [suggestions, allVotes, allComments, publicProfiles, documentAgreements]);
 
-  // Get pending suggestions ordered by section appearance
-  // Excludes edit_suggestion type since those are shown inside the parent suggestion's sidebar,
-  // not as standalone visible cards in the document
   const pendingSuggestions = React.useMemo(() => {
     if (!suggestions || !sections || !topics) return [];
     
@@ -840,9 +584,6 @@ export default function DocumentView() {
     }
   });
 
-  // Show loading only if document itself is still loading OR if we have no data yet
-  const isInitialLoading = docLoading || (!document && topicsLoading) || (!document && sectionsLoading);
-  
   if (isInitialLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6">
