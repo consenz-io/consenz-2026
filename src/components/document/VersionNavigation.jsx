@@ -39,19 +39,23 @@ export default function VersionNavigation({
   return (
     <div className="fixed bottom-0 left-0 md:left-64 right-0 z-50 print:hidden">
       <div className="bg-white border-t-2 border-slate-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
-        <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
           
-          {/* In RTL: "newer" is on the right (start), "older" is on the left (end) */}
-          {/* Newer button (right side in RTL, left side in LTR) */}
+          {/* Left button: "Newer" in RTL, "Older" in LTR */}
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onNavigate(Math.max(0, currentIndex - 1))}
-            disabled={isCurrentVersion}
+            onClick={() => isRTL
+              ? onNavigate(Math.max(0, currentIndex - 1))
+              : onNavigate(Math.min(currentIndex + 1, totalVersions - 1))
+            }
+            disabled={isRTL ? isCurrentVersion : isOldestVersion}
             className="h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
           >
-            <ChevronRight className="w-4 h-4" />
-            {language === 'he' ? 'גרסה חדשה יותר' : language === 'ar' ? 'إصدار أحدث' : 'Newer'}
+            <ChevronLeft className="w-4 h-4" />
+            {isRTL
+              ? (language === 'he' ? 'גרסה חדשה יותר' : 'إصدار أحدث')
+              : 'Older'}
           </Button>
 
           {/* Center info */}
@@ -67,16 +71,21 @@ export default function VersionNavigation({
             )}
           </div>
 
-          {/* Older button */}
+          {/* Right button: "Older" in RTL, "Newer" in LTR */}
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onNavigate(Math.min(currentIndex + 1, totalVersions - 1))}
-            disabled={isOldestVersion}
+            onClick={() => isRTL
+              ? onNavigate(Math.min(currentIndex + 1, totalVersions - 1))
+              : onNavigate(Math.max(0, currentIndex - 1))
+            }
+            disabled={isRTL ? isOldestVersion : isCurrentVersion}
             className="h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
           >
-            {language === 'he' ? 'גרסה ישנה יותר' : language === 'ar' ? 'إصدار أقدم' : 'Older'}
-            <ChevronLeft className="w-4 h-4" />
+            {isRTL
+              ? (language === 'he' ? 'גרסה ישנה יותר' : 'إصدار أقدم')
+              : 'Newer'}
+            <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
       </div>
