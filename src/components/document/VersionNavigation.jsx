@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { format } from "date-fns";
 
 export default function VersionNavigation({ 
   currentIndex, 
@@ -13,66 +13,71 @@ export default function VersionNavigation({
 }) {
   if (totalVersions <= 1) return null;
 
+  const isCurrentVersion = currentIndex === 0;
+  const isOldestVersion = currentIndex >= totalVersions - 1;
+  const versionNumber = totalVersions - currentIndex - 1; // 0 = current, 1 = latest history, etc.
+
+  const label = isCurrentVersion
+    ? (language === 'he' ? 'גרסה נוכחית' : language === 'ar' ? 'الإصدار الحالي' : 'Current Version')
+    : currentSnapshot?.isOriginal
+    ? (language === 'he' ? 'גרסה מקורית' : language === 'ar' ? 'الإصدار الأصلي' : 'Original Version')
+    : (language === 'he' ? `גרסה ${versionNumber}` : language === 'ar' ? `إصدار ${versionNumber}` : `Version ${versionNumber}`);
+
+  const changeLabel = !isCurrentVersion && currentSnapshot ? (() => {
+    if (currentSnapshot.isNewSection) return language === 'he' ? '➕ סעיף נוסף' : language === 'ar' ? '➕ قسم جديد' : '➕ Section Added';
+    if (currentSnapshot.isDeleted) return language === 'he' ? '🗑 סעיף נמחק' : language === 'ar' ? '🗑 قسم حُذف' : '🗑 Section Deleted';
+    if (currentSnapshot.isDirectEdit) return language === 'he' ? '✏️ עריכת מנהל' : language === 'ar' ? '✏️ تعديل المسؤول' : '✏️ Admin Edit';
+    if (currentSnapshot.isTopicTitleChange) return language === 'he' ? '📝 שינוי כותרת נושא' : '📝 Topic Renamed';
+    if (currentSnapshot.changedSectionId) return language === 'he' ? '✏️ סעיף עודכן' : language === 'ar' ? '✏️ قسم عُدِّل' : '✏️ Section Edited';
+    return null;
+  })() : null;
+
+  const timestampLabel = currentSnapshot?.timestamp && !isCurrentVersion
+    ? format(new Date(currentSnapshot.timestamp), 'dd/MM/yy HH:mm')
+    : null;
+
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 print:hidden">
-      <div className="bg-white/95 backdrop-blur-sm border-2 border-slate-300 rounded-full shadow-xl px-4 py-2 flex items-center gap-3">
-        {/* Older version (index increases = older) */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onNavigate(Math.min(currentIndex + 1, totalVersions - 1))}
-          disabled={currentIndex >= totalVersions - 1}
-          title={language === 'he' ? 'גרסה ישנה יותר' : language === 'ar' ? 'إصدار أقدم' : 'Older version'}
-          className="h-9 px-3 rounded-full gap-1 text-xs font-medium"
-        >
-          {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          {language === 'he' ? 'ישן' : language === 'ar' ? 'أقدم' : 'Older'}
-        </Button>
-
-        <div className="flex flex-col items-center min-w-[110px]">
-          <Badge
+    <div className="fixed bottom-0 left-0 right-0 z-50 print:hidden" style={{ paddingLeft: 'var(--sidebar-width, 0px)' }}>
+      <div className="bg-white border-t-2 border-slate-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
+        <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
+          
+          {/* Older button */}
+          <Button
             variant="outline"
-            className={`px-3 text-xs font-semibold ${
-              currentIndex === 0
-                ? 'bg-green-50 text-green-700 border-green-200'
-                : 'bg-amber-50 text-amber-700 border-amber-200'
-            }`}
+            size="sm"
+            onClick={() => onNavigate(Math.min(currentIndex + 1, totalVersions - 1))}
+            disabled={isOldestVersion}
+            className="h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
           >
-            {currentIndex === 0
-              ? (language === 'he' ? 'גרסה נוכחית' : language === 'ar' ? 'حالية' : 'Current')
-              : (language === 'he'
-                  ? `גרסה ${totalVersions - currentIndex} / ${totalVersions - 1}`
-                  : language === 'ar'
-                  ? `إصدار ${totalVersions - currentIndex} / ${totalVersions - 1}`
-                  : `v${totalVersions - currentIndex} / ${totalVersions - 1}`)}
-          </Badge>
-          {currentIndex > 0 && currentSnapshot?.isDirectEdit && (
-            <span className="text-[10px] text-amber-600 font-semibold mt-0.5">
-              {language === 'he' ? 'עריכת אדמין' : language === 'ar' ? 'تعديل المسؤول' : 'Admin Edit'}
-            </span>
-          )}
-          {currentSnapshot?.changeDescription && currentIndex > 0 && (
-            <span
-              className="text-[10px] text-slate-500 mt-0.5 max-w-[140px] truncate text-center"
-              title={currentSnapshot.changeDescription}
-            >
-              {currentSnapshot.changeDescription.replace('לפני: ', '')}
-            </span>
-          )}
-        </div>
+            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            {language === 'he' ? 'גרסה קודמת' : language === 'ar' ? 'إصدار أقدم' : 'Older'}
+          </Button>
 
-        {/* Newer version (index decreases = newer) */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onNavigate(Math.max(0, currentIndex - 1))}
-          disabled={currentIndex === 0}
-          title={language === 'he' ? 'גרסה חדשה יותר' : language === 'ar' ? 'إصدار أحدث' : 'Newer version'}
-          className="h-9 px-3 rounded-full gap-1 text-xs font-medium"
-        >
-          {language === 'he' ? 'חדש' : language === 'ar' ? 'أحدث' : 'Newer'}
-          {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-        </Button>
+          {/* Center info */}
+          <div className="flex flex-col items-center min-w-0 flex-1 text-center">
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${isCurrentVersion ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+              {label}
+            </span>
+            {changeLabel && (
+              <span className="text-[11px] text-slate-500 mt-0.5 truncate max-w-full">{changeLabel}</span>
+            )}
+            {timestampLabel && (
+              <span className="text-[10px] text-slate-400">{timestampLabel}</span>
+            )}
+          </div>
+
+          {/* Newer button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onNavigate(Math.max(0, currentIndex - 1))}
+            disabled={isCurrentVersion}
+            className="h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
+          >
+            {language === 'he' ? 'גרסה חדשה' : language === 'ar' ? 'إصدار أحدث' : 'Newer'}
+            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </Button>
+        </div>
       </div>
     </div>
   );

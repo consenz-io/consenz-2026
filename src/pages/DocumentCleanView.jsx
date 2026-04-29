@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Globe, Loader2, ChevronLeft, ChevronRight, Eye, EyeOff, Info } from "lucide-react";
+import { Download, Globe, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
@@ -528,7 +528,7 @@ ${text}`;
       </div>
 
       {/* Document Content */}
-      <div className="max-w-4xl mx-auto p-4 md:p-8 print:p-12">
+      <div className="max-w-4xl mx-auto p-4 md:p-8 print:p-12 pb-24">
         {/* Version Metadata */}
         {currentVersionIndex > 0 && currentSnapshot && (
           <div 
@@ -777,16 +777,21 @@ ${text}`;
                                 ) : isViewingHistory && hasChanged ? (
                                  <div 
                                    id={`change-${section.id}`} 
-                                   className="border-l-4 border-amber-400 pl-3 py-2 bg-amber-50/50 rounded cursor-pointer hover:bg-amber-100 transition-colors"
-                                   onClick={() => {
-                                     if (currentSnapshot?.suggestionId) {
-                                       setOpenSuggestionId(currentSnapshot.suggestionId);
-                                     }
-                                   }}
+                                   className="border-l-4 border-amber-400 pl-3 py-2 bg-amber-50/30 rounded"
                                  >
-                                   <Badge className="mb-2 bg-amber-100 text-amber-800 text-xs">
-                                     {language === 'he' ? 'שינוי - לחץ לצפייה בדיון' : language === 'ar' ? 'تغيير - انقر لعرض النقاش' : 'Change - Click to view discussion'}
-                                   </Badge>
+                                   <div className="flex items-center justify-between mb-2">
+                                     <Badge className="bg-amber-100 text-amber-800 text-xs">
+                                       {language === 'he' ? '✏️ שינוי בגרסה זו' : language === 'ar' ? '✏️ تغيير في هذا الإصدار' : '✏️ Changed in this version'}
+                                     </Badge>
+                                     {currentSnapshot?.suggestionId && (
+                                       <button
+                                         onClick={() => setOpenSuggestionId(currentSnapshot.suggestionId)}
+                                         className="text-[11px] text-blue-600 hover:underline"
+                                       >
+                                         {language === 'he' ? 'צפה בדיון' : language === 'ar' ? 'عرض النقاش' : 'View discussion'}
+                                       </button>
+                                     )}
+                                   </div>
                                    <InlineDiff
                                      originalContent={displayedContent}
                                      newContent={currentSnapshot?.newContent}
@@ -797,74 +802,25 @@ ${text}`;
                                   {isViewingHistory && olderContent && olderContent !== displayedContent ? (
                                     <div 
                                       id={`change-${section.id}`} 
-                                      className="border-l-4 border-blue-400 pl-3 py-2 bg-blue-50/30 rounded cursor-pointer hover:bg-blue-100 transition-colors"
-                                      onClick={() => {
-                                        if (currentSnapshot?.suggestionId) {
-                                          setOpenSuggestionId(currentSnapshot.suggestionId);
-                                        }
-                                      }}
+                                      className="border-l-4 border-blue-400 pl-3 py-2 bg-blue-50/20 rounded"
                                     >
                                       <div className="flex items-center justify-between mb-2">
                                         <Badge className="bg-blue-100 text-blue-800 text-xs">
-                                          {language === 'he' ? 'השוואה - לחץ לצפייה בדיון' : language === 'ar' ? 'مقارنة - انقر لعرض النقاش' : 'Comparison - Click to view discussion'}
+                                          {language === 'he' ? '✏️ שינוי בגרסה זו' : language === 'ar' ? '✏️ تغيير في هذا الإصدار' : '✏️ Changed in this version'}
                                         </Badge>
-                                        <div className="flex items-center gap-2">
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setShowDiffForSections(prev => ({
-                                                ...prev,
-                                                [section.id]: !prev[section.id]
-                                              }));
-                                            }}
-                                            className="h-7 px-2 text-xs"
+                                        {currentSnapshot?.suggestionId && (
+                                          <button
+                                            onClick={() => setOpenSuggestionId(currentSnapshot.suggestionId)}
+                                            className="text-[11px] text-blue-600 hover:underline"
                                           >
-                                            {showDiffForSections[section.id] ? (
-                                              <>
-                                                <EyeOff className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                                {t('hideChanges')}
-                                              </>
-                                            ) : (
-                                              <>
-                                                <Eye className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                                {t('showDiff')}
-                                              </>
-                                            )}
-                                          </Button>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setOpenSectionHistoryId(section.id);
-                                            }}
-                                            className="h-7 px-2 text-xs"
-                                          >
-                                            {language === 'he' ? 'היסטוריית סעיף' : language === 'ar' ? 'تاريخ القسم' : 'Section History'}
-                                          </Button>
-                                        </div>
+                                            {language === 'he' ? 'צפה בדיון' : language === 'ar' ? 'عرض النقاش' : 'View discussion'}
+                                          </button>
+                                        )}
                                       </div>
-                                      {showDiffForSections[section.id] ? (
-                                        <InlineDiff
-                                          originalContent={olderContent}
-                                          newContent={displayedContent}
-                                        />
-                                      ) : (
-                                        <div
-                                          className="prose prose-sm max-w-none text-slate-700"
-                                          style={{ 
-                                            direction: isRTL ? 'rtl' : 'ltr', 
-                                            textAlign: isRTL ? 'right' : 'left',
-                                            fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
-                                            fontSize: "1.125rem",
-                                            lineHeight: "1.8",
-                                            letterSpacing: "0.01em"
-                                          }}
-                                          dangerouslySetInnerHTML={{ __html: displayedContent }}
-                                        />
-                                      )}
+                                      <InlineDiff
+                                        originalContent={olderContent}
+                                        newContent={displayedContent}
+                                      />
                                     </div>
                                   ) : (
                                     <div 
