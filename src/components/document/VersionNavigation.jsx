@@ -15,7 +15,7 @@ export default function VersionNavigation({
 
   const isCurrentVersion = currentIndex === 0;
   const isOldestVersion = currentIndex >= totalVersions - 1;
-  const versionNumber = totalVersions - currentIndex - 1; // 0 = current, 1 = latest history, etc.
+  const versionNumber = currentSnapshot?.isOriginal ? 0 : totalVersions - currentIndex - 1; // Skip original in count
 
   const label = isCurrentVersion
     ? (language === 'he' ? 'גרסה נוכחית' : language === 'ar' ? 'الإصدار الحالي' : 'Current Version')
