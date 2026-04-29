@@ -739,7 +739,8 @@ ${text}`;
                                 ) : isDirectlyEdited ? (
                                   <div
                                     id={`change-${section.id}`}
-                                    className="border-l-4 border-amber-500 pl-3 py-2 bg-amber-50 rounded"
+                                    className="border-l-4 border-amber-500 pl-3 py-2 bg-amber-50 rounded cursor-pointer hover:bg-amber-100 transition-colors"
+                                    onClick={() => setOpenSectionHistoryId(section.id)}
                                   >
                                     <Badge className="mb-2 bg-amber-100 text-amber-800 text-xs">
                                       {language === 'he' ? '✏️ עריכה ישירה של מנהל' : language === 'ar' ? '✏️ تعديل مباشر من المسؤول' : '✏️ Direct Admin Edit'}
@@ -797,11 +798,12 @@ ${text}`;
                                  </div>
                                 ) : (
                                 <>
-                                  {isViewingHistory && olderContent && olderContent !== displayedContent ? (
-                                    <div 
-                                      id={`change-${section.id}`} 
-                                      className="border-l-4 border-blue-400 pl-3 py-2 bg-blue-50/20 rounded"
-                                    >
+                                {isViewingHistory && olderContent && olderContent !== displayedContent ? (
+                                  <div 
+                                    id={`change-${section.id}`} 
+                                    className="border-l-4 border-blue-400 pl-3 py-2 bg-blue-50/20 rounded cursor-pointer hover:bg-blue-50/40 transition-colors"
+                                    onClick={() => setOpenSectionHistoryId(section.id)}
+                                  >
                                       <div className="flex items-center justify-between mb-2">
                                         <Badge className="bg-blue-100 text-blue-800 text-xs">
                                           {language === 'he' ? '✏️ שינוי בגרסה זו' : language === 'ar' ? '✏️ تغيير في هذا الإصدار' : '✏️ Changed in this version'}
@@ -822,7 +824,8 @@ ${text}`;
                                     </div>
                                   ) : (
                                     <div 
-                                      className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none"
+                                      className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none cursor-pointer hover:bg-slate-50/50 p-2 rounded transition-colors"
+                                      onClick={() => setOpenSectionHistoryId(section.id)}
                                       style={{ 
                                         fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
                                         fontSize: "1.125rem",
