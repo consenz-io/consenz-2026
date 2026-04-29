@@ -29,29 +29,33 @@ export async function sendNotificationsBatch(notifications) {
     return { successful: 0, failed: 0 };
   }
   
-  console.log('[SEND BATCH] Sending', notifications.length, 'notifications via backend...');
+  console.log('[SEND BATCH] Sending', notifications.length, 'notifications directly to DB...');
   
-  try {
-    // Call backend function asynchronously
-    const response = await base44.functions.invoke('sendBatchNotifications', {
-      notifications,
-      maxRetries: 3
-    });
-    
-    if (response.data.success) {
-      console.log('[SEND BATCH] ✓', response.data.message);
-      return {
-        successful: response.data.successful,
-        failed: response.data.failed
-      };
-    } else {
-      console.error('[SEND BATCH] ✗ Backend error:', response.data.error);
-      return { successful: 0, failed: notifications.length };
+  let successful = 0;
+  let failed = 0;
+  
+  for (const notif of notifications) {
+    try {
+      await base44.entities.Notification.create({
+        userId: notif.userId,
+        type: notif.type,
+        title: notif.title,
+        message: notif.message,
+        translations: notif.translations || {},
+        relatedEntityId: notif.relatedEntityId,
+        relatedEntityType: notif.relatedEntityType,
+        actionUrl: notif.actionUrl,
+        read: false
+      });
+      successful++;
+    } catch (err) {
+      console.error('[SEND BATCH] Failed to create notification for user', notif.userId, ':', err.message);
+      failed++;
     }
-  } catch (error) {
-    console.error('[SEND BATCH] ✗ Failed to call backend:', error.message);
-    return { successful: 0, failed: notifications.length };
   }
+  
+  console.log(`[SEND BATCH] ✓ ${successful} sent, ${failed} failed`);
+  return { successful, failed };
 }
 
 /**
