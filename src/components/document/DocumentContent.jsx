@@ -471,7 +471,7 @@ Return ONLY the translated text:`;
   const topicVotingInProgressRef = React.useRef(new Set());
   
   const voteTopicEditMutation = useMutation({
-    mutationFn: async ({ suggestionId, vote, currentVote }) => {
+    mutationFn: async ({ suggestionId, vote }) => {
       if (!user) throw new Error("יש להתחבר כדי להצביע");
 
       // מניעת הצבעות כפולות על אותה הצעה
@@ -483,69 +483,53 @@ Return ONLY the translated text:`;
 
       try {
         const topicSuggestion = topicEditSuggestions.find(s => s.id === suggestionId);
-        
-        // קריאה אחת לשרת - הצבעה קיימת + הצעה עדכנית במקביל
-        const [freshVotes, freshSuggestions] = await Promise.all([
+
+        // Fetch fresh data in parallel
+        const [existingVotes, freshSuggestions] = await Promise.all([
           base44.entities.TopicEditVote.filter({ suggestionId, userId: user.id }),
           base44.entities.TopicEditSuggestion.filter({ id: suggestionId })
         ]);
-        
-        const serverVote = freshVotes[0];
-        const freshSuggestion = freshSuggestions[0];
-        
-        if (!freshSuggestion) {
-          throw new Error("ההצעה לא נמצאה");
-        }
-        
-        let newProVotes = freshSuggestion.proVotes || 0;
-        let newConVotes = freshSuggestion.conVotes || 0;
 
+        const serverVote = existingVotes[0];
+        const freshSuggestion = freshSuggestions[0];
+
+        if (!freshSuggestion || freshSuggestion.status !== 'pending') {
+          throw new Error("ההצעה לא נמצאה או כבר טופלה");
+        }
+
+        // Mutate the vote record
         if (serverVote) {
           if (serverVote.vote === vote) {
-            // Canceling vote
             await base44.entities.TopicEditVote.delete(serverVote.id);
-            if (vote === 'pro') newProVotes = Math.max(0, newProVotes - 1);
-            else newConVotes = Math.max(0, newConVotes - 1);
           } else {
-            // Changing vote
             await base44.entities.TopicEditVote.update(serverVote.id, { vote });
-            if (vote === 'pro') {
-              newProVotes += 1;
-              newConVotes = Math.max(0, newConVotes - 1);
-            } else {
-              newConVotes += 1;
-              newProVotes = Math.max(0, newProVotes - 1);
-            }
           }
         } else {
-          // הצבעה חדשה - ה-lock מבטיח אין כפילות, אין צורך ב-double-check
           await base44.entities.TopicEditVote.create({ suggestionId, userId: user.id, vote });
           ensureUserPublicProfile(user).catch(() => {});
-          
-          if (vote === 'pro') newProVotes += 1;
-          else newConVotes += 1;
 
           // Award points for pro vote - fire and forget
           if (vote === 'pro' && document.gamificationEnabled && topicSuggestion) {
             base44.entities.User.filter({ email: topicSuggestion.created_by }).then(list => {
               const creator = list[0];
               if (!creator) return;
-              const newPoints = (creator.points || 1000) + 10;
               return Promise.all([
-                base44.entities.User.update(creator.id, { points: newPoints }),
+                base44.entities.User.update(creator.id, { points: (creator.points || 1000) + 10 }),
                 base44.entities.PointsTransaction.create({
-                  userId: creator.id,
-                  amount: 10,
-                  action: 'vote_received',
-                  description: `קיבל הצבעה בעד על הצעת עריכת כותרת`,
-                  relatedEntityType: 'topic'
+                  userId: creator.id, amount: 10, action: 'vote_received',
+                  description: 'קיבל הצבעה בעד על הצעת עריכת כותרת', relatedEntityType: 'topic'
                 })
               ]);
             }).catch(() => {});
           }
         }
-        
-        // עדכון ספירת הצבעות
+
+        // Re-count from DB — source of truth, prevents race conditions
+        const allFreshVotes = await base44.entities.TopicEditVote.filter({ suggestionId });
+        const newProVotes = allFreshVotes.filter(v => v.vote === 'pro').length;
+        const newConVotes = allFreshVotes.filter(v => v.vote === 'con').length;
+
+        // Update suggestion with accurate counts
         const updatedSuggestion = await base44.entities.TopicEditSuggestion.update(suggestionId, {
           proVotes: newProVotes,
           conVotes: newConVotes
