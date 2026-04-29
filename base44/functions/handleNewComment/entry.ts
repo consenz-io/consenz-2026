@@ -64,7 +64,8 @@ Deno.serve(async (req) => {
     const notifications = [];
 
     if (comment.rootEntityType === 'suggestion') {
-      const suggestion = await base44.asServiceRole.entities.Suggestion.filter({ id: comment.rootEntityId }).then(s => s[0]);
+      const suggestions = await base44.asServiceRole.entities.Suggestion.filter({ id: comment.rootEntityId });
+      const suggestion = suggestions[0];
       if (!suggestion) {
         return Response.json({ message: 'Suggestion not found' }, { status: 200 });
       }
@@ -113,7 +114,8 @@ Deno.serve(async (req) => {
       }
 
     } else if (comment.rootEntityType === 'section') {
-      const section = await base44.asServiceRole.entities.Section.filter({ id: comment.rootEntityId }).then(s => s[0]);
+      const sections = await base44.asServiceRole.entities.Section.filter({ id: comment.rootEntityId });
+      const section = sections[0];
       if (!section) {
         return Response.json({ message: 'Section not found' }, { status: 200 });
       }

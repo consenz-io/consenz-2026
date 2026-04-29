@@ -278,60 +278,21 @@ const CommentItem = memo(({
   );
 });
 
-// Background tasks - fire and forget
-const runBackgroundTasks = async (comment, entityType, entityId, parentComment, currentUser) => {
+// Background tasks - fire and forget (notifications handled by backend automation)
+const runBackgroundTasks = async (comment, entityType, entityId) => {
   try {
-    const { notifyNewComment, notifyNewDocumentComment } = await import("../notifications/createNotification");
     const { calculateDocumentContributors } = await import('./calculateContributors');
     
     let docId;
-    let documentTitle;
     
     if (entityType === 'suggestion') {
       const suggestions = await base44.entities.Suggestion.filter({ id: entityId });
-      if (suggestions.length > 0) {
-        docId = suggestions[0].documentId;
-        const docs = await base44.entities.Document.filter({ id: docId });
-        documentTitle = docs[0]?.title;
-        notifyNewComment({ 
-          comment, 
-          targetEntity: suggestions[0], 
-          targetEntityType: 'suggestion', 
-          parentComment,
-          currentUser,
-          documentId: docId,
-          documentTitle
-        });
-      }
+      if (suggestions.length > 0) docId = suggestions[0].documentId;
     } else if (entityType === 'section') {
       const sections = await base44.entities.Section.filter({ id: entityId });
-      if (sections.length > 0) {
-        docId = sections[0].documentId;
-        const docs = await base44.entities.Document.filter({ id: docId });
-        documentTitle = docs[0]?.title;
-        notifyNewComment({ 
-          comment, 
-          targetEntity: sections[0], 
-          targetEntityType: 'section', 
-          parentComment,
-          currentUser,
-          documentId: docId,
-          documentTitle
-        });
-      }
+      if (sections.length > 0) docId = sections[0].documentId;
     } else if (entityType === 'document') {
-      const docs = await base44.entities.Document.filter({ id: entityId });
-      if (docs.length > 0) {
-        docId = entityId;
-        documentTitle = docs[0]?.title;
-        // For document comments, use notifyNewDocumentComment
-        notifyNewDocumentComment({ 
-          comment, 
-          document: docs[0],
-          parentComment,
-          currentUser
-        });
-      }
+      docId = entityId;
     }
     
     if (docId) {
@@ -440,7 +401,7 @@ export default function CommentsSection({ entityType, entityId, user }) {
       const actualEntityType = parentComment ? parentComment.rootEntityType : entityType;
       const actualEntityId = parentComment ? parentComment.rootEntityId : entityId;
 
-      runBackgroundTasks(comment, actualEntityType, actualEntityId, parentComment, user);
+      runBackgroundTasks(comment, actualEntityType, actualEntityId);
       
       return comment;
     },

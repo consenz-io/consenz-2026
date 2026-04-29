@@ -1,0 +1,68 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string",
+      "description": "User ID who receives the notification"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "vote_on_suggestion",
+        "suggestion_accepted",
+        "suggestion_rejected",
+        "suggestion_comment",
+        "section_comment",
+        "suggestion_expiring",
+        "comment_reply",
+        "new_suggestion_in_followed_document",
+        "document_comment"
+      ],
+      "description": "Type of notification"
+    },
+    "title": {
+      "type": "string",
+      "description": "Notification title (default language)"
+    },
+    "message": {
+      "type": "string",
+      "description": "Notification message (default language)"
+    },
+    "translations": {
+      "type": "object",
+      "description": "Translations of title/message keyed by language code: {en: {title, message}, he: {title, message}, ar: {title, message}}",
+      "default": {}
+    },
+    "relatedEntityId": {
+      "type": "string",
+      "description": "Related entity ID (suggestion, section, etc.)"
+    },
+    "relatedEntityType": {
+      "type": "string",
+      "enum": [
+        "suggestion",
+        "section",
+        "document",
+        "comment",
+        "topic"
+      ],
+      "description": "Type of related entity"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the notification has been read"
+    },
+    "actionUrl": {
+      "type": "string",
+      "description": "URL to navigate to when clicking the notification"
+    }
+  },
+  "required": [
+    "userId",
+    "type",
+    "title",
+    "message"
+  ]
+}
