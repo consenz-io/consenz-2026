@@ -207,22 +207,6 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
             </p>
             }
 
-          {/* Current Section Content */}
-          {section && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <h3 className="text-xs font-semibold text-slate-700 mb-2">{t('current')}</h3>
-              <div
-                className="prose prose-sm max-w-none text-slate-700"
-                style={{
-                  fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
-                  fontSize: "1rem",
-                  lineHeight: "1.7"
-                }}
-                dangerouslySetInnerHTML={{ __html: section.content }}
-              />
-            </div>
-          )}
-
           {sectionLoading || versionsLoading ?
             <div className="space-y-4">
               <Skeleton className="h-32 w-full" />
