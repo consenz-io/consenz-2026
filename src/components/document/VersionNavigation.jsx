@@ -37,7 +37,7 @@ export default function VersionNavigation({
     : null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 print:hidden" style={{ paddingLeft: 'var(--sidebar-width, 0px)' }}>
+    <div className="fixed bottom-0 left-0 md:left-64 right-0 z-50 print:hidden">
       <div className="bg-white border-t-2 border-slate-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
         <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
           

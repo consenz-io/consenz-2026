@@ -272,4 +272,4 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
   }, [allVersions, sections, document, suggestions]);
 
   return versionGroups;
-}
+  }
