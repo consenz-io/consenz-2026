@@ -21,9 +21,9 @@ export function useDocumentData(documentId) {
     staleTime: Infinity,
   });
 
-  const { data: topics = [], isLoading: topicsLoading } = useQuery({
+  const { data: topics = [], isLoading: topicsLoading, isError: topicsError } = useQuery({
     queryKey: ['topics', documentId],
-    queryFn: () => base44.entities.Topic.filter({ documentId }, 'order'),
+    queryFn: () => base44.entities.Topic.filter({ documentId }, 'order').catch(() => []),
     enabled: !!documentId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -31,9 +31,9 @@ export function useDocumentData(documentId) {
     retryDelay: 1000,
   });
 
-  const { data: sections = [], isLoading: sectionsLoading, isFetched: sectionsFetched } = useQuery({
+  const { data: sections = [], isLoading: sectionsLoading, isError: sectionsError } = useQuery({
     queryKey: ['sections', documentId],
-    queryFn: () => base44.entities.Section.filter({ documentId }, 'order'),
+    queryFn: () => base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
     enabled: !!documentId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -41,7 +41,7 @@ export function useDocumentData(documentId) {
     retryDelay: 1000,
   });
 
-  const { data: suggestions = [], isLoading: suggestionsLoading, isFetched: suggestionsFetched } = useQuery({
+  const { data: suggestions = [], isLoading: suggestionsLoading, isError: suggestionsError } = useQuery({
     queryKey: ['suggestions', documentId],
     queryFn: async () => {
       if (!documentId) return [];
@@ -55,31 +55,31 @@ export function useDocumentData(documentId) {
   });
 
   const { data: aggregatedData } = useQuery({
-    queryKey: ['documentAggregatedData', documentId],
+    queryKey: ['documentAggregatedData', documentId, suggestions, sections],
     queryFn: async () => {
       const suggestionIds = suggestions.map(s => s.id);
       const sectionIds = sections.map(s => s.id);
 
       const [votes, publicProfiles, args, docComments, sectionComments, suggestionComments] = await Promise.all([
         suggestionIds.length > 0
-          ? base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } })
+          ? base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } }).catch(() => [])
           : Promise.resolve([]),
-        base44.entities.UserPublicProfile.list(),
+        base44.entities.UserPublicProfile.list().catch(() => []),
         suggestionIds.length > 0
-          ? base44.entities.Argument.filter({ suggestionId: { $in: suggestionIds } })
+          ? base44.entities.Argument.filter({ suggestionId: { $in: suggestionIds } }).catch(() => [])
           : Promise.resolve([]),
-        base44.entities.Comment.filter({ rootEntityType: 'document', rootEntityId: documentId }),
+        base44.entities.Comment.filter({ rootEntityType: 'document', rootEntityId: documentId }).catch(() => []),
         sectionIds.length > 0
-          ? base44.entities.Comment.filter({ rootEntityType: 'section', rootEntityId: { $in: sectionIds } })
+          ? base44.entities.Comment.filter({ rootEntityType: 'section', rootEntityId: { $in: sectionIds } }).catch(() => [])
           : Promise.resolve([]),
         suggestionIds.length > 0
-          ? base44.entities.Comment.filter({ rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } })
+          ? base44.entities.Comment.filter({ rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } }).catch(() => [])
           : Promise.resolve([]),
       ]);
       const comments = [...docComments, ...sectionComments, ...suggestionComments];
       return { votes, users: publicProfiles, publicProfiles, args, comments };
     },
-    enabled: !!documentId && suggestionsFetched && sectionsFetched,
+    enabled: !!documentId,
     staleTime: 2 * 60 * 1000,
   });
 
@@ -159,7 +159,7 @@ export function useDocumentData(documentId) {
   const documentAgreements = React.useMemo(() => documentMetadata?.agreements || [], [documentMetadata?.agreements]);
   const documentVersions = React.useMemo(() => documentMetadata?.versions || [], [documentMetadata?.versions]);
 
-  const isInitialLoading = docLoading || (!document && topicsLoading) || (!document && sectionsLoading);
+  const isInitialLoading = docLoading || (topicsLoading && sectionsLoading);
 
   return {
     document, topics, sections, suggestions,
