@@ -14,7 +14,8 @@ import { toast } from "sonner";
  * Extracted from DocumentContent to keep that component focused on UI only.
  */
 export function useTopicVoteMutation({ document, user, topicEditSuggestions, queryClient: _qc }) {
-  const queryClient = _qc || useQueryClient();
+  const ownQueryClient = useQueryClient();
+  const queryClient = _qc || ownQueryClient;
   const topicVotingInProgressRef = { current: new Set() };
 
   const mutation = useMutation({
