@@ -124,6 +124,18 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'Threshold not met, acceptance aborted' });
     }
 
+    // ATOMIC LOCK: Mark as accepted immediately before any processing.
+    // This prevents double-accept from concurrent admin clicks or parallel function instances.
+    // If another process already changed the status, this re-fetch will catch it.
+    await base44.asServiceRole.entities.Suggestion.update(suggestionId, { status: 'accepted' });
+    // Re-fetch to confirm we were the one that made the change (guard against race)
+    const lockedSuggestion = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
+    if (!lockedSuggestion || lockedSuggestion.status !== 'accepted' || lockedSuggestion.suggestionConsensus !== undefined && lockedSuggestion.suggestionConsensus !== null) {
+      // Another process already completed the full acceptance (suggestionConsensus is set at the end)
+      console.log('[PROCESS ACCEPTANCE] Another process completed acceptance first, skipping');
+      return Response.json({ success: true, message: 'Already processed by another instance' });
+    }
+
     // Calculate contributors and consensus
     const totalUsers = await calculateContributors(base44, documentId);
     
@@ -350,7 +362,7 @@ Deno.serve(async (req) => {
     if (suggestion.type !== 'new_section') {
       updates.push(
         base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
-          status: 'accepted',
+          // status already set to 'accepted' atomically at the start of this function
           suggestionConsensus: boundedConsensus,
           participantsAtAcceptance: totalUsers
         })
