@@ -73,17 +73,15 @@ export default function DocumentCleanView() {
     enabled: !!documentId,
   });
 
-  const { data: allVersions, isLoading: versionsLoading, isFetching: versionsFetching } = useQuery({
+  const { data: allVersions, isLoading: versionsLoading } = useQuery({
     queryKey: ['allVersions', documentId],
     queryFn: () => base44.entities.DocumentVersion.filter({ documentId }, '-version'),
-    initialData: [],
     enabled: !!documentId,
   });
 
-  const { data: suggestions, isLoading: suggestionsLoading, isFetching: suggestionsFetching } = useQuery({
+  const { data: suggestions, isLoading: suggestionsLoading } = useQuery({
     queryKey: ['suggestions', documentId],
     queryFn: () => base44.entities.Suggestion.filter({ documentId }),
-    initialData: [],
     enabled: !!documentId,
   });
 
@@ -128,7 +126,7 @@ export default function DocumentCleanView() {
   };
 
   // Use custom hook for version management
-  const versionGroups = useDocumentVersions(document, sections, allVersions, suggestions);
+  const versionGroups = useDocumentVersions(document, sections, allVersions || [], suggestions || []);
 
   const currentSnapshot = versionGroups[currentVersionIndex] || versionGroups[0];
   const olderSnapshot = currentVersionIndex < versionGroups.length - 1 ? versionGroups[currentVersionIndex + 1] : null;
@@ -143,19 +141,19 @@ export default function DocumentCleanView() {
     });
     
     // Add sections from versions that might be deleted now
-    allVersions.forEach(v => {
+    (allVersions || []).forEach(v => {
       if (v.sectionId && !sectionMap.has(v.sectionId)) {
         // Find the topic for this section from versions
-        const relatedVersions = allVersions.filter(ver => ver.sectionId === v.sectionId);
+        const relatedVersions = (allVersions || []).filter(ver => ver.sectionId === v.sectionId);
         if (relatedVersions.length > 0) {
           // Get the earliest version (when section was created) to find original order
           const earliestVersion = relatedVersions.sort((a, b) => (a.version || 0) - (b.version || 0))[0];
           const latestVersion = relatedVersions.sort((a, b) => (b.version || 0) - (a.version || 0))[0];
           
           // Try to find the corresponding suggestion to get topic and order info
-          const relatedSuggestion = suggestions.find(s => 
+          const relatedSuggestion = (suggestions || []).find(s => 
             s.id === earliestVersion.suggestionId || 
-            allVersions.some(ver => ver.sectionId === v.sectionId && ver.suggestionId === s.id)
+            (allVersions || []).some(ver => ver.sectionId === v.sectionId && ver.suggestionId === s.id)
           );
           
           let topicId = null;
@@ -192,7 +190,7 @@ export default function DocumentCleanView() {
     });
     
     return sectionMap;
-  }, [sections, allVersions, topics, suggestions]);
+  }, [sections, allVersions, topics, suggestions]);  // eslint-disable-line
   
   // Reset version index if it's out of bounds
   React.useEffect(() => {
@@ -465,7 +463,7 @@ ${text}`;
     printWindow.document.close();
   };
 
-  if (docLoading || topicsLoading || sectionsLoading || versionsLoading || suggestionsLoading) {
+  if (docLoading || topicsLoading || sectionsLoading || versionsLoading || suggestionsLoading || !allVersions || !suggestions) {
     return (
       <div className="min-h-screen bg-white p-8">
         <div className="max-w-4xl mx-auto space-y-6">
@@ -683,7 +681,7 @@ ${text}`;
                           currentSnapshot?.newSectionId === section.id;
                         
                         // Check if this section was deleted in THIS snapshot
-                        const versionSuggestion = suggestions.find(s => s.id === currentSnapshot?.suggestionId);
+                        const versionSuggestion = (suggestions || []).find(s => s.id === currentSnapshot?.suggestionId);
                         const isDeletedSection = isViewingHistory &&
                           currentSnapshot?.isDeleted &&
                           currentSnapshot?.deletedSectionId === section.id &&
