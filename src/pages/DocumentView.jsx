@@ -261,38 +261,6 @@ export default function DocumentView() {
     }
   }, [pendingSuggestions, suggestions]);
 
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: () => base44.auth.me(),
-    retry: false,
-    staleTime: 300000, // 5 minutes - user data rarely changes
-  });
-
-  const { data: isAdmin } = useQuery({
-    queryKey: ['isAdmin', documentId, user?.id],
-    queryFn: async () => {
-      if (!user?.id || !documentId) return false;
-      const admins = await base44.entities.DocumentAdmin.filter({ documentId, userId: user.id });
-      return admins.length > 0;
-    },
-    enabled: !!user?.id && !!documentId,
-  });
-
-  // Fetch group info for privacy enforcement
-  const { data: groupData } = useQuery({
-    queryKey: ['documentGroup', document?.groupId],
-    queryFn: async () => {
-      if (!document?.groupId) return null;
-      const [groups, members] = await Promise.all([
-        base44.entities.Group.filter({ id: document.groupId }),
-        base44.entities.GroupMember.filter({ groupId: document.groupId }),
-      ]);
-      return { group: groups[0] || null, members };
-    },
-    enabled: !!document?.groupId,
-    staleTime: 2 * 60 * 1000,
-  });
-
   // Derived privacy checks
   const groupPrivacy = React.useMemo(() => {
     if (!groupData?.group) return { canView: true, canParticipate: true };
