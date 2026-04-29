@@ -41,20 +41,20 @@ export default function VersionNavigation({
       <div className="bg-white border-t-2 border-slate-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
         <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
           
-          {/* Left button: "Newer" in RTL, "Older" in LTR */}
+          {/* Left button: RTL=Older, LTR=Older */}
           <Button
             variant="outline"
             size="sm"
             onClick={() => isRTL
-              ? onNavigate(Math.max(0, currentIndex - 1))
+              ? onNavigate(Math.min(currentIndex + 1, totalVersions - 1))
               : onNavigate(Math.min(currentIndex + 1, totalVersions - 1))
             }
-            disabled={!hasMultipleVersions || (isRTL ? isCurrentVersion : isOldestVersion)}
+            disabled={!hasMultipleVersions || isOldestVersion}
             className="h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
           >
-            <ChevronLeft className="w-4 h-4" />
+            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             {isRTL
-              ? (language === 'he' ? 'גרסה חדשה יותר' : 'إصدار أحدث')
+              ? (language === 'he' ? 'גרסה ישנה יותר' : 'إصدار أقدم')
               : 'Older'}
           </Button>
 
@@ -71,21 +71,18 @@ export default function VersionNavigation({
             )}
           </div>
 
-          {/* Right button: "Older" in RTL, "Newer" in LTR */}
+          {/* Right button: RTL=Newer, LTR=Newer */}
           <Button
             variant="outline"
             size="sm"
-            onClick={() => isRTL
-              ? onNavigate(Math.min(currentIndex + 1, totalVersions - 1))
-              : onNavigate(Math.max(0, currentIndex - 1))
-            }
-            disabled={!hasMultipleVersions || (isRTL ? isOldestVersion : isCurrentVersion)}
+            onClick={() => onNavigate(Math.max(0, currentIndex - 1))}
+            disabled={!hasMultipleVersions || isCurrentVersion}
             className="h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
           >
             {isRTL
-              ? (language === 'he' ? 'גרסה ישנה יותר' : 'إصدار أقدم')
+              ? (language === 'he' ? 'גרסה חדשה יותר' : 'إصدار أحدث')
               : 'Newer'}
-            <ChevronRight className="w-4 h-4" />
+            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </Button>
         </div>
       </div>
