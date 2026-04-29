@@ -55,7 +55,7 @@ export function useDocumentData(documentId) {
   });
 
   const { data: aggregatedData } = useQuery({
-    queryKey: ['documentAggregatedData', documentId, suggestionsFetched, sectionsFetched],
+    queryKey: ['documentAggregatedData', documentId],
     queryFn: async () => {
       const suggestionIds = suggestions.map(s => s.id);
       const sectionIds = sections.map(s => s.id);
@@ -119,7 +119,7 @@ export function useDocumentData(documentId) {
     },
     enabled: !!documentId,
     staleTime: 2 * 60 * 1000,
-    cacheTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
   });
 
   const { data: user } = useQuery({

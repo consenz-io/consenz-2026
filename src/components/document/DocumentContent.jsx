@@ -24,6 +24,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import { autoAcceptTopicEditSuggestion, checkTopicEditConsensus } from "./suggestionAutoAccept";
 import { votingQueue } from "./VotingQueue";
 import { useVoteMutation } from "./hooks/useVoteMutation";
+import { useTopicVoteMutation } from "./hooks/useTopicVoteMutation";
 import { toast } from "sonner";
 
 export default function DocumentContent({ 
@@ -170,31 +171,13 @@ export default function DocumentContent({
     checkTopicSuggestions();
   }, [topicEditSuggestions, document, user, queryClient]);
 
-  // Fetch all comments for this document's suggestions and sections to show counts
-  const { data: allDocumentComments = [] } = useQuery({
-    queryKey: ['allDocumentComments', document?.id],
-    queryFn: async () => {
-      const suggestionIds = suggestions.map(s => s.id);
-      const sectionIds = sections.map(s => s.id);
-      return await base44.entities.Comment.filter({
-        $or: [
-          { rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } },
-          { rootEntityType: 'section', rootEntityId: { $in: sectionIds } },
-        ]
-      });
-    },
-    enabled: !!document?.id && suggestions.length > 0,
-    initialData: [],
-    staleTime: 60 * 1000,
+  // Comment counts — re-use the aggregated data already fetched by useDocumentData.
+  // This avoids a duplicate Comments query; the cache is invalidated by useDocumentSubscriptions.
+  const { data: aggregatedForComments } = useQuery({
+    queryKey: ['documentAggregatedData', document?.id],
+    enabled: false, // never re-fetches here — only reads from cache
   });
-
-  // Invalidate comment counts when any comment is added/deleted
-  React.useEffect(() => {
-    const unsubscribe = base44.entities.Comment.subscribe(() => {
-      queryClient.invalidateQueries({ queryKey: ['allDocumentComments', document?.id] });
-    });
-    return unsubscribe;
-  }, [document?.id, queryClient]);
+  const allDocumentComments = aggregatedForComments?.comments || [];
 
   const getCommentsCount = React.useCallback((entityType, entityId) => {
     return allDocumentComments.filter(
@@ -467,162 +450,7 @@ Return ONLY the translated text:`;
     return topicEditVotes?.find(v => v.suggestionId === suggestionId);
   }, [topicEditVotes]);
 
-  // מעקב אחרי הצבעות על כותרות נושאים למניעת race conditions
-  const topicVotingInProgressRef = React.useRef(new Set());
-  
-  const voteTopicEditMutation = useMutation({
-    mutationFn: async ({ suggestionId, vote }) => {
-      if (!user) throw new Error("יש להתחבר כדי להצביע");
-
-      // מניעת הצבעות כפולות על אותה הצעה
-      if (topicVotingInProgressRef.current.has(suggestionId)) {
-        console.log('[TOPIC VOTE] Already voting on this suggestion, ignoring');
-        throw new Error("ההצבעה בתהליך, אנא המתן");
-      }
-      topicVotingInProgressRef.current.add(suggestionId);
-
-      try {
-        const topicSuggestion = topicEditSuggestions.find(s => s.id === suggestionId);
-
-        // Fetch fresh data in parallel
-        const [existingVotes, freshSuggestions] = await Promise.all([
-          base44.entities.TopicEditVote.filter({ suggestionId, userId: user.id }),
-          base44.entities.TopicEditSuggestion.filter({ id: suggestionId })
-        ]);
-
-        const serverVote = existingVotes[0];
-        const freshSuggestion = freshSuggestions[0];
-
-        if (!freshSuggestion || freshSuggestion.status !== 'pending') {
-          throw new Error("ההצעה לא נמצאה או כבר טופלה");
-        }
-
-        // Mutate the vote record
-        if (serverVote) {
-          if (serverVote.vote === vote) {
-            await base44.entities.TopicEditVote.delete(serverVote.id);
-          } else {
-            await base44.entities.TopicEditVote.update(serverVote.id, { vote });
-          }
-        } else {
-          await base44.entities.TopicEditVote.create({ suggestionId, userId: user.id, vote });
-          ensureUserPublicProfile(user).catch(() => {});
-
-          // Award points for pro vote - fire and forget
-          if (vote === 'pro' && document.gamificationEnabled && topicSuggestion) {
-            base44.entities.User.filter({ email: topicSuggestion.created_by }).then(list => {
-              const creator = list[0];
-              if (!creator) return;
-              return Promise.all([
-                base44.entities.User.update(creator.id, { points: (creator.points || 1000) + 10 }),
-                base44.entities.PointsTransaction.create({
-                  userId: creator.id, amount: 10, action: 'vote_received',
-                  description: 'קיבל הצבעה בעד על הצעת עריכת כותרת', relatedEntityType: 'topic'
-                })
-              ]);
-            }).catch(() => {});
-          }
-        }
-
-        // Re-count from DB — source of truth, prevents race conditions
-        const allFreshVotes = await base44.entities.TopicEditVote.filter({ suggestionId });
-        const newProVotes = allFreshVotes.filter(v => v.vote === 'pro').length;
-        const newConVotes = allFreshVotes.filter(v => v.vote === 'con').length;
-
-        // Update suggestion with accurate counts
-        const updatedSuggestion = await base44.entities.TopicEditSuggestion.update(suggestionId, {
-          proVotes: newProVotes,
-          conVotes: newConVotes
-        });
-
-        // בדיקת קונצנזוס ואישור אוטומטי - זהה ל-voteOnSuggestion: משתמשים ב-document.threshold הקבוע
-        const delta = updatedSuggestion.proVotes - updatedSuggestion.conVotes;
-        const thresholdForAcceptance = Math.max(2, document.threshold || 2);
-        
-        if (delta >= thresholdForAcceptance && topicSuggestion) {
-          // Optimistically update UI immediately before server calls
-          queryClient.setQueryData(['topics', document.id], (oldTopics) => {
-            if (!oldTopics) return oldTopics;
-            return oldTopics.map(t => t.id === topicSuggestion.topicId ? { ...t, title: topicSuggestion.newTitle } : t);
-          });
-          queryClient.setQueryData(['topicEditSuggestions', document.id], (oldSuggestions) => {
-            if (!oldSuggestions) return oldSuggestions;
-            return oldSuggestions.map(s => s.id === suggestionId ? { ...s, status: 'accepted' } : s);
-          });
-
-          // Update topic title and mark suggestion accepted
-          await Promise.all([
-            base44.entities.Topic.update(topicSuggestion.topicId, { title: topicSuggestion.newTitle }),
-            base44.entities.TopicEditSuggestion.update(suggestionId, { status: 'accepted' })
-          ]);
-
-          // Create a DocumentVersion record so the change appears in version history
-          try {
-            const allVersions = await base44.entities.DocumentVersion.filter({ documentId: document.id });
-            const nextVersion = allVersions.length > 0 ? Math.max(...allVersions.map(v => v.version || 0)) + 1 : 1;
-            const topicSections = await base44.entities.Section.filter({ topicId: topicSuggestion.topicId });
-            const firstSectionId = topicSections.length > 0 ? topicSections[0].id : null;
-            if (firstSectionId) {
-              await base44.entities.DocumentVersion.create({
-                documentId: document.id,
-                sectionId: firstSectionId,
-                content: `topic_title_change:${topicSuggestion.topicId}:${topicSuggestion.originalTitle}:${topicSuggestion.newTitle}`,
-                changeDescription: `כותרת נושא עודכנה: ${topicSuggestion.originalTitle} → ${topicSuggestion.newTitle}`,
-                version: nextVersion,
-                changeType: 'suggestion_accepted',
-                suggestionId: topicSuggestion.id,
-                originalLanguage: 'he',
-                translations: {}
-              });
-            }
-          } catch (versionErr) {
-            console.error('[TOPIC VOTE] Error creating version record:', versionErr);
-          }
-
-          // Award acceptance points - fire and forget
-          if (document.gamificationEnabled) {
-            base44.entities.User.filter({ email: topicSuggestion.created_by }).then(list => {
-              const creator = list[0];
-              if (!creator) return;
-              const newPoints = (creator.points || 1000) + 100;
-              return Promise.all([
-                base44.entities.User.update(creator.id, { points: newPoints }),
-                base44.entities.PointsTransaction.create({
-                  userId: creator.id,
-                  amount: 100,
-                  action: 'suggestion_accepted',
-                  description: `ההצעה שלך לעריכת כותרת נושא התקבלה`,
-                  relatedEntityType: 'topic'
-                })
-              ]);
-            }).catch(() => {});
-          }
-
-          toast.success('🎉 ההצעה לעריכת כותרת התקבלה!', { description: 'הכותרת עודכנה במסמך', duration: 4000 });
-          
-          await Promise.all([
-            queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
-            queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
-            queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions'] }),
-            queryClient.invalidateQueries({ queryKey: ['document', document.id] }),
-            queryClient.invalidateQueries({ queryKey: ['allVersions', document.id] }),
-            queryClient.invalidateQueries({ queryKey: ['allVersions'] }),
-          ]);
-        }
-      } catch (err) {
-        throw err;
-      } finally {
-        topicVotingInProgressRef.current.delete(suggestionId);
-      }
-    },
-    onSuccess: () => {
-      // רענון מיידי במקביל
-      Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions'] }),
-        queryClient.invalidateQueries({ queryKey: ['topicEditVotes'] })
-      ]);
-    },
-  });
+  const voteTopicEditMutation = useTopicVoteMutation({ document, user, topicEditSuggestions, queryClient });
 
   return (
     <>
