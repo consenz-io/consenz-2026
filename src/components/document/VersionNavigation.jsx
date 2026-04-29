@@ -11,7 +11,7 @@ export default function VersionNavigation({
   language,
   isRTL 
 }) {
-  if (totalVersions <= 1) return null;
+  const hasMultipleVersions = totalVersions > 1;
 
   const isCurrentVersion = currentIndex === 0;
   const isOldestVersion = currentIndex >= totalVersions - 1;
@@ -49,7 +49,7 @@ export default function VersionNavigation({
               ? onNavigate(Math.max(0, currentIndex - 1))
               : onNavigate(Math.min(currentIndex + 1, totalVersions - 1))
             }
-            disabled={isRTL ? isCurrentVersion : isOldestVersion}
+            disabled={!hasMultipleVersions || (isRTL ? isCurrentVersion : isOldestVersion)}
             className="h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -79,7 +79,7 @@ export default function VersionNavigation({
               ? onNavigate(Math.min(currentIndex + 1, totalVersions - 1))
               : onNavigate(Math.max(0, currentIndex - 1))
             }
-            disabled={isRTL ? isOldestVersion : isCurrentVersion}
+            disabled={!hasMultipleVersions || (isRTL ? isOldestVersion : isCurrentVersion)}
             className="h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
           >
             {isRTL
