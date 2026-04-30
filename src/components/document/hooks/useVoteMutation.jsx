@@ -62,7 +62,9 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
       const previousSuggestions = queryClient.getQueryData(['suggestions', document?.id]);
       const previousVotes = queryClient.getQueryData(['userVotes', document?.id, user?.id]);
       
-      const suggestion = suggestions?.find(s => s.id === suggestionId);
+      // Read from live cache (not stale closure) to get accurate current vote counts
+      const liveSuggestions = previousSuggestions || [];
+      const suggestion = liveSuggestions.find(s => s.id === suggestionId);
       let newProVotes = suggestion?.proVotes || 0;
       let newConVotes = suggestion?.conVotes || 0;
       

@@ -120,18 +120,15 @@ const SectionCarousel = React.memo(function SectionCarousel({
     return new Date(b.created_date) - new Date(a.created_date);
   });
   
-  // Tracks pending animation timers so we can cancel them on unmount
+  // Tracks pending animation timers so we can cancel them between effect runs and on unmount
   const animationTimersRef = React.useRef([]);
-
-  // Cleanup all pending timers on unmount
-  React.useEffect(() => {
-    return () => {
-      animationTimersRef.current.forEach(clearTimeout);
-    };
-  }, []);
 
   // מעקב אחרי שינוי סטטוס להצגת אנימציה - עובד על כל ההצעות
   React.useEffect(() => {
+    // Clear any timers from the previous effect run before setting new ones
+    animationTimersRef.current.forEach(clearTimeout);
+    animationTimersRef.current = [];
+
     if (!allSectionSuggestions || allSectionSuggestions.length === 0 || !document?.id) return;
     
     allSectionSuggestions.forEach(sug => {
@@ -183,7 +180,13 @@ const SectionCarousel = React.memo(function SectionCarousel({
       
       prevSuggestionsStatusRef.current[sug.id] = sug.status;
     });
-  }, [allSectionSuggestions, currentSuggestionId, document.id, queryClient]);
+
+    // Cleanup on unmount or before next effect run
+    return () => {
+      animationTimersRef.current.forEach(clearTimeout);
+      animationTimersRef.current = [];
+    };
+  }, [allSectionSuggestions, currentSuggestionId, document.id, section.id, queryClient]);
 
   // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות + הצעות באנימציה
   const allViews = React.useMemo(() => {

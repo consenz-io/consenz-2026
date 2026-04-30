@@ -198,12 +198,20 @@ export default function DocumentContent({
     retry: 1,
   });
 
-  const getUserVote = React.useCallback((suggestionId) => {
-    // מחזיר את ההצבעה האחרונה עבור ההצעה הספציפית
-    const votesForSuggestion = userVotes?.filter(v => v.suggestionId === suggestionId) || [];
-    // אם יש כפילויות (לא אמור לקרות), נחזיר את האחרונה
-    return votesForSuggestion[votesForSuggestion.length - 1] || null;
+  // O(1) Map lookup instead of O(n) filter on every call
+  const userVotesMap = React.useMemo(() => {
+    const map = new Map();
+    if (!userVotes) return map;
+    // Iterate forward so the last entry (most recent) wins on duplicates
+    for (const v of userVotes) {
+      map.set(v.suggestionId, v);
+    }
+    return map;
   }, [userVotes]);
+
+  const getUserVote = React.useCallback((suggestionId) => {
+    return userVotesMap.get(suggestionId) || null;
+  }, [userVotesMap]);
 
 
 
