@@ -57,8 +57,9 @@ export function useDocumentData(documentId) {
   // Stable key: only keyed by documentId — avoids a new query on every render
   // (suggestions/sections arrays change reference every render causing cache thrash)
   const { data: aggregatedData } = useQuery({
-    queryKey: ['documentAggregatedData', documentId],
+    queryKey: ['documentAggregatedData', documentId ?? '__none__'],
     queryFn: async () => {
+      if (!documentId) return { votes: [], users: [], publicProfiles: [], args: [], comments: [] };
       // Re-read from cache at fetch time so we always have the latest IDs
       // without capturing stale closures
       const [allSuggestions, allSections] = await Promise.all([
