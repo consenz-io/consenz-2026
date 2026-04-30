@@ -131,46 +131,46 @@ export default function CreateGroup() {
               </div>
 
               <div className="space-y-3">
-                <Label>{language === 'he' ? 'פרטיות הקבוצה' : language === 'ar' ? 'خصوصية المجموعة' : 'Group Privacy'}</Label>
+                <Label className={isRTL ? 'block text-right' : ''}>{language === 'he' ? 'פרטיות הקבוצה' : language === 'ar' ? 'خصوصية المجموعة' : 'Group Privacy'}</Label>
                 <RadioGroup
                   value={formData.status}
                   onValueChange={(value) => setFormData({ ...formData, status: value })}
                 >
-                  <div className="flex items-start space-x-3 space-x-reverse p-4 border rounded-lg hover:bg-slate-50 cursor-pointer">
+                  <div className={`flex items-start gap-3 p-4 border rounded-lg hover:bg-slate-50 cursor-pointer ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <RadioGroupItem value="public" id="public" />
-                    <Label htmlFor="public" className="flex-1 cursor-pointer">
-                      <div className="flex items-center gap-2 font-semibold mb-1">
+                    <Label htmlFor="public" className={`flex-1 cursor-pointer ${isRTL ? 'text-right' : ''}`}>
+                      <div className={`flex items-center gap-2 font-semibold mb-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <Globe className="w-4 h-4" />
                         {language === 'he' ? 'קבוצה ציבורית' : language === 'ar' ? 'مجموعة عامة' : 'Public Group'}
                       </div>
                       <p className="text-sm text-slate-500">
-                        {language === 'he' ? 'כולם יכולים לראות את הקבוצה והמסמכים שלה' : 'Everyone can see the group and its documents'}
+                        {language === 'he' ? 'כולם יכולים לראות את הקבוצה והמסמכים שלה' : language === 'ar' ? 'يمكن للجميع رؤية المجموعة ومستنداتها' : 'Everyone can see the group and its documents'}
                       </p>
                     </Label>
                   </div>
 
-                  <div className="flex items-start space-x-3 space-x-reverse p-4 border rounded-lg hover:bg-slate-50 cursor-pointer">
+                  <div className={`flex items-start gap-3 p-4 border rounded-lg hover:bg-slate-50 cursor-pointer ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <RadioGroupItem value="private" id="private" />
-                    <Label htmlFor="private" className="flex-1 cursor-pointer">
-                      <div className="flex items-center gap-2 font-semibold mb-1">
+                    <Label htmlFor="private" className={`flex-1 cursor-pointer ${isRTL ? 'text-right' : ''}`}>
+                      <div className={`flex items-center gap-2 font-semibold mb-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <Lock className="w-4 h-4" />
                         {language === 'he' ? 'קבוצה פרטית' : language === 'ar' ? 'مجموعة خاصة' : 'Private Group'}
                       </div>
                       <p className="text-sm text-slate-500">
-                        {language === 'he' ? 'כולם יכולים לראות, דרושה אישור להצטרפות' : 'Everyone can see, approval required to join'}
+                        {language === 'he' ? 'כולם יכולים לראות, דרושה אישור להצטרפות' : language === 'ar' ? 'يمكن للجميع الرؤية، يتطلب الموافقة للانضمام' : 'Everyone can see, approval required to join'}
                       </p>
                     </Label>
                   </div>
 
-                  <div className="flex items-start space-x-3 space-x-reverse p-4 border rounded-lg hover:bg-slate-50 cursor-pointer">
+                  <div className={`flex items-start gap-3 p-4 border rounded-lg hover:bg-slate-50 cursor-pointer ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <RadioGroupItem value="hidden" id="hidden" />
-                    <Label htmlFor="hidden" className="flex-1 cursor-pointer">
-                      <div className="flex items-center gap-2 font-semibold mb-1">
+                    <Label htmlFor="hidden" className={`flex-1 cursor-pointer ${isRTL ? 'text-right' : ''}`}>
+                      <div className={`flex items-center gap-2 font-semibold mb-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                         <Lock className="w-4 h-4" />
                         {language === 'he' ? 'קבוצה חסויה' : language === 'ar' ? 'مجموعة مخفية' : 'Hidden Group'}
                       </div>
                       <p className="text-sm text-slate-500">
-                        {language === 'he' ? 'רק חברי הקבוצה ומנהלי המערכת יכולים לראות' : 'Only members and system admins can see'}
+                        {language === 'he' ? 'רק חברי הקבוצה ומנהלי המערכת יכולים לראות' : language === 'ar' ? 'فقط الأعضاء ومدراء النظام يمكنهم الرؤية' : 'Only members and system admins can see'}
                       </p>
                     </Label>
                   </div>
