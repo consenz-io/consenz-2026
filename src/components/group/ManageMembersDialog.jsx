@@ -22,7 +22,7 @@ import {
 import { useLanguage } from "@/components/LanguageContext";
 
 export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupDeleted }) {
-  const { language } = useLanguage();
+  const { language, isRTL } = useLanguage();
   const queryClient = useQueryClient();
   const [inviteEmail, setInviteEmail] = useState("");
   const [error, setError] = useState(null);
@@ -299,15 +299,15 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
             />
           </div>
           <div className="space-y-2">
-            <Label>{language === 'he' ? 'פרטיות הקבוצה' : 'Group Privacy'}</Label>
+            <Label className={isRTL ? 'block text-right' : ''}>{language === 'he' ? 'פרטיות הקבוצה' : 'Group Privacy'}</Label>
             <RadioGroup
               value={group?.status || 'public'}
               onValueChange={(value) => updateGroupStatusMutation.mutate(value)}
             >
-              <div className="flex items-start space-x-3 space-x-reverse p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
+              <div className={`flex items-start p-3 border rounded-lg hover:bg-slate-50 cursor-pointer gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <RadioGroupItem value="public" id="public-manage" />
-                <Label htmlFor="public-manage" className="flex-1 cursor-pointer">
-                  <div className="flex items-center gap-2 font-medium mb-1">
+                <Label htmlFor="public-manage" className={`flex-1 cursor-pointer ${isRTL ? 'text-right' : ''}`}>
+                  <div className={`flex items-center gap-2 font-medium mb-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Globe className="w-4 h-4" />
                     {language === 'he' ? 'ציבורי' : 'Public'}
                   </div>
@@ -317,10 +317,10 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                 </Label>
               </div>
 
-              <div className="flex items-start space-x-3 space-x-reverse p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
+              <div className={`flex items-start p-3 border rounded-lg hover:bg-slate-50 cursor-pointer gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <RadioGroupItem value="private" id="private-manage" />
-                <Label htmlFor="private-manage" className="flex-1 cursor-pointer">
-                  <div className="flex items-center gap-2 font-medium mb-1">
+                <Label htmlFor="private-manage" className={`flex-1 cursor-pointer ${isRTL ? 'text-right' : ''}`}>
+                  <div className={`flex items-center gap-2 font-medium mb-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Lock className="w-4 h-4" />
                     {language === 'he' ? 'פרטי' : 'Private'}
                   </div>
@@ -330,10 +330,10 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                 </Label>
               </div>
 
-              <div className="flex items-start space-x-3 space-x-reverse p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
+              <div className={`flex items-start p-3 border rounded-lg hover:bg-slate-50 cursor-pointer gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <RadioGroupItem value="hidden" id="hidden-manage" />
-                <Label htmlFor="hidden-manage" className="flex-1 cursor-pointer">
-                  <div className="flex items-center gap-2 font-medium mb-1">
+                <Label htmlFor="hidden-manage" className={`flex-1 cursor-pointer ${isRTL ? 'text-right' : ''}`}>
+                  <div className={`flex items-center gap-2 font-medium mb-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                     <Lock className="w-4 h-4" />
                     {language === 'he' ? 'חסוי' : 'Hidden'}
                   </div>
