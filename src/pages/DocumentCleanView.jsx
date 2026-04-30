@@ -76,12 +76,19 @@ export default function DocumentCleanView() {
   const { data: allVersions, isLoading: versionsLoading } = useQuery({
     queryKey: ['allVersions', documentId],
     queryFn: async () => {
-      // Use service role to bypass RLS restrictions on DocumentVersion
+      // Fetch versions - backend now allows public access for public documents
       const result = await base44.functions.invoke('getDocumentVersionsServiceRole', { documentId });
       return result?.data || [];
     },
     enabled: !!documentId,
   });
+
+  // Calculate correct version count
+  const totalVersionCount = React.useMemo(() => {
+    if (!allVersions || allVersions.length === 0) return 1;
+    const maxVersion = Math.max(...allVersions.map(v => v.version || 0));
+    return maxVersion + 1;
+  }, [allVersions]);
 
   const { data: suggestions, isLoading: suggestionsLoading } = useQuery({
     queryKey: ['suggestions', documentId],
@@ -504,7 +511,7 @@ ${text}`;
     <div className="min-h-screen bg-white">
       <VersionNavigation
         currentIndex={currentVersionIndex}
-        totalVersions={versionGroups.length}
+        totalVersions={totalVersionCount}
         onNavigate={setCurrentVersionIndex}
         currentSnapshot={currentSnapshot}
         language={language}
