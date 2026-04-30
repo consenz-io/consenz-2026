@@ -690,14 +690,14 @@ ${text}`;
                           currentSnapshot?.changedSectionId === section.id;
 
                         // Check if this section changed between versions (content edit)
-                        // Compare the snapshot's content with the newer version's content
+                        // olderContent = the content in the previous (newer in time) snapshot
+                        // displayedContent = the content at this historical snapshot
                         const hasChanged = isViewingHistory && 
                           !isDeletedSection &&
                           !isDirectlyEdited &&
                           currentSnapshot?.changedSectionId === section.id && 
-                          currentSnapshot?.newContent && 
-                          currentSnapshot?.newContent !== '' &&
-                          displayedContent !== currentSnapshot?.newContent;
+                          olderContent !== undefined &&
+                          olderContent !== displayedContent;
 
                         return (
                           <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
@@ -790,7 +790,7 @@ ${text}`;
                                    </div>
                                    <InlineDiff
                                      originalContent={displayedContent}
-                                     newContent={currentSnapshot?.newContent}
+                                     newContent={olderContent}
                                    />
                                  </div>
                                 ) : (

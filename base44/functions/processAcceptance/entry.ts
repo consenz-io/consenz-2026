@@ -320,9 +320,12 @@ Deno.serve(async (req) => {
         }
 
         // Create a second version record marking the deletion (content='')
+        // topicId and sectionOrder must be saved here because the section is already deleted
         await base44.entities.DocumentVersion.create({
           documentId: suggestion.documentId,
           sectionId: section.id,
+          topicId: section.topicId,
+          sectionOrder: section.order,
           content: '',
           changeDescription: suggestion.title || 'מחיקת סעיף',
           version: nextVersion + 1,

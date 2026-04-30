@@ -75,17 +75,24 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
     });
 
     // Build grouped edit pairs for direct_edits: each pair = [afterVersion, beforeVersion]
+    // Pair consecutive version numbers: changeDescription starting with "לפני:" is "before", the next version is "after"
     const directEditPairs = [];
-    directEditsBySectionId.forEach((versions, sectionId) => {
-      // sort ascending by version number to pair them
+    directEditsBySectionId.forEach((versions) => {
       const sorted = [...versions].sort((a, b) => (a.version || 0) - (b.version || 0));
-      // pair: even index = before (לפני:), odd = after
-      for (let i = 1; i < sorted.length; i += 2) {
-        directEditPairs.push({ afterVersion: sorted[i], beforeVersion: sorted[i - 1] });
-      }
-      // if odd count, last one is unpaired after
-      if (sorted.length % 2 === 1) {
-        directEditPairs.push({ afterVersion: sorted[sorted.length - 1], beforeVersion: null });
+      // Walk the sorted list: a "before" record is one whose changeDescription starts with "לפני:"
+      // The very next record (higher version) is the corresponding "after"
+      let i = 0;
+      while (i < sorted.length) {
+        const current = sorted[i];
+        const isBeforeRecord = current.changeDescription?.startsWith('לפני:');
+        if (isBeforeRecord && i + 1 < sorted.length) {
+          directEditPairs.push({ afterVersion: sorted[i + 1], beforeVersion: current });
+          i += 2;
+        } else {
+          // Standalone "after" with no explicit "before" (e.g. orphaned record)
+          directEditPairs.push({ afterVersion: current, beforeVersion: null });
+          i += 1;
+        }
       }
     });
     // Sort pairs by afterVersion.created_date descending
@@ -121,9 +128,11 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
       if (event.eventType === 'suggestion') {
         const relatedSuggestion = suggestions?.find(s => s.id === afterVersion.suggestionId);
 
+        // Use updated_date as the acceptance timestamp (status changes from pending → accepted update the record)
+        const versionTime = new Date(afterVersion.created_date);
         const acceptedSuggestionsUpToHere = suggestions
-          ?.filter(s => s.status === 'accepted' && new Date(s.created_date) <= new Date(afterVersion.created_date))
-          .sort((a, b) => new Date(a.created_date) - new Date(b.created_date)) || [];
+          ?.filter(s => s.status === 'accepted' && new Date(s.updated_date || s.created_date) <= versionTime)
+          .sort((a, b) => new Date(a.updated_date || a.created_date) - new Date(b.updated_date || b.created_date)) || [];
 
         const weightedConsensusAtTime = acceptedSuggestionsUpToHere.length === 0 ? 0.5 :
           acceptedSuggestionsUpToHere.reduce((sum, s) => {
