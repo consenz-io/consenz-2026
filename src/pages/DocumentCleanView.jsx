@@ -145,7 +145,8 @@ export default function DocumentCleanView() {
     });
     
     // Add sections from versions that might be deleted now
-    (allVersions || []).forEach(v => {
+    if (Array.isArray(allVersions)) {
+      allVersions.forEach(v => {
       if (v.sectionId && !sectionMap.has(v.sectionId)) {
         // Find the topic for this section from versions
         const relatedVersions = (allVersions || []).filter(ver => ver.sectionId === v.sectionId);
@@ -192,6 +193,7 @@ export default function DocumentCleanView() {
         }
       }
     });
+    }
     
     return sectionMap;
   }, [sections, allVersions, topics, suggestions]);  // eslint-disable-line
