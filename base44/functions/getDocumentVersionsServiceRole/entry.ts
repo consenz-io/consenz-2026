@@ -10,9 +10,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'documentId is required' }, { status: 400 });
     }
 
-    // Fetch using user's context (respects RLS) - this is correct because
-    // DocumentVersion RLS already allows viewing based on document access permissions
-    const versions = await base44.entities.DocumentVersion.filter(
+    // Bypass RLS to get all versions regardless of user's role or group membership
+    // The Document RLS will still restrict access to the document itself
+    const versions = await base44.asServiceRole.entities.DocumentVersion.filter(
       { documentId },
       '-version'
     );

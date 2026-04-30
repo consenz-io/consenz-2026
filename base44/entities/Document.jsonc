@@ -1,0 +1,141 @@
+{
+  "name": "Document",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Document title"
+    },
+    "urlName": {
+      "type": "string",
+      "description": "URL-friendly unique name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Rich text description and background for the document"
+    },
+    "privacy": {
+      "type": "string",
+      "enum": [
+        "public_view_open_participation",
+        "public_view_closed_participation",
+        "private_invite_only"
+      ],
+      "default": "public_view_open_participation",
+      "description": "Privacy setting"
+    },
+    "groupId": {
+      "type": "string",
+      "description": "Group ID that this document belongs to"
+    },
+    "votingButtonsEnabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable voting buttons"
+    },
+    "gamificationEnabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable gamification system (points cost for suggestions)"
+    },
+    "avgSuggestionConsensus": {
+      "type": "number",
+      "default": 0.5,
+      "description": "Average consensus score of accepted suggestions"
+    },
+    "totalUsersInteracted": {
+      "type": "number",
+      "default": 0,
+      "description": "Total unique users who interacted with document"
+    },
+    "threshold": {
+      "type": "number",
+      "default": 2,
+      "description": "Current acceptance threshold for suggestions (delta between pro and con votes)"
+    },
+    "consensuses": {
+      "type": "array",
+      "description": "Array of section_consensus_meter values from accepted suggestions",
+      "default": [],
+      "items": {
+        "type": "number"
+      }
+    },
+    "defaultSuggestionLifetimeHours": {
+      "type": "number",
+      "default": 72,
+      "description": "Default voting period in hours"
+    },
+    "originalLanguage": {
+      "type": "string",
+      "enum": [
+        "en",
+        "he",
+        "ar"
+      ],
+      "default": "he",
+      "description": "Original language of the content"
+    },
+    "translations": {
+      "type": "object",
+      "description": "Cached translations {language_code: translated_content}",
+      "default": {}
+    }
+  },
+  "required": [
+    "title",
+    "urlName"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "data.privacy": {
+            "$in": [
+              "public_view_open_participation",
+              "public_view_closed_participation"
+            ]
+          }
+        },
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.groupId": {
+            "$in": "{{user_group_ids}}"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
