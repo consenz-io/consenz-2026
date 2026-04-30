@@ -117,28 +117,25 @@ export default function DocumentView() {
   const versionCount = React.useMemo(() => {
     if (!documentVersions || documentVersions.length === 0) return 1;
     
-    // Count unique suggestion-based versions
+    // Deduplicate versions first - keep only the latest version per (sectionId, version) pair
+    const versionMap = new Map();
+    documentVersions.forEach(v => {
+      const key = `${v.sectionId}-${v.version}`;
+      const existing = versionMap.get(key);
+      if (!existing || new Date(v.created_date) > new Date(existing.created_date)) {
+        versionMap.set(key, v);
+      }
+    });
+    
+    const deduplicatedVersions = Array.from(versionMap.values());
+    
+    // Count unique suggestions (each suggestion = 1 version)
     const suggestionIds = new Set(
-      documentVersions.filter(v => v.suggestionId).map(v => v.suggestionId)
+      deduplicatedVersions.filter(v => v.suggestionId).map(v => v.suggestionId)
     );
     
-    // Count direct edits (versions without suggestionId but with sectionId)
-    const directEditVersions = new Set(
-      documentVersions.filter(v => !v.suggestionId && v.sectionId).map(v => {
-        // Group direct edits by sectionId and version to identify unique edit events
-        return `${v.sectionId}-${v.version}`;
-      })
-    );
-    
-    // Also include section_created events as versions
-    const createdSectionVersions = new Set(
-      documentVersions.filter(v => v.changeType === 'section_created').map(v => {
-        return `section_created-${v.sectionId}`;
-      })
-    );
-    
-    // Total = current + suggestion changes + direct edits + section creations
-    return 1 + suggestionIds.size + directEditVersions.size + createdSectionVersions.size;
+    // Total = current + unique suggestions
+    return 1 + suggestionIds.size;
   }, [documentVersions]);
 
   const sectionCommentsCount = React.useMemo(() => {
