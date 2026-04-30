@@ -59,14 +59,16 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
   });
 
   const { data: versions, isLoading: versionsLoading } = useQuery({
-    queryKey: ['versions', sectionId],
+    queryKey: ['versions', sectionId, section?.documentId],
     queryFn: async () => {
-      const result = await base44.functions.invoke('getDocumentVersionsServiceRole', { documentId: section?.documentId });
+      if (!section?.documentId) return [];
+      const result = await base44.functions.invoke('getDocumentVersionsServiceRole', { documentId: section.documentId });
       const allVersions = result?.data || [];
       return allVersions.filter(v => v.sectionId === sectionId).sort((a, b) => (b.version || 0) - (a.version || 0));
     },
     initialData: [],
-    enabled: !!sectionId && !!section?.documentId && isOpen
+    enabled: !!sectionId && !!section?.documentId && isOpen,
+    staleTime: 1000 * 60 * 5 // 5 minutes
   });
 
   const { data: user } = useQuery({
