@@ -75,7 +75,11 @@ export default function DocumentCleanView() {
 
   const { data: allVersions, isLoading: versionsLoading } = useQuery({
     queryKey: ['allVersions', documentId],
-    queryFn: () => base44.entities.DocumentVersion.filter({ documentId }, '-version'),
+    queryFn: async () => {
+      // Use service role to bypass RLS restrictions on DocumentVersion
+      const result = await base44.functions.invoke('getDocumentVersionsServiceRole', { documentId });
+      return result?.data || [];
+    },
     enabled: !!documentId,
   });
 
