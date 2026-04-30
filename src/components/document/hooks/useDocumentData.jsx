@@ -18,27 +18,33 @@ export function useDocumentData(documentId) {
     enabled: !!documentId,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const { data: topics = [], isLoading: topicsLoading, isError: topicsError } = useQuery({
     queryKey: ['topics', documentId],
     queryFn: () => base44.entities.Topic.filter({ documentId }, 'order').catch(() => []),
     enabled: !!documentId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     gcTime: 10 * 60 * 1000,
     retry: 3,
     retryDelay: 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const { data: sections = [], isLoading: sectionsLoading, isError: sectionsError } = useQuery({
     queryKey: ['sections', documentId],
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
     enabled: !!documentId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     gcTime: 10 * 60 * 1000,
     retry: 3,
     retryDelay: 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const { data: suggestions = [], isLoading: suggestionsLoading, isError: suggestionsError } = useQuery({
@@ -49,9 +55,11 @@ export function useDocumentData(documentId) {
       return results || [];
     },
     enabled: !!documentId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
     gcTime: 10 * 60 * 1000,
     retry: 2,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // Stable key: only keyed by documentId — avoids a new query on every render
@@ -89,7 +97,9 @@ export function useDocumentData(documentId) {
       return { votes, users: publicProfiles, publicProfiles, args, comments };
     },
     enabled: !!documentId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // Seed individual caches from aggregatedData
@@ -127,8 +137,10 @@ export function useDocumentData(documentId) {
       return { agreements, versions };
     },
     enabled: !!documentId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
     gcTime: 5 * 60 * 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   const { data: user } = useQuery({
