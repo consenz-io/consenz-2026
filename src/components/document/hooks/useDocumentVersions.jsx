@@ -6,14 +6,14 @@ import React from "react";
  */
 export function useDocumentVersions(document, sections, allVersions, suggestions) {
   const versionGroups = React.useMemo(() => {
-    if (!document || !sections) return [];
+    if (!document || !sections || !Array.isArray(allVersions)) return [];
     
     const snapshots = [];
     
     // Collect all section IDs that ever existed
     const allSectionIds = new Set();
     sections.forEach(s => allSectionIds.add(s.id));
-    allVersions?.forEach(v => {
+    allVersions.forEach(v => {
       if (v.sectionId) allSectionIds.add(v.sectionId);
     });
     

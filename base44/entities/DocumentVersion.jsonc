@@ -96,24 +96,7 @@
         },
         {
           "data.documentId": {
-            "$in": "{{document.data.id}}",
-            "document.privacy": {
-              "$in": [
-                "public_view_open_participation",
-                "public_view_closed_participation"
-              ]
-            }
-          }
-        },
-        {
-          "data.documentId": {
-            "$in": "{{document.data.id}}",
-            "document.created_by": "{{user.email}}"
-          }
-        },
-        {
-          "data.documentId": {
-            "$in": "{{document_admin.data.documentId}}"
+            "$in": "{{document.data.id}}"
           }
         }
       ]
