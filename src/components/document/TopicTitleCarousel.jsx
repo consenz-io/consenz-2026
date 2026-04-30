@@ -17,7 +17,6 @@ const TopicTitleCarousel = React.memo(function TopicTitleCarousel({
   voteTopicEditMutation,
   getUserName,
   isAdmin,
-  users,
   publicProfiles,
   showTranslatedTopics,
   setShowTranslatedTopics,

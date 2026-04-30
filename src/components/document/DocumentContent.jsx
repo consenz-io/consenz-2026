@@ -7,7 +7,7 @@ import { ensureUserPublicProfile } from "@/components/ensureUserPublicProfile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Plus, AlertCircle, ThumbsUp, ThumbsDown, MessageSquare, History, Languages, Loader2, GripVertical, Trash2 } from "lucide-react";
+import { Edit, Plus, ThumbsUp, ThumbsDown, MessageSquare, Languages, Loader2, GripVertical, Trash2 } from "lucide-react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import VotesNeededCounter from "./VotesNeededCounter";
 import SectionDiff from "./SectionDiff";
@@ -56,12 +56,6 @@ export default function DocumentContent({
     () => suggestions.filter(s => s.status === 'accepted'),
     [suggestions]
   );
-
-  const { data: users } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => base44.entities.User.list(),
-    initialData: [],
-  });
 
   const { data: publicProfiles } = useQuery({
     queryKey: ['publicProfiles'],
@@ -221,17 +215,9 @@ export default function DocumentContent({
 
 
   const getUserName = React.useCallback((email) => {
-    // Try public profile first (accessible to everyone)
     const profile = publicProfiles?.find(p => p.email === email);
-    if (profile?.fullName) return profile.fullName;
-    
-    // Fallback to User entity (admins only)
-    const user = users?.find(u => u.email === email);
-    if (user?.full_name) return user.full_name;
-    
-    // User hasn't completed profile yet
-    return 'User';
-  }, [publicProfiles, users]);
+    return profile?.fullName || 'User';
+  }, [publicProfiles]);
 
   const toggleComments = React.useCallback((id) => {
     setShowComments(prev => ({
@@ -504,7 +490,6 @@ Return ONLY the translated text:`;
                                 voteTopicEditMutation={voteTopicEditMutation}
                                 getUserName={getUserName}
                                 isAdmin={isAdmin}
-                                users={users}
                                 publicProfiles={publicProfiles}
                                 showTranslatedTopics={showTranslatedTopics}
                                 setShowTranslatedTopics={setShowTranslatedTopics}
@@ -722,8 +707,8 @@ Return ONLY the translated text:`;
                               acceptedSuggestions={acceptedSuggestions}
                               sectionIndex={index}
                               isAdmin={isAdmin}
-                              users={users}
-                              onOpenSuggestionSidebar={onOpenSuggestionSidebar}
+                              users={publicProfiles}
+                                    onOpenSuggestionSidebar={onOpenSuggestionSidebar}
                               newlyCreatedSuggestionId={newlyCreatedSuggestion?.sectionId === section.id ? newlyCreatedSuggestion?.suggestionId : null}
                               onClearNewlyCreated={onClearNewlyCreated}
                               targetSuggestionId={targetSuggestionId}

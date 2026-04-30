@@ -9,6 +9,7 @@ import { base44 } from "@/api/base44Client";
 import DeleteSectionDialog from "./DeleteSectionDialog";
 import SectionHistorySidebar from "./SectionHistorySidebar";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 import SectionDiff from "./SectionDiff";
 import VotesNeededCounter from "./VotesNeededCounter";
 import CommentsSection from "./CommentsSection";
@@ -218,7 +219,6 @@ const SectionCarousel = React.memo(function SectionCarousel({
     const idx = allViews.findIndex(v => v.id === currentSuggestionId);
     return idx >= 0 ? idx : 0;
   }, [currentSuggestionId, allViews]);
-  const [showTranslated, setShowTranslated] = useState({});
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showHistorySidebar, setShowHistorySidebar] = useState(false);
   const [showJoinGroupDialog, setShowJoinGroupDialog] = useState(false);
@@ -312,77 +312,6 @@ const SectionCarousel = React.memo(function SectionCarousel({
       queryClient.invalidateQueries({ queryKey: ['versions'] });
       setShowDeleteDialog(false);
     },
-  });
-
-  const translateSuggestionMutation = useMutation({
-    mutationFn: async (suggestion) => {
-      const languagePrompts = { en: "English", he: "Hebrew", ar: "Arabic" };
-      const originalLanguage = suggestion.originalLanguage || 'he';
-      
-      // תרגום כותרת
-      const titlePrompt = `Translate the following HTML content to ${languagePrompts[language]}. Keep ALL HTML tags. Return ONLY the translated HTML:\n${suggestion.title}`;
-      const titleResult = await base44.integrations.Core.InvokeLLM({
-        prompt: titlePrompt,
-        add_context_from_internet: false,
-      });
-      const translatedTitle = (typeof titleResult === 'string' ? titleResult : titleResult.content || titleResult)
-        .replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
-
-      console.log('[TRANSLATE DEBUG] Translated title:', translatedTitle);
-
-      // תרגום הסבר
-      let translatedExplanation = suggestion.explanation || '';
-      if (suggestion.explanation) {
-        const explanationPrompt = `Translate the following HTML content to ${languagePrompts[language]}. Keep ALL HTML tags. Return ONLY the translated HTML:\n${suggestion.explanation}`;
-        const explanationResult = await base44.integrations.Core.InvokeLLM({
-          prompt: explanationPrompt,
-          add_context_from_internet: false,
-        });
-        translatedExplanation = (typeof explanationResult === 'string' ? explanationResult : explanationResult.content || explanationResult)
-          .replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
-      }
-
-      // תרגום תוכן מוצע
-      const contentPrompt = `Translate the following HTML content to ${languagePrompts[language]}. Keep ALL HTML tags. Return ONLY the translated HTML:\n${suggestion.newContent}`;
-      const contentResult = await base44.integrations.Core.InvokeLLM({
-        prompt: contentPrompt,
-        add_context_from_internet: false,
-      });
-      const translatedContent = (typeof contentResult === 'string' ? contentResult : contentResult.content || contentResult)
-        .replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
-
-      console.log('[TRANSLATE DEBUG] Translated content:', translatedContent);
-
-      const newTranslations = {
-        ...(suggestion.translations || {}),
-        [language]: {
-          title: translatedTitle,
-          explanation: translatedExplanation,
-          newContent: translatedContent
-        }
-      };
-
-      await base44.entities.Suggestion.update(suggestion.id, {
-        translations: newTranslations
-      });
-
-      return { suggestionId: suggestion.id, translations: newTranslations, suggestion };
-    },
-    onMutate: async (suggestion) => {
-      // מגדיר מראש שאנחנו מציגים תרגום
-      setShowTranslated(prev => ({ ...prev, [suggestion.id]: true }));
-    },
-    onSuccess: (data) => {
-      // עדכון הדאטה באופן מיידי בקאש
-      queryClient.setQueryData(['suggestions', document.id], (oldData) => {
-        if (!oldData) return oldData;
-        return oldData.map(s => 
-          s.id === data.suggestionId 
-            ? { ...s, translations: data.translations }
-            : s
-        );
-      });
-    }
   });
 
   const currentSuggestionDisplayId = currentView?.type === 'suggestion' ? `suggestion-${currentView.data.id}` : `section-${section.id}`;

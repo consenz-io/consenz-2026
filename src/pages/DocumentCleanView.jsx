@@ -666,9 +666,6 @@ ${text}`;
                   ) : (
                     <div className="space-y-4 md:space-y-6">
                       {topicSections.map((section, sectionIndex) => {
-                        // מציאת תוכן הסעיף בגרסה המוצגת ובגרסה החדשה יותר
-                        const isViewingHistory = currentVersionIndex > 0;
-
                         // Get content to display
                         const displayedContent = currentSnapshot?.sectionContents?.[section.id] || section.content;
 
