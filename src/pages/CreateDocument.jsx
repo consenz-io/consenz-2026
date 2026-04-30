@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -64,10 +64,23 @@ export default function CreateDocument() {
     initialData: false,
   });
 
+  const { data: groupData } = useQuery({
+    queryKey: ['group', groupId],
+    queryFn: () => base44.entities.Group.filter({ id: groupId }).then(r => r[0]),
+    enabled: !!groupId,
+  });
+
+  // Derive document privacy from group status
+  const privacyFromGroup = React.useMemo(() => {
+    if (!groupData) return "public_view_open_participation";
+    if (groupData.status === 'private') return "public_view_closed_participation";
+    if (groupData.status === 'hidden') return "private_invite_only";
+    return "public_view_open_participation"; // public group
+  }, [groupData]);
+
   const [formData, setFormData] = useState({
     title: "",
     urlName: "",
-    privacy: "public_view_open_participation",
     votingButtonsEnabled: true,
     defaultSuggestionLifetimeHours: 72,
     groupId: groupId || null,
@@ -338,7 +351,7 @@ Return JSON with title, topics array (each with title and sections array with co
       const doc = await base44.entities.Document.create({
         title: data.title.trim(),
         urlName: data.urlName.trim(),
-        privacy: data.privacy,
+        privacy: privacyFromGroup,
         votingButtonsEnabled: data.votingButtonsEnabled,
         defaultSuggestionLifetimeHours: data.defaultSuggestionLifetimeHours,
         avgSuggestionConsensus: 0.5,
@@ -791,29 +804,6 @@ Return JSON with title, topics array (each with title and sections array with co
                   {formData.urlName && validateUrlName(formData.urlName) && (
                     <p className="text-xs text-red-600 mt-1">{validateUrlName(formData.urlName)}</p>
                   )}
-                </div>
-
-                <div>
-                  <Label htmlFor="privacy">Privacy Setting</Label>
-                  <Select
-                    value={formData.privacy}
-                    onValueChange={(value) => setFormData({ ...formData, privacy: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="public_view_open_participation">
-                        🌐 Public - Open Participation
-                      </SelectItem>
-                      <SelectItem value="public_view_closed_participation">
-                        👀 Public View - Closed Participation
-                      </SelectItem>
-                      <SelectItem value="private_invite_only">
-                        🔒 Private - Invite Only
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
