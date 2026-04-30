@@ -60,9 +60,13 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
 
   const { data: versions, isLoading: versionsLoading } = useQuery({
     queryKey: ['versions', sectionId],
-    queryFn: () => base44.entities.DocumentVersion.filter({ sectionId }, '-version'),
+    queryFn: async () => {
+      const result = await base44.functions.invoke('getDocumentVersionsServiceRole', { documentId: section?.documentId });
+      const allVersions = result?.data || [];
+      return allVersions.filter(v => v.sectionId === sectionId).sort((a, b) => (b.version || 0) - (a.version || 0));
+    },
     initialData: [],
-    enabled: !!sectionId && isOpen
+    enabled: !!sectionId && !!section?.documentId && isOpen
   });
 
   const { data: user } = useQuery({
