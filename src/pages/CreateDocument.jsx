@@ -53,7 +53,7 @@ export default function CreateDocument() {
   });
 
   // Check if user is group admin for the target group
-  const { data: isGroupAdmin } = useQuery({
+  const { data: isGroupAdmin, isLoading: isGroupAdminLoading } = useQuery({
     queryKey: ['isGroupAdmin', groupId, user?.id],
     queryFn: async () => {
       if (!groupId || !user?.id) return false;
@@ -112,6 +112,8 @@ export default function CreateDocument() {
   // Check points requirement before allowing document creation
   useEffect(() => {
     if (!user || userLoading) return;
+    // Wait for group admin check to finish if there's a groupId
+    if (groupId && isGroupAdminLoading) return;
 
     // If admin or group admin - skip points check
     if (user.role === 'admin' || isGroupAdmin) {
@@ -136,7 +138,7 @@ export default function CreateDocument() {
       setShowPointsConfirm(true);
       setPointsCheckCompleted(false);
     }
-  }, [user, userLoading, isGroupAdmin]);
+  }, [user, userLoading, isGroupAdmin, isGroupAdminLoading, groupId]);
 
   const validateUrlName = (urlName) => {
     if (!urlName || urlName.trim() === "") {
