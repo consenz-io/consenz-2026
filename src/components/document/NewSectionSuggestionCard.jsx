@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, Edit2, ChevronLeft, ChevronRight, CheckCircle } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, Edit2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -11,6 +11,7 @@ import TranslatableContent from "./TranslatableContent";
 import CommentsSection from "./CommentsSection";
 import DocumentTextContent from "./DocumentTextContent";
 import { motion, AnimatePresence } from "framer-motion";
+import AcceptedAnimation from "./AcceptedAnimation";
 
 const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({ 
   suggestion, 
@@ -169,65 +170,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   if (suggestion.status === 'accepted' && ['announcing', 'celebrating', 'transitioning'].includes(animationPhase)) {
     return (
       <div id={`suggestion-${suggestion.id}`} className="group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 border-green-400 bg-gradient-to-br from-green-50 to-emerald-50">
-        {animationPhase === 'announcing' && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="relative overflow-hidden rounded-lg p-8 text-center"
-          >
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.4 }}
-              className="text-2xl font-bold text-green-700"
-            >
-              🎉 ההצעה עברה את סף התמיכה!
-            </motion.div>
-          </motion.div>
-        )}
-        {animationPhase === 'celebrating' && (
-          <motion.div
-            initial={{ scale: 1 }}
-            animate={{ scale: [1, 1.02, 1] }}
-            transition={{ duration: 0.6, ease: 'easeInOut' }}
-            className="relative overflow-hidden rounded-lg p-4"
-          >
-            <div className="flex items-start gap-3 mb-3">
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ type: 'spring', duration: 0.6 }}
-                className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0"
-              >
-                <CheckCircle className="w-5 h-5 text-white" />
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="text-lg font-bold text-green-700"
-              >
-                ההצעה התקבלה!
-              </motion.div>
-            </div>
-            <div className="prose prose-sm max-w-none">
-              <DocumentTextContent content={suggestion.newContent} className="text-slate-700" />
-            </div>
-          </motion.div>
-        )}
-        {animationPhase === 'transitioning' && (
-          <motion.div
-            initial={{ background: 'linear-gradient(135deg, rgb(240 253 244) 0%, rgb(220 252 231) 100%)' }}
-            animate={{ background: 'rgb(255 255 255)' }}
-            transition={{ duration: 1, ease: 'easeInOut' }}
-            className="rounded-lg p-4"
-          >
-            <div className="prose prose-sm max-w-none">
-              <DocumentTextContent content={suggestion.newContent} className="text-slate-700" />
-            </div>
-          </motion.div>
-        )}
+        <AcceptedAnimation phase={animationPhase} newContent={suggestion.newContent} />
       </div>
     );
   }

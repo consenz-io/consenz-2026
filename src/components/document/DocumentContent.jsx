@@ -52,17 +52,10 @@ export default function DocumentContent({
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
 
-  const languageNames = {
-    en: "English",
-    he: "עברית",
-    ar: "العربية"
-  };
-
-  const languagePrompts = {
-    en: "English",
-    he: "Hebrew",
-    ar: "Arabic"
-  };
+  const acceptedSuggestions = React.useMemo(
+    () => suggestions.filter(s => s.status === 'accepted'),
+    [suggestions]
+  );
 
   const { data: users } = useQuery({
     queryKey: ['users'],
@@ -241,6 +234,7 @@ export default function DocumentContent({
 
   const translateTopicMutation = useMutation({
     mutationFn: async (topic) => {
+      const languagePrompts = { en: "English", he: "Hebrew", ar: "Arabic" };
       const titlePrompt = `You are a professional translator. Translate the following text to ${languagePrompts[language]}.
 
 CRITICAL INSTRUCTIONS:
@@ -588,7 +582,7 @@ Return ONLY the translated text:`;
                      suggestion={suggestion}
                      document={document}
                      getUserName={getUserName}
-                     acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                     acceptedSuggestions={acceptedSuggestions}
                      user={user}
                      getUserVote={getUserVote}
                      voteMutation={voteMutation}
@@ -600,10 +594,10 @@ Return ONLY the translated text:`;
                      onEditSuggestion={onEditSuggestion}
                      allDocumentSuggestions={suggestions}
                      />
-                  ))}
-                </>
-              ) : (
-                <DragDropContext onDragEnd={(result) => handleSectionDragEnd(result, topic.id)}>
+                     ))}
+                     </>
+                     ) : (
+                     <DragDropContext onDragEnd={(result) => handleSectionDragEnd(result, topic.id)}>
                   <Droppable droppableId={`sections-${topic.id}`} isDropDisabled={!isAdmin}>
                     {(provided) => (
                       <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3 md:space-y-4">
@@ -689,7 +683,7 @@ Return ONLY the translated text:`;
                                       suggestion={suggestion}
                                       document={document}
                                       getUserName={getUserName}
-                                      acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                                      acceptedSuggestions={acceptedSuggestions}
                                       user={user}
                                       getUserVote={getUserVote}
                                       voteMutation={voteMutation}
@@ -717,7 +711,7 @@ Return ONLY the translated text:`;
                               getUserVote={getUserVote}
                               voteMutation={voteMutation}
                               getUserName={getUserName}
-                              acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                              acceptedSuggestions={acceptedSuggestions}
                               sectionIndex={index}
                               isAdmin={isAdmin}
                               users={users}
@@ -754,7 +748,7 @@ Return ONLY the translated text:`;
                                   suggestion={suggestion}
                                   document={document}
                                   getUserName={getUserName}
-                                  acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                                  acceptedSuggestions={acceptedSuggestions}
                                   user={user}
                                   getUserVote={getUserVote}
                                   voteMutation={voteMutation}
@@ -843,7 +837,7 @@ Return ONLY the translated text:`;
                               suggestion={suggestion}
                               document={document}
                               getUserName={getUserName}
-                              acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                              acceptedSuggestions={acceptedSuggestions}
                               user={user}
                               getUserVote={getUserVote}
                               voteMutation={voteMutation}
@@ -895,7 +889,7 @@ Return ONLY the translated text:`;
                                 suggestion={suggestion}
                                 document={document}
                                 getUserName={getUserName}
-                                acceptedSuggestions={suggestions.filter(s => s.status === 'accepted')}
+                                acceptedSuggestions={acceptedSuggestions}
                                 user={user}
                                 getUserVote={getUserVote}
                                 voteMutation={voteMutation}
