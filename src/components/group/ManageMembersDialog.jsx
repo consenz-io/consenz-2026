@@ -39,6 +39,12 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
     enabled: !!groupId,
   });
 
+  const { data: group } = useQuery({
+    queryKey: ['group', groupId],
+    queryFn: () => base44.entities.Group.filter({ id: groupId }).then(groups => groups[0]),
+    enabled: !!groupId,
+  });
+
   const { data: joinRequests = [] } = useQuery({
     queryKey: ['joinRequests', groupId],
     queryFn: () => base44.entities.GroupJoinRequest.filter({ groupId, status: 'pending' }),
@@ -51,15 +57,9 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
     queryFn: () => base44.entities.UserPublicProfile.list(),
   });
 
-  const isAdmin = groupMembers.some(
-    m => m.userId === currentUser?.id && m.role === 'admin'
-  );
-
-  const { data: group } = useQuery({
-    queryKey: ['group', groupId],
-    queryFn: () => base44.entities.Group.filter({ id: groupId }).then(groups => groups[0]),
-    enabled: !!groupId,
-  });
+  // isAdmin: member with admin role OR group creator
+  const isAdmin = groupMembers.some(m => m.userId === currentUser?.id && m.role === 'admin')
+    || (group && currentUser && group.created_by === currentUser.email);
 
   const inviteMemberMutation = useMutation({
     mutationFn: async (email) => {
