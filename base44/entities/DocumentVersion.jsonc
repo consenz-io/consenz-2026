@@ -1,0 +1,132 @@
+{
+  "name": "DocumentVersion",
+  "type": "object",
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "description": "Parent document ID"
+    },
+    "sectionId": {
+      "type": "string",
+      "description": "Section ID that was changed"
+    },
+    "topicId": {
+      "type": "string",
+      "description": "Topic ID of the section (for reconstructing deleted sections)"
+    },
+    "sectionOrder": {
+      "type": "number",
+      "description": "Section order at time of change (for reconstructing deleted sections)"
+    },
+    "content": {
+      "type": "string",
+      "description": "Section content at this version"
+    },
+    "changeDescription": {
+      "type": "string",
+      "description": "Description of what changed"
+    },
+    "version": {
+      "type": "number",
+      "description": "Version number"
+    },
+    "changeType": {
+      "type": "string",
+      "enum": [
+        "suggestion_accepted",
+        "direct_edit",
+        "section_created"
+      ],
+      "description": "Type of change that created this version"
+    },
+    "suggestionId": {
+      "type": "string",
+      "description": "Related suggestion ID if applicable"
+    },
+    "originalLanguage": {
+      "type": "string",
+      "enum": [
+        "en",
+        "he",
+        "ar"
+      ],
+      "default": "he",
+      "description": "Original language of the content"
+    },
+    "translations": {
+      "type": "object",
+      "description": "Cached translations {language_code: translated_content}",
+      "default": {}
+    }
+  },
+  "required": [
+    "documentId",
+    "sectionId",
+    "content",
+    "version",
+    "changeType"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.documentId": {
+            "$in": "{{document_admin.data.documentId}}"
+          }
+        },
+        {
+          "data.documentId": {
+            "$in": "{{document.data.id}}",
+            "document.created_by": "{{user.email}}"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.documentId": {
+            "$in": "{{document.data.id}}",
+            "document.privacy": {
+              "$in": [
+                "public_view_open_participation",
+                "public_view_closed_participation"
+              ]
+            }
+          }
+        },
+        {
+          "data.documentId": {
+            "$in": "{{document.data.id}}",
+            "document.created_by": "{{user.email}}"
+          }
+        },
+        {
+          "data.documentId": {
+            "$in": "{{document_admin.data.documentId}}"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
