@@ -116,10 +116,29 @@ export default function DocumentView() {
   // Calculate version count matching DocumentCleanView logic
   const versionCount = React.useMemo(() => {
     if (!documentVersions || documentVersions.length === 0) return 1;
-    const uniqueSuggestions = new Set(
+    
+    // Count unique suggestion-based versions
+    const suggestionIds = new Set(
       documentVersions.filter(v => v.suggestionId).map(v => v.suggestionId)
     );
-    return uniqueSuggestions.size + 1;
+    
+    // Count direct edits (versions without suggestionId but with sectionId)
+    const directEditVersions = new Set(
+      documentVersions.filter(v => !v.suggestionId && v.sectionId).map(v => {
+        // Group direct edits by sectionId and version to identify unique edit events
+        return `${v.sectionId}-${v.version}`;
+      })
+    );
+    
+    // Also include section_created events as versions
+    const createdSectionVersions = new Set(
+      documentVersions.filter(v => v.changeType === 'section_created').map(v => {
+        return `section_created-${v.sectionId}`;
+      })
+    );
+    
+    // Total = current + suggestion changes + direct edits + section creations
+    return 1 + suggestionIds.size + directEditVersions.size + createdSectionVersions.size;
   }, [documentVersions]);
 
   const sectionCommentsCount = React.useMemo(() => {
