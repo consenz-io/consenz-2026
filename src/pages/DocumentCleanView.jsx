@@ -196,10 +196,10 @@ export default function DocumentCleanView() {
     return sectionMap;
   }, [sections, allVersions, topics, suggestions]);  // eslint-disable-line
   
-  // Reset version index if it's out of bounds
+  // Reset version index if it's out of bounds — clamp to latest valid version
   React.useEffect(() => {
-    if (currentVersionIndex >= versionGroups.length && versionGroups.length > 0) {
-      setCurrentVersionIndex(0);
+    if (versionGroups.length > 0 && currentVersionIndex >= versionGroups.length) {
+      setCurrentVersionIndex(Math.max(0, versionGroups.length - 1));
     }
   }, [versionGroups.length, currentVersionIndex]);
 

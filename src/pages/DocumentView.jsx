@@ -113,13 +113,10 @@ export default function DocumentView() {
     [allComments, documentId]
   );
 
-  // Calculate version count matching DocumentCleanView logic
+  // Calculate version count: total versions + 1 (current)
   const versionCount = React.useMemo(() => {
     if (!documentVersions || documentVersions.length === 0) return 1;
-    const uniqueSuggestions = new Set(
-      documentVersions.filter(v => v.suggestionId).map(v => v.suggestionId)
-    );
-    return uniqueSuggestions.size + 1;
+    return documentVersions.length + 1;
   }, [documentVersions]);
 
   const sectionCommentsCount = React.useMemo(() => {
