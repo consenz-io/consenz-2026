@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
 import { 
   UserPlus, Shield, ShieldOff, Trash2, Mail, 
   AlertCircle, CheckCircle, Lock, Globe 
@@ -228,6 +229,17 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
     },
   });
 
+  const updateFreeDocCreationMutation = useMutation({
+    mutationFn: async (value) => {
+      await base44.entities.Group.update(groupId, { freeDocumentCreation: value });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['group', groupId] });
+      setSuccess(language === 'he' ? 'הגדרות הקבוצה עודכנו בהצלחה' : 'Group settings updated successfully');
+      setTimeout(() => setSuccess(null), 3000);
+    },
+  });
+
   const handleInvite = (e) => {
     e.preventDefault();
     if (!inviteEmail.trim()) return;
@@ -271,6 +283,21 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
           <h3 className="font-semibold text-sm text-slate-700">
             {language === 'he' ? 'הגדרות קבוצה' : 'Group Settings'}
           </h3>
+          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border">
+            <div>
+              <p className="text-sm font-medium text-slate-900">
+                {language === 'he' ? 'יצירת מסמכים ללא עלות' : 'Free Document Creation'}
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {language === 'he' ? 'חברי הקבוצה יוכלו לפתוח מסמכים חדשים ללא עלות של 1001 נקודות' : 'Group members can create documents without spending 1001 points'}
+              </p>
+            </div>
+            <Switch
+              checked={group?.freeDocumentCreation || false}
+              onCheckedChange={(val) => updateFreeDocCreationMutation.mutate(val)}
+              disabled={updateFreeDocCreationMutation.isPending}
+            />
+          </div>
           <div className="space-y-2">
             <Label>{language === 'he' ? 'פרטיות הקבוצה' : 'Group Privacy'}</Label>
             <RadioGroup

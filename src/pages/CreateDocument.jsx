@@ -119,8 +119,8 @@ export default function CreateDocument() {
     // Wait for group admin check to finish if there's a groupId
     if (groupId && (!isGroupAdminFetched || isGroupAdminLoading)) return;
 
-    // If admin or group admin - skip points check
-    if (user.role === 'admin' || isGroupAdmin) {
+    // If admin, group admin, or group has free document creation - skip points check
+    if (user.role === 'admin' || isGroupAdmin || groupData?.freeDocumentCreation) {
       setPointsCheckCompleted(true);
       return;
     }
@@ -329,7 +329,7 @@ Return JSON with title, topics array (each with title and sections array with co
         throw new Error('User not authenticated');
       }
       
-      const isAdmin = user.role === 'admin' || isGroupAdmin;
+      const isAdmin = user.role === 'admin' || isGroupAdmin || groupData?.freeDocumentCreation;
       
       if (!isAdmin) {
         // Check if user has enough points (1001 required to create document)
@@ -478,7 +478,7 @@ Return JSON with title, topics array (each with title and sections array with co
     }
 
     // Check if should show points confirmation dialog (skip for admins and group admins)
-    const isAdmin = user?.role === 'admin' || isGroupAdmin;
+    const isAdmin = user?.role === 'admin' || isGroupAdmin || groupData?.freeDocumentCreation;
     const skipConfirm = localStorage.getItem('consenz_skip_points_confirm_document') === 'true';
     const currentPoints = user?.points || 1000;
     
@@ -650,7 +650,7 @@ Return JSON with title, topics array (each with title and sections array with co
           </Alert>
         )}
         
-        {user && (user.role === 'admin' || isGroupAdmin) && (
+        {user && (user.role === 'admin' || isGroupAdmin || groupData?.freeDocumentCreation) && (
           <Alert className="bg-green-50 border-green-200">
             <AlertDescription className="text-green-900">
               {user.role === 'admin' ? t('cdAdminAlert') : t('cdGroupAdminAlert')}
