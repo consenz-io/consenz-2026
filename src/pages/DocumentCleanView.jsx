@@ -85,7 +85,7 @@ export default function DocumentCleanView() {
 
   // Calculate correct version count
   const totalVersionCount = React.useMemo(() => {
-    if (!allVersions || allVersions.length === 0) return 1;
+    if (!Array.isArray(allVersions) || allVersions.length === 0) return 1;
     const maxVersion = Math.max(...allVersions.map(v => v.version || 0));
     return maxVersion + 1;
   }, [allVersions]);
