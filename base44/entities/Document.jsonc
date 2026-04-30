@@ -105,11 +105,6 @@
           "user_condition": {
             "role": "admin"
           }
-        },
-        {
-          "data.groupId": {
-            "$in": "{{user_group_ids}}"
-          }
         }
       ]
     },
