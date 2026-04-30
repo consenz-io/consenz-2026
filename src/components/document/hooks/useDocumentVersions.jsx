@@ -45,8 +45,19 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
       return snapshots;
     }
     
+    // Deduplicate versions - keep only the latest version per (sectionId, version) pair
+    const versionMap = new Map();
+    allVersions.forEach(v => {
+      const key = `${v.sectionId}-${v.version}`;
+      const existing = versionMap.get(key);
+      // Keep the one with the latest created_date (most recent)
+      if (!existing || new Date(v.created_date) > new Date(existing.created_date)) {
+        versionMap.set(key, v);
+      }
+    });
+    
     // Sort versions newest first by created_date (reflects actual acceptance time)
-    const sortedVersions = [...allVersions].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+    const sortedVersions = Array.from(versionMap.values()).sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     // Track section states as we go backwards
     let currentSectionContents = { ...currentSnapshot.sectionContents };
