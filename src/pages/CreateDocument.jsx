@@ -57,8 +57,12 @@ export default function CreateDocument() {
     queryKey: ['isGroupAdmin', groupId, user?.id],
     queryFn: async () => {
       if (!groupId || !user?.id) return false;
+      // Check GroupMember table
       const members = await base44.entities.GroupMember.filter({ groupId, userId: user.id });
-      return members.length > 0 && members[0].role === 'admin';
+      if (members.length > 0 && members[0].role === 'admin') return true;
+      // Fallback: check if user is the group creator
+      const groups = await base44.entities.Group.filter({ id: groupId });
+      return groups.length > 0 && groups[0].created_by === user.email;
     },
     enabled: !!groupId && !!user?.id,
     staleTime: 0,
