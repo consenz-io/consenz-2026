@@ -45,19 +45,8 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
       return snapshots;
     }
     
-    // Deduplicate versions - keep only the latest version per (sectionId, version) pair
-    const versionMap = new Map();
-    allVersions.forEach(v => {
-      const key = `${v.sectionId}-${v.version}`;
-      const existing = versionMap.get(key);
-      // Keep the one with the latest created_date (most recent)
-      if (!existing || new Date(v.created_date) > new Date(existing.created_date)) {
-        versionMap.set(key, v);
-      }
-    });
-    
     // Sort versions newest first by created_date (reflects actual acceptance time)
-    const sortedVersions = Array.from(versionMap.values()).sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+    const sortedVersions = [...allVersions].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
     // Track section states as we go backwards
     let currentSectionContents = { ...currentSnapshot.sectionContents };
@@ -86,24 +75,17 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
     });
 
     // Build grouped edit pairs for direct_edits: each pair = [afterVersion, beforeVersion]
-    // Pair consecutive version numbers: changeDescription starting with "לפני:" is "before", the next version is "after"
     const directEditPairs = [];
-    directEditsBySectionId.forEach((versions) => {
+    directEditsBySectionId.forEach((versions, sectionId) => {
+      // sort ascending by version number to pair them
       const sorted = [...versions].sort((a, b) => (a.version || 0) - (b.version || 0));
-      // Walk the sorted list: a "before" record is one whose changeDescription starts with "לפני:"
-      // The very next record (higher version) is the corresponding "after"
-      let i = 0;
-      while (i < sorted.length) {
-        const current = sorted[i];
-        const isBeforeRecord = current.changeDescription?.startsWith('לפני:');
-        if (isBeforeRecord && i + 1 < sorted.length) {
-          directEditPairs.push({ afterVersion: sorted[i + 1], beforeVersion: current });
-          i += 2;
-        } else {
-          // Standalone "after" with no explicit "before" (e.g. orphaned record)
-          directEditPairs.push({ afterVersion: current, beforeVersion: null });
-          i += 1;
-        }
+      // pair: even index = before (לפני:), odd = after
+      for (let i = 1; i < sorted.length; i += 2) {
+        directEditPairs.push({ afterVersion: sorted[i], beforeVersion: sorted[i - 1] });
+      }
+      // if odd count, last one is unpaired after
+      if (sorted.length % 2 === 1) {
+        directEditPairs.push({ afterVersion: sorted[sorted.length - 1], beforeVersion: null });
       }
     });
     // Sort pairs by afterVersion.created_date descending
@@ -139,11 +121,9 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
       if (event.eventType === 'suggestion') {
         const relatedSuggestion = suggestions?.find(s => s.id === afterVersion.suggestionId);
 
-        // Use updated_date as the acceptance timestamp (status changes from pending → accepted update the record)
-        const versionTime = new Date(afterVersion.created_date);
         const acceptedSuggestionsUpToHere = suggestions
-          ?.filter(s => s.status === 'accepted' && new Date(s.updated_date || s.created_date) <= versionTime)
-          .sort((a, b) => new Date(a.updated_date || a.created_date) - new Date(b.updated_date || b.created_date)) || [];
+          ?.filter(s => s.status === 'accepted' && new Date(s.created_date) <= new Date(afterVersion.created_date))
+          .sort((a, b) => new Date(a.created_date) - new Date(b.created_date)) || [];
 
         const weightedConsensusAtTime = acceptedSuggestionsUpToHere.length === 0 ? 0.5 :
           acceptedSuggestionsUpToHere.reduce((sum, s) => {
@@ -174,24 +154,6 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
           }
         }
 
-        // Snapshot the state BEFORE mutating currentSectionContents
-        const frozenContents = { ...currentSectionContents };
-        const frozenExisting = new Set(currentExistingSections);
-
-        // Update state FIRST (walk backwards: remove "after", restore "before")
-        if (afterVersion.changeType === 'section_created') {
-          delete currentSectionContents[afterVersion.sectionId];
-          currentExistingSections.delete(afterVersion.sectionId);
-        } else if (afterVersion.content === '') {
-          const contentBeforeDelete = beforeVersion?.content || currentSectionContents[afterVersion.sectionId] || '';
-          if (contentBeforeDelete) {
-            currentSectionContents[afterVersion.sectionId] = contentBeforeDelete;
-            currentExistingSections.add(afterVersion.sectionId);
-          }
-        } else if (beforeVersion) {
-          currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
-        }
-
         const snapshotAfterChange = {
           version: afterVersion.version,
           label: `גרסה ${afterVersion.version}`,
@@ -199,8 +161,8 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
           changeDescription: afterVersion.changeDescription,
           changeType: afterVersion.changeType,
           suggestionId: afterVersion.suggestionId,
-          sectionContents: frozenContents,
-          existingSections: frozenExisting,
+          sectionContents: { ...currentSectionContents },
+          existingSections: new Set(currentExistingSections),
           changedSectionId: isTopicTitleChange ? null : afterVersion.sectionId,
           newContent: isTopicTitleChange ? null : afterVersion.content,
           isTopicTitleChange: isTopicTitleChange || false,
@@ -223,27 +185,29 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
         if (afterVersion.content === '') {
           snapshotAfterChange.isDeleted = true;
           snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
-          const deletedContent = beforeVersion?.content || frozenContents[afterVersion.sectionId] || '';
+          const deletedContent = currentSectionContents[afterVersion.sectionId] || beforeVersion?.content || '';
           snapshotAfterChange.deletedSectionContent = deletedContent;
-          snapshotAfterChange.sectionContents = { ...frozenContents, [afterVersion.sectionId]: deletedContent };
-          snapshotAfterChange.existingSections = new Set([...frozenExisting, afterVersion.sectionId]);
+          snapshotAfterChange.sectionContents[afterVersion.sectionId] = deletedContent;
+          snapshotAfterChange.existingSections.add(afterVersion.sectionId);
         }
 
         snapshots.push(snapshotAfterChange);
 
-      } else if (event.eventType === 'direct_edit') {
-        const frozenContents = { ...currentSectionContents };
-        const frozenExisting = new Set(currentExistingSections);
-
-        // Update state FIRST (walk backwards)
+        // Update state for older version
         if (afterVersion.changeType === 'section_created') {
           delete currentSectionContents[afterVersion.sectionId];
           currentExistingSections.delete(afterVersion.sectionId);
+        } else if (afterVersion.content === '') {
+          const contentBeforeDelete = beforeVersion?.content || snapshotAfterChange.deletedSectionContent;
+          if (contentBeforeDelete) {
+            currentSectionContents[afterVersion.sectionId] = contentBeforeDelete;
+            currentExistingSections.add(afterVersion.sectionId);
+          }
         } else if (beforeVersion) {
           currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
-          currentExistingSections.add(afterVersion.sectionId);
         }
 
+      } else if (event.eventType === 'direct_edit') {
         const snapshotAfterChange = {
           version: afterVersion.version,
           label: `עריכה ישירה`,
@@ -252,8 +216,8 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
           changeType: 'direct_edit',
           isDirectEdit: true,
           suggestionId: null,
-          sectionContents: frozenContents,
-          existingSections: frozenExisting,
+          sectionContents: { ...currentSectionContents },
+          existingSections: new Set(currentExistingSections),
           changedSectionId: afterVersion.sectionId,
           newContent: afterVersion.content,
           allSectionIds,
@@ -270,13 +234,22 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
         } else if (afterVersion.content === '') {
           snapshotAfterChange.isDeleted = true;
           snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
-          const deletedContent = frozenContents[afterVersion.sectionId] || beforeVersion?.content || '';
+          const deletedContent = currentSectionContents[afterVersion.sectionId] || beforeVersion?.content || '';
           snapshotAfterChange.deletedSectionContent = deletedContent;
-          snapshotAfterChange.sectionContents = { ...frozenContents, [afterVersion.sectionId]: deletedContent };
-          snapshotAfterChange.existingSections = new Set([...frozenExisting, afterVersion.sectionId]);
+          snapshotAfterChange.sectionContents[afterVersion.sectionId] = deletedContent;
+          snapshotAfterChange.existingSections.add(afterVersion.sectionId);
         }
 
         snapshots.push(snapshotAfterChange);
+
+        // Update state for older view
+        if (afterVersion.changeType === 'section_created') {
+          delete currentSectionContents[afterVersion.sectionId];
+          currentExistingSections.delete(afterVersion.sectionId);
+        } else if (beforeVersion) {
+          currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
+          currentExistingSections.add(afterVersion.sectionId);
+        }
       }
     });
 

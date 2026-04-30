@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -53,40 +53,22 @@ export default function CreateDocument() {
   });
 
   // Check if user is group admin for the target group
-  const { data: isGroupAdmin, isLoading: isGroupAdminLoading, isFetched: isGroupAdminFetched } = useQuery({
+  const { data: isGroupAdmin } = useQuery({
     queryKey: ['isGroupAdmin', groupId, user?.id],
     queryFn: async () => {
       if (!groupId || !user?.id) return false;
-      // Check GroupMember table
       const members = await base44.entities.GroupMember.filter({ groupId, userId: user.id });
-      if (members.length > 0 && members[0].role === 'admin') return true;
-      // Fallback: check if user is the group creator
-      const groups = await base44.entities.Group.filter({ id: groupId });
-      return groups.length > 0 && groups[0].created_by === user.email;
+      return members.length > 0 && members[0].role === 'admin';
     },
     enabled: !!groupId && !!user?.id,
-    staleTime: 0,
+    initialData: false,
   });
-
-  const { data: groupData } = useQuery({
-    queryKey: ['group', groupId],
-    queryFn: () => base44.entities.Group.filter({ id: groupId }).then(r => r[0]),
-    enabled: !!groupId,
-  });
-
-  // Derive document privacy from group status
-  const privacyFromGroup = React.useMemo(() => {
-    if (!groupData) return "public_view_open_participation";
-    if (groupData.status === 'private') return "public_view_closed_participation";
-    if (groupData.status === 'hidden') return "private_invite_only";
-    return "public_view_open_participation"; // public group
-  }, [groupData]);
 
   const [formData, setFormData] = useState({
     title: "",
     urlName: "",
+    privacy: "public_view_open_participation",
     votingButtonsEnabled: true,
-    gamificationEnabled: false,
     defaultSuggestionLifetimeHours: 72,
     groupId: groupId || null,
   });
@@ -116,11 +98,9 @@ export default function CreateDocument() {
   // Check points requirement before allowing document creation
   useEffect(() => {
     if (!user || userLoading) return;
-    // Wait for group admin check to finish if there's a groupId
-    if (groupId && (!isGroupAdminFetched || isGroupAdminLoading)) return;
 
-    // If admin, group admin, or group has free document creation - skip points check
-    if (user.role === 'admin' || isGroupAdmin || groupData?.freeDocumentCreation) {
+    // If admin or group admin - skip points check
+    if (user.role === 'admin' || isGroupAdmin) {
       setPointsCheckCompleted(true);
       return;
     }
@@ -142,7 +122,7 @@ export default function CreateDocument() {
       setShowPointsConfirm(true);
       setPointsCheckCompleted(false);
     }
-  }, [user, userLoading, isGroupAdmin, isGroupAdminLoading, isGroupAdminFetched, groupId]);
+  }, [user, userLoading, isGroupAdmin]);
 
   const validateUrlName = (urlName) => {
     if (!urlName || urlName.trim() === "") {
@@ -329,7 +309,7 @@ Return JSON with title, topics array (each with title and sections array with co
         throw new Error('User not authenticated');
       }
       
-      const isAdmin = user.role === 'admin' || isGroupAdmin || groupData?.freeDocumentCreation;
+      const isAdmin = user.role === 'admin' || isGroupAdmin;
       
       if (!isAdmin) {
         // Check if user has enough points (1001 required to create document)
@@ -358,9 +338,8 @@ Return JSON with title, topics array (each with title and sections array with co
       const doc = await base44.entities.Document.create({
         title: data.title.trim(),
         urlName: data.urlName.trim(),
-        privacy: privacyFromGroup,
+        privacy: data.privacy,
         votingButtonsEnabled: data.votingButtonsEnabled,
-        gamificationEnabled: data.gamificationEnabled,
         defaultSuggestionLifetimeHours: data.defaultSuggestionLifetimeHours,
         avgSuggestionConsensus: 0.5,
         totalUsersInteracted: 0,
@@ -478,7 +457,7 @@ Return JSON with title, topics array (each with title and sections array with co
     }
 
     // Check if should show points confirmation dialog (skip for admins and group admins)
-    const isAdmin = user?.role === 'admin' || isGroupAdmin || groupData?.freeDocumentCreation;
+    const isAdmin = user?.role === 'admin' || isGroupAdmin;
     const skipConfirm = localStorage.getItem('consenz_skip_points_confirm_document') === 'true';
     const currentPoints = user?.points || 1000;
     
@@ -645,15 +624,18 @@ Return JSON with title, topics array (each with title and sections array with co
         {user && user.role !== 'admin' && !isGroupAdmin && (
           <Alert className="bg-blue-50 border-blue-200">
             <AlertDescription className="text-blue-900">
-              {t('cdCostAlert', { points: user.points || 1000 })}
+              <strong>עלות יצירת מסמך:</strong> 1001 נקודות | <strong>הנקודות שלך:</strong> {user.points || 1000}
             </AlertDescription>
           </Alert>
         )}
         
-        {user && (user.role === 'admin' || isGroupAdmin || groupData?.freeDocumentCreation) && (
+        {user && (user.role === 'admin' || isGroupAdmin) && (
           <Alert className="bg-green-50 border-green-200">
             <AlertDescription className="text-green-900">
-              {user.role === 'admin' ? t('cdAdminAlert') : t('cdGroupAdminAlert')}
+              {user.role === 'admin'
+                ? <><strong>מצב אדמין:</strong> אין עלות ליצירת מסמכים עבור משתמשי Admin</>
+                : <><strong>מנהל/ת קבוצה:</strong> אין עלות ליצירת מסמכים עבור מנהלי הקבוצה</>
+              }
             </AlertDescription>
           </Alert>
         )}
@@ -671,20 +653,22 @@ Return JSON with title, topics array (each with title and sections array with co
         }} className="mb-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="manual">
-              <FileText className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {t('cdManualCreation')}
+              <FileText className="w-4 h-4 mr-2" />
+              Manual Creation
             </TabsTrigger>
             <TabsTrigger value="upload">
-              <Upload className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {t('cdUploadDocument')}
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Document
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="upload" className="mt-6">
             <Card className="border-2 border-dashed border-slate-300 bg-white">
               <CardHeader>
-                <CardTitle>{t('cdUploadSyncTitle')}</CardTitle>
-                <CardDescription>{t('cdUploadSyncDesc')}</CardDescription>
+                <CardTitle>Upload & Sync Document</CardTitle>
+                <CardDescription>
+                  Upload a PDF or Word document. AI will automatically extract topics and sections.
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {!uploadedFile && !isProcessing && (
@@ -692,13 +676,15 @@ Return JSON with title, topics array (each with title and sections array with co
                     <div className="w-20 h-20 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
                       <Upload className="w-10 h-10 text-blue-600" />
                     </div>
-                    <h3 className="text-lg font-semibold mb-2">{t('cdUploadYourDoc')}</h3>
-                    <p className="text-sm text-slate-600 mb-4">{t('cdUploadAnalyze')}</p>
+                    <h3 className="text-lg font-semibold mb-2">Upload Your Document</h3>
+                    <p className="text-sm text-slate-600 mb-4">
+                      We'll analyze it and extract the structure automatically
+                    </p>
                     <label htmlFor="file-upload" className="cursor-pointer">
                       <Button type="button" asChild className="bg-gradient-to-r from-blue-600 to-indigo-600">
                         <span>
-                          <Upload className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                          {t('cdChooseFile')}
+                          <Upload className="w-4 h-4 mr-2" />
+                          Choose File
                         </span>
                       </Button>
                       <input
@@ -709,16 +695,20 @@ Return JSON with title, topics array (each with title and sections array with co
                         className="hidden"
                       />
                     </label>
-                    <p className="text-xs text-slate-500 mt-4">{t('cdSupportedFormats')}</p>
+                    <p className="text-xs text-slate-500 mt-4">
+                      Supported: PDF, DOC, DOCX • Max size: 10MB
+                    </p>
                   </div>
                 )}
 
                 {isProcessing && (
                   <div className="text-center py-12">
                     <Loader2 className="w-16 h-16 mx-auto mb-4 text-blue-600 animate-spin" />
-                    <h3 className="text-lg font-semibold text-slate-900 mb-2">{t('cdProcessingDoc')}</h3>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                      מעבד את המסמך
+                    </h3>
                     <p className="text-slate-600">{processingStage}</p>
-                    <p className="text-sm text-slate-400 mt-2">{t('cdProcessingTime')}</p>
+                    <p className="text-sm text-slate-400 mt-2">ניתוח PDF עשוי לקחת עד 2 דקות</p>
                     <div className="mt-4 max-w-md mx-auto">
                       <div className="w-full bg-slate-200 rounded-full h-2">
                         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }} />
@@ -732,24 +722,29 @@ Return JSON with title, topics array (each with title and sections array with co
                     <Alert className="bg-green-50 border-green-200">
                       <CheckCircle className="h-4 w-4 text-green-600" />
                       <AlertDescription className="text-green-800">
-                        {t('cdSuccessFound', {
-                          topics: extractedStructure.topics.length,
-                          sections: extractedStructure.topics.reduce((sum, tp) => sum + tp.sections.length, 0)
-                        })}
+                        <strong>Success!</strong> Found {extractedStructure.topics.length} topics with{' '}
+                        {extractedStructure.topics.reduce((sum, t) => sum + t.sections.length, 0)} sections.
+                        Review and edit below.
                       </AlertDescription>
                     </Alert>
-                    <div className={`flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                           <FileText className="w-6 h-6 text-blue-600" />
                         </div>
                         <div>
                           <p className="font-medium text-slate-900">{uploadedFile.name}</p>
-                          <p className="text-sm text-slate-500">{(uploadedFile.size / 1024).toFixed(2)} KB</p>
+                          <p className="text-sm text-slate-500">
+                            {(uploadedFile.size / 1024).toFixed(2)} KB
+                          </p>
                         </div>
                       </div>
-                      <Button variant="outline" onClick={resetUpload} size="sm">
-                        {t('cdUploadDifferentFile')}
+                      <Button
+                        variant="outline"
+                        onClick={resetUpload}
+                        size="sm"
+                      >
+                        Upload Different File
                       </Button>
                     </div>
                   </div>
@@ -763,24 +758,23 @@ Return JSON with title, topics array (each with title and sections array with co
           <form onSubmit={handleSubmit} className="space-y-6">
             <Card className="bg-white">
               <CardHeader>
-                <CardTitle>{t('cdDocumentDetails')}</CardTitle>
-                <CardDescription>{t('cdDocumentDetailsDesc')}</CardDescription>
+                <CardTitle>Document Details</CardTitle>
+                <CardDescription>Basic information about your document</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="title">{t('cdDocumentTitle')} *</Label>
+                  <Label htmlFor="title">Document Title *</Label>
                   <Input
                     id="title"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder={language === 'he' ? 'למשל: חוקת הקהילה' : language === 'ar' ? 'مثال: دستور المجتمع' : 'e.g., Community Constitution'}
+                    placeholder="e.g., Community Constitution"
                     required
-                    dir={isRTL ? 'rtl' : 'ltr'}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="urlName">{t('cdUrlName')} *</Label>
+                  <Label htmlFor="urlName">URL Name *</Label>
                   <Input
                     id="urlName"
                     value={formData.urlName}
@@ -790,18 +784,42 @@ Return JSON with title, topics array (each with title and sections array with co
                     }}
                     placeholder="e.g., community-constitution"
                     required
-                    dir="ltr"
                   />
-                  <p className="text-xs text-slate-500 mt-1">{t('cdUrlNameHint')}</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Used in URL • Only lowercase letters, numbers, and hyphens
+                  </p>
                   {formData.urlName && validateUrlName(formData.urlName) && (
                     <p className="text-xs text-red-600 mt-1">{validateUrlName(formData.urlName)}</p>
                   )}
                 </div>
 
-                <div className={`flex items-center justify-between p-4 bg-slate-50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className={isRTL ? 'text-right' : ''}>
-                    <Label htmlFor="voting" className="text-base">{t('cdEnableVoting')}</Label>
-                    <p className="text-sm text-slate-500">{t('cdEnableVotingDesc')}</p>
+                <div>
+                  <Label htmlFor="privacy">Privacy Setting</Label>
+                  <Select
+                    value={formData.privacy}
+                    onValueChange={(value) => setFormData({ ...formData, privacy: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="public_view_open_participation">
+                        🌐 Public - Open Participation
+                      </SelectItem>
+                      <SelectItem value="public_view_closed_participation">
+                        👀 Public View - Closed Participation
+                      </SelectItem>
+                      <SelectItem value="private_invite_only">
+                        🔒 Private - Invite Only
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                  <div>
+                    <Label htmlFor="voting" className="text-base">Enable Voting Buttons</Label>
+                    <p className="text-sm text-slate-500">Allow users to vote on suggestions</p>
                   </div>
                   <Switch
                     id="voting"
@@ -809,34 +827,26 @@ Return JSON with title, topics array (each with title and sections array with co
                     onCheckedChange={(checked) => setFormData({ ...formData, votingButtonsEnabled: checked })}
                   />
                 </div>
-
-                <div className={`flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className={isRTL ? 'text-right' : ''}>
-                    <Label htmlFor="gamification" className="text-base">{t('cdEnableGamification')}</Label>
-                    <p className="text-sm text-slate-500">{t('cdEnableGamificationDesc')}</p>
-                  </div>
-                  <Switch
-                    id="gamification"
-                    checked={formData.gamificationEnabled}
-                    onCheckedChange={(checked) => setFormData({ ...formData, gamificationEnabled: checked })}
-                  />
-                </div>
               </CardContent>
             </Card>
 
             <Card className="bg-white">
               <CardHeader>
-                <CardTitle>{t('cdTopicsSections')}</CardTitle>
-                <CardDescription>
-                  {extractedStructure ? t('cdTopicsSectionsExtracted') : t('cdTopicsSectionsDesc')}
-                </CardDescription>
+                <div>
+                  <CardTitle>Topics & Sections</CardTitle>
+                  <CardDescription>
+                    {extractedStructure
+                      ? "Review and edit the extracted structure"
+                      : "Structure your document with topics and sections"}
+                  </CardDescription>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 {topics.map((topic, topicIndex) => (
                   <div key={topicIndex} className="border-2 border-slate-200 rounded-lg p-4 space-y-4 bg-slate-50">
-                    <div className={`flex gap-2 items-start ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className="flex gap-2 items-start">
                       <div className="flex-1">
-                        <Label className="text-xs text-slate-500 mb-1">{t('cdTopicLabel', { num: topicIndex + 1 })}</Label>
+                        <Label className="text-xs text-slate-500 mb-1">Topic {topicIndex + 1}</Label>
                         <Input
                           value={topic.title}
                           onChange={(e) => {
@@ -844,9 +854,8 @@ Return JSON with title, topics array (each with title and sections array with co
                             newTopics[topicIndex].title = e.target.value;
                             setTopics(newTopics);
                           }}
-                          placeholder={t('cdTopicPlaceholder')}
+                          placeholder="Enter topic title..."
                           className="bg-white"
-                          dir={isRTL ? 'rtl' : 'ltr'}
                         />
                       </div>
                       {topics.length > 1 && (
@@ -865,10 +874,10 @@ Return JSON with title, topics array (each with title and sections array with co
                     <div className="space-y-3">
                       {topic.sections.map((section, sectionIndex) => (
                         <div key={sectionIndex} className="border border-slate-200 rounded-lg p-3 bg-white">
-                          <div className={`flex gap-2 items-start mb-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className="flex gap-2 items-start mb-2">
                             <div className="flex-1">
                               <Label className="text-xs text-slate-500 mb-1">
-                                {t('cdSectionLabel', { num: sectionIndex + 1 })}
+                                Section {sectionIndex + 1}
                               </Label>
                               <Textarea
                                 value={section.content}
@@ -877,10 +886,9 @@ Return JSON with title, topics array (each with title and sections array with co
                                   newTopics[topicIndex].sections[sectionIndex].content = e.target.value;
                                   setTopics(newTopics);
                                 }}
-                                placeholder={t('cdSectionPlaceholder')}
+                                placeholder="Enter section content..."
                                 className="bg-white"
                                 rows={4}
-                                dir={isRTL ? 'rtl' : 'ltr'}
                               />
                             </div>
                             {topic.sections.length > 1 && (
@@ -890,21 +898,23 @@ Return JSON with title, topics array (each with title and sections array with co
                                 size="icon"
                                 onClick={() => removeSection(topicIndex, sectionIndex)}
                                 className="mt-6"
+                                title="Delete section"
                               >
                                 <Trash2 className="w-4 h-4 text-red-500" />
                               </Button>
                             )}
                           </div>
-                          <div className={`flex gap-2 ${isRTL ? 'justify-start' : 'justify-end'}`}>
+                          <div className="flex gap-2 justify-end">
                             {sectionIndex > 0 && (
                               <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
                                 onClick={() => mergeSections(topicIndex, sectionIndex)}
+                                title="Merge with previous section"
                               >
-                                <Merge className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                {t('cdMergeUp')}
+                                <Merge className="w-3 h-3 mr-1" />
+                                Merge Up
                               </Button>
                             )}
                             <Button
@@ -912,9 +922,10 @@ Return JSON with title, topics array (each with title and sections array with co
                               variant="outline"
                               size="sm"
                               onClick={() => splitSection(topicIndex, sectionIndex)}
+                              title="Split section in half"
                             >
-                              <Split className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                              {t('cdSplit')}
+                              <Split className="w-3 h-3 mr-1" />
+                              Split
                             </Button>
                           </div>
                         </div>
@@ -926,28 +937,29 @@ Return JSON with title, topics array (each with title and sections array with co
                       onClick={() => addSection(topicIndex)}
                       variant="outline"
                       size="sm"
+                      className="ml-4"
                     >
-                      <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                      {t('cdAddSection', { topic: topic.title || (language === 'he' ? 'נושא זה' : language === 'ar' ? 'هذا الموضوع' : 'this topic') })}
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Section to "{topic.title || 'this topic'}"
                     </Button>
                   </div>
                 ))}
 
                 <Button type="button" onClick={addTopic} variant="outline" size="sm">
-                  <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {t('cdAddTopic')}
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Topic
                 </Button>
               </CardContent>
             </Card>
 
-            <div className={`flex gap-3 ${isRTL ? 'justify-start flex-row-reverse' : 'justify-end'}`}>
+            <div className="flex justify-end gap-3">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => navigate(createPageUrl("Home"))}
                 disabled={createDocMutation.isPending}
               >
-                {t('cancel')}
+                Cancel
               </Button>
               <Button
                 type="submit"
@@ -956,13 +968,13 @@ Return JSON with title, topics array (each with title and sections array with co
               >
                 {createDocMutation.isPending ? (
                   <>
-                    <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
-                    {t('cdCreating')}
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
                   </>
                 ) : (
                   <>
-                    <FileText className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                    {t('cdCreateDocument')}
+                    <FileText className="w-4 h-4 mr-2" />
+                    Create Document
                   </>
                 )}
               </Button>

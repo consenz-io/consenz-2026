@@ -18,33 +18,27 @@ export function useDocumentData(documentId) {
     enabled: !!documentId,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
-    staleTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: topics = [], isLoading: topicsLoading, isError: topicsError } = useQuery({
     queryKey: ['topics', documentId],
     queryFn: () => base44.entities.Topic.filter({ documentId }, 'order').catch(() => []),
     enabled: !!documentId,
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 3,
     retryDelay: 1000,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
   });
 
   const { data: sections = [], isLoading: sectionsLoading, isError: sectionsError } = useQuery({
     queryKey: ['sections', documentId],
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
     enabled: !!documentId,
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 3,
     retryDelay: 1000,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
   });
 
   const { data: suggestions = [], isLoading: suggestionsLoading, isError: suggestionsError } = useQuery({
@@ -55,19 +49,16 @@ export function useDocumentData(documentId) {
       return results || [];
     },
     enabled: !!documentId,
-    staleTime: 0,
+    staleTime: 2 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 2,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
   });
 
   // Stable key: only keyed by documentId — avoids a new query on every render
   // (suggestions/sections arrays change reference every render causing cache thrash)
   const { data: aggregatedData } = useQuery({
-    queryKey: ['documentAggregatedData', documentId ?? '__none__'],
+    queryKey: ['documentAggregatedData', documentId],
     queryFn: async () => {
-      if (!documentId) return { votes: [], users: [], publicProfiles: [], args: [], comments: [] };
       // Re-read from cache at fetch time so we always have the latest IDs
       // without capturing stale closures
       const [allSuggestions, allSections] = await Promise.all([
@@ -97,9 +88,7 @@ export function useDocumentData(documentId) {
       return { votes, users: publicProfiles, publicProfiles, args, comments };
     },
     enabled: !!documentId,
-    staleTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 2 * 60 * 1000,
   });
 
   // Seed individual caches from aggregatedData
@@ -137,10 +126,8 @@ export function useDocumentData(documentId) {
       return { agreements, versions };
     },
     enabled: !!documentId,
-    staleTime: 0,
+    staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
   });
 
   const { data: user } = useQuery({

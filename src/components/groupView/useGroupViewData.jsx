@@ -109,10 +109,6 @@ export function useGroupViewData(groupId) {
 
   const requestAccessMutation = useMutation({
     mutationFn: async () => {
-      // Prevent duplicate requests
-      const existing = await base44.entities.GroupJoinRequest.filter({ groupId: group.id, userId: currentUser.id, status: 'pending' });
-      if (existing.length > 0) return; // already requested
-
       const admins = groupMembers.filter(m => m.role === 'admin');
       const adminProfiles = admins.map(admin => publicProfiles.find(p => p.userId === admin.userId)).filter(Boolean);
       if (!adminProfiles.length) return;

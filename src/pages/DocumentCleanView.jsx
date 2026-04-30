@@ -463,7 +463,7 @@ ${text}`;
     printWindow.document.close();
   };
 
-  if (docLoading || topicsLoading || sectionsLoading || versionsLoading || suggestionsLoading) {
+  if (docLoading || topicsLoading || sectionsLoading || versionsLoading || suggestionsLoading || !allVersions || !suggestions) {
     return (
       <div className="min-h-screen bg-white p-8">
         <div className="max-w-4xl mx-auto space-y-6">
@@ -666,6 +666,9 @@ ${text}`;
                   ) : (
                     <div className="space-y-4 md:space-y-6">
                       {topicSections.map((section, sectionIndex) => {
+                        // מציאת תוכן הסעיף בגרסה המוצגת ובגרסה החדשה יותר
+                        const isViewingHistory = currentVersionIndex > 0;
+
                         // Get content to display
                         const displayedContent = currentSnapshot?.sectionContents?.[section.id] || section.content;
 
@@ -690,14 +693,14 @@ ${text}`;
                           currentSnapshot?.changedSectionId === section.id;
 
                         // Check if this section changed between versions (content edit)
-                        // olderContent = the content in the previous (newer in time) snapshot
-                        // displayedContent = the content at this historical snapshot
+                        // Compare the snapshot's content with the newer version's content
                         const hasChanged = isViewingHistory && 
                           !isDeletedSection &&
                           !isDirectlyEdited &&
                           currentSnapshot?.changedSectionId === section.id && 
-                          olderContent !== undefined &&
-                          olderContent !== displayedContent;
+                          currentSnapshot?.newContent && 
+                          currentSnapshot?.newContent !== '' &&
+                          displayedContent !== currentSnapshot?.newContent;
 
                         return (
                           <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
@@ -790,7 +793,7 @@ ${text}`;
                                    </div>
                                    <InlineDiff
                                      originalContent={displayedContent}
-                                     newContent={olderContent}
+                                     newContent={currentSnapshot?.newContent}
                                    />
                                  </div>
                                 ) : (

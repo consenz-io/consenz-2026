@@ -116,26 +116,10 @@ export default function DocumentView() {
   // Calculate version count matching DocumentCleanView logic
   const versionCount = React.useMemo(() => {
     if (!documentVersions || documentVersions.length === 0) return 1;
-    
-    // Deduplicate versions first - keep only the latest version per (sectionId, version) pair
-    const versionMap = new Map();
-    documentVersions.forEach(v => {
-      const key = `${v.sectionId}-${v.version}`;
-      const existing = versionMap.get(key);
-      if (!existing || new Date(v.created_date) > new Date(existing.created_date)) {
-        versionMap.set(key, v);
-      }
-    });
-    
-    const deduplicatedVersions = Array.from(versionMap.values());
-    
-    // Count unique suggestions (each suggestion = 1 version)
-    const suggestionIds = new Set(
-      deduplicatedVersions.filter(v => v.suggestionId).map(v => v.suggestionId)
+    const uniqueSuggestions = new Set(
+      documentVersions.filter(v => v.suggestionId).map(v => v.suggestionId)
     );
-    
-    // Total = current + unique suggestions
-    return 1 + suggestionIds.size;
+    return uniqueSuggestions.size + 1;
   }, [documentVersions]);
 
   const sectionCommentsCount = React.useMemo(() => {

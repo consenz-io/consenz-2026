@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Switch } from "@/components/ui/switch";
 import { 
   UserPlus, Shield, ShieldOff, Trash2, Mail, 
   AlertCircle, CheckCircle, Lock, Globe 
@@ -22,7 +21,7 @@ import {
 import { useLanguage } from "@/components/LanguageContext";
 
 export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupDeleted }) {
-  const { language, isRTL } = useLanguage();
+  const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [inviteEmail, setInviteEmail] = useState("");
   const [error, setError] = useState(null);
@@ -39,12 +38,6 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
     enabled: !!groupId,
   });
 
-  const { data: group } = useQuery({
-    queryKey: ['group', groupId],
-    queryFn: () => base44.entities.Group.filter({ id: groupId }).then(groups => groups[0]),
-    enabled: !!groupId,
-  });
-
   const { data: joinRequests = [] } = useQuery({
     queryKey: ['joinRequests', groupId],
     queryFn: () => base44.entities.GroupJoinRequest.filter({ groupId, status: 'pending' }),
@@ -57,9 +50,15 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
     queryFn: () => base44.entities.UserPublicProfile.list(),
   });
 
-  // isAdmin: member with admin role OR group creator
-  const isAdmin = groupMembers.some(m => m.userId === currentUser?.id && m.role === 'admin')
-    || (group && currentUser && group.created_by === currentUser.email);
+  const isAdmin = groupMembers.some(
+    m => m.userId === currentUser?.id && m.role === 'admin'
+  );
+
+  const { data: group } = useQuery({
+    queryKey: ['group', groupId],
+    queryFn: () => base44.entities.Group.filter({ id: groupId }).then(groups => groups[0]),
+    enabled: !!groupId,
+  });
 
   const inviteMemberMutation = useMutation({
     mutationFn: async (email) => {
@@ -229,17 +228,6 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
     },
   });
 
-  const updateFreeDocCreationMutation = useMutation({
-    mutationFn: async (value) => {
-      await base44.entities.Group.update(groupId, { freeDocumentCreation: value });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['group', groupId] });
-      setSuccess(language === 'he' ? 'הגדרות הקבוצה עודכנו בהצלחה' : 'Group settings updated successfully');
-      setTimeout(() => setSuccess(null), 3000);
-    },
-  });
-
   const handleInvite = (e) => {
     e.preventDefault();
     if (!inviteEmail.trim()) return;
@@ -283,31 +271,16 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
           <h3 className="font-semibold text-sm text-slate-700">
             {language === 'he' ? 'הגדרות קבוצה' : 'Group Settings'}
           </h3>
-          <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border">
-            <div>
-              <p className="text-sm font-medium text-slate-900">
-                {language === 'he' ? 'יצירת מסמכים ללא עלות' : 'Free Document Creation'}
-              </p>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {language === 'he' ? 'חברי הקבוצה יוכלו לפתוח מסמכים חדשים ללא עלות של 1001 נקודות' : 'Group members can create documents without spending 1001 points'}
-              </p>
-            </div>
-            <Switch
-              checked={group?.freeDocumentCreation || false}
-              onCheckedChange={(val) => updateFreeDocCreationMutation.mutate(val)}
-              disabled={updateFreeDocCreationMutation.isPending}
-            />
-          </div>
           <div className="space-y-2">
-            <Label className={isRTL ? 'block text-right' : ''}>{language === 'he' ? 'פרטיות הקבוצה' : 'Group Privacy'}</Label>
+            <Label>{language === 'he' ? 'פרטיות הקבוצה' : 'Group Privacy'}</Label>
             <RadioGroup
               value={group?.status || 'public'}
               onValueChange={(value) => updateGroupStatusMutation.mutate(value)}
             >
-              <div className={`flex items-start p-3 border rounded-lg hover:bg-slate-50 cursor-pointer gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="flex items-start space-x-3 space-x-reverse p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
                 <RadioGroupItem value="public" id="public-manage" />
-                <Label htmlFor="public-manage" className={`flex-1 cursor-pointer ${isRTL ? 'text-right' : ''}`}>
-                  <div className={`flex items-center gap-2 font-medium mb-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Label htmlFor="public-manage" className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2 font-medium mb-1">
                     <Globe className="w-4 h-4" />
                     {language === 'he' ? 'ציבורי' : 'Public'}
                   </div>
@@ -317,10 +290,10 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                 </Label>
               </div>
 
-              <div className={`flex items-start p-3 border rounded-lg hover:bg-slate-50 cursor-pointer gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="flex items-start space-x-3 space-x-reverse p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
                 <RadioGroupItem value="private" id="private-manage" />
-                <Label htmlFor="private-manage" className={`flex-1 cursor-pointer ${isRTL ? 'text-right' : ''}`}>
-                  <div className={`flex items-center gap-2 font-medium mb-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Label htmlFor="private-manage" className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2 font-medium mb-1">
                     <Lock className="w-4 h-4" />
                     {language === 'he' ? 'פרטי' : 'Private'}
                   </div>
@@ -330,10 +303,10 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                 </Label>
               </div>
 
-              <div className={`flex items-start p-3 border rounded-lg hover:bg-slate-50 cursor-pointer gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="flex items-start space-x-3 space-x-reverse p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
                 <RadioGroupItem value="hidden" id="hidden-manage" />
-                <Label htmlFor="hidden-manage" className={`flex-1 cursor-pointer ${isRTL ? 'text-right' : ''}`}>
-                  <div className={`flex items-center gap-2 font-medium mb-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <Label htmlFor="hidden-manage" className="flex-1 cursor-pointer">
+                  <div className="flex items-center gap-2 font-medium mb-1">
                     <Lock className="w-4 h-4" />
                     {language === 'he' ? 'חסוי' : 'Hidden'}
                   </div>
