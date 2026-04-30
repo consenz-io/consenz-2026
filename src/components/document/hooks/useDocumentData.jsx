@@ -18,7 +18,7 @@ export function useDocumentData(documentId) {
     enabled: !!documentId,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
-    staleTime: Infinity,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: topics = [], isLoading: topicsLoading, isError: topicsError } = useQuery({
@@ -54,11 +54,19 @@ export function useDocumentData(documentId) {
     retry: 2,
   });
 
+  // Stable key: only keyed by documentId — avoids a new query on every render
+  // (suggestions/sections arrays change reference every render causing cache thrash)
   const { data: aggregatedData } = useQuery({
-    queryKey: ['documentAggregatedData', documentId, suggestions, sections],
+    queryKey: ['documentAggregatedData', documentId],
     queryFn: async () => {
-      const suggestionIds = suggestions.map(s => s.id);
-      const sectionIds = sections.map(s => s.id);
+      // Re-read from cache at fetch time so we always have the latest IDs
+      // without capturing stale closures
+      const [allSuggestions, allSections] = await Promise.all([
+        base44.entities.Suggestion.filter({ documentId }, '-created_date').catch(() => []),
+        base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
+      ]);
+      const suggestionIds = allSuggestions.map(s => s.id);
+      const sectionIds = allSections.map(s => s.id);
 
       const [votes, publicProfiles, args, docComments, sectionComments, suggestionComments] = await Promise.all([
         suggestionIds.length > 0
@@ -159,7 +167,10 @@ export function useDocumentData(documentId) {
   const documentAgreements = React.useMemo(() => documentMetadata?.agreements || [], [documentMetadata?.agreements]);
   const documentVersions = React.useMemo(() => documentMetadata?.versions || [], [documentMetadata?.versions]);
 
-  const isInitialLoading = docLoading || (topicsLoading && sectionsLoading);
+  // Wait for document AND both topics+sections before showing content
+  // Previously (topicsLoading && sectionsLoading) would stop waiting as soon as
+  // ONE of them finished — causing the page to render with the other still empty.
+  const isInitialLoading = docLoading || topicsLoading || sectionsLoading;
 
   return {
     document, topics, sections, suggestions,

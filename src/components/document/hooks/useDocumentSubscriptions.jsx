@@ -19,9 +19,9 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
   const setSectionsRef = (v) => { sectionsRef.current = v; };
   const setSuggestionsRef = (v) => { suggestionsRef.current = v; };
 
-  // Document subscription
+  // Document subscription — only needs documentId, not the document object
   React.useEffect(() => {
-    if (!documentId || !document) return;
+    if (!documentId) return;
     const unsubscribe = base44.entities.Document.subscribe((event) => {
       if (event.id === documentId) {
         queryClient.invalidateQueries({ queryKey: ['document', documentId] });
@@ -29,11 +29,11 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
       }
     });
     return unsubscribe;
-  }, [documentId, document, queryClient]);
+  }, [documentId, queryClient]);
 
   // Topics / Sections / Suggestions subscriptions — debounced
   React.useEffect(() => {
-    if (!documentId || !document) return;
+    if (!documentId) return;
 
     const timers = { topics: null, sections: null, suggestions: null };
     const debouncedInvalidate = (queryKey) => {
@@ -72,11 +72,11 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
       unsubscribeSection();
       unsubscribeSuggestion();
     };
-  }, [documentId, document, queryClient]);
+  }, [documentId, queryClient]);
 
   // Comment subscription
   React.useEffect(() => {
-    if (!documentId || !document) return;
+    if (!documentId) return;
     const unsubscribe = base44.entities.Comment.subscribe((event) => {
       if (event.data?.rootEntityType === 'document' && event.data?.rootEntityId === documentId) {
         queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
@@ -86,11 +86,11 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
       }
     });
     return unsubscribe;
-  }, [documentId, document, queryClient]);
+  }, [documentId, queryClient]);
 
   // Agreement / Version subscriptions
   React.useEffect(() => {
-    if (!documentId || !document) return;
+    if (!documentId) return;
 
     const unsubscribeAgreement = base44.entities.DocumentAgreement.subscribe((event) => {
       if (event.data?.documentId === documentId ||
@@ -109,7 +109,7 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
       unsubscribeAgreement();
       unsubscribeVersion();
     };
-  }, [documentId, document, queryClient, documentMetadata]);
+  }, [documentId, queryClient, documentMetadata]);
 
   return { setTopicsRef, setSectionsRef, setSuggestionsRef };
 }
