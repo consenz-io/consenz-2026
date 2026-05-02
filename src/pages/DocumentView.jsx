@@ -113,11 +113,12 @@ export default function DocumentView() {
     [allComments, documentId]
   );
 
-  // Calculate version count: max version number + 1 (current)
+  // Version count = number of unique accepted changes + 1 (current state)
+  // Deduplicate by version number to avoid counting multiple section changes per suggestion
   const versionCount = React.useMemo(() => {
     if (!documentVersions || documentVersions.length === 0) return 1;
-    const maxVersion = Math.max(...documentVersions.map(v => v.version || 0));
-    return maxVersion + 1;
+    const uniqueVersionNumbers = new Set(documentVersions.map(v => v.version || 0));
+    return uniqueVersionNumbers.size + 1; // +1 for current version
   }, [documentVersions]);
 
   const sectionCommentsCount = React.useMemo(() => {

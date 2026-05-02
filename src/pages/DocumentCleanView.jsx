@@ -76,23 +76,17 @@ export default function DocumentCleanView() {
   const { data: allVersions, isLoading: versionsLoading } = useQuery({
     queryKey: ['allVersions', documentId],
     queryFn: async () => {
-      // Fetch versions - backend now allows public access for public documents
       const result = await base44.functions.invoke('getDocumentVersionsServiceRole', { documentId });
       return result?.data || [];
     },
+    initialData: [],
     enabled: !!documentId,
   });
-
-  // Calculate correct version count
-  const totalVersionCount = React.useMemo(() => {
-    if (!Array.isArray(allVersions) || allVersions.length === 0) return 1;
-    const maxVersion = Math.max(...allVersions.map(v => v.version || 0));
-    return maxVersion + 1;
-  }, [allVersions]);
 
   const { data: suggestions, isLoading: suggestionsLoading } = useQuery({
     queryKey: ['suggestions', documentId],
     queryFn: () => base44.entities.Suggestion.filter({ documentId }),
+    initialData: [],
     enabled: !!documentId,
   });
 
@@ -116,6 +110,12 @@ export default function DocumentCleanView() {
     return map;
   }, [topicEditSuggestions]);
 
+  // Use custom hook for version management — must be declared before getTopicTitleAtVersion
+  const versionGroups = useDocumentVersions(document, sections, allVersions, suggestions);
+
+  // Total version count is simply the number of snapshots (current + history)
+  const totalVersionCount = versionGroups.length || 1;
+
   // Get topic title as it was at a specific version
   const getTopicTitleAtVersion = (topicId, versionIndex) => {
     const topic = topics.find(t => t.id === topicId);
@@ -135,9 +135,6 @@ export default function DocumentCleanView() {
     }
     return relevant[relevant.length - 1].newTitle;
   };
-
-  // Use custom hook for version management
-  const versionGroups = useDocumentVersions(document, sections, allVersions || [], suggestions || []);
 
   const currentSnapshot = versionGroups[currentVersionIndex] || versionGroups[0];
   const olderSnapshot = currentVersionIndex < versionGroups.length - 1 ? versionGroups[currentVersionIndex + 1] : null;
@@ -476,7 +473,7 @@ ${text}`;
     printWindow.document.close();
   };
 
-  if (docLoading || topicsLoading || sectionsLoading || versionsLoading || suggestionsLoading || !allVersions || !suggestions) {
+  if (docLoading || topicsLoading || sectionsLoading || versionsLoading || suggestionsLoading) {
     return (
       <div className="min-h-screen bg-white p-8">
         <div className="max-w-4xl mx-auto space-y-6">
