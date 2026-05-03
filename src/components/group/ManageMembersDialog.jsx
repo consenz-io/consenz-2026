@@ -277,10 +277,10 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
               value={group?.status || 'public'}
               onValueChange={(value) => updateGroupStatusMutation.mutate(value)}
             >
-              <div className="flex items-start space-x-3 space-x-reverse p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
+              <div className="flex items-start flex-row-reverse gap-3 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
                 <RadioGroupItem value="public" id="public-manage" />
-                <Label htmlFor="public-manage" className="flex-1 cursor-pointer">
-                  <div className="flex items-center gap-2 font-medium mb-1">
+                <Label htmlFor="public-manage" className="flex-1 cursor-pointer text-right">
+                  <div className="flex items-center justify-end gap-2 font-medium mb-1">
                     <Globe className="w-4 h-4" />
                     {language === 'he' ? 'ציבורי' : 'Public'}
                   </div>
@@ -290,10 +290,10 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                 </Label>
               </div>
 
-              <div className="flex items-start space-x-3 space-x-reverse p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
+              <div className="flex items-start flex-row-reverse gap-3 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
                 <RadioGroupItem value="private" id="private-manage" />
-                <Label htmlFor="private-manage" className="flex-1 cursor-pointer">
-                  <div className="flex items-center gap-2 font-medium mb-1">
+                <Label htmlFor="private-manage" className="flex-1 cursor-pointer text-right">
+                  <div className="flex items-center justify-end gap-2 font-medium mb-1">
                     <Lock className="w-4 h-4" />
                     {language === 'he' ? 'פרטי' : 'Private'}
                   </div>
@@ -303,10 +303,10 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                 </Label>
               </div>
 
-              <div className="flex items-start space-x-3 space-x-reverse p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
+              <div className="flex items-start flex-row-reverse gap-3 p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
                 <RadioGroupItem value="hidden" id="hidden-manage" />
-                <Label htmlFor="hidden-manage" className="flex-1 cursor-pointer">
-                  <div className="flex items-center gap-2 font-medium mb-1">
+                <Label htmlFor="hidden-manage" className="flex-1 cursor-pointer text-right">
+                  <div className="flex items-center justify-end gap-2 font-medium mb-1">
                     <Lock className="w-4 h-4" />
                     {language === 'he' ? 'חסוי' : 'Hidden'}
                   </div>
