@@ -512,7 +512,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
                 {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString('en-GB')}
               </div>
               <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <SectionVoteButtons section={section} user={user} />
+                <SectionVoteButtons section={section} user={user} onSuggestEdit={onEditSection} />
                 {(() => {
                   const count = typeof getCommentsCount === 'function' ? getCommentsCount(activeCommentEntity.entityType, activeCommentEntity.entityId) : 0;
                   const hasComments = count > 0;
