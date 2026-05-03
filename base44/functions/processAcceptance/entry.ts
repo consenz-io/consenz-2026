@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     
     // This function runs with service role privileges
-    const { suggestionId, documentId, voterId, wasNewVote } = await req.json();
+    const { suggestionId, documentId, voterId, wasNewVote, forceAccept } = await req.json();
 
     console.log('[PROCESS ACCEPTANCE] Starting for suggestion:', suggestionId);
 
@@ -129,11 +129,14 @@ Deno.serve(async (req) => {
     }
 
     // Re-verify the suggestion actually meets the threshold (using stored document.threshold)
-    const verifyDelta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
-    const verifyThreshold = Math.max(2, document.threshold || 2);
-    if (verifyDelta < verifyThreshold) {
-      console.log('[PROCESS ACCEPTANCE] Suggestion no longer meets threshold, aborting. delta:', verifyDelta, 'threshold:', verifyThreshold);
-      return Response.json({ success: true, message: 'Threshold not met, acceptance aborted' });
+    // Skip threshold check if forceAccept=true (e.g. triggered by an accepted edit_suggestion on a pending parent)
+    if (!forceAccept) {
+      const verifyDelta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
+      const verifyThreshold = Math.max(2, document.threshold || 2);
+      if (verifyDelta < verifyThreshold) {
+        console.log('[PROCESS ACCEPTANCE] Suggestion no longer meets threshold, aborting. delta:', verifyDelta, 'threshold:', verifyThreshold);
+        return Response.json({ success: true, message: 'Threshold not met, acceptance aborted' });
+      }
     }
 
     // ATOMIC LOCK: Mark as accepted immediately before any processing.
@@ -317,6 +320,24 @@ Deno.serve(async (req) => {
           translations: {}
         });
         console.log('[PROCESS ACCEPTANCE] Updated parent suggestion content:', suggestion.parentSuggestionId);
+
+        // If the parent suggestion is still pending (new_section or edit_section),
+        // trigger its acceptance now with the updated content
+        if (parentSuggestion.status === 'pending') {
+          console.log('[PROCESS ACCEPTANCE] Parent is still pending, triggering its acceptance:', suggestion.parentSuggestionId);
+          try {
+            await base44.asServiceRole.functions.invoke('processAcceptance', {
+              suggestionId: suggestion.parentSuggestionId,
+              documentId: suggestion.documentId,
+              voterId,
+              wasNewVote,
+              forceAccept: true
+            });
+            console.log('[PROCESS ACCEPTANCE] Parent suggestion processed successfully');
+          } catch (parentErr) {
+            console.error('[PROCESS ACCEPTANCE] Failed to process parent suggestion:', parentErr);
+          }
+        }
       } else {
         console.warn('[PROCESS ACCEPTANCE] Parent suggestion not found:', suggestion.parentSuggestionId);
       }
