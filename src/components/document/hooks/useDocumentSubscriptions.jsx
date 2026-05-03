@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 
@@ -14,10 +14,11 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
   const sectionsRef = React.useRef([]);
   const suggestionsRef = React.useRef([]);
 
-  // These are updated by DocumentView via the returned setters
-  const setTopicsRef = (v) => { topicsRef.current = v; };
-  const setSectionsRef = (v) => { sectionsRef.current = v; };
-  const setSuggestionsRef = (v) => { suggestionsRef.current = v; };
+  // Stable setter functions — defined once, never change reference
+  // (inline arrow functions would create a new reference on every render)
+  const setTopicsRef = React.useCallback((v) => { topicsRef.current = v; }, []);
+  const setSectionsRef = React.useCallback((v) => { sectionsRef.current = v; }, []);
+  const setSuggestionsRef = React.useCallback((v) => { suggestionsRef.current = v; }, []);
 
   // Document subscription — only needs documentId, not the document object
   React.useEffect(() => {
@@ -109,7 +110,11 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
       unsubscribeAgreement();
       unsubscribeVersion();
     };
-  }, [documentId, queryClient, documentMetadata]);
+  // documentMetadata intentionally excluded — it changes every refetch and would
+  // cause unnecessary re-subscription. The delete-check fallback is a nice-to-have,
+  // not critical — the invalidation on create/update is sufficient.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [documentId, queryClient]);
 
   return { setTopicsRef, setSectionsRef, setSuggestionsRef };
 }

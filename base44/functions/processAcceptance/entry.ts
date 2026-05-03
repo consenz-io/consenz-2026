@@ -50,43 +50,55 @@ const detectLanguage = (text) => {
   return 'en';
 };
 
-// Calculate contributors efficiently - single batch query
+// Calculate contributors efficiently - scoped to this document only (no global list() calls)
 async function calculateContributors(base44, documentId) {
-  const [suggestions, votes, profiles, comments, sections, agreements] = await Promise.all([
-    base44.entities.Suggestion.filter({ documentId }),
-    base44.entities.Vote.list(),
-    base44.entities.UserPublicProfile.list(),
-    base44.entities.Comment.list(),
-    base44.entities.Section.filter({ documentId }),
-    base44.entities.DocumentAgreement.filter({ documentId })
+  const [suggestions, sections, agreements] = await Promise.all([
+    base44.asServiceRole.entities.Suggestion.filter({ documentId }),
+    base44.asServiceRole.entities.Section.filter({ documentId }),
+    base44.asServiceRole.entities.DocumentAgreement.filter({ documentId })
   ]);
 
-  const uniqueEmails = new Set();
-  
-  // Collect from votes
   const suggestionIds = suggestions.map(s => s.id);
-  votes.filter(v => suggestionIds.includes(v.suggestionId)).forEach(v => {
-    const profile = profiles.find(p => p.userId === v.userId);
+  const sectionIds = sections.map(s => s.id);
+
+  // Fetch votes and comments scoped to this document's entities only
+  const [votes, profiles, docComments, sectionComments, suggestionComments] = await Promise.all([
+    suggestionIds.length > 0
+      ? base44.asServiceRole.entities.Vote.filter({ suggestionId: { $in: suggestionIds } })
+      : Promise.resolve([]),
+    base44.asServiceRole.entities.UserPublicProfile.list(),
+    base44.asServiceRole.entities.Comment.filter({ rootEntityType: 'document', rootEntityId: documentId }),
+    sectionIds.length > 0
+      ? base44.asServiceRole.entities.Comment.filter({ rootEntityType: 'section', rootEntityId: { $in: sectionIds } })
+      : Promise.resolve([]),
+    suggestionIds.length > 0
+      ? base44.asServiceRole.entities.Comment.filter({ rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } })
+      : Promise.resolve([]),
+  ]);
+
+  const comments = [...docComments, ...sectionComments, ...suggestionComments];
+
+  // Build O(1) lookup map
+  const profileByUserId = new Map();
+  profiles.forEach(p => { if (p.userId) profileByUserId.set(p.userId, p); });
+
+  const uniqueEmails = new Set();
+
+  // From votes — resolve userId → email via profile map
+  votes.forEach(v => {
+    const profile = profileByUserId.get(v.userId);
     if (profile?.email) uniqueEmails.add(profile.email);
   });
-  
-  // Collect from comments
-  const sectionIds = sections.map(s => s.id);
-  comments.forEach(c => {
-    if (c.created_by && (
-      (c.rootEntityType === 'suggestion' && suggestionIds.includes(c.rootEntityId)) ||
-      (c.rootEntityType === 'section' && sectionIds.includes(c.rootEntityId)) ||
-      (c.rootEntityType === 'document' && c.rootEntityId === documentId)
-    )) {
-      uniqueEmails.add(c.created_by);
-    }
-  });
-  
-  // Collect from agreements
-  agreements.forEach(a => {
-    if (a.userEmail) uniqueEmails.add(a.userEmail);
-  });
-  
+
+  // From comments
+  comments.forEach(c => { if (c.created_by) uniqueEmails.add(c.created_by); });
+
+  // From agreements
+  agreements.forEach(a => { if (a.userEmail) uniqueEmails.add(a.userEmail); });
+
+  // From suggestion creators
+  suggestions.forEach(s => { if (s.created_by) uniqueEmails.add(s.created_by); });
+
   return Math.max(1, uniqueEmails.size);
 }
 
@@ -130,8 +142,14 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.entities.Suggestion.update(suggestionId, { status: 'accepted' });
     // Re-fetch to confirm we were the one that made the change (guard against race)
     const lockedSuggestion = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
-    if (!lockedSuggestion || lockedSuggestion.status !== 'accepted' || lockedSuggestion.suggestionConsensus !== undefined && lockedSuggestion.suggestionConsensus !== null) {
-      // Another process already completed the full acceptance (suggestionConsensus is set at the end)
+    // Guard: if another process already completed full acceptance (suggestionConsensus is set),
+    // or if the status is NOT 'accepted' (meaning something reset it), bail out.
+    // Explicit parentheses to avoid operator precedence bugs (&& binds tighter than ||).
+    if (
+      !lockedSuggestion ||
+      lockedSuggestion.status !== 'accepted' ||
+      (lockedSuggestion.suggestionConsensus !== undefined && lockedSuggestion.suggestionConsensus !== null)
+    ) {
       console.log('[PROCESS ACCEPTANCE] Another process completed acceptance first, skipping');
       return Response.json({ success: true, message: 'Already processed by another instance' });
     }

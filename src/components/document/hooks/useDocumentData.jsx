@@ -55,15 +55,23 @@ export function useDocumentData(documentId) {
   });
 
   // Stable key: only keyed by documentId — avoids a new query on every render
-  // (suggestions/sections arrays change reference every render causing cache thrash)
+  // Note: suggestions/sections are re-fetched here to get fresh IDs at query time
+  // without stale closure issues. The individual queries above remain separate
+  // so isInitialLoading works correctly.
   const { data: aggregatedData } = useQuery({
     queryKey: ['documentAggregatedData', documentId],
     queryFn: async () => {
-      // Re-read from cache at fetch time so we always have the latest IDs
-      // without capturing stale closures
+      // Read IDs from the already-populated cache first to avoid double-fetch
+      const cachedSuggestions = queryClient.getQueryData(['suggestions', documentId]);
+      const cachedSections = queryClient.getQueryData(['sections', documentId]);
+
       const [allSuggestions, allSections] = await Promise.all([
-        base44.entities.Suggestion.filter({ documentId }, '-created_date').catch(() => []),
-        base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
+        cachedSuggestions
+          ? Promise.resolve(cachedSuggestions)
+          : base44.entities.Suggestion.filter({ documentId }, '-created_date').catch(() => []),
+        cachedSections
+          ? Promise.resolve(cachedSections)
+          : base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
       ]);
       const suggestionIds = allSuggestions.map(s => s.id);
       const sectionIds = allSections.map(s => s.id);
