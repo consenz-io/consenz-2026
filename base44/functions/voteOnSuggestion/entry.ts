@@ -83,10 +83,11 @@ Deno.serve(async (req) => {
     console.log('[VOTE FUNCTION] Processing vote:', { suggestionId, vote, userId: user.id });
 
     // Fetch current state in parallel — use asServiceRole for both to avoid platform rate limits
-    const [allVotes, suggestion] = await Promise.all([
+    const [allVotes, suggestionData] = await Promise.all([
       base44.asServiceRole.entities.Vote.filter({ suggestionId }),
       base44.asServiceRole.entities.Suggestion.get(suggestionId),
     ]);
+    let suggestion = suggestionData;
     
     const existingVote = allVotes.find(v => v.userId === user.id) || null;
 
