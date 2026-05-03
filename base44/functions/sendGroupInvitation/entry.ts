@@ -26,25 +26,39 @@ Deno.serve(async (req) => {
       status: 'pending'
     });
 
-    const inviteUrl = `${req.headers.get('origin') || 'https://app.consenz.io'}/login?groupInvite=${token}`;
+    const inviteUrl = `https://app.consenz.io/login?groupInvite=${token}`;
+    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
-    // Send email via Base44 built-in integration (works with any email address)
-    await base44.asServiceRole.integrations.Core.SendEmail({
-      to: email,
-      subject: `הוזמנת להצטרף לקבוצה "${groupName}" ב-Consenz`,
-      body: `
-        <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h2 style="color: #1e40af;">הוזמנת להצטרף לקבוצה!</h2>
-          <p>${user.full_name || 'מישהו'} הזמין אותך להצטרף לקבוצה <strong>"${groupName}"</strong> בפלטפורמת Consenz.</p>
-          <p>לחץ על הכפתור למטה כדי לקבל את ההזמנה:</p>
-          <a href="${inviteUrl}" 
-             style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 16px 0;">
-            הצטרף לקבוצה
-          </a>
-          <p style="color: #64748b; font-size: 14px;">אם הכפתור לא עובד, העתק את הקישור: <br/><a href="${inviteUrl}">${inviteUrl}</a></p>
-        </div>
-      `
+    const emailRes = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Consenz <onboarding@resend.dev>',
+        to: [email],
+        subject: `הוזמנת להצטרף לקבוצה "${groupName}" ב-Consenz`,
+        html: `
+          <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #1e40af;">הוזמנת להצטרף לקבוצה!</h2>
+            <p>${user.full_name || 'מישהו'} הזמין אותך להצטרף לקבוצה <strong>"${groupName}"</strong> בפלטפורמת Consenz.</p>
+            <p>לחץ על הכפתור למטה כדי לקבל את ההזמנה:</p>
+            <a href="${inviteUrl}" 
+               style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 16px 0;">
+              הצטרף לקבוצה
+            </a>
+            <p style="color: #64748b; font-size: 14px;">אם הכפתור לא עובד, העתק את הקישור: <br/><a href="${inviteUrl}">${inviteUrl}</a></p>
+          </div>
+        `
+      })
     });
+
+    if (!emailRes.ok) {
+      const errBody = await emailRes.json();
+      console.error('[sendGroupInvitation] Resend error:', errBody);
+      return Response.json({ error: errBody.message || 'Failed to send email' }, { status: 500 });
+    }
 
     return Response.json({ success: true });
 
