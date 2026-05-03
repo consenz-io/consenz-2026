@@ -10,15 +10,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'documentId is required' }, { status: 400 });
     }
 
-    // Use asServiceRole to bypass all RLS checks
+    // Use asServiceRole to bypass all RLS checks - works without user auth
     const versions = await base44.asServiceRole.entities.DocumentVersion.filter(
-      { documentId }
+      { documentId },
+      'version',
+      500
     );
 
     return Response.json({ data: versions });
   } catch (error) {
-    console.error('Error fetching document versions:', error);
-    console.error('Error data:', JSON.stringify(error.data));
-    return Response.json({ error: error.message, detail: error.data }, { status: 500 });
+    console.error('Error fetching document versions:', error.message);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });
