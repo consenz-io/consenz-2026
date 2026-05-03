@@ -1,0 +1,27 @@
+{
+  "name": "SectionVote",
+  "type": "object",
+  "properties": {
+    "sectionId": {
+      "type": "string",
+      "description": "Section ID being voted on"
+    },
+    "userId": {
+      "type": "string",
+      "description": "User ID who voted"
+    },
+    "vote": {
+      "type": "string",
+      "enum": [
+        "pro",
+        "con"
+      ],
+      "description": "Vote direction"
+    }
+  },
+  "required": [
+    "sectionId",
+    "userId",
+    "vote"
+  ]
+}

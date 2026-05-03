@@ -18,6 +18,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import JoinGroupDialog from "@/components/group/JoinGroupDialog";
 import AcceptedAnimation from "./AcceptedAnimation";
+import SectionVoteButtons from "./SectionVoteButtons";
 
 const SectionCarousel = React.memo(function SectionCarousel({
   section,
@@ -510,25 +511,28 @@ const SectionCarousel = React.memo(function SectionCarousel({
               <div className="text-[10px] md:text-xs text-slate-400">
                 {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString('en-GB')}
               </div>
-              {(() => {
-                const count = typeof getCommentsCount === 'function' ? getCommentsCount(activeCommentEntity.entityType, activeCommentEntity.entityId) : 0;
-                const hasComments = count > 0;
-                return (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => toggleComments(`section-${section.id}`)}
-                    className={`h-7 md:h-8 text-xs px-2 transition-all ${
-                      hasComments
-                        ? 'font-bold text-blue-700 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 shadow-sm'
-                        : 'text-slate-600 hover:text-blue-600'
-                    }`}
-                  >
-                    <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'} ${hasComments ? 'fill-blue-200' : ''}`} />
-                    {t('comments')}{hasComments ? ` (${count})` : ''}
-                  </Button>
-                );
-              })()}
+              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <SectionVoteButtons section={section} user={user} />
+                {(() => {
+                  const count = typeof getCommentsCount === 'function' ? getCommentsCount(activeCommentEntity.entityType, activeCommentEntity.entityId) : 0;
+                  const hasComments = count > 0;
+                  return (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleComments(`section-${section.id}`)}
+                      className={`h-7 md:h-8 text-xs px-2 transition-all ${
+                        hasComments
+                          ? 'font-bold text-blue-700 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 shadow-sm'
+                          : 'text-slate-600 hover:text-blue-600'
+                      }`}
+                    >
+                      <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'} ${hasComments ? 'fill-blue-200' : ''}`} />
+                      {t('comments')}{hasComments ? ` (${count})` : ''}
+                    </Button>
+                  );
+                })()}
+              </div>
             </div>
             {showComments[`section-${section.id}`] && (
               <div className="mt-4 pt-4 border-t border-slate-200">
