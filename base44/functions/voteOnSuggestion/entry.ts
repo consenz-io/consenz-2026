@@ -82,9 +82,9 @@ Deno.serve(async (req) => {
 
     console.log('[VOTE FUNCTION] Processing vote:', { suggestionId, vote, userId: user.id });
 
-    // Fetch current state in parallel
+    // Fetch current state in parallel — use asServiceRole for both to avoid platform rate limits
     const [allVotes, suggestion] = await Promise.all([
-      base44.entities.Vote.filter({ suggestionId }),
+      base44.asServiceRole.entities.Vote.filter({ suggestionId }),
       base44.asServiceRole.entities.Suggestion.get(suggestionId),
     ]);
     
@@ -116,27 +116,42 @@ Deno.serve(async (req) => {
     if (existingVote) {
       if (existingVote.vote === vote) {
         // Cancel vote
-        await base44.entities.Vote.delete(existingVote.id);
+        await base44.asServiceRole.entities.Vote.delete(existingVote.id);
         voteAction = 'canceled';
       } else {
         // Change vote direction
-        await base44.entities.Vote.update(existingVote.id, { vote });
+        await base44.asServiceRole.entities.Vote.update(existingVote.id, { vote });
         voteAction = 'changed';
       }
     } else {
-      // New vote
-      await base44.entities.Vote.create({ suggestionId, userId: user.id, vote });
-      voteAction = 'created';
+      // New vote — check for duplicate before creating (guard against double-click race)
+      const dupeCheck = allVotes.filter(v => v.userId === user.id);
+      if (dupeCheck.length > 0) {
+        console.log('[VOTE FUNCTION] Duplicate vote detected, updating instead of creating');
+        await base44.asServiceRole.entities.Vote.update(dupeCheck[0].id, { vote });
+        voteAction = 'changed';
+      } else {
+        await base44.asServiceRole.entities.Vote.create({ suggestionId, userId: user.id, vote });
+        voteAction = 'created';
+      }
     }
 
     // Re-read the actual votes from DB after mutation - this is the source of truth
-    // This prevents race conditions: count from reality, not from a stale cached number
-    const freshVotes = await base44.entities.Vote.filter({ suggestionId });
+    const freshVotes = await base44.asServiceRole.entities.Vote.filter({ suggestionId });
     const newProVotes = freshVotes.filter(v => v.vote === 'pro').length;
     const newConVotes = freshVotes.filter(v => v.vote === 'con').length;
 
+    // Verify: each user can only have ONE vote — log if violation found
+    const votesByUser = new Map();
+    freshVotes.forEach(v => {
+      if (votesByUser.has(v.userId)) {
+        console.warn('[VOTE FUNCTION] DUPLICATE VOTE DETECTED for userId:', v.userId, 'on suggestion:', suggestionId);
+      }
+      votesByUser.set(v.userId, v);
+    });
+
     // Update suggestion vote counts based on actual DB count
-    await base44.entities.Suggestion.update(suggestionId, {
+    await base44.asServiceRole.entities.Suggestion.update(suggestionId, {
       proVotes: newProVotes,
       conVotes: newConVotes
     });

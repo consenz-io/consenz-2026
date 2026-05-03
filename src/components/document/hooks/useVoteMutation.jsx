@@ -130,6 +130,10 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
         return;
       }
 
+      // Always invalidate to get fresh server data after any error
+      queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
+      queryClient.invalidateQueries({ queryKey: ['userVotes', document?.id, user?.id] });
+
       // Handle rate limit errors
       const isRateLimit = err.response?.status === 429
         || err.status === 429
@@ -139,7 +143,7 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
         || errorMessage?.includes('המתן')
         || errorMessage?.toLowerCase().includes('rate limit');
       if (isRateLimit) {
-        toast.error('ההצבעה לא נקלטה. נסו שוב בעוד 15 שניות', { duration: 15000 });
+        toast.error('ההצבעה לא נקלטה. נסו שוב בעוד כמה שניות', { duration: 8000 });
       } else {
         toast.error(errorMessage || 'שגיאה בהצבעה, נסה שוב');
       }
