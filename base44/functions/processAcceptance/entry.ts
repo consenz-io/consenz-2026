@@ -306,6 +306,21 @@ Deno.serve(async (req) => {
         parentSuggestionId: null
       });
 
+    } else if (suggestion.type === 'edit_suggestion' && suggestion.parentSuggestionId) {
+      // Update the parent suggestion's newContent with the accepted edit
+      const parentSuggestion = await base44.asServiceRole.entities.Suggestion.get(suggestion.parentSuggestionId);
+      if (parentSuggestion) {
+        const newContentLanguage = detectLanguage(suggestion.newContent || '');
+        await base44.asServiceRole.entities.Suggestion.update(suggestion.parentSuggestionId, {
+          newContent: suggestion.newContent,
+          originalLanguage: newContentLanguage,
+          translations: {}
+        });
+        console.log('[PROCESS ACCEPTANCE] Updated parent suggestion content:', suggestion.parentSuggestionId);
+      } else {
+        console.warn('[PROCESS ACCEPTANCE] Parent suggestion not found:', suggestion.parentSuggestionId);
+      }
+
     } else if (suggestion.type === 'delete_section' && suggestion.sectionId) {
       const section = await base44.asServiceRole.entities.Section.filter({ id: suggestion.sectionId }).then(r => r[0]);
       if (section) {
