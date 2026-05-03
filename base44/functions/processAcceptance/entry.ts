@@ -147,28 +147,44 @@ Deno.serve(async (req) => {
     const delta             = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
     const boundedConsensus  = Math.min(1, Math.max(0, (delta + totalUsers) / (2 * totalUsers)));
     const updatedConsensuses = [...(document.consensuses || []), boundedConsensus];
-    const consensusAvg      = updatedConsensuses.reduce((s, v) => s + Math.min(1, v), 0) / updatedConsensuses.length;
+    // Assert all values are [0,1] to catch data errors early instead of silently masking them
+    const consensusAvg      = updatedConsensuses.reduce((s, v) => {
+      if (v < 0 || v > 1) console.warn('[PROCESS ACCEPTANCE] Consensus out of bounds:', v);
+      return s + v;
+    }, 0) / updatedConsensuses.length;
     const newThreshold      = Math.max(2, Math.round(consensusAvg * totalUsers));
 
     console.log('[PROCESS ACCEPTANCE] Calculated:', { totalUsers, boundedConsensus, newThreshold });
 
     // ── Delegate type-specific mutation ──────────────────────────────────────
-    if (suggestion.type === 'edit_section' && suggestion.sectionId) {
-      await base44.asServiceRole.functions.invoke('_acceptEditSection', { suggestion, voterId });
+    // CRITICAL: Wrap in try-catch to prevent silent data corruption
+    // If mutation fails, rollback status and bail out
+    try {
+      if (suggestion.type === 'edit_section' && suggestion.sectionId) {
+        await base44.asServiceRole.functions.invoke('_acceptEditSection', { suggestion, voterId });
 
-    } else if (suggestion.type === 'new_section') {
-      await base44.asServiceRole.functions.invoke('_acceptNewSection', {
-        suggestion, voterId, boundedConsensus, totalUsers, newThreshold, suggestionId
-      });
+      } else if (suggestion.type === 'new_section') {
+        await base44.asServiceRole.functions.invoke('_acceptNewSection', {
+          suggestion, voterId, boundedConsensus, totalUsers, newThreshold, suggestionId
+        });
 
-    } else if (suggestion.type === 'edit_suggestion' && suggestion.parentSuggestionId) {
-      await base44.asServiceRole.functions.invoke('_acceptEditSuggestion', { suggestion, voterId, wasNewVote });
+      } else if (suggestion.type === 'edit_suggestion' && suggestion.parentSuggestionId) {
+        await base44.asServiceRole.functions.invoke('_acceptEditSuggestion', { suggestion, voterId, wasNewVote });
 
-    } else if (suggestion.type === 'delete_section' && suggestion.sectionId) {
-      await base44.asServiceRole.functions.invoke('_acceptDeleteSection', {
-        suggestion,
-        documentGamificationEnabled: !!document.gamificationEnabled
-      });
+      } else if (suggestion.type === 'delete_section' && suggestion.sectionId) {
+        await base44.asServiceRole.functions.invoke('_acceptDeleteSection', {
+          suggestion,
+          documentGamificationEnabled: !!document.gamificationEnabled
+        });
+      }
+    } catch (mutationErr) {
+      console.error('[PROCESS ACCEPTANCE] Type-specific mutation failed, rolling back status:', mutationErr);
+      // Rollback: revert status back to pending
+      await base44.asServiceRole.entities.Suggestion.update(suggestionId, { status: 'pending' });
+      return Response.json({ 
+        error: 'Document mutation failed: ' + mutationErr.message, 
+        details: mutationErr.stack 
+      }, { status: 500 });
     }
 
     // ── Update document + propagate threshold to pending siblings ─────────────
@@ -186,8 +202,14 @@ Deno.serve(async (req) => {
         .filter(p => p.id !== suggestionId)
         .map(p => {
           if (p.type === 'edit_section' && p.sectionId === suggestion.sectionId && suggestion.type === 'edit_section') {
+            // GUARD: Only update originalContent if suggestion.newContent is valid
+            const newOriginalContent = suggestion.newContent && suggestion.newContent.trim();
+            if (!newOriginalContent) {
+              console.warn('[PROCESS ACCEPTANCE] Skipping invalid originalContent update for sibling', p.id);
+              return base44.asServiceRole.entities.Suggestion.update(p.id, { threshold: newThreshold });
+            }
             return base44.asServiceRole.entities.Suggestion.update(p.id, {
-              threshold: newThreshold, originalContent: suggestion.newContent
+              threshold: newThreshold, originalContent: newOriginalContent
             });
           }
           return base44.asServiceRole.entities.Suggestion.update(p.id, { threshold: newThreshold });
@@ -204,7 +226,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    await Promise.all(updates);
+    // Use Promise.allSettled to prevent one failure from blocking all updates
+    const results = await Promise.allSettled(updates);
+    const failures = results.filter((r, i) => r.status === 'rejected');
+    if (failures.length > 0) {
+      console.error('[PROCESS ACCEPTANCE] Some updates failed:', failures.map(f => f.reason));
+    }
 
     // ── Notifications ────────────────────────────────────────────────────────
     const contributorEmails = await collectContributorEmails(base44, document);

@@ -87,6 +87,10 @@ Deno.serve(async (req) => {
       translations: {}
     });
 
+    // Calculate correct version number for new section (not hardcoded 1)
+    const existingVersions = await base44.asServiceRole.entities.DocumentVersion.filter({ sectionId: newSection.id });
+    const nextVersion = existingVersions.length > 0 ? Math.max(...existingVersions.map(v => v.version || 0)) + 1 : 1;
+
     await base44.asServiceRole.entities.DocumentVersion.create({
       documentId: suggestion.documentId,
       sectionId: newSection.id,
@@ -94,7 +98,7 @@ Deno.serve(async (req) => {
       sectionOrder: newOrder,
       content: suggestion.newContent,
       changeDescription: suggestion.title || 'סעיף חדש',
-      version: 1,
+      version: nextVersion,
       changeType: 'section_created',
       suggestionId: suggestion.id,
       originalLanguage: newContentLanguage,
