@@ -52,30 +52,39 @@ export default function SectionVoteButtons({ section, user }) {
     voteMutation.mutate(voteType);
   };
 
+  const proButton = (
+    <Button
+      key="pro"
+      variant={userVote?.vote === "pro" ? "default" : "outline"}
+      size="sm"
+      onClick={(e) => handleVote(e, "pro")}
+      disabled={voteMutation.isPending}
+      className={`h-7 px-2 text-xs gap-1 ${userVote?.vote === "pro" ? "bg-green-600 hover:bg-green-700 border-green-600" : "text-green-700 border-green-300 hover:bg-green-50"}`}
+      title="הצבעה בעד"
+    >
+      <ThumbsUp className="w-3.5 h-3.5" />
+      <span>{proCount}</span>
+    </Button>
+  );
+
+  const conButton = (
+    <Button
+      key="con"
+      variant={userVote?.vote === "con" ? "default" : "outline"}
+      size="sm"
+      onClick={(e) => handleVote(e, "con")}
+      disabled={voteMutation.isPending}
+      className={`h-7 px-2 text-xs gap-1 ${userVote?.vote === "con" ? "bg-red-600 hover:bg-red-700 border-red-600" : "text-red-700 border-red-300 hover:bg-red-50"}`}
+      title="הצבעה נגד"
+    >
+      <ThumbsDown className="w-3.5 h-3.5" />
+      <span>{conCount}</span>
+    </Button>
+  );
+
   return (
-    <div className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-      <Button
-        variant={userVote?.vote === "pro" ? "default" : "outline"}
-        size="sm"
-        onClick={(e) => handleVote(e, "pro")}
-        disabled={voteMutation.isPending}
-        className={`h-7 px-2 text-xs gap-1 ${userVote?.vote === "pro" ? "bg-green-600 hover:bg-green-700 border-green-600" : "text-green-700 border-green-300 hover:bg-green-50"}`}
-        title="הצבעה בעד"
-      >
-        <ThumbsUp className="w-3.5 h-3.5" />
-        <span>{proCount}</span>
-      </Button>
-      <Button
-        variant={userVote?.vote === "con" ? "default" : "outline"}
-        size="sm"
-        onClick={(e) => handleVote(e, "con")}
-        disabled={voteMutation.isPending}
-        className={`h-7 px-2 text-xs gap-1 ${userVote?.vote === "con" ? "bg-red-600 hover:bg-red-700 border-red-600" : "text-red-700 border-red-300 hover:bg-red-50"}`}
-        title="הצבעה נגד"
-      >
-        <ThumbsDown className="w-3.5 h-3.5" />
-        <span>{conCount}</span>
-      </Button>
+    <div className="flex items-center gap-2">
+      {isRTL ? <>{conButton}{proButton}</> : <>{proButton}{conButton}</>}
     </div>
   );
 }
