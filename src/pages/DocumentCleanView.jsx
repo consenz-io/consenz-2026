@@ -676,11 +676,12 @@ ${text}`;
                           currentSnapshot?.newSectionId === section.id;
                         
                         // Check if this section was deleted in THIS snapshot
-                        const versionSuggestion = (suggestions || []).find(s => s.id === currentSnapshot?.suggestionId);
+                        // isDeleted is set by useDocumentVersions when afterVersion.content === ''
+                        // We do NOT rely on suggestion.type here because new_section suggestions
+                        // get their type mutated to 'edit_section' after acceptance.
                         const isDeletedSection = isViewingHistory &&
                           currentSnapshot?.isDeleted &&
-                          currentSnapshot?.deletedSectionId === section.id &&
-                          (versionSuggestion?.type === 'delete_section' || currentSnapshot?.isDirectEdit);
+                          currentSnapshot?.deletedSectionId === section.id;
 
                         // Check if this section was directly edited by admin in this snapshot
                         const isDirectlyEdited = isViewingHistory &&
@@ -696,6 +697,7 @@ ${text}`;
                           currentSnapshot?.newContent && 
                           currentSnapshot?.newContent !== '' &&
                           oldContent !== null &&
+                          oldContent !== '' &&
                           oldContent !== currentSnapshot?.newContent;
 
                         return (

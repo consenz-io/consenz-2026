@@ -158,7 +158,14 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
         // We're walking newest→oldest, so currentSectionContents = state AFTER this change.
         // The snapshot should represent the document AT this version (i.e. after the change),
         // and we track what the content was BEFORE so the diff can be shown.
-        const contentBeforeChange = beforeVersion?.content ?? currentSectionContents[afterVersion.sectionId] ?? '';
+        //
+        // IMPORTANT: beforeVersion is the "old content" version record (lower version number).
+        // If it doesn't exist, fall back to currentSectionContents which holds the state
+        // BEFORE we apply this event (we haven't mutated it yet at this point in the loop).
+        // However currentSectionContents at this point = state AFTER this event (since we walk
+        // newest→oldest and haven't rewound yet). So the true "before" for a missing beforeVersion
+        // is unknown — we use empty string to signal "this was a creation".
+        const contentBeforeChange = beforeVersion?.content ?? '';
         const contentAfterChange = afterVersion.content; // new content introduced by this version
 
         // Build the section contents for this snapshot (state after this change = currentSectionContents)
@@ -188,10 +195,13 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
           documentThresholdAtTime: document.threshold || 2
         };
 
-        if (afterVersion.changeType === 'section_created') {
+        // A section_created OR a suggestion with no beforeVersion (first edit ever) = new section
+        if (afterVersion.changeType === 'section_created' || (!beforeVersion && afterVersion.content !== '' && !isTopicTitleChange)) {
           snapshotAfterChange.isNewSection = true;
           snapshotAfterChange.newSectionId = afterVersion.sectionId;
           snapshotAfterChange.newSectionContent = afterVersion.content;
+          // Clear oldContent so diff doesn't show empty→content as a diff
+          snapshotAfterChange.oldContent = null;
         }
 
         if (afterVersion.content === '') {
@@ -210,12 +220,19 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
           delete currentSectionContents[afterVersion.sectionId];
           currentExistingSections.delete(afterVersion.sectionId);
         } else if (afterVersion.content === '') {
+          // deleted section — restore to before state
           if (contentBeforeChange) {
             currentSectionContents[afterVersion.sectionId] = contentBeforeChange;
             currentExistingSections.add(afterVersion.sectionId);
           }
         } else if (beforeVersion) {
+          // edit: rewind to the "before" content
           currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
+        } else {
+          // No beforeVersion: we don't know what came before, remove from map so
+          // subsequent (older) snapshots don't show stale content for this section.
+          delete currentSectionContents[afterVersion.sectionId];
+          currentExistingSections.delete(afterVersion.sectionId);
         }
 
       } else if (event.eventType === 'direct_edit') {
@@ -240,14 +257,15 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
           documentThresholdAtTime: null
         };
 
-        if (afterVersion.changeType === 'section_created') {
+        if (afterVersion.changeType === 'section_created' || (!beforeVersion && afterVersion.content !== '')) {
           snapshotAfterChange.isNewSection = true;
           snapshotAfterChange.newSectionId = afterVersion.sectionId;
           snapshotAfterChange.newSectionContent = afterVersion.content;
+          snapshotAfterChange.oldContent = null;
         } else if (afterVersion.content === '') {
           snapshotAfterChange.isDeleted = true;
           snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
-          const deletedContent = currentSectionContents[afterVersion.sectionId] || beforeVersion?.content || '';
+          const deletedContent = beforeVersion?.content || currentSectionContents[afterVersion.sectionId] || '';
           snapshotAfterChange.deletedSectionContent = deletedContent;
           snapshotAfterChange.sectionContents[afterVersion.sectionId] = deletedContent;
           snapshotAfterChange.existingSections.add(afterVersion.sectionId);
@@ -259,9 +277,17 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
         if (afterVersion.changeType === 'section_created') {
           delete currentSectionContents[afterVersion.sectionId];
           currentExistingSections.delete(afterVersion.sectionId);
+        } else if (afterVersion.content === '') {
+          if (beforeVersion?.content) {
+            currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
+            currentExistingSections.add(afterVersion.sectionId);
+          }
         } else if (beforeVersion) {
           currentSectionContents[afterVersion.sectionId] = beforeVersion.content;
           currentExistingSections.add(afterVersion.sectionId);
+        } else {
+          delete currentSectionContents[afterVersion.sectionId];
+          currentExistingSections.delete(afterVersion.sectionId);
         }
       }
     });
