@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Consenz <onboarding@resend.dev>',
+        from: 'Consenz <no-reply@consenz.net>',
         to: [email],
         subject: `הוזמנת להצטרף לקבוצה "${groupName}" ב-Consenz`,
         html: `
