@@ -154,6 +154,16 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
           }
         }
 
+        // First, compute what the state looked like BEFORE this change was applied.
+        // We're walking newest→oldest, so currentSectionContents = state AFTER this change.
+        // The snapshot should represent the document AT this version (i.e. after the change),
+        // and we track what the content was BEFORE so the diff can be shown.
+        const contentBeforeChange = beforeVersion?.content ?? currentSectionContents[afterVersion.sectionId] ?? '';
+        const contentAfterChange = afterVersion.content; // new content introduced by this version
+
+        // Build the section contents for this snapshot (state after this change = currentSectionContents)
+        const snapshotSectionContents = { ...currentSectionContents };
+
         const snapshotAfterChange = {
           version: afterVersion.version,
           label: `גרסה ${afterVersion.version}`,
@@ -161,10 +171,12 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
           changeDescription: afterVersion.changeDescription,
           changeType: afterVersion.changeType,
           suggestionId: afterVersion.suggestionId,
-          sectionContents: { ...currentSectionContents },
+          sectionContents: snapshotSectionContents,
           existingSections: new Set(currentExistingSections),
           changedSectionId: isTopicTitleChange ? null : afterVersion.sectionId,
-          newContent: isTopicTitleChange ? null : afterVersion.content,
+          // newContent = the NEW content (after change), oldContent = the content before
+          newContent: isTopicTitleChange ? null : contentAfterChange,
+          oldContent: isTopicTitleChange ? null : contentBeforeChange,
           isTopicTitleChange: isTopicTitleChange || false,
           topicTitleChangeMeta,
           allSectionIds,
@@ -185,7 +197,7 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
         if (afterVersion.content === '') {
           snapshotAfterChange.isDeleted = true;
           snapshotAfterChange.deletedSectionId = afterVersion.sectionId;
-          const deletedContent = currentSectionContents[afterVersion.sectionId] || beforeVersion?.content || '';
+          const deletedContent = contentBeforeChange || '';
           snapshotAfterChange.deletedSectionContent = deletedContent;
           snapshotAfterChange.sectionContents[afterVersion.sectionId] = deletedContent;
           snapshotAfterChange.existingSections.add(afterVersion.sectionId);
@@ -193,14 +205,13 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
 
         snapshots.push(snapshotAfterChange);
 
-        // Update state for older version
+        // Update state for older version (walk backwards)
         if (afterVersion.changeType === 'section_created') {
           delete currentSectionContents[afterVersion.sectionId];
           currentExistingSections.delete(afterVersion.sectionId);
         } else if (afterVersion.content === '') {
-          const contentBeforeDelete = beforeVersion?.content || snapshotAfterChange.deletedSectionContent;
-          if (contentBeforeDelete) {
-            currentSectionContents[afterVersion.sectionId] = contentBeforeDelete;
+          if (contentBeforeChange) {
+            currentSectionContents[afterVersion.sectionId] = contentBeforeChange;
             currentExistingSections.add(afterVersion.sectionId);
           }
         } else if (beforeVersion) {
@@ -208,6 +219,7 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
         }
 
       } else if (event.eventType === 'direct_edit') {
+        const directOldContent = beforeVersion?.content ?? currentSectionContents[afterVersion.sectionId] ?? '';
         const snapshotAfterChange = {
           version: afterVersion.version,
           label: `עריכה ישירה`,
@@ -220,6 +232,7 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
           existingSections: new Set(currentExistingSections),
           changedSectionId: afterVersion.sectionId,
           newContent: afterVersion.content,
+          oldContent: directOldContent,
           allSectionIds,
           proVotes: 0,
           conVotes: 0,

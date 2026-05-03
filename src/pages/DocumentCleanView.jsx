@@ -41,7 +41,6 @@ export default function DocumentCleanView() {
   const [translatingAll, setTranslatingAll] = useState(false);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
   const [openSectionHistoryId, setOpenSectionHistoryId] = useState(null);
-  const [showDiffForSections, setShowDiffForSections] = useState({});
   const [openSuggestionId, setOpenSuggestionId] = useState(null);
   const [searchParams] = useSearchParams();
 
@@ -137,7 +136,6 @@ export default function DocumentCleanView() {
   };
 
   const currentSnapshot = versionGroups[currentVersionIndex] || versionGroups[0];
-  const olderSnapshot = currentVersionIndex < versionGroups.length - 1 ? versionGroups[currentVersionIndex + 1] : null;
   
   // Build a complete list of all sections including deleted ones from versions
   const allSectionsMap = React.useMemo(() => {
@@ -208,21 +206,6 @@ export default function DocumentCleanView() {
       setCurrentVersionIndex(Math.max(0, versionGroups.length - 1));
     }
   }, [versionGroups.length, currentVersionIndex]);
-
-  // Initialize showDiffForSections with true for all sections when viewing history
-  React.useEffect(() => {
-    if (currentVersionIndex > 0 && sections && sections.length > 0) {
-      const initialState = {};
-      sections.forEach(section => {
-        if (showDiffForSections[section.id] === undefined) {
-          initialState[section.id] = true;
-        }
-      });
-      if (Object.keys(initialState).length > 0) {
-        setShowDiffForSections(prev => ({ ...prev, ...initialState }));
-      }
-    }
-  }, [currentVersionIndex, sections, showDiffForSections]);
 
   // גלילה אוטומטית לסעיף שהשתנה או נוצר
   React.useEffect(() => {
@@ -679,11 +662,13 @@ ${text}`;
                         // מציאת תוכן הסעיף בגרסה המוצגת ובגרסה החדשה יותר
                         const isViewingHistory = currentVersionIndex > 0;
 
-                        // Get content to display
+                        // Get content to display (state after this version's change)
                         const displayedContent = currentSnapshot?.sectionContents?.[section.id] || section.content;
 
-                        // Get content from the older snapshot (for diff) - to show what changed in THIS version
-                        const olderContent = olderSnapshot?.sectionContents?.[section.id];
+                        // oldContent = what the section looked like BEFORE this version's change
+                        const oldContent = (isViewingHistory && currentSnapshot?.changedSectionId === section.id)
+                          ? currentSnapshot?.oldContent
+                          : null;
                         
                         // Check if this section was newly created in THIS snapshot (current view)
                         const isNewlyCreatedSection = isViewingHistory && 
@@ -702,15 +687,16 @@ ${text}`;
                           currentSnapshot?.isDirectEdit &&
                           currentSnapshot?.changedSectionId === section.id;
 
-                        // Check if this section changed between versions (content edit)
-                        // Compare the snapshot's content with the newer version's content
+                        // Check if this section changed in this version (has both old and new content)
                         const hasChanged = isViewingHistory && 
                           !isDeletedSection &&
                           !isDirectlyEdited &&
+                          !isNewlyCreatedSection &&
                           currentSnapshot?.changedSectionId === section.id && 
                           currentSnapshot?.newContent && 
                           currentSnapshot?.newContent !== '' &&
-                          displayedContent !== currentSnapshot?.newContent;
+                          oldContent !== null &&
+                          oldContent !== currentSnapshot?.newContent;
 
                         return (
                           <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
@@ -756,7 +742,7 @@ ${text}`;
                                       {language === 'he' ? '✏️ עריכה ישירה של מנהל' : language === 'ar' ? '✏️ تعديل مباشر من المسؤول' : '✏️ Direct Admin Edit'}
                                     </Badge>
                                     <InlineDiff
-                                      originalContent={olderContent || displayedContent}
+                                      originalContent={currentSnapshot?.oldContent || displayedContent}
                                       newContent={currentSnapshot?.newContent || displayedContent}
                                     />
                                   </div>
@@ -784,55 +770,30 @@ ${text}`;
                                     />
                                   </div>
                                 ) : isViewingHistory && hasChanged ? (
-                                 <div 
-                                   id={`change-${section.id}`} 
-                                   className="border-l-4 border-amber-400 pl-3 py-2 bg-amber-50/30 rounded"
-                                 >
-                                   <div className="flex items-center justify-between mb-2">
-                                     <Badge className="bg-amber-100 text-amber-800 text-xs">
-                                       {language === 'he' ? '✏️ שינוי בגרסה זו' : language === 'ar' ? '✏️ تغيير في هذا الإصدار' : '✏️ Changed in this version'}
-                                     </Badge>
-                                     {currentSnapshot?.suggestionId && (
-                                       <button
-                                         onClick={() => setOpenSuggestionId(currentSnapshot.suggestionId)}
-                                         className="text-[11px] text-blue-600 hover:underline"
-                                       >
-                                         {language === 'he' ? 'צפה בדיון' : language === 'ar' ? 'عرض النقاش' : 'View discussion'}
-                                       </button>
-                                     )}
-                                   </div>
-                                   <InlineDiff
-                                     originalContent={displayedContent}
-                                     newContent={currentSnapshot?.newContent}
-                                   />
-                                 </div>
+                                <div 
+                                  id={`change-${section.id}`} 
+                                  className="border-l-4 border-amber-400 pl-3 py-2 bg-amber-50/30 rounded"
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <Badge className="bg-amber-100 text-amber-800 text-xs">
+                                      {language === 'he' ? '✏️ שינוי בגרסה זו' : language === 'ar' ? '✏️ تغيير في هذا الإصدار' : '✏️ Changed in this version'}
+                                    </Badge>
+                                    {currentSnapshot?.suggestionId && (
+                                      <button
+                                        onClick={() => setOpenSuggestionId(currentSnapshot.suggestionId)}
+                                        className="text-[11px] text-blue-600 hover:underline"
+                                      >
+                                        {language === 'he' ? 'צפה בדיון' : language === 'ar' ? 'عرض النقاش' : 'View discussion'}
+                                      </button>
+                                    )}
+                                  </div>
+                                  <InlineDiff
+                                    originalContent={oldContent}
+                                    newContent={currentSnapshot?.newContent}
+                                  />
+                                </div>
                                 ) : (
                                 <>
-                                {isViewingHistory && olderContent && olderContent !== displayedContent ? (
-                                  <div 
-                                    id={`change-${section.id}`} 
-                                    className="border-l-4 border-blue-400 pl-3 py-2 bg-blue-50/20 rounded cursor-pointer hover:bg-blue-50/40 transition-colors"
-                                    onClick={() => setOpenSectionHistoryId(section.id)}
-                                  >
-                                      <div className="flex items-center justify-between mb-2">
-                                        <Badge className="bg-blue-100 text-blue-800 text-xs">
-                                          {language === 'he' ? '✏️ שינוי בגרסה זו' : language === 'ar' ? '✏️ تغيير في هذا الإصدار' : '✏️ Changed in this version'}
-                                        </Badge>
-                                        {currentSnapshot?.suggestionId && (
-                                          <button
-                                            onClick={() => setOpenSuggestionId(currentSnapshot.suggestionId)}
-                                            className="text-[11px] text-blue-600 hover:underline"
-                                          >
-                                            {language === 'he' ? 'צפה בדיון' : language === 'ar' ? 'عرض النقاش' : 'View discussion'}
-                                          </button>
-                                        )}
-                                      </div>
-                                      <InlineDiff
-                                        originalContent={olderContent}
-                                        newContent={displayedContent}
-                                      />
-                                    </div>
-                                  ) : (
                                     <div 
                                       className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none cursor-pointer hover:bg-slate-50/50 p-2 rounded transition-colors"
                                       onClick={() => setOpenSectionHistoryId(section.id)}
@@ -848,7 +809,6 @@ ${text}`;
                                           : displayedContent 
                                       }}
                                     />
-                                  )}
                                     {(section.originalLanguage || detectLanguage(section.content)) !== language && (
                                       <Button
                                         variant="ghost"
