@@ -195,6 +195,7 @@ export default function GroupView() {
                         key={doc.id}
                         doc={doc}
                         unvotedCount={getUnvotedCount(doc.id)}
+                        participantCount={groupMembers.length}
                         translations={translations}
                         translating={translating}
                         onTranslate={translateText}

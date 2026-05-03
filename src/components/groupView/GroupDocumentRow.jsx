@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { Users, Bell, Languages, Loader2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
-export default function GroupDocumentRow({ doc, unvotedCount, translations, translating, onTranslate }) {
+export default function GroupDocumentRow({ doc, unvotedCount, participantCount, translations, translating, onTranslate }) {
   const { language } = useLanguage();
 
   const unvotedLabel = {
@@ -58,7 +58,7 @@ export default function GroupDocumentRow({ doc, unvotedCount, translations, tran
           </div>
           <div className="flex items-center gap-1 text-sm text-slate-600 shrink-0">
             <Users className="w-4 h-4" />
-            <span>{doc.totalUsersInteracted || 0}</span>
+            <span>{participantCount ?? 0}</span>
           </div>
         </div>
       </div>
