@@ -72,17 +72,13 @@ export default function DocumentCleanView() {
     enabled: !!documentId,
   });
 
-  const { data: allVersions } = useQuery({
+  const { data: allVersions, isLoading: versionsLoading } = useQuery({
     queryKey: ['allVersions', documentId],
     queryFn: async () => {
       const result = await base44.functions.invoke('getDocumentVersionsServiceRole', { documentId });
-      // base44.functions.invoke returns axios response: result.data = function's returned JSON
-      // Our function returns { data: [...] }, so result.data.data is the array
       const versions = result?.data?.data ?? result?.data ?? [];
-      console.log('[DocumentCleanView] allVersions fetched:', versions.length, versions);
       return versions;
     },
-    initialData: [],
     enabled: !!documentId,
   });
 
@@ -114,10 +110,11 @@ export default function DocumentCleanView() {
   }, [topicEditSuggestions]);
 
   // Use custom hook for version management — must be declared before getTopicTitleAtVersion
-  const versionGroups = useDocumentVersions(document, sections, allVersions, suggestions);
+  const versionGroups = useDocumentVersions(document, sections, allVersions ?? [], suggestions);
 
   // Total version count is simply the number of snapshots (current + history)
-  const totalVersionCount = versionGroups.length || 1;
+  // Use 0 while versions are loading so navigation shows a loading state
+  const totalVersionCount = versionsLoading ? 0 : (versionGroups.length || 1);
 
   // Get topic title as it was at a specific version
   const getTopicTitleAtVersion = (topicId, versionIndex) => {

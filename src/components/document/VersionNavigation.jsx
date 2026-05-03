@@ -11,6 +11,7 @@ export default function VersionNavigation({
   language,
   isRTL 
 }) {
+  const isLoading = totalVersions === 0;
   const hasMultipleVersions = totalVersions > 1;
 
   const isCurrentVersion = currentIndex === 0;
@@ -18,7 +19,9 @@ export default function VersionNavigation({
   // Version numbers: index 0 = current (version N), index 1 = version N-1, etc.
   const versionNumber = currentIndex === 0 ? totalVersions - 1 : totalVersions - currentIndex;
 
-  const label = isCurrentVersion
+  const label = isLoading
+    ? (language === 'he' ? 'טוען גרסאות...' : language === 'ar' ? 'جارٍ التحميل...' : 'Loading versions...')
+    : isCurrentVersion
     ? (language === 'he' ? 'גרסה נוכחית' : language === 'ar' ? 'الإصدار الحالي' : 'Current Version')
     : currentSnapshot?.isOriginal
     ? (language === 'he' ? 'גרסה מקורית' : language === 'ar' ? 'الإصدار الأصلي' : 'Original Version')
@@ -50,7 +53,7 @@ export default function VersionNavigation({
               ? onNavigate(Math.min(currentIndex + 1, totalVersions - 1))
               : onNavigate(Math.min(currentIndex + 1, totalVersions - 1))
             }
-            disabled={!hasMultipleVersions || isOldestVersion}
+            disabled={isLoading || !hasMultipleVersions || isOldestVersion}
             className="h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
           >
             {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
@@ -77,7 +80,7 @@ export default function VersionNavigation({
             variant="outline"
             size="sm"
             onClick={() => onNavigate(Math.max(0, currentIndex - 1))}
-            disabled={!hasMultipleVersions || isCurrentVersion}
+            disabled={isLoading || !hasMultipleVersions || isCurrentVersion}
             className="h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
           >
             {isRTL
