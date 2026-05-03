@@ -73,7 +73,7 @@ export default function DocumentCleanView() {
     enabled: !!documentId,
   });
 
-  const { data: allVersions, isLoading: versionsLoading } = useQuery({
+  const { data: allVersions } = useQuery({
     queryKey: ['allVersions', documentId],
     queryFn: async () => {
       const result = await base44.functions.invoke('getDocumentVersionsServiceRole', { documentId });
@@ -83,7 +83,7 @@ export default function DocumentCleanView() {
     enabled: !!documentId,
   });
 
-  const { data: suggestions, isLoading: suggestionsLoading } = useQuery({
+  const { data: suggestions } = useQuery({
     queryKey: ['suggestions', documentId],
     queryFn: () => base44.entities.Suggestion.filter({ documentId }),
     initialData: [],
@@ -473,7 +473,7 @@ ${text}`;
     printWindow.document.close();
   };
 
-  if (docLoading || topicsLoading || sectionsLoading || versionsLoading || suggestionsLoading) {
+  if (docLoading || topicsLoading || sectionsLoading) {
     return (
       <div className="min-h-screen bg-white p-8">
         <div className="max-w-4xl mx-auto space-y-6">
