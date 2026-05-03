@@ -215,11 +215,11 @@ Deno.serve(async (req) => {
       let targetTopicId = suggestion.topicId;
 
       if (!targetTopicId && suggestion.newTopicTitle) {
-        const existingTopics = await base44.entities.Topic.filter({ documentId: suggestion.documentId }, 'order');
+        const existingTopics = await base44.asServiceRole.entities.Topic.filter({ documentId: suggestion.documentId }, 'order');
         const maxOrder = existingTopics.length > 0 ? Math.max(...existingTopics.map(t => t.order || 0)) : -1;
         const newTopicLanguage = detectLanguage(suggestion.newTopicTitle);
         
-        const newTopic = await base44.entities.Topic.create({
+        const newTopic = await base44.asServiceRole.entities.Topic.create({
           documentId: suggestion.documentId,
           title: suggestion.newTopicTitle,
           order: suggestion.newTopicOrder ?? (maxOrder + 1),
@@ -242,9 +242,9 @@ Deno.serve(async (req) => {
         // Shift all sections with order >= newOrder up by 1 to make room
         const sectionsToShift = allSections.filter(s => s.order >= newOrder);
         if (sectionsToShift.length > 0) {
-          // Shift sections
-          await Promise.all(
-            sectionsToShift.map(s => base44.entities.Section.update(s.id, { order: s.order + 1 }))
+        // Shift sections
+        await Promise.all(
+          sectionsToShift.map(s => base44.asServiceRole.entities.Section.update(s.id, { order: s.order + 1 }))
           );
 
           // Also shift insertPosition of pending new_section suggestions in the same topic
@@ -348,7 +348,7 @@ Deno.serve(async (req) => {
         const versions = await base44.asServiceRole.entities.DocumentVersion.filter({ sectionId: section.id });
         const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
 
-        await base44.entities.DocumentVersion.create({
+        await base44.asServiceRole.entities.DocumentVersion.create({
           documentId: suggestion.documentId,
           sectionId: section.id,
           content: section.content,
@@ -360,7 +360,7 @@ Deno.serve(async (req) => {
           translations: section.translations || {}
         });
 
-        await base44.entities.Section.delete(section.id);
+        await base44.asServiceRole.entities.Section.delete(section.id);
 
         // Reject any orphaned suggestions targeting this deleted section
         try {
@@ -374,7 +374,7 @@ Deno.serve(async (req) => {
         }
 
         // Create a second version record marking the deletion (content='')
-        await base44.entities.DocumentVersion.create({
+        await base44.asServiceRole.entities.DocumentVersion.create({
           documentId: suggestion.documentId,
           sectionId: section.id,
           content: '',

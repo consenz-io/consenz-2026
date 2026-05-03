@@ -1,5 +1,42 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
+const VOTE_TRANSLATIONS = {
+  en: {
+    voteTitle: "New vote on your suggestion",
+    voteMessage: "Someone voted {direction} on your suggestion \"{title}\"",
+  },
+  he: {
+    voteTitle: "הצבעה חדשה על ההצעה שלך",
+    voteMessage: "מישהו הצביע {direction} על ההצעה \"{title}\"",
+  },
+  ar: {
+    voteTitle: "تصويت جديد على اقتراحك",
+    voteMessage: "صوّت شخص ما {direction} على اقتراحك \"{title}\"",
+  }
+};
+
+const directionLabels = { en: { pro: 'in favour', con: 'against' }, he: { pro: 'בעד', con: 'נגד' }, ar: { pro: 'مع', con: 'ضد' } };
+
+function voteT(lang, key, replacements = {}) {
+  let text = VOTE_TRANSLATIONS[lang]?.[key] || VOTE_TRANSLATIONS['he'][key] || key;
+  for (const [k, v] of Object.entries(replacements)) {
+    text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+  }
+  return text;
+}
+
+function buildVoteTranslations(titleKey, messageKey, replacements = {}) {
+  const result = {};
+  for (const lang of ['en', 'he', 'ar']) {
+    const langReplacements = { ...replacements, direction: directionLabels[lang]?.[replacements._voteType] || replacements.direction };
+    result[lang] = {
+      title: voteT(lang, titleKey, langReplacements),
+      message: voteT(lang, messageKey, langReplacements),
+    };
+  }
+  return result;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -41,6 +78,27 @@ Deno.serve(async (req) => {
     if (vote.userId === creator.id) {
       console.log('[VOTE AUTOMATION] Voter is creator, skipping');
       return Response.json({ message: 'Voter is creator' }, { status: 200 });
+    }
+
+    // Notify suggestion creator about the vote
+    try {
+      const userLang = creator.preferredLanguage || 'he';
+      const direction = directionLabels[userLang]?.[vote.vote] || vote.vote;
+      const replacements = { title: suggestion.title || '', direction, _voteType: vote.vote };
+      await base44.asServiceRole.entities.Notification.create({
+        userId: creator.id,
+        type: 'vote_on_suggestion',
+        title: voteT(userLang, 'voteTitle', replacements),
+        message: voteT(userLang, 'voteMessage', replacements),
+        translations: buildVoteTranslations('voteTitle', 'voteMessage', replacements),
+        relatedEntityId: suggestion.id,
+        relatedEntityType: 'suggestion',
+        actionUrl: `/suggestiondetail?id=${suggestion.id}`,
+        read: false
+      });
+      console.log('[VOTE AUTOMATION] ✅ Sent vote notification to creator');
+    } catch (notifError) {
+      console.error('[VOTE AUTOMATION] Notification error (non-critical):', notifError.message);
     }
 
     // Award points if gamification enabled and pro vote

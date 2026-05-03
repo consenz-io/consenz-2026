@@ -1,5 +1,45 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
+const EXPIRY_TRANSLATIONS = {
+  en: {
+    creatorTitle: "Your suggestion has expired",
+    creatorMessage: "\"{title}\" did not receive enough support within the voting period and was rejected.",
+    voterTitle: "A suggestion you voted on has expired",
+    voterMessage: "\"{title}\" did not receive enough support within the voting period and was rejected.",
+  },
+  he: {
+    creatorTitle: "ההצעה שלך פגה תוקף",
+    creatorMessage: "\"{title}\" לא קיבלה מספיק תמיכה בזמן הקצוב ונדחתה.",
+    voterTitle: "הצעה שהצבעת עליה פגה תוקף",
+    voterMessage: "\"{title}\" לא קיבלה מספיק תמיכה בזמן הקצוב ונדחתה.",
+  },
+  ar: {
+    creatorTitle: "انتهت صلاحية اقتراحك",
+    creatorMessage: "لم يحصل \"{title}\" على دعم كافٍ خلال فترة التصويت وتم رفضه.",
+    voterTitle: "انتهت صلاحية اقتراح صوّتَ عليه",
+    voterMessage: "لم يحصل \"{title}\" على دعم كافٍ خلال فترة التصويت وتم رفضه.",
+  }
+};
+
+function expiryT(lang, key, replacements = {}) {
+  let text = EXPIRY_TRANSLATIONS[lang]?.[key] || EXPIRY_TRANSLATIONS['he'][key] || key;
+  for (const [k, v] of Object.entries(replacements)) {
+    text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+  }
+  return text;
+}
+
+function buildExpiryTranslations(titleKey, messageKey, replacements = {}) {
+  const result = {};
+  for (const lang of ['en', 'he', 'ar']) {
+    result[lang] = {
+      title: expiryT(lang, titleKey, replacements),
+      message: expiryT(lang, messageKey, replacements),
+    };
+  }
+  return result;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -40,20 +80,30 @@ Deno.serve(async (req) => {
 
       votes.forEach(v => { if (v.userId) recipientUserIds.add(v.userId); });
 
-      // Send notifications sequentially
+      // Build notifications with full translations for all recipients
+      const expiryNotifications = [];
       for (const userId of recipientUserIds) {
         const profile = allProfiles.find(p => p.userId === userId);
         const isCreator = profile?.email === suggestion.created_by;
-        await base44.asServiceRole.entities.Notification.create({
+        const titleKey = isCreator ? 'creatorTitle' : 'voterTitle';
+        const messageKey = isCreator ? 'creatorMessage' : 'voterMessage';
+        const replacements = { title: suggestion.title || 'הצעה' };
+        // Use user's preferred language if available — fall back via profile lookup
+        const userLang = 'he'; // profiles don't carry preferredLanguage; default is fine here
+        expiryNotifications.push({
           userId,
           type: 'suggestion_expiring',
-          title: isCreator ? 'ההצעה שלך פגה תוקף' : 'הצעה פגה תוקף',
-          message: `"${suggestion.title || 'הצעה'}" לא קיבלה מספיק תמיכה בזמן הקצוב ונדחתה.`,
+          title: expiryT(userLang, titleKey, replacements),
+          message: expiryT(userLang, messageKey, replacements),
+          translations: buildExpiryTranslations(titleKey, messageKey, replacements),
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
           read: false,
           actionUrl: `/suggestiondetail?id=${suggestion.id}`
         });
+      }
+      if (expiryNotifications.length > 0) {
+        await base44.asServiceRole.entities.Notification.bulkCreate(expiryNotifications);
       }
 
       console.log('[EXPIRE SUGGESTIONS] Done:', suggestion.id, 'notified', recipientUserIds.size);

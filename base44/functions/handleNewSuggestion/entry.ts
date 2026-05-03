@@ -76,7 +76,9 @@ Deno.serve(async (req) => {
     }
 
     // Fetch users to get their preferredLanguage
-    const users = await base44.asServiceRole.entities.User.filter({ id: { $in: uniqueUserIds } });
+    // Note: $in is not supported by the SDK filter — fetch all and filter client-side
+    const allUsers = await base44.asServiceRole.entities.User.list();
+    const users = allUsers.filter(u => uniqueUserIds.includes(u.id));
 
     const isEditSuggestion = suggestion.type === 'edit_suggestion';
     const titleKey = isEditSuggestion ? 'editSuggestionTitle' : 'newSuggestionTitle';

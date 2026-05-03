@@ -35,16 +35,18 @@ export default function NotificationBell({ user }) {
   });
 
   // Real-time subscription for notifications
+  // IMPORTANT: `notifications` must NOT be in the dependency array — it would cause the subscription
+  // to be torn down and re-created on every new notification, creating a gap where events are missed.
+  // Instead we use a ref to access current notifications inside the stable callback.
+  const notificationsRef = React.useRef(notifications);
+  React.useEffect(() => { notificationsRef.current = notifications; }, [notifications]);
+
   React.useEffect(() => {
     if (!user?.id) return;
     
-    console.log('[REALTIME NOTIFICATIONS] Setting up Notification subscription for user:', user.id);
-    
-    // Debounced to prevent rate limits
     let notifTimer;
     const unsubscribe = base44.entities.Notification.subscribe((event) => {
-      console.log('[REALTIME NOTIFICATIONS] Notification event:', event.type);
-      if (event.data?.userId === user.id || (event.type === 'update' && notifications?.some(n => n.id === event.id))) {
+      if (event.data?.userId === user.id || (event.type === 'update' && notificationsRef.current?.some(n => n.id === event.id))) {
         clearTimeout(notifTimer);
         notifTimer = setTimeout(() => {
           queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
@@ -53,10 +55,10 @@ export default function NotificationBell({ user }) {
     });
     
     return () => {
-      console.log('[REALTIME NOTIFICATIONS] Cleaning up Notification subscription');
+      clearTimeout(notifTimer);
       unsubscribe();
     };
-  }, [user?.id, queryClient, notifications]);
+  }, [user?.id, queryClient]);
 
   const markAsReadMutation = useMutation({
     mutationFn: (notificationId) => base44.entities.Notification.update(notificationId, { read: true }),
