@@ -441,8 +441,8 @@ export default function LearnMore() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-4">
-                <div className={`flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-start">
+                <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200" dir="rtl">
+                  <div className="text-right">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Receive Pro Vote", "קבלת הצבעה בעד", "تلقي تصويت مع")}
                     </p>
@@ -450,23 +450,23 @@ export default function LearnMore() {
                       {getLocalizedText("Each pro vote on your suggestion", "כל הצבעה בעד על ההצעה שלך", "كل تصويت مع على مقترحك")}
                     </p>
                   </div>
-                  <Badge className="bg-green-600 text-white text-lg px-4 py-2 whitespace-nowrap">+10</Badge>
+                  <Badge className="bg-green-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0">+10</Badge>
                 </div>
 
-                <div className={`flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-start">
+                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200" dir="rtl">
+                  <div className="text-right">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Suggestion Accepted", "הצעה התקבלה", "المقترح مقبول")}
                     </p>
                     <p className="text-sm text-slate-600">
-                      {getLocalizedText("Your suggestion passes consensus", "ההצעה שלך עוברת את הקונצנזוס", "مقترحך يتجاوز الإجماع")}
+                      {getLocalizedText("Your suggestion passes consensus", "ההצעה שלך עוברת את הקונצנזוס", "مقترحك يتجاوز الإجماع")}
                     </p>
                   </div>
-                  <Badge className="bg-blue-600 text-white text-lg px-4 py-2 whitespace-nowrap">+200</Badge>
+                  <Badge className="bg-blue-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0">+200</Badge>
                 </div>
 
-                <div className={`flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-start">
+                <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200" dir="rtl">
+                  <div className="text-right">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Decisive Vote", "הצבעה מכרעת", "تصويت حاسم")}
                     </p>
@@ -474,7 +474,7 @@ export default function LearnMore() {
                       {getLocalizedText("Your vote caused acceptance", "ההצבעה שלך גרמה לאישור או לדחיית הצעה", "تصويتك تسبب في القبول")}
                     </p>
                   </div>
-                  <Badge className="bg-purple-600 text-white text-lg px-4 py-2 whitespace-nowrap">+50</Badge>
+                  <Badge className="bg-purple-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0">+50</Badge>
                 </div>
               </div>
             </CardContent>
