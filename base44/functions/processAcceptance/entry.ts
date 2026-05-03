@@ -61,15 +61,19 @@ async function collectContributorEmails(base44, document) {
   const suggestionIdSet = new Set(docSuggestions.map(s => s.id));
   const sectionIdSet    = new Set(docSections.map(s => s.id));
 
-  const [allVotes, allComments] = await Promise.all([
-    suggestionIdSet.size > 0 ? base44.asServiceRole.entities.Vote.list() : Promise.resolve([]),
-    base44.asServiceRole.entities.Comment.list()
+  const [docVotes, docSuggestionComments, docSectionComments, docDocumentComments] = await Promise.all([
+    suggestionIdSet.size > 0
+      ? base44.asServiceRole.entities.Vote.filter({ suggestionId: { $in: [...suggestionIdSet] } })
+      : Promise.resolve([]),
+    suggestionIdSet.size > 0
+      ? base44.asServiceRole.entities.Comment.filter({ rootEntityType: 'suggestion', rootEntityId: { $in: [...suggestionIdSet] } })
+      : Promise.resolve([]),
+    sectionIdSet.size > 0
+      ? base44.asServiceRole.entities.Comment.filter({ rootEntityType: 'section', rootEntityId: { $in: [...sectionIdSet] } })
+      : Promise.resolve([]),
+    base44.asServiceRole.entities.Comment.filter({ rootEntityType: 'document', rootEntityId: document.id }),
   ]);
-
-  const docVotes    = allVotes.filter(v => suggestionIdSet.has(v.suggestionId));
-  const docComments = allComments.filter(c =>
-    suggestionIdSet.has(c.rootEntityId) || sectionIdSet.has(c.rootEntityId) || c.rootEntityId === document.id
-  );
+  const docComments = [...docSuggestionComments, ...docSectionComments, ...docDocumentComments];
 
   const emails = new Set();
   agreements.forEach(a => { if (a.userEmail) emails.add(a.userEmail); });
@@ -116,15 +120,17 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Atomic lock ──────────────────────────────────────────────────────────
-    await base44.asServiceRole.entities.Suggestion.update(suggestionId, { status: 'accepted' });
+    // ── Atomic lock: use a sentinel field to detect concurrent runs ──────────
+    // We write a unique lock token. If the value we read back differs, another
+    // instance already claimed the lock — we bail out.
+    const lockToken = `lock-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    await base44.asServiceRole.entities.Suggestion.update(suggestionId, {
+      status: 'accepted',
+      _acceptanceLock: lockToken
+    });
     const locked = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
-    if (
-      !locked ||
-      locked.status !== 'accepted' ||
-      (locked.suggestionConsensus !== undefined && locked.suggestionConsensus !== null)
-    ) {
-      console.log('[PROCESS ACCEPTANCE] Race condition detected, skipping');
+    if (!locked || locked._acceptanceLock !== lockToken) {
+      console.log('[PROCESS ACCEPTANCE] Race condition detected — another instance claimed the lock, skipping');
       return Response.json({ success: true, message: 'Already processed by another instance' });
     }
 

@@ -37,7 +37,15 @@ async function calculateContributors(base44, documentId) {
   const profileByUserId = new Map(profiles.filter(p => p.userId).map(p => [p.userId, p]));
 
   const uniqueEmails = new Set();
-  votes.forEach(v => { const p = profileByUserId.get(v.userId); if (p?.email) uniqueEmails.add(p.email); });
+  // Use created_by (platform-set email) as primary; fall back to profile lookup for older records
+  votes.forEach(v => {
+    if (v.created_by) {
+      uniqueEmails.add(v.created_by);
+    } else {
+      const p = profileByUserId.get(v.userId);
+      if (p?.email) uniqueEmails.add(p.email);
+    }
+  });
   comments.forEach(c => { if (c.created_by) uniqueEmails.add(c.created_by); });
   agreements.forEach(a => { if (a.userEmail) uniqueEmails.add(a.userEmail); });
   suggestions.forEach(s => { if (s.created_by) uniqueEmails.add(s.created_by); });

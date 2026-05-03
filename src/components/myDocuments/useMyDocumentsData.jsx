@@ -69,18 +69,20 @@ export function useMyDocumentsData() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Compute stable IDs arrays for the comments query key so it re-runs when dependencies resolve
+  const allSuggestionIds = useMemo(() => allSuggestions.map(s => s.id), [allSuggestions]);
+  const allSectionIds = useMemo(() => allSections.map(s => s.id), [allSections]);
+
   const { data: allComments = [] } = useQuery({
-    queryKey: ['allComments', myDocumentIds],
+    queryKey: ['allComments', myDocumentIds, allSuggestionIds, allSectionIds],
     queryFn: async () => {
       if (myDocumentIds.length === 0) return [];
-      const suggestionIds = allSuggestions.map(s => s.id);
-      const sectionIds = allSections.map(s => s.id);
-      if (suggestionIds.length === 0 && sectionIds.length === 0) return [];
+      if (allSuggestionIds.length === 0 && allSectionIds.length === 0) return [];
       return base44.entities.Comment.filter({
-        rootEntityId: { $in: [...suggestionIds, ...sectionIds, ...myDocumentIds] }
+        rootEntityId: { $in: [...allSuggestionIds, ...allSectionIds, ...myDocumentIds] }
       });
     },
-    enabled: !!user?.id && myDocumentIds.length > 0,
+    enabled: !!user?.id && myDocumentIds.length > 0 && (allSuggestionIds.length > 0 || allSectionIds.length > 0),
     staleTime: 2 * 60 * 1000,
   });
 
