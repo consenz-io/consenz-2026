@@ -63,7 +63,7 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
     queryFn: async () => {
       if (!section?.documentId) return [];
       const result = await base44.functions.invoke('getDocumentVersionsServiceRole', { documentId: section.documentId });
-      const allVersions = result?.data || [];
+      const allVersions = result?.data?.data ?? result?.data ?? [];
       return allVersions.filter(v => v.sectionId === sectionId).sort((a, b) => (b.version || 0) - (a.version || 0));
     },
     initialData: [],

@@ -76,7 +76,11 @@ export default function DocumentCleanView() {
     queryKey: ['allVersions', documentId],
     queryFn: async () => {
       const result = await base44.functions.invoke('getDocumentVersionsServiceRole', { documentId });
-      return result?.data || [];
+      // base44.functions.invoke returns axios response: result.data = function's returned JSON
+      // Our function returns { data: [...] }, so result.data.data is the array
+      const versions = result?.data?.data ?? result?.data ?? [];
+      console.log('[DocumentCleanView] allVersions fetched:', versions.length, versions);
+      return versions;
     },
     initialData: [],
     enabled: !!documentId,
