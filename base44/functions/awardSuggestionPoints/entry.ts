@@ -29,18 +29,19 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'Gamification not enabled' });
     }
 
-    // Get creator user ID from created_by_id field
-    const creatorId = suggestion.created_by_id;
-    if (!creatorId) {
-      return Response.json({ error: 'No creator ID found' }, { status: 404 });
+    // Get creator by email (created_by is the email field on entities)
+    const creatorEmail = suggestion.created_by;
+    if (!creatorEmail) {
+      return Response.json({ error: 'No creator email found' }, { status: 404 });
     }
 
     // Get current user points
-    const usersList = await base44.asServiceRole.entities.User.filter({ id: creatorId });
+    const usersList = await base44.asServiceRole.entities.User.filter({ email: creatorEmail });
     if (usersList.length === 0) {
       return Response.json({ error: 'User not found' }, { status: 404 });
     }
     const currentUser = usersList[0];
+    const creatorId = currentUser.id;
 
     // Award points based on action and suggestion type
      let pointsAmount = 0;
