@@ -798,12 +798,13 @@ Return ONLY the translated text:`;
                                 const pos = s.insertPosition;
                                 // pos === -1 is handled separately (rendered BEFORE section carousel)
                                 if (pos === -1) return false;
-                                // Show AFTER this section: insertPosition === section.order + 1
+                                // Show AFTER this specific section: insertPosition === section.order + 1
                                 if (pos !== undefined && pos !== null && pos === section.order + 1) return true;
-                                // Show after the last section: pos doesn't match any section.order+1 and pos !== -1
+                                // Show after the last section only: pos is null/undefined (no specific position)
+                                // OR pos doesn't match any section.order+1 (orphaned position)
                                 if (index === topicSections.length - 1) {
-                                  if (pos === -1) return false; // already handled above
-                                  const matchesAnySectionOrder = topicSections.some(sec => pos !== undefined && pos !== null && pos === sec.order + 1);
+                                  if (pos === undefined || pos === null) return true;
+                                  const matchesAnySectionOrder = topicSections.some(sec => pos === sec.order + 1);
                                   return !matchesAnySectionOrder;
                                 }
                                 return false;
