@@ -1,55 +1,59 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-const TRANSLATIONS = {
+/**
+ * Automation handler: fires when a Suggestion entity is created.
+ * Notifies all users who have previously interacted with the document.
+ */
+
+// ─── i18n ─────────────────────────────────────────────────────────────────────
+const LANGS = ['en', 'he', 'ar'];
+
+const SUGGESTION_T = {
   en: {
-    newSuggestionTitle: "New suggestion in document",
+    newSuggestionTitle:   "New suggestion in document",
     newSuggestionMessage: "{name} added a new suggestion in the document \"{title}\"",
-    editSuggestionTitle: "Suggestion to edit a suggestion",
-    editSuggestionMessage: "{name} suggested an edit to a suggestion in document \"{title}\"",
+    editSuggestionTitle:  "Suggestion to edit a suggestion",
+    editSuggestionMessage:"{name} suggested an edit to a suggestion in document \"{title}\"",
   },
   he: {
-    newSuggestionTitle: "הצעה חדשה במסמך",
+    newSuggestionTitle:   "הצעה חדשה במסמך",
     newSuggestionMessage: "{name} הוסיף הצעה חדשה במסמך \"{title}\"",
-    editSuggestionTitle: "הצעה לעריכת הצעה",
-    editSuggestionMessage: "{name} הציע/ה עריכה להצעה במסמך \"{title}\"",
+    editSuggestionTitle:  "הצעה לעריכת הצעה",
+    editSuggestionMessage:"{name} הציע/ה עריכה להצעה במסמך \"{title}\"",
   },
   ar: {
-    newSuggestionTitle: "اقتراح جديد في المستند",
+    newSuggestionTitle:   "اقتراح جديد في المستند",
     newSuggestionMessage: "{name} أضاف اقتراحًا جديدًا في المستند \"{title}\"",
-    editSuggestionTitle: "اقتراح لتعديل اقتراح",
-    editSuggestionMessage: "{name} اقترح تعديلاً على اقتراح في المستند \"{title}\"",
+    editSuggestionTitle:  "اقتراح لتعديل اقتراح",
+    editSuggestionMessage:"{name} اقترح تعديلاً على اقتراح في المستند \"{title}\"",
   }
 };
 
-function t(lang, key, replacements = {}) {
-  let text = TRANSLATIONS[lang]?.[key] || TRANSLATIONS['he'][key] || key;
+function translate(lang, key, replacements = {}) {
+  let text = SUGGESTION_T[lang]?.[key] || SUGGESTION_T['he'][key] || key;
   for (const [k, v] of Object.entries(replacements)) {
-    text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+    text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v));
   }
   return text;
 }
 
-function buildTranslations(titleKey, messageKey, replacements = {}) {
+function buildAllTranslations(titleKey, messageKey, replacements = {}) {
   const result = {};
-  for (const lang of ['en', 'he', 'ar']) {
-    result[lang] = {
-      title: t(lang, titleKey, replacements),
-      message: t(lang, messageKey, replacements),
-    };
+  for (const lang of LANGS) {
+    result[lang] = { title: translate(lang, titleKey, replacements), message: translate(lang, messageKey, replacements) };
   }
   return result;
 }
 
+// ─── Handler ──────────────────────────────────────────────────────────────────
 Deno.serve(async (req) => {
   const startTime = Date.now();
-  console.log('[SUGGESTION AUTOMATION] ===== START =====');
-
   try {
     const base44 = createClientFromRequest(req);
     const { event, data: suggestion } = await req.json();
 
     if (!suggestion || event.type !== 'create') {
-      return Response.json({ message: 'Not a create event' }, { status: 200 });
+      return Response.json({ message: 'Not a create event' });
     }
 
     console.log('[SUGGESTION AUTOMATION] Processing new suggestion:', suggestion.id);
@@ -61,51 +65,45 @@ Deno.serve(async (req) => {
     ]);
 
     const document = documents[0];
-    if (!document) {
-      return Response.json({ message: 'Document not found' }, { status: 404 });
-    }
+    if (!document) return Response.json({ message: 'Document not found' }, { status: 404 });
 
-    const creatorProfile = creatorProfiles[0];
-    const creatorName = creatorProfile?.fullName || 'User';
+    const creatorName = creatorProfiles[0]?.fullName || 'User';
 
+    // Exclude the creator themselves from the notification list
     const uniqueUserIds = [...new Set(interactions.map(i => i.userId))].filter(uid => uid !== suggestion.created_by);
-
     if (uniqueUserIds.length === 0) {
-      console.log('[SUGGESTION AUTOMATION] No users to notify');
       return Response.json({ success: true, notificationsSent: 0 });
     }
 
-    // Fetch users to get their preferredLanguage
-    // Note: $in is not supported by the SDK filter — fetch all and filter client-side
+    // $in not supported — fetch all and filter client-side
     const allUsers = await base44.asServiceRole.entities.User.list();
-    const users = allUsers.filter(u => uniqueUserIds.includes(u.id));
+    const recipients = allUsers.filter(u => uniqueUserIds.includes(u.id));
 
     const isEditSuggestion = suggestion.type === 'edit_suggestion';
-    const titleKey = isEditSuggestion ? 'editSuggestionTitle' : 'newSuggestionTitle';
+    const titleKey   = isEditSuggestion ? 'editSuggestionTitle'   : 'newSuggestionTitle';
     const messageKey = isEditSuggestion ? 'editSuggestionMessage' : 'newSuggestionMessage';
-    const replacements = { name: creatorName, title: document.title };
-    const translationsObj = buildTranslations(titleKey, messageKey, replacements);
+    const replacements    = { name: creatorName, title: document.title };
+    const allTranslations = buildAllTranslations(titleKey, messageKey, replacements);
 
-    const notifications = users.map(user => {
-      const userLang = user.preferredLanguage || 'he';
+    const notifications = recipients.map(user => {
+      const lang = user.preferredLanguage || 'he';
       return {
-        userId: user.id,
-        type: 'new_suggestion_in_followed_document',
-        title: t(userLang, titleKey, replacements),
-        message: t(userLang, messageKey, replacements),
-        translations: translationsObj,
-        relatedEntityId: suggestion.id,
+        userId:            user.id,
+        type:              'new_suggestion_in_followed_document',
+        title:             translate(lang, titleKey,   replacements),
+        message:           translate(lang, messageKey, replacements),
+        translations:      allTranslations,
+        relatedEntityId:   suggestion.id,
         relatedEntityType: 'suggestion',
-        actionUrl: `/suggestiondetail?id=${suggestion.id}`,
-        read: false
+        actionUrl:         `/suggestiondetail?id=${suggestion.id}`,
+        read:              false
       };
     });
 
     await base44.asServiceRole.entities.Notification.bulkCreate(notifications);
     console.log('[SUGGESTION AUTOMATION] Created', notifications.length, 'notifications');
 
-    const duration = Date.now() - startTime;
-    return Response.json({ success: true, notificationsSent: notifications.length, duration });
+    return Response.json({ success: true, notificationsSent: notifications.length, duration: Date.now() - startTime });
   } catch (error) {
     console.error('[SUGGESTION AUTOMATION] ERROR:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
