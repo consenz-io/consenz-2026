@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
 
     // Send email via Resend
     await resend.emails.send({
-      from: 'Consenz <onboarding@resend.dev>',
+      from: 'Consenz <noreply@base44.app>',
       to: email,
       subject: `הוזמנת להצטרף לקבוצה "${groupName}" ב-Consenz`,
       html: `
