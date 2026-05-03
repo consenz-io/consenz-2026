@@ -12,7 +12,7 @@ const scrollToGroups = () => {
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
-export default function HeroSection({ documentsCount, displayedUsers, publicProfilesLoading, averageConsensus, onContributorsClick }) {
+export default function HeroSection({ documentsCount, displayedUsers, publicProfilesLoading, averageConsensus, onContributorsClick, contributorsCount }) {
   const { t, isRTL, language } = useLanguage();
 
   const description = {
@@ -64,6 +64,7 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
           averageConsensus={averageConsensus}
           onContributorsClick={onContributorsClick}
           onDocumentsClick={scrollToGroups}
+          contributorsCount={contributorsCount}
         />
       </div>
     </section>

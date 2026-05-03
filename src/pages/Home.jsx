@@ -11,7 +11,7 @@ export default function Home() {
     user, groups, groupsLoading, groupMembers, membersLoading, documents,
     displayedUsers, publicProfilesLoading,
     averageConsensus, groupParticipantCounts,
-    contributorsList,
+    contributorsList, totalUniqueContributors,
   } = useHomeData();
 
   return (
@@ -22,6 +22,7 @@ export default function Home() {
         publicProfilesLoading={publicProfilesLoading}
         averageConsensus={averageConsensus}
         onContributorsClick={() => setShowContributorsModal(true)}
+        contributorsCount={totalUniqueContributors}
       />
 
       <GroupsSection
