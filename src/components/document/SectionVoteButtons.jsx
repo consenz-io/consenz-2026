@@ -32,23 +32,22 @@ export default function SectionVoteButtons({ section, user, onSuggestEdit, canPa
   const voteMutation = useMutation({
     mutationFn: async (voteType) => {
       if (!user?.id) return;
-      if (userVote) {
-        if (userVote.vote === voteType) {
-          await base44.entities.SectionVote.delete(userVote.id);
-        } else {
-          await base44.entities.SectionVote.update(userVote.id, { vote: voteType });
-        }
-      } else {
-        await base44.entities.SectionVote.create({
-          sectionId: section.id,
-          userId: user.id,
-          vote: voteType,
-        });
-      }
+      const res = await base44.functions.invoke('voteOnSection', {
+        sectionId: section.id,
+        vote: voteType,
+      });
+      return res.data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sectionVotes", section.id] });
-      queryClient.invalidateQueries({ queryKey: ["allSectionVotes"] });
+    onSuccess: (data) => {
+      // Update cache directly with fresh votes returned from backend (avoids extra fetch)
+      if (data?.votes) {
+        queryClient.setQueryData(["sectionVotes", section.id], data.votes);
+        // Also invalidate the batch query so DocumentContent stays in sync
+        queryClient.invalidateQueries({ queryKey: ["allSectionVotes"] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ["sectionVotes", section.id] });
+        queryClient.invalidateQueries({ queryKey: ["allSectionVotes"] });
+      }
     },
   });
 
