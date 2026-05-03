@@ -663,6 +663,7 @@ export default function LearnMore() {
             <div className="space-y-4">
               <div className="p-4 bg-white rounded-lg border border-slate-200" dir="rtl">
                 <div className="flex items-start gap-3">
+                  <Badge className="bg-blue-600 flex-shrink-0 self-start" dir="ltr">1</Badge>
                   <div className="text-right flex-1">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Start with default value", "התחלה עם ערך ברירת מחדל", "البدء بقيمة افتراضية")}
@@ -675,12 +676,12 @@ export default function LearnMore() {
                       )}
                     </p>
                   </div>
-                  <Badge className="bg-blue-600 flex-shrink-0" dir="ltr">1</Badge>
                 </div>
               </div>
 
               <div className="p-4 bg-white rounded-lg border border-slate-200" dir="rtl">
                 <div className="flex items-start gap-3">
+                  <Badge className="bg-indigo-600 flex-shrink-0 self-start" dir="ltr">2</Badge>
                   <div className="text-right flex-1">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Collect data from accepted suggestions", "איסוף נתונים מהצעות שהתקבלו", "جمع البيانات من المقترحات المقبولة")}
@@ -693,12 +694,12 @@ export default function LearnMore() {
                       )}
                     </p>
                   </div>
-                  <Badge className="bg-indigo-600 flex-shrink-0" dir="ltr">2</Badge>
                 </div>
               </div>
 
               <div className="p-4 bg-white rounded-lg border border-slate-200" dir="rtl">
                 <div className="flex items-start gap-3">
+                  <Badge className="bg-purple-600 flex-shrink-0 self-start" dir="ltr">3</Badge>
                   <div className="text-right flex-1">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Dynamic threshold update", "עדכון דינמי של הסף", "تحديث عتبة ديناميكي")}
@@ -711,7 +712,6 @@ export default function LearnMore() {
                       )}
                     </p>
                   </div>
-                  <Badge className="bg-purple-600 flex-shrink-0" dir="ltr">3</Badge>
                 </div>
               </div>
 
