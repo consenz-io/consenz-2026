@@ -140,6 +140,9 @@ Deno.serve(async (req) => {
     const freshVotes = await base44.asServiceRole.entities.Vote.filter({ suggestionId });
     const newProVotes = freshVotes.filter(v => v.vote === 'pro').length;
     const newConVotes = freshVotes.filter(v => v.vote === 'con').length;
+    
+    // Re-fetch suggestion to ensure we have latest data for checks below
+    suggestion = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
 
     // Verify: each user can only have ONE vote — log if violation found
     const votesByUser = new Map();
@@ -155,6 +158,9 @@ Deno.serve(async (req) => {
       proVotes: newProVotes,
       conVotes: newConVotes
     });
+    
+    // Re-fetch to get updated vote counts for the check below
+    suggestion = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
 
     console.log('[VOTE FUNCTION] Vote processed:', { voteAction, newProVotes, newConVotes });
 
@@ -165,10 +171,9 @@ Deno.serve(async (req) => {
     // If autoAcceptEnabled is explicitly false, skip auto-acceptance entirely
     const autoAcceptEnabled = document.autoAcceptEnabled !== false; // default true
 
-    // Use the document's stored threshold (same logic as checkSuggestionConsensus on the frontend)
-    // threshold is updated only when a suggestion is accepted, not dynamically during voting
-    const threshold = document.threshold ? Math.max(1, Math.round(document.threshold)) : 2;
-    console.log('[VOTE FUNCTION] Threshold calc:', { documentThreshold: document.threshold, finalThreshold: threshold });
+    // Use the document's stored threshold - ensure it's a valid number
+    const threshold = Math.max(1, Math.round(document.threshold || 2));
+    console.log('[VOTE FUNCTION] Threshold calc:', { documentThreshold: document.threshold, finalThreshold: threshold, delta });
 
     const shouldAccept = autoAcceptEnabled && delta >= threshold;
 
@@ -191,18 +196,17 @@ Deno.serve(async (req) => {
       processingAcceptance.add(lockKey);
       try {
         // Await processAcceptance directly — do NOT fire-and-forget.
-        // Fire-and-forget caused multiple concurrent calls that raced against each other,
-        // resulting in both instances bailing out and the section never being updated.
-        await base44.asServiceRole.functions.invoke('processAcceptance', {
+        const acceptanceResult = await base44.asServiceRole.functions.invoke('processAcceptance', {
           suggestionId,
           documentId: document.id,
           voterId: user.id,
           wasNewVote: voteAction === 'created' && vote === 'pro'
         });
-        accepted = true;
-        console.log('[VOTE FUNCTION] Acceptance completed successfully');
+        accepted = acceptanceResult?.data?.accepted === true;
+        console.log('[VOTE FUNCTION] Acceptance result:', { accepted, result: acceptanceResult?.data });
       } catch (err) {
-        console.error('[VOTE FUNCTION] Acceptance error:', err);
+        console.error('[VOTE FUNCTION] Acceptance error:', err.message);
+        console.log('[VOTE FUNCTION] Error details:', err);
       } finally {
         processingAcceptance.delete(lockKey);
       }

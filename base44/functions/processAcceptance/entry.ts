@@ -113,7 +113,8 @@ Deno.serve(async (req) => {
     // Verify threshold still met (skip if forceAccept, e.g. cascaded from edit_suggestion)
     if (!forceAccept) {
       const delta     = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
-      const threshold = Math.max(2, document.threshold || 2);
+      const threshold = document.threshold ? Math.max(1, Math.round(document.threshold)) : 2;
+      console.log('[PROCESS ACCEPTANCE] Threshold check:', { delta, threshold, willAccept: delta >= threshold });
       if (delta < threshold) {
         console.log('[PROCESS ACCEPTANCE] Threshold not met, aborting');
         return Response.json({ success: true, message: 'Threshold not met' });
