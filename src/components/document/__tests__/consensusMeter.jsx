@@ -2,7 +2,6 @@
  * טסטים למד הקונצנזוס - ליבת המערכת
  * מוודא שהחישוב של הדלתא והקונצנזוס עובד נכון
  */
-import { describe, test, expect } from 'vitest';
 
 describe('Consensus Meter Tests', () => {
   

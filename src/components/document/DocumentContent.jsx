@@ -165,11 +165,8 @@ export default function DocumentContent({
   }, [topicEditSuggestions, document, user, queryClient]);
 
   // Comment counts — re-use the aggregated data already fetched by useDocumentData.
-  // This avoids a duplicate Comments query; the cache is invalidated by useDocumentSubscriptions.
-  const { data: aggregatedForComments } = useQuery({
-    queryKey: ['documentAggregatedData', document?.id],
-    enabled: false, // never re-fetches here — only reads from cache
-  });
+  // Read directly from the query cache (no queryFn needed, no re-fetch triggered).
+  const aggregatedForComments = queryClient.getQueryData(['documentAggregatedData', document?.id]);
   const allDocumentComments = aggregatedForComments?.comments || [];
 
   // Pre-group comments by "type:id" key for O(1) count lookup
@@ -681,7 +678,7 @@ Return ONLY the translated text:`;
                           {...provided.draggableProps}
                           className={snapshot.isDragging ? 'opacity-70' : ''}
                         >
-                          <React.Fragment>
+                          <>
                             {/* intentionally empty - new section suggestions are rendered AFTER each section below */}
 
                             {index > 0 && (
@@ -876,7 +873,7 @@ Return ONLY the translated text:`;
                                 </div>
                               </>
                             )}
-                          </React.Fragment>
+                          </>
                         </div>
                       )}
                     </Draggable>
