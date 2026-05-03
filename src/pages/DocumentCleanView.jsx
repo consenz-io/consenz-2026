@@ -82,7 +82,22 @@ export default function DocumentCleanView() {
       return versions;
     },
     enabled: !!documentId,
+    staleTime: 0,
+    refetchOnMount: true,
   });
+
+  // Subscribe to DocumentVersion changes to refresh version history in real-time
+  React.useEffect(() => {
+    if (!documentId) return;
+    const unsubscribe = base44.entities.DocumentVersion.subscribe((event) => {
+      if (event.data?.documentId === documentId || !event.data?.documentId) {
+        queryClient.invalidateQueries({ queryKey: ['allVersions', documentId] });
+        queryClient.invalidateQueries({ queryKey: ['sections', documentId] });
+        queryClient.invalidateQueries({ queryKey: ['suggestions', documentId] });
+      }
+    });
+    return unsubscribe;
+  }, [documentId, queryClient]);
 
   const { data: suggestions } = useQuery({
     queryKey: ['suggestions', documentId],

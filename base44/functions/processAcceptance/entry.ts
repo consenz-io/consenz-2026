@@ -413,6 +413,8 @@ Deno.serve(async (req) => {
         })
     ];
 
+    // new_section is already fully updated inside its own block above (including suggestionConsensus)
+    // edit_suggestion needs its own consensus fields set here
     if (suggestion.type !== 'new_section') {
       updates.push(
         base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
