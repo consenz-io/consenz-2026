@@ -488,15 +488,7 @@ ${text}`;
   ) && ((document.originalLanguage || 'he') === language || translatedDocTitle || document.translations?.[language]);
 
   return (
-    <div className="min-h-screen bg-white">
-      <VersionNavigation
-        currentIndex={currentVersionIndex}
-        totalVersions={totalVersionCount}
-        onNavigate={setCurrentVersionIndex}
-        currentSnapshot={currentSnapshot}
-        language={language}
-        isRTL={isRTL}
-      />
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Header - Hidden on print */}
       <div className="bg-slate-50 border-b border-slate-200 p-3 md:p-4 print:hidden sticky top-0 z-10">
         <div className="max-w-4xl mx-auto">
@@ -867,6 +859,15 @@ ${text}`;
           <p>מסמך זה נוצר באמצעות פלטפורמת Consenz</p>
         </div>
       </div>
+
+      <VersionNavigation
+        currentIndex={currentVersionIndex}
+        totalVersions={totalVersionCount}
+        onNavigate={setCurrentVersionIndex}
+        currentSnapshot={currentSnapshot}
+        language={language}
+        isRTL={isRTL}
+      />
 
       {/* Print Styles */}
       <style>{`
