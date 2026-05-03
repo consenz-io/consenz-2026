@@ -16,8 +16,9 @@ export default function VersionNavigation({
 
   const isCurrentVersion = currentIndex === 0;
   const isOldestVersion = currentIndex >= totalVersions - 1;
-  // Version numbers: index 0 = current (version N), index 1 = version N-1, etc.
-  const versionNumber = currentIndex === 0 ? totalVersions - 1 : totalVersions - currentIndex;
+  // Version numbers: index 1 = most recent change (highest number), last index = oldest (1)
+  // currentIndex=1 → versionNumber = totalVersions-1, currentIndex=last → versionNumber = 1
+  const versionNumber = totalVersions - currentIndex;
 
   const label = isLoading
     ? (language === 'he' ? 'טוען גרסאות...' : language === 'ar' ? 'جارٍ التحميل...' : 'Loading versions...')
