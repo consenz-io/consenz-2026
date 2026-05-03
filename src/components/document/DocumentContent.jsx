@@ -342,13 +342,22 @@ Return ONLY the translated text:`;
     return sectionsByTopicId.get(topicId) || [];
   }, [sectionsByTopicId]);
 
-  const getSuggestionsForSection = React.useCallback((sectionId) => {
-    return suggestions.filter(s => 
-      s.sectionId === sectionId && 
-      (s.type === 'edit_section' || s.type === 'delete_section') && 
-      s.status === 'pending'
-    );
+  // Pre-group pending edit/delete suggestions by sectionId for O(1) lookup
+  const suggestionsBySectionId = React.useMemo(() => {
+    const map = new Map();
+    for (const s of suggestions) {
+      if (s.sectionId && (s.type === 'edit_section' || s.type === 'delete_section') && s.status === 'pending') {
+        if (!map.has(s.sectionId)) map.set(s.sectionId, []);
+        map.get(s.sectionId).push(s);
+      }
+    }
+    return map;
   }, [suggestions]);
+
+  const getSuggestionsForSection = React.useCallback(
+    (sectionId) => suggestionsBySectionId.get(sectionId) || [],
+    [suggestionsBySectionId]
+  );
 
   const getNewSectionSuggestionsForTopic = React.useCallback((topicId) => {
     return suggestions.filter(s => {
@@ -491,9 +500,17 @@ Return ONLY the translated text:`;
     return topicEditSuggestions.filter(s => s.topicId === topicId && s.status === 'pending');
   }, [topicEditSuggestions]);
 
-  const getUserTopicVote = React.useCallback((suggestionId) => {
-    return topicEditVotes?.find(v => v.suggestionId === suggestionId);
+  // O(1) lookup map for topic edit votes
+  const topicEditVotesMap = React.useMemo(() => {
+    const map = new Map();
+    topicEditVotes?.forEach(v => map.set(v.suggestionId, v));
+    return map;
   }, [topicEditVotes]);
+
+  const getUserTopicVote = React.useCallback(
+    (suggestionId) => topicEditVotesMap.get(suggestionId),
+    [topicEditVotesMap]
+  );
 
   const voteTopicEditMutation = useTopicVoteMutation({ document, user, topicEditSuggestions, queryClient });
 
