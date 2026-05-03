@@ -120,19 +120,27 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Atomic lock: use a sentinel field to detect concurrent runs ──────────
-    // We write a unique lock token. If the value we read back differs, another
-    // instance already claimed the lock — we bail out.
+    // ── Atomic lock: write only the lock token (NOT status yet).
+    // Then re-read. If another instance wrote a different token in the meantime,
+    // bail out. Only the winner then flips status to 'accepted'.
     const lockToken = `lock-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     await base44.asServiceRole.entities.Suggestion.update(suggestionId, {
-      status: 'accepted',
       _acceptanceLock: lockToken
     });
+    // Small delay to let a concurrent write settle before we read back
+    await new Promise(r => setTimeout(r, 200));
     const locked = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
     if (!locked || locked._acceptanceLock !== lockToken) {
       console.log('[PROCESS ACCEPTANCE] Race condition detected — another instance claimed the lock, skipping');
       return Response.json({ success: true, message: 'Already processed by another instance' });
     }
+    // Re-check status after winning the lock (another instance may have accepted in between)
+    if (locked.status !== 'pending') {
+      console.log('[PROCESS ACCEPTANCE] Already accepted by another instance after lock check, skipping');
+      return Response.json({ success: true, message: 'Already processed' });
+    }
+    // Mark as accepted now that we hold the lock
+    await base44.asServiceRole.entities.Suggestion.update(suggestionId, { status: 'accepted' });
 
     // ── Consensus math ───────────────────────────────────────────────────────
     const totalUsers        = await calculateContributors(base44, documentId);
