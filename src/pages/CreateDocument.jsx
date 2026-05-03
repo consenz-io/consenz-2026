@@ -355,6 +355,7 @@ Return JSON with title, topics array (each with title and sections array with co
         privacy: privacyFromGroup,
         votingButtonsEnabled: data.votingButtonsEnabled,
         gamificationEnabled: data.gamificationEnabled,
+        autoAcceptEnabled: data.autoAcceptEnabled ?? true,
         defaultSuggestionLifetimeHours: data.defaultSuggestionLifetimeHours,
         avgSuggestionConsensus: 0.5,
         totalUsersInteracted: 0,
@@ -813,6 +814,26 @@ Return JSON with title, topics array (each with title and sections array with co
                     id="gamification"
                     checked={formData.gamificationEnabled}
                     onCheckedChange={(checked) => setFormData({ ...formData, gamificationEnabled: checked })}
+                  />
+                </div>
+
+                <div className={`flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className={isRTL ? 'text-right' : ''}>
+                    <Label htmlFor="autoAccept" className="text-base">
+                      {language === 'he' ? 'אפשר קבלה אוטומטית של הצעות' : language === 'ar' ? 'تفعيل القبول التلقائي للاقتراحات' : 'Enable Auto-Accept of Suggestions'}
+                    </Label>
+                    <p className="text-sm text-slate-500">
+                      {language === 'he'
+                        ? 'כשמופעל — הצעות מתקבלות אוטומטית עם הגעה לרף. כשכבוי — רק אדמין יכול לאשר ידנית.'
+                        : language === 'ar'
+                        ? 'عند التفعيل، تُقبل الاقتراحات تلقائياً. عند الإيقاف، يقبلها المشرف فقط.'
+                        : 'When on, suggestions auto-accept at threshold. When off, only admin can approve manually.'}
+                    </p>
+                  </div>
+                  <Switch
+                    id="autoAccept"
+                    checked={formData.autoAcceptEnabled ?? true}
+                    onCheckedChange={(checked) => setFormData({ ...formData, autoAcceptEnabled: checked })}
                   />
                 </div>
               </CardContent>

@@ -162,11 +162,14 @@ Deno.serve(async (req) => {
     let accepted = false;
     const delta = newProVotes - newConVotes;
     
+    // If autoAcceptEnabled is explicitly false, skip auto-acceptance entirely
+    const autoAcceptEnabled = document.autoAcceptEnabled !== false; // default true
+
     // Use the document's stored threshold (same logic as checkSuggestionConsensus on the frontend)
     // threshold is updated only when a suggestion is accepted, not dynamically during voting
     const threshold = Math.max(2, document.threshold || 2);
 
-    const shouldAccept = delta >= threshold;
+    const shouldAccept = autoAcceptEnabled && delta >= threshold;
 
     console.log('[VOTE FUNCTION] Consensus check:', { delta, threshold, shouldAccept });
 

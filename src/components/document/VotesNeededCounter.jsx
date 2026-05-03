@@ -90,6 +90,11 @@ const VotesNeededCounter = React.memo(function VotesNeededCounter({ suggestion, 
 
   const votesNeeded = calculateVotesNeeded();
 
+  // If auto-accept is disabled, don't show the threshold counter
+  if (document?.autoAcceptEnabled === false) {
+    return null;
+  }
+
   if (!suggestion || suggestion.status !== 'pending') {
     return null;
   }

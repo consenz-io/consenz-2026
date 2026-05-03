@@ -74,6 +74,7 @@ export default function DocumentAdmin() {
     privacy: document?.privacy || "public_view_open_participation",
     votingButtonsEnabled: document?.votingButtonsEnabled ?? true,
     gamificationEnabled: document?.gamificationEnabled ?? false,
+    autoAcceptEnabled: document?.autoAcceptEnabled ?? true,
     defaultSuggestionLifetimeHours: document?.defaultSuggestionLifetimeHours || 72,
   });
 
@@ -84,6 +85,7 @@ export default function DocumentAdmin() {
         privacy: document.privacy,
         votingButtonsEnabled: document.votingButtonsEnabled,
         gamificationEnabled: document.gamificationEnabled ?? false,
+        autoAcceptEnabled: document.autoAcceptEnabled ?? true,
         defaultSuggestionLifetimeHours: document.defaultSuggestionLifetimeHours,
       });
     }
@@ -492,6 +494,24 @@ ${generatedInviteLink.signupUrl}
                   id="gamification"
                   checked={formData.gamificationEnabled}
                   onCheckedChange={(checked) => setFormData({ ...formData, gamificationEnabled: checked })}
+                />
+              </div>
+
+              <div className={`flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className={`flex-1 min-w-0 ${isRTL ? 'text-right ml-4' : 'mr-4'}`}>
+                  <Label htmlFor="autoAccept" className="text-base">
+                    {isRTL ? 'אפשר קבלה אוטומטית של הצעות' : 'Enable Auto-Accept of Suggestions'}
+                  </Label>
+                  <p className="text-sm text-slate-500">
+                    {isRTL
+                      ? 'כשמופעל — הצעות מתקבלות אוטומטית עם הגעה לרף הקונצנזוס. כשכבוי — רק אדמין יכול לאשר הצעות ידנית.'
+                      : 'When enabled, suggestions auto-accept when the consensus threshold is met. When disabled, only admin can approve manually.'}
+                  </p>
+                </div>
+                <Switch
+                  id="autoAccept"
+                  checked={formData.autoAcceptEnabled}
+                  onCheckedChange={(checked) => setFormData({ ...formData, autoAcceptEnabled: checked })}
                 />
               </div>
 
