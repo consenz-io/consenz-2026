@@ -12,7 +12,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-export default function SectionVoteButtons({ section, user, onSuggestEdit }) {
+export default function SectionVoteButtons({ section, user, onSuggestEdit, canParticipate = true, onCannotParticipate }) {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [showConDialog, setShowConDialog] = useState(false);
@@ -55,6 +55,10 @@ export default function SectionVoteButtons({ section, user, onSuggestEdit }) {
       base44.auth.redirectToLogin(window.location.href);
       return;
     }
+    if (!canParticipate) {
+      if (onCannotParticipate) onCannotParticipate();
+      return;
+    }
     voteMutation.mutate("pro");
   };
 
@@ -62,6 +66,10 @@ export default function SectionVoteButtons({ section, user, onSuggestEdit }) {
     e.stopPropagation();
     if (!user) {
       base44.auth.redirectToLogin(window.location.href);
+      return;
+    }
+    if (!canParticipate) {
+      if (onCannotParticipate) onCannotParticipate();
       return;
     }
     // If already voted con — toggle it off directly, no dialog
@@ -80,8 +88,12 @@ export default function SectionVoteButtons({ section, user, onSuggestEdit }) {
 
   const handleConVoteAndSuggest = () => {
     setShowConDialog(false);
-    voteMutation.mutate("con");
-    if (onSuggestEdit) onSuggestEdit(section);
+    // Fire vote first; open modal only after vote succeeds to avoid stale state on error
+    voteMutation.mutate("con", {
+      onSuccess: () => {
+        if (onSuggestEdit) onSuggestEdit(section);
+      },
+    });
   };
 
   const isHe = language === "he";
