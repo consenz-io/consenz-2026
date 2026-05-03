@@ -174,7 +174,7 @@ Deno.serve(async (req) => {
     console.log('[VOTE FUNCTION] Consensus check:', { delta, threshold, shouldAccept });
 
     if (shouldAccept && suggestion.status === 'pending') {
-      // Prevent concurrent acceptance processing
+      // Prevent concurrent acceptance processing within this Deno instance
       const lockKey = `accept-${suggestionId}`;
       if (processingAcceptance.has(lockKey)) {
         console.log('[VOTE FUNCTION] Already processing acceptance, skipping');
@@ -188,24 +188,23 @@ Deno.serve(async (req) => {
       }
 
       processingAcceptance.add(lockKey);
-
-      // Fire-and-forget: run processAcceptance in background, clean up lock when done
-      base44.asServiceRole.functions.invoke('processAcceptance', {
-        suggestionId,
-        documentId: document.id,
-        voterId: user.id,
-        wasNewVote: voteAction === 'created' && vote === 'pro'
-      }).then(() => {
+      try {
+        // Await processAcceptance directly — do NOT fire-and-forget.
+        // Fire-and-forget caused multiple concurrent calls that raced against each other,
+        // resulting in both instances bailing out and the section never being updated.
+        await base44.asServiceRole.functions.invoke('processAcceptance', {
+          suggestionId,
+          documentId: document.id,
+          voterId: user.id,
+          wasNewVote: voteAction === 'created' && vote === 'pro'
+        });
+        accepted = true;
+        console.log('[VOTE FUNCTION] Acceptance completed successfully');
+      } catch (err) {
+        console.error('[VOTE FUNCTION] Acceptance error:', err);
+      } finally {
         processingAcceptance.delete(lockKey);
-      }).catch(err => {
-        console.error('[VOTE FUNCTION] Background acceptance error:', err);
-        processingAcceptance.delete(lockKey);
-      });
-
-      accepted = true;
-      // Safety net: release lock after 60s in case the promise never settles
-      setTimeout(() => processingAcceptance.delete(lockKey), 60000);
-      console.log('[VOTE FUNCTION] Auto-accept scheduled in background');
+      }
     }
 
     return Response.json({
