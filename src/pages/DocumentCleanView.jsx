@@ -58,18 +58,20 @@ export default function DocumentCleanView() {
     enabled: !!documentId,
   });
 
-  const { data: topics, isLoading: topicsLoading } = useQuery({
+  const { data: topics = [], isLoading: topicsLoading } = useQuery({
     queryKey: ['topics', documentId],
     queryFn: () => base44.entities.Topic.filter({ documentId }, 'order'),
-    initialData: [],
     enabled: !!documentId,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
-  const { data: sections, isLoading: sectionsLoading } = useQuery({
+  const { data: sections = [], isLoading: sectionsLoading } = useQuery({
     queryKey: ['sections', documentId],
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order'),
-    initialData: [],
     enabled: !!documentId,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   const { data: allVersions, isLoading: versionsLoading } = useQuery({
