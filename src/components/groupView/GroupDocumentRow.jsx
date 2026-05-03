@@ -56,10 +56,7 @@ export default function GroupDocumentRow({ doc, unvotedCount, participantCount, 
               </div>
             )}
           </div>
-          <div className="flex items-center gap-1 text-sm text-slate-600 shrink-0">
-            <Users className="w-4 h-4" />
-            <span>{participantCount ?? 0}</span>
-          </div>
+
         </div>
       </div>
     </Link>
