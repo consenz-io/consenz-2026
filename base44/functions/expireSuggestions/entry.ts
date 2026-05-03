@@ -113,9 +113,10 @@ Deno.serve(async (req) => {
         const documents = await base44.asServiceRole.entities.Document.filter({ id: suggestion.documentId });
         const document = documents[0];
         if (document?.gamificationEnabled) {
-          const conVoterIds = votes.filter(v => v.vote === 'con').map(v => v.userId).filter(Boolean);
-          if (conVoterIds.length > 0) {
-            const conVoterUsers = await base44.asServiceRole.entities.User.filter({ id: { $in: conVoterIds } });
+          const conVoterIdSet = new Set(votes.filter(v => v.vote === 'con').map(v => v.userId).filter(Boolean));
+          if (conVoterIdSet.size > 0) {
+            const allSystemUsers = await base44.asServiceRole.entities.User.list();
+            const conVoterUsers = allSystemUsers.filter(u => conVoterIdSet.has(u.id));
             for (const u of conVoterUsers) {
               await Promise.all([
                 base44.asServiceRole.entities.User.update(u.id, { points: (u.points || 1000) + 50 }),
@@ -130,6 +131,7 @@ Deno.serve(async (req) => {
               ]);
             }
             console.log('[EXPIRE SUGGESTIONS] ✓ Awarded 50 points to', conVoterUsers.length, 'con voters');
+
           }
         }
       } catch (pointsErr) {

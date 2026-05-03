@@ -441,15 +441,19 @@ Deno.serve(async (req) => {
     const docSuggestionIds = docSuggestions.map(s => s.id);
     const docSectionIds = docSections.map(s => s.id);
 
-    // Fetch votes and comments filtered to this document's entities
-    const [docVotes, docComments] = await Promise.all([
-      docSuggestionIds.length > 0
-        ? base44.asServiceRole.entities.Vote.filter({ suggestionId: { $in: docSuggestionIds } })
-        : Promise.resolve([]),
-      base44.asServiceRole.entities.Comment.filter({
-        rootEntityId: { $in: [...docSuggestionIds, ...docSectionIds, document.id] }
-      })
+    // Fetch votes and comments — $in not supported, fetch all and filter client-side
+    const suggestionIdSet = new Set(docSuggestionIds);
+    const sectionIdSet = new Set(docSectionIds);
+    const [allVotes, allComments] = await Promise.all([
+      docSuggestionIds.length > 0 ? base44.asServiceRole.entities.Vote.list() : Promise.resolve([]),
+      base44.asServiceRole.entities.Comment.list()
     ]);
+    const docVotes = allVotes.filter(v => suggestionIdSet.has(v.suggestionId));
+    const docComments = allComments.filter(c =>
+      suggestionIdSet.has(c.rootEntityId) ||
+      sectionIdSet.has(c.rootEntityId) ||
+      c.rootEntityId === document.id
+    );
 
     // Collect unique contributor emails
     const contributorEmails = new Set();
@@ -466,11 +470,11 @@ Deno.serve(async (req) => {
     // From suggestion creators
     docSuggestions.forEach(s => { if (s.created_by) contributorEmails.add(s.created_by); });
     
-    // Fetch all users by email
+    // Fetch all users by email — $in not supported, fetch all and filter client-side
     let allUsers = [];
     if (contributorEmails.size > 0) {
-      const emailArray = Array.from(contributorEmails);
-      allUsers = await base44.asServiceRole.entities.User.filter({ email: { $in: emailArray } });
+      const allSystemUsers = await base44.asServiceRole.entities.User.list();
+      allUsers = allSystemUsers.filter(u => u.email && contributorEmails.has(u.email));
     }
     
     const suggTitle = suggestion.title || 'הצעה';

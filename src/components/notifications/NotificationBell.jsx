@@ -69,7 +69,8 @@ export default function NotificationBell({ user }) {
 
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      const unreadNotifications = notifications.filter(n => !n.read);
+      // Use ref to avoid stale closure over the notifications array
+      const unreadNotifications = (notificationsRef.current || []).filter(n => !n.read);
       await Promise.all(
         unreadNotifications.map(n => base44.entities.Notification.update(n.id, { read: true }))
       );

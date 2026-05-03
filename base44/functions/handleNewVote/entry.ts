@@ -28,7 +28,9 @@ function voteT(lang, key, replacements = {}) {
 function buildVoteTranslations(titleKey, messageKey, replacements = {}) {
   const result = {};
   for (const lang of ['en', 'he', 'ar']) {
-    const langReplacements = { ...replacements, direction: directionLabels[lang]?.[replacements._voteType] || replacements.direction };
+    // Strip internal _* keys before passing to the template substituter
+    const { _voteType, ...publicReplacements } = replacements;
+    const langReplacements = { ...publicReplacements, direction: directionLabels[lang]?.[_voteType] || publicReplacements.direction };
     result[lang] = {
       title: voteT(lang, titleKey, langReplacements),
       message: voteT(lang, messageKey, langReplacements),
