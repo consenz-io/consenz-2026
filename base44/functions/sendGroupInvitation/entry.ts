@@ -1,4 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { Resend } from 'npm:resend@4.0.0';
+
+const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
 Deno.serve(async (req) => {
   try {
@@ -28,11 +31,12 @@ Deno.serve(async (req) => {
 
     const inviteUrl = `${req.headers.get('origin') || 'https://app.consenz.io'}/login?groupInvite=${token}`;
 
-    // Send email via Base44 built-in integration
-    await base44.asServiceRole.integrations.Core.SendEmail({
+    // Send email via Resend
+    await resend.emails.send({
+      from: 'Consenz <onboarding@resend.dev>',
       to: email,
       subject: `הוזמנת להצטרף לקבוצה "${groupName}" ב-Consenz`,
-      body: `
+      html: `
         <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h2 style="color: #1e40af;">הוזמנת להצטרף לקבוצה!</h2>
           <p>${user.full_name || 'מישהו'} הזמין אותך להצטרף לקבוצה <strong>"${groupName}"</strong> בפלטפורמת Consenz.</p>
