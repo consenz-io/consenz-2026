@@ -393,8 +393,8 @@ export default function LearnMore() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-4">
-                <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-start">
+                <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200" dir="rtl">
+                  <div className="text-right">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Create Document", "פרסום מסמך", "نشر وثيقة")}
                     </p>
@@ -402,11 +402,11 @@ export default function LearnMore() {
                       {getLocalizedText("Cost to publish a new document", "עלות פרסום מסמך חדש", "تكلفة نشر وثيقة جديدة")}
                     </p>
                   </div>
-                  <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap">-1001</Badge>
+                  <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0" dir="ltr">-1001</Badge>
                 </div>
                 
-                <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-start">
+                <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200" dir="rtl">
+                  <div className="text-right">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Edit Section Suggestion", "הצעה לעריכת סעיף", "اقتراح تعديل قسم")}
                     </p>
@@ -414,11 +414,11 @@ export default function LearnMore() {
                       {getLocalizedText("Cost to suggest editing existing section", "עלות להצעת עריכה לסעיף קיים", "تكلفة اقتراح تعديل قسم موجود")}
                     </p>
                   </div>
-                  <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap">-200</Badge>
+                  <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0" dir="ltr">-200</Badge>
                 </div>
                 
-                <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className="text-start">
+                <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200" dir="rtl">
+                  <div className="text-right">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("New Section Suggestion", "הצעה לסעיף חדש", "اقتراح قسم جديد")}
                     </p>
@@ -426,7 +426,7 @@ export default function LearnMore() {
                       {getLocalizedText("Cost to suggest adding new section", "עלות להצעת הוספת סעיף חדש", "تكلفة اقتراح إضافة قسم جديد")}
                     </p>
                   </div>
-                  <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap">-350</Badge>
+                  <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0" dir="ltr">-350</Badge>
                 </div>
               </div>
             </CardContent>
@@ -450,7 +450,7 @@ export default function LearnMore() {
                       {getLocalizedText("Each pro vote on your suggestion", "כל הצבעה בעד על ההצעה שלך", "كل تصويت مع على مقترحك")}
                     </p>
                   </div>
-                  <Badge className="bg-green-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0">+10</Badge>
+                  <Badge className="bg-green-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0" dir="ltr">+10</Badge>
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200" dir="rtl">
@@ -462,7 +462,7 @@ export default function LearnMore() {
                       {getLocalizedText("Your suggestion passes consensus", "ההצעה שלך עוברת את הקונצנזוס", "مقترحك يتجاوز الإجماع")}
                     </p>
                   </div>
-                  <Badge className="bg-blue-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0">+200</Badge>
+                  <Badge className="bg-blue-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0" dir="ltr">+200</Badge>
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200" dir="rtl">
@@ -474,7 +474,7 @@ export default function LearnMore() {
                       {getLocalizedText("Your vote caused acceptance", "ההצבעה שלך גרמה לאישור או לדחיית הצעה", "تصويتك تسبب في القبول")}
                     </p>
                   </div>
-                  <Badge className="bg-purple-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0">+50</Badge>
+                  <Badge className="bg-purple-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0" dir="ltr">+50</Badge>
                 </div>
               </div>
             </CardContent>
