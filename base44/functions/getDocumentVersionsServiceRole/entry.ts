@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.27';
 
 Deno.serve(async (req) => {
   try {
@@ -10,16 +10,15 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'documentId is required' }, { status: 400 });
     }
 
-    // Bypass RLS to get all versions regardless of user's role or group membership
-    // The Document RLS will still restrict access to the document itself
+    // Use asServiceRole to bypass all RLS checks
     const versions = await base44.asServiceRole.entities.DocumentVersion.filter(
-      { documentId },
-      '-version'
+      { documentId }
     );
 
     return Response.json({ data: versions });
   } catch (error) {
     console.error('Error fetching document versions:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('Error data:', JSON.stringify(error.data));
+    return Response.json({ error: error.message, detail: error.data }, { status: 500 });
   }
 });
