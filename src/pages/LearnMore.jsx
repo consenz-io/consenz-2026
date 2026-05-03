@@ -471,7 +471,7 @@ export default function LearnMore() {
                       {getLocalizedText("Decisive Vote", "הצבעה מכרעת", "تصويت حاسم")}
                     </p>
                     <p className="text-sm text-slate-600">
-                      {getLocalizedText("Your vote caused acceptance", "ההצבעה שלך גרמה לאישור", "تصويتك تسبب في القبول")}
+                      {getLocalizedText("Your vote caused acceptance", "ההצבעה שלך גרמה לאישור או לדחיית הצעה", "تصويتك تسبب في القبول")}
                     </p>
                   </div>
                   <Badge className="bg-purple-600 text-white text-lg px-4 py-2 whitespace-nowrap">+50</Badge>
