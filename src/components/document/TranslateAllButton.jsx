@@ -174,47 +174,5 @@ export default function TranslateAllButton({ document, topics, sections }) {
     }
   });
 
-  return (
-    <div className={`flex items-center gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
-      {isTranslatingAll ? (
-        <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-lg border border-blue-200">
-          <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-          <span className="text-sm text-blue-700">{t('translating')}</span>
-          {totalItems > 0 && (
-            <div className="w-24">
-              <Progress value={(progress / totalItems) * 100} className="h-2" />
-            </div>
-          )}
-          <span className="text-xs text-blue-600">{progress}/{totalItems}</span>
-        </div>
-      ) : (
-        <>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => translateAllMutation.mutate()}
-            className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100 gap-2"
-          >
-            <Languages className="w-4 h-4" />
-            {t('translateAll')}
-          </Button>
-          
-          {hasAnyTranslations && (
-            <Button
-              variant={globalShowTranslated ? "default" : "outline"}
-              size="sm"
-              onClick={() => setGlobalShowTranslated(true)}
-              className={globalShowTranslated 
-                ? "bg-green-600 hover:bg-green-700 text-white gap-2" 
-                : "border-slate-300 text-slate-700 hover:bg-slate-100 gap-2"
-              }
-            >
-              <Eye className="w-4 h-4" />
-              {t('showTranslation')}
-            </Button>
-          )}
-        </>
-      )}
-    </div>
-  );
+  return null;
 }
