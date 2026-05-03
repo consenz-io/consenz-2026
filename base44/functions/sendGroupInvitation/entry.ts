@@ -1,7 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-const SENDGRID_API_KEY = Deno.env.get('SENDGRID_API_KEY');
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -30,44 +28,23 @@ Deno.serve(async (req) => {
 
     const inviteUrl = `${req.headers.get('origin') || 'https://app.consenz.io'}/login?groupInvite=${token}`;
 
-    // Send email via SendGrid
-    const emailBody = {
-      personalizations: [{
-        to: [{ email }],
-        subject: `הוזמנת להצטרף לקבוצה "${groupName}" ב-Consenz`
-      }],
-      from: { email: 'no-reply@consenz.io', name: 'Consenz' },
-      content: [{
-        type: 'text/html',
-        value: `
-          <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #1e40af;">הוזמנת להצטרף לקבוצה!</h2>
-            <p>${user.full_name || 'מישהו'} הזמין אותך להצטרף לקבוצה <strong>"${groupName}"</strong> בפלטפורמת Consenz.</p>
-            <p>לחץ על הכפתור למטה כדי לקבל את ההזמנה:</p>
-            <a href="${inviteUrl}" 
-               style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 16px 0;">
-              הצטרף לקבוצה
-            </a>
-            <p style="color: #64748b; font-size: 14px;">אם הכפתור לא עובד, העתק את הקישור: <br/><a href="${inviteUrl}">${inviteUrl}</a></p>
-          </div>
-        `
-      }]
-    };
-
-    const sgResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${SENDGRID_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(emailBody)
+    // Send email via Base44 built-in integration
+    await base44.asServiceRole.integrations.Core.SendEmail({
+      to: email,
+      subject: `הוזמנת להצטרף לקבוצה "${groupName}" ב-Consenz`,
+      body: `
+        <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #1e40af;">הוזמנת להצטרף לקבוצה!</h2>
+          <p>${user.full_name || 'מישהו'} הזמין אותך להצטרף לקבוצה <strong>"${groupName}"</strong> בפלטפורמת Consenz.</p>
+          <p>לחץ על הכפתור למטה כדי לקבל את ההזמנה:</p>
+          <a href="${inviteUrl}" 
+             style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 16px 0;">
+            הצטרף לקבוצה
+          </a>
+          <p style="color: #64748b; font-size: 14px;">אם הכפתור לא עובד, העתק את הקישור: <br/><a href="${inviteUrl}">${inviteUrl}</a></p>
+        </div>
+      `
     });
-
-    if (!sgResponse.ok) {
-      const errText = await sgResponse.text();
-      console.error('[sendGroupInvitation] SendGrid error:', errText);
-      return Response.json({ error: 'Failed to send email', details: errText }, { status: 500 });
-    }
 
     return Response.json({ success: true });
 
