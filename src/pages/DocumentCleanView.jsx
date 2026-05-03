@@ -15,7 +15,6 @@ import DocumentSnapshot from "@/components/document/DocumentSnapshot";
 import { useDocumentVersions } from "@/components/document/hooks/useDocumentVersions";
 
 // Lazy load sidebars
-const SectionHistorySidebar = React.lazy(() => import("@/components/document/SectionHistorySidebar"));
 const SuggestionSidebar = React.lazy(() => import("@/components/document/SuggestionSidebar"));
 
 const detectLanguage = (text) => {
@@ -40,8 +39,8 @@ export default function DocumentCleanView() {
   const [showTranslatedSections, setShowTranslatedSections] = useState({});
   const [translatingAll, setTranslatingAll] = useState(false);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
-  const [openSectionHistoryId, setOpenSectionHistoryId] = useState(null);
   const [openSuggestionId, setOpenSuggestionId] = useState(null);
+  const [openingSectionId, setOpeningSectionId] = useState(null); // loading state per section
   const [searchParams] = useSearchParams();
 
   const { data: currentUser } = useQuery({
@@ -411,6 +410,46 @@ ${text}`;
     }
   };
 
+  // Find or create a suggestion for a section so users can discuss it via SuggestionSidebar
+  const openSectionDiscussion = async (section, snapshotSuggestionId = null) => {
+    if (snapshotSuggestionId) {
+      setOpenSuggestionId(snapshotSuggestionId);
+      return;
+    }
+    setOpeningSectionId(section.id);
+    try {
+      // Look for any accepted suggestion linked to this section
+      const linked = suggestions.filter(s =>
+        s.sectionId === section.id && s.status === 'accepted'
+      ).sort((a, b) => new Date(b.updated_date || b.created_date) - new Date(a.updated_date || a.created_date));
+
+      if (linked.length > 0) {
+        setOpenSuggestionId(linked[0].id);
+        return;
+      }
+
+      // No linked suggestion — create a placeholder one so users can comment
+      const newSugg = await base44.entities.Suggestion.create({
+        documentId: section.documentId,
+        sectionId: section.id,
+        topicId: section.topicId,
+        type: 'edit_section',
+        title: language === 'he' ? 'דיון על הסעיף' : language === 'ar' ? 'نقاش حول القسم' : 'Section Discussion',
+        newContent: section.content,
+        originalContent: section.content,
+        status: 'accepted',
+        approvedByAdmin: true,
+        proVotes: 0,
+        conVotes: 0,
+      });
+      // Update the local suggestions cache
+      queryClient.setQueryData(['suggestions', documentId], (old = []) => [...old, newSugg]);
+      setOpenSuggestionId(newSugg.id);
+    } finally {
+      setOpeningSectionId(null);
+    }
+  };
+
   const needsTranslation = sections.some(s => (s.originalLanguage || 'he') !== language) || 
     topics.some(t => (t.originalLanguage || 'he') !== language) ||
     ((document?.originalLanguage || 'he') !== language);
@@ -733,13 +772,9 @@ ${text}`;
                                  <div 
                                    id={`change-${section.id}`} 
                                    className="border-l-4 border-red-500 pl-3 py-2 bg-red-50 rounded cursor-pointer hover:bg-red-100 transition-colors"
-                                   onClick={() => {
-                                     if (currentSnapshot?.suggestionId) {
-                                       setOpenSuggestionId(currentSnapshot.suggestionId);
-                                     }
-                                   }}
-                                 >
-                                   <Badge className="mb-2 bg-red-100 text-red-800 text-xs">
+                                   onClick={() => openSectionDiscussion(section, currentSnapshot?.suggestionId)}
+                                   >
+                                    <Badge className="mb-2 bg-red-100 text-red-800 text-xs">
                                      {language === 'he' ? 'סעיף נמחק - לחץ לצפייה בדיון' : language === 'ar' ? 'تم حذف القسم - انقر لعرض النقاش' : 'Section Deleted - Click to view discussion'}
                                    </Badge>
                                    <div 
@@ -756,13 +791,7 @@ ${text}`;
                                   <div
                                     id={`change-${section.id}`}
                                     className="border-l-4 border-amber-500 pl-3 py-2 bg-amber-50 rounded cursor-pointer hover:bg-amber-100 transition-colors"
-                                    onClick={() => {
-                                      if (currentSnapshot?.suggestionId) {
-                                        setOpenSuggestionId(currentSnapshot.suggestionId);
-                                      } else {
-                                        setOpenSectionHistoryId(section.id);
-                                      }
-                                    }}
+                                    onClick={() => openSectionDiscussion(section, currentSnapshot?.suggestionId)}
                                   >
                                     <Badge className="mb-2 bg-amber-100 text-amber-800 text-xs">
                                       {language === 'he' ? '✏️ עריכה ישירה של מנהל' : language === 'ar' ? '✏️ تعديل مباشر من المسؤول' : '✏️ Direct Admin Edit'}
@@ -776,11 +805,7 @@ ${text}`;
                                   <div 
                                     id={`change-${section.id}`} 
                                     className="bg-green-50 border-l-4 border-green-500 p-3 rounded cursor-pointer hover:bg-green-100 transition-colors"
-                                    onClick={() => {
-                                      if (currentSnapshot?.suggestionId) {
-                                        setOpenSuggestionId(currentSnapshot.suggestionId);
-                                      }
-                                    }}
+                                    onClick={() => openSectionDiscussion(section, currentSnapshot?.suggestionId)}
                                   >
                                     <Badge className="mb-2 bg-green-100 text-green-800 text-xs">
                                       {language === 'he' ? 'סעיף חדש - לחץ לצפייה בדיון' : language === 'ar' ? 'قسم جديد - انقر لعرض النقاش' : 'New Section - Click to view discussion'}
@@ -821,8 +846,8 @@ ${text}`;
                                 ) : (
                                 <>
                                     <div 
-                                      className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none cursor-pointer hover:bg-slate-50/50 p-2 rounded transition-colors"
-                                      onClick={() => setOpenSectionHistoryId(section.id)}
+                                      className={`text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none cursor-pointer hover:bg-slate-50/50 p-2 rounded transition-colors ${openingSectionId === section.id ? 'opacity-60 pointer-events-none' : ''}`}
+                                      onClick={() => openSectionDiscussion(section)}
                                       style={{ 
                                         fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
                                         fontSize: "1.125rem",
@@ -912,14 +937,6 @@ ${text}`;
       `}</style>
 
       <React.Suspense fallback={<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"><div className="bg-white p-4 rounded-lg shadow-lg">טוען...</div></div>}>
-        {openSectionHistoryId && (
-          <SectionHistorySidebar
-            sectionId={openSectionHistoryId}
-            isOpen={true}
-            onClose={() => setOpenSectionHistoryId(null)}
-          />
-        )}
-
         {openSuggestionId && (
           <SuggestionSidebar
             suggestionId={openSuggestionId}
