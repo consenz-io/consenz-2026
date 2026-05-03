@@ -172,11 +172,19 @@ export default function DocumentContent({
   });
   const allDocumentComments = aggregatedForComments?.comments || [];
 
-  const getCommentsCount = React.useCallback((entityType, entityId) => {
-    return allDocumentComments.filter(
-      c => c.rootEntityType === entityType && c.rootEntityId === entityId
-    ).length;
+  // Pre-group comments by "type:id" key for O(1) count lookup
+  const commentsCountMap = React.useMemo(() => {
+    const map = new Map();
+    for (const c of allDocumentComments) {
+      const key = `${c.rootEntityType}:${c.rootEntityId}`;
+      map.set(key, (map.get(key) || 0) + 1);
+    }
+    return map;
   }, [allDocumentComments]);
+
+  const getCommentsCount = React.useCallback((entityType, entityId) => {
+    return commentsCountMap.get(`${entityType}:${entityId}`) || 0;
+  }, [commentsCountMap]);
 
   // Batch fetch ALL section votes for this document in one query (instead of N per-section queries)
   const { data: allSectionVotes = [] } = useQuery({
@@ -238,18 +246,26 @@ export default function DocumentContent({
       
 
 
+  // O(1) lookup maps instead of O(n) find on every call
+  const profileByEmail = React.useMemo(() => {
+    const map = new Map();
+    publicProfiles?.forEach(p => { if (p.email) map.set(p.email, p); });
+    return map;
+  }, [publicProfiles]);
+
+  const userByEmail = React.useMemo(() => {
+    const map = new Map();
+    users?.forEach(u => { if (u.email) map.set(u.email, u); });
+    return map;
+  }, [users]);
+
   const getUserName = React.useCallback((email) => {
-    // Try public profile first (accessible to everyone)
-    const profile = publicProfiles?.find(p => p.email === email);
+    const profile = profileByEmail.get(email);
     if (profile?.fullName) return profile.fullName;
-    
-    // Fallback to User entity (admins only)
-    const user = users?.find(u => u.email === email);
+    const user = userByEmail.get(email);
     if (user?.full_name) return user.full_name;
-    
-    // User hasn't completed profile yet
     return 'User';
-  }, [publicProfiles, users]);
+  }, [profileByEmail, userByEmail]);
 
   const toggleComments = React.useCallback((id) => {
     setShowComments(prev => ({
@@ -307,15 +323,24 @@ Return ONLY the translated text:`;
     }
   });
 
-  const getSectionsForTopic = React.useCallback((topicId) => {
-    return sections
-      .filter(s => s.topicId === topicId)
-      .sort((a, b) => {
-        if (a.order !== b.order) return a.order - b.order;
-        // Tiebreaker: earlier created_date comes first
-        return new Date(a.created_date) - new Date(b.created_date);
-      });
+  // Pre-group sections by topicId so getSectionsForTopic is O(1)
+  const sectionsByTopicId = React.useMemo(() => {
+    const map = new Map();
+    for (const s of sections) {
+      if (!map.has(s.topicId)) map.set(s.topicId, []);
+      map.get(s.topicId).push(s);
+    }
+    // Sort each group once
+    map.forEach(arr => arr.sort((a, b) => {
+      if (a.order !== b.order) return a.order - b.order;
+      return new Date(a.created_date) - new Date(b.created_date);
+    }));
+    return map;
   }, [sections]);
+
+  const getSectionsForTopic = React.useCallback((topicId) => {
+    return sectionsByTopicId.get(topicId) || [];
+  }, [sectionsByTopicId]);
 
   const getSuggestionsForSection = React.useCallback((sectionId) => {
     return suggestions.filter(s => 

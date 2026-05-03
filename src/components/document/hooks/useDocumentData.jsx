@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 
@@ -25,9 +25,8 @@ export function useDocumentData(documentId) {
     queryKey: ['topics', documentId],
     queryFn: () => base44.entities.Topic.filter({ documentId }, 'order').catch(() => []),
     enabled: !!documentId,
-    staleTime: 0,
+    staleTime: 30 * 1000, // 30s — real-time subscriptions handle live updates
     gcTime: 10 * 60 * 1000,
-    refetchOnMount: true,
     retry: 3,
     retryDelay: 1000,
   });
@@ -36,9 +35,8 @@ export function useDocumentData(documentId) {
     queryKey: ['sections', documentId],
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
     enabled: !!documentId,
-    staleTime: 0,
+    staleTime: 30 * 1000, // 30s — real-time subscriptions handle live updates
     gcTime: 10 * 60 * 1000,
-    refetchOnMount: true,
     retry: 3,
     retryDelay: 1000,
   });
@@ -93,30 +91,43 @@ export function useDocumentData(documentId) {
     staleTime: 2 * 60 * 1000,
   });
 
-  // Seed individual caches from aggregatedData
+  // Seed individual caches from aggregatedData — only re-runs when aggregatedData changes,
+  // not on every sections/suggestions reference change (avoids cascade re-runs)
+  const aggregatedDataRef = React.useRef(null);
   React.useEffect(() => {
     if (!aggregatedData || !documentId) return;
+    // Skip if same object reference (no change)
+    if (aggregatedDataRef.current === aggregatedData) return;
+    aggregatedDataRef.current = aggregatedData;
+
     const { comments = [], publicProfiles: profiles = [] } = aggregatedData;
     if (profiles.length > 0) {
       queryClient.setQueryData(['publicProfiles'], profiles);
     }
+
+    // Group comments by type+id in a single pass
+    const commentsByKey = new Map();
+    for (const c of comments) {
+      const key = `${c.rootEntityType}:${c.rootEntityId}`;
+      if (!commentsByKey.has(key)) commentsByKey.set(key, []);
+      commentsByKey.get(key).push(c);
+    }
+
     queryClient.setQueryData(
       ['comments', 'document', documentId],
-      comments.filter(c => c.rootEntityType === 'document' && c.rootEntityId === documentId)
+      commentsByKey.get(`document:${documentId}`) || []
     );
-    sections.forEach(section => {
-      queryClient.setQueryData(
-        ['comments', 'section', section.id],
-        comments.filter(c => c.rootEntityType === 'section' && c.rootEntityId === section.id)
-      );
+
+    // Seed section and suggestion comment caches from the already-grouped map
+    commentsByKey.forEach((arr, key) => {
+      const [type, id] = key.split(':');
+      if (type === 'section') {
+        queryClient.setQueryData(['comments', 'section', id], arr);
+      } else if (type === 'suggestion') {
+        queryClient.setQueryData(['comments', 'suggestion', id], arr);
+      }
     });
-    suggestions.forEach(suggestion => {
-      queryClient.setQueryData(
-        ['comments', 'suggestion', suggestion.id],
-        comments.filter(c => c.rootEntityType === 'suggestion' && c.rootEntityId === suggestion.id)
-      );
-    });
-  }, [aggregatedData, documentId, sections, suggestions, queryClient]);
+  }, [aggregatedData, documentId, queryClient]);
 
   const { data: documentMetadata } = useQuery({
     queryKey: ['documentMetadata', documentId],

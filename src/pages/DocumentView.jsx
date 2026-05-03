@@ -81,10 +81,12 @@ export default function DocumentView() {
     documentId, document, documentMetadata
   );
 
-  // Keep subscription refs up to date
-  React.useEffect(() => { setTopicsRef(topics); }, [topics]);
-  React.useEffect(() => { setSectionsRef(sections); }, [sections]);
-  React.useEffect(() => { setSuggestionsRef(suggestions); }, [suggestions]);
+  // Keep subscription refs up to date — single effect, no redundant re-renders
+  React.useEffect(() => {
+    setTopicsRef(topics);
+    setSectionsRef(sections);
+    setSuggestionsRef(suggestions);
+  }, [topics, sections, suggestions]);
 
   // Track accepted suggestions to flash them when status changes to 'accepted'
   const prevSuggestionStatusesRef = React.useRef({});
@@ -128,18 +130,38 @@ export default function DocumentView() {
     ).length;
   }, [allComments, sections]);
 
+  // Build O(1) lookup map for profile by userId — avoids O(n²) in contributorsCount
+  const profileByUserId = React.useMemo(() => {
+    const map = new Map();
+    publicProfiles.forEach(p => { if (p.userId) map.set(p.userId, p); });
+    return map;
+  }, [publicProfiles]);
+
   const contributorsCount = React.useMemo(() => {
     const contributorEmails = new Set();
     suggestions.forEach(s => { if (s.created_by) contributorEmails.add(s.created_by); });
     allVotes.forEach(v => {
       if (v.created_by) contributorEmails.add(v.created_by);
-      const profile = publicProfiles.find(p => p.userId === v.userId);
+      const profile = profileByUserId.get(v.userId);
       if (profile?.email) contributorEmails.add(profile.email);
     });
     allComments.forEach(c => { if (c.created_by) contributorEmails.add(c.created_by); });
     documentAgreements.forEach(a => { if (a.userEmail) contributorEmails.add(a.userEmail); });
     return contributorEmails.size;
-  }, [suggestions, allVotes, allComments, publicProfiles, documentAgreements]);
+  }, [suggestions, allVotes, allComments, profileByUserId, documentAgreements]);
+
+  // Pre-build lookup maps for O(1) access during sort
+  const topicOrderMap = React.useMemo(() => {
+    const map = new Map();
+    topics.forEach(t => map.set(t.id, t.order));
+    return map;
+  }, [topics]);
+
+  const sectionOrderMap = React.useMemo(() => {
+    const map = new Map();
+    sections.forEach(s => map.set(s.id, s.order));
+    return map;
+  }, [sections]);
 
   const pendingSuggestions = React.useMemo(() => {
     if (!suggestions || !sections || !topics) return [];
@@ -147,32 +169,20 @@ export default function DocumentView() {
     return suggestions
       .filter(s => s.status === 'pending' && s.type !== 'edit_suggestion')
       .sort((a, b) => {
-        // Sort by topic order first
-        const topicA = topics.find(t => t.id === a.topicId);
-        const topicB = topics.find(t => t.id === b.topicId);
-        const topicOrderA = topicA?.order ?? 999;
-        const topicOrderB = topicB?.order ?? 999;
+        const topicOrderA = topicOrderMap.get(a.topicId) ?? 999;
+        const topicOrderB = topicOrderMap.get(b.topicId) ?? 999;
         
-        if (topicOrderA !== topicOrderB) {
-          return topicOrderA - topicOrderB;
-        }
+        if (topicOrderA !== topicOrderB) return topicOrderA - topicOrderB;
         
-        // Then by section order
         if (a.type === 'edit_section' && b.type === 'edit_section') {
-          const sectionA = sections.find(s => s.id === a.sectionId);
-          const sectionB = sections.find(s => s.id === b.sectionId);
-          const orderA = sectionA?.order ?? 999;
-          const orderB = sectionB?.order ?? 999;
-          return orderA - orderB;
+          return (sectionOrderMap.get(a.sectionId) ?? 999) - (sectionOrderMap.get(b.sectionId) ?? 999);
         }
         
-        // edit_section before new_section
         if (a.type === 'edit_section') return -1;
         if (b.type === 'edit_section') return 1;
-        
         return 0;
       });
-  }, [suggestions, sections, topics]);
+  }, [suggestions, topicOrderMap, sectionOrderMap]);
 
   const scrollToSuggestion = React.useCallback((index) => {
     const suggestion = pendingSuggestions[index];
