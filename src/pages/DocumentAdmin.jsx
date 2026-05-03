@@ -17,7 +17,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
 
 export default function DocumentAdmin() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
   const navigate = useNavigate();
@@ -109,13 +109,13 @@ export default function DocumentAdmin() {
       queryClient.invalidateQueries({ queryKey: ['document', documentId] });
       queryClient.invalidateQueries({ queryKey: ['suggestions', documentId] });
       const msg = result.resetCount > 0
-        ? `ההגדרות נשמרו. הטיימרים של ${result.resetCount} הצעות ממתינות אופסו.`
-        : "Document settings updated successfully!";
+        ? t('daTimersReset', { count: result.resetCount })
+        : t('daSettingsSaved');
       setSuccess(msg);
       setTimeout(() => setSuccess(null), 4000);
     },
     onError: (err) => {
-      setError(err.message || "Failed to update document");
+      setError(err.message || t('daSettingsSaved'));
       setTimeout(() => setError(null), 5000);
     },
   });
@@ -169,11 +169,11 @@ export default function DocumentAdmin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentAdmins', documentId] });
       setNewAdminEmail("");
-      setSuccess("Admin added successfully!");
+      setSuccess(t('daAdminAdded'));
       setTimeout(() => setSuccess(null), 3000);
     },
     onError: (err) => {
-      setError(err.message || "Failed to add admin");
+      setError(err.message || t('daAdminAdded'));
       setTimeout(() => setError(null), 5000);
     },
   });
@@ -190,11 +190,11 @@ export default function DocumentAdmin() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentAdmins', documentId] });
-      setSuccess("Admin removed successfully!");
+      setSuccess(t('daAdminRemoved'));
       setTimeout(() => setSuccess(null), 3000);
     },
     onError: (err) => {
-      setError(err.message || "Failed to remove admin");
+      setError(err.message || t('daAdminRemoved'));
       setTimeout(() => setError(null), 5000);
     },
   });
@@ -249,15 +249,15 @@ export default function DocumentAdmin() {
       setGeneratedInviteLink(data);
       setInviteEmail("");
       if (data.isExisting) {
-        setSuccess(`נמצאה הזמנה קיימת עבור ${data.email}`);
+        setSuccess(t('daExistingInviteFound', { email: data.email }));
       } else {
-        setSuccess(`הזמנה נוצרה עבור ${data.email}!`);
+        setSuccess(t('daInviteCreated', { email: data.email }));
       }
       setTimeout(() => setSuccess(null), 5000);
     },
     onError: (err) => {
       console.error('❌ Invitation failed:', err);
-      setError(err.message || "יצירת ההזמנה נכשלה. אנא נסה שוב.");
+      setError(err.message || t('daCreating'));
       setTimeout(() => setError(null), 5000);
     },
   });
@@ -267,14 +267,14 @@ export default function DocumentAdmin() {
     
     if (!inviteEmail || !inviteEmail.trim()) {
       console.log('❌ Email field is empty');
-      setError("אנא הזן כתובת מייל");
+      setError(t('daEnterEmail'));
       setTimeout(() => setError(null), 3000);
       return;
     }
 
     if (!document || !user) {
       console.log('❌ Missing document or user data');
-      setError("טוען נתונים, אנא נסה שוב בעוד רגע");
+      setError(t('loading'));
       setTimeout(() => setError(null), 3000);
       return;
     }
@@ -287,30 +287,21 @@ export default function DocumentAdmin() {
   const copyInviteLink = () => {
     if (generatedInviteLink?.signupUrl) {
       navigator.clipboard.writeText(generatedInviteLink.signupUrl);
-      setSuccess("הקישור הועתק ללוח!");
+      setSuccess(t('daLinkCopied'));
       setTimeout(() => setSuccess(null), 2000);
     }
   };
 
   const copyInviteMessage = () => {
     if (generatedInviteLink) {
-      const message = `שלום,
-
-הוזמנת על ידי ${user.full_name} להצטרף למסמך "${document.title}" בפלטפורמת Consenz.
-
-כדי להצטרף:
-1. לחץ על הקישור הבא להרשמה
-2. צור חשבון חדש או התחבר עם חשבון קיים
-3. לאחר ההרשמה תוכל לגשת למסמך ולהשתתף בדיונים
-
-קישור ההזמנה:
-${generatedInviteLink.signupUrl}
-
-בברכה,
-צוות Consenz`;
-      
+      const inviteMessages = {
+        he: `שלום,\n\nהוזמנת על ידי ${user.full_name} להצטרף למסמך "${document.title}" בפלטפורמת Consenz.\n\nכדי להצטרף:\n1. לחץ על הקישור הבא להרשמה\n2. צור חשבון חדש או התחבר עם חשבון קיים\n3. לאחר ההרשמה תוכל לגשת למסמך ולהשתתף בדיונים\n\nקישור ההזמנה:\n${generatedInviteLink.signupUrl}\n\nבברכה,\nצוות Consenz`,
+        ar: `مرحباً،\n\nلقد دعاك ${user.full_name} للانضمام إلى مستند "${document.title}" على منصة Consenz.\n\nللانضمام:\n1. انقر على الرابط التالي للتسجيل\n2. أنشئ حساباً جديداً أو سجل الدخول بحساب موجود\n3. بعد التسجيل يمكنك الوصول إلى المستند والمشاركة في النقاشات\n\nرابط الدعوة:\n${generatedInviteLink.signupUrl}\n\nمع التحيات،\nفريق Consenz`,
+        en: `Hello,\n\nYou have been invited by ${user.full_name} to join the document "${document.title}" on the Consenz platform.\n\nTo join:\n1. Click the following link to register\n2. Create a new account or sign in with an existing one\n3. After registration you can access the document and participate in discussions\n\nInvitation link:\n${generatedInviteLink.signupUrl}\n\nBest regards,\nConsenz Team`,
+      };
+      const message = inviteMessages[language] || inviteMessages.en;
       navigator.clipboard.writeText(message);
-      setSuccess("הטקסט המלא הועתק ללוח!");
+      setSuccess(t('daMessageCopied'));
       setTimeout(() => setSuccess(null), 2000);
     }
   };
@@ -322,14 +313,14 @@ ${generatedInviteLink.signupUrl}
   };
 
   const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this document? This action cannot be undone.")) {
+    if (window.confirm(t('daDeleteConfirm'))) {
       deleteDocMutation.mutate();
     }
   };
 
   const handleAddAdmin = () => {
     if (!newAdminEmail || !newAdminEmail.trim()) {
-      setError("Please enter an email address");
+      setError(t('daEnterUserEmail'));
       return;
     }
     addAdminMutation.mutate(newAdminEmail.trim());
@@ -341,11 +332,11 @@ ${generatedInviteLink.signupUrl}
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
-      setSuccess("User updated successfully!");
+      setSuccess(t('daUserUpdated'));
       setTimeout(() => setSuccess(null), 3000);
     },
     onError: (err) => {
-      setError(err.message || "Failed to update user");
+      setError(err.message || t('daUserUpdated'));
       setTimeout(() => setError(null), 5000);
     },
   });
@@ -374,9 +365,9 @@ ${generatedInviteLink.signupUrl}
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-4xl mx-auto text-center py-20">
-          <h1 className="text-2xl font-bold text-slate-900">Document not found</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t('daDocumentNotFound')}</h1>
           <Button className="mt-4" onClick={() => navigate(createPageUrl("Home"))}>
-            Go Home
+            {t('goHome')}
           </Button>
         </div>
       </div>
@@ -387,10 +378,10 @@ ${generatedInviteLink.signupUrl}
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-4xl mx-auto text-center py-20">
-          <h1 className="text-2xl font-bold text-slate-900">Access Denied</h1>
-          <p className="text-slate-600 mt-2">You don't have permission to access this page</p>
+          <h1 className="text-2xl font-bold text-slate-900">{t('daAccessDenied')}</h1>
+          <p className="text-slate-600 mt-2">{t('daAccessDeniedDesc')}</p>
           <Button className="mt-4" onClick={() => navigate(`${createPageUrl("DocumentView")}?id=${documentId}`)}>
-            Back to Document
+            {t('daBackToDocument')}
           </Button>
         </div>
       </div>
@@ -401,7 +392,7 @@ ${generatedInviteLink.signupUrl}
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         <PageHeader 
-          title="Document Settings"
+          title={t('daDocumentSettings')}
           backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
         />
         
@@ -426,12 +417,12 @@ ${generatedInviteLink.signupUrl}
         <form onSubmit={handleSubmit}>
           <Card className="bg-white">
             <CardHeader>
-              <CardTitle>General Settings</CardTitle>
-              <CardDescription>Update document configuration</CardDescription>
+              <CardTitle>{t('daGeneralSettings')}</CardTitle>
+              <CardDescription>{t('daUpdateConfig')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="title">Document Title</Label>
+                <Label htmlFor="title">{t('daDocumentTitle')}</Label>
                 <Input
                   id="title"
                   value={formData.title}
@@ -440,7 +431,7 @@ ${generatedInviteLink.signupUrl}
               </div>
 
               <div>
-                <Label htmlFor="privacy">Privacy Setting</Label>
+                <Label htmlFor="privacy">{t('daPrivacySetting')}</Label>
                 <Select
                   value={formData.privacy}
                   onValueChange={(value) => setFormData({ ...formData, privacy: value })}
@@ -450,20 +441,20 @@ ${generatedInviteLink.signupUrl}
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="public_view_open_participation">
-                      🌐 Public - Open Participation
+                      🌐 {t('publicViewOpenParticipation')}
                     </SelectItem>
                     <SelectItem value="public_view_closed_participation">
-                      👀 Public View - Closed Participation
+                      👀 {t('publicViewClosedParticipation')}
                     </SelectItem>
                     <SelectItem value="private_invite_only">
-                      🔒 Private - Invite Only
+                      🔒 {t('privateInviteOnly')}
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label htmlFor="lifetime">Default Voting Period (hours)</Label>
+                <Label htmlFor="lifetime">{t('daDefaultVotingPeriod')}</Label>
                 <Input
                   id="lifetime"
                   type="number"
@@ -475,8 +466,8 @@ ${generatedInviteLink.signupUrl}
 
               <div className={`flex items-center justify-between p-4 bg-slate-50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className={`flex-1 min-w-0 ${isRTL ? 'text-right ml-4' : 'mr-4'}`}>
-                  <Label htmlFor="voting" className="text-base">Enable Voting Buttons</Label>
-                  <p className="text-sm text-slate-500">Allow users to vote on suggestions</p>
+                  <Label htmlFor="voting" className="text-base">{t('daEnableVoting')}</Label>
+                  <p className="text-sm text-slate-500">{t('daEnableVotingDesc')}</p>
                 </div>
                 <Switch
                   id="voting"
@@ -487,8 +478,8 @@ ${generatedInviteLink.signupUrl}
 
               <div className={`flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className={`flex-1 min-w-0 ${isRTL ? 'text-right ml-4' : 'mr-4'}`}>
-                  <Label htmlFor="gamification" className="text-base">Enable Gamification System</Label>
-                  <p className="text-sm text-slate-500">Require points for creating suggestions and award points for contributions</p>
+                  <Label htmlFor="gamification" className="text-base">{t('daEnableGamification')}</Label>
+                  <p className="text-sm text-slate-500">{t('daEnableGamificationDesc')}</p>
                 </div>
                 <Switch
                   id="gamification"
@@ -499,14 +490,8 @@ ${generatedInviteLink.signupUrl}
 
               <div className={`flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className={`flex-1 min-w-0 ${isRTL ? 'text-right ml-4' : 'mr-4'}`}>
-                  <Label htmlFor="autoAccept" className="text-base">
-                    {isRTL ? 'אפשר קבלה אוטומטית של הצעות' : 'Enable Auto-Accept of Suggestions'}
-                  </Label>
-                  <p className="text-sm text-slate-500">
-                    {isRTL
-                      ? 'כשמופעל — הצעות מתקבלות אוטומטית עם הגעה לרף הקונצנזוס. כשכבוי — רק אדמין יכול לאשר הצעות ידנית.'
-                      : 'When enabled, suggestions auto-accept when the consensus threshold is met. When disabled, only admin can approve manually.'}
-                  </p>
+                  <Label htmlFor="autoAccept" className="text-base">{t('daEnableAutoAccept')}</Label>
+                  <p className="text-sm text-slate-500">{t('daEnableAutoAcceptDesc')}</p>
                 </div>
                 <Switch
                   id="autoAccept"
@@ -521,7 +506,7 @@ ${generatedInviteLink.signupUrl}
                 className="bg-gradient-to-r from-blue-600 to-indigo-600"
               >
                 <Save className="w-4 h-4 mr-2" />
-                Save Settings
+                {t('daSaveSettings')}
               </Button>
             </CardContent>
           </Card>
@@ -529,14 +514,14 @@ ${generatedInviteLink.signupUrl}
 
         <Card className="bg-white">
           <CardHeader>
-            <CardTitle>הזמנת משתתפים</CardTitle>
-            <CardDescription>שלח הזמנות למשתמשים חדשים להצטרף למסמך</CardDescription>
+            <CardTitle>{t('daInviteParticipants')}</CardTitle>
+            <CardDescription>{t('daInviteParticipantsDesc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-2">
               <Input
                 type="email"
-                placeholder="הזן כתובת מייל"
+                placeholder={t('daEnterEmail')}
                 value={inviteEmail}
                 onChange={(e) => {
                   setInviteEmail(e.target.value);
@@ -559,7 +544,7 @@ ${generatedInviteLink.signupUrl}
                 className="bg-green-600 hover:bg-green-700"
               >
                 <Link2 className="w-4 h-4 mr-2" />
-                {createInviteMutation.isPending ? "יוצר..." : "צור קישור הזמנה"}
+                {createInviteMutation.isPending ? t('daCreating') : t('daCreateInviteLink')}
               </Button>
             </div>
             
@@ -567,7 +552,7 @@ ${generatedInviteLink.signupUrl}
               <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3" dir="rtl">
                 <div>
                   <Label className="text-sm font-semibold text-blue-900">
-                    קישור הזמנה עבור: {generatedInviteLink.email}
+                    {t('daInviteLinkFor')} {generatedInviteLink.email}
                   </Label>
                   <div className="flex gap-2 mt-2">
                     <Input
@@ -582,7 +567,7 @@ ${generatedInviteLink.signupUrl}
                       size="sm"
                     >
                       <Copy className="w-4 h-4 ml-2" />
-                      העתק קישור
+                      {t('daCopyLink')}
                     </Button>
                   </div>
                 </div>
@@ -595,12 +580,12 @@ ${generatedInviteLink.signupUrl}
                     className="w-full"
                   >
                     <Mail className="w-4 h-4 ml-2" />
-                    העתק טקסט מלא לשליחה במייל
+                    {t('daCopyFullMessage')}
                   </Button>
                 </div>
                 
                 <p className="text-xs text-blue-700">
-                  שלח את הקישור או את הטקסט המלא למוזמן באמצעות המייל או האפליקציה המועדפת עליך
+                  {t('daInviteLinkHint')}
                 </p>
               </div>
             )}
