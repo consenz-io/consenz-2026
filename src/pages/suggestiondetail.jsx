@@ -57,7 +57,7 @@ export default function SuggestionDetail() {
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
     throwOnError: false,
-    staleTime: Infinity
+    staleTime: 30 * 1000, // 30s — allows real-time updates to show after invalidation
   });
 
   // Real-time subscription for suggestion updates
@@ -135,7 +135,7 @@ export default function SuggestionDetail() {
       return userVotes.length > 0 ? userVotes[0] : null;
     },
     enabled: !!suggestionId && !!user?.id,
-    staleTime: Infinity
+    staleTime: 30 * 1000,
   });
 
   // Real-time subscription for votes
@@ -253,31 +253,30 @@ export default function SuggestionDetail() {
       if (context?.previousSuggestion) queryClient.setQueryData(['suggestion', suggestionId], context.previousSuggestion);
       if (context?.previousVote !== undefined) queryClient.setQueryData(['userVote', suggestionId, user?.id], context.previousVote);
 
-      if (err.response?.status === 429 || err.response?.data?.remainingSeconds) {
-        const retrySeconds = err.response.data?.remainingSeconds || 30;
-        setRateLimitRetryAfter(retrySeconds);
+      const startRateLimitCountdown = (seconds) => {
+        setRateLimitRetryAfter(seconds);
         const interval = setInterval(() => {
           setRateLimitRetryAfter((prev) => {
-            if (prev <= 1) { clearInterval(interval); return null; }
+            if (prev === null || prev <= 1) { clearInterval(interval); return null; }
             return prev - 1;
           });
         }, 1000);
+      };
+
+      if (err.response?.status === 429 || err.response?.data?.remainingSeconds) {
+        startRateLimitCountdown(err.response.data?.remainingSeconds || 30);
       } else if (err.message?.includes('המתן') || err.message?.toLowerCase().includes('wait')) {
         const match = err.message.match(/(\d+)\s*(?:שניות|seconds)/);
-        const retrySeconds = match ? parseInt(match[1]) : 30;
-        setRateLimitRetryAfter(retrySeconds);
-        const interval = setInterval(() => {
-          setRateLimitRetryAfter((prev) => {
-            if (prev <= 1) { clearInterval(interval); return null; }
-            return prev - 1;
-          });
-        }, 1000);
+        startRateLimitCountdown(match ? parseInt(match[1]) : 30);
       } else {
         setError(err.response?.data?.error || err.message);
         setTimeout(() => setError(null), 5000);
       }
     },
     onSuccess: (data) => {
+      // Always refresh suggestion to get accurate server-side vote counts
+      queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
+      queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
       if (data?.accepted === true) {
         toast.success(isRTL ? 'ההצעה התקבלה! ✓' : 'Suggestion accepted! ✓', { duration: 4000 });
         setTimeout(() => {
@@ -768,11 +767,25 @@ export default function SuggestionDetail() {
               <CardTitle className="text-base md:text-lg">{isRTL ? 'היסטוריית עריכה של ההצעה' : 'Suggestion Edit History'}</CardTitle>
             </CardHeader>
             <CardContent className="p-3 md:p-6 flex justify-between items-center">
-              <Button variant="outline" onClick={() => navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${suggestionChain[currentSuggestionIndexInChain - 1].id}`)} disabled={currentSuggestionIndexInChain <= 0}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const prev = suggestionChain[currentSuggestionIndexInChain - 1];
+                  if (prev) navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${prev.id}`);
+                }}
+                disabled={currentSuggestionIndexInChain <= 0}
+              >
                 <ChevronLeft className="w-4 h-4" />{isRTL ? 'גרסה קודמת' : 'Previous Version'}
               </Button>
               <span className="text-sm text-slate-600">{isRTL ? 'גרסה' : 'Version'} {currentSuggestionIndexInChain + 1} / {suggestionChain.length}</span>
-              <Button variant="outline" onClick={() => navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${suggestionChain[currentSuggestionIndexInChain + 1].id}`)} disabled={currentSuggestionIndexInChain >= suggestionChain.length - 1}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const next = suggestionChain[currentSuggestionIndexInChain + 1];
+                  if (next) navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${next.id}`);
+                }}
+                disabled={currentSuggestionIndexInChain >= suggestionChain.length - 1}
+              >
                 {isRTL ? 'גרסה הבאה' : 'Next Version'}<ChevronRight className="w-4 h-4" />
               </Button>
             </CardContent>
