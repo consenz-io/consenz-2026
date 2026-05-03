@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Lock, Globe, FileText, Plus, Settings, UserPlus, AlertCircle, Mail } from "lucide-react";
+import { Users, Lock, Globe, FileText, Plus, Settings, UserPlus, AlertCircle, Mail, GripVertical } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import PageHeader from "@/components/PageHeader";
@@ -34,28 +34,39 @@ export default function GroupView() {
 
   const [orderedDocs, setOrderedDocs] = useState(null);
 
-  // Sync orderedDocs when documents change (initial load)
+  // Sync orderedDocs when documents/group change — respect saved order from group.documentOrder
   React.useEffect(() => {
-    if (documents.length > 0) {
+    if (documents.length === 0) return;
+    const savedOrder = group?.documentOrder;
+    if (savedOrder && savedOrder.length > 0) {
+      const docMap = new Map(documents.map(d => [d.id, d]));
+      const sorted = savedOrder.map(id => docMap.get(id)).filter(Boolean);
+      const unsorted = documents.filter(d => !savedOrder.includes(d.id));
+      setOrderedDocs([...sorted, ...unsorted]);
+    } else {
       setOrderedDocs(prev => {
         if (!prev) return documents;
-        // Keep custom order but add any new docs
         const existingIds = new Set(prev.map(d => d.id));
         const newDocs = documents.filter(d => !existingIds.has(d.id));
         const updated = prev.map(d => documents.find(dd => dd.id === d.id) || d);
         return [...updated, ...newDocs];
       });
     }
-  }, [documents]);
+  }, [documents, group?.documentOrder]);
 
   const displayedDocs = orderedDocs || documents;
 
-  const handleDragEnd = (result) => {
-    if (!result.destination) return;
+  const handleDragEnd = async (result) => {
+    if (!result.destination || !isAdmin) return;
     const items = Array.from(displayedDocs);
     const [moved] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, moved);
     setOrderedDocs(items);
+    // Persist order to the Group entity
+    await base44.entities.Group.update(groupId, {
+      documentOrder: items.map(d => d.id)
+    });
+    queryClient.invalidateQueries({ queryKey: ['group', groupId] });
   };
 
   if (isLoading) {
@@ -183,7 +194,7 @@ export default function GroupView() {
                   <p className="text-slate-500 text-center py-8">{language === 'he' ? 'אין עדיין מסמכים בקבוצה זו' : 'No documents in this group yet'}</p>
                 ) : (
                   <DragDropContext onDragEnd={handleDragEnd}>
-                    <Droppable droppableId="group-documents">
+                    <Droppable droppableId="group-documents" isDropDisabled={!isAdmin}>
                       {(provided) => (
                         <div
                           className="space-y-3"
@@ -191,19 +202,29 @@ export default function GroupView() {
                           ref={provided.innerRef}
                         >
                           {displayedDocs.map((doc, index) => (
-                            <Draggable key={doc.id} draggableId={doc.id} index={index}>
+                            <Draggable key={doc.id} draggableId={doc.id} index={index} isDragDisabled={!isAdmin}>
                               {(provided, snapshot) => (
                                 <div
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  className={snapshot.isDragging ? 'opacity-70 shadow-lg rounded-lg' : ''}
+                                  className={`flex items-center gap-2 ${snapshot.isDragging ? 'opacity-70 shadow-lg rounded-lg' : ''}`}
                                 >
-                                  <GroupDocumentRow
-                                   doc={doc}
-                                   unvotedCount={getUnvotedCount(doc.id)}
-                                   participantCount={groupMembers.length}
-                                  />
+                                  {isAdmin && (
+                                    <div
+                                      {...provided.dragHandleProps}
+                                      className="p-1 cursor-grab text-slate-400 hover:text-slate-600 flex-shrink-0"
+                                      title={language === 'he' ? 'גרור לשינוי סדר' : 'Drag to reorder'}
+                                    >
+                                      <GripVertical className="w-4 h-4" />
+                                    </div>
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <GroupDocumentRow
+                                      doc={doc}
+                                      unvotedCount={getUnvotedCount(doc.id)}
+                                      participantCount={groupMembers.length}
+                                    />
+                                  </div>
                                 </div>
                               )}
                             </Draggable>
