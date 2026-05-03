@@ -756,7 +756,13 @@ ${text}`;
                                   <div
                                     id={`change-${section.id}`}
                                     className="border-l-4 border-amber-500 pl-3 py-2 bg-amber-50 rounded cursor-pointer hover:bg-amber-100 transition-colors"
-                                    onClick={() => setOpenSectionHistoryId(section.id)}
+                                    onClick={() => {
+                                      if (currentSnapshot?.suggestionId) {
+                                        setOpenSuggestionId(currentSnapshot.suggestionId);
+                                      } else {
+                                        setOpenSectionHistoryId(section.id);
+                                      }
+                                    }}
                                   >
                                     <Badge className="mb-2 bg-amber-100 text-amber-800 text-xs">
                                       {language === 'he' ? '✏️ עריכה ישירה של מנהל' : language === 'ar' ? '✏️ تعديل مباشر من المسؤول' : '✏️ Direct Admin Edit'}
