@@ -1,10 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Users, Bell, Languages, Loader2 } from "lucide-react";
+import { Bell } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
-export default function GroupDocumentRow({ doc, unvotedCount, participantCount, translations, translating, onTranslate }) {
+export default function GroupDocumentRow({ doc, unvotedCount, participantCount }) {
   const { language } = useLanguage();
 
   const unvotedLabel = {
@@ -25,39 +25,13 @@ export default function GroupDocumentRow({ doc, unvotedCount, participantCount, 
         </div>
       )}
       <div className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-slate-900">{translations[`doc-title-${doc.id}`] || doc.title}</h3>
-              <button
-                onClick={(e) => { e.preventDefault(); onTranslate(`doc-title-${doc.id}`, doc.title); }}
-                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 px-1.5 py-0.5 rounded border border-blue-200 hover:bg-blue-50 transition-colors shrink-0"
-              >
-                {translating[`doc-title-${doc.id}`] ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Languages className="w-2.5 h-2.5" />}
-              </button>
-            </div>
-            {doc.description && (
-              <div className="flex items-start gap-2 mt-1">
-                <p
-                  className="text-sm text-slate-500 line-clamp-2 flex-1"
-                  dangerouslySetInnerHTML={{ __html: translations[`doc-desc-${doc.id}`] || doc.description }}
-                />
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const tmp = window.document.createElement('div');
-                    tmp.innerHTML = doc.description;
-                    onTranslate(`doc-desc-${doc.id}`, tmp.textContent || tmp.innerText || doc.description);
-                  }}
-                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 px-1.5 py-0.5 rounded border border-blue-200 hover:bg-blue-50 transition-colors shrink-0 mt-0.5"
-                >
-                  {translating[`doc-desc-${doc.id}`] ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : <Languages className="w-2.5 h-2.5" />}
-                </button>
-              </div>
-            )}
-          </div>
-
-        </div>
+        <h3 className="font-semibold text-slate-900">{doc.title}</h3>
+        {doc.description && (
+          <p
+            className="text-sm text-slate-500 line-clamp-2 mt-1"
+            dangerouslySetInnerHTML={{ __html: doc.description }}
+          />
+        )}
       </div>
     </Link>
   );

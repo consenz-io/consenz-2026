@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Lock, Globe, FileText, Plus, Settings, UserPlus, AlertCircle, Mail, Languages, Loader2 } from "lucide-react";
+import { Users, Lock, Globe, FileText, Plus, Settings, UserPlus, AlertCircle, Mail } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import PageHeader from "@/components/PageHeader";
@@ -18,16 +18,12 @@ import GroupDocumentRow from "@/components/groupView/GroupDocumentRow";
 import GroupMemberRow from "@/components/groupView/GroupMemberRow";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-const LANG_NAMES = { en: 'English', he: 'Hebrew', ar: 'Arabic' };
-
 export default function GroupView() {
   const { isRTL, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const groupId = searchParams.get('id');
   const [showManageMembers, setShowManageMembers] = useState(false);
   const [showInviteMember, setShowInviteMember] = useState(false);
-  const [translations, setTranslations] = useState({});
-  const [translating, setTranslating] = useState({});
 
   const {
     currentUser, group, groupMembers, documents, publicProfiles,
@@ -60,24 +56,6 @@ export default function GroupView() {
     const [moved] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, moved);
     setOrderedDocs(items);
-  };
-
-  const translateText = async (key, text) => {
-    if (!text || translating[key]) return;
-    if (translations[key]) {
-      setTranslations(prev => { const n = { ...prev }; delete n[key]; return n; });
-      return;
-    }
-    setTranslating(prev => ({ ...prev, [key]: true }));
-    try {
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Translate the following text to ${LANG_NAMES[language] || 'English'}. Return ONLY the translated text:\n${text}`,
-      });
-      const translated = typeof result === 'string' ? result : result?.content || result;
-      setTranslations(prev => ({ ...prev, [key]: translated.trim() }));
-    } finally {
-      setTranslating(prev => { const n = { ...prev }; delete n[key]; return n; });
-    }
   };
 
   if (isLoading) {
@@ -151,21 +129,9 @@ export default function GroupView() {
         {/* Header */}
         <div className="flex justify-between items-start">
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <PageHeader title={translations['name'] || group.name} backUrl={createPageUrl("Groups")} />
-              <button onClick={() => translateText('name', group.name)} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50 transition-colors shrink-0">
-                {translating['name'] ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
-                <span>{translations['name'] ? (language === 'he' ? 'מקור' : 'Original') : (language === 'he' ? 'תרגם' : 'Translate')}</span>
-              </button>
-            </div>
+            <PageHeader title={group.name} backUrl={createPageUrl("Groups")} />
             {group.description && (
-              <div className="flex items-start gap-2">
-                <p className="text-slate-600 flex-1">{translations['description'] || group.description}</p>
-                <button onClick={() => translateText('description', group.description)} className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50 transition-colors shrink-0 mt-0.5">
-                  {translating['description'] ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3" />}
-                  <span>{translations['description'] ? (language === 'he' ? 'מקור' : 'Original') : (language === 'he' ? 'תרגם' : 'Translate')}</span>
-                </button>
-              </div>
+              <p className="text-slate-600">{group.description}</p>
             )}
             <div className="flex items-center gap-2">
               <Badge variant="outline" className={statusBadgeCls}>
@@ -234,12 +200,9 @@ export default function GroupView() {
                                   className={snapshot.isDragging ? 'opacity-70 shadow-lg rounded-lg' : ''}
                                 >
                                   <GroupDocumentRow
-                                    doc={doc}
-                                    unvotedCount={getUnvotedCount(doc.id)}
-                                    participantCount={groupMembers.length}
-                                    translations={translations}
-                                    translating={translating}
-                                    onTranslate={translateText}
+                                   doc={doc}
+                                   unvotedCount={getUnvotedCount(doc.id)}
+                                   participantCount={groupMembers.length}
                                   />
                                 </div>
                               )}
