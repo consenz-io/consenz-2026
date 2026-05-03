@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
 
     // ── Atomic lock: write only the lock token (NOT status yet).
     // Then re-read. If another instance wrote a different token in the meantime,
-    // bail out. Only the winner then flips status to 'accepted'.
+    // bail out. Only the winner then flips status to 'accepted' AFTER all mutations succeed.
     const lockToken = `lock-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     await base44.asServiceRole.entities.Suggestion.update(suggestionId, {
       _acceptanceLock: lockToken
@@ -139,8 +139,6 @@ Deno.serve(async (req) => {
       console.log('[PROCESS ACCEPTANCE] Already accepted by another instance after lock check, skipping');
       return Response.json({ success: true, message: 'Already processed' });
     }
-    // Mark as accepted now that we hold the lock
-    await base44.asServiceRole.entities.Suggestion.update(suggestionId, { status: 'accepted' });
 
     // ── Consensus math ───────────────────────────────────────────────────────
     const totalUsers        = await calculateContributors(base44, documentId);
@@ -178,12 +176,20 @@ Deno.serve(async (req) => {
         });
       }
     } catch (mutationErr) {
-      console.error('[PROCESS ACCEPTANCE] Type-specific mutation failed, rolling back status:', mutationErr);
-      // Rollback: revert status back to pending
-      await base44.asServiceRole.entities.Suggestion.update(suggestionId, { status: 'pending' });
+      console.error('[PROCESS ACCEPTANCE] Type-specific mutation failed, aborting acceptance:', mutationErr);
       return Response.json({ 
         error: 'Document mutation failed: ' + mutationErr.message, 
         details: mutationErr.stack 
+      }, { status: 500 });
+    }
+
+    // ── Now that document mutations succeeded, mark suggestion as accepted ─────
+    try {
+      await base44.asServiceRole.entities.Suggestion.update(suggestionId, { status: 'accepted' });
+    } catch (statusErr) {
+      console.error('[PROCESS ACCEPTANCE] Failed to mark as accepted after successful mutations:', statusErr);
+      return Response.json({ 
+        error: 'Failed to finalize acceptance: ' + statusErr.message
       }, { status: 500 });
     }
 
