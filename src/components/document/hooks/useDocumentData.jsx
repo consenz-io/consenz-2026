@@ -25,8 +25,10 @@ export function useDocumentData(documentId) {
     queryKey: ['topics', documentId],
     queryFn: () => base44.entities.Topic.filter({ documentId }, 'order').catch(() => []),
     enabled: !!documentId,
-    staleTime: 30 * 1000, // 30s — real-time subscriptions handle live updates
+    staleTime: 0, // Always refetch on mount to avoid stale empty cache after navigation
     gcTime: 10 * 60 * 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
     retry: 3,
     retryDelay: 1000,
   });
@@ -35,8 +37,10 @@ export function useDocumentData(documentId) {
     queryKey: ['sections', documentId],
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
     enabled: !!documentId,
-    staleTime: 30 * 1000, // 30s — real-time subscriptions handle live updates
+    staleTime: 0, // Always refetch on mount to avoid stale empty cache after navigation
     gcTime: 10 * 60 * 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
     retry: 3,
     retryDelay: 1000,
   });
