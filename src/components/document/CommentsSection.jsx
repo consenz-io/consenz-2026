@@ -55,16 +55,17 @@ const CommentItem = memo(({
   };
 
   const getUserName = (email) => {
+    if (!email) return '?';
     // Try public profile first (accessible to everyone)
     const profile = publicProfiles?.find(p => p.email === email);
     if (profile?.fullName) return profile.fullName;
     
     // Fallback to User entity (admins only)
-    const user = users?.find(u => u.email === email);
-    if (user?.full_name) return user.full_name;
+    const userObj = users?.find(u => u.email === email);
+    if (userObj?.full_name) return userObj.full_name;
     
-    // Last resort
-    return 'User';
+    // Last resort: show part before @
+    return email.split('@')[0] || email;
   };
 
   const isEditing = editingComment?.id === comment.id;
@@ -197,11 +198,12 @@ const CommentItem = memo(({
          <div className="flex items-center gap-2 text-sm text-slate-600">
            <Reply className="w-4 h-4" />
            <span>{t('replyingTo')} {(() => {
+             if (!comment.created_by) return '?';
              const profile = publicProfiles?.find(p => p.email === comment.created_by);
              if (profile?.fullName) return profile.fullName;
              const userObj = users?.find(u => u.email === comment.created_by);
              if (userObj?.full_name) return userObj.full_name;
-             return 'User';
+             return comment.created_by.split('@')[0] || comment.created_by;
            })()}</span>
          </div>
          <Textarea
@@ -304,7 +306,7 @@ const runBackgroundTasks = async (comment, entityType, entityId) => {
   }
 };
 
-export default function CommentsSection({ entityType, entityId, user }) {
+export default function CommentsSection({ entityType, entityId, user, scrollToCommentId }) {
   const { t, isRTL, language } = useLanguage();
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState(null);
@@ -339,7 +341,8 @@ export default function CommentsSection({ entityType, entityId, user }) {
     },
     initialData: [],
     enabled: !!entityType && !!entityId,
-    staleTime: 30 * 1000, // 30 seconds — seeded data stays fresh, avoids immediate re-fetch
+    staleTime: 0, // Always fetch fresh comments on mount
+    refetchOnMount: true,
   });
 
   const { data: users } = useQuery({
@@ -488,6 +491,26 @@ export default function CommentsSection({ entityType, entityId, user }) {
       content: newComment.trim(),
     });
   };
+
+  // Scroll to specific comment from notification link
+  React.useEffect(() => {
+    if (!scrollToCommentId || isLoading || comments.length === 0 || typeof window === 'undefined') return;
+    let timer, highlightTimer, attempts = 0;
+    const attemptScroll = () => {
+      const el = window.document.getElementById(`comment-${scrollToCommentId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.style.transition = 'background-color 0.3s ease';
+        el.style.backgroundColor = '#dbeafe';
+        highlightTimer = setTimeout(() => { el.style.backgroundColor = ''; }, 3000);
+      } else if (attempts < 8) {
+        attempts++;
+        timer = setTimeout(attemptScroll, 300 * attempts);
+      }
+    };
+    timer = setTimeout(attemptScroll, 400);
+    return () => { clearTimeout(timer); clearTimeout(highlightTimer); };
+  }, [scrollToCommentId, isLoading, comments.length]);
 
   const topLevelComments = comments.filter(c => !c.parentCommentId);
   const totalCommentsCount = comments.length;

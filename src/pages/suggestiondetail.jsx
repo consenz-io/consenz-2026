@@ -474,11 +474,13 @@ export default function SuggestionDetail() {
   // ── Helper fns ─────────────────────────────────────────────────────────────
 
   const getUserName = (email) => {
-    const profile = publicProfiles.find((p) => p.email === email);
+    if (!email) return '?';
+    const profile = (publicProfiles || []).find((p) => p.email === email);
     if (profile?.fullName) return profile.fullName;
-    const u = users.find((u) => u.email === email);
+    const u = (users || []).find((u) => u.email === email);
     if (u?.full_name) return u.full_name;
-    return 'User';
+    // Fallback: show the part before @ from email
+    return email.split('@')[0] || email;
   };
 
   const getStatusColor = (status) => {
@@ -797,7 +799,7 @@ export default function SuggestionDetail() {
             <CardTitle className="text-base md:text-lg">{t('commentsOnSuggestion')} ({totalCommentsCount})</CardTitle>
           </CardHeader>
           <CardContent className="p-3 md:p-6 overflow-x-hidden">
-            <CommentsSection entityType="suggestion" entityId={suggestionId} user={user} />
+            <CommentsSection entityType="suggestion" entityId={suggestionId} user={user} scrollToCommentId={commentId} />
           </CardContent>
         </Card>
       </div>
