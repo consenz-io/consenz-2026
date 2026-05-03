@@ -90,6 +90,8 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.entities.DocumentVersion.create({
       documentId: suggestion.documentId,
       sectionId: newSection.id,
+      topicId: targetTopicId,
+      sectionOrder: newOrder,
       content: suggestion.newContent,
       changeDescription: suggestion.title || 'סעיף חדש',
       version: 1,

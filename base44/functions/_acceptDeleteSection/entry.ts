@@ -2,8 +2,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 /**
  * Handles acceptance of a delete_section suggestion.
- * Creates a before-version record, deletes the section,
- * rejects orphaned suggestions targeting it, and records the deletion version.
+ * 1. Records a final DocumentVersion snapshot of the section content before deletion.
+ * 2. Deletes the section.
+ * 3. Rejects orphaned suggestions targeting it.
  *
  * Input:  { suggestion, documentGamificationEnabled }
  * Output: { success: true }
@@ -19,12 +20,14 @@ Deno.serve(async (req) => {
     const versions = await base44.asServiceRole.entities.DocumentVersion.filter({ sectionId: section.id });
     const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
 
-    // Record the "before" snapshot
+    // Record a final snapshot of the content before it disappears (changeType marks it as deleted)
     await base44.asServiceRole.entities.DocumentVersion.create({
       documentId: suggestion.documentId,
       sectionId: section.id,
+      topicId: section.topicId,
+      sectionOrder: section.order,
       content: section.content,
-      changeDescription: `לפני: ${suggestion.title || 'מחיקת סעיף'}`,
+      changeDescription: suggestion.title || 'מחיקת סעיף',
       version: nextVersion,
       changeType: 'suggestion_accepted',
       suggestionId: suggestion.id,
@@ -32,6 +35,7 @@ Deno.serve(async (req) => {
       translations: section.translations || {}
     });
 
+    // Delete the section
     await base44.asServiceRole.entities.Section.delete(section.id);
 
     // Reject orphaned suggestions that targeted this section
@@ -45,19 +49,9 @@ Deno.serve(async (req) => {
       console.error('[ACCEPT DELETE SECTION] Failed to reject orphaned suggestions:', orphanErr);
     }
 
-    // Record the deletion
-    await base44.asServiceRole.entities.DocumentVersion.create({
-      documentId: suggestion.documentId,
-      sectionId: section.id,
-      content: '',
-      changeDescription: suggestion.title || 'מחיקת סעיף',
-      version: nextVersion + 1,
-      changeType: 'suggestion_accepted',
-      suggestionId: suggestion.id
-    });
-
     return Response.json({ success: true });
   } catch (error) {
+    console.error('[ACCEPT DELETE SECTION ERROR]', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
