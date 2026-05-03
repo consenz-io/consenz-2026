@@ -661,10 +661,9 @@ export default function LearnMore() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
-              <div className="p-4 bg-white rounded-lg border border-slate-200">
-                <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Badge className="bg-blue-600">1</Badge>
-                  <div className="text-start">
+              <div className="p-4 bg-white rounded-lg border border-slate-200" dir="rtl">
+                <div className="flex items-start gap-3">
+                  <div className="text-right flex-1">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Start with default value", "התחלה עם ערך ברירת מחדל", "البدء بقيمة افتراضية")}
                     </p>
@@ -676,13 +675,13 @@ export default function LearnMore() {
                       )}
                     </p>
                   </div>
+                  <Badge className="bg-blue-600 flex-shrink-0" dir="ltr">1</Badge>
                 </div>
               </div>
 
-              <div className="p-4 bg-white rounded-lg border border-slate-200">
-                <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Badge className="bg-indigo-600">2</Badge>
-                  <div className="text-start">
+              <div className="p-4 bg-white rounded-lg border border-slate-200" dir="rtl">
+                <div className="flex items-start gap-3">
+                  <div className="text-right flex-1">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Collect data from accepted suggestions", "איסוף נתונים מהצעות שהתקבלו", "جمع البيانات من المقترحات المقبولة")}
                     </p>
@@ -694,13 +693,13 @@ export default function LearnMore() {
                       )}
                     </p>
                   </div>
+                  <Badge className="bg-indigo-600 flex-shrink-0" dir="ltr">2</Badge>
                 </div>
               </div>
 
-              <div className="p-4 bg-white rounded-lg border border-slate-200">
-                <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <Badge className="bg-purple-600">3</Badge>
-                  <div className="text-start">
+              <div className="p-4 bg-white rounded-lg border border-slate-200" dir="rtl">
+                <div className="flex items-start gap-3">
+                  <div className="text-right flex-1">
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Dynamic threshold update", "עדכון דינמי של הסף", "تحديث عتبة ديناميكي")}
                     </p>
@@ -712,13 +711,13 @@ export default function LearnMore() {
                       )}
                     </p>
                   </div>
+                  <Badge className="bg-purple-600 flex-shrink-0" dir="ltr">3</Badge>
                 </div>
               </div>
 
-              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-start">
+              <div className="p-4 bg-green-50 rounded-lg border border-green-200" dir="rtl">
+                <div className="flex items-start gap-3">
+                  <div className="text-right flex-1">
                     <p className="font-semibold text-green-900">
                       {getLocalizedText("Result: Community-adapted algorithm", "תוצאה: אלגוריתם מותאם לקהילה", "النتيجة: خوارزمية متكيفة مع المجتمع")}
                     </p>
@@ -730,56 +729,57 @@ export default function LearnMore() {
                       )}
                     </p>
                   </div>
+                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                 </div>
               </div>
             </div>
 
             {/* Visual Example */}
-            <div className="mt-8 text-start">
-              <h4 className="font-bold text-slate-900 mb-4">
+            <div className="mt-8" dir="rtl">
+              <h4 className="font-bold text-slate-900 mb-4 text-right">
                 {getLocalizedText("Numerical Example", "דוגמה מספרית", "مثال رقمي")}
               </h4>
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 text-start">
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 text-right">
                   <p className="text-sm font-medium text-blue-900 mb-2">
                     {getLocalizedText("Suggestion 1 Accepted", "הצעה 1 התקבלה", "المقترح 1 مقبول")}
                   </p>
-                  <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="flex items-center gap-4 flex-row-reverse">
+                    <div className="flex items-center gap-2 flex-row-reverse">
                       <ThumbsUp className="w-4 h-4 text-green-600" />
                       <span className="font-bold">8</span>
                     </div>
-                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className="flex items-center gap-2 flex-row-reverse">
                       <ThumbsDown className="w-4 h-4 text-red-600" />
                       <span className="font-bold">2</span>
                     </div>
-                    <span className="text-sm text-slate-600">
+                    <span className="text-sm text-slate-600" dir="ltr">
                       {getLocalizedText("Delta: 6", "דלתא: 6", "دلتا: 6")}
                     </span>
                   </div>
                 </div>
 
-                <div className="p-4 bg-purple-50 rounded-lg border border-purple-200 text-start">
+                <div className="p-4 bg-purple-50 rounded-lg border border-purple-200 text-right">
                   <p className="text-sm font-medium text-purple-900 mb-2">
                     {getLocalizedText("Suggestion 2 Accepted", "הצעה 2 התקבלה", "المقترح 2 مقبول")}
                   </p>
-                  <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="flex items-center gap-4 flex-row-reverse">
+                    <div className="flex items-center gap-2 flex-row-reverse">
                       <ThumbsUp className="w-4 h-4 text-green-600" />
                       <span className="font-bold">5</span>
                     </div>
-                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className="flex items-center gap-2 flex-row-reverse">
                       <ThumbsDown className="w-4 h-4 text-red-600" />
                       <span className="font-bold">1</span>
                     </div>
-                    <span className="text-sm text-slate-600">
+                    <span className="text-sm text-slate-600" dir="ltr">
                       {getLocalizedText("Delta: 4", "דלתא: 4", "دلتا: 4")}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200 text-start">
+              <div className="mt-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200 text-right">
                 <p className="font-bold text-indigo-900 mb-2">
                   {getLocalizedText("New Threshold", "הסף החדש", "العتبة الجديدة")}
                 </p>
