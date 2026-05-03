@@ -17,14 +17,12 @@ export default function SectionVoteButtons({ section, user, onSuggestEdit, canPa
   const queryClient = useQueryClient();
   const [showConDialog, setShowConDialog] = useState(false);
 
-  // Use initialVotes (batch-loaded by parent) when available; fall back to individual query only if not provided
+  // Use initialVotes (batch-loaded by parent) as placeholder; after voting, re-fetch individually
   const { data: sectionVotes = [] } = useQuery({
     queryKey: ["sectionVotes", section.id],
     queryFn: () => base44.entities.SectionVote.filter({ sectionId: section.id }),
     staleTime: 60 * 1000,
-    enabled: initialVotes === undefined,
-    initialData: initialVotes,
-    initialDataUpdatedAt: initialVotes !== undefined ? Date.now() : undefined,
+    placeholderData: initialVotes,
   });
 
   const proCount = sectionVotes.filter(v => v.vote === "pro").length;
