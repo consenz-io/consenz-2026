@@ -12,15 +12,19 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-export default function SectionVoteButtons({ section, user, onSuggestEdit, canParticipate = true, onCannotParticipate }) {
+export default function SectionVoteButtons({ section, user, onSuggestEdit, canParticipate = true, onCannotParticipate, initialVotes }) {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [showConDialog, setShowConDialog] = useState(false);
 
+  // Use initialVotes (batch-loaded by parent) when available; fall back to individual query only if not provided
   const { data: sectionVotes = [] } = useQuery({
     queryKey: ["sectionVotes", section.id],
     queryFn: () => base44.entities.SectionVote.filter({ sectionId: section.id }),
     staleTime: 60 * 1000,
+    enabled: initialVotes === undefined,
+    initialData: initialVotes,
+    initialDataUpdatedAt: initialVotes !== undefined ? Date.now() : undefined,
   });
 
   const proCount = sectionVotes.filter(v => v.vote === "pro").length;
@@ -46,6 +50,7 @@ export default function SectionVoteButtons({ section, user, onSuggestEdit, canPa
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sectionVotes", section.id] });
+      queryClient.invalidateQueries({ queryKey: ["allSectionVotes"] });
     },
   });
 

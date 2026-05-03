@@ -43,7 +43,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
   onClearNewlyCreated,
   targetSuggestionId,
   publicProfiles = [],
-  allDocumentSuggestions = []
+  allDocumentSuggestions = [],
+  sectionVotes = []
 }) {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
@@ -518,6 +519,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
                   onSuggestEdit={onEditSection}
                   canParticipate={canParticipate}
                   onCannotParticipate={() => setShowJoinGroupDialog(true)}
+                  initialVotes={sectionVotes}
                 />
                 {(() => {
                   const count = typeof getCommentsCount === 'function' ? getCommentsCount(activeCommentEntity.entityType, activeCommentEntity.entityId) : 0;

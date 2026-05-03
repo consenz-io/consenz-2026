@@ -178,6 +178,24 @@ export default function DocumentContent({
     ).length;
   }, [allDocumentComments]);
 
+  // Batch fetch ALL section votes for this document in one query (instead of N per-section queries)
+  const { data: allSectionVotes = [] } = useQuery({
+    queryKey: ['allSectionVotes', document?.id],
+    queryFn: () => base44.entities.SectionVote.filter({ sectionId: sections.map(s => s.id) }),
+    enabled: !!document?.id && sections.length > 0,
+    staleTime: 60 * 1000,
+  });
+
+  // Pre-group by sectionId for O(1) lookup in SectionVoteButtons
+  const sectionVotesBySectionId = React.useMemo(() => {
+    const map = new Map();
+    for (const v of allSectionVotes) {
+      if (!map.has(v.sectionId)) map.set(v.sectionId, []);
+      map.get(v.sectionId).push(v);
+    }
+    return map;
+  }, [allSectionVotes]);
+
   const { data: userVotes = [] } = useQuery({
     queryKey: ['userVotes', document?.id, user?.id],
     queryFn: async () => {
@@ -729,6 +747,7 @@ Return ONLY the translated text:`;
                               targetSuggestionId={targetSuggestionId}
                               publicProfiles={publicProfiles}
                               allDocumentSuggestions={suggestions}
+                              sectionVotes={sectionVotesBySectionId.get(section.id) || []}
                             />
                           </div>
                             {/* Show new section suggestions in their correct position:
