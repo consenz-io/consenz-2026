@@ -53,8 +53,10 @@ export function useDocumentData(documentId) {
       return results || [];
     },
     enabled: !!documentId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0, // Always refetch on mount — same as topics/sections — so suggestions aren't stale after navigation
     gcTime: 10 * 60 * 1000,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
     retry: 2,
   });
 
