@@ -17,7 +17,7 @@ import DocumentTextContent from "./DocumentTextContent";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import JoinGroupDialog from "@/components/group/JoinGroupDialog";
-import AcceptedAnimation from "./AcceptedAnimation";
+
 import SectionVoteButtons from "./SectionVoteButtons";
 
 const SectionCarousel = React.memo(function SectionCarousel({
@@ -567,14 +567,16 @@ const SectionCarousel = React.memo(function SectionCarousel({
           // תצוגת הצעה - diff או אנימציה
           <>
             {(() => {
-              const animationPhase = animationPhases[currentView.data.id] || 'none';
-              
-              // שלבי אנימציה (announcing / celebrating / transitioning)
-              if (['announcing', 'celebrating', 'transitioning'].includes(animationPhase)) {
-                return <AcceptedAnimation phase={animationPhase} newContent={currentView.data.newContent} />;
-              }
+               // כאשר הצעה התקבלה, פשוט הצג את התוכן המעודכן בלי אנימציה
+               if (animationPhases[currentView.data.id] === 'completed' || currentView.data.status === 'accepted') {
+                 return (
+                   <div className="prose prose-sm max-w-none">
+                     <DocumentTextContent content={currentView.data.newContent || currentView.data.content} className="text-slate-800" />
+                   </div>
+                 );
+               }
 
-              // תצוגה רגילה - diff או הצעה
+               // תצוגה רגילה - diff או הצעה
               return (
                 <div 
                   className="cursor-pointer hover:opacity-90 transition-opacity"
