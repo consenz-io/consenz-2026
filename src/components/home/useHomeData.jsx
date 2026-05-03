@@ -39,18 +39,6 @@ export function useHomeData() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: allSuggestions = [] } = useQuery({
-    queryKey: ['allSuggestions'],
-    queryFn: () => base44.entities.Suggestion.list(),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: allVotes = [] } = useQuery({
-    queryKey: ['allVotes'],
-    queryFn: () => base44.entities.Vote.list(),
-    staleTime: 5 * 60 * 1000,
-  });
-
   const { data: allUsers = [] } = useQuery({
     queryKey: ['allUsers'],
     queryFn: () => base44.entities.User.list('-created_date'),
@@ -67,22 +55,41 @@ export function useHomeData() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Heavy contributor/stats data — only fetched when the modal is opened or counts are needed
+  // These are deferred with a long staleTime to avoid blocking initial page load
+  const { data: allSuggestions = [] } = useQuery({
+    queryKey: ['allSuggestions'],
+    queryFn: () => base44.entities.Suggestion.list(),
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+  });
+
+  const { data: allVotes = [] } = useQuery({
+    queryKey: ['allVotes'],
+    queryFn: () => base44.entities.Vote.list(),
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+  });
+
   const { data: allComments = [] } = useQuery({
     queryKey: ['allComments'],
     queryFn: () => base44.entities.Comment.list(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
   const { data: allSections = [] } = useQuery({
     queryKey: ['allSections'],
     queryFn: () => base44.entities.Section.list(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
   const { data: allAgreements = [] } = useQuery({
     queryKey: ['allAgreements'],
     queryFn: () => base44.entities.DocumentAgreement.list(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
   // ── Derived: displayed users list ──────────────────────────────────────────

@@ -356,56 +356,57 @@ Return ONLY the translated text:`;
     [suggestionsBySectionId]
   );
 
+  // Pre-build topic order set for O(1) "already shown" check
+  const topicOrdersSet = React.useMemo(() => new Set(topics.map(t => t.order)), [topics]);
+
+  // Pre-group pending new_section suggestions by topicId — O(1) lookup
+  const newSectionSuggestionsByTopicId = React.useMemo(() => {
+    const map = new Map();
+    for (const s of suggestions) {
+      if (s.type !== 'new_section' || s.parentSuggestionId || s.status !== 'pending' || s.sectionId) continue;
+      if (!s.topicId) continue;
+      if (!map.has(s.topicId)) map.set(s.topicId, []);
+      map.get(s.topicId).push(s);
+    }
+    // Sort each group once
+    map.forEach(arr => arr.sort((a, b) => (a.insertPosition || 999) - (b.insertPosition || 999)));
+    return map;
+  }, [suggestions]);
+
   const getNewSectionSuggestionsForTopic = React.useCallback((topicId) => {
-    return suggestions.filter(s => {
-      // רק הצעות לסעיפים חדשים שהן ROOT (אין להן parent)
-      if (s.type !== 'new_section') return false;
-      if (s.parentSuggestionId) return false; // דלג על הצעות עריכה - נציג אותן בקרוסלה
-      
-      // הצג רק הצעות pending
-      if (s.status !== 'pending') return false;
-      
-      // דלג גם על pending שכבר יש להן sectionId (הסעיף נוצר אבל הן עדיין pending)
-      if (s.type === 'new_section' && s.sectionId) return false;
-      
-      // אם ההצעה מיועדת לנושא קיים - בדוק לפי topicId
-      if (s.topicId) {
-        return s.topicId === topicId;
-      }
-      
-      // אם ההצעה מיועדת לנושא חדש שעדיין לא נוצר - לא מציגים אותה בשום נושא
-      return false;
-    }).sort((a, b) => (a.insertPosition || 999) - (b.insertPosition || 999));
+    return newSectionSuggestionsByTopicId.get(topicId) || [];
+  }, [newSectionSuggestionsByTopicId]);
+
+  // Pre-compute new-topic suggestions (no topicId) once — sorted
+  const newTopicSuggestions = React.useMemo(() => {
+    return suggestions
+      .filter(s =>
+        s.type === 'new_section' &&
+        s.status === 'pending' &&
+        !s.topicId &&
+        s.newTopicTitle &&
+        !s.parentSuggestionId &&
+        !s.sectionId
+      )
+      .sort((a, b) => (a.newTopicOrder || 999) - (b.newTopicOrder || 999));
   }, [suggestions]);
 
-  // פונקציה נפרדת להצעות לנושאים חדשים שעדיין לא נוצרו
-  const getNewTopicSuggestions = React.useCallback(() => {
-    return suggestions.filter(s => {
-      // רק הצעות new_section (לא edit_section)
-      if (s.type !== 'new_section') return false;
-      // רק pending
-      if (s.status !== 'pending') return false;
-      // לא topicId - כלומר נושא חדש
-      if (s.topicId) return false;
-      // חייב newTopicTitle
-      if (!s.newTopicTitle) return false;
-      // רק ROOT suggestions
-      if (s.parentSuggestionId) return false;
-      if (s.sectionId) return false;
-      
-      return true;
-    }).sort((a, b) => (a.newTopicOrder || 999) - (b.newTopicOrder || 999));
-  }, [suggestions]);
+  // Pre-group new-topic suggestions by newTopicOrder for O(1) lookup
+  const newTopicSuggestionsByOrder = React.useMemo(() => {
+    const map = new Map();
+    for (const s of newTopicSuggestions) {
+      const key = s.newTopicOrder ?? null;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(s);
+    }
+    return map;
+  }, [newTopicSuggestions]);
 
-  // פונקציה להצעות נושאים חדשים שצריכות להופיע אחרי נושא מסוים
+  const getNewTopicSuggestions = React.useCallback(() => newTopicSuggestions, [newTopicSuggestions]);
+
   const getNewTopicSuggestionsAfterTopic = React.useCallback((topicOrder) => {
-    const newTopicSuggestions = getNewTopicSuggestions();
-    return newTopicSuggestions.filter(s => 
-      s.newTopicOrder !== undefined && 
-      s.newTopicOrder !== null && 
-      s.newTopicOrder === topicOrder + 1
-    );
-  }, [getNewTopicSuggestions]);
+    return newTopicSuggestionsByOrder.get(topicOrder + 1) || [];
+  }, [newTopicSuggestionsByOrder]);
 
   const reorderSectionsMutation = useMutation({
     mutationFn: async ({ topicId, reorderedSections }) => {
@@ -493,9 +494,20 @@ Return ONLY the translated text:`;
     }
   };
 
-  const getTopicEditSuggestions = React.useCallback((topicId) => {
-    return topicEditSuggestions.filter(s => s.topicId === topicId && s.status === 'pending');
+  // Pre-group pending topic edit suggestions by topicId for O(1) lookup
+  const topicEditSuggestionsByTopicId = React.useMemo(() => {
+    const map = new Map();
+    for (const s of topicEditSuggestions) {
+      if (s.status !== 'pending') continue;
+      if (!map.has(s.topicId)) map.set(s.topicId, []);
+      map.get(s.topicId).push(s);
+    }
+    return map;
   }, [topicEditSuggestions]);
+
+  const getTopicEditSuggestions = React.useCallback((topicId) => {
+    return topicEditSuggestionsByTopicId.get(topicId) || [];
+  }, [topicEditSuggestionsByTopicId]);
 
   // O(1) lookup map for topic edit votes
   const topicEditVotesMap = React.useMemo(() => {
@@ -928,20 +940,18 @@ Return ONLY the translated text:`;
                               {provided.placeholder}
 
                               {/* הצעות לנושאים חדשים בסוף (שלא שויכו לנושא מסוים) */}
-                            {getNewTopicSuggestions()
-                            .filter(s => {
-                            // אם אין נושאים - הצג הכל
-                            if (topics.length === 0) return true;
+                              {newTopicSuggestions
+                              .filter(s => {
+                              // אם אין נושאים - הצג הכל
+                              if (topics.length === 0) return true;
 
-                            // אם אין newTopicOrder - הצג בסוף (לא שויך לנושא ספציפי)
-                            if (s.newTopicOrder === undefined || s.newTopicOrder === null) return true;
+                              // אם אין newTopicOrder - הצג בסוף (לא שויך לנושא ספציפי)
+                              if (s.newTopicOrder === undefined || s.newTopicOrder === null) return true;
 
-                            // הצג רק אם newTopicOrder לא שויך לאף נושא קיים (כלומר לא הוצג כבר ע"י getNewTopicSuggestionsAfterTopic)
-                            const topicOrders = topics.map(t => t.order);
-                            // getNewTopicSuggestionsAfterTopic מציג הצעות עם newTopicOrder === topicOrder + 1
-                            const alreadyShown = topicOrders.some(order => s.newTopicOrder === order + 1);
-                            return !alreadyShown;
-                            })
+                              // הצג רק אם newTopicOrder לא שויך לאף נושא קיים (כלומר לא הוצג כבר ע"י getNewTopicSuggestionsAfterTopic)
+                              const alreadyShown = topicOrdersSet.has(s.newTopicOrder - 1);
+                              return !alreadyShown;
+                              })
                             .map((suggestion) => (
                             <Card key={suggestion.id} className="bg-white border-slate-200 w-full overflow-hidden">
                             <CardHeader className="border-b border-slate-100 p-4 md:p-6 bg-purple-50">
@@ -973,7 +983,7 @@ Return ONLY the translated text:`;
                             </Card>
                             ))}
 
-            {topics.length === 0 && getNewTopicSuggestions().length === 0 && (
+            {topics.length === 0 && newTopicSuggestions.length === 0 && (
               <Card className="bg-white border-slate-200 w-full overflow-hidden">
                 <CardContent className="p-6 md:p-12 text-center">
                   <p className="text-slate-500 text-sm md:text-base">{t('noTopicsYet')}</p>
