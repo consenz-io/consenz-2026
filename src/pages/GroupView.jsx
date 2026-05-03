@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -16,6 +16,7 @@ import InviteMemberDialog from "@/components/group/InviteMemberDialog";
 import { useGroupViewData } from "@/components/groupView/useGroupViewData";
 import GroupDocumentRow from "@/components/groupView/GroupDocumentRow";
 import GroupMemberRow from "@/components/groupView/GroupMemberRow";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 const LANG_NAMES = { en: 'English', he: 'Hebrew', ar: 'Arabic' };
 
@@ -34,6 +35,32 @@ export default function GroupView() {
     joinGroupMutation, leaveGroupMutation, requestAccessMutation,
     queryClient, navigate,
   } = useGroupViewData(groupId);
+
+  const [orderedDocs, setOrderedDocs] = useState(null);
+
+  // Sync orderedDocs when documents change (initial load)
+  React.useEffect(() => {
+    if (documents.length > 0) {
+      setOrderedDocs(prev => {
+        if (!prev) return documents;
+        // Keep custom order but add any new docs
+        const existingIds = new Set(prev.map(d => d.id));
+        const newDocs = documents.filter(d => !existingIds.has(d.id));
+        const updated = prev.map(d => documents.find(dd => dd.id === d.id) || d);
+        return [...updated, ...newDocs];
+      });
+    }
+  }, [documents]);
+
+  const displayedDocs = orderedDocs || documents;
+
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+    const items = Array.from(displayedDocs);
+    const [moved] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, moved);
+    setOrderedDocs(items);
+  };
 
   const translateText = async (key, text) => {
     if (!text || translating[key]) return;
@@ -186,22 +213,43 @@ export default function GroupView() {
                 </div>
               </CardHeader>
               <CardContent>
-                {documents.length === 0 ? (
+                {displayedDocs.length === 0 ? (
                   <p className="text-slate-500 text-center py-8">{language === 'he' ? 'אין עדיין מסמכים בקבוצה זו' : 'No documents in this group yet'}</p>
                 ) : (
-                  <div className="space-y-3">
-                    {documents.map(doc => (
-                      <GroupDocumentRow
-                        key={doc.id}
-                        doc={doc}
-                        unvotedCount={getUnvotedCount(doc.id)}
-                        participantCount={groupMembers.length}
-                        translations={translations}
-                        translating={translating}
-                        onTranslate={translateText}
-                      />
-                    ))}
-                  </div>
+                  <DragDropContext onDragEnd={handleDragEnd}>
+                    <Droppable droppableId="group-documents">
+                      {(provided) => (
+                        <div
+                          className="space-y-3"
+                          {...provided.droppableProps}
+                          ref={provided.innerRef}
+                        >
+                          {displayedDocs.map((doc, index) => (
+                            <Draggable key={doc.id} draggableId={doc.id} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className={snapshot.isDragging ? 'opacity-70 shadow-lg rounded-lg' : ''}
+                                >
+                                  <GroupDocumentRow
+                                    doc={doc}
+                                    unvotedCount={getUnvotedCount(doc.id)}
+                                    participantCount={groupMembers.length}
+                                    translations={translations}
+                                    translating={translating}
+                                    onTranslate={translateText}
+                                  />
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </DragDropContext>
                 )}
               </CardContent>
             </Card>
