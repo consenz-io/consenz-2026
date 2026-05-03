@@ -167,11 +167,12 @@ Deno.serve(async (req) => {
 
     // Use the document's stored threshold (same logic as checkSuggestionConsensus on the frontend)
     // threshold is updated only when a suggestion is accepted, not dynamically during voting
-    const threshold = Math.max(2, document.threshold || 2);
+    const threshold = document.threshold ? Math.max(1, Math.round(document.threshold)) : 2;
+    console.log('[VOTE FUNCTION] Threshold calc:', { documentThreshold: document.threshold, finalThreshold: threshold });
 
     const shouldAccept = autoAcceptEnabled && delta >= threshold;
 
-    console.log('[VOTE FUNCTION] Consensus check:', { delta, threshold, shouldAccept });
+    console.log('[VOTE FUNCTION] Consensus check:', { delta, threshold, shouldAccept, suggestionStatus: suggestion.status, autoAcceptEnabled, documentId: document.id });
 
     if (shouldAccept && suggestion.status === 'pending') {
       // Prevent concurrent acceptance processing within this Deno instance
