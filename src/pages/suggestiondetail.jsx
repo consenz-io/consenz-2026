@@ -699,7 +699,7 @@ export default function SuggestionDetail() {
               <div className="pt-4">
                 <Button variant="outline" onClick={() => setShowEditSuggestionModal(true)} className="w-full">
                   <Edit2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {language === 'he' ? 'הצע עריכה להצעה זו' : language === 'ar' ? 'اقترح تعديلاً على هذا الاقتراح' : 'Suggest an Edit to this Suggestion'}
+                  {language === 'he' ? 'הצעת עריכה להצעה זו' : language === 'ar' ? 'اقترح تعديلاً على هذا الاقتراح' : 'Suggest an Edit to this Suggestion'}
                 </Button>
               </div>
             }
