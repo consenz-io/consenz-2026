@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
             <p>לחץ על הכפתור למטה כדי לקבל את ההזמנה:</p>
             <a href="${inviteUrl}" 
                style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 16px 0;">
-              הצטרף לקבוצה
+              הצטרפות לקבוצה
             </a>
             <p style="color: #64748b; font-size: 14px;">אם הכפתור לא עובד, העתק את הקישור: <br/><a href="${inviteUrl}">${inviteUrl}</a></p>
           </div>
