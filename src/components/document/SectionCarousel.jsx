@@ -793,7 +793,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
               title={(language || 'he') === 'he' ? 'הצע מחיקת סעיף' : 'Suggest Section Deletion'}
             >
               <Trash2 className={`w-3.5 h-3.5 shrink-0 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-              <span className="hidden sm:inline">{(language || 'he') === 'he' ? 'הצע מחיקה' : 'Suggest Delete'}</span>
+              <span className="hidden sm:inline">{(language || 'he') === 'he' ? 'הצעת מחיקה' : 'Suggest Delete'}</span>
             </Button>
           )}
           {isAdmin && (
