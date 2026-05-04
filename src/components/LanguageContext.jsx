@@ -420,7 +420,7 @@ const translations = {
     postComment: "פרסום תגובה",
     loadingComments: "טוען תגובות...",
     noCommentsYet: "אין תגובות עדיין.",
-    beFirstToComment: ״״,
+    beFirstToComment: "",
     reply: "להשיב",
     delete: "למחוק",
     passedConsensusThreshold: "עבר את סף הקונצנזוס!",
