@@ -73,6 +73,7 @@ export default function CreateSuggestionModal({
   const [showPointsConfirm, setShowPointsConfirm] = useState(false);
   const [pendingFormData, setPendingFormData] = useState(null);
   const [showDiff, setShowDiff] = useState(false);
+  const [originalLoadedContent, setOriginalLoadedContent] = useState(null);
   
   const currentUser = user;
   
@@ -119,12 +120,14 @@ export default function CreateSuggestionModal({
       // If viewing in same language as original, use original content
       if (sectionOriginalLang === language) {
         setFormData(prev => ({ ...prev, newContent: existingSection.content }));
+        setOriginalLoadedContent(existingSection.content);
         return;
       }
       
       // If translation exists, use it
       if (existingSection.translations?.[language]) {
         setFormData(prev => ({ ...prev, newContent: existingSection.translations[language] }));
+        setOriginalLoadedContent(existingSection.translations[language]);
         return;
       }
       
@@ -172,6 +175,7 @@ export default function CreateSuggestionModal({
         }
 
         setFormData(prev => ({ ...prev, newContent: translatedContent }));
+        setOriginalLoadedContent(translatedContent);
         
         // Save translation to cache
         const updatedTranslations = { ...existingSection.translations, [language]: translatedContent };
@@ -658,7 +662,11 @@ export default function CreateSuggestionModal({
             </Button>
             <Button 
               type="submit" 
-              disabled={createSuggestionMutation.isPending}
+              disabled={
+                createSuggestionMutation.isPending ||
+                (!isNewSection && !isDeleteSection && !isDirectEdit && !isEditingSuggestion &&
+                  originalLoadedContent !== null && formData.newContent === originalLoadedContent)
+              }
               className={isDirectEdit ? "bg-purple-600 hover:bg-purple-700" : "bg-gradient-to-r from-blue-600 to-indigo-600"}
             >
               {createSuggestionMutation.isPending 
