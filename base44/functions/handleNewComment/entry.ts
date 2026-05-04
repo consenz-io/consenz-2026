@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
         return Response.json({ message: 'Section not found' }, { status: 200 });
       }
 
-      const actionUrl = `/documentview?id=${section.documentId}&scrollTo=section-${section.id}&commentId=${comment.id}`;
+      const actionUrl = `/documentview?id=${section.documentId}&commentId=${comment.id}`;
       const nameReplacements = { name: commenterName };
 
       // Reply notification

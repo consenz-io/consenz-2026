@@ -38,11 +38,6 @@
       "default": false,
       "description": "Enable gamification system (points cost for suggestions)"
     },
-    "autoAcceptEnabled": {
-      "type": "boolean",
-      "default": true,
-      "description": "When enabled, suggestions auto-accept when vote threshold is met. When disabled, only admin can accept suggestions manually."
-    },
     "avgSuggestionConsensus": {
       "type": "number",
       "default": 0.5,

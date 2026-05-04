@@ -44,14 +44,19 @@ export function useGroupViewData(groupId) {
     staleTime: 15 * 60 * 1000,
   });
 
-  const docIds = useMemo(() => documents.map(d => d.id), [documents]);
+  const docIds = documents.map(d => d.id);
 
-  // Fetch all pending suggestions for this group's docs in a single query
+  // Fetch pending suggestions per-doc sequentially to avoid 429
   const { data: groupSuggestions = [] } = useQuery({
     queryKey: ['groupSuggestions', groupId, docIds.join(',')],
-    queryFn: () => docIds.length === 0
-      ? Promise.resolve([])
-      : base44.entities.Suggestion.filter({ documentId: { $in: docIds }, status: 'pending' }, null, 500),
+    queryFn: async () => {
+      const results = [];
+      for (const id of docIds) {
+        const sug = await base44.entities.Suggestion.filter({ documentId: id, status: 'pending' }, null, 50);
+        results.push(...sug);
+      }
+      return results;
+    },
     enabled: docIds.length > 0,
     staleTime: 10 * 60 * 1000,
   });

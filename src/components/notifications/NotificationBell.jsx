@@ -35,18 +35,16 @@ export default function NotificationBell({ user }) {
   });
 
   // Real-time subscription for notifications
-  // IMPORTANT: `notifications` must NOT be in the dependency array — it would cause the subscription
-  // to be torn down and re-created on every new notification, creating a gap where events are missed.
-  // Instead we use a ref to access current notifications inside the stable callback.
-  const notificationsRef = React.useRef(notifications);
-  React.useEffect(() => { notificationsRef.current = notifications; }, [notifications]);
-
   React.useEffect(() => {
     if (!user?.id) return;
     
+    console.log('[REALTIME NOTIFICATIONS] Setting up Notification subscription for user:', user.id);
+    
+    // Debounced to prevent rate limits
     let notifTimer;
     const unsubscribe = base44.entities.Notification.subscribe((event) => {
-      if (event.data?.userId === user.id || (event.type === 'update' && notificationsRef.current?.some(n => n.id === event.id))) {
+      console.log('[REALTIME NOTIFICATIONS] Notification event:', event.type);
+      if (event.data?.userId === user.id || (event.type === 'update' && notifications?.some(n => n.id === event.id))) {
         clearTimeout(notifTimer);
         notifTimer = setTimeout(() => {
           queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
@@ -55,10 +53,10 @@ export default function NotificationBell({ user }) {
     });
     
     return () => {
-      clearTimeout(notifTimer);
+      console.log('[REALTIME NOTIFICATIONS] Cleaning up Notification subscription');
       unsubscribe();
     };
-  }, [user?.id, queryClient]);
+  }, [user?.id, queryClient, notifications]);
 
   const markAsReadMutation = useMutation({
     mutationFn: (notificationId) => base44.entities.Notification.update(notificationId, { read: true }),
@@ -69,8 +67,7 @@ export default function NotificationBell({ user }) {
 
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      // Use ref to avoid stale closure over the notifications array
-      const unreadNotifications = (notificationsRef.current || []).filter(n => !n.read);
+      const unreadNotifications = notifications.filter(n => !n.read);
       await Promise.all(
         unreadNotifications.map(n => base44.entities.Notification.update(n.id, { read: true }))
       );

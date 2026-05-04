@@ -83,11 +83,10 @@ Deno.serve(async (req) => {
     console.log('[VOTE FUNCTION] Processing vote:', { suggestionId, vote, userId: user.id });
 
     // Fetch current state in parallel — use asServiceRole for both to avoid platform rate limits
-    const [allVotes, suggestionData] = await Promise.all([
+    const [allVotes, suggestion] = await Promise.all([
       base44.asServiceRole.entities.Vote.filter({ suggestionId }),
       base44.asServiceRole.entities.Suggestion.get(suggestionId),
     ]);
-    let suggestion = suggestionData;
     
     const existingVote = allVotes.find(v => v.userId === user.id) || null;
 
@@ -141,9 +140,6 @@ Deno.serve(async (req) => {
     const freshVotes = await base44.asServiceRole.entities.Vote.filter({ suggestionId });
     const newProVotes = freshVotes.filter(v => v.vote === 'pro').length;
     const newConVotes = freshVotes.filter(v => v.vote === 'con').length;
-    
-    // Re-fetch suggestion to ensure we have latest data for checks below
-    suggestion = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
 
     // Verify: each user can only have ONE vote — log if violation found
     const votesByUser = new Map();
@@ -159,9 +155,6 @@ Deno.serve(async (req) => {
       proVotes: newProVotes,
       conVotes: newConVotes
     });
-    
-    // Re-fetch to get updated vote counts for the check below
-    suggestion = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
 
     console.log('[VOTE FUNCTION] Vote processed:', { voteAction, newProVotes, newConVotes });
 
@@ -169,19 +162,16 @@ Deno.serve(async (req) => {
     let accepted = false;
     const delta = newProVotes - newConVotes;
     
-    // If autoAcceptEnabled is explicitly false, skip auto-acceptance entirely
-    const autoAcceptEnabled = document.autoAcceptEnabled !== false; // default true
+    // Use the document's stored threshold (same logic as checkSuggestionConsensus on the frontend)
+    // threshold is updated only when a suggestion is accepted, not dynamically during voting
+    const threshold = Math.max(2, document.threshold || 2);
 
-    // Use the document's stored threshold - ensure it's a valid number
-    const threshold = Math.max(1, Math.round(document.threshold || 2));
-    console.log('[VOTE FUNCTION] Threshold calc:', { documentThreshold: document.threshold, finalThreshold: threshold, delta });
+    const shouldAccept = delta >= threshold;
 
-    const shouldAccept = autoAcceptEnabled && delta >= threshold;
-
-    console.log('[VOTE FUNCTION] Consensus check:', { delta, threshold, shouldAccept, suggestionStatus: suggestion.status, autoAcceptEnabled, documentId: document.id });
+    console.log('[VOTE FUNCTION] Consensus check:', { delta, threshold, shouldAccept });
 
     if (shouldAccept && suggestion.status === 'pending') {
-      // Prevent concurrent acceptance processing within this Deno instance
+      // Prevent concurrent acceptance processing
       const lockKey = `accept-${suggestionId}`;
       if (processingAcceptance.has(lockKey)) {
         console.log('[VOTE FUNCTION] Already processing acceptance, skipping');
@@ -195,22 +185,24 @@ Deno.serve(async (req) => {
       }
 
       processingAcceptance.add(lockKey);
-      try {
-        // Await processAcceptance directly — do NOT fire-and-forget.
-        const acceptanceResult = await base44.asServiceRole.functions.invoke('processAcceptance', {
-          suggestionId,
-          documentId: document.id,
-          voterId: user.id,
-          wasNewVote: voteAction === 'created' && vote === 'pro'
-        });
-        accepted = acceptanceResult?.data?.accepted === true;
-        console.log('[VOTE FUNCTION] Acceptance result:', { accepted, result: acceptanceResult?.data });
-      } catch (err) {
-        console.error('[VOTE FUNCTION] Acceptance error:', err.message);
-        console.log('[VOTE FUNCTION] Error details:', err);
-      } finally {
+
+      // Fire-and-forget: run processAcceptance in background, clean up lock when done
+      base44.asServiceRole.functions.invoke('processAcceptance', {
+        suggestionId,
+        documentId: document.id,
+        voterId: user.id,
+        wasNewVote: voteAction === 'created' && vote === 'pro'
+      }).then(() => {
         processingAcceptance.delete(lockKey);
-      }
+      }).catch(err => {
+        console.error('[VOTE FUNCTION] Background acceptance error:', err);
+        processingAcceptance.delete(lockKey);
+      });
+
+      accepted = true;
+      // Safety net: release lock after 60s in case the promise never settles
+      setTimeout(() => processingAcceptance.delete(lockKey), 60000);
+      console.log('[VOTE FUNCTION] Auto-accept scheduled in background');
     }
 
     return Response.json({

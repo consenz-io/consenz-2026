@@ -17,7 +17,7 @@ import DocumentTextContent from "./DocumentTextContent";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import JoinGroupDialog from "@/components/group/JoinGroupDialog";
-
+import AcceptedAnimation from "./AcceptedAnimation";
 import SectionVoteButtons from "./SectionVoteButtons";
 
 const SectionCarousel = React.memo(function SectionCarousel({
@@ -126,52 +126,40 @@ const SectionCarousel = React.memo(function SectionCarousel({
   const animationTimersRef = React.useRef([]);
 
   // מעקב אחרי שינוי סטטוס להצגת אנימציה - עובד על כל ההצעות
-  // IMPORTANT: currentSuggestionId intentionally excluded from deps — including it would
-  // re-run the effect mid-animation, clearing animationTimersRef and losing the transition.
-  // We use a ref to read it inside the callback without triggering re-runs.
-  const currentSuggestionIdRef = React.useRef(currentSuggestionId);
-  React.useEffect(() => { currentSuggestionIdRef.current = currentSuggestionId; }, [currentSuggestionId]);
-
   React.useEffect(() => {
-    // Use allDocumentSuggestions (not allSectionSuggestions which is filtered to pending-only)
-    // so we can detect the pending→accepted transition even after the suggestion leaves the pending list
-    const relevantSuggestions = allDocumentSuggestions.filter(s =>
-      s.sectionId === section.id &&
-      (s.type === 'edit_section' || s.type === 'delete_section' || s.type === 'new_section')
-    );
+    // Clear any timers from the previous effect run before setting new ones
+    animationTimersRef.current.forEach(clearTimeout);
+    animationTimersRef.current = [];
 
-    if (relevantSuggestions.length === 0 || !document?.id) {
-      // Still update prevStatus so we have a baseline for future comparisons
-      return;
-    }
-
-    relevantSuggestions.forEach(sug => {
+    if (!allSectionSuggestions || allSectionSuggestions.length === 0 || !document?.id) return;
+    
+    allSectionSuggestions.forEach(sug => {
       const prevStatus = prevSuggestionsStatusRef.current[sug.id];
-
+      
       // זיהוי מעבר מ-pending ל-accepted
       if (prevStatus === 'pending' && sug.status === 'accepted' && !hasAnimatedRef.current.has(sug.id)) {
         hasAnimatedRef.current.add(sug.id);
         const docId = document.id;
         const sectionId = section.id;
         const sugId = sug.id;
-
+        
         // אם המשתמש לא צופה בהצעה הזו - מעביר אותו אליה
-        if (currentSuggestionIdRef.current !== sugId) {
+        if (currentSuggestionId !== sugId) {
           setCurrentSuggestionId(sugId);
         }
-
+        
         // שלב 0: הכרזה (1 שניה)
         setAnimationPhases(prev => ({ ...prev, [sugId]: 'announcing' }));
-
+        
         const t1 = setTimeout(() => {
           setAnimationPhases(prev => ({ ...prev, [sugId]: 'celebrating' }));
         }, 1000);
-
+        
         // שלב 1: חגיגה (2.5 שניות)
         const t2 = setTimeout(() => {
           setAnimationPhases(prev => ({ ...prev, [sugId]: 'transitioning' }));
         }, 3500);
-
+        
         // שלב 2: חזרה לסעיף עם תוכן מעודכן
         const t3 = setTimeout(() => {
           setAnimationPhases(prev => ({ ...prev, [sugId]: 'completed' }));
@@ -179,7 +167,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
           setCurrentSuggestionId('current');
           queryClient.invalidateQueries({ queryKey: ['sections', docId] });
         }, 4500);
-
+        
         // שלב 3: הסרת badge "עודכן עכשיו" (אחרי 14.5 שניות מהתחלה)
         const t4 = setTimeout(() => {
           setRecentlyUpdatedSections(prev => {
@@ -191,7 +179,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
 
         animationTimersRef.current.push(t1, t2, t3, t4);
       }
-
+      
       prevSuggestionsStatusRef.current[sug.id] = sug.status;
     });
 
@@ -200,8 +188,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
       animationTimersRef.current.forEach(clearTimeout);
       animationTimersRef.current = [];
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allDocumentSuggestions, document?.id, section.id, queryClient]);
+  }, [allSectionSuggestions, currentSuggestionId, document.id, section.id, queryClient]);
 
   // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות + הצעות באנימציה
   const allViews = React.useMemo(() => {
@@ -209,21 +196,23 @@ const SectionCarousel = React.memo(function SectionCarousel({
       { type: 'current', data: section, id: 'current' },
       ...sortedSuggestions.map(s => ({ type: 'suggestion', data: s, id: s.id }))
     ];
-
-    // Keep suggestions that are actively animating (accepted but not yet removed from view).
-    // Use allDocumentSuggestions (not allSectionSuggestions) so we still have the accepted
-    // suggestion object even after it leaves the pending-only filtered list.
-    const viewIds = new Set(views.map(v => v.id));
-    allDocumentSuggestions.forEach(sug => {
-      if (viewIds.has(sug.id)) return;
-      const animationPhase = animationPhases[sug.id];
-      if (animationPhase && animationPhase !== 'hidden' && animationPhase !== 'completed') {
-        views.push({ type: 'suggestion', data: sug, id: sug.id });
-      }
-    });
-
+    
+    // אם יש הצעה באנימציה שכבר לא ב-pending - נוסיף אותה לתצוגה
+    if (allSectionSuggestions && allSectionSuggestions.length > 0) {
+      allSectionSuggestions.forEach(sug => {
+        const animationPhase = animationPhases[sug.id];
+        if (animationPhase && animationPhase !== 'hidden' && !views.find(v => v.id === sug.id)) {
+          views.push({
+            type: 'suggestion',
+            data: sug,
+            id: sug.id
+          });
+        }
+      });
+    }
+    
     return views;
-  }, [section, sortedSuggestions, allDocumentSuggestions, animationPhases]);
+  }, [section, sortedSuggestions, allSectionSuggestions, animationPhases]);
   
   // מחשב את ה-index הנוכחי לפי ה-ID
   const currentIndex = React.useMemo(() => {
@@ -567,16 +556,14 @@ const SectionCarousel = React.memo(function SectionCarousel({
           // תצוגת הצעה - diff או אנימציה
           <>
             {(() => {
-               // כאשר הצעה התקבלה, פשוט הצג את התוכן המעודכן בלי אנימציה
-               if (animationPhases[currentView.data.id] === 'completed' || currentView.data.status === 'accepted') {
-                 return (
-                   <div className="prose prose-sm max-w-none">
-                     <DocumentTextContent content={currentView.data.newContent || currentView.data.content} className="text-slate-800" />
-                   </div>
-                 );
-               }
+              const animationPhase = animationPhases[currentView.data.id] || 'none';
+              
+              // שלבי אנימציה (announcing / celebrating / transitioning)
+              if (['announcing', 'celebrating', 'transitioning'].includes(animationPhase)) {
+                return <AcceptedAnimation phase={animationPhase} newContent={currentView.data.newContent} />;
+              }
 
-               // תצוגה רגילה - diff או הצעה
+              // תצוגה רגילה - diff או הצעה
               return (
                 <div 
                   className="cursor-pointer hover:opacity-90 transition-opacity"

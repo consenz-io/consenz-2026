@@ -112,10 +112,31 @@ ${content}`,
 
   // Sync with global translation state - MUST be called before any early returns
   useEffect(() => {
-    if (globalShowTranslated) {
-      setLocalShowTranslated(true);
+    if (entity) {
+      const translations = entity?.translations || {};
+      // Prefer createdByLanguage (set on Suggestions written in a different language),
+      // then detect from actual content, then fall back to originalLanguage.
+      const detectedLanguage = entity?.createdByLanguage || detectLanguage(content || '') || entity?.originalLanguage;
+      const needsTranslation = detectedLanguage && language && detectedLanguage !== language;
+      
+      const langTranslation = translations[language];
+      let hasTranslation = false;
+      
+      if (langTranslation) {
+        if (typeof langTranslation === 'string' && !fieldName) {
+          hasTranslation = true;
+        } else if (typeof langTranslation === 'object' && fieldName && typeof langTranslation[fieldName] === 'string') {
+          hasTranslation = true;
+        } else if (typeof langTranslation === 'object' && !fieldName) {
+          hasTranslation = typeof langTranslation.content === 'string' || typeof langTranslation.newContent === 'string';
+        }
+      }
+      
+      if (hasTranslation) {
+        setLocalShowTranslated(globalShowTranslated || (needsTranslation && hasTranslation));
+      }
     }
-  }, [globalShowTranslated]);
+  }, [globalShowTranslated, entity, language, fieldName, content]);
   
   // Now safe to calculate derived values after all hooks
   // Prefer createdByLanguage (actual language of suggestion content),

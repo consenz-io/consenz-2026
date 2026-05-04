@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.27';
 
 Deno.serve(async (req) => {
   try {
@@ -10,7 +10,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'documentId is required' }, { status: 400 });
     }
 
-    // Use asServiceRole to bypass all RLS checks — no user auth needed
+    // Use asServiceRole to bypass all RLS checks
     const versions = await base44.asServiceRole.entities.DocumentVersion.filter(
       { documentId }
     );

@@ -36,7 +36,7 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
   React.useEffect(() => {
     if (!documentId) return;
 
-    const timers = { topics: null, sections: null, suggestions: null, aggregated: null };
+    const timers = { topics: null, sections: null, suggestions: null };
     const debouncedInvalidate = (queryKey) => {
       const key = queryKey[0];
       clearTimeout(timers[key]);
@@ -63,11 +63,7 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
       if (event.data?.documentId === documentId ||
           (event.type === 'update' && event.id && suggestionsRef.current?.some(s => s.id === event.id))) {
         debouncedInvalidate(['suggestions', documentId]);
-        // Delay aggregatedData invalidation until after suggestions cache is refreshed,
-        // otherwise aggregatedData runs with stale suggestion IDs and overwrites publicProfiles/comments
-        timers['aggregated'] = setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
-        }, 800);
+        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
       }
     });
 

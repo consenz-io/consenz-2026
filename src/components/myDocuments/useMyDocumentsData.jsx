@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 
@@ -27,13 +27,10 @@ export function useMyDocumentsData() {
     enabled: !!user?.email,
   });
 
-  // Note: 'myVotes' and 'allVotes' below both fetch the same data (user's votes).
-  // We use one query and share the result to avoid a duplicate network call.
   const { data: votes = [] } = useQuery({
-    queryKey: ['allVotes', user?.id],
+    queryKey: ['myVotes', user?.id],
     queryFn: () => base44.entities.Vote.filter({ userId: user.id }),
     enabled: !!user?.id,
-    staleTime: 2 * 60 * 1000,
   });
 
   const myDocumentIds = useMemo(() => {
@@ -51,7 +48,12 @@ export function useMyDocumentsData() {
     staleTime: 2 * 60 * 1000,
   });
 
-  // votes and allVotes are the same data — use the single query above
+  const { data: allVotes = [] } = useQuery({
+    queryKey: ['allVotes', user?.id],
+    queryFn: () => base44.entities.Vote.filter({ userId: user.id }),
+    enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000,
+  });
 
   const { data: allUsers = [] } = useQuery({
     queryKey: ['publicProfiles'],
@@ -69,59 +71,43 @@ export function useMyDocumentsData() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Compute stable IDs arrays for the comments query key so it re-runs when dependencies resolve
-  const allSuggestionIds = useMemo(() => allSuggestions.map(s => s.id), [allSuggestions]);
-  const allSectionIds = useMemo(() => allSections.map(s => s.id), [allSections]);
-
   const { data: allComments = [] } = useQuery({
-    queryKey: ['allComments', myDocumentIds, allSuggestionIds, allSectionIds],
+    queryKey: ['allComments', myDocumentIds],
     queryFn: async () => {
       if (myDocumentIds.length === 0) return [];
-      if (allSuggestionIds.length === 0 && allSectionIds.length === 0) return [];
+      const suggestionIds = allSuggestions.map(s => s.id);
+      const sectionIds = allSections.map(s => s.id);
+      if (suggestionIds.length === 0 && sectionIds.length === 0) return [];
       return base44.entities.Comment.filter({
-        rootEntityId: { $in: [...allSuggestionIds, ...allSectionIds, ...myDocumentIds] }
+        rootEntityId: { $in: [...suggestionIds, ...sectionIds, ...myDocumentIds] }
       });
     },
-    enabled: !!user?.id && myDocumentIds.length > 0 && (allSuggestionIds.length > 0 || allSectionIds.length > 0),
+    enabled: !!user?.id && myDocumentIds.length > 0,
     staleTime: 2 * 60 * 1000,
   });
 
-  // O(1) set of suggestion IDs the user has already voted on
-  const votedSuggestionIds = useMemo(() => new Set(votes.map(v => v.suggestionId)), [votes]);
-
   // Derive the full set of my documents (including voted ones)
   const myDocuments = useMemo(() => {
-    const votedDocIds = allSuggestions
-      .filter(s => votedSuggestionIds.has(s.id))
-      .map(s => s.documentId);
+    const votedSuggestions = allSuggestions.filter(s => allVotes.some(v => v.suggestionId === s.id));
+    const votedDocIds = votedSuggestions.map(s => s.documentId);
     const allMyIds = new Set([...myDocumentIds, ...votedDocIds]);
     return allDocuments.filter(doc => allMyIds.has(doc.id));
-  }, [allDocuments, myDocumentIds, allSuggestions, votedSuggestionIds]);
+  }, [allDocuments, myDocumentIds, allSuggestions, allVotes]);
 
-  // Pre-group pending suggestions by documentId for O(1) unvoted count lookup
-  const pendingSuggestionsByDocId = useMemo(() => {
-    const map = new Map();
-    for (const s of allSuggestions) {
-      if (s.status === 'pending' && s.type !== 'edit_suggestion') {
-        if (!map.has(s.documentId)) map.set(s.documentId, []);
-        map.get(s.documentId).push(s);
-      }
-    }
-    return map;
-  }, [allSuggestions]);
-
-  const getUnvotedCount = useMemo(() => (docId) => {
+  const getUnvotedCount = (docId) => {
     if (!user?.id) return 0;
-    const pending = pendingSuggestionsByDocId.get(docId) || [];
-    return pending.filter(s => !votedSuggestionIds.has(s.id)).length;
-  }, [pendingSuggestionsByDocId, votedSuggestionIds, user?.id]);
+    const pending = allSuggestions.filter(s =>
+      s.documentId === docId && s.status === 'pending' && s.type !== 'edit_suggestion'
+    );
+    return pending.filter(s => !votes.some(v => v.suggestionId === s.id)).length;
+  };
 
   return {
     user,
     myDocuments,
     suggestions,
     allSuggestions,
-    allVotes: votes,
+    allVotes,
     allUsers,
     allComments,
     allSections,

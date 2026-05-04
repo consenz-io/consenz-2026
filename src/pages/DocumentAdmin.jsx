@@ -17,7 +17,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
 
 export default function DocumentAdmin() {
-  const { t, isRTL, language } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
   const navigate = useNavigate();
@@ -74,7 +74,6 @@ export default function DocumentAdmin() {
     privacy: document?.privacy || "public_view_open_participation",
     votingButtonsEnabled: document?.votingButtonsEnabled ?? true,
     gamificationEnabled: document?.gamificationEnabled ?? false,
-    autoAcceptEnabled: document?.autoAcceptEnabled ?? true,
     defaultSuggestionLifetimeHours: document?.defaultSuggestionLifetimeHours || 72,
   });
 
@@ -85,7 +84,6 @@ export default function DocumentAdmin() {
         privacy: document.privacy,
         votingButtonsEnabled: document.votingButtonsEnabled,
         gamificationEnabled: document.gamificationEnabled ?? false,
-        autoAcceptEnabled: document.autoAcceptEnabled ?? true,
         defaultSuggestionLifetimeHours: document.defaultSuggestionLifetimeHours,
       });
     }
@@ -109,13 +107,13 @@ export default function DocumentAdmin() {
       queryClient.invalidateQueries({ queryKey: ['document', documentId] });
       queryClient.invalidateQueries({ queryKey: ['suggestions', documentId] });
       const msg = result.resetCount > 0
-        ? t('daTimersReset', { count: result.resetCount })
-        : t('daSettingsSaved');
+        ? `ההגדרות נשמרו. הטיימרים של ${result.resetCount} הצעות ממתינות אופסו.`
+        : "Document settings updated successfully!";
       setSuccess(msg);
       setTimeout(() => setSuccess(null), 4000);
     },
     onError: (err) => {
-      setError(err.message || t('daSettingsSaved'));
+      setError(err.message || "Failed to update document");
       setTimeout(() => setError(null), 5000);
     },
   });
@@ -169,11 +167,11 @@ export default function DocumentAdmin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentAdmins', documentId] });
       setNewAdminEmail("");
-      setSuccess(t('daAdminAdded'));
+      setSuccess("Admin added successfully!");
       setTimeout(() => setSuccess(null), 3000);
     },
     onError: (err) => {
-      setError(err.message || t('daAdminAdded'));
+      setError(err.message || "Failed to add admin");
       setTimeout(() => setError(null), 5000);
     },
   });
@@ -190,11 +188,11 @@ export default function DocumentAdmin() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documentAdmins', documentId] });
-      setSuccess(t('daAdminRemoved'));
+      setSuccess("Admin removed successfully!");
       setTimeout(() => setSuccess(null), 3000);
     },
     onError: (err) => {
-      setError(err.message || t('daAdminRemoved'));
+      setError(err.message || "Failed to remove admin");
       setTimeout(() => setError(null), 5000);
     },
   });
@@ -249,15 +247,15 @@ export default function DocumentAdmin() {
       setGeneratedInviteLink(data);
       setInviteEmail("");
       if (data.isExisting) {
-        setSuccess(t('daExistingInviteFound', { email: data.email }));
+        setSuccess(`נמצאה הזמנה קיימת עבור ${data.email}`);
       } else {
-        setSuccess(t('daInviteCreated', { email: data.email }));
+        setSuccess(`הזמנה נוצרה עבור ${data.email}!`);
       }
       setTimeout(() => setSuccess(null), 5000);
     },
     onError: (err) => {
       console.error('❌ Invitation failed:', err);
-      setError(err.message || t('daCreating'));
+      setError(err.message || "יצירת ההזמנה נכשלה. אנא נסה שוב.");
       setTimeout(() => setError(null), 5000);
     },
   });
@@ -267,14 +265,14 @@ export default function DocumentAdmin() {
     
     if (!inviteEmail || !inviteEmail.trim()) {
       console.log('❌ Email field is empty');
-      setError(t('daEnterEmail'));
+      setError("אנא הזן כתובת מייל");
       setTimeout(() => setError(null), 3000);
       return;
     }
 
     if (!document || !user) {
       console.log('❌ Missing document or user data');
-      setError(t('loading'));
+      setError("טוען נתונים, אנא נסה שוב בעוד רגע");
       setTimeout(() => setError(null), 3000);
       return;
     }
@@ -287,21 +285,30 @@ export default function DocumentAdmin() {
   const copyInviteLink = () => {
     if (generatedInviteLink?.signupUrl) {
       navigator.clipboard.writeText(generatedInviteLink.signupUrl);
-      setSuccess(t('daLinkCopied'));
+      setSuccess("הקישור הועתק ללוח!");
       setTimeout(() => setSuccess(null), 2000);
     }
   };
 
   const copyInviteMessage = () => {
     if (generatedInviteLink) {
-      const inviteMessages = {
-        he: `שלום,\n\nהוזמנת על ידי ${user.full_name} להצטרף למסמך "${document.title}" בפלטפורמת Consenz.\n\nכדי להצטרף:\n1. לחץ על הקישור הבא להרשמה\n2. צור חשבון חדש או התחבר עם חשבון קיים\n3. לאחר ההרשמה תוכל לגשת למסמך ולהשתתף בדיונים\n\nקישור ההזמנה:\n${generatedInviteLink.signupUrl}\n\nבברכה,\nצוות Consenz`,
-        ar: `مرحباً،\n\nلقد دعاك ${user.full_name} للانضمام إلى مستند "${document.title}" على منصة Consenz.\n\nللانضمام:\n1. انقر على الرابط التالي للتسجيل\n2. أنشئ حساباً جديداً أو سجل الدخول بحساب موجود\n3. بعد التسجيل يمكنك الوصول إلى المستند والمشاركة في النقاشات\n\nرابط الدعوة:\n${generatedInviteLink.signupUrl}\n\nمع التحيات،\nفريق Consenz`,
-        en: `Hello,\n\nYou have been invited by ${user.full_name} to join the document "${document.title}" on the Consenz platform.\n\nTo join:\n1. Click the following link to register\n2. Create a new account or sign in with an existing one\n3. After registration you can access the document and participate in discussions\n\nInvitation link:\n${generatedInviteLink.signupUrl}\n\nBest regards,\nConsenz Team`,
-      };
-      const message = inviteMessages[language] || inviteMessages.en;
+      const message = `שלום,
+
+הוזמנת על ידי ${user.full_name} להצטרף למסמך "${document.title}" בפלטפורמת Consenz.
+
+כדי להצטרף:
+1. לחץ על הקישור הבא להרשמה
+2. צור חשבון חדש או התחבר עם חשבון קיים
+3. לאחר ההרשמה תוכל לגשת למסמך ולהשתתף בדיונים
+
+קישור ההזמנה:
+${generatedInviteLink.signupUrl}
+
+בברכה,
+צוות Consenz`;
+      
       navigator.clipboard.writeText(message);
-      setSuccess(t('daMessageCopied'));
+      setSuccess("הטקסט המלא הועתק ללוח!");
       setTimeout(() => setSuccess(null), 2000);
     }
   };
@@ -313,14 +320,14 @@ export default function DocumentAdmin() {
   };
 
   const handleDelete = () => {
-    if (window.confirm(t('daDeleteConfirm'))) {
+    if (window.confirm("Are you sure you want to delete this document? This action cannot be undone.")) {
       deleteDocMutation.mutate();
     }
   };
 
   const handleAddAdmin = () => {
     if (!newAdminEmail || !newAdminEmail.trim()) {
-      setError(t('daEnterUserEmail'));
+      setError("Please enter an email address");
       return;
     }
     addAdminMutation.mutate(newAdminEmail.trim());
@@ -332,11 +339,11 @@ export default function DocumentAdmin() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['allUsers'] });
-      setSuccess(t('daUserUpdated'));
+      setSuccess("User updated successfully!");
       setTimeout(() => setSuccess(null), 3000);
     },
     onError: (err) => {
-      setError(err.message || t('daUserUpdated'));
+      setError(err.message || "Failed to update user");
       setTimeout(() => setError(null), 5000);
     },
   });
@@ -365,9 +372,9 @@ export default function DocumentAdmin() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-4xl mx-auto text-center py-20">
-          <h1 className="text-2xl font-bold text-slate-900">{t('daDocumentNotFound')}</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Document not found</h1>
           <Button className="mt-4" onClick={() => navigate(createPageUrl("Home"))}>
-            {t('goHome')}
+            Go Home
           </Button>
         </div>
       </div>
@@ -378,10 +385,10 @@ export default function DocumentAdmin() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-4xl mx-auto text-center py-20">
-          <h1 className="text-2xl font-bold text-slate-900">{t('daAccessDenied')}</h1>
-          <p className="text-slate-600 mt-2">{t('daAccessDeniedDesc')}</p>
+          <h1 className="text-2xl font-bold text-slate-900">Access Denied</h1>
+          <p className="text-slate-600 mt-2">You don't have permission to access this page</p>
           <Button className="mt-4" onClick={() => navigate(`${createPageUrl("DocumentView")}?id=${documentId}`)}>
-            {t('daBackToDocument')}
+            Back to Document
           </Button>
         </div>
       </div>
@@ -392,7 +399,7 @@ export default function DocumentAdmin() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         <PageHeader 
-          title={t('daDocumentSettings')}
+          title="Document Settings"
           backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
         />
         
@@ -417,12 +424,12 @@ export default function DocumentAdmin() {
         <form onSubmit={handleSubmit}>
           <Card className="bg-white">
             <CardHeader>
-              <CardTitle>{t('daGeneralSettings')}</CardTitle>
-              <CardDescription>{t('daUpdateConfig')}</CardDescription>
+              <CardTitle>General Settings</CardTitle>
+              <CardDescription>Update document configuration</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="title">{t('daDocumentTitle')}</Label>
+                <Label htmlFor="title">Document Title</Label>
                 <Input
                   id="title"
                   value={formData.title}
@@ -431,7 +438,7 @@ export default function DocumentAdmin() {
               </div>
 
               <div>
-                <Label htmlFor="privacy">{t('daPrivacySetting')}</Label>
+                <Label htmlFor="privacy">Privacy Setting</Label>
                 <Select
                   value={formData.privacy}
                   onValueChange={(value) => setFormData({ ...formData, privacy: value })}
@@ -441,20 +448,20 @@ export default function DocumentAdmin() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="public_view_open_participation">
-                      🌐 {t('publicViewOpenParticipation')}
+                      🌐 Public - Open Participation
                     </SelectItem>
                     <SelectItem value="public_view_closed_participation">
-                      👀 {t('publicViewClosedParticipation')}
+                      👀 Public View - Closed Participation
                     </SelectItem>
                     <SelectItem value="private_invite_only">
-                      🔒 {t('privateInviteOnly')}
+                      🔒 Private - Invite Only
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label htmlFor="lifetime">{t('daDefaultVotingPeriod')}</Label>
+                <Label htmlFor="lifetime">Default Voting Period (hours)</Label>
                 <Input
                   id="lifetime"
                   type="number"
@@ -466,8 +473,8 @@ export default function DocumentAdmin() {
 
               <div className={`flex items-center justify-between p-4 bg-slate-50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className={`flex-1 min-w-0 ${isRTL ? 'text-right ml-4' : 'mr-4'}`}>
-                  <Label htmlFor="voting" className="text-base">{t('daEnableVoting')}</Label>
-                  <p className="text-sm text-slate-500">{t('daEnableVotingDesc')}</p>
+                  <Label htmlFor="voting" className="text-base">Enable Voting Buttons</Label>
+                  <p className="text-sm text-slate-500">Allow users to vote on suggestions</p>
                 </div>
                 <Switch
                   id="voting"
@@ -478,25 +485,13 @@ export default function DocumentAdmin() {
 
               <div className={`flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <div className={`flex-1 min-w-0 ${isRTL ? 'text-right ml-4' : 'mr-4'}`}>
-                  <Label htmlFor="gamification" className="text-base">{t('daEnableGamification')}</Label>
-                  <p className="text-sm text-slate-500">{t('daEnableGamificationDesc')}</p>
+                  <Label htmlFor="gamification" className="text-base">Enable Gamification System</Label>
+                  <p className="text-sm text-slate-500">Require points for creating suggestions and award points for contributions</p>
                 </div>
                 <Switch
                   id="gamification"
                   checked={formData.gamificationEnabled}
                   onCheckedChange={(checked) => setFormData({ ...formData, gamificationEnabled: checked })}
-                />
-              </div>
-
-              <div className={`flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <div className={`flex-1 min-w-0 ${isRTL ? 'text-right ml-4' : 'mr-4'}`}>
-                  <Label htmlFor="autoAccept" className="text-base">{t('daEnableAutoAccept')}</Label>
-                  <p className="text-sm text-slate-500">{t('daEnableAutoAcceptDesc')}</p>
-                </div>
-                <Switch
-                  id="autoAccept"
-                  checked={formData.autoAcceptEnabled}
-                  onCheckedChange={(checked) => setFormData({ ...formData, autoAcceptEnabled: checked })}
                 />
               </div>
 
@@ -506,7 +501,7 @@ export default function DocumentAdmin() {
                 className="bg-gradient-to-r from-blue-600 to-indigo-600"
               >
                 <Save className="w-4 h-4 mr-2" />
-                {t('daSaveSettings')}
+                Save Settings
               </Button>
             </CardContent>
           </Card>
@@ -514,14 +509,14 @@ export default function DocumentAdmin() {
 
         <Card className="bg-white">
           <CardHeader>
-            <CardTitle>{t('daInviteParticipants')}</CardTitle>
-            <CardDescription>{t('daInviteParticipantsDesc')}</CardDescription>
+            <CardTitle>הזמנת משתתפים</CardTitle>
+            <CardDescription>שלח הזמנות למשתמשים חדשים להצטרף למסמך</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex gap-2">
               <Input
                 type="email"
-                placeholder={t('daEnterEmail')}
+                placeholder="הזן כתובת מייל"
                 value={inviteEmail}
                 onChange={(e) => {
                   setInviteEmail(e.target.value);
@@ -544,7 +539,7 @@ export default function DocumentAdmin() {
                 className="bg-green-600 hover:bg-green-700"
               >
                 <Link2 className="w-4 h-4 mr-2" />
-                {createInviteMutation.isPending ? t('daCreating') : t('daCreateInviteLink')}
+                {createInviteMutation.isPending ? "יוצר..." : "צור קישור הזמנה"}
               </Button>
             </div>
             
@@ -552,7 +547,7 @@ export default function DocumentAdmin() {
               <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3" dir="rtl">
                 <div>
                   <Label className="text-sm font-semibold text-blue-900">
-                    {t('daInviteLinkFor')} {generatedInviteLink.email}
+                    קישור הזמנה עבור: {generatedInviteLink.email}
                   </Label>
                   <div className="flex gap-2 mt-2">
                     <Input
@@ -567,7 +562,7 @@ export default function DocumentAdmin() {
                       size="sm"
                     >
                       <Copy className="w-4 h-4 ml-2" />
-                      {t('daCopyLink')}
+                      העתק קישור
                     </Button>
                   </div>
                 </div>
@@ -580,12 +575,12 @@ export default function DocumentAdmin() {
                     className="w-full"
                   >
                     <Mail className="w-4 h-4 ml-2" />
-                    {t('daCopyFullMessage')}
+                    העתק טקסט מלא לשליחה במייל
                   </Button>
                 </div>
                 
                 <p className="text-xs text-blue-700">
-                  {t('daInviteLinkHint')}
+                  שלח את הקישור או את הטקסט המלא למוזמן באמצעות המייל או האפליקציה המועדפת עליך
                 </p>
               </div>
             )}
