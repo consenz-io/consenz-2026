@@ -25,7 +25,7 @@ export default function GroupsSection({ groups, groupsLoading, groupMembers, doc
   const noGroupsTitle = { he: 'אין קבוצות עדיין', ar: 'لا توجد مجموعات بعد', en: 'No groups yet' };
   const noGroupsSub   = { he: 'היו הראשונים ליצור קבוצה', ar: 'كن أول من ينشئ مجموعة', en: 'Be the first to create a group' };
   const createLabel   = { he: 'צור קבוצה', ar: 'إنشاء مجموعة', en: 'Create Group' };
-  const createNewLabel = { he: 'צור קבוצה חדשה', ar: 'إنشاء مجموعة جديدة', en: 'Create New Group' };
+  const createNewLabel = { he: 'יצירת קבוצה חדשה', ar: 'إنشاء مجموعة جديدة', en: 'Create New Group' };
 
   return (
     <section id="recent-documents-section" className="max-w-7xl mx-auto px-6 py-16" aria-labelledby="groups-heading">
