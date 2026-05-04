@@ -319,7 +319,7 @@ export default function CreateSuggestionModal({
     onSuccess: async (result) => {
       if (result?.isDirectEdit) {
         queryClient.invalidateQueries({ queryKey: ['sections'] });
-        queryClient.invalidateQueries({ queryKey: ['allVersions'] });
+        queryClient.invalidateQueries({ queryKey: ['versions'] });
         onClose();
         return;
       }

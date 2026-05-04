@@ -68,7 +68,7 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
     },
     initialData: [],
     enabled: !!sectionId && !!section?.documentId && isOpen,
-    staleTime: 1000 * 60 * 5 // 5 minutes
+    staleTime: 0
   });
 
   const { data: user } = useQuery({
