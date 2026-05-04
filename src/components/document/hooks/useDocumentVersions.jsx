@@ -48,6 +48,12 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
     // Sort versions newest first by created_date (reflects actual acceptance time)
     const sortedVersions = [...allVersions].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
     
+    // Sections that have NO version records at all (e.g. accepted by admin without creating a
+    // DocumentVersion record) should be treated as "always existing" — they will appear in all
+    // historical snapshots and never get rewound.
+    const sectionIdsWithVersionRecords = new Set(allVersions.map(v => v.sectionId).filter(Boolean));
+    const sectionsWithNoVersionRecord = sections.filter(s => !sectionIdsWithVersionRecords.has(s.id));
+
     // Track section states as we go backwards
     let currentSectionContents = { ...currentSnapshot.sectionContents };
     let currentExistingSections = new Set(currentSnapshot.existingSections);
@@ -213,6 +219,14 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
           snapshotAfterChange.existingSections.add(afterVersion.sectionId);
         }
 
+        // Inject sections that have no version records — they always exist in every snapshot
+        sectionsWithNoVersionRecord.forEach(s => {
+          if (!snapshotAfterChange.sectionContents[s.id]) {
+            snapshotAfterChange.sectionContents[s.id] = s.content;
+          }
+          snapshotAfterChange.existingSections.add(s.id);
+        });
+
         snapshots.push(snapshotAfterChange);
 
         // Update state for older version (walk backwards)
@@ -271,6 +285,14 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
           snapshotAfterChange.existingSections.add(afterVersion.sectionId);
         }
 
+        // Inject sections that have no version records — they always exist in every snapshot
+        sectionsWithNoVersionRecord.forEach(s => {
+          if (!snapshotAfterChange.sectionContents[s.id]) {
+            snapshotAfterChange.sectionContents[s.id] = s.content;
+          }
+          snapshotAfterChange.existingSections.add(s.id);
+        });
+
         snapshots.push(snapshotAfterChange);
 
         // Update state for older view
@@ -300,12 +322,19 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
 
     // Add original version
     if (Object.keys(currentSectionContents).length > 0) {
+      // Include sections with no version records in original version too
+      const originalSectionContents = { ...currentSectionContents };
+      const originalExistingSections = new Set(currentExistingSections);
+      sectionsWithNoVersionRecord.forEach(s => {
+        if (!originalSectionContents[s.id]) originalSectionContents[s.id] = s.content;
+        originalExistingSections.add(s.id);
+      });
       snapshots.push({
         version: 0,
         label: 'גרסה מקורית',
         timestamp: document.created_date || new Date(0).toISOString(),
-        sectionContents: { ...currentSectionContents },
-        existingSections: new Set(currentExistingSections),
+        sectionContents: originalSectionContents,
+        existingSections: originalExistingSections,
         allSectionIds,
         isOriginal: true
       });

@@ -279,76 +279,27 @@ export default function SuggestionSidebar({
     mutationFn: async (status) => {
       if (!isAdmin) throw new Error(t('adminAccessRequired'));
       
-      if (status === 'accepted' && suggestion.type === 'edit_section' && section) {
-        const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
-        const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
-        
-        await base44.entities.DocumentVersion.create({
+      if (status === 'accepted') {
+        // Delegate to processAcceptance backend which handles all types correctly,
+        // creates version records, updates sections, and awards points/notifications.
+        const response = await base44.functions.invoke('processAcceptance', {
+          suggestionId: suggestion.id,
           documentId: suggestion.documentId,
-          sectionId: section.id,
-          content: section.content,
-          changeDescription: `לפני: ${suggestion.title}`,
-          version: nextVersion,
-          changeType: 'suggestion_accepted',
-          suggestionId: suggestion.id
+          voterId: user.id,
+          wasNewVote: false,
+          forceAccept: true
         });
-        
-        await base44.entities.Section.update(section.id, {
-          content: suggestion.newContent,
-          lastEditedBy: user.id
-        });
-        
-        await base44.entities.DocumentVersion.create({
-          documentId: suggestion.documentId,
-          sectionId: section.id,
-          content: suggestion.newContent,
-          changeDescription: suggestion.title,
-          version: nextVersion + 1,
-          changeType: 'suggestion_accepted',
-          suggestionId: suggestion.id
-        });
-      } else if (status === 'accepted' && suggestion.type === 'new_section') {
-        const sections = await base44.entities.Section.filter({ 
-          documentId: suggestion.documentId,
-          topicId: suggestion.topicId 
-        }, 'order');
-        
-        let newOrder;
-        if (suggestion.insertPosition !== undefined && suggestion.insertPosition !== null) {
-          const sectionsToUpdate = sections.filter(s => s.order >= suggestion.insertPosition);
-          for (const sec of sectionsToUpdate) {
-            await base44.entities.Section.update(sec.id, { order: sec.order + 1 });
-          }
-          newOrder = suggestion.insertPosition;
-        } else {
-          const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order)) : -1;
-          newOrder = maxOrder + 1;
+        if (!response?.data?.success) {
+          throw new Error(response?.data?.error || 'שגיאה בעיבוד ההצעה');
         }
-        
-        const newSection = await base44.entities.Section.create({
-          documentId: suggestion.documentId,
-          topicId: suggestion.topicId,
-          content: suggestion.newContent,
-          order: newOrder,
-          lastEditedBy: user.id
-        });
-        
-        await base44.entities.DocumentVersion.create({
-          documentId: suggestion.documentId,
-          sectionId: newSection.id,
-          content: suggestion.newContent,
-          changeDescription: suggestion.title,
-          version: 1,
-          changeType: 'section_created',
-          suggestionId: suggestion.id
+        // Mark as approved by admin (processAcceptance already sets status=accepted)
+        await base44.entities.Suggestion.update(suggestionId, { approvedByAdmin: true });
+      } else {
+        await base44.entities.Suggestion.update(suggestionId, { 
+          status,
+          ...(status === 'rejected' ? { rejectedByAdmin: true } : {})
         });
       }
-
-      await base44.entities.Suggestion.update(suggestionId, { 
-        status,
-        ...(status === 'accepted' ? { approvedByAdmin: true } : {}),
-        ...(status === 'rejected' ? { rejectedByAdmin: true } : {})
-      });
 
       // אם גיימיפיקציה מופעלת ואדמין דחה — החזר נקודות ליוצר
       let refundAmount = 0;
@@ -384,17 +335,15 @@ export default function SuggestionSidebar({
         }
       }
       
-      // שליחת התראה על שינוי סטטוס - רק אם ההצעה עדיין pending (לא פגה תוקף כבר)
-      if (suggestion.status === 'pending') {
-        console.log('[UPDATE STATUS] Sending status change notifications...');
+      // שליחת התראה רק על דחייה — קבלה כבר מטופלת ע"י processAcceptance
+      if (status === 'rejected' && suggestion.status === 'pending') {
+        console.log('[UPDATE STATUS] Sending rejection notifications...');
         await notifySuggestionStatusChange({ 
           suggestion, 
           newStatus: status,
-          rejectedByAdmin: status === 'rejected' ? true : undefined,
-          refundAmount: status === 'rejected' ? refundAmount : 0
+          rejectedByAdmin: true,
+          refundAmount
         });
-      } else {
-        console.log('[UPDATE STATUS] Suggestion already in status:', suggestion.status, '- skipping notification');
       }
     },
     onSuccess: () => {
