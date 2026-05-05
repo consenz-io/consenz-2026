@@ -106,9 +106,9 @@ export default function DocumentSummaryDialog({ isOpen, onClose, document, sugge
     }).join('\n');
 
     const langInstructions = {
-      he: `ענה בעברית בלבד. שפה חיה, ישירה, נרטיבית. אל תשתמש בביטויים כלליים כמו "מגוון רחב" או "פעילות ענפה". התייחס לאנשים בשמותיהם. השתמש בשפה נייטרלית מגדרית (כלומר: "כתב/ה", "הציע/ה").`,
-      ar: `أجب بالعربية فقط. كن مباشراً وسردياً. اذكر الناس بأسمائهم. استخدم لغة محايدة جندياً.`,
-      en: `Answer in English only. Be direct, vivid, and narrative. Name people by name. Avoid generic phrases.`,
+      he: `ענה בעברית בלבד. שפה חיה, ישירה, נרטיבית. אל תשתמש בביטויים כלליים כמו "מגוון רחב" או "פעילות ענפה". התייחס לאנשים בשמותיהם. IMPORTANT: Keep all user names exactly as they appear in the data — do NOT translate or transliterate names (e.g. write "Anay Ben Pazi" not "אנת בן פזי"). השתמש בשפה נייטרלית מגדרית (כלומר: "כתב/ה", "הציע/ה").`,
+      ar: `أجب بالعربية فقط. كن مباشراً وسردياً. IMPORTANT: Keep all user names exactly as they appear in the data — do NOT translate or transliterate names. استخدم لغة محايدة جندياً.`,
+      en: `Answer in English only. Be direct, vivid, and narrative. IMPORTANT: Keep all user names exactly as they appear in the data — do NOT translate or transliterate names. Avoid generic phrases.`,
     };
 
     const prompt = `
