@@ -311,82 +311,90 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
             )}
           </div>
         )}
-        <div className="flex items-center gap-2 flex-wrap">
-        <Button 
-          size="sm" 
-          variant="outline" 
-          className="text-[10px] md:text-xs h-7 md:h-8 px-2 md:px-3 flex-shrink-0"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpenSidebar && onOpenSidebar(currentVersion.id);
-          }}
-        >
-          {t('viewDetails')}
-        </Button>
-        {user && currentVersion.status === 'pending' && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditSuggestion && onEditSuggestion(currentVersion);
-            }}
-            className="h-7 md:h-8 text-xs px-2"
-          >
-            <Edit2 className="w-3 h-3 md:w-4 md:h-4" />
-          </Button>
-        )}
-        {canDelete && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (confirm(t('confirmDeleteSuggestion'))) {
-                deleteSuggestionMutation.mutate();
-              }
-            }}
-            disabled={deleteSuggestionMutation.isPending}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50 h-7 md:h-8 text-xs px-2"
-          >
-            <Trash2 className="w-3 h-3 md:w-4 md:h-4" />
-          </Button>
-        )}
-        </div>
-      </div>
-
-      {/* תגובות */}
-      <div className="mt-3">
+        {/* שורת כפתורים + תגובות */}
         {(() => {
           const count = getCommentsCount ? getCommentsCount('suggestion', currentVersion.id) : 0;
           const hasComments = count > 0;
+          const commentsKey = `suggestion-${currentVersion.id}`;
           return (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleComments && toggleComments(`suggestion-${currentVersion.id}`);
-              }}
-              className={`h-7 md:h-8 text-xs px-2 transition-all ${
-                hasComments
-                  ? 'font-bold text-blue-700 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 shadow-sm'
-                  : 'text-slate-600 hover:text-blue-600'
-              }`}
-            >
-              <div className="relative">
-                <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'} ${hasComments ? 'fill-blue-200' : ''}`} />
-                {hasComments && (
-                  <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-blue-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center leading-none">
-                    {count > 9 ? '9+' : count}
-                  </span>
+            <>
+              <div className="flex items-center gap-2 flex-wrap mt-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="text-xs h-8 px-3 flex-shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenSidebar && onOpenSidebar(currentVersion.id);
+                  }}
+                >
+                  {t('viewDetails')}
+                </Button>
+                {user && currentVersion.status === 'pending' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEditSuggestion && onEditSuggestion(currentVersion);
+                    }}
+                    className="h-8 text-xs px-2"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Button>
+                )}
+                {canDelete && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(t('confirmDeleteSuggestion'))) {
+                        deleteSuggestionMutation.mutate();
+                      }
+                    }}
+                    disabled={deleteSuggestionMutation.isPending}
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 text-xs px-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
+                <Button
+                  variant={hasComments ? "outline" : "ghost"}
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleComments && toggleComments(commentsKey);
+                  }}
+                  className={`h-8 text-sm px-3 gap-1.5 flex-shrink-0 transition-all ${
+                    hasComments
+                      ? 'font-semibold text-blue-700 border-blue-300 bg-blue-50 hover:bg-blue-100'
+                      : 'text-slate-600 hover:text-blue-600'
+                  }`}
+                >
+                  <MessageSquare className={`w-4 h-4 ${hasComments ? 'fill-blue-200' : ''}`} />
+                  {t('comments')}{hasComments ? ` (${count})` : ''}
+                </Button>
+                {user && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (toggleComments && !showComments?.[commentsKey]) toggleComments(commentsKey);
+                    }}
+                    className="h-8 text-sm px-3 gap-1.5 text-slate-600 hover:text-blue-600 flex-shrink-0"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    {language === 'he' ? '+ תגובה' : language === 'ar' ? '+ تعليق' : '+ Comment'}
+                  </Button>
                 )}
               </div>
-              {t('comments')}{hasComments ? ` (${count})` : ''}
-            </Button>
+            </>
           );
         })()}
       </div>
+
       {showComments && showComments[`suggestion-${currentVersion.id}`] && (
         <div className="mt-4 pt-4 border-t border-amber-200">
           <CommentsSection

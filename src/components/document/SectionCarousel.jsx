@@ -586,60 +586,63 @@ const SectionCarousel = React.memo(function SectionCarousel({
                     )}
                   </div>
                 )}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="text-[10px] md:text-xs h-7 md:h-8 px-2 md:px-3 flex-shrink-0"
-                    onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
-                  >
-                    {t('viewDetails')}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* תגובות להצעה */}
-            {currentView?.data?.id && (
-              <>
-                <div className="mt-3">
-                  {(() => {
-                    const count = typeof getCommentsCount === 'function' ? getCommentsCount('suggestion', currentView.data.id) : 0;
-                    const hasComments = count > 0;
-                    return (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleComments(`suggestion-${currentView.data.id}`)}
-                        className={`h-7 md:h-8 text-xs px-2 transition-all relative ${
-                          hasComments
-                            ? 'font-bold text-blue-700 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 shadow-sm'
-                            : 'text-slate-600 hover:text-blue-600'
-                        }`}
-                      >
-                        <div className="relative">
-                          <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'} ${hasComments ? 'fill-blue-200' : ''}`} />
-                          {hasComments && (
-                            <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-blue-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center leading-none">
-                              {count > 9 ? '9+' : count}
-                            </span>
-                          )}
+                {/* שורת כפתורים + תגובות */}
+                {currentView?.data?.id && (() => {
+                  const count = typeof getCommentsCount === 'function' ? getCommentsCount('suggestion', currentView.data.id) : 0;
+                  const hasComments = count > 0;
+                  const commentsKey = `suggestion-${currentView.data.id}`;
+                  return (
+                    <>
+                      <div className="flex items-center gap-2 flex-wrap mt-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-xs h-8 px-3 flex-shrink-0"
+                          onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
+                        >
+                          {t('viewDetails')}
+                        </Button>
+                        <Button
+                          variant={hasComments ? "outline" : "ghost"}
+                          size="sm"
+                          onClick={() => toggleComments(commentsKey)}
+                          className={`h-8 text-sm px-3 gap-1.5 relative flex-shrink-0 transition-all ${
+                            hasComments
+                              ? 'font-semibold text-blue-700 border-blue-300 bg-blue-50 hover:bg-blue-100'
+                              : 'text-slate-600 hover:text-blue-600'
+                          }`}
+                        >
+                          <MessageSquare className={`w-4 h-4 ${hasComments ? 'fill-blue-200' : ''}`} />
+                          {t('comments')}{hasComments ? ` (${count})` : ''}
+                        </Button>
+                        {user && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!showComments[commentsKey]) toggleComments(commentsKey);
+                            }}
+                            className="h-8 text-sm px-3 gap-1.5 text-slate-600 hover:text-blue-600 flex-shrink-0"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                            {language === 'he' ? '+ תגובה' : language === 'ar' ? '+ تعليق' : '+ Comment'}
+                          </Button>
+                        )}
+                      </div>
+                      {showComments[commentsKey] && (
+                        <div className="mt-4 pt-4 border-t border-slate-200">
+                          <CommentsSection
+                            entityType="suggestion"
+                            entityId={currentView.data.id}
+                            user={user}
+                          />
                         </div>
-                        {t('comments')}{hasComments ? ` (${count})` : ''}
-                      </Button>
-                    );
-                  })()}
-                </div>
-                {showComments[`suggestion-${currentView.data.id}`] && (
-                  <div className="mt-4 pt-4 border-t border-slate-200">
-                    <CommentsSection
-                      entityType="suggestion"
-                      entityId={currentView.data.id}
-                      user={user}
-                    />
-                  </div>
-                )}
-              </>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
             )}
           </>
         )}
