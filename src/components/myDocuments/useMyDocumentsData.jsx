@@ -49,9 +49,14 @@ export function useMyDocumentsData() {
   });
 
   const { data: allVotes = [] } = useQuery({
-    queryKey: ['allVotes', user?.id],
-    queryFn: () => base44.entities.Vote.filter({ userId: user.id }),
-    enabled: !!user?.id,
+    queryKey: ['allVotesForDocs', myDocumentIds],
+    queryFn: async () => {
+      if (myDocumentIds.length === 0) return [];
+      const suggestionIds = allSuggestions.map(s => s.id);
+      if (suggestionIds.length === 0) return [];
+      return base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } });
+    },
+    enabled: !!user?.id && allSuggestions.length > 0,
     staleTime: 2 * 60 * 1000,
   });
 
