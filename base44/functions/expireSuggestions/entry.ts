@@ -65,7 +65,9 @@ Deno.serve(async (req) => {
         if (document?.gamificationEnabled) {
           const conVoterIds = votes.filter(v => v.vote === 'con').map(v => v.userId).filter(Boolean);
           if (conVoterIds.length > 0) {
-            const conVoterUsers = await base44.asServiceRole.entities.User.filter({ id: { $in: conVoterIds } });
+            // Fetch all users and filter client-side (platform doesn't reliably support $in on User)
+            const allUsers = await base44.asServiceRole.entities.User.list();
+            const conVoterUsers = allUsers.filter(u => conVoterIds.includes(u.id));
             for (const u of conVoterUsers) {
               await Promise.all([
                 base44.asServiceRole.entities.User.update(u.id, { points: (u.points || 1000) + 50 }),
