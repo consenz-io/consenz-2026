@@ -605,11 +605,11 @@ const SectionCarousel = React.memo(function SectionCarousel({
                   const commentsKey = `suggestion-${currentView.data.id}`;
                   return (
                     <>
-                      <div className="flex items-center gap-2 flex-wrap mt-2">
+                      <div className={`flex items-center gap-2 flex-wrap mt-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                         <Button 
                           size="sm" 
                           variant="outline" 
-                          className="text-xs h-8 px-3 flex-shrink-0"
+                          className={`text-xs h-8 px-3 flex-shrink-0 ${isRTL ? 'mr-0 ml-auto' : 'ml-0 mr-auto'}`}
                           onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
                         >
                           {t('viewDetails')}
