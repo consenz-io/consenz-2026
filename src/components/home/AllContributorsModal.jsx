@@ -58,15 +58,15 @@ export default function AllContributorsModal({
             <p className="text-slate-500 text-center py-8">{t('noContributors')}</p>
           ) : (
             <div className="space-y-2">
-              {filteredContributors.map((contributor) => {
+              {filteredContributors.map((contributor, index) => {
                 const userId = contributor.userId || contributor.id;
                 const name = contributor.name || contributor.fullName || contributor.full_name || contributor.email;
                 const isAdmin = contributor.role === 'admin';
                 
                 return (
-                  <Link
-                    key={userId}
-                    to={`${createPageUrl("Profile")}?userId=${userId}`}
+                   <Link
+                     key={userId || contributor.email || index}
+                     to={`${createPageUrl("Profile")}?userId=${userId}`}
                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors"
                   >
                     <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center flex-shrink-0">

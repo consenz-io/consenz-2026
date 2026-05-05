@@ -9,14 +9,13 @@ import { base44 } from "@/api/base44Client";
  */
 export async function calculateDocumentContributors(documentId) {
   try {
-    // Fetch all data in parallel
-    const [suggestions, sections, allVotes, publicProfiles, allComments, followers, documentAgreements] = await Promise.all([
+    // Fetch all data in parallel — DocumentFollow entity was removed, auto-follow logic dropped
+    const [suggestions, sections, allVotes, publicProfiles, allComments, documentAgreements] = await Promise.all([
       base44.entities.Suggestion.filter({ documentId }),
       base44.entities.Section.filter({ documentId }),
       base44.entities.Vote.list(),
       base44.entities.UserPublicProfile.list(),
       base44.entities.Comment.list(),
-      base44.entities.DocumentFollow.filter({ documentId }),
       base44.entities.DocumentAgreement.filter({ documentId })
     ]);
 
@@ -66,27 +65,6 @@ export async function calculateDocumentContributors(documentId) {
         uniqueEmails.add(a.userEmail);
       }
     });
-    
-    // Auto-follow all participants
-    const followerUserIds = new Set(followers.map(f => f.userId));
-    const profilesToAutoFollow = publicProfiles.filter(p => 
-      uniqueEmails.has(p.email) && !followerUserIds.has(p.userId)
-    );
-    
-    if (profilesToAutoFollow.length > 0) {
-      console.log('[AUTO-FOLLOW] Auto-following', profilesToAutoFollow.length, 'participants');
-      await Promise.all(
-        profilesToAutoFollow.map(profile =>
-          base44.entities.DocumentFollow.create({
-            documentId,
-            userId: profile.userId,
-            followedAt: new Date().toISOString()
-          }).catch(err => {
-            console.error('[AUTO-FOLLOW] Error auto-following user:', profile.email, err);
-          })
-        )
-      );
-    }
     
     return Math.max(1, uniqueEmails.size);
   } catch (error) {
