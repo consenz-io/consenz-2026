@@ -19,45 +19,45 @@ export default function DocumentSummaryDialog({ isOpen, onClose, document, sugge
 
   const labels = {
     he: {
-      title: 'סיכום פעילות המסמך',
-      subtitle: 'מה קרה במסמך הזה מאז הקמתו?',
-      generate: 'הצג סיכום',
+      title: 'מה קורה במסמך?',
+      subtitle: suggestions.filter(s=>s.status==='pending').length > 0
+        ? `${suggestions.filter(s=>s.status==='pending').length} הצעות פתוחות מחכות להצבעתך`
+        : `${allComments.length} תגובות, ${suggestions.filter(s=>s.status==='accepted').length} שינויים שהתקבלו`,
+      generate: 'תן לי את הסיכום',
       skip: 'עבור למסמך',
-      loading: 'מייצר סיכום...',
-      stats: 'נתוני הפעילות',
+      loading: 'קורא את הדיון...',
       suggestions_count: 'הצעות',
       comments_count: 'תגובות',
       votes_count: 'הצבעות',
       participants_count: 'משתתפים',
-      go_to_suggestion: 'עבור להצעה',
       close: 'סגור',
     },
     ar: {
-      title: 'ملخص نشاط الوثيقة',
-      subtitle: 'ماذا حدث في هذه الوثيقة منذ إنشائها؟',
-      generate: 'عرض الملخص',
+      title: 'ما الذي يحدث في الوثيقة؟',
+      subtitle: suggestions.filter(s=>s.status==='pending').length > 0
+        ? `${suggestions.filter(s=>s.status==='pending').length} مقترح مفتوح ينتظر تصويتك`
+        : `${allComments.length} تعليق، ${suggestions.filter(s=>s.status==='accepted').length} تغيير تمت الموافقة عليه`,
+      generate: 'أعطني الملخص',
       skip: 'انتقل إلى الوثيقة',
-      loading: 'جارٍ إنشاء الملخص...',
-      stats: 'إحصاءات النشاط',
+      loading: 'أقرأ النقاش...',
       suggestions_count: 'مقترحات',
       comments_count: 'تعليقات',
       votes_count: 'تصويتات',
       participants_count: 'مشاركون',
-      go_to_suggestion: 'انتقل إلى الاقتراح',
       close: 'إغلاق',
     },
     en: {
-      title: 'Document Activity Summary',
-      subtitle: 'What happened in this document since it was created?',
-      generate: 'Show Summary',
+      title: "What's happening in this document?",
+      subtitle: suggestions.filter(s=>s.status==='pending').length > 0
+        ? `${suggestions.filter(s=>s.status==='pending').length} open suggestions waiting for your vote`
+        : `${allComments.length} comments, ${suggestions.filter(s=>s.status==='accepted').length} changes accepted`,
+      generate: 'Give me the summary',
       skip: 'Go to Document',
-      loading: 'Generating summary...',
-      stats: 'Activity Stats',
+      loading: 'Reading the discussion...',
       suggestions_count: 'Suggestions',
       comments_count: 'Comments',
       votes_count: 'Votes',
       participants_count: 'Participants',
-      go_to_suggestion: 'Go to suggestion',
       close: 'Close',
     },
   };
@@ -80,58 +80,71 @@ export default function DocumentSummaryDialog({ isOpen, onClose, document, sugge
   const generateSummary = async () => {
     setSummaryState('loading');
 
-    // Prepare data for the LLM
     const acceptedSuggestions = suggestions.filter(s => s.status === 'accepted');
     const pendingSuggestions = suggestions.filter(s => s.status === 'pending');
-    const rejectedSuggestions = suggestions.filter(s => s.status === 'rejected');
 
+    // Rich suggestion data with their comments
     const suggestionLines = suggestions.map(s => {
       const author = getUserName(s.created_by);
       const proVotes = s.proVotes || 0;
       const conVotes = s.conVotes || 0;
-      const commentsOnSuggestion = allComments.filter(c => c.rootEntityType === 'suggestion' && c.rootEntityId === s.id).length;
-      return `- [${s.status}] "${s.title}" (מאת ${author}, ${proVotes} בעד / ${conVotes} נגד, ${commentsOnSuggestion} תגובות, ID: ${s.id})`;
-    }).join('\n');
+      const commentsOnSuggestion = allComments
+        .filter(c => c.rootEntityType === 'suggestion' && c.rootEntityId === s.id)
+        .map(c => `    • ${getUserName(c.created_by)}: "${(c.content || '').substring(0, 120).replace(/<[^>]*>/g, '')}"`)
+        .join('\n');
+      return `- [${s.status}] "${s.title}" by ${author} | ${proVotes} pro / ${conVotes} con | ID: ${s.id}\n${commentsOnSuggestion ? `  Comments:\n${commentsOnSuggestion}` : '  (no comments)'}`;
+    }).join('\n\n');
 
-    const commentLines = allComments.slice(0, 30).map(c => {
+    // All comments with context
+    const allCommentLines = allComments.slice(0, 50).map(c => {
       const author = getUserName(c.created_by);
-      const snippet = (c.content || '').substring(0, 80).replace(/<[^>]*>/g, '');
-      return `- ${author}: "${snippet}"`;
+      const snippet = (c.content || '').substring(0, 150).replace(/<[^>]*>/g, '');
+      const entityType = c.rootEntityType;
+      const relatedSuggestion = entityType === 'suggestion' ? suggestions.find(s => s.id === c.rootEntityId) : null;
+      const context = relatedSuggestion ? `on suggestion "${relatedSuggestion.title}"` : `on ${entityType}`;
+      return `- ${author} (${context}): "${snippet}"`;
     }).join('\n');
 
     const langInstructions = {
-      he: 'ענה בעברית בלבד. השתמש בשפה נייטרלית מבחינה מגדרית (למשל: "הוגשה הצעה", "נרשמו הצבעות").',
-      ar: 'أجب بالعربية فقط. استخدم لغة محايدة جندياً.',
-      en: 'Answer in English only. Use gender-neutral language.',
+      he: `ענה בעברית בלבד. שפה חיה, ישירה, נרטיבית. אל תשתמש בביטויים כלליים כמו "מגוון רחב" או "פעילות ענפה". התייחס לאנשים בשמותיהם. השתמש בשפה נייטרלית מגדרית (כלומר: "כתב/ה", "הציע/ה").`,
+      ar: `أجب بالعربية فقط. كن مباشراً وسردياً. اذكر الناس بأسمائهم. استخدم لغة محايدة جندياً.`,
+      en: `Answer in English only. Be direct, vivid, and narrative. Name people by name. Avoid generic phrases.`,
     };
 
     const prompt = `
-You are summarizing the activity on a collaborative document titled: "${document.title}".
+You are writing an activity briefing for a new reader of the collaborative document titled: "${document.title}".
 
 ${langInstructions[language] || langInstructions.en}
 
-Document statistics:
-- Total suggestions: ${suggestions.length} (${acceptedSuggestions.length} accepted, ${pendingSuggestions.length} pending, ${rejectedSuggestions.length} rejected)
-- Total comments: ${allComments.length}
-- Total votes: ${allVotes.length}
-- Unique participants: ${uniqueParticipants}
-
-Suggestions list:
+== SUGGESTIONS AND THEIR COMMENTS ==
 ${suggestionLines}
 
-Sample comments:
-${commentLines}
+== ALL COMMENTS ==
+${allCommentLines}
 
-Write a flowing NARRATIVE summary (3-5 paragraphs) that:
-1. Describes the overall state and progress of the document
-2. Highlights the most significant accepted changes and who contributed them
-3. Mentions ongoing debates and pending suggestions where participants should vote (mention if there are disputes)
-4. Encourages readers to participate: vote on pending suggestions if they agree or disagree, or ask questions in the comments
-5. Mention specific suggestion titles by name (do NOT include IDs in the visible text)
+== STATS ==
+- ${acceptedSuggestions.length} suggestions accepted, ${pendingSuggestions.length} pending
+- ${allComments.length} total comments, ${allVotes.length} total votes, ${uniqueParticipants} unique participants
 
-Return a JSON object in this exact format:
+Write 3-4 paragraphs that:
+
+1. CONTENT FOCUS: Describe what the document is actually about and what specific changes have been proposed. Mention the accepted changes by name and describe what they changed. Do NOT just say "several changes were made" — describe the actual content.
+
+2. WHO SAID WHAT: Name specific people and what they wrote. If multiple commenters expressed similar views or concerns, group them together and say "Both X and Y argued that...". Surface the most interesting or contested ideas.
+
+3. COMMENTS AS POTENTIAL EDITS: Identify comments that contain substantive opinions or proposals (not just questions). Tell the reader: if these ideas resonate with them, they can turn them into edit suggestions and vote on them. Be specific — mention the comment content and who wrote it.
+
+4. CALL TO ACTION: Name the pending suggestions by title and tell the reader concretely what they're about and why their vote matters. Make it personal and specific — e.g. "If you think X should be included, vote for [suggestion title]".
+
+IMPORTANT: 
+- Never invent content. Only refer to what's in the data above.
+- For each pending suggestion you mention by title, wrap it in the link tag.
+- Keep it under 350 words total.
+- Be warm and engaging, not bureaucratic.
+
+Return JSON:
 {
-  "summary": "the full narrative text with HTML for links. For each mentioned pending suggestion, wrap its title in: <a data-suggestion-id=\\"SUGGESTION_ID\\" class=\\"suggestion-link\\">TITLE</a>",
+  "summary": "narrative HTML text. For each mentioned pending suggestion title, wrap it in: <a data-suggestion-id=\\"SUGGESTION_ID\\" class=\\"suggestion-link\\">TITLE</a>",
   "highlightedSuggestionIds": ["id1", "id2"]
 }
 `;
@@ -220,14 +233,53 @@ Return a JSON object in this exact format:
         {/* Content */}
         <div className="flex-1 overflow-y-auto min-h-0">
           {summaryState === 'idle' && (
-            <div className="flex flex-col items-center justify-center py-10 gap-4 text-center">
-              <Sparkles className="w-12 h-12 text-indigo-300" />
-              <p className="text-slate-600 text-sm max-w-sm">
+            <div className="flex flex-col gap-3 py-4">
+              {/* Pending suggestions teaser */}
+              {suggestions.filter(s => s.status === 'pending').length > 0 && (
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                  <p className="text-sm font-semibold text-orange-800 mb-1">
+                    {language === 'he' ? '⏳ ממתין להצבעתך:' : language === 'ar' ? '⏳ في انتظار تصويتك:' : '⏳ Waiting for your vote:'}
+                  </p>
+                  <ul className="space-y-1">
+                    {suggestions.filter(s => s.status === 'pending').slice(0, 3).map(s => (
+                      <li key={s.id} className="text-xs text-orange-700 flex items-center gap-1">
+                        <span className="font-medium">"{s.title}"</span>
+                        <span className="text-orange-400">— {s.proVotes || 0}✓ {s.conVotes || 0}✗</span>
+                      </li>
+                    ))}
+                    {suggestions.filter(s => s.status === 'pending').length > 3 && (
+                      <li className="text-xs text-orange-500">
+                        {language === 'he' ? `ועוד ${suggestions.filter(s=>s.status==='pending').length - 3}...` : `+${suggestions.filter(s=>s.status==='pending').length - 3} more...`}
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+              {/* Recent comments teaser */}
+              {allComments.length > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm font-semibold text-blue-800 mb-1">
+                    {language === 'he' ? '💬 נכתב לאחרונה:' : language === 'ar' ? '💬 كُتب مؤخراً:' : '💬 Recently written:'}
+                  </p>
+                  <ul className="space-y-1">
+                    {allComments.slice(-3).reverse().map(c => {
+                      const name = getUserName(c.created_by);
+                      const snippet = (c.content || '').replace(/<[^>]*>/g, '').substring(0, 70);
+                      return (
+                        <li key={c.id} className="text-xs text-blue-700">
+                          <span className="font-medium">{name}:</span> "{snippet}{snippet.length >= 70 ? '...' : ''}"
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+              <p className="text-xs text-slate-400 text-center mt-1">
                 {language === 'he'
-                  ? 'הבינה המלאכותית תנתח את כל ההצעות, התגובות וההצבעות ותיצור עבורך סיכום נרטיבי של הפעילות.'
+                  ? 'לחץ על "תן לי את הסיכום" לניתוח מעמיק של הדיון והמלצות לאינטראקציה'
                   : language === 'ar'
-                  ? 'سيقوم الذكاء الاصطناعي بتحليل جميع المقترحات والتعليقات والتصويتات وإنشاء ملخص سردي للنشاط.'
-                  : 'AI will analyze all suggestions, comments, and votes to create a narrative summary of activity.'}
+                  ? 'انقر على "أعطني الملخص" لتحليل معمق للنقاش'
+                  : 'Click "Give me the summary" for a deep analysis of the discussion'}
               </p>
             </div>
           )}
@@ -240,8 +292,10 @@ Return a JSON object in this exact format:
           )}
 
           {summaryState === 'done' && summaryData && (
-            <div className="prose prose-sm max-w-none text-slate-800 leading-relaxed space-y-3 py-2">
-              {renderSummary(summaryData.summary)}
+            <div className="py-2 space-y-3 text-sm text-slate-800 leading-relaxed">
+              {(summaryData.summary || '').split(/\n\n+/).map((para, i) => (
+                <p key={i} className="leading-6">{renderSummary(para)}</p>
+              ))}
             </div>
           )}
         </div>
