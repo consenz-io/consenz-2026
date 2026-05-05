@@ -48,15 +48,12 @@ export function useMyDocumentsData() {
     staleTime: 2 * 60 * 1000,
   });
 
+  const allSuggestionIds = useMemo(() => allSuggestions.map(s => s.id), [allSuggestions]);
+
   const { data: allVotes = [] } = useQuery({
-    queryKey: ['allVotesForDocs', myDocumentIds],
-    queryFn: async () => {
-      if (myDocumentIds.length === 0) return [];
-      const suggestionIds = allSuggestions.map(s => s.id);
-      if (suggestionIds.length === 0) return [];
-      return base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } });
-    },
-    enabled: !!user?.id && allSuggestions.length > 0,
+    queryKey: ['allVotesForDocs', allSuggestionIds],
+    queryFn: () => base44.entities.Vote.filter({ suggestionId: { $in: allSuggestionIds } }),
+    enabled: !!user?.id && allSuggestionIds.length > 0,
     staleTime: 2 * 60 * 1000,
   });
 
@@ -76,16 +73,14 @@ export function useMyDocumentsData() {
     staleTime: 5 * 60 * 1000,
   });
 
+  const allSectionIds = useMemo(() => allSections.map(s => s.id), [allSections]);
+
   const { data: allComments = [] } = useQuery({
-    queryKey: ['allComments', myDocumentIds],
-    queryFn: async () => {
-      if (myDocumentIds.length === 0) return [];
-      const suggestionIds = allSuggestions.map(s => s.id);
-      const sectionIds = allSections.map(s => s.id);
-      if (suggestionIds.length === 0 && sectionIds.length === 0) return [];
-      return base44.entities.Comment.filter({
-        rootEntityId: { $in: [...suggestionIds, ...sectionIds, ...myDocumentIds] }
-      });
+    queryKey: ['allComments', allSuggestionIds, allSectionIds, myDocumentIds],
+    queryFn: () => {
+      const allIds = [...allSuggestionIds, ...allSectionIds, ...myDocumentIds];
+      if (allIds.length === 0) return Promise.resolve([]);
+      return base44.entities.Comment.filter({ rootEntityId: { $in: allIds } });
     },
     enabled: !!user?.id && myDocumentIds.length > 0,
     staleTime: 2 * 60 * 1000,
