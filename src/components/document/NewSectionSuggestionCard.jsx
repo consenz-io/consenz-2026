@@ -261,20 +261,32 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       {/* כפתורי הצבעה */}
       {doc?.votingButtonsEnabled && (
         <div className="mt-4" onClick={(e) => e.stopPropagation()}>
-          <VotingProgressSection
-            suggestion={currentVersion}
-            document={doc}
-            userVote={getUserVote(currentVersion.id)}
-            voteMutation={{
-              isPending: voteMutation.isPending,
-              mutate: (vote) => {
-                if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
-                voteMutation.mutate({ suggestionId: currentVersion.id, vote, currentVote: getUserVote(currentVersion.id) });
-              }
-            }}
-            isRTL={isRTL}
-            readOnly={!user || !canParticipate}
-          />
+          {user && canParticipate ? (
+            <VotingProgressSection
+              suggestion={currentVersion}
+              document={doc}
+              userVote={getUserVote(currentVersion.id)}
+              voteMutation={{
+                isPending: voteMutation.isPending,
+                mutate: (vote) => voteMutation.mutate({ suggestionId: currentVersion.id, vote, currentVote: getUserVote(currentVersion.id) })
+              }}
+              isRTL={isRTL}
+            />
+          ) : (
+            <VotingProgressSection
+              suggestion={currentVersion}
+              document={doc}
+              userVote={null}
+              voteMutation={{
+                isPending: false,
+                mutate: () => {
+                  if (!user) base44.auth.redirectToLogin(window.location.href);
+                }
+              }}
+              isRTL={isRTL}
+              readOnly={!user}
+            />
+          )}
         </div>
       )}
 
