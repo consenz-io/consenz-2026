@@ -359,8 +359,8 @@ const translations = {
     cancel: "ביטול",
     
     // הצבעה
-    votePro: "הצבעת בעד",
-    voteCon: "הצבעת נגד",
+    votePro: "בעד",
+    voteCon: "נגד",
     proVotes: "הצבעות בעד",
     conVotes: "הצבעות נגד",
     consensus: "קונצנזוס",
