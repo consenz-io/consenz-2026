@@ -15,6 +15,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import ReactQuill from "react-quill";
 
 import DocumentContent from "../components/document/DocumentContent";
+import DocumentSummaryDialog from "../components/document/DocumentSummaryDialog";
 import ErrorBoundary from "../components/ErrorBoundary";
 import PageHeader from "../components/PageHeader";
 import { calculateContributorsFromData } from "../components/document/calculateContributors";
@@ -67,6 +68,7 @@ export default function DocumentView() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState(null);
+  const [showSummaryDialog, setShowSummaryDialog] = useState(true);
 
   // ── Data & Subscriptions (extracted to dedicated hooks) ──────────────────
   const {
@@ -998,6 +1000,18 @@ export default function DocumentView() {
           />
         </ErrorBoundary>
       </div>
+
+      {showSummaryDialog && document && !isInitialLoading && (
+        <DocumentSummaryDialog
+          isOpen={showSummaryDialog}
+          onClose={() => setShowSummaryDialog(false)}
+          document={document}
+          suggestions={suggestions}
+          allComments={allComments}
+          allVotes={allVotes}
+          publicProfiles={publicProfiles}
+        />
+      )}
 
       <React.Suspense fallback={<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"><div className="bg-white p-4 rounded-lg shadow-lg">טוען...</div></div>}>
         {showCreateSuggestion && canParticipate && (
