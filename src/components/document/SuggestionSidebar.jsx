@@ -566,78 +566,24 @@ export default function SuggestionSidebar({
             )}
           </div>
 
-          {/* Explanation - always show for creator, editable */}
-          {(suggestion.explanation || user?.email === suggestion.created_by) && (
-            <div className="bg-slate-50 rounded-lg p-3">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-xs font-semibold text-slate-700">{t('explanation')}</h3>
-                {user?.email === suggestion.created_by && !isEditingExplanation && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setExplanationText(suggestion.explanation || "");
-                      setIsEditingExplanation(true);
-                    }}
-                    className="h-6 w-6 p-0"
-                  >
-                    <Edit2 className="w-3 h-3" />
-                  </Button>
-                )}
-              </div>
-              {isEditingExplanation ? (
-                <div className="space-y-2">
-                  <Textarea
-                    value={explanationText}
-                    onChange={(e) => setExplanationText(e.target.value)}
-                    placeholder={t('explainChange')}
-                    rows={3}
-                    className="text-sm"
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => updateExplanationMutation.mutate(explanationText)}
-                      disabled={updateExplanationMutation.isPending}
-                      className="h-7 text-xs"
-                    >
-                      <Save className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                      {t('saveChanges')}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setIsEditingExplanation(false)}
-                      className="h-7 text-xs"
-                    >
-                      {t('cancel')}
-                    </Button>
-                  </div>
-                </div>
-              ) : suggestion.explanation ? (
-                <TranslatableContent
-                  content={suggestion.explanation}
-                  entity={suggestion}
-                  entityType="Suggestion"
-                  fieldName="explanation"
-                  className="text-sm text-slate-600"
-                />
-              ) : (
-                <p className="text-sm text-slate-400 italic">{t('noDescription')}</p>
-              )}
-            </div>
-          )}
-
           {/* Content diff or proposed content */}
           {suggestion.type === 'delete_section' ? (
-            <div className="p-3 md:p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="text-sm font-bold text-red-700 mb-2">
-                {language === 'he' ? 'סעיף שמוצע למחיקה:' : language === 'ar' ? 'القسم المقترح حذفه:' : 'Section to be deleted:'}
+            <div>
+              <div className="p-3 md:p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="text-sm font-bold text-red-700 mb-2">
+                  {language === 'he' ? 'סעיף שמוצע למחיקה:' : language === 'ar' ? 'القسم المقترح حذفه:' : 'Section to be deleted:'}
+                </div>
+                <div 
+                  className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
+                  dangerouslySetInnerHTML={{ __html: suggestion.originalContent }}
+                />
               </div>
-              <div 
-                className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
-                dangerouslySetInnerHTML={{ __html: suggestion.originalContent }}
-              />
+              {suggestion.explanation && (
+                <div className="mt-3 bg-slate-50 rounded-lg p-3">
+                  <h3 className="text-xs font-semibold text-slate-700 mb-1">{t('explanation')}</h3>
+                  <TranslatableContent content={suggestion.explanation} entity={suggestion} entityType="Suggestion" fieldName="explanation" className="text-sm text-slate-600" />
+                </div>
+              )}
             </div>
           ) : suggestion.type === 'edit_section' && suggestion.originalContent ? (
             <div>
@@ -649,6 +595,33 @@ export default function SuggestionSidebar({
                 sectionId={suggestion.sectionId}
                 section={section}
               />
+              {(suggestion.explanation || user?.email === suggestion.created_by) && (
+                <div className="mt-3 bg-slate-50 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-xs font-semibold text-slate-700">{t('explanation')}</h3>
+                    {user?.email === suggestion.created_by && !isEditingExplanation && (
+                      <Button variant="ghost" size="sm" onClick={() => { setExplanationText(suggestion.explanation || ""); setIsEditingExplanation(true); }} className="h-6 w-6 p-0">
+                        <Edit2 className="w-3 h-3" />
+                      </Button>
+                    )}
+                  </div>
+                  {isEditingExplanation ? (
+                    <div className="space-y-2">
+                      <Textarea value={explanationText} onChange={(e) => setExplanationText(e.target.value)} placeholder={t('explainChange')} rows={3} className="text-sm" />
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => updateExplanationMutation.mutate(explanationText)} disabled={updateExplanationMutation.isPending} className="h-7 text-xs">
+                          <Save className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />{t('saveChanges')}
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setIsEditingExplanation(false)} className="h-7 text-xs">{t('cancel')}</Button>
+                      </div>
+                    </div>
+                  ) : suggestion.explanation ? (
+                    <TranslatableContent content={suggestion.explanation} entity={suggestion} entityType="Suggestion" fieldName="explanation" className="text-sm text-slate-600" />
+                  ) : (
+                    <p className="text-sm text-slate-400 italic">{t('noDescription')}</p>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div>
@@ -664,6 +637,33 @@ export default function SuggestionSidebar({
                   )}
                 />
               </div>
+              {(suggestion.explanation || user?.email === suggestion.created_by) && (
+                <div className="mt-3 bg-slate-50 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-xs font-semibold text-slate-700">{t('explanation')}</h3>
+                    {user?.email === suggestion.created_by && !isEditingExplanation && (
+                      <Button variant="ghost" size="sm" onClick={() => { setExplanationText(suggestion.explanation || ""); setIsEditingExplanation(true); }} className="h-6 w-6 p-0">
+                        <Edit2 className="w-3 h-3" />
+                      </Button>
+                    )}
+                  </div>
+                  {isEditingExplanation ? (
+                    <div className="space-y-2">
+                      <Textarea value={explanationText} onChange={(e) => setExplanationText(e.target.value)} placeholder={t('explainChange')} rows={3} className="text-sm" />
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => updateExplanationMutation.mutate(explanationText)} disabled={updateExplanationMutation.isPending} className="h-7 text-xs">
+                          <Save className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />{t('saveChanges')}
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setIsEditingExplanation(false)} className="h-7 text-xs">{t('cancel')}</Button>
+                      </div>
+                    </div>
+                  ) : suggestion.explanation ? (
+                    <TranslatableContent content={suggestion.explanation} entity={suggestion} entityType="Suggestion" fieldName="explanation" className="text-sm text-slate-600" />
+                  ) : (
+                    <p className="text-sm text-slate-400 italic">{t('noDescription')}</p>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

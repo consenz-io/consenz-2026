@@ -255,19 +255,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
 
       {/* תוכן ההצעה */}
       <div className="min-h-[100px]">
-        {currentVersion.explanation && typeof currentVersion.explanation === 'string' && (
-          <div className="mb-3 text-sm">
-            <div className="font-semibold text-slate-700 mb-1">{language === 'he' ? 'הסבר:' : language === 'ar' ? 'الشرح:' : 'Explanation:'}</div>
-            <TranslatableContent
-              content={currentVersion.explanation}
-              entity={currentVersion}
-              entityType="Suggestion"
-              className="text-slate-600"
-            />
-          </div>
-        )}
-        
-        <div className="p-3 md:p-4 bg-white/80 rounded border border-amber-200">
+        <div className="p-3 md:p-4 bg-white/80 rounded border border-amber-200 mb-3">
           <TranslatableContent
             content={currentVersion.newContent}
             entity={currentVersion}
@@ -278,6 +266,18 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
             )}
           />
         </div>
+
+        {currentVersion.explanation && typeof currentVersion.explanation === 'string' && (
+          <div className="text-sm">
+            <div className="font-semibold text-slate-700 mb-1">{language === 'he' ? 'הסבר:' : language === 'ar' ? 'الشرح:' : 'Explanation:'}</div>
+            <TranslatableContent
+              content={currentVersion.explanation}
+              entity={currentVersion}
+              entityType="Suggestion"
+              className="text-slate-600"
+            />
+          </div>
+        )}
       </div>
 
       {/* כפתורי הצבעה והערות */}
