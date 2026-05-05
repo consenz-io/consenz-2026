@@ -14,6 +14,7 @@ import {
   CheckCircle, XCircle, AlertCircle, Trash2, ExternalLink, Edit2, Save, Loader2, ShieldCheck
 } from "lucide-react";
 import VotesNeededCounter from "./VotesNeededCounter";
+import VotingProgressSection from "./VotingProgressSection";
 import CommentsSection from "./CommentsSection";
 import SuggestionCountdown from "./SuggestionCountdown";
 import SectionDiff from "./SectionDiff";
@@ -666,57 +667,28 @@ export default function SuggestionSidebar({
             </div>
           )}
 
-          {/* Voting stats */}
-          {(document || parentDocument)?.votingButtonsEnabled && (
-          <div className="flex items-center gap-4 py-3 border-y border-slate-200">
-            <div className="text-center">
-              <div className="text-xl font-bold text-green-600">{suggestion.proVotes || 0}</div>
-              <div className="text-[10px] text-slate-500">{t('proVotes')}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-red-600">{suggestion.conVotes || 0}</div>
-              <div className="text-[10px] text-slate-500">{t('conVotes')}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-blue-600">{consensusScore}%</div>
-              <div className="text-[10px] text-slate-500">{t('consensus')}</div>
-            </div>
-            <div className="flex-1">
-              <VotesNeededCounter 
-                suggestion={suggestion} 
-                document={document || parentDocument}
-                acceptedSuggestions={allDocumentSuggestions.filter(s => s.status === 'accepted')}
-              />
-            </div>
-          </div>
-          )}
-
-          {/* Vote buttons */}
-          {user && suggestion.status === 'pending' && (document || parentDocument)?.votingButtonsEnabled && (
-            <div className="flex gap-2 relative">
-              {voteMutation.isPending && (
-                <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10">
-                  <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-                </div>
+          {/* Voting progress + buttons */}
+          {(document || parentDocument)?.votingButtonsEnabled && suggestion.status === 'pending' && (
+            <div className="py-1">
+              {user ? (
+                <VotingProgressSection
+                  suggestion={suggestion}
+                  document={document || parentDocument}
+                  userVote={userVote}
+                  voteMutation={voteMutation}
+                  isRTL={isRTL}
+                />
+              ) : (
+                // Not logged in: show read-only progress bar only
+                <VotingProgressSection
+                  suggestion={suggestion}
+                  document={document || parentDocument}
+                  userVote={null}
+                  voteMutation={{ isPending: false, mutate: () => {} }}
+                  isRTL={isRTL}
+                  readOnly
+                />
               )}
-              <Button
-                variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
-                onClick={() => voteMutation.mutate('pro')}
-                disabled={voteMutation.isPending}
-                className={`flex-1 ${userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
-              >
-                <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                {t('votePro')}
-              </Button>
-              <Button
-                variant={userVote?.vote === 'con' ? 'default' : 'outline'}
-                onClick={() => voteMutation.mutate('con')}
-                disabled={voteMutation.isPending}
-                className={`flex-1 ${userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
-              >
-                <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                {t('voteCon')}
-              </Button>
             </div>
           )}
 
