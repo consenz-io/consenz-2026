@@ -162,11 +162,9 @@ Deno.serve(async (req) => {
     let accepted = false;
     const delta = newProVotes - newConVotes;
     
-    // Use the document's stored threshold.
-    // If threshold is 0 (new document with no accepted suggestions yet), use 1 as minimum.
-    // Math.max(2,...) was wrong — it prevented acceptance on fresh documents.
-    const rawThreshold = document.threshold || 0;
-    const threshold = rawThreshold > 0 ? Math.max(1, Math.round(rawThreshold)) : 1;
+    // Use the document's stored threshold (same logic as checkSuggestionConsensus on the frontend)
+    // threshold is updated only when a suggestion is accepted, not dynamically during voting
+    const threshold = Math.max(2, document.threshold || 2);
 
     const shouldAccept = delta >= threshold;
 
