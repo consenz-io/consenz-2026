@@ -112,23 +112,23 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
           </div>
         )}
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full min-w-0">
           <Button
             variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
             onClick={() => voteMutation.mutate('pro')}
             disabled={voteMutation.isPending}
             onMouseEnter={() => setHoverVote('pro')}
             onMouseLeave={() => setHoverVote(null)}
-            className={`flex-1 h-12 text-base font-semibold rounded-xl transition-all duration-200 ${
+            className={`flex-1 min-w-0 h-10 md:h-12 text-sm md:text-base font-semibold rounded-xl transition-all duration-200 px-2 md:px-4 ${
               userVote?.vote === 'pro'
                 ? 'bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-200'
                 : 'border-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-400'
             }`}
           >
-            <ThumbsUp className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-            {t('votePro')}
+            <ThumbsUp className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+            <span className="truncate">{t('votePro')}</span>
             {proVotes > 0 && (
-              <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm opacity-80`}>({proVotes})</span>
+              <span className="text-xs md:text-sm opacity-80 shrink-0">({proVotes})</span>
             )}
           </Button>
           <Button
@@ -137,16 +137,16 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             disabled={voteMutation.isPending}
             onMouseEnter={() => setHoverVote('con')}
             onMouseLeave={() => setHoverVote(null)}
-            className={`flex-1 h-12 text-base font-semibold rounded-xl transition-all duration-200 ${
+            className={`flex-1 min-w-0 h-10 md:h-12 text-sm md:text-base font-semibold rounded-xl transition-all duration-200 px-2 md:px-4 ${
               userVote?.vote === 'con'
                 ? 'bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-200'
                 : 'border-2 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-400'
             }`}
           >
-            <ThumbsDown className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-            {t('voteCon')}
+            <ThumbsDown className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+            <span className="truncate">{t('voteCon')}</span>
             {conVotes > 0 && (
-              <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm opacity-80`}>({conVotes})</span>
+              <span className="text-xs md:text-sm opacity-80 shrink-0">({conVotes})</span>
             )}
           </Button>
         </div>
