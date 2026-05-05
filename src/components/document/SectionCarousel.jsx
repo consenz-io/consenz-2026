@@ -627,20 +627,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
                           <MessageSquare className={`w-4 h-4 ${hasComments ? 'fill-blue-200' : ''}`} />
                           {t('comments')}{hasComments ? ` (${count})` : ''}
                         </Button>
-                        {user && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (!showComments[commentsKey]) toggleComments(commentsKey);
-                            }}
-                            className="h-8 text-sm px-3 gap-1.5 text-slate-600 hover:text-blue-600 flex-shrink-0"
-                          >
-                            <MessageSquare className="w-4 h-4" />
-                            {language === 'he' ? '+ תגובה' : language === 'ar' ? '+ تعليق' : '+ Comment'}
-                          </Button>
-                        )}
+
                       </div>
                       {showComments[commentsKey] && (
                         <div className="mt-4 pt-4 border-t border-slate-200">
