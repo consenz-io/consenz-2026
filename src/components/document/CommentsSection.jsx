@@ -6,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageSquare, Send, Reply, Trash2, Edit2, X, Heart } from "lucide-react";
+import { MessageSquare, Send, Reply, Trash2, Edit2, X, ThumbsUp } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
@@ -168,11 +168,11 @@ const CommentItem = memo(({
                         }}
                         className={`flex items-center gap-1 h-7 px-2 rounded text-xs transition-colors ${
                           isLiked
-                            ? 'text-rose-600 bg-rose-50 hover:bg-rose-100'
-                            : 'text-slate-500 hover:text-rose-500 hover:bg-rose-50'
+                            ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                            : 'text-slate-500 hover:text-blue-500 hover:bg-blue-50'
                         }`}
                       >
-                        <Heart className={`w-3 h-3 ${isLiked ? 'fill-rose-500' : ''}`} />
+                        <ThumbsUp className={`w-3 h-3 ${isLiked ? 'fill-blue-500' : ''}`} />
                         {likeCount > 0 && <span>{likeCount}</span>}
                       </button>
                     );
