@@ -679,7 +679,7 @@ export default function DocumentView() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onSelect={() => setShowActivitySummary(true)}>
+                <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setTimeout(() => setShowActivitySummary(true), 0); }}>
                   <Sparkles className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} text-indigo-500`} />
                   {language === 'he' ? 'סיכום פעילות' : language === 'ar' ? 'ملخص النشاط' : 'Activity Summary'}
                 </DropdownMenuItem>
