@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { describe, test, expect } from 'vitest';
 
 /**
