@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
     
     // Use the document's stored threshold (same logic as checkSuggestionConsensus on the frontend)
     // threshold is updated only when a suggestion is accepted, not dynamically during voting
-    const threshold = Math.max(2, document.threshold || 2);
+    const threshold = document.threshold > 0 ? Math.max(2, document.threshold) : 2;
 
     const shouldAccept = delta >= threshold;
 
@@ -186,18 +186,20 @@ Deno.serve(async (req) => {
 
       processingAcceptance.add(lockKey);
 
-      // Fire-and-forget: run processAcceptance in background, clean up lock when done
-      base44.asServiceRole.functions.invoke('processAcceptance', {
-        suggestionId,
-        documentId: document.id,
-        voterId: user.id,
-        wasNewVote: voteAction === 'created' && vote === 'pro'
-      }).then(() => {
+      // Call processAcceptance synchronously (not fire-and-forget) so we have full context
+      try {
+        await base44.asServiceRole.functions.invoke('processAcceptance', {
+          suggestionId,
+          documentId: document.id,
+          voterId: user.id,
+          wasNewVote: voteAction === 'created' && vote === 'pro'
+        });
+        console.log('[VOTE FUNCTION] processAcceptance completed successfully');
+      } catch (err) {
+        console.error('[VOTE FUNCTION] processAcceptance error:', err);
+      } finally {
         processingAcceptance.delete(lockKey);
-      }).catch(err => {
-        console.error('[VOTE FUNCTION] Background acceptance error:', err);
-        processingAcceptance.delete(lockKey);
-      });
+      }
 
       accepted = true;
       // Safety net: release lock after 60s in case the promise never settles
