@@ -26,7 +26,8 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   isAdmin,
   onEditSuggestion,
   allDocumentSuggestions,
-  targetSuggestionId
+  targetSuggestionId,
+  canParticipate = true
 }) {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
@@ -272,7 +273,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
               }
             }}
             isRTL={isRTL}
-            readOnly={!user}
+            readOnly={!user || !canParticipate}
           />
         </div>
       )}
