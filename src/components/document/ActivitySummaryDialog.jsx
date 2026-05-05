@@ -43,36 +43,31 @@ export function useActivitySummaryTrigger(documentId, suggestions, allComments, 
     // Save current visit timestamp AFTER we've read the previous one
     saveCurrentVisit(documentId);
 
-    if (!prev) return; // First visit — no comparison possible
-
-    setLastVisit(prev);
+    // Use prev if exists, otherwise use a date far in the past to include all activity
+    const sinceDate = prev || new Date(0);
+    setLastVisit(sinceDate);
 
     const newSuggestions = suggestions.filter(
-      s => s.documentId === documentId && new Date(s.created_date) > prev
+      s => s.documentId === documentId && new Date(s.created_date) > sinceDate
     );
     const newComments = allComments.filter(
-      c => new Date(c.created_date) > prev
+      c => new Date(c.created_date) > sinceDate
     );
     const newVoteCount = allVotes.filter(
-      v => new Date(v.created_date) > prev
+      v => new Date(v.created_date) > sinceDate
     ).length;
 
     const newUserEmails = new Set();
     newSuggestions.forEach(s => s.created_by && newUserEmails.add(s.created_by));
     newComments.forEach(c => c.created_by && newUserEmails.add(c.created_by));
 
-    const hasActivity =
-      newSuggestions.length > 0 || newComments.length > 0 || newVoteCount > 0;
-
-    if (hasActivity) {
-      setNewActivity({
-        suggestions: newSuggestions,
-        comments: newComments,
-        votes: newVoteCount,
-        users: newUserEmails,
-      });
-      setShowPrompt(true);
-    }
+    setNewActivity({
+      suggestions: newSuggestions,
+      comments: newComments,
+      votes: newVoteCount,
+      users: newUserEmails,
+    });
+    setShowPrompt(true);
   }, [documentId, suggestions?.length, allComments?.length, allVotes?.length]);
 
   return { showPrompt, setShowPrompt, lastVisit, newActivity };
