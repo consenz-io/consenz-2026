@@ -15,7 +15,8 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
 
   const proVotes = suggestion.proVotes || 0;
   const conVotes = suggestion.conVotes || 0;
-  const threshold = Math.max(2, document?.threshold || 2);
+  const rawThreshold = document?.threshold || 0;
+  const threshold = rawThreshold > 0 ? Math.max(1, Math.round(rawThreshold)) : 1;
   const delta = proVotes - conVotes;
 
   // How many more pro votes needed

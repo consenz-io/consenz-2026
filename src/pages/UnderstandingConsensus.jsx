@@ -80,8 +80,9 @@ export default function UnderstandingConsensus() {
     : 0;
   
   // ה-threshold הקבוע מהמסמך - לא מחשבים אותו מחדש!
-  // הוא מתעדכן רק כשהצעה מתקבלת
-  const threshold = Math.max(2, document?.threshold || 2);
+  // הוא מתעדכן רק כשהצעה מתקבלת. מסמך חדש (threshold=0) → threshold=1
+  const rawThreshold = document?.threshold || 0;
+  const threshold = rawThreshold > 0 ? Math.max(1, Math.round(rawThreshold)) : 1;
 
   if (docLoading || suggestionsLoading) {
     return (
