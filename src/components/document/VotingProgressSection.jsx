@@ -55,7 +55,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
     : hoverVote === 'con'
     ? (language === 'he' ? `הצבעתך תרחיק את ההצעה מאישור` : language === 'ar' ? 'سيبعد صوتك الاقتراح عن القبول' : 'Your vote will push back the proposal')
     : votesNeeded === 1
-    ? (language === 'he' ? `עוד תומך אחד דרוש לאישור` : language === 'ar' ? 'مطلوب مؤيد واحد فقط للموافقة' : '1 more supporter needed')
+    ? (language === 'he' ? `עוד הצבעת בעד אחת חסרה לאישור` : language === 'ar' ? 'مطلوب مؤيد واحد فقط للموافقة' : '1 more supporter needed')
     : (language === 'he' ? `עוד ${votesNeeded} תומכים דרושים לאישור` : language === 'ar' ? `${votesNeeded} مؤيدين إضافيين مطلوبين للموافقة` : `${votesNeeded} more supporters needed`);
 
   return (
@@ -64,7 +64,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
       <Link
         to={`${createPageUrl("UnderstandingConsensus")}?id=${document?.id}`}
         className="block group"
-        title={language === 'he' ? 'למד על מנגנון הקונצנזוס' : 'Learn about consensus'}
+        title={language === 'he' ? 'למדו על מנגנון הקונצנזוס' : 'Learn about consensus'}
       >
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-blue-200 transition-colors">
           {/* Labels row */}
