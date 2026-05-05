@@ -492,31 +492,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
                   className="cursor-pointer hover:opacity-90 transition-opacity"
                   onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
                 >
-                  {currentView.data.type !== 'delete_section' && currentView.data.explanation && typeof currentView.data.explanation === 'string' && (
-                    <div className="mb-3 text-sm">
-                      <div className="font-semibold text-slate-700 mb-1">הסבר:</div>
-                      <TranslatableContent
-                        content={currentView.data.explanation}
-                        entity={currentView.data}
-                        entityType="Suggestion"
-                        className="text-slate-600"
-                      />
-                    </div>
-                  )}
-                  
                   {currentView.data.type === 'delete_section' ? (
                     <div>
-                      {currentView.data.explanation && (
-                        <div className="mb-3 p-3 bg-white/60 rounded-lg border border-red-100">
-                          <div className="text-sm font-bold text-slate-700 mb-1">{t('explanation')}:</div>
-                          <TranslatableContent
-                            content={currentView.data.explanation}
-                            entity={currentView.data}
-                            entityType="Suggestion"
-                            className="text-slate-700 text-sm whitespace-pre-wrap"
-                          />
-                        </div>
-                      )}
                       <div className="p-3 md:p-4 bg-red-50 rounded border border-red-200">
                         <div className="text-sm font-bold text-red-700 mb-2">
                           {(language || 'he') === 'he' ? 'סעיף שמוצע למחיקה:' : (language || 'he') === 'ar' ? 'القسم المقترح حذفه:' : 'Section to be deleted:'}
@@ -526,6 +503,17 @@ const SectionCarousel = React.memo(function SectionCarousel({
                           dangerouslySetInnerHTML={{ __html: currentView.data.originalContent }}
                         />
                       </div>
+                      {currentView.data.explanation && (
+                        <div className="mt-3 p-3 bg-white/60 rounded-lg border border-red-100">
+                          <div className="text-sm font-bold text-slate-700 mb-1">{t('explanation')}:</div>
+                          <TranslatableContent
+                            content={currentView.data.explanation}
+                            entity={currentView.data}
+                            entityType="Suggestion"
+                            className="text-slate-700 text-sm whitespace-pre-wrap"
+                          />
+                        </div>
+                      )}
                     </div>
                   ) : currentView.data.originalContent ? (
                     <div>
@@ -537,18 +525,42 @@ const SectionCarousel = React.memo(function SectionCarousel({
                         suggestion={currentView.data}
                         section={section}
                       />
+                      {currentView.data.explanation && typeof currentView.data.explanation === 'string' && (
+                        <div className="mt-3 text-sm">
+                          <div className="font-semibold text-slate-700 mb-1">{t('explanation')}:</div>
+                          <TranslatableContent
+                            content={currentView.data.explanation}
+                            entity={currentView.data}
+                            entityType="Suggestion"
+                            className="text-slate-600"
+                          />
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <div className="p-3 bg-green-50 rounded border border-green-200 hover:bg-green-100 hover:shadow-md transition-all">
-                      <TranslatableContent
-                        content={currentView.data.newContent}
-                        entity={currentView.data}
-                        entityType="Suggestion"
-                        className="prose prose-sm max-w-none"
-                        renderContent={(content) => (
-                          <DocumentTextContent content={content} />
-                        )}
-                      />
+                    <div>
+                      <div className="p-3 bg-green-50 rounded border border-green-200 hover:bg-green-100 hover:shadow-md transition-all">
+                        <TranslatableContent
+                          content={currentView.data.newContent}
+                          entity={currentView.data}
+                          entityType="Suggestion"
+                          className="prose prose-sm max-w-none"
+                          renderContent={(content) => (
+                            <DocumentTextContent content={content} />
+                          )}
+                        />
+                      </div>
+                      {currentView.data.explanation && typeof currentView.data.explanation === 'string' && (
+                        <div className="mt-3 text-sm">
+                          <div className="font-semibold text-slate-700 mb-1">{t('explanation')}:</div>
+                          <TranslatableContent
+                            content={currentView.data.explanation}
+                            entity={currentView.data}
+                            entityType="Suggestion"
+                            className="text-slate-600"
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

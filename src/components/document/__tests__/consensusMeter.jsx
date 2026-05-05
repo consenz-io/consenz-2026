@@ -1,5 +1,7 @@
 import { describe, test, expect } from 'vitest';
 
+import { describe, test, expect } from 'vitest';
+
 /**
  * טסטים למד הקונצנזוס - ליבת המערכת
  * מוודא שהחישוב של הדלתא והקונצנזוס עובד נכון
