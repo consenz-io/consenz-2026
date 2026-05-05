@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -27,12 +27,20 @@ export function useActivitySummaryTrigger(documentId, suggestions, allComments, 
   const [showPrompt, setShowPrompt] = useState(false);
   const [lastVisit, setLastVisit] = useState(null);
   const [newActivity, setNewActivity] = useState({ suggestions: [], comments: [], votes: 0, users: new Set() });
+  const checkedRef = useRef(false);
 
   useEffect(() => {
-    if (!documentId || !suggestions || !allComments || !allVotes) return;
+    // Wait until data has actually loaded (non-empty arrays, or at least one is non-empty)
+    if (!documentId) return;
+    if (!suggestions || !allComments || !allVotes) return;
+    // Don't run until we have real data loaded
+    if (suggestions.length === 0 && allComments.length === 0 && allVotes.length === 0) return;
+    // Only run once per page load
+    if (checkedRef.current) return;
+    checkedRef.current = true;
 
     const prev = getLastVisit(documentId);
-    // Save current visit timestamp now (so next visit will use this)
+    // Save current visit timestamp AFTER we've read the previous one
     saveCurrentVisit(documentId);
 
     if (!prev) return; // First visit — no comparison possible
