@@ -149,31 +149,16 @@ Return JSON:
 }
 `;
 
-    let result;
-    try {
-      result = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        model: 'claude_sonnet_4_6',
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            summary: { type: 'string' },
-            highlightedSuggestionIds: { type: 'array', items: { type: 'string' } },
-          },
+    const result = await base44.integrations.Core.InvokeLLM({
+      prompt,
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          summary: { type: 'string' },
+          highlightedSuggestionIds: { type: 'array', items: { type: 'string' } },
         },
-      });
-    } catch (e) {
-      result = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        response_json_schema: {
-          type: 'object',
-          properties: {
-            summary: { type: 'string' },
-            highlightedSuggestionIds: { type: 'array', items: { type: 'string' } },
-          },
-        },
-      });
-    }
+      },
+    });
 
     setSummaryData(result);
     setSummaryState('done');
