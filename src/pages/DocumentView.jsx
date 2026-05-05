@@ -23,7 +23,6 @@ import TranslateAllButton from "../components/document/TranslateAllButton";
 import CommentsSection from "../components/document/CommentsSection";
 import { useDocumentData } from "../components/document/hooks/useDocumentData";
 import { useDocumentSubscriptions } from "../components/document/hooks/useDocumentSubscriptions";
-import ActivitySummaryDialog, { useActivitySummaryTrigger } from "../components/document/ActivitySummaryDialog";
 
 // Lazy load heavy components
 const CreateSuggestionModal = React.lazy(() => import("../components/document/CreateSuggestionModal"));
@@ -68,7 +67,6 @@ export default function DocumentView() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState(null);
-  const [showActivitySummary, setShowActivitySummary] = useState(false);
 
   // ── Data & Subscriptions (extracted to dedicated hooks) ──────────────────
   const {
@@ -110,14 +108,6 @@ export default function DocumentView() {
   }, [suggestions]);
 
   const allUsers = publicProfiles;
-
-  // Activity summary since last visit
-  const { showPrompt: showActivityPrompt, setShowPrompt: setShowActivityPrompt, lastVisit, newActivity } =
-    useActivitySummaryTrigger(documentId, suggestions, allComments, allVotes, publicProfiles);
-
-  React.useEffect(() => {
-    if (showActivityPrompt) setShowActivitySummary(true);
-  }, [showActivityPrompt]);
 
   // Derived from aggregatedData — no extra query needed
   const documentComments = React.useMemo(() =>
@@ -1060,16 +1050,6 @@ export default function DocumentView() {
           />
         )}
       </React.Suspense>
-
-      <ActivitySummaryDialog
-        isOpen={showActivitySummary}
-        onClose={() => { setShowActivitySummary(false); setShowActivityPrompt(false); }}
-        lastVisit={lastVisit}
-        newActivity={newActivity}
-        documentId={documentId}
-        document={document}
-        publicProfiles={publicProfiles}
-      />
 
       {/* Floating navigation for suggestions */}
       {pendingSuggestions.length > 0 && showSuggestionNav && showScrollTop && (
