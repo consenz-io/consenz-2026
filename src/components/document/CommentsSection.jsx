@@ -6,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageSquare, Send, Reply, Trash2, Edit2, X } from "lucide-react";
+import { MessageSquare, Send, Reply, Trash2, Edit2, X, Heart } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
@@ -32,7 +32,8 @@ const CommentItem = memo(({
   replyTo,
   newComment,
   setNewComment,
-  createCommentMutation
+  createCommentMutation,
+  queryClient
 }) => {
   // Always call hooks in the same order, regardless of conditions
   const [localEditContent, setLocalEditContent] = useState(comment.content);
@@ -144,7 +145,38 @@ const CommentItem = memo(({
                   className="text-sm text-slate-700 whitespace-pre-wrap break-words"
                   renderContent={(text) => <span>{text?.replace(/<[^>]*>/g, '')}</span>}
                 />
-                <div className="flex gap-2 mt-2">
+                <div className="flex gap-2 mt-2 items-center flex-wrap">
+                  {/* Like button */}
+                  {(() => {
+                    const likes = comment.likes || [];
+                    const isLiked = user ? likes.includes(user.email) : false;
+                    const likeCount = likes.length;
+                    return (
+                      <button
+                        onClick={() => {
+                          if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
+                          const newLikes = isLiked
+                            ? likes.filter(e => e !== user.email)
+                            : [...likes, user.email];
+                          base44.entities.Comment.update(comment.id, { likes: newLikes });
+                          // Optimistic update via queryClient passed down would need prop drilling,
+                          // so just invalidate — the mutation is fast enough
+                          queryClient.setQueryData(
+                            ['comments', comment.rootEntityType, comment.rootEntityId],
+                            (old = []) => old.map(c => c.id === comment.id ? { ...c, likes: newLikes } : c)
+                          );
+                        }}
+                        className={`flex items-center gap-1 h-7 px-2 rounded text-xs transition-colors ${
+                          isLiked
+                            ? 'text-rose-600 bg-rose-50 hover:bg-rose-100'
+                            : 'text-slate-500 hover:text-rose-500 hover:bg-rose-50'
+                        }`}
+                      >
+                        <Heart className={`w-3 h-3 ${isLiked ? 'fill-rose-500' : ''}`} />
+                        {likeCount > 0 && <span>{likeCount}</span>}
+                      </button>
+                    );
+                  })()}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -272,6 +304,7 @@ const CommentItem = memo(({
               newComment={newComment}
               setNewComment={setNewComment}
               createCommentMutation={createCommentMutation}
+              queryClient={queryClient}
             />
           ))}
         </div>
@@ -537,24 +570,25 @@ export default function CommentsSection({ entityType, entityId, user, scrollToCo
           </div>
         ) : (
           topLevelComments.map(comment => (
-             <CommentItem 
-               key={comment.id} 
-               comment={comment}
-               users={users}
-               publicProfiles={publicProfiles}
-               user={user}
-               editingComment={editingComment}
-               setEditingComment={setEditingComment}
-               updateCommentMutation={updateCommentMutation}
-               setReplyTo={setReplyTo}
-               deleteCommentMutation={deleteCommentMutation}
-               allComments={comments}
-               t={t}
-               replyTo={replyTo}
-               newComment={newComment}
-               setNewComment={setNewComment}
-               createCommentMutation={createCommentMutation}
-             />
+            <CommentItem 
+              key={comment.id} 
+              comment={comment}
+              users={users}
+              publicProfiles={publicProfiles}
+              user={user}
+              editingComment={editingComment}
+              setEditingComment={setEditingComment}
+              updateCommentMutation={updateCommentMutation}
+              setReplyTo={setReplyTo}
+              deleteCommentMutation={deleteCommentMutation}
+              allComments={comments}
+              t={t}
+              replyTo={replyTo}
+              newComment={newComment}
+              setNewComment={setNewComment}
+              createCommentMutation={createCommentMutation}
+              queryClient={queryClient}
+            />
            ))
         )}
       </div>

@@ -1,0 +1,55 @@
+{
+  "name": "Comment",
+  "type": "object",
+  "properties": {
+    "rootEntityType": {
+      "type": "string",
+      "enum": [
+        "suggestion",
+        "argument",
+        "section"
+      ],
+      "description": "Type of entity being commented on"
+    },
+    "rootEntityId": {
+      "type": "string",
+      "description": "ID of entity being commented on"
+    },
+    "parentCommentId": {
+      "type": "string",
+      "description": "Parent comment ID for replies"
+    },
+    "content": {
+      "type": "string",
+      "description": "Comment content"
+    },
+    "originalLanguage": {
+      "type": "string",
+      "enum": [
+        "en",
+        "he",
+        "ar"
+      ],
+      "default": "he",
+      "description": "Original language of the content"
+    },
+    "translations": {
+      "type": "object",
+      "description": "Cached translations {language_code: translated_content}",
+      "default": {}
+    },
+    "likes": {
+      "type": "array",
+      "description": "Array of user emails who liked this comment",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "rootEntityType",
+    "rootEntityId",
+    "content"
+  ]
+}
