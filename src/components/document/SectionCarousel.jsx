@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import JoinGroupDialog from "@/components/group/JoinGroupDialog";
 import AcceptedAnimation from "./AcceptedAnimation";
 import SectionVoteButtons from "./SectionVoteButtons";
+import VotingProgressSection from "./VotingProgressSection";
 
 const SectionCarousel = React.memo(function SectionCarousel({
   section,
@@ -634,65 +635,36 @@ const SectionCarousel = React.memo(function SectionCarousel({
 
             {/* כפתורי הצבעה והערות - רק אם לא באנימציה */}
             {!['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView.data.id]) && (
-              <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap relative">
-                {voteMutation.isPending && (
-                  <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10">
-                    <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                  </div>
-                )}
-                {document?.votingButtonsEnabled ? (
-                  <>
-                    <Button
-                      variant={getUserVote(currentView.data.id)?.vote === 'pro' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
-                        if (!canParticipate) { setShowJoinGroupDialog(true); return; }
-                        voteMutation.mutate({ suggestionId: currentView.data.id, vote: 'pro', currentVote: getUserVote(currentView.data.id) });
-                      }}
-                      disabled={voteMutation.isPending}
-                      className={`text-xs px-2 md:px-3 ${getUserVote(currentView.data.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
-                    >
-                      <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                      {currentView.data.proVotes || 0}
-                    </Button>
-                    <Button
-                      variant={getUserVote(currentView.data.id)?.vote === 'con' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
-                        if (!canParticipate) { setShowJoinGroupDialog(true); return; }
-                        voteMutation.mutate({ suggestionId: currentView.data.id, vote: 'con', currentVote: getUserVote(currentView.data.id) });
-                      }}
-                      disabled={voteMutation.isPending}
-                      className={`text-xs px-2 md:px-3 ${getUserVote(currentView.data.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
-                    >
-                      <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                      {currentView.data.conVotes || 0}
-                    </Button>
-                  </>
-                ) : null}
+              <div className="mt-4 space-y-2">
                 {document?.votingButtonsEnabled && (
-                  <div className="flex-shrink-0 flex items-center gap-2">
-                    <VotesNeededCounter 
-                      suggestion={currentView.data} 
-                      document={document} 
-                      acceptedSuggestions={acceptedSuggestions}
-                      sectionId={section.id}
-                    />
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="text-[10px] md:text-xs h-7 md:h-8 px-2 md:px-3 flex-shrink-0"
-                      onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
-                    >
-                      {t('viewDetails')}
-                    </Button>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    {user && canParticipate ? (
+                      <VotingProgressSection
+                        suggestion={currentView.data}
+                        document={document}
+                        userVote={getUserVote(currentView.data.id)}
+                        voteMutation={{
+                          isPending: voteMutation.isPending,
+                          mutate: (vote) => voteMutation.mutate({ suggestionId: currentView.data.id, vote, currentVote: getUserVote(currentView.data.id) })
+                        }}
+                        isRTL={isRTL}
+                      />
+                    ) : (
+                      <VotingProgressSection
+                        suggestion={currentView.data}
+                        document={document}
+                        userVote={null}
+                        voteMutation={{ isPending: false, mutate: () => {
+                          if (!user) base44.auth.redirectToLogin(window.location.href);
+                          else if (!canParticipate) setShowJoinGroupDialog(true);
+                        }}}
+                        isRTL={isRTL}
+                        readOnly={!user}
+                      />
+                    )}
                   </div>
                 )}
-                {!document?.votingButtonsEnabled && (
+                <div className="flex items-center gap-2 flex-wrap">
                   <Button 
                     size="sm" 
                     variant="outline" 
@@ -701,7 +673,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
                   >
                     {t('viewDetails')}
                   </Button>
-                )}
+                </div>
               </div>
             )}
 
