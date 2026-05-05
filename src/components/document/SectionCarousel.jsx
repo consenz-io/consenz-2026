@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, ThumbsUp, ThumbsDown, Languages, Loader2, Trash2, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, Trash2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import DeleteSectionDialog from "./DeleteSectionDialog";
@@ -17,7 +17,6 @@ import DocumentTextContent from "./DocumentTextContent";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import JoinGroupDialog from "@/components/group/JoinGroupDialog";
-import AcceptedAnimation from "./AcceptedAnimation";
 import SectionVoteButtons from "./SectionVoteButtons";
 import VotingProgressSection from "./VotingProgressSection";
 
@@ -101,12 +100,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
   // שומר את ה-ID של ההצעה הנוכחית במקום index
   const [currentSuggestionId, setCurrentSuggestionId] = useState(null);
   
-  // שומר הצעות שהתקבלו בזמן שהיוזר צופה בהן - כדי שלא ייעלמו פתאום
-  const [recentlyAcceptedSuggestions, setRecentlyAcceptedSuggestions] = useState({});
-  
-  // מעקב אחרי אנימציות של הצעות מקובלות
-  const [animationPhases, setAnimationPhases] = useState({});
-  const [recentlyUpdatedSections, setRecentlyUpdatedSections] = useState({});
+  // מסגרת ירוקה מהבהבת לאחר קבלת הצעה
+  const [flashingSection, setFlashingSection] = useState(false);
   const prevSuggestionsStatusRef = React.useRef({});
   const hasAnimatedRef = React.useRef(new Set());
   
@@ -123,97 +118,43 @@ const SectionCarousel = React.memo(function SectionCarousel({
     return new Date(b.created_date) - new Date(a.created_date);
   });
   
-  // Tracks pending animation timers so we can cancel them between effect runs and on unmount
-  const animationTimersRef = React.useRef([]);
+  const flashTimerRef = React.useRef(null);
 
-  // מעקב אחרי שינוי סטטוס להצגת אנימציה - עובד על כל ההצעות
+  // מעקב אחרי שינוי סטטוס - כשהצעה מתקבלת, עוברים לתצוגת הסעיף עם מסגרת מהבהבת
   React.useEffect(() => {
-    // Clear any timers from the previous effect run before setting new ones
-    animationTimersRef.current.forEach(clearTimeout);
-    animationTimersRef.current = [];
-
     if (!allSectionSuggestions || allSectionSuggestions.length === 0 || !document?.id) return;
     
     allSectionSuggestions.forEach(sug => {
       const prevStatus = prevSuggestionsStatusRef.current[sug.id];
       
-      // זיהוי מעבר מ-pending ל-accepted
       if (prevStatus === 'pending' && sug.status === 'accepted' && !hasAnimatedRef.current.has(sug.id)) {
         hasAnimatedRef.current.add(sug.id);
-        const docId = document.id;
-        const sectionId = section.id;
-        const sugId = sug.id;
         
-        // אם המשתמש לא צופה בהצעה הזו - מעביר אותו אליה
-        if (currentSuggestionId !== sugId) {
-          setCurrentSuggestionId(sugId);
-        }
+        // מיד עוברים לתצוגת הסעיף הנוכחי ומרעננים
+        setCurrentSuggestionId('current');
+        queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
         
-        // שלב 0: הכרזה (1 שניה)
-        setAnimationPhases(prev => ({ ...prev, [sugId]: 'announcing' }));
-        
-        const t1 = setTimeout(() => {
-          setAnimationPhases(prev => ({ ...prev, [sugId]: 'celebrating' }));
-        }, 1000);
-        
-        // שלב 1: חגיגה (2.5 שניות)
-        const t2 = setTimeout(() => {
-          setAnimationPhases(prev => ({ ...prev, [sugId]: 'transitioning' }));
-        }, 3500);
-        
-        // שלב 2: חזרה לסעיף עם תוכן מעודכן
-        const t3 = setTimeout(() => {
-          setAnimationPhases(prev => ({ ...prev, [sugId]: 'completed' }));
-          setRecentlyUpdatedSections(prev => ({ ...prev, [sectionId]: Date.now() }));
-          setCurrentSuggestionId('current');
-          queryClient.invalidateQueries({ queryKey: ['sections', docId] });
-        }, 4500);
-        
-        // שלב 3: הסרת badge "עודכן עכשיו" (אחרי 14.5 שניות מהתחלה)
-        const t4 = setTimeout(() => {
-          setRecentlyUpdatedSections(prev => {
-            const updated = { ...prev };
-            delete updated[sectionId];
-            return updated;
-          });
-        }, 14500);
-
-        animationTimersRef.current.push(t1, t2, t3, t4);
+        // מסגרת ירוקה מהבהבת
+        setFlashingSection(true);
+        if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+        flashTimerRef.current = setTimeout(() => setFlashingSection(false), 3000);
       }
       
       prevSuggestionsStatusRef.current[sug.id] = sug.status;
     });
 
-    // Cleanup on unmount or before next effect run
     return () => {
-      animationTimersRef.current.forEach(clearTimeout);
-      animationTimersRef.current = [];
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
     };
-  }, [allSectionSuggestions, currentSuggestionId, document.id, section.id, queryClient]);
+  }, [allSectionSuggestions, document.id, queryClient]);
 
-  // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות + הצעות באנימציה
+  // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות
   const allViews = React.useMemo(() => {
-    const views = [
+    return [
       { type: 'current', data: section, id: 'current' },
       ...sortedSuggestions.map(s => ({ type: 'suggestion', data: s, id: s.id }))
     ];
-    
-    // אם יש הצעה באנימציה שכבר לא ב-pending - נוסיף אותה לתצוגה
-    if (allSectionSuggestions && allSectionSuggestions.length > 0) {
-      allSectionSuggestions.forEach(sug => {
-        const animationPhase = animationPhases[sug.id];
-        if (animationPhase && animationPhase !== 'hidden' && !views.find(v => v.id === sug.id)) {
-          views.push({
-            type: 'suggestion',
-            data: sug,
-            id: sug.id
-          });
-        }
-      });
-    }
-    
-    return views;
-  }, [section, sortedSuggestions, allSectionSuggestions, animationPhases]);
+  }, [section, sortedSuggestions]);
   
   // מחשב את ה-index הנוכחי לפי ה-ID
   const currentIndex = React.useMemo(() => {
@@ -401,7 +342,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
   }, [targetSuggestionId]);
 
   return (
-    <div id={currentSuggestionDisplayId} className="group relative p-3 md:p-6 border-2 border-slate-300 rounded-lg hover:border-blue-400 hover:shadow-md transition-all bg-gradient-to-br from-white to-slate-50/30">
+    <div id={currentSuggestionDisplayId} className={`group relative p-3 md:p-6 border-2 rounded-lg hover:shadow-md transition-all bg-gradient-to-br from-white to-slate-50/30 ${flashingSection ? 'suggestion-accepted-flash border-green-400' : 'border-slate-300 hover:border-blue-400'}`}>
       {/* כותרת סעיף עם אינדיקטור */}
       <div className="flex items-center justify-between mb-3 md:mb-4">
         <div className="flex items-center gap-2 md:gap-3">
@@ -428,8 +369,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
         </div>
       </div>
 
-      {/* כפתורי דפדוף - רק אם לא באנימציה */}
-      {allViews.length > 1 && !['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView?.data?.id]) && (
+      {/* כפתורי דפדוף */}
+      {allViews.length > 1 && (
         <div className={`flex items-center justify-between mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm ${
           currentView?.data?.type === 'delete_section' 
             ? 'border-red-300 bg-gradient-to-r from-red-50 to-pink-50' 
@@ -489,17 +430,6 @@ const SectionCarousel = React.memo(function SectionCarousel({
         {!currentView ? null : currentView.type === 'current' ? (
           // תצוגת תוכן נוכחי
           <>
-            {recentlyUpdatedSections[section.id] && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="mb-3 inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg text-sm font-medium text-green-700"
-              >
-                <Sparkles className="w-4 h-4" />
-                עודכן עכשיו ✓
-              </motion.div>
-            )}
             <TranslatableContent
               content={section.content}
               entity={section}
@@ -554,17 +484,9 @@ const SectionCarousel = React.memo(function SectionCarousel({
             )}
           </>
         ) : (
-          // תצוגת הצעה - diff או אנימציה
+          // תצוגת הצעה
           <>
             {(() => {
-              const animationPhase = animationPhases[currentView.data.id] || 'none';
-              
-              // שלבי אנימציה (announcing / celebrating / transitioning)
-              if (['announcing', 'celebrating', 'transitioning'].includes(animationPhase)) {
-                return <AcceptedAnimation phase={animationPhase} newContent={currentView.data.newContent} />;
-              }
-
-              // תצוגה רגילה - diff או הצעה
               return (
                 <div 
                   className="cursor-pointer hover:opacity-90 transition-opacity"
@@ -633,8 +555,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
               );
             })()}
 
-            {/* כפתורי הצבעה והערות - רק אם לא באנימציה */}
-            {!['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView.data.id]) && (
+            {/* כפתורי הצבעה והערות */}
+            {(
               <div className="mt-4 space-y-2">
                 {document?.votingButtonsEnabled && (
                   <div onClick={(e) => e.stopPropagation()}>
@@ -677,8 +599,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
               </div>
             )}
 
-            {/* תגובות להצעה - רק אם לא באנימציה */}
-            {currentView?.data?.id && !['announcing', 'celebrating', 'transitioning', 'completed'].includes(animationPhases[currentView.data.id]) && (
+            {/* תגובות להצעה */}
+            {currentView?.data?.id && (
               <>
                 <div className="mt-3">
                   {(() => {
