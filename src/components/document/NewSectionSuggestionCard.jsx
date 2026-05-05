@@ -2,11 +2,11 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MessageSquare, Trash2, Edit2, ChevronLeft, ChevronRight } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, Edit2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import VotingProgressSection from "./VotingProgressSection";
+import VotesNeededCounter from "./VotesNeededCounter";
 import TranslatableContent from "./TranslatableContent";
 import CommentsSection from "./CommentsSection";
 import DocumentTextContent from "./DocumentTextContent";
@@ -280,28 +280,63 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
         </div>
       </div>
 
-      {/* כפתורי הצבעה */}
-      {doc?.votingButtonsEnabled && (
-        <div className="mt-4" onClick={(e) => e.stopPropagation()}>
-          <VotingProgressSection
-            suggestion={currentVersion}
-            document={doc}
-            userVote={getUserVote(currentVersion.id)}
-            voteMutation={{
-              isPending: voteMutation.isPending,
-              mutate: (vote) => {
-                if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
-                voteMutation.mutate({ suggestionId: currentVersion.id, vote, currentVote: getUserVote(currentVersion.id) });
-              }
-            }}
-            isRTL={isRTL}
-            readOnly={!user}
-          />
-        </div>
-      )}
-
-      {/* כפתורי פעולה */}
-      <div className="flex items-center gap-2 md:gap-4 mt-3 text-sm flex-wrap">
+      {/* כפתורי הצבעה והערות */}
+      <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap">
+        {doc?.votingButtonsEnabled ? (
+          <>
+            <Button
+              variant={getUserVote(currentVersion.id)?.vote === 'pro' ? 'default' : 'outline'}
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!user) {
+                  base44.auth.redirectToLogin(window.location.href);
+                  return;
+                }
+                voteMutation.mutate({
+                  suggestionId: currentVersion.id,
+                  vote: 'pro',
+                  currentVote: getUserVote(currentVersion.id)
+                });
+              }}
+              disabled={voteMutation.isPending}
+              className={`text-xs px-2 md:px-3 ${getUserVote(currentVersion.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
+            >
+              <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              {currentVersion.proVotes || 0}
+            </Button>
+            <Button
+              variant={getUserVote(currentVersion.id)?.vote === 'con' ? 'default' : 'outline'}
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!user) {
+                  base44.auth.redirectToLogin(window.location.href);
+                  return;
+                }
+                voteMutation.mutate({
+                  suggestionId: currentVersion.id,
+                  vote: 'con',
+                  currentVote: getUserVote(currentVersion.id)
+                });
+              }}
+              disabled={voteMutation.isPending}
+              className={`text-xs px-2 md:px-3 ${getUserVote(currentVersion.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
+            >
+              <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              {currentVersion.conVotes || 0}
+            </Button>
+          </>
+        ) : null}
+        {doc?.votingButtonsEnabled && (
+          <div className="flex-shrink-0">
+            <VotesNeededCounter 
+              suggestion={currentVersion}
+              document={doc}
+              acceptedSuggestions={acceptedSuggestions}
+            />
+          </div>
+        )}
         <Button 
           size="sm" 
           variant="outline" 
