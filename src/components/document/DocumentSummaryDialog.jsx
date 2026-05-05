@@ -233,53 +233,21 @@ Return JSON:
         {/* Content */}
         <div className="flex-1 overflow-y-auto min-h-0">
           {summaryState === 'idle' && (
-            <div className="flex flex-col gap-3 py-4">
-              {/* Pending suggestions teaser */}
-              {suggestions.filter(s => s.status === 'pending').length > 0 && (
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                  <p className="text-sm font-semibold text-orange-800 mb-1">
-                    {language === 'he' ? '⏳ ממתין להצבעתך:' : language === 'ar' ? '⏳ في انتظار تصويتك:' : '⏳ Waiting for your vote:'}
-                  </p>
-                  <ul className="space-y-1">
-                    {suggestions.filter(s => s.status === 'pending').slice(0, 3).map(s => (
-                      <li key={s.id} className="text-xs text-orange-700 flex items-center gap-1">
-                        <span className="font-medium">"{s.title}"</span>
-                        <span className="text-orange-400">— {s.proVotes || 0}✓ {s.conVotes || 0}✗</span>
-                      </li>
-                    ))}
-                    {suggestions.filter(s => s.status === 'pending').length > 3 && (
-                      <li className="text-xs text-orange-500">
-                        {language === 'he' ? `ועוד ${suggestions.filter(s=>s.status==='pending').length - 3}...` : `+${suggestions.filter(s=>s.status==='pending').length - 3} more...`}
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              )}
-              {/* Recent comments teaser */}
-              {allComments.length > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-sm font-semibold text-blue-800 mb-1">
-                    {language === 'he' ? '💬 נכתב לאחרונה:' : language === 'ar' ? '💬 كُتب مؤخراً:' : '💬 Recently written:'}
-                  </p>
-                  <ul className="space-y-1">
-                    {allComments.slice(-3).reverse().map(c => {
-                      const name = getUserName(c.created_by);
-                      const snippet = (c.content || '').replace(/<[^>]*>/g, '').substring(0, 70);
-                      return (
-                        <li key={c.id} className="text-xs text-blue-700">
-                          <span className="font-medium">{name}:</span> "{snippet}{snippet.length >= 70 ? '...' : ''}"
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              )}
-              <p className="text-xs text-slate-400 text-center mt-1">
+            <div className="flex flex-col items-center justify-center py-8 gap-3 text-center">
+              <Sparkles className="w-10 h-10 text-indigo-300" />
+              <p className="text-slate-700 text-sm font-medium">
                 {language === 'he'
-                  ? 'לחץ על "תן לי את הסיכום" לניתוח מעמיק של הדיון והמלצות לאינטראקציה'
+                  ? 'רוצה לקרוא סיכום של הפעילות במסמך?'
                   : language === 'ar'
-                  ? 'انقر على "أعطني الملخص" لتحليل معمق للنقاش'
-                  : 'Click "Give me the summary" for a deep analysis of the discussion'}
+                  ? 'هل تريد قراءة ملخص نشاط الوثيقة؟'
+                  : 'Would you like a summary of this document\'s activity?'}
+              </p>
+              <p className="text-xs text-slate-400 max-w-xs">
+                {language === 'he'
+                  ? 'הבינה המלאכותית תנתח את הדיונים, ההצעות והתגובות ותיצור עבורך תמונה ברורה'
+                  : language === 'ar'
+                  ? 'سيحلل الذكاء الاصطناعي النقاشات والمقترحات والتعليقات ويعطيك صورة واضحة'
+                  : 'AI will analyze discussions, suggestions, and comments to give you a clear picture'}
               </p>
             </div>
           )}
