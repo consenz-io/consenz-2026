@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle, ChevronLeft, ChevronRight, MoreVertical, Clock } from "lucide-react";
+import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle, ChevronLeft, ChevronRight, MoreVertical, Clock, Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
@@ -23,6 +23,7 @@ import TranslateAllButton from "../components/document/TranslateAllButton";
 import CommentsSection from "../components/document/CommentsSection";
 import { useDocumentData } from "../components/document/hooks/useDocumentData";
 import { useDocumentSubscriptions } from "../components/document/hooks/useDocumentSubscriptions";
+import ActivitySummaryDialog, { recordDocumentVisit, getLastVisitDate } from "../components/document/ActivitySummaryDialog";
 
 // Lazy load heavy components
 const CreateSuggestionModal = React.lazy(() => import("../components/document/CreateSuggestionModal"));
@@ -67,6 +68,7 @@ export default function DocumentView() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState(null);
+  const [showActivitySummary, setShowActivitySummary] = useState(false);
 
   // ── Data & Subscriptions (extracted to dedicated hooks) ──────────────────
   const {
@@ -437,6 +439,15 @@ export default function DocumentView() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Record document visit when document loads (after a short delay)
+  useEffect(() => {
+    if (!documentId) return;
+    const timer = setTimeout(() => {
+      recordDocumentVisit(documentId);
+    }, 5000); // record after 5 seconds of viewing
+    return () => clearTimeout(timer);
+  }, [documentId]);
+
   // Restore scroll position after page reload
   useEffect(() => {
     const savedScrollPosition = sessionStorage.getItem('documentScrollPosition');
@@ -668,6 +679,13 @@ export default function DocumentView() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onSelect={() => setShowActivitySummary(true)}>
+                  <Sparkles className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} text-indigo-500`} />
+                  {language === 'he' ? 'סיכום פעילות' : language === 'ar' ? 'ملخص النشاط' : 'Activity Summary'}
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
                 <DropdownMenuItem onSelect={() => setShowDescriptionComments(!showDescriptionComments)}>
                   <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {t('documentDiscussion')}
@@ -1050,6 +1068,18 @@ export default function DocumentView() {
           />
         )}
       </React.Suspense>
+
+      <ActivitySummaryDialog
+        isOpen={showActivitySummary}
+        onClose={() => setShowActivitySummary(false)}
+        document={document}
+        suggestions={suggestions}
+        allComments={allComments}
+        allVotes={allVotes}
+        publicProfiles={publicProfiles}
+        documentId={documentId}
+        language={language}
+      />
 
       {/* Floating navigation for suggestions */}
       {pendingSuggestions.length > 0 && showSuggestionNav && showScrollTop && (
