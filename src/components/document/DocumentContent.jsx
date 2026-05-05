@@ -658,7 +658,6 @@ Return ONLY the translated text:`;
                      isAdmin={isAdmin}
                      onEditSuggestion={onEditSuggestion}
                      allDocumentSuggestions={suggestions}
-                     canParticipate={canParticipate}
                      />
                      ))}
                      </>
@@ -761,7 +760,6 @@ Return ONLY the translated text:`;
                                       onEditSuggestion={onEditSuggestion}
                                       allDocumentSuggestions={suggestions}
                                       targetSuggestionId={targetSuggestionId}
-                                      canParticipate={canParticipate}
                                       />
                                       ))}
                                       <SectionCarousel
@@ -828,7 +826,6 @@ Return ONLY the translated text:`;
                                   onEditSuggestion={onEditSuggestion}
                                   allDocumentSuggestions={suggestions}
                                   targetSuggestionId={targetSuggestionId}
-                                  canParticipate={canParticipate}
                                 />
                               ))}
 
@@ -918,7 +915,6 @@ Return ONLY the translated text:`;
                               onEditSuggestion={onEditSuggestion}
                               allDocumentSuggestions={suggestions}
                               targetSuggestionId={targetSuggestionId}
-                              canParticipate={canParticipate}
                               />
                               </CardContent>
                               </Card>
@@ -971,7 +967,6 @@ Return ONLY the translated text:`;
                                 onEditSuggestion={onEditSuggestion}
                                 allDocumentSuggestions={suggestions}
                                 targetSuggestionId={targetSuggestionId}
-                                canParticipate={canParticipate}
                                 />
                             </CardContent>
                             </Card>
