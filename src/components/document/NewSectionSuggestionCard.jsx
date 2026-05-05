@@ -2,16 +2,14 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, Plus, MessageSquare, Trash2, Edit2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, MessageSquare, Trash2, Edit2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import VotesNeededCounter from "./VotesNeededCounter";
 import TranslatableContent from "./TranslatableContent";
 import CommentsSection from "./CommentsSection";
 import DocumentTextContent from "./DocumentTextContent";
-import { motion, AnimatePresence } from "framer-motion";
-import AcceptedAnimation from "./AcceptedAnimation";
+import VotingProgressSection from "./VotingProgressSection";
 
 const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({ 
   suggestion, 
@@ -34,19 +32,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   const language = rawLanguage || 'he';
   const queryClient = useQueryClient();
   const [currentVersionId, setCurrentVersionId] = React.useState('original');
-  const [animationPhase, setAnimationPhase] = React.useState('none');
-  const prevStatusRef = React.useRef(suggestion.status);
 
-  // Watch for pending -> accepted transition to trigger animation
-  React.useEffect(() => {
-    if (prevStatusRef.current === 'pending' && suggestion.status === 'accepted' && animationPhase === 'none') {
-      setAnimationPhase('announcing');
-      setTimeout(() => setAnimationPhase('celebrating'), 1000);
-      setTimeout(() => setAnimationPhase('transitioning'), 3500);
-      setTimeout(() => setAnimationPhase('completed'), 4500);
-    }
-    prevStatusRef.current = suggestion.status;
-  }, [suggestion.status]);
 
   const deleteSuggestionMutation = useMutation({
     mutationFn: async () => {
@@ -161,18 +147,9 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
     return null;
   }
   
-  // Hide if accepted and animation is done
-  if (suggestion.status === 'accepted' && (animationPhase === 'completed' || animationPhase === 'none')) {
+  // Hide if accepted
+  if (suggestion.status === 'accepted') {
     return null;
-  }
-
-  // Show animation if accepted and animating
-  if (suggestion.status === 'accepted' && ['announcing', 'celebrating', 'transitioning'].includes(animationPhase)) {
-    return (
-      <div id={`suggestion-${suggestion.id}`} className="group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 border-green-400 bg-gradient-to-br from-green-50 to-emerald-50">
-        <AcceptedAnimation phase={animationPhase} newContent={suggestion.newContent} />
-      </div>
-    );
   }
 
   const handlePrev = () => {
@@ -280,63 +257,27 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
         </div>
       </div>
 
-      {/* כפתורי הצבעה והערות */}
-      <div className="flex items-center gap-2 md:gap-4 mt-4 text-sm flex-wrap">
-        {doc?.votingButtonsEnabled ? (
-          <>
-            <Button
-              variant={getUserVote(currentVersion.id)?.vote === 'pro' ? 'default' : 'outline'}
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!user) {
-                  base44.auth.redirectToLogin(window.location.href);
-                  return;
-                }
-                voteMutation.mutate({
-                  suggestionId: currentVersion.id,
-                  vote: 'pro',
-                  currentVote: getUserVote(currentVersion.id)
-                });
-              }}
-              disabled={voteMutation.isPending}
-              className={`text-xs px-2 md:px-3 ${getUserVote(currentVersion.id)?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700' : ''}`}
-            >
-              <ThumbsUp className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-              {currentVersion.proVotes || 0}
-            </Button>
-            <Button
-              variant={getUserVote(currentVersion.id)?.vote === 'con' ? 'default' : 'outline'}
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!user) {
-                  base44.auth.redirectToLogin(window.location.href);
-                  return;
-                }
-                voteMutation.mutate({
-                  suggestionId: currentVersion.id,
-                  vote: 'con',
-                  currentVote: getUserVote(currentVersion.id)
-                });
-              }}
-              disabled={voteMutation.isPending}
-              className={`text-xs px-2 md:px-3 ${getUserVote(currentVersion.id)?.vote === 'con' ? 'bg-red-600 hover:bg-red-700' : ''}`}
-            >
-              <ThumbsDown className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-              {currentVersion.conVotes || 0}
-            </Button>
-          </>
-        ) : null}
-        {doc?.votingButtonsEnabled && (
-          <div className="flex-shrink-0">
-            <VotesNeededCounter 
-              suggestion={currentVersion}
-              document={doc}
-              acceptedSuggestions={acceptedSuggestions}
-            />
-          </div>
-        )}
+      {/* כפתורי הצבעה */}
+      {doc?.votingButtonsEnabled && (
+        <div className="mt-4" onClick={(e) => e.stopPropagation()}>
+          <VotingProgressSection
+            suggestion={currentVersion}
+            document={doc}
+            userVote={getUserVote(currentVersion.id)}
+            voteMutation={{
+              isPending: voteMutation.isPending,
+              mutate: (vote) => {
+                if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
+                voteMutation.mutate({ suggestionId: currentVersion.id, vote, currentVote: getUserVote(currentVersion.id) });
+              }
+            }}
+            isRTL={isRTL}
+            readOnly={!user}
+          />
+        </div>
+      )}
+
+      <div className="flex items-center gap-2 mt-3 flex-wrap">
         <Button 
           size="sm" 
           variant="outline" 
@@ -380,7 +321,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       </div>
 
       {/* תגובות */}
-      <div className="mt-3">
+      <div className="mt-2">
         {(() => {
           const count = getCommentsCount ? getCommentsCount('suggestion', currentVersion.id) : 0;
           const hasComments = count > 0;
