@@ -22,17 +22,15 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   const votesNeeded = Math.max(0, threshold - delta);
   const passed = delta >= threshold;
 
-  // Progress: clamp between 0–100 based on delta vs threshold
-  // We show progress as "how far along the delta is toward threshold"
-  // Delta can be negative; we map [-threshold, threshold] to [0, 100]
-  const rawProgress = (delta + threshold) / (2 * threshold); // 0 to 1
-  const progressPercent = Math.min(100, Math.max(0, rawProgress * 100));
+  // Progress: 0% = delta of 0 (or negative), 100% = delta >= threshold
+  // Map [0, threshold] to [0%, 100%], clamped
+  const progressPercent = Math.min(100, Math.max(0, (delta / threshold) * 100));
 
   // Simulate what a pro/con vote would do
   const afterProDelta = delta + (userVote?.vote === 'pro' ? 0 : userVote?.vote === 'con' ? 2 : 1);
   const afterConDelta = delta + (userVote?.vote === 'con' ? 0 : userVote?.vote === 'pro' ? -2 : -1);
-  const afterProProgress = Math.min(100, Math.max(0, ((afterProDelta + threshold) / (2 * threshold)) * 100));
-  const afterConProgress = Math.min(100, Math.max(0, ((afterConDelta + threshold) / (2 * threshold)) * 100));
+  const afterProProgress = Math.min(100, Math.max(0, (afterProDelta / threshold) * 100));
+  const afterConProgress = Math.min(100, Math.max(0, (afterConDelta / threshold) * 100));
 
   const [hoverVote, setHoverVote] = React.useState(null); // 'pro' | 'con' | null
 
@@ -75,14 +73,12 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
               {language === 'he' ? 'התקדמות לאישור' : language === 'ar' ? 'تقدم نحو القبول' : 'Progress to acceptance'}
             </span>
             <span className={`text-xs font-bold ${passed ? 'text-green-600' : 'text-slate-500'}`}>
-              {passed ? '✓' : `${delta}/${threshold}`}
+              {passed ? '✓' : `${Math.max(0, delta)}/${threshold}`}
             </span>
           </div>
 
           {/* Progress bar */}
           <div className="relative h-3 bg-slate-200 rounded-full overflow-hidden">
-            {/* Threshold marker at 50% (center = threshold exactly) */}
-            <div className="absolute inset-y-0 left-1/2 w-0.5 bg-slate-400 z-10 opacity-50" />
             
             <motion.div
               className={`h-full rounded-full ${barColor} transition-colors duration-300`}
