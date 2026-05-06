@@ -111,22 +111,46 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
         </div>
       </Link>
 
-      {/* User vote indicator - shown in read-only mode when user voted */}
-      {readOnly && userVote && (
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border ${userVote.vote === 'pro' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
-          {userVote.vote === 'pro' ? <ThumbsUp className="w-4 h-4" /> : <ThumbsDown className="w-4 h-4" />}
-          <span>
-            {language === 'he'
-              ? `הצבעת ${userVote.vote === 'pro' ? 'בעד' : 'נגד'}`
-              : language === 'ar'
-              ? `صوّتت ${userVote.vote === 'pro' ? 'مع' : 'ضد'}`
-              : `You voted ${userVote.vote === 'pro' ? 'Pro' : 'Con'}`}
-          </span>
+      {/* Vote buttons - disabled in read-only mode, showing past vote + counts */}
+      {readOnly ? (
+        <div className="flex gap-2 w-full min-w-0">
+          <button
+            disabled
+            className={`flex-1 min-w-0 h-10 md:h-12 text-sm md:text-base font-semibold rounded-xl px-2 md:px-4 flex items-center justify-center gap-2 border-2 transition-none cursor-not-allowed
+              ${userVote?.vote === 'pro'
+                ? 'bg-green-50 border-green-400 text-green-700 opacity-90'
+                : 'bg-slate-50 border-slate-200 text-slate-400 opacity-60'
+              }`}
+          >
+            <ThumbsUp className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+            <span className="truncate">{t('votePro')}</span>
+            {proVotes > 0 && <span className="text-xs md:text-sm shrink-0">({proVotes})</span>}
+            {userVote?.vote === 'pro' && (
+              <span className="text-xs bg-green-200 text-green-800 rounded-full px-1.5 py-0.5 shrink-0">
+                {language === 'he' ? 'הצבעתי' : language === 'ar' ? 'صوتي' : 'My vote'}
+              </span>
+            )}
+          </button>
+          <button
+            disabled
+            className={`flex-1 min-w-0 h-10 md:h-12 text-sm md:text-base font-semibold rounded-xl px-2 md:px-4 flex items-center justify-center gap-2 border-2 transition-none cursor-not-allowed
+              ${userVote?.vote === 'con'
+                ? 'bg-red-50 border-red-400 text-red-700 opacity-90'
+                : 'bg-slate-50 border-slate-200 text-slate-400 opacity-60'
+              }`}
+          >
+            <ThumbsDown className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+            <span className="truncate">{t('voteCon')}</span>
+            {conVotes > 0 && <span className="text-xs md:text-sm shrink-0">({conVotes})</span>}
+            {userVote?.vote === 'con' && (
+              <span className="text-xs bg-red-200 text-red-800 rounded-full px-1.5 py-0.5 shrink-0">
+                {language === 'he' ? 'הצבעתי' : language === 'ar' ? 'صوتي' : 'My vote'}
+              </span>
+            )}
+          </button>
         </div>
-      )}
-
-      {/* Vote buttons - full width (hidden in read-only mode) */}
-      {!readOnly && <div className="relative">
+      ) : (
+      <div className="relative">
         {voteMutation.isPending && (
           <div className="absolute inset-0 bg-white/60 rounded-xl flex items-center justify-center z-10">
             <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
@@ -177,7 +201,8 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
               : (language === 'he' ? 'הצבעת נגד • לחץ/י שוב לביטול' : language === 'ar' ? 'صوتك ضد • اضغط مجدداً للإلغاء' : 'You voted con • click again to remove')}
           </p>
         )}
-      </div>}
+      </div>
+      )}
     </div>
   );
 }
