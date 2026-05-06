@@ -752,6 +752,22 @@ export default function SuggestionDetail() {
                   </div>
                 </div>
 
+                {suggestion.status !== 'pending' && userVote && (
+                  <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${userVote.vote === 'pro' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+                    {userVote.vote === 'pro'
+                      ? <ThumbsUp className="w-4 h-4" />
+                      : <ThumbsDown className="w-4 h-4" />
+                    }
+                    <span>
+                      {language === 'he'
+                        ? `הצבעת ${userVote.vote === 'pro' ? 'בעד' : 'נגד'}`
+                        : language === 'ar'
+                        ? `صوّتت ${userVote.vote === 'pro' ? 'مع' : 'ضد'}`
+                        : `You voted ${userVote.vote === 'pro' ? 'Pro' : 'Con'}`}
+                    </span>
+                  </div>
+                )}
+
                 {suggestion.status === 'pending' &&
                   <div className="flex gap-3 relative">
                     {voteMutation.isPending && !rateLimitRetryAfter &&
