@@ -53,9 +53,12 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
     });
 
     const unsubscribeSection = base44.entities.Section.subscribe((event) => {
-      if (event.data?.documentId === documentId ||
-          (event.type === 'update' && event.id && sectionsRef.current?.some(s => s.id === event.id))) {
+      const belongsToDoc = event.data?.documentId === documentId;
+      const isKnownSection = event.id && sectionsRef.current?.some(s => s.id === event.id);
+      if (belongsToDoc || isKnownSection) {
         debouncedInvalidate(['sections', documentId]);
+        // Also refresh aggregated data (votes, comments scoped to sections)
+        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
       }
     });
 
