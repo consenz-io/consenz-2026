@@ -68,7 +68,20 @@ Deno.serve(async (req) => {
     const creatorProfile = creatorProfiles[0];
     const creatorName = creatorProfile?.fullName || 'User';
 
-    const uniqueUserIds = [...new Set(interactions.map(i => i.userId))].filter(uid => uid !== suggestion.created_by);
+    // Collect user IDs from interactions + group members (if document belongs to a group)
+    const interactionUserIds = new Set(interactions.map(i => i.userId));
+
+    if (document.groupId) {
+      const groupMembers = await base44.asServiceRole.entities.GroupMember.filter({ groupId: document.groupId });
+      groupMembers.forEach(m => { if (m.userId) interactionUserIds.add(m.userId); });
+      console.log('[SUGGESTION AUTOMATION] Added', groupMembers.length, 'group members to notify list');
+    }
+
+    // Exclude the suggestion creator from notifications
+    const uniqueUserIds = [...interactionUserIds].filter(uid => uid !== suggestion.created_by);
+
+    // Also exclude by email — creator might be stored as email in some interactions
+    const creatorEmail = suggestion.created_by;
 
     if (uniqueUserIds.length === 0) {
       console.log('[SUGGESTION AUTOMATION] No users to notify');
@@ -76,7 +89,9 @@ Deno.serve(async (req) => {
     }
 
     // Fetch users to get their preferredLanguage
-    const users = await base44.asServiceRole.entities.User.filter({ id: { $in: uniqueUserIds } });
+    const allUsers = await base44.asServiceRole.entities.User.filter({ id: { $in: uniqueUserIds } });
+    // Filter out the creator by email as well
+    const users = allUsers.filter(u => u.email !== creatorEmail);
 
     const isEditSuggestion = suggestion.type === 'edit_suggestion';
     const titleKey = isEditSuggestion ? 'editSuggestionTitle' : 'newSuggestionTitle';
