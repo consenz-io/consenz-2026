@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -49,6 +49,54 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
   });
+
+  // Fetch group documents to find additional participants (suggestion creators)
+  const { data: groupDocuments = [] } = useQuery({
+    queryKey: ['groupDocuments', groupId],
+    queryFn: () => base44.entities.Document.filter({ groupId }, '-created_date'),
+    enabled: !!groupId && isOpen,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const docIds = groupDocuments.map(d => d.id);
+
+  const { data: allDocSuggestions = [] } = useQuery({
+    queryKey: ['groupAllSuggestions', groupId, docIds.join(',')],
+    queryFn: async () => {
+      if (docIds.length === 0) return [];
+      const results = [];
+      for (const id of docIds) {
+        const sug = await base44.entities.Suggestion.filter({ documentId: id }, null, 200);
+        results.push(...sug);
+      }
+      return results;
+    },
+    enabled: docIds.length > 0 && isOpen,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  // Build the full participant list: formal members + suggestion creators
+  const allParticipants = useMemo(() => {
+    const emailToProfile = new Map();
+    publicProfiles.forEach(p => { if (p.email) emailToProfile.set(p.email, p); });
+
+    const memberUserIds = new Set(groupMembers.map(m => m.userId));
+
+    // Collect emails of suggestion creators who are not formal members
+    const extraProfiles = [];
+    const seenEmails = new Set();
+    allDocSuggestions.forEach(s => {
+      if (s.created_by && !seenEmails.has(s.created_by)) {
+        seenEmails.add(s.created_by);
+        const profile = emailToProfile.get(s.created_by);
+        if (profile && !memberUserIds.has(profile.userId)) {
+          extraProfiles.push(profile);
+        }
+      }
+    });
+
+    return { extraProfiles };
+  }, [groupMembers, publicProfiles, allDocSuggestions]);
 
   const isAdmin = groupMembers.some(
     m => m.userId === currentUser?.id && m.role === 'admin'
@@ -423,7 +471,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
 
         <div className="space-y-3">
           <h3 className="font-semibold text-sm text-slate-700">
-            {language === 'he' ? 'חברי הקבוצה' : 'Group Members'} ({groupMembers.length})
+            {language === 'he' ? 'חברי הקבוצה' : 'Group Members'} ({groupMembers.length + allParticipants.extraProfiles.length})
           </h3>
           
           {groupMembers.map((member) => {
@@ -509,6 +557,31 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
               </div>
             );
           })}
+
+          {/* Additional participants (not formal members) */}
+          {allParticipants.extraProfiles.length > 0 && (
+            <>
+              <p className="text-xs text-slate-400 pt-2 border-t">
+                {language === 'he' ? 'משתתפים נוספים (הגישו הצעות)' : 'Additional participants (submitted suggestions)'}
+              </p>
+              {allParticipants.extraProfiles.map((profile) => (
+                <div
+                  key={profile.userId}
+                  className="flex items-center justify-between p-3 rounded-lg border border-dashed hover:bg-slate-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-slate-400 to-slate-500 rounded-full flex items-center justify-center text-white font-medium">
+                      {profile.fullName?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-900">{profile.fullName}</p>
+                      <p className="text-sm text-slate-500">{profile.email}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
         </div>
       </DialogContent>
     </Dialog>
