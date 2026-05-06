@@ -747,24 +747,8 @@ export default function SuggestionDetail() {
                       readOnly={true}
                     />
                   : <>
-                      {/* For pending suggestions: keep existing vote buttons UI */}
-                      <div className="flex items-center gap-6">
-                        <div className="flex items-center gap-1">
-                          <ThumbsUp className="w-4 h-4 text-green-500" />
-                          <span className="text-xl font-bold text-green-600">{suggestion.proVotes || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <ThumbsDown className="w-4 h-4 text-red-500" />
-                          <span className="text-xl font-bold text-red-600">{suggestion.conVotes || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-xl font-bold text-blue-600">{consensusScore}%</span>
-                          <span className="text-xs text-slate-500 ml-1">{t('consensus')}</span>
-                        </div>
-                        <div className="flex-1">
-                          <VotesNeededCounter suggestion={suggestion} document={document} acceptedSuggestions={allDocumentSuggestions.filter((s) => s.status === 'accepted')} />
-                        </div>
-                      </div>
+                      {/* For pending suggestions: show progress bar and vote buttons */}
+                      <VotesNeededCounter suggestion={suggestion} document={document} acceptedSuggestions={allDocumentSuggestions.filter((s) => s.status === 'accepted')} />
                       <div className="flex gap-3 relative">
                         {voteMutation.isPending && !rateLimitRetryAfter &&
                           <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10"><Loader2 className="w-5 h-5 animate-spin text-blue-600" /></div>
