@@ -70,7 +70,7 @@ export default function MyDocuments() {
           </Card>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {myDocuments.map(doc => (
+            {[...myDocuments].sort((a, b) => getUnvotedCount(b.id) - getUnvotedCount(a.id)).map(doc => (
               <MyDocumentCard
                 key={doc.id}
                 doc={doc}
