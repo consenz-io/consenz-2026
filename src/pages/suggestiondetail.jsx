@@ -192,14 +192,18 @@ export default function SuggestionDetail() {
     queryKey: ['topics', suggestion?.documentId],
     queryFn: () => base44.entities.Topic.filter({ documentId: suggestion.documentId }, 'order'),
     enabled: !!suggestion?.documentId,
-    initialData: []
+    initialData: [],
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   const { data: sections } = useQuery({
     queryKey: ['sections', suggestion?.documentId],
     queryFn: () => base44.entities.Section.filter({ documentId: suggestion.documentId }),
     enabled: !!suggestion?.documentId,
-    initialData: []
+    initialData: [],
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   // ── Mutations ─────────────────────────────────────────────────────────────
