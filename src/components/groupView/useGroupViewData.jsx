@@ -61,14 +61,15 @@ export function useGroupViewData(groupId) {
     staleTime: 10 * 60 * 1000,
   });
 
-  const { data: docInteractions = [] } = useQuery({
-    queryKey: ['groupDocInteractions', groupId, docIds.join(',')],
+  // Fetch all suggestions (not just pending) to collect participant emails
+  const { data: allDocSuggestions = [] } = useQuery({
+    queryKey: ['groupAllSuggestions', groupId, docIds.join(',')],
     queryFn: async () => {
       if (docIds.length === 0) return [];
       const results = [];
       for (const id of docIds) {
-        const interactions = await base44.entities.UserInteraction.filter({ documentId: id });
-        results.push(...interactions);
+        const sug = await base44.entities.Suggestion.filter({ documentId: id }, null, 200);
+        results.push(...sug);
       }
       return results;
     },
@@ -76,12 +77,25 @@ export function useGroupViewData(groupId) {
     staleTime: 10 * 60 * 1000,
   });
 
-  // All unique participant userIds: formal members + document participants
+  // All unique participant userIds: formal members + anyone who created a suggestion in any group doc
   const allParticipantUserIds = useMemo(() => {
+    // Start with formal group members
     const ids = new Set(groupMembers.map(m => m.userId));
-    docInteractions.forEach(i => { if (i.userId) ids.add(i.userId); });
+
+    // Build email → userId map from publicProfiles
+    const emailToUserId = new Map();
+    publicProfiles.forEach(p => { if (p.email && p.userId) emailToUserId.set(p.email, p.userId); });
+
+    // Add suggestion creators (stored as email in created_by)
+    allDocSuggestions.forEach(s => {
+      if (s.created_by) {
+        const uid = emailToUserId.get(s.created_by);
+        if (uid) ids.add(uid);
+      }
+    });
+
     return [...ids];
-  }, [groupMembers, docInteractions]);
+  }, [groupMembers, publicProfiles, allDocSuggestions]);
 
   const { data: userVotes = [] } = useQuery({
     queryKey: ['userVotes', currentUser?.id],
