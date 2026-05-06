@@ -36,7 +36,6 @@ export default function SuggestionSidebar({
 }) {
   const { t, isRTL, language } = useLanguage();
   const queryClient = useQueryClient();
-  const [newArgument, setNewArgument] = useState({ type: null, content: "" });
   const [error, setError] = useState(null);
   const [isEditingExplanation, setIsEditingExplanation] = useState(false);
   const [explanationText, setExplanationText] = useState("");
@@ -109,13 +108,6 @@ export default function SuggestionSidebar({
     enabled: !!suggestionId && !!user?.id,
     refetchInterval: SYNC_INTERVAL,
     refetchIntervalInBackground: false,
-  });
-
-  const { data: args } = useQuery({
-    queryKey: ['arguments', suggestionId],
-    queryFn: () => base44.entities.Argument.filter({ suggestionId }, '-created_date'),
-    initialData: [],
-    enabled: !!suggestionId,
   });
 
   const { data: users } = useQuery({
@@ -252,28 +244,6 @@ export default function SuggestionSidebar({
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
       queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
     },
-  });
-
-  const addArgumentMutation = useMutation({
-    mutationFn: async ({ type, content }) => {
-      if (!user) throw new Error(t('mustBeLoggedIn'));
-      if (!content.trim()) throw new Error(t('argumentContentRequired'));
-
-      await base44.entities.Argument.create({
-        suggestionId,
-        type,
-        content: content.trim(),
-        convincedCount: 0
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['arguments', suggestionId] });
-      setNewArgument({ type: null, content: "" });
-    },
-    onError: (err) => {
-      setError(err.message);
-      setTimeout(() => setError(null), 5000);
-    }
   });
 
   const updateStatusMutation = useMutation({
@@ -419,12 +389,6 @@ export default function SuggestionSidebar({
       default: return 'bg-slate-100 text-slate-800 border-slate-200';
     }
   };
-
-  const proArgs = args.filter(a => a.type === 'pro');
-  const conArgs = args.filter(a => a.type === 'con');
-  const consensusScore = suggestion.proVotes + suggestion.conVotes > 0 
-    ? (suggestion.proVotes / (suggestion.proVotes + suggestion.conVotes) * 100).toFixed(0)
-    : 50;
 
   return (
     <>
@@ -739,103 +703,6 @@ export default function SuggestionSidebar({
               {t('deleteSuggestion')}
             </Button>
           )}
-
-          {/* Arguments */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-green-50 rounded-lg p-3">
-              <h4 className="text-xs font-semibold text-green-700 mb-2 flex items-center gap-1">
-                <ThumbsUp className="w-3 h-3" />
-                {t('proArguments')} ({proArgs.length})
-              </h4>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {proArgs.length === 0 ? (
-                  <p className="text-[10px] text-slate-500">{t('noProArgumentsYet')}</p>
-                ) : (
-                  proArgs.map(arg => (
-                    <div key={arg.id} className="text-xs text-slate-700 bg-white p-2 rounded">
-                      {arg.content}
-                    </div>
-                  ))
-                )}
-              </div>
-              {user && newArgument.type !== 'pro' && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setNewArgument({ type: 'pro', content: "" })}
-                  className="w-full mt-2 text-xs h-7"
-                >
-                  {t('addProArgument')}
-                </Button>
-              )}
-              {newArgument.type === 'pro' && (
-                <div className="mt-2 space-y-2">
-                  <Textarea
-                    value={newArgument.content}
-                    onChange={(e) => setNewArgument({ ...newArgument, content: e.target.value })}
-                    placeholder={t('writeProArgument')}
-                    rows={2}
-                    className="text-xs"
-                  />
-                  <div className="flex gap-1">
-                    <Button size="sm" onClick={() => addArgumentMutation.mutate(newArgument)} className="flex-1 h-7 text-xs">
-                      {t('submit')}
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => setNewArgument({ type: null, content: "" })} className="h-7 text-xs">
-                      {t('cancel')}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="bg-red-50 rounded-lg p-3">
-              <h4 className="text-xs font-semibold text-red-700 mb-2 flex items-center gap-1">
-                <ThumbsDown className="w-3 h-3" />
-                {t('conArguments')} ({conArgs.length})
-              </h4>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {conArgs.length === 0 ? (
-                  <p className="text-[10px] text-slate-500">{t('noConArgumentsYet')}</p>
-                ) : (
-                  conArgs.map(arg => (
-                    <div key={arg.id} className="text-xs text-slate-700 bg-white p-2 rounded">
-                      {arg.content}
-                    </div>
-                  ))
-                )}
-              </div>
-              {user && newArgument.type !== 'con' && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setNewArgument({ type: 'con', content: "" })}
-                  className="w-full mt-2 text-xs h-7"
-                >
-                  {t('addConArgument')}
-                </Button>
-              )}
-              {newArgument.type === 'con' && (
-                <div className="mt-2 space-y-2">
-                  <Textarea
-                    value={newArgument.content}
-                    onChange={(e) => setNewArgument({ ...newArgument, content: e.target.value })}
-                    placeholder={t('writeConArgument')}
-                    rows={2}
-                    className="text-xs"
-                  />
-                  <div className="flex gap-1">
-                    <Button size="sm" onClick={() => addArgumentMutation.mutate(newArgument)} className="flex-1 h-7 text-xs">
-                      {t('submit')}
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => setNewArgument({ type: null, content: "" })} className="h-7 text-xs">
-                      {t('cancel')}
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
 
           {/* Comments */}
           <div className="border-t border-slate-200 pt-4">
