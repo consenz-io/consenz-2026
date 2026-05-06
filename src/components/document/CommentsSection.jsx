@@ -564,11 +564,7 @@ export default function CommentsSection({ entityType, entityId, user, scrollToCo
       <div className="space-y-3">
         {isLoading ? (
           <div className="text-center py-8 text-slate-500">{t('loadingComments')}</div>
-        ) : topLevelComments.length === 0 ? (
-          <div className="text-center py-8 text-slate-500">
-            {t('noCommentsYet')} {user && t('beFirstToComment')}
-          </div>
-        ) : (
+        ) : topLevelComments.length === 0 ? null : (
           topLevelComments.map(comment => (
             <CommentItem 
               key={comment.id} 
