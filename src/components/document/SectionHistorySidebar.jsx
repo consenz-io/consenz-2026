@@ -164,23 +164,18 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                           ? 'cursor-pointer border-slate-200 hover:border-blue-300 hover:shadow-md hover:-translate-y-0.5'
                           : 'border-slate-100'
                         }`}
-                      onClick={() => {
-                        if (group.suggestionId) {
-                          window.location.href = `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${group.suggestionId}`;
-                        }
-                      }}
                     >
-                      {/* Colored left accent bar */}
-                      <div className={`absolute inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-1 rounded-full
+                      {/* Colored accent bar */}
+                      <div className={`absolute inset-y-0 right-0 w-1 rounded-full
                         ${ver.changeType === 'suggestion_accepted' ? 'bg-green-400' :
                           ver.changeType === 'section_created' ? 'bg-blue-400' : 'bg-slate-300'}`}
                       />
 
-                      <div className={`px-4 py-3 ${isRTL ? 'pr-5' : 'pl-5'}`}>
-                        <div className={`flex items-start justify-between gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                          <div className={`flex flex-col gap-1.5 flex-1 min-w-0 ${isRTL ? 'items-end' : 'items-start'}`}>
+                      <div className="px-4 pr-5 py-3" dir="rtl">
+                        <div className="flex items-start justify-between gap-2 flex-row-reverse">
+                          <div className="flex flex-col gap-1.5 flex-1 min-w-0 items-end">
                             {/* Badge + version */}
-                            <div className={`flex items-center gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
+                            <div className="flex items-center gap-2 flex-wrap flex-row-reverse">
                               <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
                                 v{ver.version}
                               </span>
@@ -193,8 +188,8 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                             {/* Content preview */}
                             {ver.content && (
                               <p
-                                className="text-sm text-slate-600 line-clamp-2 leading-relaxed"
-                                dir={isRTL ? 'rtl' : 'ltr'}
+                                className="text-sm text-slate-600 line-clamp-2 leading-relaxed text-right"
+                                dir="rtl"
                                 style={{ fontFamily: "'Times New Roman', 'David Libre', serif" }}
                               >
                                 {ver.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}
@@ -213,10 +208,19 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                           </div>
 
                           {group.suggestionId && (
-                            <ChevronRight className={`w-4 h-4 text-slate-300 group-hover:text-blue-500 flex-shrink-0 mt-1 transition-colors ${isRTL ? 'rotate-180' : ''}`} />
+                            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-500 flex-shrink-0 mt-1 transition-colors rotate-180" />
                           )}
                         </div>
                       </div>
+
+                      {/* Clickable overlay via Link */}
+                      {group.suggestionId && (
+                        <Link
+                          to={`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${group.suggestionId}`}
+                          className="absolute inset-0"
+                          aria-label="פתח פרטי הצעה"
+                        />
+                      )}
                     </div>
                   );
                 })}
