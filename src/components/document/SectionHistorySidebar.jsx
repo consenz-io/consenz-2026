@@ -171,17 +171,17 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                           ver.changeType === 'section_created' ? 'bg-blue-400' : 'bg-slate-300'}`}
                       />
 
-                      <div className="px-4 pr-5 py-3" dir="rtl">
-                        <div className="flex items-start justify-between gap-2 flex-row-reverse">
-                          <div className="flex flex-col gap-1.5 flex-1 min-w-0 items-end">
+                      <div className="px-4 pl-5 py-3" dir="rtl">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex flex-col gap-1.5 flex-1 min-w-0">
                             {/* Badge + version */}
-                            <div className="flex items-center gap-2 flex-wrap flex-row-reverse">
-                              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
-                                v{ver.version}
-                              </span>
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${changeTypeBadgeClass(ver.changeType)}`}>
                                 {changeTypeIcon(ver.changeType)}
                                 {changeTypeLabel(ver.changeType)}
+                              </span>
+                              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                                v{ver.version}
                               </span>
                             </div>
 
@@ -208,7 +208,7 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                           </div>
 
                           {group.suggestionId && (
-                            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-500 flex-shrink-0 mt-1 transition-colors rotate-180" />
+                            <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-blue-500 flex-shrink-0 mt-1 transition-colors" />
                           )}
                         </div>
                       </div>
