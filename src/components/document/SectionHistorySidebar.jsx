@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, History, ChevronRight } from "lucide-react";
+import { X, History, ChevronRight, CheckCircle2, Edit2, PlusCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -75,6 +75,18 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
     return t('directEdit');
   };
 
+  const changeTypeIcon = (changeType) => {
+    if (changeType === 'suggestion_accepted') return <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />;
+    if (changeType === 'section_created') return <PlusCircle className="w-3.5 h-3.5 text-blue-500" />;
+    return <Edit2 className="w-3.5 h-3.5 text-slate-400" />;
+  };
+
+  const changeTypeBadgeClass = (changeType) => {
+    if (changeType === 'suggestion_accepted') return 'bg-green-50 text-green-700 border-green-200';
+    if (changeType === 'section_created') return 'bg-blue-50 text-blue-700 border-blue-200';
+    return 'bg-slate-50 text-slate-600 border-slate-200';
+  };
+
   return (
     <AnimatePresence>
       {isOpen && <>
@@ -90,94 +102,123 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
 
         {/* Sidebar */}
         <motion.div
-          className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-full max-w-sm bg-white shadow-2xl z-50 overflow-y-auto`}
+          className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-full max-w-sm bg-gradient-to-b from-slate-50 to-white shadow-2xl z-50 overflow-y-auto flex flex-col`}
           initial={{ x: isRTL ? '100%' : '-100%' }}
           animate={{ x: 0 }}
           exit={{ x: isRTL ? '100%' : '-100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         >
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-slate-200 p-4 flex items-center justify-between z-10">
+          <div className="sticky top-0 bg-white/90 backdrop-blur-sm border-b border-slate-200 px-5 py-4 flex items-center justify-between z-10 shadow-sm">
             <div className="flex items-center gap-3">
-              <History className="w-5 h-5 text-blue-600" />
-              <h2 className="text-lg font-bold text-slate-900">{t('sectionHistory')}</h2>
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-sm">
+                <History className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-slate-900 leading-tight">{t('sectionHistory')}</h2>
+                {document && topic && (
+                  <p className={`text-xs text-slate-400 ${isRTL ? 'text-right' : ''}`}>
+                    <Link to={`${createPageUrl("DocumentView")}?id=${document.id}`} className="hover:text-blue-600 transition-colors">
+                      {document.title}
+                    </Link>
+                    <span className="mx-1">›</span>
+                    <span>{topic.title}</span>
+                  </p>
+                )}
+              </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="w-5 h-5" />
+            <Button variant="ghost" size="icon" onClick={onClose} className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg">
+              <X className="w-4 h-4" />
             </Button>
           </div>
 
-          <div className="p-4 space-y-2">
-            {/* Breadcrumb */}
-            {document && topic && (
-              <p className={`text-sm text-slate-500 mb-4 ${isRTL ? 'text-right' : ''}`}>
-                <Link to={`${createPageUrl("DocumentView")}?id=${document.id}`} className="hover:underline">
-                  {document.title}
-                </Link>
-                {' > '}{topic.title}
-              </p>
-            )}
-
+          <div className="p-4 space-y-2 flex-1">
             {sectionLoading || versionsLoading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-14 w-full" />
-                <Skeleton className="h-14 w-full" />
-                <Skeleton className="h-14 w-full" />
+              <div className="space-y-3 pt-2">
+                <Skeleton className="h-20 w-full rounded-xl" />
+                <Skeleton className="h-20 w-full rounded-xl" />
+                <Skeleton className="h-20 w-full rounded-xl" />
               </div>
             ) : !section ? (
-              <div className="text-center py-12">
-                <p className="text-slate-500">{t('sectionNotFound')}</p>
+              <div className="text-center py-16">
+                <p className="text-slate-500 text-sm">{t('sectionNotFound')}</p>
               </div>
             ) : versionGroups.length === 0 ? (
-              <div className="text-center py-12">
-                <History className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-500">{t('noPreviousVersions')}</p>
+              <div className="text-center py-16 px-4">
+                <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <History className="w-7 h-7 text-slate-300" />
+                </div>
+                <p className="text-slate-600 font-medium text-sm">{t('noPreviousVersions')}</p>
                 <p className="text-xs text-slate-400 mt-2">{t('sectionChangesAutomaticallySaved')}</p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 pt-1">
                 {versionGroups.filter(g => g.version?.changeType).map((group, idx) => {
                   const ver = group.version;
                   const date = ver.updated_date || ver.created_date;
-                  const row = (
+                  return (
                     <div
                       key={idx}
-                      className={`flex items-center justify-between gap-3 p-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition-colors ${group.suggestionId ? 'cursor-pointer' : ''}`}
+                      className={`group relative rounded-xl border bg-white transition-all duration-200 overflow-hidden
+                        ${group.suggestionId
+                          ? 'cursor-pointer border-slate-200 hover:border-blue-300 hover:shadow-md hover:-translate-y-0.5'
+                          : 'border-slate-100'
+                        }`}
                       onClick={() => {
                         if (group.suggestionId) {
                           window.location.href = `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${group.suggestionId}`;
                         }
                       }}
                     >
-                      <div className={`flex flex-col gap-1 ${isRTL ? 'items-end' : 'items-start'}`}>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-slate-700">
-                            {t('version')} {ver.version}
-                          </span>
-                          <Badge variant="outline" className="text-xs py-0">
-                            {changeTypeLabel(ver.changeType)}
-                          </Badge>
+                      {/* Colored left accent bar */}
+                      <div className={`absolute inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-1 rounded-full
+                        ${ver.changeType === 'suggestion_accepted' ? 'bg-green-400' :
+                          ver.changeType === 'section_created' ? 'bg-blue-400' : 'bg-slate-300'}`}
+                      />
+
+                      <div className={`px-4 py-3 ${isRTL ? 'pr-5' : 'pl-5'}`}>
+                        <div className={`flex items-start justify-between gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                          <div className={`flex flex-col gap-1.5 flex-1 min-w-0 ${isRTL ? 'items-end' : 'items-start'}`}>
+                            {/* Badge + version */}
+                            <div className={`flex items-center gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
+                              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+                                v{ver.version}
+                              </span>
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${changeTypeBadgeClass(ver.changeType)}`}>
+                                {changeTypeIcon(ver.changeType)}
+                                {changeTypeLabel(ver.changeType)}
+                              </span>
+                            </div>
+
+                            {/* Content preview */}
+                            {ver.content && (
+                              <p
+                                className="text-sm text-slate-600 line-clamp-2 leading-relaxed"
+                                dir={isRTL ? 'rtl' : 'ltr'}
+                                style={{ fontFamily: "'Times New Roman', 'David Libre', serif" }}
+                              >
+                                {ver.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()}
+                              </p>
+                            )}
+
+                            {/* Date */}
+                            {date && (
+                              <span className="text-xs text-slate-400">
+                                {new Date(date).toLocaleDateString(
+                                  language === 'he' ? 'he-IL' : language === 'ar' ? 'ar' : 'en-GB',
+                                  { day: 'numeric', month: 'short', year: 'numeric' }
+                                )}
+                              </span>
+                            )}
+                          </div>
+
+                          {group.suggestionId && (
+                            <ChevronRight className={`w-4 h-4 text-slate-300 group-hover:text-blue-500 flex-shrink-0 mt-1 transition-colors ${isRTL ? 'rotate-180' : ''}`} />
+                          )}
                         </div>
-                        {ver.content && (
-                          <p className="text-xs text-slate-500 line-clamp-2 max-w-[200px]"
-                             dir={isRTL ? 'rtl' : 'ltr'}
-                             dangerouslySetInnerHTML={{ __html: ver.content.replace(/<[^>]*>/g, ' ').trim() }}
-                          />
-                        )}
-                        {date && (
-                          <span className="text-xs text-slate-400">
-                            {new Date(date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar' : 'en-GB', {
-                              day: 'numeric', month: 'short', year: 'numeric'
-                            })}
-                          </span>
-                        )}
                       </div>
-                      {group.suggestionId && (
-                        <ChevronRight className={`w-4 h-4 text-slate-400 flex-shrink-0 ${isRTL ? 'rotate-180' : ''}`} />
-                      )}
                     </div>
                   );
-                  return row;
                 })}
               </div>
             )}
