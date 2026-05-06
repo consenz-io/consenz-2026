@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useEffect, useRef } from "react";
+import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -77,25 +78,41 @@ export function useGroupViewData(groupId) {
     staleTime: 10 * 60 * 1000,
   });
 
-  // All unique participant userIds: formal members + anyone who created a suggestion in any group doc
-  const allParticipantUserIds = useMemo(() => {
-    // Start with formal group members
-    const ids = new Set(groupMembers.map(m => m.userId));
+  // Auto-add suggestion creators as formal group members if not already members
+  const autoAddedRef = React.useRef(new Set());
+  React.useEffect(() => {
+    if (!groupId || groupMembers.length === 0 || publicProfiles.length === 0 || allDocSuggestions.length === 0) return;
 
-    // Build email → userId map from publicProfiles
+    const memberUserIds = new Set(groupMembers.map(m => m.userId));
     const emailToUserId = new Map();
     publicProfiles.forEach(p => { if (p.email && p.userId) emailToUserId.set(p.email, p.userId); });
 
-    // Add suggestion creators (stored as email in created_by)
+    const toAdd = [];
+    const seenEmails = new Set();
     allDocSuggestions.forEach(s => {
-      if (s.created_by) {
+      if (s.created_by && !seenEmails.has(s.created_by)) {
+        seenEmails.add(s.created_by);
         const uid = emailToUserId.get(s.created_by);
-        if (uid) ids.add(uid);
+        if (uid && !memberUserIds.has(uid) && !autoAddedRef.current.has(uid)) {
+          autoAddedRef.current.add(uid);
+          toAdd.push(uid);
+        }
       }
     });
 
-    return [...ids];
-  }, [groupMembers, publicProfiles, allDocSuggestions]);
+    if (toAdd.length === 0) return;
+
+    Promise.all(
+      toAdd.map(userId => base44.entities.GroupMember.create({ groupId, userId, role: 'member' }))
+    ).then(() => {
+      queryClient.invalidateQueries({ queryKey: ['groupMembers', groupId] });
+    });
+  }, [groupId, groupMembers, publicProfiles, allDocSuggestions, queryClient]);
+
+  // All unique participant userIds: formal members only (suggestion creators are now auto-added as members)
+  const allParticipantUserIds = useMemo(() => {
+    return groupMembers.map(m => m.userId);
+  }, [groupMembers]);
 
   const { data: userVotes = [] } = useQuery({
     queryKey: ['userVotes', currentUser?.id],
