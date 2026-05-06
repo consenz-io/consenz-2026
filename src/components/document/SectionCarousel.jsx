@@ -342,91 +342,83 @@ const SectionCarousel = React.memo(function SectionCarousel({
   }, [targetSuggestionId]);
 
   return (
-    <div id={currentSuggestionDisplayId} className={`group relative p-3 md:p-6 border-2 rounded-lg hover:shadow-md transition-all bg-gradient-to-br from-white to-slate-50/30 ${flashingSection ? 'suggestion-accepted-flash border-green-400' : 'border-slate-300 hover:border-blue-400'}`}>
-      {/* כותרת סעיף עם אינדיקטור */}
-      <div className="flex items-center justify-between mb-3 md:mb-4">
-        <div className="flex items-center gap-2 md:gap-3">
-          <div className="text-xs md:text-sm font-medium text-slate-500">
+    <div id={currentSuggestionDisplayId} className={`group relative rounded-lg transition-all bg-white overflow-hidden ${
+      flashingSection
+        ? 'suggestion-accepted-flash border-2 border-green-400 shadow-md'
+        : allViews.length > 1
+          ? 'border-2 border-indigo-200 shadow-sm hover:shadow-md hover:border-indigo-300'
+          : 'border border-slate-200 hover:border-slate-300 hover:shadow-sm'
+    }`}>
+      {/* כותרת סעיף */}
+      <div className="flex items-center justify-between px-3 md:px-5 pt-3 md:pt-4 pb-2">
+        <div className="flex items-center gap-2">
+          <div className="text-xs font-medium text-slate-400">
             {t('section')} {sectionIndex + 1}
           </div>
           {allViews.length > 1 && (
-            <Badge variant="outline" className="text-[10px] md:text-xs">
+            <Badge variant="outline" className="text-[10px] border-slate-300 text-slate-500">
               {currentIndex + 1} / {allViews.length}
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-1 md:gap-2 relative z-10">
-          {/* כפתור היסטוריה - פותח sidebar */}
+        <div className="flex items-center gap-1 relative z-10">
           <Button
             variant="ghost"
             size="sm"
             onClick={(e) => { e.stopPropagation(); setShowHistorySidebar(true); }}
-            className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-blue-600 h-7 md:h-8 px-2 md:px-3"
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-blue-600 h-7 px-2"
           >
-            <History className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-            <span className="hidden md:inline">{t('history')}</span>
+            <History className={`w-3.5 h-3.5 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+            <span className="hidden md:inline text-xs">{t('history')}</span>
           </Button>
         </div>
       </div>
 
-      {/* כפתורי דפדוף */}
+      {/* אינדיקטור הצעות ממתינות */}
       {allViews.length > 1 && (
-        <div className={`flex items-center justify-between mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm ${
-          currentView?.data?.type === 'delete_section' 
-            ? 'border-red-300 bg-gradient-to-r from-red-50 to-pink-50' 
-            : 'border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50'
+        <div className={`mx-10 md:mx-12 mb-1 px-3 py-1.5 rounded-md text-center text-xs font-semibold border ${
+          isFirstView
+            ? 'bg-indigo-50 text-indigo-700 border-indigo-100'
+            : currentView?.data?.type === 'delete_section'
+              ? 'bg-red-50 text-red-700 border-red-100'
+              : 'bg-indigo-50 text-indigo-700 border-indigo-100'
         }`}>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrev}
-            className="flex items-center"
-          >
-            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </Button>
-
-          <div className="text-center">
-            {isFirstView ? (
-              <p className="text-sm">
-                <span className="font-bold text-amber-700 text-lg">{sortedSuggestions.length}</span> <span className="font-bold text-slate-800">{t('editSuggestions')}</span>
-              </p>
-            ) : (
-              <div className="flex flex-col items-center gap-0.5">
-                <button 
-                  onClick={() => setCurrentSuggestionId('current')}
-                  className={`text-sm font-bold hover:underline cursor-pointer transition-colors ${
-                    currentView?.data?.type === 'delete_section' 
-                      ? 'text-red-700 hover:text-red-900' 
-                      : 'text-blue-700 hover:text-blue-900'
-                  }`}
-                >
-                  {currentView?.data?.type === 'delete_section' 
-                   ? ((language || 'he') === 'he' ? 'הצעה למחיקת הסעיף' : (language || 'he') === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion')
-                   : `${(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح תعديل בواسطة' : 'Edit suggestion by'} ${getUserName(currentView?.data?.created_by)}`
-                  }
-                </button>
-                {currentView?.data?.created_date && (
-                  <span className="text-[10px] text-slate-400">
-                    {new Date(currentView.data.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNext}
-            className="flex items-center"
-          >
-            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </Button>
+          {isFirstView ? (
+            <span>{sortedSuggestions.length} {t('editSuggestions')}</span>
+          ) : (
+            <button
+              onClick={() => setCurrentSuggestionId('current')}
+              className="hover:underline cursor-pointer"
+            >
+              {currentView?.data?.type === 'delete_section'
+                ? ((language || 'he') === 'he' ? 'הצעה למחיקת הסעיף' : (language || 'he') === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion')
+                : `${(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح تعديل بواسطة' : 'Edit suggestion by'} ${getUserName(currentView?.data?.created_by)}`
+              }
+            </button>
+          )}
         </div>
       )}
 
-      {/* תוכן */}
-      <div className="min-h-[40px]">
+      {/* אזור תוכן עם חיצי דפדוף בצדדים */}
+      <div className="relative flex items-stretch">
+        {/* חץ שמאל */}
+        {allViews.length > 1 && (
+          <button
+            onClick={isRTL ? handleNext : handlePrev}
+            aria-label={isRTL ? 'הבא' : 'Previous'}
+            className={`flex-shrink-0 w-10 md:w-12 flex items-center justify-center self-stretch
+              transition-all duration-150
+              ${isRTL
+                ? (isLastView ? 'text-slate-200 cursor-default' : 'text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 active:bg-indigo-100 cursor-pointer')
+                : (isFirstView ? 'text-slate-200 cursor-default' : 'text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 active:bg-indigo-100 cursor-pointer')
+              }`}
+          >
+            <ChevronLeft className="w-6 h-6 md:w-7 md:h-7" strokeWidth={2.5} />
+          </button>
+        )}
+
+        {/* תוכן */}
+        <div className="flex-1 min-w-0 px-3 md:px-5 py-3 md:py-4 min-h-[60px]">
         {!currentView ? null : currentView.type === 'current' ? (
           // תצוגת תוכן נוכחי
           <>
@@ -645,11 +637,28 @@ const SectionCarousel = React.memo(function SectionCarousel({
             )}
           </>
         )}
+        </div>
+
+        {/* חץ ימין */}
+        {allViews.length > 1 && (
+          <button
+            onClick={isRTL ? handlePrev : handleNext}
+            aria-label={isRTL ? 'הקודם' : 'Next'}
+            className={`flex-shrink-0 w-10 md:w-12 flex items-center justify-center self-stretch
+              transition-all duration-150
+              ${isRTL
+                ? (isFirstView ? 'text-slate-200 cursor-default' : 'text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 active:bg-indigo-100 cursor-pointer')
+                : (isLastView ? 'text-slate-200 cursor-default' : 'text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 active:bg-indigo-100 cursor-pointer')
+              }`}
+          >
+            <ChevronRight className="w-6 h-6 md:w-7 md:h-7" strokeWidth={2.5} />
+          </button>
+        )}
       </div>
 
       {/* כפתורים מרכזיים - ערוך/תגובה בתצוגה נוכחית */}
       {isFirstView && (
-        <div className={`flex flex-wrap gap-1 mt-4 pt-4 border-t border-slate-200 ${isRTL ? 'justify-end' : 'justify-start'}`}>
+        <div className={`flex flex-wrap gap-1 px-3 md:px-5 pb-3 md:pb-4 pt-1 border-t border-slate-100 ${isRTL ? 'justify-end' : 'justify-start'}`}>
           <Button
             variant="ghost"
             size="sm"
@@ -713,13 +722,11 @@ const SectionCarousel = React.memo(function SectionCarousel({
         onConfirm={(saveToHistory) => deleteSectionMutation.mutate(saveToHistory)}
         isDeleting={deleteSectionMutation.isPending}
       />
-      
       <SectionHistorySidebar
         sectionId={section.id}
         isOpen={showHistorySidebar}
         onClose={() => setShowHistorySidebar(false)}
       />
-
       <JoinGroupDialog
         isOpen={showJoinGroupDialog}
         onClose={() => setShowJoinGroupDialog(false)}
