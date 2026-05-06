@@ -150,6 +150,12 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'Already being processed' });
     }
 
+    // Second guard: if acceptance was already fully completed by another instance that won the lock
+    if (lockedSuggestion.suggestionConsensus != null) {
+      console.log('[PROCESS ACCEPTANCE] Already processed by another instance (suggestionConsensus set), skipping');
+      return Response.json({ success: true, message: 'Already processed by another instance' });
+    }
+
     // We own the lock — immediately mark as accepted so no other instance can proceed
     await base44.asServiceRole.entities.Suggestion.update(suggestionId, { status: 'accepted' });
 
