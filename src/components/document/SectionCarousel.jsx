@@ -369,31 +369,40 @@ const SectionCarousel = React.memo(function SectionCarousel({
         </div>
       </div>
 
-      {/* כפתורי דפדוף - באנר עליון + חיצים צדדיים */}
+      {/* כפתורי דפדוף */}
       {allViews.length > 1 && (
-        <div className={`mb-3 px-3 py-2 rounded-lg border-b-2 flex items-center justify-between ${
-          currentView?.data?.type === 'delete_section'
-            ? 'border-red-300 bg-gradient-to-r from-red-50 to-pink-50'
+        <div className={`flex items-center justify-between mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm ${
+          currentView?.data?.type === 'delete_section' 
+            ? 'border-red-300 bg-gradient-to-r from-red-50 to-pink-50' 
             : 'border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50'
         }`}>
-          <div className="text-center flex-1 min-w-0 px-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrev}
+            className="flex items-center"
+          >
+            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </Button>
+
+          <div className="text-center">
             {isFirstView ? (
               <p className="text-sm">
                 <span className="font-bold text-amber-700 text-lg">{sortedSuggestions.length}</span> <span className="font-bold text-slate-800">{t('editSuggestions')}</span>
               </p>
             ) : (
               <div className="flex flex-col items-center gap-0.5">
-                <button
+                <button 
                   onClick={() => setCurrentSuggestionId('current')}
-                  className={`text-sm font-bold hover:underline cursor-pointer transition-colors truncate max-w-full ${
-                    currentView?.data?.type === 'delete_section'
-                      ? 'text-red-700 hover:text-red-900'
+                  className={`text-sm font-bold hover:underline cursor-pointer transition-colors ${
+                    currentView?.data?.type === 'delete_section' 
+                      ? 'text-red-700 hover:text-red-900' 
                       : 'text-blue-700 hover:text-blue-900'
                   }`}
                 >
-                  {currentView?.data?.type === 'delete_section'
+                  {currentView?.data?.type === 'delete_section' 
                    ? ((language || 'he') === 'he' ? 'הצעה למחיקת הסעיף' : (language || 'he') === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion')
-                   : `${(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح تعديل بواسطة' : 'Edit suggestion by'} ${getUserName(currentView?.data?.created_by)}`
+                   : `${(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح תعديل בواسطة' : 'Edit suggestion by'} ${getUserName(currentView?.data?.created_by)}`
                   }
                 </button>
                 {currentView?.data?.created_date && (
@@ -404,63 +413,20 @@ const SectionCarousel = React.memo(function SectionCarousel({
               </div>
             )}
           </div>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <button
-              onClick={handlePrev}
-              className={`w-7 h-7 flex items-center justify-center rounded-full border transition-all shadow-sm hover:shadow-md active:scale-95 ${
-                currentView?.data?.type === 'delete_section'
-                  ? 'bg-white border-red-300 text-red-600 hover:bg-red-50'
-                  : 'bg-white border-amber-300 text-amber-700 hover:bg-amber-50'
-              }`}
-              title={isRTL ? 'הבא' : 'Previous'}
-            >
-              {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            </button>
-            <span className="text-xs font-semibold text-slate-500 min-w-[32px] text-center">{currentIndex + 1}/{allViews.length}</span>
-            <button
-              onClick={handleNext}
-              className={`w-7 h-7 flex items-center justify-center rounded-full border transition-all shadow-sm hover:shadow-md active:scale-95 ${
-                currentView?.data?.type === 'delete_section'
-                  ? 'bg-white border-red-300 text-red-600 hover:bg-red-50'
-                  : 'bg-white border-amber-300 text-amber-700 hover:bg-amber-50'
-              }`}
-              title={isRTL ? 'הקודם' : 'Next'}
-            >
-              {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            </button>
-          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNext}
+            className="flex items-center"
+          >
+            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </Button>
         </div>
       )}
 
-      {/* תוכן עם חיצי דפדוף צמודים לצדדים */}
-      <div className="relative min-h-[40px]">
-        {allViews.length > 1 && (
-          <>
-            <button
-              onClick={handlePrev}
-              className={`absolute top-0 bottom-0 ${isRTL ? 'right-0' : 'left-0'} w-6 flex items-center justify-center rounded transition-all z-10 opacity-0 hover:opacity-100 group-hover:opacity-60 hover:!opacity-100 ${
-                currentView?.data?.type === 'delete_section'
-                  ? 'hover:bg-red-100 text-red-500'
-                  : 'hover:bg-amber-100 text-amber-600'
-              }`}
-              title={isRTL ? 'הבא' : 'Previous'}
-            >
-              {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            </button>
-            <button
-              onClick={handleNext}
-              className={`absolute top-0 bottom-0 ${isRTL ? 'left-0' : 'right-0'} w-6 flex items-center justify-center rounded transition-all z-10 opacity-0 hover:opacity-100 group-hover:opacity-60 hover:!opacity-100 ${
-                currentView?.data?.type === 'delete_section'
-                  ? 'hover:bg-red-100 text-red-500'
-                  : 'hover:bg-amber-100 text-amber-600'
-              }`}
-              title={isRTL ? 'הקודם' : 'Next'}
-            >
-              {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            </button>
-          </>
-        )}
-        <div className={allViews.length > 1 ? 'px-7' : ''}>
+      {/* תוכן */}
+      <div className="min-h-[40px]">
         {!currentView ? null : currentView.type === 'current' ? (
           // תצוגת תוכן נוכחי
           <>
@@ -679,7 +645,6 @@ const SectionCarousel = React.memo(function SectionCarousel({
             )}
           </>
         )}
-        </div>
       </div>
 
       {/* כפתורים מרכזיים - ערוך/תגובה בתצוגה נוכחית */}
