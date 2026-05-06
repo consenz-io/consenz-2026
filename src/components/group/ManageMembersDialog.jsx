@@ -578,6 +578,31 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                       <p className="text-sm text-slate-500">{profile.email}</p>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        await base44.entities.GroupMember.create({ groupId, userId: profile.userId, role: 'member' });
+                        queryClient.invalidateQueries({ queryKey: ['groupMembers', groupId] });
+                      }}
+                    >
+                      <UserPlus className="w-4 h-4 mr-1" />
+                      {language === 'he' ? 'הוסף כחבר' : 'Add as member'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-purple-700 border-purple-200 hover:bg-purple-50"
+                      onClick={async () => {
+                        await base44.entities.GroupMember.create({ groupId, userId: profile.userId, role: 'admin' });
+                        queryClient.invalidateQueries({ queryKey: ['groupMembers', groupId] });
+                      }}
+                    >
+                      <Shield className="w-4 h-4 mr-1" />
+                      {language === 'he' ? 'הפוך לאדמין' : 'Make admin'}
+                    </Button>
+                  </div>
                 </div>
               ))}
             </>
