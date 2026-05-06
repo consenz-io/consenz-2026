@@ -341,103 +341,92 @@ const SectionCarousel = React.memo(function SectionCarousel({
     }
   }, [targetSuggestionId]);
 
-  // צבעי ה-indicator לפי סוג התצוגה
-  const isDeleteView = currentView?.data?.type === 'delete_section';
-  const hasSuggestions = allViews.length > 1;
-
   return (
-    <div id={currentSuggestionDisplayId} className={`group relative border-2 rounded-xl transition-all bg-white ${flashingSection ? 'suggestion-accepted-flash border-green-400 shadow-md' : hasSuggestions ? 'border-amber-300 shadow-sm hover:shadow-md' : 'border-slate-200 hover:border-blue-300 hover:shadow-sm'}`}>
-
-      {/* פס עליון עם מידע + היסטוריה */}
-      <div className="flex items-center justify-between px-4 pt-3 pb-2">
-        <div className="flex items-center gap-2">
-          <div className="text-xs font-medium text-slate-400">
+    <div id={currentSuggestionDisplayId} className={`group relative p-3 md:p-6 border-2 rounded-lg hover:shadow-md transition-all bg-gradient-to-br from-white to-slate-50/30 ${flashingSection ? 'suggestion-accepted-flash border-green-400' : 'border-slate-300 hover:border-blue-400'}`}>
+      {/* כותרת סעיף עם אינדיקטור */}
+      <div className="flex items-center justify-between mb-3 md:mb-4">
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="text-xs md:text-sm font-medium text-slate-500">
             {t('section')} {sectionIndex + 1}
           </div>
-          {hasSuggestions && (
-            <div className="flex items-center gap-1.5">
-              <div className="w-1 h-1 rounded-full bg-slate-300" />
-              {/* Dot indicators */}
-              <div className="flex gap-1">
-                {allViews.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentSuggestionId(allViews[i].id)}
-                    className={`rounded-full transition-all ${
-                      i === currentIndex
-                        ? 'w-4 h-2 bg-amber-500'
-                        : 'w-2 h-2 bg-slate-300 hover:bg-amber-300'
-                    }`}
-                    aria-label={`עבור לכרטיס ${i + 1}`}
-                  />
-                ))}
-              </div>
-              <span className="text-xs text-slate-400">{currentIndex + 1}/{allViews.length}</span>
-            </div>
+          {allViews.length > 1 && (
+            <Badge variant="outline" className="text-[10px] md:text-xs">
+              {currentIndex + 1} / {allViews.length}
+            </Badge>
           )}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => { e.stopPropagation(); setShowHistorySidebar(true); }}
-          className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-blue-600 h-7 px-2"
-        >
-          <History className={`w-3.5 h-3.5 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-          <span className="hidden md:inline text-xs">{t('history')}</span>
-        </Button>
+        <div className="flex items-center gap-1 md:gap-2 relative z-10">
+          {/* כפתור היסטוריה - פותח sidebar */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => { e.stopPropagation(); setShowHistorySidebar(true); }}
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-blue-600 h-7 md:h-8 px-2 md:px-3"
+          >
+            <History className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+            <span className="hidden md:inline">{t('history')}</span>
+          </Button>
+        </div>
       </div>
 
-      {/* banner לתצוגת הצעה */}
-      {hasSuggestions && !isFirstView && (
-        <div className={`mx-4 mb-2 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 ${
-          isDeleteView
-            ? 'bg-red-50 text-red-700 border border-red-200'
-            : 'bg-amber-50 text-amber-800 border border-amber-200'
+      {/* כפתורי דפדוף */}
+      {allViews.length > 1 && (
+        <div className={`flex items-center justify-between mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm ${
+          currentView?.data?.type === 'delete_section' 
+            ? 'border-red-300 bg-gradient-to-r from-red-50 to-pink-50' 
+            : 'border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50'
         }`}>
-          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isDeleteView ? 'bg-red-500' : 'bg-amber-500'}`} />
-          <span className="truncate">
-            {isDeleteView
-              ? ((language === 'he') ? 'הצעה למחיקת הסעיף' : (language === 'ar') ? 'اقتراح لحذف القسم' : 'Delete section suggestion')
-              : `${(language === 'he') ? 'הצעת עריכה' : (language === 'ar') ? 'اقتراح تعديل' : 'Edit suggestion'} · ${getUserName(currentView?.data?.created_by)}`
-            }
-          </span>
-          {currentView?.data?.created_date && (
-            <span className="text-[10px] opacity-60 flex-shrink-0">
-              {new Date(currentView.data.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit' })}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* banner לתצוגת תוכן נוכחי עם הצעות */}
-      {hasSuggestions && isFirstView && (
-        <div className="mx-4 mb-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
-          <span>
-            {language === 'he' ? `${sortedSuggestions.length} הצעות עריכה ממתינות — גלול לצדדים` : language === 'ar' ? `${sortedSuggestions.length} اقتراحات تعديل معلقة` : `${sortedSuggestions.length} pending edit suggestions — swipe to browse`}
-          </span>
-        </div>
-      )}
-
-      {/* גוף הכרטיס עם כפתורי דפדוף משני הצדדים */}
-      <div className="relative flex items-stretch">
-        {/* כפתור שמאל */}
-        {hasSuggestions && (
-          <button
-            onClick={isRTL ? handleNext : handlePrev}
-            className={`flex-shrink-0 flex items-center justify-center w-10 md:w-12 self-stretch transition-all
-              ${isRTL ? (isLastView  ? 'text-slate-200 cursor-default' : 'text-amber-500 hover:text-amber-700 hover:bg-amber-50 active:bg-amber-100')
-                      : (isFirstView ? 'text-slate-200 cursor-default' : 'text-amber-500 hover:text-amber-700 hover:bg-amber-50 active:bg-amber-100')
-              }`}
-            disabled={isRTL ? isLastView : isFirstView}
-            aria-label={isRTL ? t('nextSuggestion') : t('previousSuggestion')}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrev}
+            className="flex items-center"
           >
-            <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
-          </button>
-        )}
+            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </Button>
 
-        {/* תוכן */}
-        <div className={`flex-1 min-w-0 py-3 min-h-[60px] ${hasSuggestions ? 'px-2 md:px-3' : 'px-4 md:px-6'}`}>
+          <div className="text-center">
+            {isFirstView ? (
+              <p className="text-sm">
+                <span className="font-bold text-amber-700 text-lg">{sortedSuggestions.length}</span> <span className="font-bold text-slate-800">{t('editSuggestions')}</span>
+              </p>
+            ) : (
+              <div className="flex flex-col items-center gap-0.5">
+                <button 
+                  onClick={() => setCurrentSuggestionId('current')}
+                  className={`text-sm font-bold hover:underline cursor-pointer transition-colors ${
+                    currentView?.data?.type === 'delete_section' 
+                      ? 'text-red-700 hover:text-red-900' 
+                      : 'text-blue-700 hover:text-blue-900'
+                  }`}
+                >
+                  {currentView?.data?.type === 'delete_section' 
+                   ? ((language || 'he') === 'he' ? 'הצעה למחיקת הסעיף' : (language || 'he') === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion')
+                   : `${(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح תعديل בواسطة' : 'Edit suggestion by'} ${getUserName(currentView?.data?.created_by)}`
+                  }
+                </button>
+                {currentView?.data?.created_date && (
+                  <span className="text-[10px] text-slate-400">
+                    {new Date(currentView.data.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNext}
+            className="flex items-center"
+          >
+            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          </Button>
+        </div>
+      )}
+
+      {/* תוכן */}
+      <div className="min-h-[40px]">
         {!currentView ? null : currentView.type === 'current' ? (
           // תצוגת תוכן נוכחי
           <>
@@ -579,100 +568,88 @@ const SectionCarousel = React.memo(function SectionCarousel({
             })()}
 
             {/* כפתורי הצבעה והערות */}
-            <div className="mt-4 space-y-2">
-              {document?.votingButtonsEnabled && (
-                <div onClick={(e) => e.stopPropagation()}>
-                  {user && canParticipate ? (
-                    <VotingProgressSection
-                      suggestion={currentView.data}
-                      document={document}
-                      userVote={getUserVote(currentView.data.id)}
-                      voteMutation={{
-                        isPending: voteMutation.isPending,
-                        mutate: (vote) => voteMutation.mutate({ suggestionId: currentView.data.id, vote, currentVote: getUserVote(currentView.data.id) })
-                      }}
-                      isRTL={isRTL}
-                    />
-                  ) : (
-                    <VotingProgressSection
-                      suggestion={currentView.data}
-                      document={document}
-                      userVote={null}
-                      voteMutation={{ isPending: false, mutate: () => {
-                        if (!user) base44.auth.redirectToLogin(window.location.href);
-                        else if (!canParticipate) setShowJoinGroupDialog(true);
-                      }}}
-                      isRTL={isRTL}
-                      readOnly={!user}
-                    />
-                  )}
-                </div>
-              )}
-              {currentView?.data?.id && (() => {
-                const count = typeof getCommentsCount === 'function' ? getCommentsCount('suggestion', currentView.data.id) : 0;
-                const hasComments = count > 0;
-                const commentsKey = `suggestion-${currentView.data.id}`;
-                return (
-                  <>
-                    <div className={`flex items-center gap-2 flex-wrap mt-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className={`text-xs h-8 px-3 flex-shrink-0 ${isRTL ? 'mr-0 ml-auto' : 'ml-0 mr-auto'}`}
-                        onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
-                      >
-                        {t('viewDetails')}
-                      </Button>
-                      <Button
-                        variant={hasComments ? "outline" : "ghost"}
-                        size="sm"
-                        onClick={() => toggleComments(commentsKey)}
-                        className={`h-8 text-sm px-3 gap-1.5 relative flex-shrink-0 transition-all ${
-                          hasComments
-                            ? 'font-semibold text-blue-700 border-blue-300 bg-blue-50 hover:bg-blue-100'
-                            : 'text-slate-600 hover:text-blue-600'
-                        }`}
-                      >
-                        <MessageSquare className={`w-4 h-4 ${hasComments ? 'fill-blue-200' : ''}`} />
-                        {t('comments')}{hasComments ? ` (${count})` : ''}
-                      </Button>
-                    </div>
-                    {showComments[commentsKey] && (
-                      <div className="mt-4 pt-4 border-t border-slate-200">
-                        <CommentsSection
-                          entityType="suggestion"
-                          entityId={currentView.data.id}
-                          user={user}
-                        />
-                      </div>
+            {(
+              <div className="mt-4 space-y-2">
+                {document?.votingButtonsEnabled && (
+                  <div onClick={(e) => e.stopPropagation()}>
+                    {user && canParticipate ? (
+                      <VotingProgressSection
+                        suggestion={currentView.data}
+                        document={document}
+                        userVote={getUserVote(currentView.data.id)}
+                        voteMutation={{
+                          isPending: voteMutation.isPending,
+                          mutate: (vote) => voteMutation.mutate({ suggestionId: currentView.data.id, vote, currentVote: getUserVote(currentView.data.id) })
+                        }}
+                        isRTL={isRTL}
+                      />
+                    ) : (
+                      <VotingProgressSection
+                        suggestion={currentView.data}
+                        document={document}
+                        userVote={null}
+                        voteMutation={{ isPending: false, mutate: () => {
+                          if (!user) base44.auth.redirectToLogin(window.location.href);
+                          else if (!canParticipate) setShowJoinGroupDialog(true);
+                        }}}
+                        isRTL={isRTL}
+                        readOnly={!user}
+                      />
                     )}
-                  </>
-                );
-              })()}
-            </div>
-          </>
-        )}
-        </div>
+                  </div>
+                )}
+                {/* שורת כפתורים + תגובות */}
+                {currentView?.data?.id && (() => {
+                  const count = typeof getCommentsCount === 'function' ? getCommentsCount('suggestion', currentView.data.id) : 0;
+                  const hasComments = count > 0;
+                  const commentsKey = `suggestion-${currentView.data.id}`;
+                  return (
+                    <>
+                      <div className={`flex items-center gap-2 flex-wrap mt-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className={`text-xs h-8 px-3 flex-shrink-0 ${isRTL ? 'mr-0 ml-auto' : 'ml-0 mr-auto'}`}
+                          onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(currentView.data.id)}
+                        >
+                          {t('viewDetails')}
+                        </Button>
+                        <Button
+                          variant={hasComments ? "outline" : "ghost"}
+                          size="sm"
+                          onClick={() => toggleComments(commentsKey)}
+                          className={`h-8 text-sm px-3 gap-1.5 relative flex-shrink-0 transition-all ${
+                            hasComments
+                              ? 'font-semibold text-blue-700 border-blue-300 bg-blue-50 hover:bg-blue-100'
+                              : 'text-slate-600 hover:text-blue-600'
+                          }`}
+                        >
+                          <MessageSquare className={`w-4 h-4 ${hasComments ? 'fill-blue-200' : ''}`} />
+                          {t('comments')}{hasComments ? ` (${count})` : ''}
+                        </Button>
 
-        {/* כפתור ימין */}
-        {hasSuggestions && (
-          <button
-            onClick={isRTL ? handlePrev : handleNext}
-            className={`flex-shrink-0 flex items-center justify-center w-10 md:w-12 self-stretch rounded-br-xl transition-all
-              ${isRTL ? (isFirstView ? 'text-slate-200 cursor-default' : 'text-amber-500 hover:text-amber-700 hover:bg-amber-50 active:bg-amber-100')
-                      : (isLastView  ? 'text-slate-200 cursor-default' : 'text-amber-500 hover:text-amber-700 hover:bg-amber-50 active:bg-amber-100')
-              }`}
-            disabled={isRTL ? isFirstView : isLastView}
-            aria-label={isRTL ? t('previousSuggestion') : t('nextSuggestion')}
-          >
-            <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
-          </button>
+                      </div>
+                      {showComments[commentsKey] && (
+                        <div className="mt-4 pt-4 border-t border-slate-200">
+                          <CommentsSection
+                            entityType="suggestion"
+                            entityId={currentView.data.id}
+                            user={user}
+                          />
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      {/* כפתורים תחתונים - ערוך/מחק (תצוגה נוכחית בלבד) */}
+      {/* כפתורים מרכזיים - ערוך/תגובה בתצוגה נוכחית */}
       {isFirstView && (
-        <div className={`flex flex-wrap gap-1 px-4 pb-3 pt-2 border-t border-slate-100 ${isRTL ? 'justify-end' : 'justify-start'}`}>
+        <div className={`flex flex-wrap gap-1 mt-4 pt-4 border-t border-slate-200 ${isRTL ? 'justify-end' : 'justify-start'}`}>
           <Button
             variant="ghost"
             size="sm"
@@ -702,7 +679,10 @@ const SectionCarousel = React.memo(function SectionCarousel({
               variant="ghost"
               size="sm"
               onClick={() => {
-                if (!user) { base44.auth.redirectToLogin(window.location.href); return; }
+                if (!user) {
+                  base44.auth.redirectToLogin(window.location.href);
+                  return;
+                }
                 onEditSection({ ...section, isDeletingSuggestion: true });
               }}
               className="text-red-600 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity text-xs min-w-0"
