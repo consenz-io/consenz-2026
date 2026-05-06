@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import SuggestionCountdown from "@/components/document/SuggestionCountdown";
 import VotesNeededCounter from "../components/document/VotesNeededCounter";
+import VotingProgressSection from "../components/document/VotingProgressSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import CommentsSection from "../components/document/CommentsSection";
 import SectionDiff from "../components/document/SectionDiff";
@@ -734,60 +735,56 @@ export default function SuggestionDetail() {
 
             {document?.votingButtonsEnabled &&
               <div className="pt-4 border-t space-y-4">
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-1">
-                    <ThumbsUp className="w-4 h-4 text-green-500" />
-                    <span className="text-xl font-bold text-green-600">{suggestion.proVotes || 0}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <ThumbsDown className="w-4 h-4 text-red-500" />
-                    <span className="text-xl font-bold text-red-600">{suggestion.conVotes || 0}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xl font-bold text-blue-600">{consensusScore}%</span>
-                    <span className="text-xs text-slate-500 ml-1">{t('consensus')}</span>
-                  </div>
-                  <div className="flex-1">
-                    <VotesNeededCounter suggestion={suggestion} document={document} acceptedSuggestions={allDocumentSuggestions.filter((s) => s.status === 'accepted')} />
-                  </div>
-                </div>
 
-                {suggestion.status !== 'pending' && userVote && (
-                  <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${userVote.vote === 'pro' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
-                    {userVote.vote === 'pro'
-                      ? <ThumbsUp className="w-4 h-4" />
-                      : <ThumbsDown className="w-4 h-4" />
-                    }
-                    <span>
-                      {language === 'he'
-                        ? `הצבעת ${userVote.vote === 'pro' ? 'בעד' : 'נגד'}`
-                        : language === 'ar'
-                        ? `صوّتت ${userVote.vote === 'pro' ? 'مع' : 'ضد'}`
-                        : `You voted ${userVote.vote === 'pro' ? 'Pro' : 'Con'}`}
-                    </span>
-                  </div>
-                )}
-
-                {suggestion.status === 'pending' &&
-                  <div className="flex gap-3 relative">
-                    {voteMutation.isPending && !rateLimitRetryAfter &&
-                      <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10"><Loader2 className="w-5 h-5 animate-spin text-blue-600" /></div>
-                    }
-                    {rateLimitRetryAfter &&
-                      <div className="absolute inset-0 bg-amber-50/95 rounded-lg flex items-center justify-center z-10 gap-2 p-2">
-                        <Clock className="w-4 h-4 text-amber-600 animate-pulse" />
-                        <p className="text-xs font-medium text-amber-800">
-                          {language === 'he' ? `אנא המתן ${rateLimitRetryAfter} שניות` : language === 'ar' ? `يرجى الانتظار ${rateLimitRetryAfter} ثانية` : `Please wait ${rateLimitRetryAfter} seconds`}
-                        </p>
+                {/* For closed suggestions: show VotingProgressSection in read-only mode */}
+                {suggestion.status !== 'pending'
+                  ? <VotingProgressSection
+                      suggestion={suggestion}
+                      document={document}
+                      userVote={userVote}
+                      voteMutation={voteMutation}
+                      isRTL={isRTL}
+                      readOnly={true}
+                    />
+                  : <>
+                      {/* For pending suggestions: keep existing vote buttons UI */}
+                      <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-1">
+                          <ThumbsUp className="w-4 h-4 text-green-500" />
+                          <span className="text-xl font-bold text-green-600">{suggestion.proVotes || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <ThumbsDown className="w-4 h-4 text-red-500" />
+                          <span className="text-xl font-bold text-red-600">{suggestion.conVotes || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xl font-bold text-blue-600">{consensusScore}%</span>
+                          <span className="text-xs text-slate-500 ml-1">{t('consensus')}</span>
+                        </div>
+                        <div className="flex-1">
+                          <VotesNeededCounter suggestion={suggestion} document={document} acceptedSuggestions={allDocumentSuggestions.filter((s) => s.status === 'accepted')} />
+                        </div>
                       </div>
-                    }
-                    <Button variant={userVote?.vote === 'pro' ? 'default' : 'outline'} onClick={() => { if (!user) { base44.auth.redirectToLogin(window.location.href); return; } voteMutation.mutate('pro'); }} disabled={voteMutation.isPending || rateLimitRetryAfter !== null} className={`flex-1 ${userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700 border-green-600' : 'border-green-300 text-green-700 hover:bg-green-50'}`}>
-                      <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{t('votePro')}
-                    </Button>
-                    <Button variant={userVote?.vote === 'con' ? 'default' : 'outline'} onClick={() => { if (!user) { base44.auth.redirectToLogin(window.location.href); return; } voteMutation.mutate('con'); }} disabled={voteMutation.isPending || rateLimitRetryAfter !== null} className={`flex-1 ${userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700 border-red-600' : 'border-red-300 text-red-700 hover:bg-red-50'}`}>
-                      <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{t('voteCon')}
-                    </Button>
-                  </div>
+                      <div className="flex gap-3 relative">
+                        {voteMutation.isPending && !rateLimitRetryAfter &&
+                          <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10"><Loader2 className="w-5 h-5 animate-spin text-blue-600" /></div>
+                        }
+                        {rateLimitRetryAfter &&
+                          <div className="absolute inset-0 bg-amber-50/95 rounded-lg flex items-center justify-center z-10 gap-2 p-2">
+                            <Clock className="w-4 h-4 text-amber-600 animate-pulse" />
+                            <p className="text-xs font-medium text-amber-800">
+                              {language === 'he' ? `אנא המתן ${rateLimitRetryAfter} שניות` : language === 'ar' ? `يرجى الانتظار ${rateLimitRetryAfter} ثانية` : `Please wait ${rateLimitRetryAfter} seconds`}
+                            </p>
+                          </div>
+                        }
+                        <Button variant={userVote?.vote === 'pro' ? 'default' : 'outline'} onClick={() => { if (!user) { base44.auth.redirectToLogin(window.location.href); return; } voteMutation.mutate('pro'); }} disabled={voteMutation.isPending || rateLimitRetryAfter !== null} className={`flex-1 ${userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700 border-green-600' : 'border-green-300 text-green-700 hover:bg-green-50'}`}>
+                          <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{t('votePro')}
+                        </Button>
+                        <Button variant={userVote?.vote === 'con' ? 'default' : 'outline'} onClick={() => { if (!user) { base44.auth.redirectToLogin(window.location.href); return; } voteMutation.mutate('con'); }} disabled={voteMutation.isPending || rateLimitRetryAfter !== null} className={`flex-1 ${userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700 border-red-600' : 'border-red-300 text-red-700 hover:bg-red-50'}`}>
+                          <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{t('voteCon')}
+                        </Button>
+                      </div>
+                    </>
                 }
 
                 {isAdmin && suggestion.status === 'pending' &&

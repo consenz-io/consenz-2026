@@ -42,13 +42,19 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
 
   const barColor = passed
     ? 'bg-green-500'
+    : readOnly
+    ? 'bg-red-400'
     : hoverVote === 'pro'
     ? 'bg-blue-500'
     : hoverVote === 'con'
     ? 'bg-red-400'
     : 'bg-blue-400';
 
-  const statusText = passed
+  const statusText = readOnly
+    ? passed
+      ? (language === 'he' ? '✓ עבר את סף הקונצנזוס!' : language === 'ar' ? '✓ تجاوز عتبة الإجماع!' : '✓ Passed consensus threshold!')
+      : (language === 'he' ? `לא הגיע לסף — חסרו ${votesNeeded} תומכים` : language === 'ar' ? `لم يصل للعتبة — نقص ${votesNeeded} مؤيدين` : `Did not reach threshold — ${votesNeeded} supporters short`)
+    : passed
     ? (language === 'he' ? '✓ עבר את סף הקונצנזוס!' : language === 'ar' ? '✓ تجاوز عتبة الإجماع!' : '✓ Passed consensus threshold!')
     : hoverVote === 'pro'
     ? (language === 'he' ? `הצבעתך תקרב את ההצעה לאישור` : language === 'ar' ? 'سيقرب صوتك الاقتراح من القبول' : 'Your vote will help pass this proposal')
@@ -104,6 +110,20 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
           </motion.p>
         </div>
       </Link>
+
+      {/* User vote indicator - shown in read-only mode when user voted */}
+      {readOnly && userVote && (
+        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border ${userVote.vote === 'pro' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+          {userVote.vote === 'pro' ? <ThumbsUp className="w-4 h-4" /> : <ThumbsDown className="w-4 h-4" />}
+          <span>
+            {language === 'he'
+              ? `הצבעת ${userVote.vote === 'pro' ? 'בעד' : 'נגד'}`
+              : language === 'ar'
+              ? `صوّتت ${userVote.vote === 'pro' ? 'مع' : 'ضد'}`
+              : `You voted ${userVote.vote === 'pro' ? 'Pro' : 'Con'}`}
+          </span>
+        </div>
+      )}
 
       {/* Vote buttons - full width (hidden in read-only mode) */}
       {!readOnly && <div className="relative">
