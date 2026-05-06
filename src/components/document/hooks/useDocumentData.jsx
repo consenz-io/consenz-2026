@@ -25,24 +25,26 @@ export function useDocumentData(documentId) {
     queryKey: ['topics', documentId],
     queryFn: () => base44.entities.Topic.filter({ documentId }, 'order').catch(() => []),
     enabled: !!documentId,
-    staleTime: 0, // Always refetch on mount to avoid stale empty cache after navigation
+    staleTime: 0,
     gcTime: 10 * 60 * 1000,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     retry: 3,
     retryDelay: 1000,
+    placeholderData: (prev) => prev, // keep previous data while refetching — prevents flash of empty
   });
 
   const { data: sections = [], isLoading: sectionsLoading, isError: sectionsError } = useQuery({
     queryKey: ['sections', documentId],
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
     enabled: !!documentId,
-    staleTime: 0, // Always refetch on mount to avoid stale empty cache after navigation
+    staleTime: 0,
     gcTime: 10 * 60 * 1000,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     retry: 3,
     retryDelay: 1000,
+    placeholderData: (prev) => prev, // keep previous data while refetching — prevents flash of empty
   });
 
   const { data: suggestions = [], isLoading: suggestionsLoading, isError: suggestionsError } = useQuery({
