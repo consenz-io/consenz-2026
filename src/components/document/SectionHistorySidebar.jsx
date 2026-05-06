@@ -158,6 +158,12 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                             {changeTypeLabel(ver.changeType)}
                           </Badge>
                         </div>
+                        {ver.content && (
+                          <p className="text-xs text-slate-500 line-clamp-2 max-w-[200px]"
+                             dir={isRTL ? 'rtl' : 'ltr'}
+                             dangerouslySetInnerHTML={{ __html: ver.content.replace(/<[^>]*>/g, ' ').trim() }}
+                          />
+                        )}
                         {date && (
                           <span className="text-xs text-slate-400">
                             {new Date(date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar' : 'en-GB', {
