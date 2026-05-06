@@ -26,7 +26,7 @@ export default function GroupView() {
   const [showInviteMember, setShowInviteMember] = useState(false);
 
   const {
-    currentUser, group, groupMembers, documents, publicProfiles,
+    currentUser, group, groupMembers, allParticipantUserIds, documents, publicProfiles,
     isAdmin, isMember, getUnvotedCount, isLoading,
     joinGroupMutation, leaveGroupMutation, requestAccessMutation,
     queryClient, navigate,
@@ -234,7 +234,7 @@ export default function GroupView() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {[...new Set(groupMembers.map(m => m.userId))].map(userId => {
+                  {allParticipantUserIds.map(userId => {
                     const profile = publicProfiles.find(p => p.userId === userId);
                     const member = groupMembers.find(m => m.userId === userId);
                     return <GroupMemberRow key={userId} userId={userId} profile={profile} role={member?.role} />;

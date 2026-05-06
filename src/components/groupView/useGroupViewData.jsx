@@ -61,6 +61,28 @@ export function useGroupViewData(groupId) {
     staleTime: 10 * 60 * 1000,
   });
 
+  const { data: docInteractions = [] } = useQuery({
+    queryKey: ['groupDocInteractions', groupId, docIds.join(',')],
+    queryFn: async () => {
+      if (docIds.length === 0) return [];
+      const results = [];
+      for (const id of docIds) {
+        const interactions = await base44.entities.UserInteraction.filter({ documentId: id });
+        results.push(...interactions);
+      }
+      return results;
+    },
+    enabled: docIds.length > 0,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  // All unique participant userIds: formal members + document participants
+  const allParticipantUserIds = useMemo(() => {
+    const ids = new Set(groupMembers.map(m => m.userId));
+    docInteractions.forEach(i => { if (i.userId) ids.add(i.userId); });
+    return [...ids];
+  }, [groupMembers, docInteractions]);
+
   const { data: userVotes = [] } = useQuery({
     queryKey: ['userVotes', currentUser?.id],
     queryFn: () => base44.entities.Vote.filter({ userId: currentUser.id }, null, 500),
@@ -140,7 +162,7 @@ export function useGroupViewData(groupId) {
   });
 
   return {
-    currentUser, group, groupMembers, documents, publicProfiles,
+    currentUser, group, groupMembers, allParticipantUserIds, documents, publicProfiles,
     isAdmin, isMember, getUnvotedCount,
     isLoading: groupLoading || groupFetching || membersLoading || documentsLoading,
     joinGroupMutation, leaveGroupMutation, requestAccessMutation,
