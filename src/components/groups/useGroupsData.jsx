@@ -9,50 +9,67 @@ export function useGroupsData() {
     retry: false,
   });
 
+  // Step 1: Fetch only this user's memberships
+  const { data: myMemberships = [], isLoading: membersLoading } = useQuery({
+    queryKey: ['myGroupMemberships', currentUser?.id],
+    queryFn: () => base44.entities.GroupMember.filter({ userId: currentUser.id }),
+    enabled: !!currentUser?.id,
+    placeholderData: [],
+    staleTime: 0,
+  });
+
+  const groupIds = useMemo(() => myMemberships.map(m => m.groupId), [myMemberships]);
+
+  // Step 2: Fetch only the groups the user belongs to
   const { data: groups = [], isLoading: groupsLoading } = useQuery({
-    queryKey: ['groups'],
-    queryFn: () => base44.entities.Group.list('-created_date'),
+    queryKey: ['myGroups', groupIds],
+    queryFn: () => base44.entities.Group.filter({ id: { $in: groupIds } }, '-created_date'),
+    enabled: groupIds.length > 0,
     placeholderData: [],
-    staleTime: 3 * 60 * 1000,
+    staleTime: 0,
   });
 
-  const { data: groupMembers = [], isLoading: membersLoading } = useQuery({
-    queryKey: ['groupMembers'],
-    queryFn: () => base44.entities.GroupMember.list(),
+  // Step 3: Fetch member counts for those groups
+  const { data: groupMembers = [] } = useQuery({
+    queryKey: ['groupMembersForGroups', groupIds],
+    queryFn: () => base44.entities.GroupMember.filter({ groupId: { $in: groupIds } }),
+    enabled: groupIds.length > 0,
     placeholderData: [],
-    staleTime: 3 * 60 * 1000,
+    staleTime: 0,
   });
 
+  // Step 4: Fetch documents in those groups
   const { data: documents = [] } = useQuery({
-    queryKey: ['documents'],
-    queryFn: () => base44.entities.Document.list(),
+    queryKey: ['groupDocuments', groupIds],
+    queryFn: () => base44.entities.Document.filter({ groupId: { $in: groupIds } }),
+    enabled: groupIds.length > 0,
     placeholderData: [],
-    staleTime: 3 * 60 * 1000,
+    staleTime: 0,
   });
 
+  // Visible groups: hidden groups only visible to members/admins/creators
   const visibleGroups = useMemo(() => {
-    // Wait until members are loaded before filtering hidden groups
-    if (membersLoading) return [];
+    if (!currentUser) return [];
     return groups.filter((group) => {
       if (group.status === 'public' || group.status === 'private') return true;
-      if (!currentUser) return false;
-      const isMember = groupMembers.some(m => m.groupId === group.id && m.userId === currentUser.id);
+      // hidden group — user is a member (already fetched only their groups), admin, or creator
       const isAdmin = currentUser.role === 'admin';
       const isCreator = group.created_by === currentUser.email;
+      const isMember = myMemberships.some(m => m.groupId === group.id);
       return isMember || isAdmin || isCreator;
     });
-  }, [groups, groupMembers, membersLoading, currentUser]);
+  }, [groups, myMemberships, currentUser]);
 
   const getDocCount = (groupId) => documents.filter(d => d.groupId === groupId).length;
   const getMemberCount = (groupId) => groupMembers.filter(m => m.groupId === groupId).length;
   const isGroupAdmin = (groupId) => currentUser
-    ? groupMembers.some(m => m.groupId === groupId && m.userId === currentUser.id && m.role === 'admin')
+    ? myMemberships.some(m => m.groupId === groupId && m.userId === currentUser.id && m.role === 'admin')
     : false;
 
   return {
     currentUser,
     visibleGroups,
-    isLoading: groupsLoading || membersLoading,
+    isLoading: membersLoading || (groupIds.length > 0 && groupsLoading),
     getDocCount,
     getMemberCount,
     isGroupAdmin,
