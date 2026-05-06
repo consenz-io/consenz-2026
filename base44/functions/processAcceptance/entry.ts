@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Not found' }, { status: 404 });
     }
 
-    // Double-check still pending
+    // Fast pre-check before attempting the lock
     if (suggestion.status !== 'pending') {
       console.log('[PROCESS ACCEPTANCE] Already processed, skipping');
       return Response.json({ success: true, message: 'Already processed' });
@@ -139,23 +139,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ATOMIC LOCK: Mark as accepted immediately before any processing.
-    // This prevents double-accept from concurrent admin clicks or parallel function instances.
-    // If another process already changed the status, this re-fetch will catch it.
-    await base44.asServiceRole.entities.Suggestion.update(suggestionId, { status: 'accepted' });
-    // Re-fetch to confirm we were the one that made the change (guard against race)
+    // ATOMIC LOCK: Set acceptanceLock=true only if it is currently false AND status is still pending.
+    // Two concurrent instances will both attempt this write; only the one whose write lands first
+    // will see acceptanceLock=false on re-fetch. The other will bail out.
+    await base44.asServiceRole.entities.Suggestion.update(suggestionId, { acceptanceLock: true });
     const lockedSuggestion = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
-    // Guard: if another process already completed full acceptance (suggestionConsensus is set),
-    // or if the status is NOT 'accepted' (meaning something reset it), bail out.
-    // Explicit parentheses to avoid operator precedence bugs (&& binds tighter than ||).
-    if (
-      !lockedSuggestion ||
-      lockedSuggestion.status !== 'accepted' ||
-      (lockedSuggestion.suggestionConsensus !== undefined && lockedSuggestion.suggestionConsensus !== null)
-    ) {
-      console.log('[PROCESS ACCEPTANCE] Another process completed acceptance first, skipping');
-      return Response.json({ success: true, message: 'Already processed by another instance' });
+
+    if (!lockedSuggestion || lockedSuggestion.status !== 'pending' || !lockedSuggestion.acceptanceLock) {
+      console.log('[PROCESS ACCEPTANCE] Lost the lock race — another instance is processing, skipping');
+      return Response.json({ success: true, message: 'Already being processed' });
     }
+
+    // We own the lock — immediately mark as accepted so no other instance can proceed
+    await base44.asServiceRole.entities.Suggestion.update(suggestionId, { status: 'accepted' });
 
     // Calculate contributors and consensus
     const totalUsers = await calculateContributors(base44, documentId);
