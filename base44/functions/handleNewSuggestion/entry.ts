@@ -72,9 +72,19 @@ Deno.serve(async (req) => {
     const interactionUserIds = new Set(interactions.map(i => i.userId));
 
     if (document.groupId) {
+      // Add formal group members
       const groupMembers = await base44.asServiceRole.entities.GroupMember.filter({ groupId: document.groupId });
       groupMembers.forEach(m => { if (m.userId) interactionUserIds.add(m.userId); });
-      console.log('[SUGGESTION AUTOMATION] Added', groupMembers.length, 'group members to notify list');
+
+      // Add participants from all other documents in the group
+      const groupDocs = await base44.asServiceRole.entities.Document.filter({ groupId: document.groupId });
+      const otherDocIds = groupDocs.map(d => d.id).filter(id => id !== suggestion.documentId);
+      if (otherDocIds.length > 0) {
+        const otherInteractions = await base44.asServiceRole.entities.UserInteraction.filter({ documentId: { $in: otherDocIds } });
+        otherInteractions.forEach(i => { if (i.userId) interactionUserIds.add(i.userId); });
+      }
+
+      console.log('[SUGGESTION AUTOMATION] Group notify list size after enrichment:', interactionUserIds.size);
     }
 
     // Exclude the suggestion creator from notifications
