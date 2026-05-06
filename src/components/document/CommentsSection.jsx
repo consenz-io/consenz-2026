@@ -550,11 +550,6 @@ export default function CommentsSection({ entityType, entityId, user, scrollToCo
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-slate-700">
-        <MessageSquare className="w-5 h-5" />
-        <h3 className="font-semibold">{t('commentsCount')} ({totalCommentsCount})</h3>
-      </div>
-
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
