@@ -125,11 +125,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             <ThumbsUp className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
             <span className="truncate">{t('votePro')}</span>
             {proVotes > 0 && <span className="text-xs md:text-sm shrink-0">({proVotes})</span>}
-            {userVote?.vote === 'pro' && (
-              <span className="text-xs bg-green-200 text-green-800 rounded-full px-1.5 py-0.5 shrink-0">
-                {language === 'he' ? 'הצבעתי' : language === 'ar' ? 'صوتي' : 'My vote'}
-              </span>
-            )}
+
           </button>
           <button
             disabled
@@ -142,11 +138,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             <ThumbsDown className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
             <span className="truncate">{t('voteCon')}</span>
             {conVotes > 0 && <span className="text-xs md:text-sm shrink-0">({conVotes})</span>}
-            {userVote?.vote === 'con' && (
-              <span className="text-xs bg-red-200 text-red-800 rounded-full px-1.5 py-0.5 shrink-0">
-                {language === 'he' ? 'הצבעתי' : language === 'ar' ? 'صوتي' : 'My vote'}
-              </span>
-            )}
+
           </button>
         </div>
       ) : (
