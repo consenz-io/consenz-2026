@@ -36,7 +36,7 @@ export function useMyDocumentsData() {
   const myDocumentIds = useMemo(() => {
     const suggestedDocIds = suggestions.map(s => s.documentId);
     const interactedDocIds = userInteractions.map(ui => ui.documentId);
-    return [...new Set([...interactedDocIds, ...suggestedDocIds])];
+    return [...new Set([...interactedDocIds, ...suggestedDocIds])].sort();
   }, [suggestions, userInteractions]);
 
   const { data: allSuggestions = [] } = useQuery({
@@ -48,7 +48,7 @@ export function useMyDocumentsData() {
     staleTime: 2 * 60 * 1000,
   });
 
-  const allSuggestionIds = useMemo(() => allSuggestions.map(s => s.id), [allSuggestions]);
+  const allSuggestionIds = useMemo(() => allSuggestions.map(s => s.id).sort(), [allSuggestions]);
 
   const { data: allVotes = [] } = useQuery({
     queryKey: ['allVotesForDocs', allSuggestionIds],
@@ -73,7 +73,7 @@ export function useMyDocumentsData() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const allSectionIds = useMemo(() => allSections.map(s => s.id), [allSections]);
+  const allSectionIds = useMemo(() => allSections.map(s => s.id).sort(), [allSections]);
 
   const { data: allComments = [] } = useQuery({
     queryKey: ['allComments', allSuggestionIds, allSectionIds, myDocumentIds],

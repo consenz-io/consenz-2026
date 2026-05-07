@@ -18,7 +18,7 @@ export function useGroupsData() {
     staleTime: 0,
   });
 
-  const groupIds = useMemo(() => myMemberships.map(m => m.groupId), [myMemberships]);
+  const groupIds = useMemo(() => myMemberships.map(m => m.groupId).sort(), [myMemberships]);
 
   // Step 2: Fetch only the groups the user belongs to
   const { data: groups = [], isLoading: groupsLoading } = useQuery({
