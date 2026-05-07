@@ -385,11 +385,12 @@ const SectionCarousel = React.memo(function SectionCarousel({
 
       {/* כפתורי דפדוף */}
       {allViews.length > 1 && (
-        <div className={`flex items-center justify-between mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm ${
+        <div className={`mb-4 border-b-2 p-3 rounded-lg shadow-sm ${
           currentView?.data?.type === 'delete_section' 
             ? 'border-red-300 bg-gradient-to-r from-red-50 to-pink-50' 
             : 'border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50'
         }`}>
+        <div className="flex items-center justify-between pb-2">
           <button
             onClick={handlePrev}
             className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl border-2 font-bold transition-all shadow-sm
@@ -442,6 +443,23 @@ const SectionCarousel = React.memo(function SectionCarousel({
           >
             {isRTL ? <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" /> : <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />}
           </button>
+        </div>
+
+        {/* Dot indicators */}
+        <div className="flex items-center justify-center gap-1.5 pt-2">
+          {allViews.map((view, idx) => (
+            <button
+              key={view.id}
+              onClick={() => setCurrentSuggestionId(view.id)}
+              className={`rounded-full transition-all duration-200 ${
+                idx === currentIndex
+                  ? `w-5 h-2.5 ${currentView?.data?.type === 'delete_section' ? 'bg-red-500' : 'bg-amber-500'}`
+                  : `w-2 h-2 ${currentView?.data?.type === 'delete_section' ? 'bg-red-200 hover:bg-red-400' : 'bg-amber-200 hover:bg-amber-400'}`
+              }`}
+              aria-label={`${language === 'he' ? 'עבור לעמוד' : 'Go to'} ${idx + 1}`}
+            />
+          ))}
+        </div>
         </div>
       )}
 
