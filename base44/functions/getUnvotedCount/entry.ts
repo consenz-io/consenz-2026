@@ -20,6 +20,13 @@ Deno.serve(async (req) => {
     serviceBase44.entities.UserInteraction.filter({ userId: user.id }, null, 100),
   ]);
 
+  // Votes by current user (filter by created_by email)
+  const votedSuggestionIds = new Set(
+    userVotes
+      .filter(v => v.created_by === user.email)
+      .map(v => v.suggestionId)
+  );
+
   // Build set of document IDs the user participated in
   const participatedDocIds = new Set();
   
@@ -28,15 +35,8 @@ Deno.serve(async (req) => {
   
   // Docs where user interacted
   allInteractions.forEach(ui => ui.documentId && participatedDocIds.add(ui.documentId));
-
-  // Votes by current user (filter by created_by email)
-  const votedSuggestionIds = new Set(
-    userVotes
-      .filter(v => v.created_by === user.email)
-      .map(v => v.suggestionId)
-  );
   
-  // Also track documents where user voted
+  // Docs where user voted on suggestions
   pendingSuggestions.forEach(s => {
     if (votedSuggestionIds.has(s.id) && s.documentId) {
       participatedDocIds.add(s.documentId);
