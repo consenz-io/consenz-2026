@@ -390,16 +390,19 @@ const SectionCarousel = React.memo(function SectionCarousel({
             ? 'border-red-300 bg-gradient-to-r from-red-50 to-pink-50' 
             : 'border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50'
         }`}>
-          <Button
-            variant="outline"
-            size="sm"
+          <button
             onClick={handlePrev}
-            className="flex items-center"
+            className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl border-2 font-bold transition-all shadow-sm
+              ${currentView?.data?.type === 'delete_section'
+                ? 'border-red-300 bg-white text-red-600 hover:bg-red-100 hover:border-red-500 hover:shadow-md active:scale-95'
+                : 'border-amber-300 bg-white text-amber-700 hover:bg-amber-100 hover:border-amber-500 hover:shadow-md active:scale-95'
+              }`}
+            aria-label={isRTL ? (language === 'he' ? 'הבא' : 'التالي') : 'Previous'}
           >
-            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </Button>
+            {isRTL ? <ChevronRight className="w-5 h-5 md:w-6 md:h-6" /> : <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />}
+          </button>
 
-          <div className="text-center">
+          <div className="text-center flex-1 px-2">
             {isFirstView ? (
               <p className="text-sm">
                 <span className="font-bold text-amber-700 text-lg">{sortedSuggestions.length}</span> <span className="font-bold text-slate-800">{t('editSuggestions')}</span>
@@ -416,7 +419,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
                 >
                   {currentView?.data?.type === 'delete_section' 
                    ? ((language || 'he') === 'he' ? 'הצעה למחיקת הסעיף' : (language || 'he') === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion')
-                   : `${(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح תعديل בواسطة' : 'Edit suggestion by'} ${getUserName(currentView?.data?.created_by)}`
+                   : `${(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح תعديל בواסطة' : 'Edit suggestion by'} ${getUserName(currentView?.data?.created_by)}`
                   }
                 </button>
                 {currentView?.data?.created_date && (
@@ -428,14 +431,17 @@ const SectionCarousel = React.memo(function SectionCarousel({
             )}
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
+          <button
             onClick={handleNext}
-            className="flex items-center"
+            className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl border-2 font-bold transition-all shadow-sm
+              ${currentView?.data?.type === 'delete_section'
+                ? 'border-red-300 bg-white text-red-600 hover:bg-red-100 hover:border-red-500 hover:shadow-md active:scale-95'
+                : 'border-amber-300 bg-white text-amber-700 hover:bg-amber-100 hover:border-amber-500 hover:shadow-md active:scale-95'
+              }`}
+            aria-label={isRTL ? (language === 'he' ? 'הקודם' : 'السابق') : 'Next'}
           >
-            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </Button>
+            {isRTL ? <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" /> : <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />}
+          </button>
         </div>
       )}
 
