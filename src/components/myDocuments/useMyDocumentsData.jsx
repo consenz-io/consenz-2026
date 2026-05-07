@@ -88,11 +88,11 @@ export function useMyDocumentsData() {
 
   // Derive the full set of my documents (including voted ones)
   const myDocuments = useMemo(() => {
-    const votedSuggestions = allSuggestions.filter(s => allVotes.some(v => v.suggestionId === s.id));
+    const votedSuggestions = allSuggestions.filter(s => votes.some(v => v.suggestionId === s.id));
     const votedDocIds = votedSuggestions.map(s => s.documentId);
     const allMyIds = new Set([...myDocumentIds, ...votedDocIds]);
     return allDocuments.filter(doc => allMyIds.has(doc.id));
-  }, [allDocuments, myDocumentIds, allSuggestions, allVotes]);
+  }, [allDocuments, myDocumentIds, allSuggestions, votes]);
 
   const getUnvotedCount = (docId) => {
     if (!user?.id) return 0;
