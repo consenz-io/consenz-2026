@@ -1,10 +1,38 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Loader2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/LanguageContext";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+
+function useTimeRemaining(timerEndsAt) {
+  const [remaining, setRemaining] = React.useState(() => {
+    if (!timerEndsAt) return null;
+    return Math.max(0, new Date(timerEndsAt) - Date.now());
+  });
+
+  useEffect(() => {
+    if (!timerEndsAt) return;
+    const tick = () => setRemaining(Math.max(0, new Date(timerEndsAt) - Date.now()));
+    tick();
+    const id = setInterval(tick, 60000); // update every minute
+    return () => clearInterval(id);
+  }, [timerEndsAt]);
+
+  return remaining;
+}
+
+function formatRemaining(ms, language) {
+  if (ms === null) return null;
+  if (ms <= 0) return language === 'he' ? 'פג תוקף' : language === 'ar' ? 'انتهت' : 'Expired';
+  const totalMinutes = Math.floor(ms / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const days = Math.floor(hours / 24);
+  if (days >= 2) return language === 'he' ? `${days} ימים` : language === 'ar' ? `${days} أيام` : `${days}d`;
+  if (hours >= 1) return language === 'he' ? `${hours} שע'` : language === 'ar' ? `${hours} س` : `${hours}h`;
+  return language === 'he' ? `${totalMinutes} דק'` : language === 'ar' ? `${totalMinutes} د` : `${totalMinutes}m`;
+}
 
 /**
  * VotingProgressSection
@@ -12,6 +40,9 @@ import { createPageUrl } from "@/utils";
  */
 export default function VotingProgressSection({ suggestion, document, userVote, voteMutation, isRTL, readOnly = false }) {
   const { t, language } = useLanguage();
+  const msRemaining = useTimeRemaining(suggestion?.timerEndsAt);
+  const timeLabel = formatRemaining(msRemaining, language);
+  const isUrgent = msRemaining !== null && msRemaining > 0 && msRemaining < 6 * 60 * 60 * 1000; // < 6 hours
 
   const proVotes = suggestion.proVotes || 0;
   const conVotes = suggestion.conVotes || 0;
@@ -78,9 +109,17 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             <span className="text-xs font-semibold text-slate-600">
               {language === 'he' ? 'התקדמות לאישור' : language === 'ar' ? 'تقدم نحو القبول' : 'Progress to acceptance'}
             </span>
-            <span className={`text-xs font-bold ${passed ? 'text-green-600' : 'text-slate-500'}`}>
-              {passed ? '✓' : `${Math.max(0, delta)}/${threshold}`}
-            </span>
+            <div className="flex items-center gap-2">
+              {timeLabel && !readOnly && (
+                <span className={`flex items-center gap-0.5 text-xs font-medium ${isUrgent ? 'text-orange-500' : 'text-slate-400'}`}>
+                  <Clock className="w-3 h-3 shrink-0" />
+                  {timeLabel}
+                </span>
+              )}
+              <span className={`text-xs font-bold ${passed ? 'text-green-600' : 'text-slate-500'}`}>
+                {passed ? '✓' : `${Math.max(0, delta)}/${threshold}`}
+              </span>
+            </div>
           </div>
 
           {/* Progress bar */}
