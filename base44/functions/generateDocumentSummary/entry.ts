@@ -185,7 +185,12 @@ IMPORTANT:
 - When mentioning open suggestions, embed them as clickable HTML links using the <a> tags already provided in the data above — do NOT strip or replace the HTML link tags.
 - Be honest about which content came from admins vs. the community.
 - Use the actual content of comments and arguments to give meaningful insights, not just counts.
-- Keep it under 550 words.`;
+- Keep it under 600 words.
+
+DISCLAIMER SECTION (must appear at the bottom of the email):
+Add a clearly separated disclaimer paragraph styled with small gray text, stating that:
+1. This summary was generated automatically by an AI system and may contain errors or misinterpretations of terminology.
+2. The Consenz platform has recently introduced UI improvements including: a unified voting progress bar that visually shows how close each suggestion is to the acceptance threshold, hover effects that preview the impact of your vote before you click, and clearer distinction between suggestions accepted by community consensus vs. admin override.`;
 
   const summary = await base44.asServiceRole.integrations.Core.InvokeLLM({
     prompt,

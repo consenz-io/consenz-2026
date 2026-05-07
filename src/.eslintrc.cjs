@@ -1,17 +1,7 @@
 module.exports = {
-  env: {
-    browser: true,
-    es2020: true,
-  },
-  extends: ['eslint:recommended'],
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    ecmaFeatures: { jsx: true },
-  },
   overrides: [
     {
-      files: ['**/__tests__/**', '**/*.test.*', '**/*.spec.*'],
+      files: ['**/__tests__/**/*.{js,jsx}', '**/*.test.{js,jsx}', '**/*.spec.{js,jsx}'],
       env: {
         'vitest-globals/env': true,
       },
