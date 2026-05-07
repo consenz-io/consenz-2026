@@ -11,10 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Settings, ArrowLeft, Save, Trash2, UserPlus, X, AlertCircle, CheckCircle, Users, Search, Ban, Mail, Copy, Link2 } from "lucide-react";
+import { Settings, ArrowLeft, Save, Trash2, UserPlus, X, AlertCircle, CheckCircle, Users, Search, Ban, Mail, Copy, Link2, Send } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
+import DocumentSummaryModal from "@/components/document/DocumentSummaryModal";
 
 export default function DocumentAdmin() {
   const { t, isRTL } = useLanguage();
@@ -198,6 +199,7 @@ export default function DocumentAdmin() {
   });
 
   const [generatedInviteLink, setGeneratedInviteLink] = useState(null);
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
 
   const createInviteMutation = useMutation({
     mutationFn: async (email) => {
@@ -406,6 +408,36 @@ ${generatedInviteLink.signupUrl}
         {document && (
           <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>{document.title}</p>
         )}
+
+        {/* Summary button */}
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardContent className="p-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold text-blue-900">
+                {isRTL ? 'שלח סיכום למשתתפים' : 'Send Summary to Participants'}
+              </p>
+              <p className="text-sm text-blue-700 mt-0.5">
+                {isRTL
+                  ? 'ייצור סיכום פעילות חכם ושלח אותו במייל לכל המשתתפים'
+                  : 'Generate an AI activity summary and email it to all participants'}
+              </p>
+            </div>
+            <Button
+              onClick={() => setShowSummaryModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 gap-2 shrink-0"
+            >
+              <Send className="w-4 h-4" />
+              {isRTL ? 'שלח סיכום' : 'Send Summary'}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <DocumentSummaryModal
+          isOpen={showSummaryModal}
+          onClose={() => setShowSummaryModal(false)}
+          documentId={documentId}
+          adminEmail={user?.email}
+        />
 
         {error && (
           <Alert variant="destructive">
