@@ -29,9 +29,9 @@ Deno.serve(async (req) => {
 
   if (!document) return Response.json({ error: 'Document not found' }, { status: 404 });
 
-  // Build lookup: userId -> displayName
+  // Build lookup: email -> displayName (created_by is email)
   const profileMap = {};
-  publicProfiles.forEach(p => { if (p.userId) profileMap[p.userId] = p.fullName || p.email || 'משתמש'; });
+  publicProfiles.forEach(p => { if (p.email) profileMap[p.email] = p.fullName || p.email || 'משתמש'; });
 
   // Filter votes/comments relevant to this document
   const suggestionIds = new Set(suggestions.map(s => s.id));
