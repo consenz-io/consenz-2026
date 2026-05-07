@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Settings, ArrowLeft, Save, Trash2, UserPlus, X, AlertCircle, CheckCircle, Users, Search, Ban, Mail, Copy, Link2 } from "lucide-react";
+import { Settings, ArrowLeft, Save, Trash2, UserPlus, X, AlertCircle, CheckCircle, Users, Search, Ban, Mail, Copy, Link2, Send } from "lucide-react";
+import DocumentSummaryModal from "@/components/document/DocumentSummaryModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
@@ -27,6 +28,7 @@ export default function DocumentAdmin() {
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
@@ -402,6 +404,17 @@ ${generatedInviteLink.signupUrl}
           title="Document Settings"
           backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
         />
+
+        {/* Summary email button */}
+        <div className={`flex ${isRTL ? 'justify-end' : 'justify-start'}`}>
+          <Button
+            onClick={() => setShowSummaryModal(true)}
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 gap-2 shadow-md"
+          >
+            <Send className="w-4 h-4" />
+            {isRTL ? 'שלח סיכום למשתתפים' : 'Send Summary to Participants'}
+          </Button>
+        </div>
         
         {document && (
           <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>{document.title}</p>
@@ -744,6 +757,15 @@ ${generatedInviteLink.signupUrl}
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {showSummaryModal && (
+          <DocumentSummaryModal
+            documentId={documentId}
+            document={document}
+            user={user}
+            onClose={() => setShowSummaryModal(false)}
+          />
         )}
 
         <Card className="bg-red-50 border-red-200">
