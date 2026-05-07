@@ -45,6 +45,7 @@ export default function SuggestionDetail() {
   const [showEditSuggestionModal, setShowEditSuggestionModal] = useState(false);
   const [isAutoAccepting, setIsAutoAccepting] = useState(false);
   const [rateLimitRetryAfter, setRateLimitRetryAfter] = useState(null);
+  const [hoverVote, setHoverVote] = useState(null); // 'pro' | 'con' | null
 
   const { data: suggestion, isLoading: suggestionLoading, error: suggestionError } = useQuery({
     queryKey: ['suggestion', suggestionId],
@@ -761,13 +762,21 @@ export default function SuggestionDetail() {
                             </p>
                           </div>
                         }
-                        <Button variant={userVote?.vote === 'pro' ? 'default' : 'outline'} onClick={() => { if (!user) { base44.auth.redirectToLogin(window.location.href); return; } voteMutation.mutate('pro'); }} disabled={voteMutation.isPending || rateLimitRetryAfter !== null} className={`flex-1 ${userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700 border-green-600' : 'border-green-300 text-green-700 hover:bg-green-50'}`}>
+                        <Button variant={userVote?.vote === 'pro' ? 'default' : 'outline'} onClick={() => { if (!user) { base44.auth.redirectToLogin(window.location.href); return; } voteMutation.mutate('pro'); }} disabled={voteMutation.isPending || rateLimitRetryAfter !== null} onMouseEnter={() => setHoverVote('pro')} onMouseLeave={() => setHoverVote(null)} className={`flex-1 ${userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700 border-green-600' : 'border-green-300 text-green-700 hover:bg-green-50'}`}>
                           <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{t('votePro')}
                         </Button>
-                        <Button variant={userVote?.vote === 'con' ? 'default' : 'outline'} onClick={() => { if (!user) { base44.auth.redirectToLogin(window.location.href); return; } voteMutation.mutate('con'); }} disabled={voteMutation.isPending || rateLimitRetryAfter !== null} className={`flex-1 ${userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700 border-red-600' : 'border-red-300 text-red-700 hover:bg-red-50'}`}>
+                        <Button variant={userVote?.vote === 'con' ? 'default' : 'outline'} onClick={() => { if (!user) { base44.auth.redirectToLogin(window.location.href); return; } voteMutation.mutate('con'); }} disabled={voteMutation.isPending || rateLimitRetryAfter !== null} onMouseEnter={() => setHoverVote('con')} onMouseLeave={() => setHoverVote(null)} className={`flex-1 ${userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700 border-red-600' : 'border-red-300 text-red-700 hover:bg-red-50'}`}>
                           <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{t('voteCon')}
                         </Button>
                       </div>
+                      {hoverVote && (
+                        <p className={`text-xs text-center font-medium mt-1 ${hoverVote === 'pro' ? 'text-blue-600' : 'text-red-500'}`}>
+                          {hoverVote === 'pro'
+                            ? (language === 'he' ? 'הצבעתך תקרב את ההצעה לאישור' : language === 'ar' ? 'سيقرب صوتك الاقتراح من القبول' : 'Your vote will help pass this proposal')
+                            : (language === 'he' ? 'הצבעתך תרחיק את ההצעה מאישור' : language === 'ar' ? 'سيبعد صوتك الاقتراح عن القبول' : 'Your vote will push back the proposal')
+                          }
+                        </p>
+                      )}
                     </>
                 }
 
