@@ -175,8 +175,15 @@ IMPORTANT: Start the email with this disclaimer at the very top:
 Structure:
 1. Short greeting mentioning the document name
 2. Distinguish clearly between the admin-written baseline content and genuine user contributions. Celebrate user contributions.
-3. Summarize key discussion points and arguments raised by the community (from comments and arguments above).
-
+3. ALWAYS include a dedicated section describing ALL OPEN (pending) suggestions with their details:
+   - List each open suggestion with its title, current vote count (pro/con), and a clickable HTML link to view and vote
+   - Include a brief summary of what each suggestion proposes
+   - Show any arguments or comments supporting or opposing each suggestion
+   - Help readers understand what discussions are happening around each open suggestion
+4. ALWAYS include a comprehensive section with ALL comments from participants on sections and suggestions:
+   - Organize comments by the section or suggestion they relate to
+   - Show the actual discussion content so readers understand the community's thinking
+   - Highlight key points raised in discussions that reveal the rationale behind votes
 5. Brief engagement stats
 6. Encouraging closing note with link to the document
 
@@ -185,7 +192,8 @@ IMPORTANT:
 - When mentioning open suggestions, embed them as clickable HTML links using the <a> tags already provided in the data above — do NOT strip or replace the HTML link tags.
 - Be honest about which content came from admins vs. the community.
 - Use the actual content of comments and arguments to give meaningful insights, not just counts.
-- Keep it under 600 words.
+- Make the email comprehensive enough that readers understand the full discussion landscape and can make informed decisions
+- Aim for 1000-1500 words to allow proper coverage of all open suggestions and discussion threads
 
 DISCLAIMER SECTION (must appear at the bottom of the email):
 Add a clearly separated disclaimer paragraph styled with small gray text, stating that:
