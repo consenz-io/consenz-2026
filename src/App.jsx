@@ -10,6 +10,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import RejectedSuggestions from './pages/RejectedSuggestions';
 
 // Clear cache - EmailLogs has been removed
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -68,6 +69,14 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route
+        path="/RejectedSuggestions"
+        element={
+          <LayoutWrapper currentPageName="RejectedSuggestions">
+            <RejectedSuggestions />
+          </LayoutWrapper>
+        }
+      />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
