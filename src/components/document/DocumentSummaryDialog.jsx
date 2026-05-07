@@ -134,18 +134,16 @@ Write 3-4 paragraphs that:
 
 3. COMMENTS AS POTENTIAL EDITS: Identify comments that contain substantive opinions or proposals (not just questions). Tell the reader: if these ideas resonate with them, they can turn them into edit suggestions and vote on them. Be specific — mention the comment content and who wrote it.
 
-4. CALL TO ACTION: Name the pending suggestions by title and tell the reader concretely what they're about and why their vote matters. Make it personal and specific — e.g. "If you think X should be included, vote for [suggestion title]".
-
 IMPORTANT: 
 - Never invent content. Only refer to what's in the data above.
-- For each pending suggestion you mention by title, wrap it in the link tag.
+- Do NOT list pending suggestions at the end.
 - Keep it under 350 words total.
 - Be warm and engaging, not bureaucratic.
 
 Return JSON:
 {
-  "summary": "narrative HTML text. For each mentioned pending suggestion title, wrap it in: <a data-suggestion-id=\\"SUGGESTION_ID\\" class=\\"suggestion-link\\">TITLE</a>",
-  "highlightedSuggestionIds": ["id1", "id2"]
+  "summary": "narrative HTML text",
+  "highlightedSuggestionIds": []
 }
 `;
 
