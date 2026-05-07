@@ -6,6 +6,10 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "@/components/LanguageContext";
 
+// Persists across remounts — prevents duplicate GroupMember creation on
+// navigation back to the same group page within a session.
+const autoAddedByGroup = new Map();
+
 export function useGroupViewData(groupId) {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
@@ -78,11 +82,13 @@ export function useGroupViewData(groupId) {
   });
 
   // Auto-add suggestion creators as formal group members if not already members
-  // Use a module-level map (outside component) to survive remounts without creating duplicates
-  const autoAddRunKey = `${groupId}`;
-  const autoAddedRef = React.useRef(new Set());
   React.useEffect(() => {
     if (!groupId || groupMembers.length === 0 || publicProfiles.length === 0 || allDocSuggestions.length === 0) return;
+
+    if (!autoAddedByGroup.has(groupId)) {
+      autoAddedByGroup.set(groupId, new Set());
+    }
+    const autoAdded = autoAddedByGroup.get(groupId);
 
     const memberUserIds = new Set(groupMembers.map(m => m.userId));
     const emailToUserId = new Map();
@@ -95,8 +101,8 @@ export function useGroupViewData(groupId) {
         seenEmails.add(s.created_by);
         const uid = emailToUserId.get(s.created_by);
         // Skip if already a member OR already queued in this session for this group
-        if (uid && !memberUserIds.has(uid) && !autoAddedRef.current.has(uid)) {
-          autoAddedRef.current.add(uid);
+        if (uid && !memberUserIds.has(uid) && !autoAdded.has(uid)) {
+          autoAdded.add(uid);
           toAdd.push(uid);
         }
       }
