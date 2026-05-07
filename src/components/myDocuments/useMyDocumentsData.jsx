@@ -99,7 +99,11 @@ export function useMyDocumentsData() {
     const pending = allSuggestions.filter(s =>
       s.documentId === docId && s.status === 'pending' && s.type !== 'edit_suggestion'
     );
-    return pending.filter(s => !votes.some(v => v.suggestionId === s.id)).length;
+    // Use allVotes filtered by current user's email (created_by) since userId filter is unreliable server-side
+    const myVotedSuggestionIds = new Set(
+      allVotes.filter(v => v.created_by === user.email || v.userId === user.id).map(v => v.suggestionId)
+    );
+    return pending.filter(s => !myVotedSuggestionIds.has(s.id)).length;
   };
 
   return {
