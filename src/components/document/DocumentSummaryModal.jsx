@@ -10,6 +10,7 @@ export default function DocumentSummaryModal({ documentId, document, user, onClo
   const [phase, setPhase] = useState('generating'); // 'generating' | 'chat' | 'sending' | 'done'
   const [summary, setSummary] = useState('');
   const [stats, setStats] = useState(null);
+  const [pendingSuggestions, setPendingSuggestions] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -87,9 +88,11 @@ export default function DocumentSummaryModal({ documentId, document, user, onClo
         documentId,
         additionalInstructions: instructions,
         language,
+        appBaseUrl: window.location.origin,
       });
       setSummary(res.data.summary);
       setStats(res.data.stats);
+      if (res.data.pendingSuggestions) setPendingSuggestions(res.data.pendingSuggestions);
       setPhase('chat');
     } catch (err) {
       setError(err.message || 'Failed to generate summary');
@@ -110,8 +113,10 @@ export default function DocumentSummaryModal({ documentId, document, user, onClo
         documentId,
         additionalInstructions: instruction,
         language,
+        appBaseUrl: window.location.origin,
       });
       setSummary(res.data.summary);
+      if (res.data.pendingSuggestions) setPendingSuggestions(res.data.pendingSuggestions);
       setMessages(prev => [...prev, { role: 'assistant', text: isRTL ? 'הסיכום עודכן ✓' : 'Summary updated ✓' }]);
     } catch (err) {
       setMessages(prev => [...prev, { role: 'assistant', text: `${L.error}: ${err.message}` }]);
@@ -189,6 +194,32 @@ export default function DocumentSummaryModal({ documentId, document, user, onClo
               <p className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">{L.summaryReady}</p>
               <div className={`text-sm text-slate-800 leading-relaxed whitespace-pre-line ${isRTL ? 'text-right' : 'text-left'}`}>
                 {summary}
+              </div>
+            </div>
+          )}
+
+          {/* Pending suggestions with links */}
+          {pendingSuggestions.length > 0 && (
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+              <p className={`text-xs font-semibold text-orange-600 uppercase tracking-wide mb-3 ${isRTL ? 'text-right' : ''}`}>
+                {isRTL ? `${pendingSuggestions.length} הצעות פתוחות להצבעה` : `${pendingSuggestions.length} open suggestions for voting`}
+              </p>
+              <div className="space-y-2">
+                {pendingSuggestions.map(s => (
+                  <a
+                    key={s.id}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-center justify-between gap-3 bg-white border border-orange-200 rounded-lg px-3 py-2 hover:border-orange-400 hover:shadow-sm transition-all group ${isRTL ? 'flex-row-reverse' : ''}`}
+                  >
+                    <span className="text-sm font-medium text-slate-800 flex-1 truncate">{s.title}</span>
+                    <span className="text-xs text-slate-400 shrink-0">👍 {s.proVotes} / 👎 {s.conVotes}</span>
+                    <span className="text-xs text-blue-500 group-hover:underline shrink-0">
+                      {isRTL ? 'להצבעה ←' : '→ Vote'}
+                    </span>
+                  </a>
+                ))}
               </div>
             </div>
           )}

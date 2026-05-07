@@ -6,7 +6,7 @@ Deno.serve(async (req) => {
   const user = await base44.auth.me();
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { documentId, additionalInstructions, language } = await req.json();
+  const { documentId, additionalInstructions, language, appBaseUrl } = await req.json();
   if (!documentId) return Response.json({ error: 'Missing documentId' }, { status: 400 });
 
   // Verify user is document admin or system admin
@@ -15,8 +15,8 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  // Fetch all relevant data
-  const [document, topics, sections, suggestions, allVotes, allComments, publicProfiles] = await Promise.all([
+  // Fetch all relevant data in parallel
+  const [document, topics, sections, suggestions, allVotes, allComments, publicProfiles, documentVersions] = await Promise.all([
     base44.asServiceRole.entities.Document.filter({ id: documentId }).then(r => r[0]),
     base44.asServiceRole.entities.Topic.filter({ documentId }),
     base44.asServiceRole.entities.Section.filter({ documentId }),
@@ -24,9 +24,14 @@ Deno.serve(async (req) => {
     base44.asServiceRole.entities.Vote.list(),
     base44.asServiceRole.entities.Comment.list(),
     base44.asServiceRole.entities.UserPublicProfile.list(),
+    base44.asServiceRole.entities.DocumentVersion.filter({ documentId }),
   ]);
 
   if (!document) return Response.json({ error: 'Document not found' }, { status: 404 });
+
+  // Build lookup: userId -> displayName
+  const profileMap = {};
+  publicProfiles.forEach(p => { if (p.userId) profileMap[p.userId] = p.fullName || p.email || 'משתמש'; });
 
   // Filter votes/comments relevant to this document
   const suggestionIds = new Set(suggestions.map(s => s.id));
@@ -44,47 +49,82 @@ Deno.serve(async (req) => {
   relevantComments.forEach(c => { if (c.created_by) participantEmails.add(c.created_by); });
   suggestions.forEach(s => { if (s.created_by) participantEmails.add(s.created_by); });
 
-  const accepted = suggestions.filter(s => s.status === 'accepted' && !s.approvedByAdmin);
+  // --- Distinguish content origin ---
+  // Sections created by admin directly (via direct_edit or section_created version, NOT via accepted suggestion)
+  const sectionCreatedByAcceptance = new Set(
+    documentVersions
+      .filter(v => v.changeType === 'suggestion_accepted')
+      .map(v => v.sectionId)
+  );
+  const adminCreatedSections = sections.filter(s => !sectionCreatedByAcceptance.has(s.id));
+  const userContributedSections = sections.filter(s => sectionCreatedByAcceptance.has(s.id));
+
+  // Suggestions categorised
+  const acceptedByConsensus = suggestions.filter(s => s.status === 'accepted' && !s.approvedByAdmin);
+  const acceptedByAdmin = suggestions.filter(s => s.status === 'accepted' && s.approvedByAdmin);
   const pending = suggestions.filter(s => s.status === 'pending');
   const rejected = suggestions.filter(s => s.status === 'rejected');
-  const adminApproved = suggestions.filter(s => s.approvedByAdmin);
 
-  // Determine language labels
-  const isHe = language === 'he';
-  const isAr = language === 'ar';
+  // Build base URL for links
+  const baseUrl = appBaseUrl || 'https://app.base44.com';
+  const suggestionUrl = (id) => `${baseUrl}/SuggestionDetail?id=${id}`;
+  const docUrl = `${baseUrl}/DocumentView?id=${documentId}`;
 
-  const langLabel = isHe ? 'Hebrew' : isAr ? 'Arabic' : 'English';
-  const isRTL = isHe || isAr;
+  // Helper: format suggestion line with link
+  const fmtSuggestion = (s) => {
+    const votes = `👍 ${s.proVotes || 0} / 👎 ${s.conVotes || 0}`;
+    const author = s.created_by ? (profileMap[s.created_by] || s.created_by) : '?';
+    return `"${s.title}" — ${votes} — מאת: ${author} — קישור: ${suggestionUrl(s.id)}`;
+  };
 
-  // Build structured prompt
+  const langLabel = language === 'he' ? 'Hebrew' : language === 'ar' ? 'Arabic' : 'English';
+
   const prompt = `You are writing a professional activity summary for a collaborative document platform called Consenz.
-Write the summary in ${langLabel}. The summary will be sent as an email to all document participants.
+Write the summary in ${langLabel}. The summary will be sent as an HTML email to all document participants.
 
-Document: "${document.title}"
-Topics: ${topics.map(t => t.title).join(', ') || 'None'}
-Total sections: ${sections.length}
-Total participants: ${participantEmails.size}
+=== DOCUMENT OVERVIEW ===
+Title: "${document.title}"
+Topics: ${topics.map(t => t.title).join(' | ') || 'None'}
+Document URL: ${docUrl}
+
+=== CONTENT ORIGIN (important distinction) ===
+Sections written by admin during document creation (baseline content, NOT user contributions): ${adminCreatedSections.length} sections
+Sections that exist because a user suggestion was accepted (real user contributions): ${userContributedSections.length} sections
+
+=== SUGGESTIONS ===
+Accepted by community consensus (${acceptedByConsensus.length}):
+${acceptedByConsensus.map(s => `  • ${fmtSuggestion(s)}`).join('\n') || '  (none)'}
+
+Accepted by admin override — bypassed consensus (${acceptedByAdmin.length}):
+${acceptedByAdmin.map(s => `  • ${fmtSuggestion(s)}`).join('\n') || '  (none)'}
+
+Currently open for voting — readers should click and vote (${pending.length}):
+${pending.map(s => `  • ${fmtSuggestion(s)}`).join('\n') || '  (none)'}
+
+Rejected (${rejected.length}):
+${rejected.map(s => `  • "${s.title}"`).join('\n') || '  (none)'}
+
+=== ENGAGEMENT ===
+Unique participants: ${participantEmails.size}
 Total votes cast: ${relevantVotes.length}
 Total comments: ${relevantComments.length}
 
-Suggestions breakdown:
-- Accepted by consensus (${accepted.length}): ${accepted.map(s => `"${s.title}"`).join(', ') || 'None'}
-- Accepted by admin override (${adminApproved.length}): ${adminApproved.map(s => `"${s.title}"`).join(', ') || 'None'}
-- Currently open for voting (${pending.length}): ${pending.map(s => `"${s.title}" (👍 ${s.proVotes || 0} / 👎 ${s.conVotes || 0})`).join(', ') || 'None'}
-- Rejected (${rejected.length}): ${rejected.map(s => `"${s.title}"`).join(', ') || 'None'}
+${additionalInstructions ? `=== ADMIN INSTRUCTIONS ===\n${additionalInstructions}` : ''}
 
-${additionalInstructions ? `Additional instructions from admin: ${additionalInstructions}` : ''}
+=== WRITING INSTRUCTIONS ===
+Write a clear, warm, and professional activity summary email body.
+Structure:
+1. Short greeting mentioning the document name
+2. Distinguish clearly between the admin-written baseline content and genuine user contributions (suggestions that passed consensus). Celebrate user contributions.
+3. Highlight open suggestions with their direct links so readers can click and vote easily
+4. Brief engagement stats
+5. Encouraging closing note with link to the document
 
-Write a clear, warm, and professional activity summary.
-Structure it with the following sections:
-1. A short greeting / intro paragraph (mention the document name and period of activity)
-2. Key highlights (accepted suggestions and their impact)
-3. Currently open suggestions requiring votes
-4. Overall participation and engagement stats
-5. A closing encouragement to continue participating
-
-Keep it concise (under 400 words). Use a friendly but professional tone.
-Do NOT include any HTML, markdown, or formatting tags — plain text only.`;
+IMPORTANT:
+- When mentioning open suggestions, ALWAYS include the clickable link from the data above so recipients can vote directly.
+- Be honest about which content came from admins vs. the community.
+- Plain text only — no HTML tags, no markdown. Links should appear as plain URLs on their own line after the suggestion title.
+- Keep it under 450 words.`;
 
   const summary = await base44.asServiceRole.integrations.Core.InvokeLLM({
     prompt,
@@ -97,11 +137,12 @@ Do NOT include any HTML, markdown, or formatting tags — plain text only.`;
     stats: {
       participants: participantEmails.size,
       totalSuggestions: suggestions.length,
-      accepted: accepted.length + adminApproved.length,
+      accepted: acceptedByConsensus.length + acceptedByAdmin.length,
       pending: pending.length,
       rejected: rejected.length,
       votes: relevantVotes.length,
       comments: relevantComments.length,
-    }
+    },
+    pendingSuggestions: pending.map(s => ({ id: s.id, title: s.title, proVotes: s.proVotes || 0, conVotes: s.conVotes || 0, url: suggestionUrl(s.id) })),
   });
 });
