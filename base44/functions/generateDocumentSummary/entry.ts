@@ -203,16 +203,15 @@ Add a clearly separated disclaimer paragraph styled with small gray text, statin
   summaryText = summaryText.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
 
   return Response.json({
-    summary: summaryText,
-    stats: {
-      participants: participantEmails.size,
-      totalSuggestions: suggestions.length,
-      accepted: acceptedByConsensus.length + acceptedByAdmin.length,
-      pending: pending.length,
-      rejected: rejected.length,
-      votes: relevantVotes.length,
-      comments: relevantComments.length,
-    },
-    pendingSuggestions: pending.map(s => ({ id: s.id, title: s.title, proVotes: s.proVotes || 0, conVotes: s.conVotes || 0, url: suggestionUrl(s.id) })),
+   summary: summaryText,
+   stats: {
+     participants: participantEmails.size,
+     totalSuggestions: suggestions.length,
+     accepted: acceptedByConsensus.length + acceptedByAdmin.length,
+     pending: pending.length,
+     rejected: rejected.length,
+     votes: relevantVotes.length,
+     comments: relevantComments.length,
+   },
   });
 });
