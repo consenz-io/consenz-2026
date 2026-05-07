@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
   }
 
   // Fetch all relevant data in parallel
-  const [document, topics, sections, suggestions, allVotes, allComments, publicProfiles, documentVersions] = await Promise.all([
+  const [document, topics, sections, suggestions, allVotes, allComments, publicProfiles, documentVersions, allArguments] = await Promise.all([
     base44.asServiceRole.entities.Document.filter({ id: documentId }).then(r => r[0]),
     base44.asServiceRole.entities.Topic.filter({ documentId }),
     base44.asServiceRole.entities.Section.filter({ documentId }),
@@ -25,6 +25,7 @@ Deno.serve(async (req) => {
     base44.asServiceRole.entities.Comment.list(),
     base44.asServiceRole.entities.UserPublicProfile.list(),
     base44.asServiceRole.entities.DocumentVersion.filter({ documentId }),
+    base44.asServiceRole.entities.Argument.list(),
   ]);
 
   if (!document) return Response.json({ error: 'Document not found' }, { status: 404 });
@@ -70,6 +71,12 @@ Deno.serve(async (req) => {
   const suggestionUrl = (id) => `${baseUrl}/SuggestionDetail?id=${id}`;
   const docUrl = `${baseUrl}/DocumentView?id=${documentId}`;
 
+  // Filter arguments relevant to this document's suggestions
+  const relevantArguments = allArguments.filter(a => suggestionIds.has(a.suggestionId));
+
+  // Helper: strip HTML tags for plain text
+  const stripHtml = (html) => (html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+
   // Helper: format suggestion line with HTML link
   const fmtSuggestion = (s) => {
     const votes = `👍 ${s.proVotes || 0} / 👎 ${s.conVotes || 0}`;
@@ -78,7 +85,52 @@ Deno.serve(async (req) => {
     return `"${s.title}" — ${votes} — מאת: ${author} — <a href="${url}" style="color:#2563eb;text-decoration:underline;">לצפייה והצבעה</a>`;
   };
 
+  // Helper: format comments for a given entity
+  const fmtComments = (entityType, entityId) => {
+    const comments = relevantComments.filter(c => c.rootEntityType === entityType && c.rootEntityId === entityId);
+    if (comments.length === 0) return '';
+    return comments.map(c => {
+      const author = c.created_by ? (profileMap[c.created_by] || c.created_by.split('@')[0]) : '?';
+      return `    [תגובה מאת ${author}]: "${stripHtml(c.content)}"`;
+    }).join('\n');
+  };
+
+  // Helper: format arguments for a suggestion
+  const fmtArguments = (suggestionId) => {
+    const args = relevantArguments.filter(a => a.suggestionId === suggestionId);
+    if (args.length === 0) return '';
+    return args.map(a => {
+      const author = a.created_by ? (profileMap[a.created_by] || a.created_by.split('@')[0]) : '?';
+      return `    [טיעון ${a.type === 'pro' ? 'בעד' : 'נגד'} מאת ${author}]: "${stripHtml(a.content)}"`;
+    }).join('\n');
+  };
+
+  // Helper: format full suggestion block with its arguments and comments
+  const fmtSuggestionFull = (s) => {
+    const base = fmtSuggestion(s);
+    const explanation = s.explanation ? `\n    הסבר: "${stripHtml(s.explanation)}"` : '';
+    const args = fmtArguments(s.id);
+    const comments = fmtComments('suggestion', s.id);
+    return base + explanation + (args ? '\n' + args : '') + (comments ? '\n' + comments : '');
+  };
+
   const langLabel = language === 'he' ? 'Hebrew' : language === 'ar' ? 'Arabic' : 'English';
+
+  // Build section content with their comments
+  const fmtSections = sections.map(sec => {
+    const topic = topics.find(t => t.id === sec.topicId);
+    const topicTitle = topic ? topic.title : '?';
+    const comments = fmtComments('section', sec.id);
+    return `  [נושא: ${topicTitle}] "${stripHtml(sec.content).substring(0, 300)}${stripHtml(sec.content).length > 300 ? '...' : ''}"` +
+      (comments ? '\n' + comments : '');
+  }).join('\n');
+
+  // Document-level comments
+  const docComments = relevantComments.filter(c => c.rootEntityType === 'document' && c.rootEntityId === documentId);
+  const fmtDocComments = docComments.map(c => {
+    const author = c.created_by ? (profileMap[c.created_by] || c.created_by.split('@')[0]) : '?';
+    return `  [תגובה מאת ${author}]: "${stripHtml(c.content)}"`;
+  }).join('\n');
 
   const prompt = `You are writing a professional activity summary for a collaborative document platform called Consenz.
 Write the summary in ${langLabel}. The summary will be sent as an HTML email to all document participants.
@@ -88,27 +140,33 @@ Title: "${document.title}"
 Topics: ${topics.map(t => t.title).join(' | ') || 'None'}
 Document URL: ${docUrl}
 
+=== DOCUMENT CONTENT (sections with user comments) ===
+${fmtSections || '(no sections yet)'}
+
+${fmtDocComments ? `=== GENERAL DOCUMENT DISCUSSION ===\n${fmtDocComments}` : ''}
+
 === CONTENT ORIGIN (important distinction) ===
 Sections written by admin during document creation (baseline content, NOT user contributions): ${adminCreatedSections.length} sections
 Sections that exist because a user suggestion was accepted (real user contributions): ${userContributedSections.length} sections
 
-=== SUGGESTIONS ===
+=== SUGGESTIONS (with arguments and comments) ===
 Accepted by community consensus (${acceptedByConsensus.length}):
-${acceptedByConsensus.map(s => `  • ${fmtSuggestion(s)}`).join('\n') || '  (none)'}
+${acceptedByConsensus.map(s => `  • ${fmtSuggestionFull(s)}`).join('\n') || '  (none)'}
 
 Accepted by admin override — bypassed consensus (${acceptedByAdmin.length}):
-${acceptedByAdmin.map(s => `  • ${fmtSuggestion(s)}`).join('\n') || '  (none)'}
+${acceptedByAdmin.map(s => `  • ${fmtSuggestionFull(s)}`).join('\n') || '  (none)'}
 
 Currently open for voting — readers should click and vote (${pending.length}):
-${pending.map(s => `  • ${fmtSuggestion(s)}`).join('\n') || '  (none)'}
+${pending.map(s => `  • ${fmtSuggestionFull(s)}`).join('\n') || '  (none)'}
 
 Rejected (${rejected.length}):
-${rejected.map(s => `  • "${s.title}"`).join('\n') || '  (none)'}
+${rejected.map(s => `  • "${s.title}"${s.explanation ? ` — הסבר: "${stripHtml(s.explanation)}"` : ''}`).join('\n') || '  (none)'}
 
 === ENGAGEMENT ===
 Unique participants: ${participantEmails.size}
 Total votes cast: ${relevantVotes.length}
 Total comments: ${relevantComments.length}
+Total arguments: ${relevantArguments.length}
 
 ${additionalInstructions ? `=== ADMIN INSTRUCTIONS ===\n${additionalInstructions}` : ''}
 
@@ -116,16 +174,18 @@ ${additionalInstructions ? `=== ADMIN INSTRUCTIONS ===\n${additionalInstructions
 Write a clear, warm, and professional activity summary email body.
 Structure:
 1. Short greeting mentioning the document name
-2. Distinguish clearly between the admin-written baseline content and genuine user contributions (suggestions that passed consensus). Celebrate user contributions.
-3. Highlight open suggestions with their direct links so readers can click and vote easily
-4. Brief engagement stats
-5. Encouraging closing note with link to the document
+2. Distinguish clearly between the admin-written baseline content and genuine user contributions. Celebrate user contributions.
+3. Summarize key discussion points and arguments raised by the community (from comments and arguments above).
+4. Highlight open suggestions with their direct links so readers can click and vote easily.
+5. Brief engagement stats
+6. Encouraging closing note with link to the document
 
 IMPORTANT:
 - Output valid HTML only (no markdown). Use <p>, <ul>, <li>, <strong>, <a href="..."> tags.
 - When mentioning open suggestions, embed them as clickable HTML links using the <a> tags already provided in the data above — do NOT strip or replace the HTML link tags.
 - Be honest about which content came from admins vs. the community.
-- Keep it under 450 words.`;
+- Use the actual content of comments and arguments to give meaningful insights, not just counts.
+- Keep it under 550 words.`;
 
   const summary = await base44.asServiceRole.integrations.Core.InvokeLLM({
     prompt,
