@@ -126,8 +126,9 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
           <div className="relative h-3 bg-slate-200 rounded-full overflow-hidden">
             
             <motion.div
+              key={`${suggestion?.id}-bar`}
               className={`h-full rounded-full ${barColor} transition-colors duration-300`}
-              initial={false}
+              initial={{ width: `${displayProgress}%` }}
               animate={{ width: `${displayProgress}%` }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             />
