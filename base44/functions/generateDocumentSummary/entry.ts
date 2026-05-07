@@ -70,11 +70,12 @@ Deno.serve(async (req) => {
   const suggestionUrl = (id) => `${baseUrl}/SuggestionDetail?id=${id}`;
   const docUrl = `${baseUrl}/DocumentView?id=${documentId}`;
 
-  // Helper: format suggestion line with link
+  // Helper: format suggestion line with HTML link
   const fmtSuggestion = (s) => {
     const votes = `👍 ${s.proVotes || 0} / 👎 ${s.conVotes || 0}`;
     const author = s.created_by ? (profileMap[s.created_by] || s.created_by) : '?';
-    return `"${s.title}" — ${votes} — מאת: ${author} — קישור: ${suggestionUrl(s.id)}`;
+    const url = suggestionUrl(s.id);
+    return `"${s.title}" — ${votes} — מאת: ${author} — <a href="${url}" style="color:#2563eb;text-decoration:underline;">לצפייה והצבעה</a>`;
   };
 
   const langLabel = language === 'he' ? 'Hebrew' : language === 'ar' ? 'Arabic' : 'English';
@@ -121,9 +122,9 @@ Structure:
 5. Encouraging closing note with link to the document
 
 IMPORTANT:
-- When mentioning open suggestions, ALWAYS include the clickable link from the data above so recipients can vote directly.
+- Output valid HTML only (no markdown). Use <p>, <ul>, <li>, <strong>, <a href="..."> tags.
+- When mentioning open suggestions, embed them as clickable HTML links using the <a> tags already provided in the data above — do NOT strip or replace the HTML link tags.
 - Be honest about which content came from admins vs. the community.
-- Plain text only — no HTML tags, no markdown. Links should appear as plain URLs on their own line after the suggestion title.
 - Keep it under 450 words.`;
 
   const summary = await base44.asServiceRole.integrations.Core.InvokeLLM({
