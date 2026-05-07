@@ -55,8 +55,9 @@ export function useDocumentData(documentId) {
       return results || [];
     },
     enabled: !!documentId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,           // Always fetch fresh — suggestions change frequently
     gcTime: 10 * 60 * 1000,
+    refetchOnMount: true,   // Re-fetch when navigating back to this page
     retry: 2,
   });
 
@@ -72,9 +73,9 @@ export function useDocumentData(documentId) {
       const cachedSections = queryClient.getQueryData(['sections', documentId]);
 
       const [allSuggestions, allSections] = await Promise.all([
-        cachedSuggestions
-          ? Promise.resolve(cachedSuggestions)
-          : base44.entities.Suggestion.filter({ documentId }, '-created_date').catch(() => []),
+        // Always fetch fresh suggestions — never rely on potentially stale cache
+        // (stale cache is the root cause of missing suggestions after navigation)
+        base44.entities.Suggestion.filter({ documentId }, '-created_date').catch(() => cachedSuggestions || []),
         cachedSections
           ? Promise.resolve(cachedSections)
           : base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
