@@ -313,7 +313,16 @@ export default function DocumentSummaryModal({ documentId, document, user, onClo
         )}
 
         {phase === 'done' && (
-          <div className="border-t p-4 bg-white">
+          <div className="border-t p-4 bg-white space-y-2">
+            {sendResult?.isTest && (
+              <Button
+                onClick={() => handleSend(false)}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 font-semibold"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                {L.sendAll}
+              </Button>
+            )}
             <Button onClick={onClose} className="w-full" variant="outline">{L.close}</Button>
           </div>
         )}
