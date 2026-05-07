@@ -156,12 +156,6 @@ ${acceptedByConsensus.map(s => `  • ${fmtSuggestionFull(s)}`).join('\n') || ' 
 Accepted by admin override — bypassed consensus (${acceptedByAdmin.length}):
 ${acceptedByAdmin.map(s => `  • ${fmtSuggestionFull(s)}`).join('\n') || '  (none)'}
 
-Currently open for voting — readers should click and vote (${pending.length}):
-${pending.map(s => `  • ${fmtSuggestionFull(s)}`).join('\n') || '  (none)'}
-
-Rejected (${rejected.length}):
-${rejected.map(s => `  • "${s.title}"${s.explanation ? ` — הסבר: "${stripHtml(s.explanation)}"` : ''}`).join('\n') || '  (none)'}
-
 === ENGAGEMENT ===
 Unique participants: ${participantEmails.size}
 Total votes cast: ${relevantVotes.length}
@@ -176,7 +170,7 @@ Structure:
 1. Short greeting mentioning the document name
 2. Distinguish clearly between the admin-written baseline content and genuine user contributions. Celebrate user contributions.
 3. Summarize key discussion points and arguments raised by the community (from comments and arguments above).
-4. Highlight open suggestions with their direct links so readers can click and vote easily.
+
 5. Brief engagement stats
 6. Encouraging closing note with link to the document
 
