@@ -12,17 +12,31 @@ Deno.serve(async (req) => {
   const serviceBase44 = base44.asServiceRole;
 
   // Fetch only the data we need, filtered server-side
-  const [userVotes, userCreatedSuggestions, pendingSuggestions] = await Promise.all([
-    serviceBase44.entities.Vote.filter({ userId: user.id }, null, 500),
+  const [userVotes, userCreatedSuggestions, pendingSuggestions, allInteractions] = await Promise.all([
+    // Votes — filter by created_by (email) since userId filter doesn't work server-side
+    serviceBase44.entities.Vote.list('-created_date', 500),
     serviceBase44.entities.Suggestion.filter({ created_by: user.email }, null, 200),
     serviceBase44.entities.Suggestion.filter({ status: 'pending' }, null, 300),
+    serviceBase44.entities.UserInteraction.filter({ userId: user.id }, null, 100),
   ]);
 
   // Build set of document IDs the user participated in
   const participatedDocIds = new Set();
+  
+  // Docs where user created suggestions
   userCreatedSuggestions.forEach(s => s.documentId && participatedDocIds.add(s.documentId));
+  
+  // Docs where user interacted
+  allInteractions.forEach(ui => ui.documentId && participatedDocIds.add(ui.documentId));
 
-  const votedSuggestionIds = new Set(userVotes.map(v => v.suggestionId));
+  // Votes by current user (filter by created_by email)
+  const votedSuggestionIds = new Set(
+    userVotes
+      .filter(v => v.created_by === user.email)
+      .map(v => v.suggestionId)
+  );
+  
+  // Also track documents where user voted
   pendingSuggestions.forEach(s => {
     if (votedSuggestionIds.has(s.id) && s.documentId) {
       participatedDocIds.add(s.documentId);

@@ -95,14 +95,24 @@ export function useMyDocumentsData() {
   }, [allDocuments, myDocumentIds, allSuggestions, allVotes]);
 
   const getUnvotedCount = (docId) => {
-    if (!user?.id) return 0;
+    if (!user?.id || !allSuggestions.length) return 0;
+    
+    // Get all pending suggestions for this document (excluding edit_suggestion type)
     const pending = allSuggestions.filter(s =>
       s.documentId === docId && s.status === 'pending' && s.type !== 'edit_suggestion'
     );
-    // Use allVotes filtered by current user's email (created_by) since userId filter is unreliable server-side
+    
+    if (pending.length === 0) return 0;
+    
+    // Build set of suggestion IDs that current user has voted on
+    // Use allVotes filtered by created_by (email) since it's the most reliable field
     const myVotedSuggestionIds = new Set(
-      allVotes.filter(v => v.created_by === user.email || v.userId === user.id).map(v => v.suggestionId)
+      allVotes
+        .filter(v => v.created_by === user.email)
+        .map(v => v.suggestionId)
     );
+    
+    // Count pending suggestions without user's vote
     return pending.filter(s => !myVotedSuggestionIds.has(s.id)).length;
   };
 
