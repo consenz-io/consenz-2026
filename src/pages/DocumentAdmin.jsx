@@ -76,7 +76,7 @@ export default function DocumentAdmin() {
     privacy: document?.privacy || "public_view_open_participation",
     votingButtonsEnabled: document?.votingButtonsEnabled ?? true,
     gamificationEnabled: document?.gamificationEnabled ?? false,
-    defaultSuggestionLifetimeHours: document?.defaultSuggestionLifetimeHours !== undefined ? document.defaultSuggestionLifetimeHours : 72,
+    defaultSuggestionLifetimeHours: document?.defaultSuggestionLifetimeHours !== undefined ? document.defaultSuggestionLifetimeHours : null,
   });
 
   React.useEffect(() => {
@@ -476,7 +476,7 @@ ${generatedInviteLink.signupUrl}
               <div>
                 <Label htmlFor="lifetime">Default Voting Period</Label>
                 <Select
-                  value={formData.defaultSuggestionLifetimeHours?.toString() || "72"}
+                  value={formData.defaultSuggestionLifetimeHours === null ? "unlimited" : formData.defaultSuggestionLifetimeHours?.toString()}
                   onValueChange={(value) => setFormData({ 
                     ...formData, 
                     defaultSuggestionLifetimeHours: value === "unlimited" ? null : parseInt(value)
