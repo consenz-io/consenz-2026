@@ -165,7 +165,7 @@ export function useDocumentData(documentId) {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     retry: false,
-    staleTime: 300000,
+    staleTime: 0,
   });
 
   const { data: isAdmin } = useQuery({

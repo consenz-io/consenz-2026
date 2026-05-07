@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
 import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
+import { queryClientInstance } from '@/lib/query-client';
 
 const AuthContext = createContext();
 
@@ -113,6 +114,7 @@ export const AuthProvider = ({ children }) => {
   const logout = (shouldRedirect = true) => {
     setUser(null);
     setIsAuthenticated(false);
+    queryClientInstance.removeQueries({ queryKey: ['currentUser'] });
     
     if (shouldRedirect) {
       // Use the SDK's logout method which handles token cleanup and redirect
