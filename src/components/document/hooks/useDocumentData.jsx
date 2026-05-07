@@ -198,10 +198,10 @@ export function useDocumentData(documentId) {
   const documentAgreements = React.useMemo(() => documentMetadata?.agreements || [], [documentMetadata?.agreements]);
   const documentVersions = React.useMemo(() => documentMetadata?.versions || [], [documentMetadata?.versions]);
 
-  // Wait for document AND both topics+sections before showing content
-  // Previously (topicsLoading && sectionsLoading) would stop waiting as soon as
-  // ONE of them finished — causing the page to render with the other still empty.
-  const isInitialLoading = docLoading || topicsLoading || sectionsLoading;
+  // Wait for document AND both topics+sections AND aggregatedData before showing content
+  // aggregatedData is critical because it re-fetches suggestions fresh (avoiding stale cache)
+  // Without waiting for it, suggestions appear empty even though they're loading
+  const isInitialLoading = docLoading || topicsLoading || sectionsLoading || !aggregatedData;
 
   return {
     document, topics, sections, suggestions,
