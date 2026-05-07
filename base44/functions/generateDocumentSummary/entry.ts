@@ -133,8 +133,12 @@ IMPORTANT:
     add_context_from_internet: false,
   });
 
+  // Strip markdown code fences if LLM wrapped the HTML in ```html ... ```
+  let summaryText = typeof summary === 'string' ? summary : summary?.content || String(summary);
+  summaryText = summaryText.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+
   return Response.json({
-    summary: typeof summary === 'string' ? summary : summary?.content || String(summary),
+    summary: summaryText,
     stats: {
       participants: participantEmails.size,
       totalSuggestions: suggestions.length,
