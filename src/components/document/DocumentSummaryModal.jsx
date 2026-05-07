@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/components/LanguageContext";
 import { Loader2, Send, Mail, TestTube, RefreshCw, X, CheckCircle, Users, MessageSquare, ThumbsUp, FileText } from "lucide-react";
+import ReactQuill from "react-quill";
 
 export default function DocumentSummaryModal({ documentId, document, user, onClose }) {
   const { language, isRTL } = useLanguage();
@@ -188,15 +189,22 @@ export default function DocumentSummaryModal({ documentId, document, user, onClo
             </div>
           )}
 
-          {/* Summary box - editable */}
+          {/* Summary box - editable rich text */}
           {summary && (
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{L.summaryReady}</p>
-              <Textarea
+              <ReactQuill
                 value={summary}
-                onChange={(e) => setSummary(e.target.value)}
-                className={`resize-none text-sm min-h-[200px] font-mono bg-white border-slate-300 ${isRTL ? 'text-right' : 'text-left'}`}
-                dir={dir}
+                onChange={setSummary}
+                className="bg-white rounded-lg"
+                modules={{
+                  toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['link'],
+                    ['clean']
+                  ]
+                }}
               />
             </div>
           )}
