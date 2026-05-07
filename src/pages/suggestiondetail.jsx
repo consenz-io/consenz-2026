@@ -325,6 +325,18 @@ export default function SuggestionDetail() {
     mutationFn: async (status) => {
       if (!isAdmin) throw new Error(t('adminAccessRequired'));
 
+      // If restoring to pending, set a new timer based on document's default lifetime
+      let updateData = { status };
+      if (status === 'pending') {
+        const newTimerEndsAt = new Date(Date.now() + (document?.defaultSuggestionLifetimeHours || 72) * 60 * 60 * 1000).toISOString();
+        updateData.timerEndsAt = newTimerEndsAt;
+        updateData.rejectedByAdmin = false; // Clear the rejected flag
+      } else if (status === 'rejected') {
+        updateData.rejectedByAdmin = true; // Mark as rejected by admin
+      } else if (status === 'accepted') {
+        updateData.approvedByAdmin = true; // Mark as approved by admin
+      }
+
       if (status === 'accepted' && suggestion.type === 'edit_section' && section) {
         const versions = await retryWithBackoff(() => base44.entities.DocumentVersion.filter({ sectionId: section.id }));
         const nextVersion = versions.length > 0 ? Math.max(...versions.map((v) => v.version)) + 1 : 1;
@@ -365,11 +377,7 @@ export default function SuggestionDetail() {
       }
 
       await new Promise((r) => setTimeout(r, 300));
-      await retryWithBackoff(() => base44.entities.Suggestion.update(suggestionId, {
-        status,
-        ...(status === 'accepted' ? { approvedByAdmin: true } : {}),
-        ...(status === 'rejected' ? { rejectedByAdmin: true } : {})
-      }));
+      await retryWithBackoff(() => base44.entities.Suggestion.update(suggestionId, updateData));
 
       const updatedSuggestions = await retryWithBackoff(() => base44.entities.Suggestion.filter({ id: suggestionId }));
       const updatedSuggestion = updatedSuggestions[0] || { ...suggestion, status };
