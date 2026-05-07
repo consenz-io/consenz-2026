@@ -167,19 +167,33 @@ const SectionCarousel = React.memo(function SectionCarousel({
   const [showHistorySidebar, setShowHistorySidebar] = useState(false);
   const [showJoinGroupDialog, setShowJoinGroupDialog] = useState(false);
   
-  // Effect to scroll to newly created suggestion
+  // Effect to scroll to newly created suggestion (including edit_suggestion children)
   React.useEffect(() => {
     if (newlyCreatedSuggestionId && sortedSuggestions.length > 0) {
       const foundSuggestion = sortedSuggestions.find(s => s.id === newlyCreatedSuggestionId);
       if (foundSuggestion) {
         setCurrentSuggestionId(newlyCreatedSuggestionId);
-        // Clear the flag after navigating
         if (onClearNewlyCreated) {
           setTimeout(() => onClearNewlyCreated(), 100);
         }
       }
     }
   }, [newlyCreatedSuggestionId, sortedSuggestions, onClearNewlyCreated]);
+
+  // Auto-navigate when a new suggestion is added to the pendingSuggestions list
+  const prevSortedLengthRef = React.useRef(sortedSuggestions.length);
+  React.useEffect(() => {
+    const prevLen = prevSortedLengthRef.current;
+    const newLen = sortedSuggestions.length;
+    if (newLen > prevLen) {
+      // A new suggestion appeared — navigate to the newest one (last by created_date)
+      const newest = [...sortedSuggestions].sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
+      if (newest) {
+        setCurrentSuggestionId(newest.id);
+      }
+    }
+    prevSortedLengthRef.current = newLen;
+  }, [sortedSuggestions]);
   
   // Effect to navigate to target suggestion (from floating nav buttons)
   React.useEffect(() => {

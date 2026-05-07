@@ -145,6 +145,21 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
     }
   }, [targetSuggestionId, suggestionChain, suggestion.id]);
 
+  // Auto-navigate to newly added edit_suggestion in the chain
+  const prevChainLengthRef = React.useRef(suggestionChain.length);
+  React.useEffect(() => {
+    const prevLen = prevChainLengthRef.current;
+    const newLen = suggestionChain.length;
+    if (newLen > prevLen) {
+      // A new version was added — navigate to the latest one
+      const latest = suggestionChain[newLen - 1];
+      if (latest) {
+        setCurrentVersionId(latest.id === suggestion.id ? 'original' : latest.id);
+      }
+    }
+    prevChainLengthRef.current = newLen;
+  }, [suggestionChain, suggestion.id]);
+
   // Truncate content for preview
   const getContentPreview = (html) => {
     if (typeof window !== 'undefined' && typeof document !== 'undefined' && document.createElement) {
