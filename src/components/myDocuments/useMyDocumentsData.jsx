@@ -97,7 +97,10 @@ export function useMyDocumentsData() {
   const getUnvotedCount = (docId) => {
     if (!user?.id) return 0;
     const pending = allSuggestions.filter(s =>
-      s.documentId === docId && s.status === 'pending' && s.type !== 'edit_suggestion'
+      s.documentId === docId &&
+      s.status === 'pending' &&
+      s.type !== 'edit_suggestion' &&
+      s.created_by !== user.email
     );
     return pending.filter(s => !votes.some(v => v.suggestionId === s.id)).length;
   };
