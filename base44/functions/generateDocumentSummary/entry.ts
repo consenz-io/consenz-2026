@@ -166,6 +166,12 @@ ${additionalInstructions ? `=== ADMIN INSTRUCTIONS ===\n${additionalInstructions
 
 === WRITING INSTRUCTIONS ===
 Write a clear, warm, and professional activity summary email body.
+
+IMPORTANT: Start the email with this disclaimer at the very top:
+<p style="font-size: 12px; color: #999; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">
+  <strong>הערה:</strong> מייל זה נוצר באמצעות בינה מלאכותית ועשוי להכיל שגיאות או פרשנויות שגויות של מונחים ותכנים.
+</p>
+
 Structure:
 1. Short greeting mentioning the document name
 2. Distinguish clearly between the admin-written baseline content and genuine user contributions. Celebrate user contributions.
