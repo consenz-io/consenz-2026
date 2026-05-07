@@ -328,8 +328,11 @@ export default function SuggestionDetail() {
       // If restoring to pending, set a new timer based on document's default lifetime
       let updateData = { status };
       if (status === 'pending') {
-        const newTimerEndsAt = new Date(Date.now() + (document?.defaultSuggestionLifetimeHours || 72) * 60 * 60 * 1000).toISOString();
-        updateData.timerEndsAt = newTimerEndsAt;
+        // If defaultSuggestionLifetimeHours is null, no time limit (timerEndsAt = null)
+        const timerEndsAt = document?.defaultSuggestionLifetimeHours === null 
+          ? null 
+          : new Date(Date.now() + (document?.defaultSuggestionLifetimeHours || 72) * 60 * 60 * 1000).toISOString();
+        updateData.timerEndsAt = timerEndsAt;
         updateData.rejectedByAdmin = false; // Clear the rejected flag
       } else if (status === 'rejected') {
         updateData.rejectedByAdmin = true; // Mark as rejected by admin

@@ -76,7 +76,7 @@ export default function DocumentAdmin() {
     privacy: document?.privacy || "public_view_open_participation",
     votingButtonsEnabled: document?.votingButtonsEnabled ?? true,
     gamificationEnabled: document?.gamificationEnabled ?? false,
-    defaultSuggestionLifetimeHours: document?.defaultSuggestionLifetimeHours || 72,
+    defaultSuggestionLifetimeHours: document?.defaultSuggestionLifetimeHours !== undefined ? document.defaultSuggestionLifetimeHours : 72,
   });
 
   React.useEffect(() => {
@@ -86,7 +86,7 @@ export default function DocumentAdmin() {
         privacy: document.privacy,
         votingButtonsEnabled: document.votingButtonsEnabled,
         gamificationEnabled: document.gamificationEnabled ?? false,
-        defaultSuggestionLifetimeHours: document.defaultSuggestionLifetimeHours,
+        defaultSuggestionLifetimeHours: document.defaultSuggestionLifetimeHours !== undefined ? document.defaultSuggestionLifetimeHours : 72,
       });
     }
   }, [document]);
@@ -474,14 +474,26 @@ ${generatedInviteLink.signupUrl}
               </div>
 
               <div>
-                <Label htmlFor="lifetime">Default Voting Period (hours)</Label>
-                <Input
-                  id="lifetime"
-                  type="number"
-                  min="1"
-                  value={formData.defaultSuggestionLifetimeHours}
-                  onChange={(e) => setFormData({ ...formData, defaultSuggestionLifetimeHours: parseInt(e.target.value) })}
-                />
+                <Label htmlFor="lifetime">Default Voting Period</Label>
+                <Select
+                  value={formData.defaultSuggestionLifetimeHours?.toString() || "72"}
+                  onValueChange={(value) => setFormData({ 
+                    ...formData, 
+                    defaultSuggestionLifetimeHours: value === "unlimited" ? null : parseInt(value)
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="24">24 hours</SelectItem>
+                    <SelectItem value="48">48 hours</SelectItem>
+                    <SelectItem value="72">72 hours (default)</SelectItem>
+                    <SelectItem value="168">1 week</SelectItem>
+                    <SelectItem value="336">2 weeks</SelectItem>
+                    <SelectItem value="unlimited">No time limit</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className={`flex items-center justify-between p-4 bg-slate-50 rounded-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
