@@ -42,7 +42,9 @@ export function useGroupViewData(groupId) {
   const { data: publicProfiles = [] } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
-    staleTime: 15 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    retry: 1,
   });
 
   const docIds = useMemo(() => documents.map(d => d.id), [documents]);
@@ -54,13 +56,15 @@ export function useGroupViewData(groupId) {
   const { data: groupSuggestions = [] } = useQuery({
     queryKey: ['groupSuggestions', groupId, docIdsSorted],
     queryFn: async () => {
+      if (docIds.length === 0) return [];
       const perDoc = await Promise.all(
         docIds.map(id => base44.entities.Suggestion.filter({ documentId: id, status: 'pending' }, null, 50).catch(() => []))
       );
       return perDoc.flat();
     },
-    enabled: docIds.length > 0,
-    staleTime: 5 * 60 * 1000,
+    enabled: docIds.length > 0 && documents.length > 0,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   // Fetch all suggestions (not just pending) — parallel
@@ -73,8 +77,9 @@ export function useGroupViewData(groupId) {
       );
       return perDoc.flat();
     },
-    enabled: docIds.length > 0,
-    staleTime: 5 * 60 * 1000,
+    enabled: docIds.length > 0 && documents.length > 0,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   // Auto-add suggestion creators as formal group members if not already members
@@ -104,12 +109,25 @@ export function useGroupViewData(groupId) {
 
     if (toAdd.length === 0) return;
 
-    // Use Promise.allSettled so one failure doesn't block the rest
-    Promise.allSettled(
-      toAdd.map(userId => base44.entities.GroupMember.create({ groupId, userId, role: 'member' }))
-    ).then(() => {
-      queryClient.invalidateQueries({ queryKey: ['groupMembers', groupId] });
-    });
+    // Use bulkCreate if available, otherwise allSettled with error handling
+    (async () => {
+      try {
+        const membersToCreate = toAdd.map(userId => ({ groupId, userId, role: 'member' }));
+        // Batch create for better performance
+        await base44.entities.GroupMember.bulkCreate(membersToCreate).catch(async () => {
+          // Fallback: Create one by one if bulk fails
+          await Promise.all(
+            membersToCreate.map(m => base44.entities.GroupMember.create(m).catch(err => {
+              console.error('[AUTO-ADD] Failed to add member:', err);
+              return null;
+            }))
+          );
+        });
+        queryClient.invalidateQueries({ queryKey: ['groupMembers', groupId] });
+      } catch (err) {
+        console.error('[AUTO-ADD] Failed to auto-add members:', err);
+      }
+    })();
   }, [groupId, groupMembers, publicProfiles, allDocSuggestions, queryClient]);
 
   // All unique participant userIds: formal members only (suggestion creators are now auto-added as members)
@@ -121,7 +139,8 @@ export function useGroupViewData(groupId) {
     queryKey: ['userVotes', currentUser?.id],
     queryFn: () => base44.entities.Vote.filter({ userId: currentUser.id }, null, 500),
     enabled: !!currentUser?.id,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   // Derived membership flags

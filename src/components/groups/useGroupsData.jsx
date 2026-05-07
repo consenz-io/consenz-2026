@@ -15,7 +15,8 @@ export function useGroupsData() {
     queryFn: () => base44.entities.GroupMember.filter({ userId: currentUser.id }),
     enabled: !!currentUser?.id,
     placeholderData: [],
-    staleTime: 0,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes cache
   });
 
   const groupIds = useMemo(() => myMemberships.map(m => m.groupId).sort(), [myMemberships]);
@@ -26,7 +27,8 @@ export function useGroupsData() {
     queryFn: () => base44.entities.Group.filter({ id: { $in: groupIds } }, '-created_date'),
     enabled: groupIds.length > 0,
     placeholderData: [],
-    staleTime: 0,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
   // Step 3: Fetch member counts for those groups
@@ -35,7 +37,8 @@ export function useGroupsData() {
     queryFn: () => base44.entities.GroupMember.filter({ groupId: { $in: groupIds } }),
     enabled: groupIds.length > 0,
     placeholderData: [],
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
   // Step 4: Fetch documents in those groups
@@ -44,7 +47,8 @@ export function useGroupsData() {
     queryFn: () => base44.entities.Document.filter({ groupId: { $in: groupIds } }),
     enabled: groupIds.length > 0,
     placeholderData: [],
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 
   // Visible groups: hidden groups only visible to members/admins/creators
