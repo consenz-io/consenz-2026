@@ -664,6 +664,8 @@ export default function CreateSuggestionModal({
               type="submit" 
               disabled={
                 createSuggestionMutation.isPending ||
+                (!isDeleteSection && !isDirectEdit && !formData.newContent?.trim()) ||
+                (isEditingSuggestion && formData.newContent === editingSuggestion.newContent) ||
                 (!isNewSection && !isDeleteSection && !isDirectEdit && !isEditingSuggestion &&
                   originalLoadedContent !== null && formData.newContent === originalLoadedContent)
               }
