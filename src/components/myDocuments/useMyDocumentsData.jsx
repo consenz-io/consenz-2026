@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 
@@ -94,7 +94,7 @@ export function useMyDocumentsData() {
     return allDocuments.filter(doc => allMyIds.has(doc.id));
   }, [allDocuments, myDocumentIds, allSuggestions, votes]);
 
-  const getUnvotedCount = (docId) => {
+  const getUnvotedCount = useCallback((docId) => {
     if (!user?.id) return 0;
     const pending = allSuggestions.filter(s =>
       s.documentId === docId &&
@@ -103,7 +103,7 @@ export function useMyDocumentsData() {
       s.created_by !== user.email
     );
     return pending.filter(s => !votes.some(v => v.suggestionId === s.id)).length;
-  };
+  }, [user?.id, user?.email, allSuggestions, votes]);
 
   return {
     user,
