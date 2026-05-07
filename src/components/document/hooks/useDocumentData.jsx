@@ -31,7 +31,8 @@ export function useDocumentData(documentId) {
     refetchOnWindowFocus: false,
     retry: 3,
     retryDelay: 1000,
-    placeholderData: (prev) => prev, // keep previous data while refetching — prevents flash of empty
+    // NOTE: no placeholderData — using it caused stale data from a previous document
+    // to show when navigating between documents (same prev reference across queryKey changes)
   });
 
   const { data: sections = [], isLoading: sectionsLoading, isError: sectionsError } = useQuery({
@@ -44,7 +45,7 @@ export function useDocumentData(documentId) {
     refetchOnWindowFocus: false,
     retry: 3,
     retryDelay: 1000,
-    placeholderData: (prev) => prev, // keep previous data while refetching — prevents flash of empty
+    // NOTE: no placeholderData — same reason as topics above
   });
 
   const { data: suggestions = [], isLoading: suggestionsLoading, isError: suggestionsError } = useQuery({
@@ -103,7 +104,9 @@ export function useDocumentData(documentId) {
       return { votes, users: publicProfiles, publicProfiles, args, comments };
     },
     enabled: !!documentId,
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,           // Always re-fetch — votes/comments change frequently
+    gcTime: 5 * 60 * 1000,
+    refetchOnMount: true,
   });
 
   // Seed individual caches from aggregatedData — only re-runs when aggregatedData changes,

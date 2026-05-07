@@ -45,40 +45,41 @@ export function useGroupViewData(groupId) {
     staleTime: 15 * 60 * 1000,
   });
 
-  const docIds = documents.map(d => d.id);
+  const docIds = useMemo(() => documents.map(d => d.id), [documents]);
 
-  // Fetch pending suggestions per-doc sequentially to avoid 429
+  // Sort docIds for a stable cache key regardless of order changes
+  const docIdsSorted = useMemo(() => [...docIds].sort().join(','), [docIds]);
+
+  // Fetch pending suggestions — parallel per-doc to avoid sequential bottleneck
   const { data: groupSuggestions = [] } = useQuery({
-    queryKey: ['groupSuggestions', groupId, docIds.join(',')],
+    queryKey: ['groupSuggestions', groupId, docIdsSorted],
     queryFn: async () => {
-      const results = [];
-      for (const id of docIds) {
-        const sug = await base44.entities.Suggestion.filter({ documentId: id, status: 'pending' }, null, 50);
-        results.push(...sug);
-      }
-      return results;
+      const perDoc = await Promise.all(
+        docIds.map(id => base44.entities.Suggestion.filter({ documentId: id, status: 'pending' }, null, 50).catch(() => []))
+      );
+      return perDoc.flat();
     },
     enabled: docIds.length > 0,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch all suggestions (not just pending) to collect participant emails
+  // Fetch all suggestions (not just pending) — parallel
   const { data: allDocSuggestions = [] } = useQuery({
-    queryKey: ['groupAllSuggestions', groupId, docIds.join(',')],
+    queryKey: ['groupAllSuggestions', groupId, docIdsSorted],
     queryFn: async () => {
       if (docIds.length === 0) return [];
-      const results = [];
-      for (const id of docIds) {
-        const sug = await base44.entities.Suggestion.filter({ documentId: id }, null, 200);
-        results.push(...sug);
-      }
-      return results;
+      const perDoc = await Promise.all(
+        docIds.map(id => base44.entities.Suggestion.filter({ documentId: id }, null, 200).catch(() => []))
+      );
+      return perDoc.flat();
     },
     enabled: docIds.length > 0,
-    staleTime: 10 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Auto-add suggestion creators as formal group members if not already members
+  // Use a module-level map (outside component) to survive remounts without creating duplicates
+  const autoAddRunKey = `${groupId}`;
   const autoAddedRef = React.useRef(new Set());
   React.useEffect(() => {
     if (!groupId || groupMembers.length === 0 || publicProfiles.length === 0 || allDocSuggestions.length === 0) return;
@@ -93,6 +94,7 @@ export function useGroupViewData(groupId) {
       if (s.created_by && !seenEmails.has(s.created_by)) {
         seenEmails.add(s.created_by);
         const uid = emailToUserId.get(s.created_by);
+        // Skip if already a member OR already queued in this session for this group
         if (uid && !memberUserIds.has(uid) && !autoAddedRef.current.has(uid)) {
           autoAddedRef.current.add(uid);
           toAdd.push(uid);
@@ -102,7 +104,8 @@ export function useGroupViewData(groupId) {
 
     if (toAdd.length === 0) return;
 
-    Promise.all(
+    // Use Promise.allSettled so one failure doesn't block the rest
+    Promise.allSettled(
       toAdd.map(userId => base44.entities.GroupMember.create({ groupId, userId, role: 'member' }))
     ).then(() => {
       queryClient.invalidateQueries({ queryKey: ['groupMembers', groupId] });
