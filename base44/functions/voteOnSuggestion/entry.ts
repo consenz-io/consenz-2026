@@ -113,27 +113,31 @@ Deno.serve(async (req) => {
 
     let voteAction = null;
 
-    if (existingVote) {
-      if (existingVote.vote === vote) {
+    // Clean up any duplicate votes for this user (safety check)
+    const allUserVotes = allVotes.filter(v => v.userId === user.id);
+    if (allUserVotes.length > 1) {
+      console.warn('[VOTE FUNCTION] Found', allUserVotes.length, 'votes for user, cleaning up duplicates');
+      const votes_to_delete = allUserVotes.slice(1); // Keep first, delete rest
+      await Promise.all(votes_to_delete.map(v => base44.asServiceRole.entities.Vote.delete(v.id)));
+    }
+    
+    // Re-check after cleanup
+    const userVote = allUserVotes.length > 0 ? allUserVotes[0] : null;
+
+    if (userVote) {
+      if (userVote.vote === vote) {
         // Cancel vote
-        await base44.asServiceRole.entities.Vote.delete(existingVote.id);
+        await base44.asServiceRole.entities.Vote.delete(userVote.id);
         voteAction = 'canceled';
       } else {
-        // Change vote direction
-        await base44.asServiceRole.entities.Vote.update(existingVote.id, { vote });
+        // Change vote direction (update exactly the one vote)
+        await base44.asServiceRole.entities.Vote.update(userVote.id, { vote });
         voteAction = 'changed';
       }
     } else {
-      // New vote — check for duplicate before creating (guard against double-click race)
-      const dupeCheck = allVotes.filter(v => v.userId === user.id);
-      if (dupeCheck.length > 0) {
-        console.log('[VOTE FUNCTION] Duplicate vote detected, updating instead of creating');
-        await base44.asServiceRole.entities.Vote.update(dupeCheck[0].id, { vote });
-        voteAction = 'changed';
-      } else {
-        await base44.asServiceRole.entities.Vote.create({ suggestionId, userId: user.id, vote });
-        voteAction = 'created';
-      }
+      // New vote — create exactly one
+      await base44.asServiceRole.entities.Vote.create({ suggestionId, userId: user.id, vote });
+      voteAction = 'created';
     }
 
     // Re-read the actual votes from DB after mutation - this is the source of truth
@@ -141,16 +145,27 @@ Deno.serve(async (req) => {
     const newProVotes = freshVotes.filter(v => v.vote === 'pro').length;
     const newConVotes = freshVotes.filter(v => v.vote === 'con').length;
 
-    // Verify: each user can only have ONE vote — log if violation found
+    // Verify: each user can only have ONE vote — clean up if duplicates found
     const votesByUser = new Map();
+    const duplicateVoteIds = [];
     freshVotes.forEach(v => {
       if (votesByUser.has(v.userId)) {
         console.warn('[VOTE FUNCTION] DUPLICATE VOTE DETECTED for userId:', v.userId, 'on suggestion:', suggestionId);
+        duplicateVoteIds.push(v.id); // Mark for cleanup
+      } else {
+        votesByUser.set(v.userId, v);
       }
-      votesByUser.set(v.userId, v);
     });
+    
+    // Delete duplicate votes discovered after the mutation
+    if (duplicateVoteIds.length > 0) {
+      console.log('[VOTE FUNCTION] Cleaning up', duplicateVoteIds.length, 'duplicate votes');
+      await Promise.all(duplicateVoteIds.map(id => base44.asServiceRole.entities.Vote.delete(id)));
+    }
 
     // Update suggestion vote counts based on actual DB count
+    // IMPORTANT: Using increment-style logic to be safer in case of concurrent updates
+    // But safest approach is using the count we just verified
     await base44.asServiceRole.entities.Suggestion.update(suggestionId, {
       proVotes: newProVotes,
       conVotes: newConVotes
