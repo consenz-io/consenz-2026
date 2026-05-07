@@ -767,17 +767,26 @@ export default function SuggestionDetail() {
                 }
 
                 {isAdmin && suggestion.status === 'pending' &&
-                  <div className="flex gap-2 pt-3 border-t">
-                    <Button onClick={() => updateStatusMutation.mutate('accepted')} disabled={updateStatusMutation.isPending} className="flex-1 bg-green-600 hover:bg-green-700">
-                      {updateStatusMutation.isPending ? <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} /> : <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
-                      {t('acceptSuggestion')}
-                    </Button>
-                    <Button onClick={() => updateStatusMutation.mutate('rejected')} disabled={updateStatusMutation.isPending} variant="destructive" className="flex-1">
-                      {updateStatusMutation.isPending ? <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} /> : <XCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
-                      {t('rejectSuggestion')}
-                    </Button>
-                  </div>
-                }
+                   <div className="flex gap-2 pt-3 border-t">
+                     <Button onClick={() => updateStatusMutation.mutate('accepted')} disabled={updateStatusMutation.isPending} className="flex-1 bg-green-600 hover:bg-green-700">
+                       {updateStatusMutation.isPending ? <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} /> : <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
+                       {t('acceptSuggestion')}
+                     </Button>
+                     <Button onClick={() => updateStatusMutation.mutate('rejected')} disabled={updateStatusMutation.isPending} variant="destructive" className="flex-1">
+                       {updateStatusMutation.isPending ? <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} /> : <XCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
+                       {t('rejectSuggestion')}
+                     </Button>
+                   </div>
+                 }
+
+                {isAdmin && suggestion.status === 'rejected' &&
+                   <div className="pt-3 border-t">
+                     <Button onClick={() => updateStatusMutation.mutate('pending')} disabled={updateStatusMutation.isPending} className="w-full bg-blue-600 hover:bg-blue-700">
+                       {updateStatusMutation.isPending ? <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} /> : <Clock className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
+                       {language === 'he' ? 'החזר להצבעה' : language === 'ar' ? 'إعادة التصويت' : 'Restore to Voting'}
+                     </Button>
+                   </div>
+                 }
               </div>
             }
           </CardContent>
