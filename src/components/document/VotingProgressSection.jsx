@@ -38,7 +38,7 @@ function formatRemaining(ms, language) {
  * VotingProgressSection
  * Shows a progress bar toward the acceptance threshold + full-width vote buttons.
  */
-export default function VotingProgressSection({ suggestion, document, userVote, voteMutation, isRTL, readOnly = false }) {
+export default function VotingProgressSection({ suggestion, document, userVote, voteMutation, isRTL, readOnly = false, onLoginRequired }) {
   const { t, language } = useLanguage();
   const msRemaining = useTimeRemaining(suggestion?.timerEndsAt);
   const timeLabel = formatRemaining(msRemaining, language);

@@ -15,7 +15,6 @@ import {
   CheckCircle, XCircle, AlertCircle, Loader2, Trash2, ChevronLeft, ChevronRight, Edit2, X, Save, FileText, ShieldCheck
 } from "lucide-react";
 import SuggestionCountdown from "@/components/document/SuggestionCountdown";
-import VotesNeededCounter from "../components/document/VotesNeededCounter";
 import VotingProgressSection from "../components/document/VotingProgressSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import CommentsSection from "../components/document/CommentsSection";
@@ -45,7 +44,6 @@ export default function SuggestionDetail() {
   const [showEditSuggestionModal, setShowEditSuggestionModal] = useState(false);
   const [isAutoAccepting, setIsAutoAccepting] = useState(false);
   const [rateLimitRetryAfter, setRateLimitRetryAfter] = useState(null);
-  const [hoverVote, setHoverVote] = useState(null); // 'pro' | 'con' | null
 
   const { data: suggestion, isLoading: suggestionLoading, error: suggestionError } = useQuery({
     queryKey: ['suggestion', suggestionId],
@@ -748,35 +746,23 @@ export default function SuggestionDetail() {
                       readOnly={true}
                     />
                   : <>
-                      {/* For pending suggestions: show progress bar and vote buttons */}
-                      <VotesNeededCounter suggestion={suggestion} document={document} acceptedSuggestions={allDocumentSuggestions.filter((s) => s.status === 'accepted')} />
-                      <div className="flex gap-3 relative">
-                        {voteMutation.isPending && !rateLimitRetryAfter &&
-                          <div className="absolute inset-0 bg-white/50 rounded-lg flex items-center justify-center z-10"><Loader2 className="w-5 h-5 animate-spin text-blue-600" /></div>
-                        }
-                        {rateLimitRetryAfter &&
-                          <div className="absolute inset-0 bg-amber-50/95 rounded-lg flex items-center justify-center z-10 gap-2 p-2">
-                            <Clock className="w-4 h-4 text-amber-600 animate-pulse" />
-                            <p className="text-xs font-medium text-amber-800">
-                              {language === 'he' ? `אנא המתן ${rateLimitRetryAfter} שניות` : language === 'ar' ? `يرجى الانتظار ${rateLimitRetryAfter} ثانية` : `Please wait ${rateLimitRetryAfter} seconds`}
-                            </p>
-                          </div>
-                        }
-                        <Button variant={userVote?.vote === 'pro' ? 'default' : 'outline'} onClick={() => { if (!user) { base44.auth.redirectToLogin(window.location.href); return; } voteMutation.mutate('pro'); }} disabled={voteMutation.isPending || rateLimitRetryAfter !== null} onMouseEnter={() => setHoverVote('pro')} onMouseLeave={() => setHoverVote(null)} className={`flex-1 ${userVote?.vote === 'pro' ? 'bg-green-600 hover:bg-green-700 border-green-600' : 'border-green-300 text-green-700 hover:bg-green-50'}`}>
-                          <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{t('votePro')}
-                        </Button>
-                        <Button variant={userVote?.vote === 'con' ? 'default' : 'outline'} onClick={() => { if (!user) { base44.auth.redirectToLogin(window.location.href); return; } voteMutation.mutate('con'); }} disabled={voteMutation.isPending || rateLimitRetryAfter !== null} onMouseEnter={() => setHoverVote('con')} onMouseLeave={() => setHoverVote(null)} className={`flex-1 ${userVote?.vote === 'con' ? 'bg-red-600 hover:bg-red-700 border-red-600' : 'border-red-300 text-red-700 hover:bg-red-50'}`}>
-                          <ThumbsDown className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{t('voteCon')}
-                        </Button>
-                      </div>
-                      {hoverVote && (
-                        <p className={`text-xs text-center font-medium mt-1 ${hoverVote === 'pro' ? 'text-blue-600' : 'text-red-500'}`}>
-                          {hoverVote === 'pro'
-                            ? (language === 'he' ? 'הצבעתך תקרב את ההצעה לאישור' : language === 'ar' ? 'سيقرب صوتك الاقتراح من القبول' : 'Your vote will help pass this proposal')
-                            : (language === 'he' ? 'הצבעתך תרחיק את ההצעה מאישור' : language === 'ar' ? 'سيبعد صوتك الاقتراح عن القبول' : 'Your vote will push back the proposal')
-                          }
-                        </p>
-                      )}
+                      {/* For pending suggestions: use VotingProgressSection (same as sidebar/document) */}
+                      <VotingProgressSection
+                        suggestion={suggestion}
+                        document={document}
+                        userVote={userVote}
+                        voteMutation={{ mutate: (vote) => { if (!user) { base44.auth.redirectToLogin(window.location.href); return; } voteMutation.mutate(vote); }, isPending: voteMutation.isPending || rateLimitRetryAfter !== null }}
+                        isRTL={isRTL}
+                        readOnly={false}
+                      />
+                      {rateLimitRetryAfter &&
+                        <div className="flex items-center justify-center gap-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                          <Clock className="w-4 h-4 text-amber-600 animate-pulse" />
+                          <p className="text-xs font-medium text-amber-800">
+                            {language === 'he' ? `אנא המתן ${rateLimitRetryAfter} שניות` : language === 'ar' ? `يرجى الانتظار ${rateLimitRetryAfter} ثانية` : `Please wait ${rateLimitRetryAfter} seconds`}
+                          </p>
+                        </div>
+                      }
                     </>
                 }
 
