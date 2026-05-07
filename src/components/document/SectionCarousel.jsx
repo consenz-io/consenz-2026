@@ -446,14 +446,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
       )}
 
       {/* תוכן */}
-      <div className={`min-h-[40px] ${allViews.length > 1 ? 'relative' : ''}`}>
-        {/* Peek indicators — subtle shadows on left/right edges when more cards exist */}
-        {allViews.length > 1 && !isFirstView && (
-          <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-amber-100/60 to-transparent pointer-events-none z-10 rounded-l" />
-        )}
-        {allViews.length > 1 && !isLastView && (
-          <div className="absolute right-0 top-0 bottom-0 w-3 bg-gradient-to-l from-amber-100/60 to-transparent pointer-events-none z-10 rounded-r" />
-        )}
+      <div className="min-h-[40px]">
         {!currentView ? null : currentView.type === 'current' ? (
           // תצוגת תוכן נוכחי
           <>
