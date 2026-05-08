@@ -1,44 +1,40 @@
 import js from '@eslint/js';
 
-const TEST_IGNORE_PATTERNS = [
-  '**/__tests__/**',
-  '**/*.test.js',
-  '**/*.test.jsx',
-  '**/*.test.ts',
-  '**/*.test.tsx',
-  '**/*.spec.js',
-  '**/*.spec.jsx',
-  '**/qa/QAReport.jsx',
-  '**/qa/QAReport.md.jsx',
-  '**/qa/QAReportMd.jsx',
-];
-
 export default [
-  // Global ignores — applied before any other config
+  // Completely ignore test files and QA reports — must be a standalone ignores-only block
   {
-    ignores: TEST_IGNORE_PATTERNS,
+    ignores: [
+      '**/__tests__/**',
+      '**/*.test.js',
+      '**/*.test.jsx',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/*.spec.js',
+      '**/*.spec.jsx',
+      '**/qa/**',
+    ],
   },
-  // Main lint config — explicitly scoped to non-test files
+  // Lint only production source files
   {
-    ...js.configs.recommended,
-    files: ['src/**/*.{js,jsx,ts,tsx}'],
-    ignores: TEST_IGNORE_PATTERNS,
+    files: [
+      'src/**/*.js',
+      'src/**/*.jsx',
+      'src/**/*.ts',
+      'src/**/*.tsx',
+      '!src/**/__tests__/**',
+      '!src/**/*.test.*',
+      '!src/**/*.spec.*',
+      '!src/**/qa/**',
+    ],
+    rules: {
+      ...js.configs.recommended.rules,
+      'no-unused-vars': 'warn',
+      'no-undef': 'error',
+    },
     languageOptions: {
-      ...js.configs.recommended.languageOptions,
       ecmaVersion: 2022,
       sourceType: 'module',
       globals: {
-        ...(js.configs.recommended.languageOptions?.globals ?? {}),
-        // Vitest globals (also satisfies any test files that slip through)
-        describe: 'readonly',
-        test: 'readonly',
-        it: 'readonly',
-        expect: 'readonly',
-        beforeEach: 'readonly',
-        afterEach: 'readonly',
-        beforeAll: 'readonly',
-        afterAll: 'readonly',
-        vi: 'readonly',
         // Browser globals
         window: 'readonly',
         document: 'readonly',
@@ -101,12 +97,17 @@ export default [
         crypto: 'readonly',
         queueMicrotask: 'readonly',
         structuredClone: 'readonly',
+        // Vitest globals
+        describe: 'readonly',
+        test: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        vi: 'readonly',
       },
-    },
-    rules: {
-      ...js.configs.recommended.rules,
-      'no-unused-vars': 'warn',
-      'no-undef': 'error',
     },
   },
 ];

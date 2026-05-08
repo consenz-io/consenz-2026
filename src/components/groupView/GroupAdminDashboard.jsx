@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
-import { Users, MessageSquare, Lightbulb, CheckCircle, Clock, XCircle, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import { MessageSquare, Lightbulb, CheckCircle, Clock, XCircle, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 
 function StatCard({ icon: Icon, label, value, color }) {
@@ -53,12 +53,6 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
     return m;
   }, [publicProfiles]);
 
-  const userIdToProfile = useMemo(() => {
-    const m = new Map();
-    publicProfiles.forEach(p => { if (p.userId) m.set(p.userId, p); });
-    return m;
-  }, [publicProfiles]);
-
   const docMap = useMemo(() => new Map(documents.map(d => [d.id, d])), [documents]);
 
   // Index suggestions by id for O(1) lookup in comments loop
@@ -75,21 +69,15 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
     return m;
   }, [allDocSuggestions]);
 
-  const getMemberName = (userId) => userIdToProfile.get(userId)?.fullName || userId;
   const getEmailName = (email) => emailToProfile.get(email)?.fullName || email;
 
   // Stats — derived with useMemo
-  const { totalMembers, totalSuggestions, acceptedSuggestions, totalComments } = useMemo(() => ({
-    totalMembers: groupMembers.length,
+  const { totalSuggestions, acceptedSuggestions, totalComments } = useMemo(() => ({
     totalSuggestions: allDocSuggestions.length,
     acceptedSuggestions: allDocSuggestions.filter(s => s.status === 'accepted').length,
     totalComments: allDocComments.length,
-  }), [groupMembers, allDocSuggestions, allDocComments]);
+  }), [allDocSuggestions, allDocComments]);
 
-  const sortedMembers = useMemo(
-    () => [...groupMembers].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)),
-    [groupMembers]
-  );
   const sortedSuggestions = useMemo(
     () => [...allDocSuggestions].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)),
     [allDocSuggestions]
@@ -113,40 +101,11 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
   return (
     <div className="space-y-5">
       {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard icon={Users} label={iHe ? 'חברים' : iAr ? 'أعضاء' : 'Members'} value={totalMembers} color="bg-blue-50 text-blue-800" />
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <StatCard icon={Lightbulb} label={iHe ? 'הצעות סה״כ' : iAr ? 'مجموع الاقتراحات' : 'Total Suggestions'} value={totalSuggestions} color="bg-purple-50 text-purple-800" />
         <StatCard icon={CheckCircle} label={iHe ? 'הצעות שהתקבלו' : iAr ? 'مقبولة' : 'Accepted'} value={acceptedSuggestions} color="bg-green-50 text-green-800" />
         <StatCard icon={MessageSquare} label={iHe ? 'תגובות' : iAr ? 'تعليقات' : 'Comments'} value={totalComments} color="bg-orange-50 text-orange-800" />
       </div>
-
-      {/* Members list */}
-      <CollapsibleSection
-        title={iHe ? 'רשימת חברים' : iAr ? 'قائمة الأعضاء' : 'Members List'}
-        count={totalMembers}
-        icon={Users}
-        defaultOpen={true}
-      >
-        {sortedMembers.length === 0 && (
-          <p className="text-sm text-slate-400 text-center py-4">{iHe ? 'אין חברים' : 'No members'}</p>
-        )}
-        {sortedMembers.map(member => (
-          <div key={member.id} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                {getMemberName(member.userId).charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-800">{getMemberName(member.userId)}</p>
-                <p className="text-xs text-slate-400">{iHe ? 'הצטרף' : 'Joined'}: {fmtDate(member.created_date)}</p>
-              </div>
-            </div>
-            {member.role === 'admin' && (
-              <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-xs">{iHe ? 'מנהל' : iAr ? 'مشرف' : 'Admin'}</Badge>
-            )}
-          </div>
-        ))}
-      </CollapsibleSection>
 
       {/* Suggestions list */}
       <CollapsibleSection
