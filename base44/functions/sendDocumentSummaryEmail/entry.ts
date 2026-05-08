@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
   };
 
   const l = labels[language] || labels['en'];
-  const appBase = Deno.env.get('APP_URL') || 'https://consenz.app';
+  const appBase = Deno.env.get('APP_URL') || 'https://consenz.net';
   const docUrl = `${appBase}/DocumentView?id=${documentId}`;
 
   // Base URL for the trackEmailEvent backend function

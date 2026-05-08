@@ -11,10 +11,10 @@ export default [
       '**/*.test.tsx',
       '**/*.spec.js',
       '**/*.spec.jsx',
+      '**/*.spec.ts',
+      '**/*.spec.tsx',
       '**/qa/**',
-      'src/components/document/__tests__/**',
-      'src/components/document/__tests__/consensusMeter.jsx',
-      'src/components/document/__tests__/consensusMeter.test.jsx',
+      '**/consensusMeter*',
     ],
   },
   // Lint only production source files
