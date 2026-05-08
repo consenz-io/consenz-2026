@@ -3,7 +3,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 // Public endpoint — no user auth required (called by email client or redirect)
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
-  const { logId, type, redirectUrl } = await req.json().catch(() => ({}));
+  const url = new URL(req.url);
+  const logId = url.searchParams.get('logId');
+  const type = url.searchParams.get('type');
+  const redirectUrl = url.searchParams.get('redirectUrl');
 
   if (!logId || !['open', 'click'].includes(type)) {
     return Response.json({ error: 'Invalid params' }, { status: 400 });
