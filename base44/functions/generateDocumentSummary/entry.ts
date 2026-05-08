@@ -193,11 +193,14 @@ Structure:
 
 IMPORTANT:
 - Output valid HTML only (no markdown). Use <p>, <ul>, <li>, <strong>, <a href="..."> tags.
+- CRITICAL: Do NOT add extra blank lines or excessive whitespace between elements. Each <p> tag should immediately follow the closing tag of the previous element, with NO blank lines between them.
+- Do NOT use <br> tags for spacing. Do NOT use empty <p> tags for spacing.
+- Keep the email compact and readable — no unnecessary vertical whitespace between paragraphs.
 - When mentioning open suggestions, embed them as clickable HTML links using the <a> tags already provided in the data above — do NOT strip or replace the HTML link tags.
 - Be honest about which content came from admins vs. the community.
 - Use the actual content of comments and arguments to give meaningful insights, not just counts.
 - Make the email comprehensive enough that readers understand the full discussion landscape and can make informed decisions
-- Aim for 1000-1500 words to allow proper coverage of all open suggestions and discussion threads
+- Aim for 800-1200 words — concise but thorough. Avoid padding or repetition.
 
 DISCLAIMER SECTION (must appear at the bottom of the email):
 Add a clearly separated disclaimer paragraph styled with small gray text, stating that:
@@ -213,6 +216,8 @@ Add a clearly separated disclaimer paragraph styled with small gray text, statin
   // Strip markdown code fences if LLM wrapped the HTML in ```html ... ```
   let summaryText = typeof summary === 'string' ? summary : summary?.content || String(summary);
   summaryText = summaryText.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
+  // Remove excessive blank lines / whitespace between HTML tags
+  summaryText = summaryText.replace(/>\s*\n\s*\n\s*</g, '>\n<').replace(/\n{3,}/g, '\n');
 
   return Response.json({
    summary: summaryText,
