@@ -24,6 +24,7 @@ import TranslateAllButton from "../components/document/TranslateAllButton";
 import CommentsSection from "../components/document/CommentsSection";
 import { useDocumentData } from "../components/document/hooks/useDocumentData";
 import { useDocumentSubscriptions } from "../components/document/hooks/useDocumentSubscriptions";
+import DocumentTutorial from "../components/document/DocumentTutorial";
 
 // Lazy load heavy components
 const CreateSuggestionModal = React.lazy(() => import("../components/document/CreateSuggestionModal"));
@@ -962,6 +963,7 @@ export default function DocumentView() {
                 scrollToSuggestion(currentSuggestionIndex);
               }
             }}
+            id="suggestions-nav"
             aria-label={`${pendingSuggestions.length} ${language === 'he' ? 'הצעות פתוחות' : 'open suggestions'}. ${pendingSuggestions.length > 0 ? (language === 'he' ? 'לחץ לניווט להצעות' : 'Click to navigate to suggestions') : ''}`}
           >
 
@@ -1018,9 +1020,12 @@ export default function DocumentView() {
               onClearNewlyCreated={() => setNewlyCreatedSuggestion(null)}
               targetSuggestionId={targetSuggestionId}
               onEditSuggestion={handleEditSuggestion}
+              onCreateSuggestionClick={() => setShowCreateSuggestion(true)}
           />
         </ErrorBoundary>
       </div>
+
+      <DocumentTutorial documentId={documentId} />
 
       {showSummaryDialog && document && !isInitialLoading && (
         <DocumentSummaryDialog
