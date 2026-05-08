@@ -471,7 +471,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
 
         <div className="space-y-3">
           <h3 className="font-semibold text-sm text-slate-700">
-            {language === 'he' ? 'חברי הקבוצה' : 'Group Members'} ({groupMembers.length + allParticipants.extraProfiles.length})
+            {language === 'he' ? 'חברי הקבוצה' : 'Group Members'} ({groupMembers.length + allParticipants.extraProfiles.length} {language === 'he' ? 'משתתפים' : 'participants'})
           </h3>
           
           {groupMembers.map((member) => {

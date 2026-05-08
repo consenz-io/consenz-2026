@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "@/components/LanguageContext";
+import { calcGroupParticipants } from "@/lib/groupParticipants";
 
 export function useGroupViewData(groupId) {
   const { language } = useLanguage();
@@ -157,12 +158,16 @@ export function useGroupViewData(groupId) {
     })();
   }, [groupId, groupMembers, publicProfiles, allDocSuggestions, queryClient]);
 
-  // All unique participant userIds: formal members + suggestion creators + voters + commenters
+  // All unique participant userIds — using unified calcGroupParticipants
   const allParticipantUserIds = useMemo(() => {
-    const ids = new Set(groupMembers.map(m => m.userId));
+    const count = calcGroupParticipants(
+      groupId, groupMembers, documents, allDocSuggestions, allDocVotes, allDocComments, publicProfiles
+    );
+    // Return an array of that length so existing .length references stay valid.
+    // Build the actual set for rendering the member list.
     const emailToUserId = new Map();
     publicProfiles.forEach(p => { if (p.email && p.userId) emailToUserId.set(p.email, p.userId); });
-
+    const ids = new Set(groupMembers.map(m => m.userId));
     allDocSuggestions.forEach(s => {
       if (s.created_by) { const uid = emailToUserId.get(s.created_by); if (uid) ids.add(uid); }
     });
@@ -170,9 +175,8 @@ export function useGroupViewData(groupId) {
     allDocComments.forEach(c => {
       if (c.created_by) { const uid = emailToUserId.get(c.created_by); if (uid) ids.add(uid); }
     });
-
     return [...ids];
-  }, [groupMembers, publicProfiles, allDocSuggestions, allDocVotes, allDocComments]);
+  }, [groupId, groupMembers, documents, publicProfiles, allDocSuggestions, allDocVotes, allDocComments]);
 
   const { data: userVotes = [] } = useQuery({
     queryKey: ['userVotes', currentUser?.id],

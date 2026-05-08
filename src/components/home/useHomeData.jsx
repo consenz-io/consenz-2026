@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "@/components/LanguageContext";
+import { calcGroupParticipants } from "@/lib/groupParticipants";
 
 const LANGUAGE_PROMPTS = { en: "English", he: "Hebrew", ar: "Arabic" };
 
@@ -152,49 +153,13 @@ export function useHomeData() {
   // ── Derived: per-group participant counts ──────────────────────────────────
   const groupParticipantCounts = useMemo(() => {
     const counts = {};
-    if (!groups.length) return counts;
-
-    const suggestionsByDoc = {};
-    allSuggestions.forEach(s => {
-      if (!suggestionsByDoc[s.documentId]) suggestionsByDoc[s.documentId] = [];
-      suggestionsByDoc[s.documentId].push(s);
-    });
-    const sectionsByDoc = {};
-    allSections.forEach(s => {
-      if (!sectionsByDoc[s.documentId]) sectionsByDoc[s.documentId] = [];
-      sectionsByDoc[s.documentId].push(s);
-    });
-    const agreementsByDoc = {};
-    allAgreements.forEach(a => {
-      if (!agreementsByDoc[a.documentId]) agreementsByDoc[a.documentId] = [];
-      agreementsByDoc[a.documentId].push(a);
-    });
-
     groups.forEach(group => {
-      const groupDocs = documents.filter(d => d.groupId === group.id);
-      const emails = new Set();
-      groupDocs.forEach(doc => {
-        const suggIds = new Set((suggestionsByDoc[doc.id] || []).map(s => s.id));
-        const secIds  = new Set((sectionsByDoc[doc.id]  || []).map(s => s.id));
-        allVotes.forEach(v => {
-          if (suggIds.has(v.suggestionId)) {
-            if (userIdToEmail[v.userId]) emails.add(userIdToEmail[v.userId]);
-            if (v.created_by) emails.add(v.created_by);
-          }
-        });
-        allComments.forEach(c => {
-          if ((c.rootEntityType === 'suggestion' && suggIds.has(c.rootEntityId)) ||
-              (c.rootEntityType === 'section'    && secIds.has(c.rootEntityId))  ||
-              (c.rootEntityType === 'document'   && c.rootEntityId === doc.id)) {
-            if (c.created_by) emails.add(c.created_by);
-          }
-        });
-        (agreementsByDoc[doc.id] || []).forEach(a => { if (a.userEmail) emails.add(a.userEmail); });
-      });
-      counts[group.id] = Math.max(1, emails.size);
+      counts[group.id] = calcGroupParticipants(
+        group.id, groupMembers, documents, allSuggestions, allVotes, allComments, publicProfiles
+      );
     });
     return counts;
-  }, [groups, documents, allSuggestions, allSections, allVotes, allComments, allAgreements, userIdToEmail]);
+  }, [groups, groupMembers, documents, allSuggestions, allVotes, allComments, publicProfiles]);
 
   // ── Mutation: translate document title ────────────────────────────────────
   const translateDocumentMutation = useMutation({
