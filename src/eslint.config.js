@@ -13,6 +13,8 @@ export default [
       '**/*.spec.jsx',
       '**/qa/**',
       'src/components/document/__tests__/**',
+      'src/components/document/__tests__/consensusMeter.jsx',
+      'src/components/document/__tests__/consensusMeter.test.jsx',
     ],
   },
   // Lint only production source files

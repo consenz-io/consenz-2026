@@ -84,10 +84,32 @@ Deno.serve(async (req) => {
   };
 
   const l = labels[language] || labels['en'];
-  const docUrl = `${Deno.env.get('APP_URL') || 'https://consenz.app'}/DocumentView?id=${documentId}`;
+  const appBase = Deno.env.get('APP_URL') || 'https://consenz.app';
+  const docUrl = `${appBase}/DocumentView?id=${documentId}`;
 
-  // Build HTML email with proper RTL/LTR support
-  const emailHtml = `<!DOCTYPE html>
+  // Base URL for the trackEmailEvent backend function
+  const trackBase = `${appBase}/api/functions/trackEmailEvent`;
+
+  // Helper: wrap a URL with click tracking (given a logId)
+  const trackClick = (logId, targetUrl) =>
+    `${trackBase}?logId=${logId}&type=click&redirectUrl=${encodeURIComponent(targetUrl)}`;
+
+  // Helper: build full HTML for one recipient (with unique logId for pixel + links)
+  const buildEmailHtml = (logId) => {
+    const pixelUrl = `${trackBase}?logId=${logId}&type=open`;
+    const trackedDocUrl = trackClick(logId, docUrl);
+
+    // Wrap all <a href="..."> links inside summaryContent with click tracking
+    const trackedSummary = summaryContent.replace(
+      /<a\s+([^>]*?)href="([^"]+)"([^>]*?)>/gi,
+      (match, before, url, after) => {
+        // Don't double-wrap already tracked links
+        if (url.includes('trackEmailEvent')) return match;
+        return `<a ${before}href="${trackClick(logId, url)}"${after}>`;
+      }
+    );
+
+    return `<!DOCTYPE html>
 <html lang="${language || 'en'}" dir="${dir}">
 <head>
   <meta charset="UTF-8">
@@ -119,14 +141,14 @@ Deno.serve(async (req) => {
           <!-- Summary body -->
           <tr>
             <td style="padding:28px 24px;direction:${dir};text-align:${textAlign};">
-              <div style="font-size:15px;line-height:1.8;color:#1e293b;white-space:pre-line;">${summaryContent}</div>
+              <div style="font-size:15px;line-height:1.8;color:#1e293b;white-space:pre-line;">${trackedSummary}</div>
             </td>
           </tr>
 
           <!-- CTA Button -->
           <tr>
             <td style="padding:8px 24px 28px;text-align:center;">
-              <a href="${docUrl}" style="display:inline-block;background:linear-gradient(135deg,#1e40af,#4f46e5);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:700;">${l.viewDoc} →</a>
+              <a href="${trackedDocUrl}" style="display:inline-block;background:linear-gradient(135deg,#1e40af,#4f46e5);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:700;">${l.viewDoc} →</a>
             </td>
           </tr>
 
@@ -141,8 +163,11 @@ Deno.serve(async (req) => {
       </td>
     </tr>
   </table>
+  <!-- Tracking pixel -->
+  <img src="${pixelUrl}" width="1" height="1" style="display:none;border:0;" alt="" />
 </body>
 </html>`;
+  };
 
   // Send emails (sequentially to avoid rate limits)
   let sent = 0;
@@ -152,7 +177,31 @@ Deno.serve(async (req) => {
   for (const email of recipientEmails) {
     let status = 'sent';
     let errorMessage = null;
+    let logId = null;
+
+    // Create log record FIRST to get the ID for tracking pixel/links
     try {
+      const logRecord = await base44.asServiceRole.entities.EmailLog.create({
+        senderUserId: user.id,
+        senderEmail: user.email,
+        recipientEmail: email,
+        subject: l.subject,
+        purpose: 'document_summary',
+        status: 'sent', // will update if failed below
+        relatedEntityId: documentId,
+        relatedEntityType: 'document',
+        openCount: 0,
+        clickCount: 0,
+        batchId,
+        isTestEmail: !!isTestEmail,
+      });
+      logId = logRecord.id;
+    } catch (logErr) {
+      console.error('Failed to create email log:', logErr.message);
+    }
+
+    try {
+      const emailHtml = buildEmailHtml(logId || 'unknown');
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: email,
         subject: l.subject,
@@ -165,27 +214,10 @@ Deno.serve(async (req) => {
       status = 'failed';
       errorMessage = err.message;
       console.error(`Failed to send to ${email}:`, err.message);
-    }
-
-    // Log each email
-    try {
-      await base44.asServiceRole.entities.EmailLog.create({
-        senderUserId: user.id,
-        senderEmail: user.email,
-        recipientEmail: email,
-        subject: l.subject,
-        purpose: 'document_summary',
-        status,
-        errorMessage,
-        relatedEntityId: documentId,
-        relatedEntityType: 'document',
-        openCount: 0,
-        clickCount: 0,
-        batchId,
-        isTestEmail: !!isTestEmail,
-      });
-    } catch (logErr) {
-      console.error('Failed to log email:', logErr.message);
+      // Update log record with failure status
+      if (logId) {
+        await base44.asServiceRole.entities.EmailLog.update(logId, { status: 'failed', errorMessage }).catch(() => {});
+      }
     }
   }
 
