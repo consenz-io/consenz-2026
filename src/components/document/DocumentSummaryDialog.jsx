@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, X, ExternalLink } from "lucide-react";
+import { Loader2, Sparkles, X, ExternalLink, Pencil, Check } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
@@ -16,6 +16,8 @@ export default function DocumentSummaryDialog({ isOpen, onClose, document, sugge
   const { language, isRTL } = useLanguage();
   const [summaryState, setSummaryState] = useState('idle'); // 'idle' | 'loading' | 'done'
   const [summaryData, setSummaryData] = useState(null); // { text, suggestionLinks }
+  const [isEditing, setIsEditing] = useState(false);
+  const editableRef = useRef(null);
 
   const labels = {
     he: {
@@ -260,10 +262,23 @@ Return JSON:
           )}
 
           {summaryState === 'done' && summaryData && (
-            <div className="py-2 space-y-3 text-sm text-slate-800 leading-relaxed">
-              {(summaryData.summary || '').split(/\n\n+/).map((para, i) => (
-                <p key={i} className="leading-6">{renderSummary(para)}</p>
-              ))}
+            <div className="py-2 relative">
+              {isEditing ? (
+                <div
+                  ref={editableRef}
+                  contentEditable
+                  suppressContentEditableWarning
+                  className="text-sm text-slate-800 leading-relaxed outline-none border border-indigo-300 rounded-lg p-3 min-h-[120px] focus:ring-2 focus:ring-indigo-200 bg-indigo-50/30 whitespace-pre-wrap"
+                  dir={isRTL ? 'rtl' : 'ltr'}
+                  dangerouslySetInnerHTML={{ __html: summaryData.summary || '' }}
+                />
+              ) : (
+                <div className="space-y-3 text-sm text-slate-800 leading-relaxed">
+                  {(summaryData.summary || '').split(/\n\n+/).map((para, i) => (
+                    <p key={i} className="leading-6">{renderSummary(para)}</p>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -277,6 +292,30 @@ Return JSON:
             >
               <Sparkles className="w-4 h-4" />
               {L.generate}
+            </Button>
+          )}
+          {summaryState === 'done' && !isEditing && (
+            <Button
+              variant="outline"
+              onClick={() => setIsEditing(true)}
+              className="gap-1"
+            >
+              <Pencil className="w-4 h-4" />
+              {language === 'he' ? 'עריכה' : language === 'ar' ? 'تعديل' : 'Edit'}
+            </Button>
+          )}
+          {summaryState === 'done' && isEditing && (
+            <Button
+              variant="default"
+              onClick={() => {
+                const newHtml = editableRef.current?.innerHTML || summaryData.summary;
+                setSummaryData(prev => ({ ...prev, summary: newHtml }));
+                setIsEditing(false);
+              }}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white gap-1"
+            >
+              <Check className="w-4 h-4" />
+              {language === 'he' ? 'סיום עריכה' : language === 'ar' ? 'تم' : 'Done'}
             </Button>
           )}
           <Button variant="outline" onClick={onClose} className="gap-1">

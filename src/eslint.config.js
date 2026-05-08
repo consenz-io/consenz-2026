@@ -88,7 +88,9 @@ export default [
       'src/**/QAReport*',
       'src/components/qa/QAReport.md.jsx',
       'src/components/qa/QAReport.jsx',
+      'src/components/qa/*.md.jsx',
       'src/components/document/__tests__/consensusMeter.test.jsx',
+      'src/components/document/__tests__/*.test.jsx',
       '**/__tests__/**',
       'src/**/__tests__/**',
       '**/*.test.js',
@@ -155,6 +157,7 @@ export default [
       '**/__tests__/**/*.{js,jsx,ts,tsx}',
       '**/*.test.{js,jsx,ts,tsx}',
       '**/*.spec.{js,jsx,ts,tsx}',
+      'src/components/document/__tests__/consensusMeter.test.jsx',
     ],
     rules: {
       'no-undef': 'off',
@@ -164,6 +167,14 @@ export default [
       ecmaVersion: 2022,
       sourceType: 'module',
       globals: { ...browserGlobals, ...vitestGlobals },
+    },
+  },
+  // 4. QA markdown-as-jsx files — parser may fail, skip entirely
+  {
+    files: ['**/*.md.jsx', '**/*.md.tsx', 'src/components/qa/**'],
+    rules: {
+      'no-undef': 'off',
+      'no-unused-vars': 'off',
     },
   },
 ];
