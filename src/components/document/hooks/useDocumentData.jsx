@@ -73,13 +73,10 @@ export function useDocumentData(documentId) {
       const cachedSuggestions = queryClient.getQueryData(['suggestions', documentId]);
       const cachedSections = queryClient.getQueryData(['sections', documentId]);
 
+      // Always fetch both fresh — cache may be stale after section add/delete
       const [allSuggestions, allSections] = await Promise.all([
-        // Always fetch fresh suggestions — never rely on potentially stale cache
-        // (stale cache is the root cause of missing suggestions after navigation)
         base44.entities.Suggestion.filter({ documentId }, '-created_date').catch(() => cachedSuggestions || []),
-        cachedSections
-          ? Promise.resolve(cachedSections)
-          : base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
+        base44.entities.Section.filter({ documentId }, 'order').catch(() => cachedSections || []),
       ]);
       const suggestionIds = allSuggestions.map(s => s.id);
       const sectionIds = allSections.map(s => s.id);
@@ -168,14 +165,17 @@ export function useDocumentData(documentId) {
     staleTime: 0,
   });
 
-  const { data: isAdmin } = useQuery({
+  const { data: isAdmin = false } = useQuery({
     queryKey: ['isAdmin', documentId, user?.id],
     queryFn: async () => {
       if (!user?.id || !documentId) return false;
+      // Also check system-level admin role
+      if (user.role === 'admin') return true;
       const admins = await base44.entities.DocumentAdmin.filter({ documentId, userId: user.id });
       return admins.length > 0;
     },
     enabled: !!user?.id && !!documentId,
+    placeholderData: false, // Never flash as undefined — always false until resolved
   });
 
   const { data: groupData } = useQuery({

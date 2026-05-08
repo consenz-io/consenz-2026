@@ -78,15 +78,34 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
     };
   }, [documentId, queryClient]);
 
-  // Comment subscription
+  // Comment subscription — invalidate aggregatedData for ALL comment changes in this doc
   React.useEffect(() => {
     if (!documentId) return;
     const unsubscribe = base44.entities.Comment.subscribe((event) => {
-      if (event.data?.rootEntityType === 'document' && event.data?.rootEntityId === documentId) {
+      const { rootEntityType, rootEntityId } = event.data || {};
+      // Always refresh aggregated data when any comment related to this doc changes
+      const isDocComment = rootEntityType === 'document' && rootEntityId === documentId;
+      const isSectionComment = rootEntityType === 'section' && sectionsRef.current?.some(s => s.id === rootEntityId);
+      const isSuggestionComment = rootEntityType === 'suggestion' && suggestionsRef.current?.some(s => s.id === rootEntityId);
+      if (isDocComment || isSectionComment || isSuggestionComment) {
         queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
       }
-      if (event.data?.rootEntityType && event.data?.rootEntityId) {
-        queryClient.invalidateQueries({ queryKey: ['comments', event.data.rootEntityType, event.data.rootEntityId] });
+      // Also update individual comment caches
+      if (rootEntityType && rootEntityId) {
+        queryClient.invalidateQueries({ queryKey: ['comments', rootEntityType, rootEntityId] });
+      }
+    });
+    return unsubscribe;
+  }, [documentId, queryClient]);
+
+  // Vote subscription — real-time vote count updates
+  React.useEffect(() => {
+    if (!documentId) return;
+    const unsubscribe = base44.entities.Vote.subscribe((event) => {
+      const voteSuggestionId = event.data?.suggestionId;
+      if (voteSuggestionId && suggestionsRef.current?.some(s => s.id === voteSuggestionId)) {
+        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
+        queryClient.invalidateQueries({ queryKey: ['suggestions', documentId] });
       }
     });
     return unsubscribe;

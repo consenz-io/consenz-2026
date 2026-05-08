@@ -116,10 +116,16 @@ export default [
     files: ['src/**/*.{js,jsx,ts,tsx}'],
     ignores: [
       'src/**/__tests__/**',
+      '**/__tests__/**',
       'src/**/*.test.{js,jsx,ts,tsx}',
       'src/**/*.spec.{js,jsx,ts,tsx}',
       'src/**/consensusMeter*',
+      '**/consensusMeter*',
       'src/components/qa/**',
+      'components/qa/**',
+      '**/*.md.jsx',
+      '**/*.md.tsx',
+      '**/*.md.js',
     ],
     rules: {
       ...js.configs.recommended.rules,
