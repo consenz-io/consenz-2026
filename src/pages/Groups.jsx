@@ -14,19 +14,6 @@ export default function Groups() {
   const { isRTL, language } = useLanguage();
   const { currentUser, visibleGroups, isLoading, getDocCount, getParticipantCount, isGroupAdmin } = useGroupsData();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="max-w-6xl mx-auto space-y-6">
-          <Skeleton className="h-12 w-48" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Skeleton className="h-48" /><Skeleton className="h-48" /><Skeleton className="h-48" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const statusBadge = (status) => {
     if (status === 'private') return { cls: 'bg-amber-50 text-amber-700 border-amber-200', label: { he: 'פרטי', ar: 'خاص', en: 'Private' }, Icon: Lock };
     if (status === 'hidden')  return { cls: 'bg-slate-100 text-slate-700 border-slate-300', label: { he: 'חסוי', ar: 'مخفي', en: 'Hidden' }, Icon: Lock };
@@ -51,7 +38,11 @@ export default function Groups() {
           )}
         </div>
 
-        {visibleGroups.length === 0 ? (
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Skeleton className="h-48" /><Skeleton className="h-48" /><Skeleton className="h-48" />
+          </div>
+        ) : visibleGroups.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <Users className="w-16 h-16 mx-auto text-slate-400 mb-4" />

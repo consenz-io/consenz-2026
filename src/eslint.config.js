@@ -1,7 +1,7 @@
 import js from '@eslint/js';
 
 export default [
-  // Completely ignore test files and QA reports — must be a standalone ignores-only block
+  // Global ignores — applied before any file matching
   {
     ignores: [
       '**/__tests__/**',
@@ -15,20 +15,12 @@ export default [
       '**/*.spec.tsx',
       '**/qa/**',
       '**/consensusMeter*',
+      'src/components/document/__tests__/**',
     ],
   },
-  // Lint only production source files
+  // Lint only production source files (no negation patterns — not supported in flat config)
   {
-    files: [
-      'src/**/*.js',
-      'src/**/*.jsx',
-      'src/**/*.ts',
-      'src/**/*.tsx',
-      '!src/**/__tests__/**',
-      '!src/**/*.test.*',
-      '!src/**/*.spec.*',
-      '!src/**/qa/**',
-    ],
+    files: ['src/**/*.{js,jsx,ts,tsx}'],
     rules: {
       ...js.configs.recommended.rules,
       'no-unused-vars': 'warn',

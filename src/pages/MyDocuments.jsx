@@ -25,19 +25,6 @@ export default function MyDocuments() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="max-w-6xl mx-auto space-y-6">
-          <Skeleton className="h-12 w-64" />
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map(i => <Skeleton key={i} className="h-64 w-full" />)}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const subLabel = {
     ar: `الوثائق التي شاركت فيها (${myDocuments.length})`,
     he: `מסמכים שהשתתפת בהם (${myDocuments.length})`,
@@ -58,7 +45,11 @@ export default function MyDocuments() {
           <p className="text-slate-600 mt-2">{subLabel[language] || subLabel.en}</p>
         </header>
 
-        {myDocuments.length === 0 ? (
+        {isLoading ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-64 w-full" />)}
+          </div>
+        ) : myDocuments.length === 0 ? (
           <Card className="bg-white border-slate-200">
             <CardContent className="p-12 text-center">
               <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
