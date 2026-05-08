@@ -99,6 +99,8 @@ export default [
       'src/**/*.spec.ts',
       'src/**/*.spec.tsx',
       '**/qa/**',
+      '**/*.md.jsx',
+      '**/*.md.tsx',
       '**/consensusMeter*',
       'src/**/consensusMeter*',
       'src/components/document/__tests__/**',
@@ -108,6 +110,13 @@ export default [
   // 2. Production source files
   {
     files: ['src/**/*.{js,jsx,ts,tsx}'],
+    ignores: [
+      'src/**/__tests__/**',
+      'src/**/*.test.{js,jsx,ts,tsx}',
+      'src/**/*.spec.{js,jsx,ts,tsx}',
+      'src/**/consensusMeter*',
+      'src/components/qa/**',
+    ],
     rules: {
       ...js.configs.recommended.rules,
       'no-unused-vars': 'warn',

@@ -40,7 +40,21 @@ export default function Groups() {
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Skeleton className="h-48" /><Skeleton className="h-48" /><Skeleton className="h-48" />
+            {[1,2,3,4,5,6].map(i => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-4">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         ) : visibleGroups.length === 0 ? (
           <Card>
