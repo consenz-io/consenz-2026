@@ -5,7 +5,8 @@
  *   1. Is a formal GroupMember of the group, OR
  *   2. Created a suggestion in any document belonging to the group, OR
  *   3. Voted on a suggestion in any group document, OR
- *   4. Commented in any group document.
+ *   4. Commented in any group document, OR
+ *   5. Signed a DocumentAgreement in any group document.
  *
  * All lookups go through UserPublicProfile (email → userId) to deduplicate
  * across the different activity types.
@@ -17,6 +18,7 @@
  * @param {object[]} votes             - all Vote records
  * @param {object[]} comments          - all Comment records
  * @param {object[]} publicProfiles    - all UserPublicProfile records
+ * @param {object[]} agreements        - all DocumentAgreement records (optional)
  * @returns {number} count of unique participants
  */
 export function calcGroupParticipants(
@@ -26,7 +28,8 @@ export function calcGroupParticipants(
   suggestions,
   votes,
   comments,
-  publicProfiles
+  publicProfiles,
+  agreements = []
 ) {
   // Build email → userId map from public profiles
   const emailToUserId = new Map();
@@ -76,6 +79,13 @@ export function calcGroupParticipants(
     if (isInGroup) {
       const uid = emailToUserId.get(c.created_by);
       if (uid) ids.add(uid);
+    }
+  });
+
+  // 5. DocumentAgreement signers
+  agreements.forEach(a => {
+    if (groupDocIds.has(a.documentId) && a.userId) {
+      ids.add(a.userId);
     }
   });
 

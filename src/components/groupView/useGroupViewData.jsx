@@ -110,6 +110,18 @@ export function useGroupViewData(groupId) {
     gcTime: 10 * 60 * 1000,
   });
 
+  // Fetch DocumentAgreement signers for group docs
+  const { data: allDocAgreements = [] } = useQuery({
+    queryKey: ['groupAllAgreements', groupId, docIdsSorted],
+    queryFn: async () => {
+      if (docIds.length === 0) return [];
+      return base44.entities.DocumentAgreement.filter({ documentId: { $in: docIds } }, null, 500).catch(() => []);
+    },
+    enabled: docIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
   // Auto-add suggestion creators as formal group members if not already members
   // Use a module-level map (outside component) to survive remounts without creating duplicates
   const autoAddRunKey = `${groupId}`;
@@ -160,23 +172,35 @@ export function useGroupViewData(groupId) {
 
   // All unique participant userIds — using unified calcGroupParticipants
   const allParticipantUserIds = useMemo(() => {
-    const count = calcGroupParticipants(
-      groupId, groupMembers, documents, allDocSuggestions, allDocVotes, allDocComments, publicProfiles
-    );
-    // Return an array of that length so existing .length references stay valid.
-    // Build the actual set for rendering the member list.
     const emailToUserId = new Map();
     publicProfiles.forEach(p => { if (p.email && p.userId) emailToUserId.set(p.email, p.userId); });
-    const ids = new Set(groupMembers.map(m => m.userId));
+
+    const ids = new Set(groupMembers.filter(m => m.groupId === groupId).map(m => m.userId));
+
+    const groupDocIds = new Set(documents.filter(d => d.groupId === groupId).map(d => d.id));
+    const groupSuggestionIds = new Set();
+
     allDocSuggestions.forEach(s => {
-      if (s.created_by) { const uid = emailToUserId.get(s.created_by); if (uid) ids.add(uid); }
+      if (groupDocIds.has(s.documentId)) {
+        groupSuggestionIds.add(s.id);
+        if (s.created_by) { const uid = emailToUserId.get(s.created_by); if (uid) ids.add(uid); }
+      }
     });
-    allDocVotes.forEach(v => { if (v.userId) ids.add(v.userId); });
+    allDocVotes.forEach(v => {
+      if (groupSuggestionIds.has(v.suggestionId) && v.userId) ids.add(v.userId);
+    });
     allDocComments.forEach(c => {
-      if (c.created_by) { const uid = emailToUserId.get(c.created_by); if (uid) ids.add(uid); }
+      if (!c.created_by) return;
+      const inGroup = (c.rootEntityType === 'document' && groupDocIds.has(c.rootEntityId)) ||
+                      (c.rootEntityType === 'suggestion' && groupSuggestionIds.has(c.rootEntityId));
+      if (inGroup) { const uid = emailToUserId.get(c.created_by); if (uid) ids.add(uid); }
     });
+    allDocAgreements.forEach(a => {
+      if (groupDocIds.has(a.documentId) && a.userId) ids.add(a.userId);
+    });
+
     return [...ids];
-  }, [groupId, groupMembers, documents, publicProfiles, allDocSuggestions, allDocVotes, allDocComments]);
+  }, [groupId, groupMembers, documents, publicProfiles, allDocSuggestions, allDocVotes, allDocComments, allDocAgreements]);
 
   const { data: userVotes = [] } = useQuery({
     queryKey: ['userVotes', currentUser?.id],
