@@ -172,8 +172,24 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
           <p className="text-sm text-slate-400 text-center py-4">{iHe ? 'אין תגובות' : 'No comments'}</p>
         )}
         {sortedComments.map(c => {
-          const doc = docMap.get(c.rootEntityId);
           const plainText = c.content?.replace(/<[^>]*>/g, '') || '';
+
+          // Find the related suggestion for this comment
+          let relatedSuggestion = null;
+          if (c.rootEntityType === 'suggestion') {
+            relatedSuggestion = allDocSuggestions.find(s => s.id === c.rootEntityId);
+          } else if (c.rootEntityType === 'section') {
+            // Find latest pending/accepted suggestion for this section
+            relatedSuggestion = allDocSuggestions.find(s => s.sectionId === c.rootEntityId);
+          }
+
+          // Build link: if suggestion found → suggestiondetail with commentId anchor
+          const linkTo = relatedSuggestion
+            ? `${createPageUrl("suggestiondetail")}?id=${relatedSuggestion.id}&commentId=${c.id}`
+            : null;
+
+          const doc = relatedSuggestion ? docMap.get(relatedSuggestion.documentId) : null;
+
           return (
             <div key={c.id} className="px-4 py-3 hover:bg-slate-50 transition-colors">
               <div className="flex items-start justify-between gap-3">
@@ -181,14 +197,15 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
                   <p className="text-xs text-slate-400 mb-1">
                     {getEmailName(c.created_by)} · {fmtDate(c.created_date)}
                     {doc && <span className="mx-1">· {iHe ? 'מסמך' : 'Doc'}: {doc.title}</span>}
+                    {relatedSuggestion && <span className="mx-1">· {iHe ? 'הצעה' : iAr ? 'اقتراح' : 'Suggestion'}: {relatedSuggestion.title}</span>}
                   </p>
                   <p className="text-sm text-slate-700 line-clamp-2">{plainText || '—'}</p>
                 </div>
-                {doc && (
+                {linkTo && (
                   <Link
-                    to={`${createPageUrl("DocumentView")}?id=${doc.id}`}
+                    to={linkTo}
                     className="text-blue-500 hover:text-blue-700 shrink-0 mt-0.5"
-                    title={iHe ? 'צפה במסמך' : 'View document'}
+                    title={iHe ? 'צפה בתגובה בעמוד ההצעה' : 'View comment in suggestion page'}
                   >
                     <ExternalLink className="w-4 h-4" />
                   </Link>
