@@ -49,6 +49,15 @@ Deno.serve(async (req) => {
     ).forEach(c => { if (c.created_by) emailSet.add(c.created_by); });
     allAgreements.forEach(a => { if (a.userEmail) emailSet.add(a.userEmail); });
 
+    // Always add document admins
+    const docAdmins = await base44.asServiceRole.entities.DocumentAdmin.filter({ documentId });
+    const allUsers = await base44.asServiceRole.entities.User.list();
+    const adminEmailMap = new Map(allUsers.map(u => [u.id, u.email]));
+    docAdmins.forEach(da => {
+      const adminEmail = adminEmailMap.get(da.userId);
+      if (adminEmail) emailSet.add(adminEmail);
+    });
+
     recipientEmails = [...emailSet].filter(Boolean);
   }
 
