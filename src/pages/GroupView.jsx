@@ -146,16 +146,16 @@ export default function GroupView() {
             </div>
           </div>
           <div className="flex gap-2">
+            {isMember && (
+              <Button variant="outline" onClick={() => setShowAdminDashboard(v => !v)} className={showAdminDashboard ? 'bg-indigo-50 border-indigo-300 text-indigo-700' : ''}>
+                <Settings className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {language === 'he' ? 'דשבורד פעילות' : language === 'ar' ? 'لوحة النشاط' : 'Activity Dashboard'}
+              </Button>
+            )}
             {isAdmin && (
-              <>
-                <Button variant="outline" onClick={() => setShowAdminDashboard(v => !v)} className={showAdminDashboard ? 'bg-indigo-50 border-indigo-300 text-indigo-700' : ''}>
-                  <Settings className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {language === 'he' ? 'דשבורד מנהל' : language === 'ar' ? 'لوحة المشرف' : 'Admin Dashboard'}
-                </Button>
-                <Button variant="outline" onClick={() => setShowManageMembers(true)}>
-                  <Settings className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{language === 'he' ? 'ניהול' : 'Manage'}
-                </Button>
-              </>
+              <Button variant="outline" onClick={() => setShowManageMembers(true)}>
+                <Settings className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{language === 'he' ? 'ניהול' : 'Manage'}
+              </Button>
             )}
             {currentUser && !isMember && group.status === 'public' && (
               <Button onClick={() => joinGroupMutation.mutate()} disabled={joinGroupMutation.isPending} className="bg-gradient-to-r from-blue-600 to-indigo-600">
@@ -170,13 +170,13 @@ export default function GroupView() {
           </div>
         </div>
 
-        {/* Admin Dashboard */}
-        {isAdmin && showAdminDashboard && (
+        {/* Activity Dashboard */}
+        {isMember && showAdminDashboard && (
           <Card className="border-indigo-200 bg-indigo-50/30">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg text-indigo-800 flex items-center gap-2">
                 <Settings className="w-5 h-5" />
-                {language === 'he' ? 'דשבורד מעקב מנהלים' : language === 'ar' ? 'لوحة متابعة المشرفين' : 'Admin Activity Dashboard'}
+                {language === 'he' ? 'דשבורד פעילות' : language === 'ar' ? 'لوحة النشاط' : 'Activity Dashboard'}
               </CardTitle>
             </CardHeader>
             <CardContent>
