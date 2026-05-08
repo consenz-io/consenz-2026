@@ -1,7 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 // Public endpoint — no user auth required (called by email client or redirect)
-// Responds immediately then updates DB in background to minimize latency
 Deno.serve(async (req) => {
   const url = new URL(req.url);
   const logId = url.searchParams.get('logId');
@@ -12,19 +11,33 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Invalid params' }, { status: 400 });
   }
 
-  // For click events — redirect immediately, track in background
+  // Track in background — non-blocking, never throws
+  const track = async (field) => {
+    try {
+      const base44 = createClientFromRequest(req);
+      const logs = await base44.asServiceRole.entities.EmailLog.filter({ id: logId });
+      if (logs.length === 0) return;
+      const current = logs[0][field] || 0;
+      await base44.asServiceRole.entities.EmailLog.update(logId, { [field]: current + 1 });
+    } catch (_) {
+      // analytics failure must never affect the response
+    }
+  };
+
+  // For click events — redirect immediately, track asynchronously
   if (type === 'click' && redirectUrl) {
-    // Fire-and-forget tracking
-    const base44 = createClientFromRequest(req);
-    EdgeRuntime?.waitUntil?.(trackIncrement(base44, logId, 'clickCount').catch(() => {}));
-    
+    track('clickCount'); // intentionally not awaited
     return new Response(null, {
       status: 302,
       headers: { Location: redirectUrl },
     });
   }
 
-  // For open pixel — return GIF immediately, track in background
+  // For open pixel — return 1x1 GIF, track asynchronously
+  if (type === 'open') {
+    track('openCount'); // intentionally not awaited
+  }
+
   const pixel = new Uint8Array([
     0x47,0x49,0x46,0x38,0x39,0x61,0x01,0x00,0x01,0x00,0x80,0x00,0x00,
     0xff,0xff,0xff,0x00,0x00,0x00,0x21,0xf9,0x04,0x00,0x00,0x00,0x00,
@@ -32,21 +45,8 @@ Deno.serve(async (req) => {
     0x44,0x01,0x00,0x3b,
   ]);
 
-  if (type === 'open') {
-    const base44 = createClientFromRequest(req);
-    EdgeRuntime?.waitUntil?.(trackIncrement(base44, logId, 'openCount').catch(() => {}));
-  }
-
   return new Response(pixel, {
     status: 200,
     headers: { 'Content-Type': 'image/gif', 'Cache-Control': 'no-store' },
   });
 });
-
-// Read-then-increment — kept simple; race window is acceptable for analytics counters
-async function trackIncrement(base44, logId, field) {
-  const logs = await base44.asServiceRole.entities.EmailLog.filter({ id: logId });
-  if (logs.length === 0) return;
-  const current = logs[0][field] || 0;
-  await base44.asServiceRole.entities.EmailLog.update(logId, { [field]: current + 1 });
-}
