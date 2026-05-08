@@ -12,7 +12,7 @@ import { useGroupsData } from "@/components/groups/useGroupsData";
 
 export default function Groups() {
   const { isRTL, language } = useLanguage();
-  const { currentUser, visibleGroups, isLoading, getDocCount, getMemberCount, isGroupAdmin } = useGroupsData();
+  const { currentUser, visibleGroups, isLoading, getDocCount, getParticipantCount, isGroupAdmin } = useGroupsData();
 
   if (isLoading) {
     return (
@@ -89,7 +89,7 @@ export default function Groups() {
                         </div>
                         <div className="flex items-center gap-1">
                           <Users className="w-4 h-4" />
-                          <span>{getMemberCount(group.id)} {language === 'he' ? 'חברים' : language === 'ar' ? 'أعضاء' : 'members'}</span>
+                          <span>{getParticipantCount(group.id)} {language === 'he' ? 'משתתפים' : language === 'ar' ? 'مشاركون' : 'participants'}</span>
                         </div>
                       </div>
                     </CardContent>

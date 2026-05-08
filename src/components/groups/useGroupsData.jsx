@@ -51,6 +51,18 @@ export function useGroupsData() {
     gcTime: 15 * 60 * 1000,
   });
 
+  const docIds = useMemo(() => documents.map(d => d.id).sort(), [documents]);
+
+  // Step 5: Fetch UserInteractions for all group documents to count unique participants
+  const { data: userInteractions = [] } = useQuery({
+    queryKey: ['groupUserInteractions', docIds],
+    queryFn: () => base44.entities.UserInteraction.filter({ documentId: { $in: docIds } }),
+    enabled: docIds.length > 0,
+    placeholderData: [],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+  });
+
   // Visible groups: hidden groups only visible to members/admins/creators
   const visibleGroups = useMemo(() => {
     if (!currentUser) return [];
@@ -65,6 +77,16 @@ export function useGroupsData() {
   }, [groups, myMemberships, currentUser]);
 
   const getDocCount = (groupId) => documents.filter(d => d.groupId === groupId).length;
+
+  // Count unique participants across all docs in a group (via UserInteraction)
+  const getParticipantCount = (groupId) => {
+    const groupDocIds = new Set(documents.filter(d => d.groupId === groupId).map(d => d.id));
+    const uniqueUsers = new Set(
+      userInteractions.filter(ui => groupDocIds.has(ui.documentId)).map(ui => ui.userId)
+    );
+    return uniqueUsers.size;
+  };
+
   const getMemberCount = (groupId) => groupMembers.filter(m => m.groupId === groupId).length;
   const isGroupAdmin = (groupId) => currentUser
     ? myMemberships.some(m => m.groupId === groupId && m.userId === currentUser.id && m.role === 'admin')
@@ -76,6 +98,7 @@ export function useGroupsData() {
     isLoading: membersLoading || (groupIds.length > 0 && groupsLoading),
     getDocCount,
     getMemberCount,
+    getParticipantCount,
     isGroupAdmin,
   };
 }
