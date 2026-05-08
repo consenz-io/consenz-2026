@@ -130,10 +130,20 @@ export function useGroupViewData(groupId) {
     })();
   }, [groupId, groupMembers, publicProfiles, allDocSuggestions, queryClient]);
 
-  // All unique participant userIds: formal members only (suggestion creators are now auto-added as members)
+  // All unique participant userIds: formal members + anyone who created a suggestion in group docs
   const allParticipantUserIds = useMemo(() => {
-    return groupMembers.map(m => m.userId);
-  }, [groupMembers]);
+    const ids = new Set(groupMembers.map(m => m.userId));
+    // Add suggestion creators who have a public profile (so we can display them)
+    const emailToUserId = new Map();
+    publicProfiles.forEach(p => { if (p.email && p.userId) emailToUserId.set(p.email, p.userId); });
+    allDocSuggestions.forEach(s => {
+      if (s.created_by) {
+        const uid = emailToUserId.get(s.created_by);
+        if (uid) ids.add(uid);
+      }
+    });
+    return [...ids];
+  }, [groupMembers, publicProfiles, allDocSuggestions]);
 
   const { data: userVotes = [] } = useQuery({
     queryKey: ['userVotes', currentUser?.id],
