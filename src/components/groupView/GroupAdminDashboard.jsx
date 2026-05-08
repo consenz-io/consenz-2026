@@ -120,34 +120,6 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
         <StatCard icon={MessageSquare} label={iHe ? 'תגובות' : iAr ? 'تعليقات' : 'Comments'} value={totalComments} color="bg-orange-50 text-orange-800" />
       </div>
 
-      {/* Members list */}
-      <CollapsibleSection
-        title={iHe ? 'רשימת חברים' : iAr ? 'قائمة الأعضاء' : 'Members List'}
-        count={totalMembers}
-        icon={Users}
-        defaultOpen={true}
-      >
-        {sortedMembers.length === 0 && (
-          <p className="text-sm text-slate-400 text-center py-4">{iHe ? 'אין חברים' : 'No members'}</p>
-        )}
-        {sortedMembers.map(member => (
-          <div key={member.id} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                {getMemberName(member.userId).charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-800">{getMemberName(member.userId)}</p>
-                <p className="text-xs text-slate-400">{iHe ? 'הצטרף' : 'Joined'}: {fmtDate(member.created_date)}</p>
-              </div>
-            </div>
-            {member.role === 'admin' && (
-              <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-xs">{iHe ? 'מנהל' : iAr ? 'مشرف' : 'Admin'}</Badge>
-            )}
-          </div>
-        ))}
-      </CollapsibleSection>
-
       {/* Suggestions list */}
       <CollapsibleSection
         title={iHe ? 'רשימת הצעות' : iAr ? 'قائمة الاقتراحات' : 'Suggestions List'}
