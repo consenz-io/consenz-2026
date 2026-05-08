@@ -82,6 +82,33 @@ export function useGroupViewData(groupId) {
     gcTime: 10 * 60 * 1000,
   });
 
+  // Fetch all votes on group doc suggestions
+  const allDocSuggestionIds = useMemo(() => allDocSuggestions.map(s => s.id), [allDocSuggestions]);
+  const allDocSuggestionIdsSorted = useMemo(() => [...allDocSuggestionIds].sort().join(','), [allDocSuggestionIds]);
+
+  const { data: allDocVotes = [] } = useQuery({
+    queryKey: ['groupAllVotes', groupId, allDocSuggestionIdsSorted],
+    queryFn: async () => {
+      if (allDocSuggestionIds.length === 0) return [];
+      return base44.entities.Vote.filter({ suggestionId: { $in: allDocSuggestionIds } }, null, 1000).catch(() => []);
+    },
+    enabled: allDocSuggestionIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  // Fetch all comments on group docs (sections + suggestions + document-level)
+  const { data: allDocComments = [] } = useQuery({
+    queryKey: ['groupAllComments', groupId, docIdsSorted],
+    queryFn: async () => {
+      if (docIds.length === 0) return [];
+      return base44.entities.Comment.filter({ rootEntityId: { $in: docIds } }, null, 500).catch(() => []);
+    },
+    enabled: docIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
   // Auto-add suggestion creators as formal group members if not already members
   // Use a module-level map (outside component) to survive remounts without creating duplicates
   const autoAddRunKey = `${groupId}`;
@@ -130,20 +157,25 @@ export function useGroupViewData(groupId) {
     })();
   }, [groupId, groupMembers, publicProfiles, allDocSuggestions, queryClient]);
 
-  // All unique participant userIds: formal members + anyone who created a suggestion in group docs
+  // All unique participant userIds: formal members + anyone who interacted with group docs
   const allParticipantUserIds = useMemo(() => {
     const ids = new Set(groupMembers.map(m => m.userId));
-    // Add suggestion creators who have a public profile (so we can display them)
     const emailToUserId = new Map();
     publicProfiles.forEach(p => { if (p.email && p.userId) emailToUserId.set(p.email, p.userId); });
+
+    // Suggestion creators
     allDocSuggestions.forEach(s => {
-      if (s.created_by) {
-        const uid = emailToUserId.get(s.created_by);
-        if (uid) ids.add(uid);
-      }
+      if (s.created_by) { const uid = emailToUserId.get(s.created_by); if (uid) ids.add(uid); }
     });
+    // Voters (Vote entity has userId directly)
+    allDocVotes.forEach(v => { if (v.userId) ids.add(v.userId); });
+    // Commenters
+    allDocComments.forEach(c => {
+      if (c.created_by) { const uid = emailToUserId.get(c.created_by); if (uid) ids.add(uid); }
+    });
+
     return [...ids];
-  }, [groupMembers, publicProfiles, allDocSuggestions]);
+  }, [groupMembers, publicProfiles, allDocSuggestions, allDocVotes, allDocComments]);
 
   const { data: userVotes = [] } = useQuery({
     queryKey: ['userVotes', currentUser?.id],
