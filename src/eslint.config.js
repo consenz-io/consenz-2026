@@ -157,7 +157,9 @@ export default [
       '**/__tests__/**/*.{js,jsx,ts,tsx}',
       '**/*.test.{js,jsx,ts,tsx}',
       '**/*.spec.{js,jsx,ts,tsx}',
-      'src/components/document/__tests__/consensusMeter.test.jsx',
+      'src/**/__tests__/**/*.{js,jsx,ts,tsx}',
+      'src/**/*.test.{js,jsx,ts,tsx}',
+      'src/**/*.spec.{js,jsx,ts,tsx}',
     ],
     rules: {
       'no-undef': 'off',

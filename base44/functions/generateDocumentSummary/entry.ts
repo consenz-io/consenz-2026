@@ -175,7 +175,12 @@ IMPORTANT: Start the email with this disclaimer at the very top:
 
 Structure:
 1. Short greeting mentioning the document name
-2. Distinguish clearly between the admin-written baseline content and genuine user contributions. Celebrate user contributions.
+2. FOCUS ONLY ON OPEN SUGGESTIONS AND COMMUNITY ENGAGEMENT. Do NOT discuss differences between admin-written baseline content and community contributions. Instead, concentrate exclusively on:
+   - Open (pending) suggestions — what they propose
+   - The explanations and reasoning behind each suggestion
+   - Arguments supporting and opposing them
+   - Comments and discussions developed around them
+   - Encourage participants to vote, submit their own suggestions, and respond to the discussion
 3. ALWAYS include a dedicated section describing ALL OPEN (pending) suggestions with their details:
    - List each open suggestion with its title, current vote count (pro/con), and a clickable HTML link to view and vote
    - Clearly distinguish between two separate parts of each suggestion:
