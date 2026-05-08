@@ -12,7 +12,8 @@ export default function MyDocuments() {
   const { t, language } = useLanguage();
   const {
     user, myDocuments, suggestions, allSuggestions, allVotes,
-    allUsers, allComments, allSections, votes, isLoading, getUnvotedCount,
+    allUsers, allComments, allSections, isLoading, getUnvotedCount,
+    myVotesCountByDoc,
   } = useMyDocumentsData();
 
   if (!user) {
@@ -66,7 +67,7 @@ export default function MyDocuments() {
                 key={doc.id}
                 doc={doc}
                 mySuggestionsCount={suggestions.filter(s => s.documentId === doc.id).length}
-                myVotesCount={allSuggestions.filter(s => s.documentId === doc.id && allVotes.some(v => v.suggestionId === s.id)).length}
+                myVotesCount={myVotesCountByDoc.get(doc.id) ?? 0}
                 unvotedCount={getUnvotedCount(doc.id)}
                 allSuggestions={allSuggestions}
                 allVotes={allVotes}

@@ -63,20 +63,21 @@ export function useDocumentData(documentId) {
   });
 
   // Stable key: only keyed by documentId — avoids a new query on every render
-  // Note: suggestions/sections are re-fetched here to get fresh IDs at query time
-  // without stale closure issues. The individual queries above remain separate
-  // so isInitialLoading works correctly.
   const { data: aggregatedData } = useQuery({
     queryKey: ['documentAggregatedData', documentId],
     queryFn: async () => {
-      // Read IDs from the already-populated cache first to avoid double-fetch
-      const cachedSuggestions = queryClient.getQueryData(['suggestions', documentId]);
-      const cachedSections = queryClient.getQueryData(['sections', documentId]);
+      // Read IDs from the already-populated cache — avoids duplicate network requests
+      const cachedSuggestions = queryClient.getQueryData(['suggestions', documentId]) || [];
+      const cachedSections = queryClient.getQueryData(['sections', documentId]) || [];
 
-      // Always fetch both fresh — cache may be stale after section add/delete
+      // Only re-fetch if cache is empty (e.g. cold load)
       const [allSuggestions, allSections] = await Promise.all([
-        base44.entities.Suggestion.filter({ documentId }, '-created_date').catch(() => cachedSuggestions || []),
-        base44.entities.Section.filter({ documentId }, 'order').catch(() => cachedSections || []),
+        cachedSuggestions.length > 0
+          ? Promise.resolve(cachedSuggestions)
+          : base44.entities.Suggestion.filter({ documentId }, '-created_date').catch(() => []),
+        cachedSections.length > 0
+          ? Promise.resolve(cachedSections)
+          : base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
       ]);
       const suggestionIds = allSuggestions.map(s => s.id);
       const sectionIds = allSections.map(s => s.id);

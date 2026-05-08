@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,21 +29,24 @@ export default function MyDocumentCard({ doc, mySuggestionsCount, myVotesCount, 
     }
   };
 
-  const contributorsCount = calculateContributorsFromData({
+  const docSuggestions = useMemo(() => allSuggestions.filter(s => s.documentId === doc.id), [allSuggestions, doc.id]);
+  const docSections = useMemo(() => allSections.filter(s => s.documentId === doc.id), [allSections, doc.id]);
+
+  const contributorsCount = useMemo(() => calculateContributorsFromData({
     document: doc,
-    suggestions: allSuggestions.filter(s => s.documentId === doc.id),
+    suggestions: docSuggestions,
     allVotes,
     allUsers,
     allComments,
-    sections: allSections.filter(s => s.documentId === doc.id),
-  });
+    sections: docSections,
+  }), [doc, docSuggestions, allVotes, allUsers, allComments, docSections]);
 
-  const consensusDisplay = (() => {
+  const consensusDisplay = useMemo(() => {
     const consensuses = doc.consensuses || [];
     if (!consensuses.length) return '0';
     const avg = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
     return (Math.min(100, avg * 100)).toFixed(0);
-  })();
+  }, [doc.consensuses]);
 
   const unvotedLabel = {
     he: `יש ${unvotedCount} ${unvotedCount === 1 ? 'הצעה' : 'הצעות'} שטרם הצבעת עליהן`,
