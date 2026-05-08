@@ -283,6 +283,7 @@ export function useGroupViewData(groupId) {
 
   return {
     currentUser, group, groupMembers, allParticipantUserIds, documents, publicProfiles,
+    allDocSuggestions, allDocComments,
     isAdmin, isMember, getUnvotedCount,
     isLoading: groupLoading || groupFetching || membersLoading || documentsLoading,
     joinGroupMutation, leaveGroupMutation, requestAccessMutation,
