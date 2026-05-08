@@ -12,6 +12,7 @@ export default [
       '**/*.spec.js',
       '**/*.spec.jsx',
       '**/qa/**',
+      'src/components/document/__tests__/**',
     ],
   },
   // Lint only production source files

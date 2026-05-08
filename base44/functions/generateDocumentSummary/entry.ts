@@ -108,10 +108,11 @@ Deno.serve(async (req) => {
   // Helper: format full suggestion block with its arguments and comments
   const fmtSuggestionFull = (s) => {
     const base = fmtSuggestion(s);
-    const explanation = s.explanation ? `\n    הסבר: "${stripHtml(s.explanation)}"` : '';
+    const proposedContent = s.newContent ? `\n    השינוי המוצע (תוכן): "${stripHtml(s.newContent).substring(0, 400)}${stripHtml(s.newContent).length > 400 ? '...' : ''}"` : '';
+    const explanation = s.explanation ? `\n    הסבר/נימוק לשינוי: "${stripHtml(s.explanation)}"` : '';
     const args = fmtArguments(s.id);
     const comments = fmtComments('suggestion', s.id);
-    return base + explanation + (args ? '\n' + args : '') + (comments ? '\n' + comments : '');
+    return base + proposedContent + explanation + (args ? '\n' + args : '') + (comments ? '\n' + comments : '');
   };
 
   const langLabel = language === 'he' ? 'Hebrew' : language === 'ar' ? 'Arabic' : 'English';
@@ -177,7 +178,10 @@ Structure:
 2. Distinguish clearly between the admin-written baseline content and genuine user contributions. Celebrate user contributions.
 3. ALWAYS include a dedicated section describing ALL OPEN (pending) suggestions with their details:
    - List each open suggestion with its title, current vote count (pro/con), and a clickable HTML link to view and vote
-   - Include a brief summary of what each suggestion proposes
+   - Clearly distinguish between two separate parts of each suggestion:
+       a) The actual proposed change (the new content) — what exactly is being changed in the document
+       b) The explanation/rationale — why the author believes this change should be made
+   - Present these as two distinct items for each suggestion so readers can evaluate the change itself separately from the reasoning behind it
    - Show any arguments or comments supporting or opposing each suggestion
    - Help readers understand what discussions are happening around each open suggestion
 4. ALWAYS include a comprehensive section with ALL comments from participants on sections and suggestions:
