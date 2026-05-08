@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useLanguage } from "@/components/LanguageContext";
@@ -7,6 +8,7 @@ import { Loader2, Send, Mail, TestTube, RefreshCw, X, CheckCircle, Users, Messag
 
 export default function DocumentSummaryModal({ documentId, document, user, onClose }) {
   const { language, isRTL } = useLanguage();
+  const queryClient = useQueryClient();
   const [phase, setPhase] = useState('generating'); // 'generating' | 'chat' | 'sending' | 'done'
   const [summary, setSummary] = useState('');
   const [stats, setStats] = useState(null);
@@ -136,6 +138,7 @@ export default function DocumentSummaryModal({ documentId, document, user, onClo
       });
       setSendResult({ ...res.data, isTest });
       setPhase('done');
+      queryClient.invalidateQueries({ queryKey: ['emailLogs', documentId] });
     } catch (err) {
       setError(err.message);
       setPhase('chat');
