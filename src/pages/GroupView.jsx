@@ -137,7 +137,7 @@ export default function GroupView() {
               <Badge variant="outline" className={statusBadgeCls}>
                 <StatusIcon className="w-3 h-3 mr-1" />{statusLabel}
               </Badge>
-              <Badge variant="outline"><Users className="w-3 h-3 mr-1" />{groupMembers.length} {language === 'he' ? 'חברים' : 'members'}</Badge>
+              <Badge variant="outline"><Users className="w-3 h-3 mr-1" />{allParticipantUserIds.length} {language === 'he' ? 'משתתפים' : language === 'ar' ? 'مشاركون' : 'participants'}</Badge>
               {isAdmin && <Badge className="bg-purple-100 text-purple-800 border-purple-200">{language === 'he' ? 'מנהל' : 'Admin'}</Badge>}
             </div>
           </div>

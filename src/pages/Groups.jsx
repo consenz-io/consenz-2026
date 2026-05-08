@@ -89,7 +89,7 @@ export default function Groups() {
                         </div>
                         <div className="flex items-center gap-1">
                           <Users className="w-4 h-4" />
-                          <span>{getMemberCount(group.id)}</span>
+                          <span>{getMemberCount(group.id)} {language === 'he' ? 'חברים' : language === 'ar' ? 'أعضاء' : 'members'}</span>
                         </div>
                       </div>
                     </CardContent>

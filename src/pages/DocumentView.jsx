@@ -141,13 +141,17 @@ export default function DocumentView() {
 
   const contributorsCount = React.useMemo(() => {
     const contributorEmails = new Set();
+    // Suggestion creators
     suggestions.forEach(s => { if (s.created_by) contributorEmails.add(s.created_by); });
+    // Voters
     allVotes.forEach(v => {
       if (v.created_by) contributorEmails.add(v.created_by);
       const profile = profileByUserId.get(v.userId);
       if (profile?.email) contributorEmails.add(profile.email);
     });
+    // Commenters
     allComments.forEach(c => { if (c.created_by) contributorEmails.add(c.created_by); });
+    // Agreement signers
     documentAgreements.forEach(a => { if (a.userEmail) contributorEmails.add(a.userEmail); });
     return contributorEmails.size;
   }, [suggestions, allVotes, allComments, profileByUserId, documentAgreements]);
