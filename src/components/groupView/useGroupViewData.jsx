@@ -135,8 +135,6 @@ export function useGroupViewData(groupId) {
   });
 
   // Auto-add suggestion creators as formal group members if not already members
-  // Use a module-level map (outside component) to survive remounts without creating duplicates
-  const autoAddRunKey = `${groupId}`;
   const autoAddedRef = React.useRef(new Set());
   React.useEffect(() => {
     if (!groupId || groupMembers.length === 0 || publicProfiles.length === 0 || allDocSuggestions.length === 0) return;
@@ -235,16 +233,18 @@ export function useGroupViewData(groupId) {
     [currentUser, groupMembers, groupId]
   );
 
-  const getUnvotedCount = (docId) => {
+  // Memoize votedIds set — rebuilt only when userVotes changes, not on every render
+  const votedIds = useMemo(() => new Set(userVotes.map(v => v.suggestionId)), [userVotes]);
+
+  const getUnvotedCount = useMemo(() => (docId) => {
     if (!currentUser?.id) return 0;
-    const votedIds = new Set(userVotes.map(v => v.suggestionId));
     return groupSuggestions.filter(s =>
       s.documentId === docId &&
       s.type !== 'edit_suggestion' &&
       s.created_by !== currentUser.email &&
       !votedIds.has(s.id)
     ).length;
-  };
+  }, [currentUser, groupSuggestions, votedIds]);
 
   // Mutations
   const joinGroupMutation = useMutation({

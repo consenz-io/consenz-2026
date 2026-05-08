@@ -16,6 +16,30 @@ function StatPill({ icon: Icon, label, value, color }) {
   );
 }
 
+const EMAIL_LOG_LABELS = {
+  he: {
+    title: 'יומן שליחת סיכומים במייל',
+    desc: 'מעקב אחר כל המיילים שנשלחו למשתתפי המסמך',
+    noLogs: 'עדיין לא נשלחו מיילים למסמך זה',
+    sent: 'נשלח', failed: 'נכשל', opens: 'פתיחות', clicks: 'קליקים',
+    recipients: 'נמענים', test: 'טסט', summary: 'סיכום',
+  },
+  ar: {
+    title: 'سجل إرسال الملخصات بالبريد',
+    desc: 'تتبع جميع رسائل البريد المرسلة إلى المشاركين',
+    noLogs: 'لم يتم إرسال أي رسائل بريد إلكتروني لهذا المستند بعد',
+    sent: 'مُرسل', failed: 'فاشل', opens: 'فتحات', clicks: 'نقرات',
+    recipients: 'مستلمون', test: 'اختبار', summary: 'ملخص',
+  },
+  en: {
+    title: 'Email Summary Log',
+    desc: 'Track all emails sent to document participants',
+    noLogs: 'No emails have been sent for this document yet',
+    sent: 'Sent', failed: 'Failed', opens: 'Opens', clicks: 'Clicks',
+    recipients: 'Recipients', test: 'Test', summary: 'Summary',
+  },
+};
+
 export default function EmailSentLog({ documentId }) {
   const { language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
@@ -60,46 +84,7 @@ export default function EmailSentLog({ documentId }) {
     return [...batchMap.values()].sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
   }, [logs]);
 
-  const labels = {
-    he: {
-      title: 'יומן שליחת סיכומים במייל',
-      desc: 'מעקב אחר כל המיילים שנשלחו למשתתפי המסמך',
-      noLogs: 'עדיין לא נשלחו מיילים למסמך זה',
-      sent: 'נשלח',
-      failed: 'נכשל',
-      opens: 'פתיחות',
-      clicks: 'קליקים',
-      recipients: 'נמענים',
-      test: 'טסט',
-      summary: 'סיכום',
-    },
-    ar: {
-      title: 'سجل إرسال الملخصات بالبريد',
-      desc: 'تتبع جميع رسائل البريد المرسلة إلى المشاركين',
-      noLogs: 'لم يتم إرسال أي رسائل بريد إلكتروني لهذا المستند بعد',
-      sent: 'مُرسل',
-      failed: 'فاشل',
-      opens: 'فتحات',
-      clicks: 'نقرات',
-      recipients: 'مستلمون',
-      test: 'اختبار',
-      summary: 'ملخص',
-    },
-    en: {
-      title: 'Email Summary Log',
-      desc: 'Track all emails sent to document participants',
-      noLogs: 'No emails have been sent for this document yet',
-      sent: 'Sent',
-      failed: 'Failed',
-      opens: 'Opens',
-      clicks: 'Clicks',
-      recipients: 'Recipients',
-      test: 'Test',
-      summary: 'Summary',
-    },
-  };
-
-  const l = labels[language] || labels.en;
+  const l = EMAIL_LOG_LABELS[language] || EMAIL_LOG_LABELS.en;
 
   if (isLoading) {
     return (
