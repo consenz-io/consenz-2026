@@ -42,8 +42,7 @@ export default function DocumentContent({
   newlyCreatedSuggestion,
   onClearNewlyCreated,
   targetSuggestionId,
-  onEditSuggestion,
-  onCreateSuggestionClick
+  onEditSuggestion
 }) {
   const [showComments, setShowComments] = useState({});
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
@@ -712,21 +711,21 @@ Return ONLY the translated text:`;
                                           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <div className="h-full flex items-center justify-center">
                                               <Button
-                                                          size="sm"
-                                                          variant="outline"
-                                                          onClick={() => {
-                                                            if (!user) {
-                                                              base44.auth.redirectToLogin(window.location.href);
-                                                              return;
-                                                            }
-                                                            if (!canParticipate) return;
-                                                            onNewSection(topic.id, -1);
-                                                          }}
-                                                          className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50 plus-button-suggest"
-                                                        >
-                                                          <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                                                          {t('insertSectionHere')}
-                                                        </Button>
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => {
+                                                  if (!user) {
+                                                    base44.auth.redirectToLogin(window.location.href);
+                                                    return;
+                                                  }
+                                                  if (!canParticipate) return;
+                                                  onNewSection(topic.id, -1);
+                                                }}
+                                                className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
+                                              >
+                                                <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                                {t('insertSectionHere')}
+                                              </Button>
                                             </div>
                                           </div>
                                         </div>
