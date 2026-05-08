@@ -151,7 +151,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
           {acceptedDate && (
             <p className="text-xs text-center text-slate-400 mt-1">
               {suggestion?.language === 'he' || (typeof document === 'object' && document?.originalLanguage === 'he') ? 'התקבלה ב-' : 'Accepted on '}
-              {new Date(acceptedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              {new Date(acceptedDate).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </p>
           )}
         </div>
