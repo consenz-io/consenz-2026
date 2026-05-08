@@ -147,8 +147,11 @@ Deno.serve(async (req) => {
   // Send emails (sequentially to avoid rate limits)
   let sent = 0;
   const failed = [];
+  const batchId = crypto.randomUUID();
 
   for (const email of recipientEmails) {
+    let status = 'sent';
+    let errorMessage = null;
     try {
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: email,
@@ -159,7 +162,30 @@ Deno.serve(async (req) => {
       sent++;
     } catch (err) {
       failed.push(email);
+      status = 'failed';
+      errorMessage = err.message;
       console.error(`Failed to send to ${email}:`, err.message);
+    }
+
+    // Log each email
+    try {
+      await base44.asServiceRole.entities.EmailLog.create({
+        senderUserId: user.id,
+        senderEmail: user.email,
+        recipientEmail: email,
+        subject: l.subject,
+        purpose: 'document_summary',
+        status,
+        errorMessage,
+        relatedEntityId: documentId,
+        relatedEntityType: 'document',
+        openCount: 0,
+        clickCount: 0,
+        batchId,
+        isTestEmail: !!isTestEmail,
+      });
+    } catch (logErr) {
+      console.error('Failed to log email:', logErr.message);
     }
   }
 

@@ -1,0 +1,85 @@
+{
+  "name": "EmailLog",
+  "type": "object",
+  "properties": {
+    "senderUserId": {
+      "type": "string",
+      "description": "User ID who sent the email"
+    },
+    "senderEmail": {
+      "type": "string",
+      "description": "Email address of sender"
+    },
+    "recipientEmail": {
+      "type": "string",
+      "description": "Email address of recipient"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Email subject"
+    },
+    "purpose": {
+      "type": "string",
+      "enum": [
+        "group_invitation",
+        "email_digest",
+        "document_summary",
+        "notification",
+        "other"
+      ],
+      "description": "Purpose of the email"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "sent",
+        "failed"
+      ],
+      "description": "Status of email delivery"
+    },
+    "errorMessage": {
+      "type": "string",
+      "description": "Error message if failed"
+    },
+    "relatedEntityId": {
+      "type": "string",
+      "description": "Related entity ID (group, document, etc)"
+    },
+    "relatedEntityType": {
+      "type": "string",
+      "description": "Type of related entity"
+    },
+    "openCount": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of times the email was opened"
+    },
+    "clickCount": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of times links in the email were clicked"
+    },
+    "sentCount": {
+      "type": "number",
+      "default": 1,
+      "description": "Number of recipients this batch was sent to"
+    },
+    "batchId": {
+      "type": "string",
+      "description": "Batch ID to group emails sent in the same send action"
+    },
+    "isTestEmail": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this was a test email"
+    }
+  },
+  "required": [
+    "senderUserId",
+    "senderEmail",
+    "recipientEmail",
+    "subject",
+    "purpose",
+    "status"
+  ]
+}

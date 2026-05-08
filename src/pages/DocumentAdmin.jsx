@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Settings, ArrowLeft, Save, Trash2, UserPlus, X, AlertCircle, CheckCircle, Users, Search, Ban, Mail, Copy, Link2, Send } from "lucide-react";
 import DocumentSummaryModal from "@/components/document/DocumentSummaryModal";
+import EmailSentLog from "@/components/document/EmailSentLog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
@@ -770,6 +771,8 @@ ${generatedInviteLink.signupUrl}
             </CardContent>
           </Card>
         )}
+
+        <EmailSentLog documentId={documentId} />
 
         {showSummaryModal && (
           <DocumentSummaryModal
