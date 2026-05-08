@@ -101,6 +101,8 @@ export default [
       '**/qa/**',
       '**/consensusMeter*',
       'src/**/consensusMeter*',
+      'src/components/document/__tests__/**',
+      'components/document/__tests__/**',
     ],
   },
   // 2. Production source files

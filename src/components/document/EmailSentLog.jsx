@@ -51,7 +51,7 @@ export default function EmailSentLog({ documentId }) {
       '-created_date',
       100
     ),
-    staleTime: 2 * 60 * 1000,
+    staleTime: 0,
   });
 
   // Group by batchId (or by created_date minute as fallback), sorted newest first
