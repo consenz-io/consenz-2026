@@ -33,13 +33,26 @@ export function useMyDocumentsData() {
     enabled: !!user?.id,
   });
 
+  // Voted suggestion IDs — to look up their docIds
+  const votedSuggestionIdsList = useMemo(() => votes.map(v => v.suggestionId).sort(), [votes]);
+
+  // Fetch the suggestions the user voted on to get their document IDs
+  const { data: votedSuggestions = [] } = useQuery({
+    queryKey: ['votedSuggestions', votedSuggestionIdsList],
+    queryFn: () => votedSuggestionIdsList.length > 0
+      ? base44.entities.Suggestion.filter({ id: { $in: votedSuggestionIdsList } }, null, 500)
+      : Promise.resolve([]),
+    enabled: !!user?.id && votedSuggestionIdsList.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
   const myDocumentIds = useMemo(() => {
     const suggestedDocIds = suggestions.map(s => s.documentId);
     const interactedDocIds = userInteractions.map(ui => ui.documentId);
-    // Include documents created by this user (even without interaction)
     const createdDocIds = allDocuments.filter(d => d.created_by === user?.email).map(d => d.id);
-    return [...new Set([...interactedDocIds, ...suggestedDocIds, ...createdDocIds])].sort();
-  }, [suggestions, userInteractions, allDocuments, user?.email]);
+    const votedDocIds = votedSuggestions.map(s => s.documentId);
+    return [...new Set([...interactedDocIds, ...suggestedDocIds, ...createdDocIds, ...votedDocIds])].sort();
+  }, [suggestions, userInteractions, allDocuments, user?.email, votedSuggestions]);
 
   const { data: allSuggestions = [] } = useQuery({
     queryKey: ['allSuggestions', myDocumentIds],
@@ -88,17 +101,13 @@ export function useMyDocumentsData() {
     staleTime: 2 * 60 * 1000,
   });
 
-  // Derive the full set of my documents (including voted ones and created ones)
+  // Derive the full set of my documents — myDocumentIds already includes voted doc IDs
   const myDocuments = useMemo(() => {
-    const votedSuggestions = allSuggestions.filter(s => votes.some(v => v.suggestionId === s.id));
-    const votedDocIds = votedSuggestions.map(s => s.documentId);
-    const allMyIds = new Set([...myDocumentIds, ...votedDocIds]);
-    return allDocuments.filter(doc =>
-      allMyIds.has(doc.id) || doc.created_by === user?.email
-    );
-  }, [allDocuments, myDocumentIds, allSuggestions, votes, user?.email]);
+    const allMyIds = new Set(myDocumentIds);
+    return allDocuments.filter(doc => allMyIds.has(doc.id));
+  }, [allDocuments, myDocumentIds]);
 
-  const votedIds = useMemo(() => new Set(votes.map(v => v.suggestionId)), [votes]);
+  const votedIds = useMemo(() => new Set(votedSuggestionIdsList), [votedSuggestionIdsList]);
 
   const getUnvotedCount = useCallback((docId) => {
     if (!user?.id) return 0;

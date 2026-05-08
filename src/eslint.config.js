@@ -84,6 +84,8 @@ export default [
       'components/qa/**',
       'src/components/qa/QAReport*',
       'components/qa/QAReport*',
+      '**/QAReport*',
+      'src/**/QAReport*',
       '**/__tests__/**',
       'src/**/__tests__/**',
       '**/*.test.js',
@@ -119,6 +121,8 @@ export default [
   {
     files: ['src/**/*.{js,jsx,ts,tsx}'],
     ignores: [
+      '**/QAReport*',
+      'src/**/QAReport*',
       'src/**/__tests__/**',
       '**/__tests__/**',
       'src/**/*.test.{js,jsx,ts,tsx}',
