@@ -97,11 +97,16 @@ export default function DocumentAdmin() {
       const lifetimeChanged = document && data.defaultSuggestionLifetimeHours !== document.defaultSuggestionLifetimeHours;
       await base44.entities.Document.update(documentId, data);
       if (lifetimeChanged) {
-        const newTimerEndsAt = new Date(Date.now() + data.defaultSuggestionLifetimeHours * 60 * 60 * 1000).toISOString();
         const pendingSuggestions = await base44.entities.Suggestion.filter({ documentId, status: 'pending' });
-        await Promise.all(pendingSuggestions.map(s =>
-          base44.entities.Suggestion.update(s.id, { timerEndsAt: newTimerEndsAt })
-        ));
+        await Promise.all(pendingSuggestions.map(s => {
+          // Calculate timerEndsAt relative to when this suggestion was created,
+          // so older suggestions don't get a full new period reset.
+          // If no time limit, set to null.
+          const timerEndsAt = data.defaultSuggestionLifetimeHours === null
+            ? null
+            : new Date(new Date(s.created_date).getTime() + data.defaultSuggestionLifetimeHours * 60 * 60 * 1000).toISOString();
+          return base44.entities.Suggestion.update(s.id, { timerEndsAt });
+        }));
         return { resetCount: pendingSuggestions.length };
       }
       return { resetCount: 0 };

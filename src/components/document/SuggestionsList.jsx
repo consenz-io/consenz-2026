@@ -13,7 +13,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import SuggestionCountdown from "./SuggestionCountdown";
 
 export default function SuggestionsList({ suggestions, document, user, isAdmin }) {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const { data: publicProfiles } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
@@ -46,7 +46,10 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
     // Last resort
     return 'User';
   };
-  const getStatusColor = (status) => {
+  const getStatusColor = (status, timerEndsAt) => {
+    if (status === 'pending' && timerEndsAt && new Date(timerEndsAt) <= new Date()) {
+      return 'bg-slate-100 text-slate-500 border-slate-200'; // expired-pending
+    }
     switch (status) {
       case 'pending':
         return 'bg-amber-100 text-amber-800 border-amber-200';
@@ -77,8 +80,10 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="outline" className={getStatusColor(suggestion.status)}>
-                        {t(suggestion.status)}
+                      <Badge variant="outline" className={getStatusColor(suggestion.status, suggestion.timerEndsAt)}>
+                        {suggestion.status === 'pending' && suggestion.timerEndsAt && new Date(suggestion.timerEndsAt) <= new Date()
+                          ? (language === 'he' ? 'פג תוקף' : language === 'ar' ? 'انتهت' : 'Expired')
+                          : t(suggestion.status)}
                       </Badge>
                       <Badge variant="outline">
                         {suggestion.type === 'new_section' ? t('newSection') : t('editSection')}
@@ -121,7 +126,7 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
                       <ThumbsDown className="w-4 h-4" />
                       <span className="font-medium">{suggestion.conVotes || 0}</span>
                     </div>
-                    {suggestion.status === 'pending' && suggestion.timerEndsAt && (
+                    {suggestion.timerEndsAt && (
                       <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="xs" />
                     )}
                     <VotesNeededCounter suggestion={suggestion} document={document} />

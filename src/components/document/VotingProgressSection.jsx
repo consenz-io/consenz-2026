@@ -44,6 +44,11 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   const timeLabel = formatRemaining(msRemaining, language);
   const isUrgent = msRemaining !== null && msRemaining > 0 && msRemaining < 6 * 60 * 60 * 1000; // < 6 hours
 
+  // Check if timer has expired on the frontend (even if status is still 'pending' — cron may not have run yet)
+  const isTimerExpired = suggestion?.timerEndsAt && new Date(suggestion.timerEndsAt) <= new Date();
+  // Treat as effectively read-only if expired
+  const effectiveReadOnly = readOnly || isTimerExpired;
+
   const proVotes = suggestion.proVotes || 0;
   const conVotes = suggestion.conVotes || 0;
   const threshold = Math.max(2, document?.threshold || 2);
@@ -73,7 +78,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
 
   const barColor = passed
     ? 'bg-green-500'
-    : readOnly
+    : effectiveReadOnly
     ? 'bg-red-400'
     : hoverVote === 'pro'
     ? 'bg-blue-500'
@@ -81,9 +86,11 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
     ? 'bg-red-400'
     : 'bg-blue-400';
 
-  const statusText = readOnly
+  const statusText = effectiveReadOnly
     ? passed
       ? (language === 'he' ? '✓ עבר את סף הקונצנזוס!' : language === 'ar' ? '✓ تجاوز عتبة الإجماع!' : '✓ Passed consensus threshold!')
+      : isTimerExpired && !readOnly
+      ? (language === 'he' ? `פג תוקף ההצבעה — חסרו ${votesNeeded} תומכים` : language === 'ar' ? `انتهت مدة التصويت — نقص ${votesNeeded} مؤيدين` : `Voting period ended — ${votesNeeded} supporters short`)
       : (language === 'he' ? `לא הגיע לסף — חסרו ${votesNeeded} תומכים` : language === 'ar' ? `لم يصل للعتبة — نقص ${votesNeeded} مؤيدين` : `Did not reach threshold — ${votesNeeded} supporters short`)
     : passed
     ? (language === 'he' ? '✓ עבר את סף הקונצנזוס!' : language === 'ar' ? '✓ تجاوز عتبة الإجماع!' : '✓ Passed consensus threshold!')
@@ -110,7 +117,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
               {language === 'he' ? 'התקדמות לאישור' : language === 'ar' ? 'تقدم نحو القبول' : 'Progress to acceptance'}
             </span>
             <div className="flex items-center gap-2">
-              {timeLabel && !readOnly && (
+              {timeLabel && !effectiveReadOnly && (
                 <span className={`flex items-center gap-0.5 text-xs font-medium ${isUrgent ? 'text-orange-500' : 'text-slate-400'}`}>
                   <Clock className="w-3 h-3 shrink-0" />
                   {timeLabel}
@@ -157,8 +164,17 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
         </div>
       </Link>
 
-      {/* Vote buttons - disabled in read-only mode, showing past vote + counts */}
-      {readOnly ? (
+      {/* Vote buttons - disabled in read-only mode or when timer expired */}
+      {effectiveReadOnly ? (
+        <div className="space-y-2">
+        {isTimerExpired && !readOnly && (
+          <div className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-slate-100 border border-slate-200 rounded-lg">
+            <Clock className="w-3.5 h-3.5 text-slate-500" />
+            <span className="text-xs font-medium text-slate-500">
+              {language === 'he' ? 'תקופת ההצבעה הסתיימה' : language === 'ar' ? 'انتهت فترة التصويت' : 'Voting period ended'}
+            </span>
+          </div>
+        )}
         <div className="flex gap-2 w-full min-w-0">
           <button
             disabled
@@ -186,6 +202,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             {conVotes > 0 && <span className="text-xs md:text-sm shrink-0">({conVotes})</span>}
 
           </button>
+        </div>
         </div>
       ) : (
       <div className="relative">

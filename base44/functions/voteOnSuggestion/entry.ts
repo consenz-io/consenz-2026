@@ -111,6 +111,16 @@ Deno.serve(async (req) => {
       }, { status: 400 });
     }
 
+    // Block voting on expired suggestions even if cron hasn't run yet
+    if (suggestion.timerEndsAt && new Date(suggestion.timerEndsAt) <= new Date()) {
+      return Response.json({
+        error: 'פג תוקף ההצעה — לא ניתן להצביע עליה',
+        newProVotes: suggestion.proVotes,
+        newConVotes: suggestion.conVotes,
+        expired: true
+      }, { status: 400 });
+    }
+
     let voteAction = null;
 
     // Clean up any duplicate votes for this user (safety check)
