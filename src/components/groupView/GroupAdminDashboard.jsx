@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
 import { Users, MessageSquare, Lightbulb, CheckCircle, Clock, XCircle, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
@@ -42,41 +41,63 @@ function CollapsibleSection({ title, count, icon: Icon, children, defaultOpen = 
 }
 
 export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, allDocComments, documents, publicProfiles, groupId }) {
-  const { language, isRTL } = useLanguage();
+  const { language } = useLanguage();
 
   const iHe = language === 'he';
   const iAr = language === 'ar';
 
-  const emailToProfile = new Map();
-  publicProfiles.forEach(p => { if (p.email) emailToProfile.set(p.email, p); });
+  // Stable lookup maps — recomputed only when source arrays change
+  const emailToProfile = useMemo(() => {
+    const m = new Map();
+    publicProfiles.forEach(p => { if (p.email) m.set(p.email, p); });
+    return m;
+  }, [publicProfiles]);
 
-  const docMap = new Map(documents.map(d => [d.id, d]));
+  const userIdToProfile = useMemo(() => {
+    const m = new Map();
+    publicProfiles.forEach(p => { if (p.userId) m.set(p.userId, p); });
+    return m;
+  }, [publicProfiles]);
 
-  const getMemberName = (userId) => {
-    const profile = publicProfiles.find(p => p.userId === userId);
-    return profile?.fullName || userId;
-  };
+  const docMap = useMemo(() => new Map(documents.map(d => [d.id, d])), [documents]);
 
-  const getEmailName = (email) => {
-    const profile = emailToProfile.get(email);
-    return profile?.fullName || email;
-  };
+  // Index suggestions by id for O(1) lookup in comments loop
+  const suggestionById = useMemo(() => {
+    const m = new Map();
+    allDocSuggestions.forEach(s => m.set(s.id, s));
+    return m;
+  }, [allDocSuggestions]);
 
-  // Stats
-  const totalMembers = groupMembers.length;
-  const totalSuggestions = allDocSuggestions.length;
-  const pendingSuggestions = allDocSuggestions.filter(s => s.status === 'pending').length;
-  const acceptedSuggestions = allDocSuggestions.filter(s => s.status === 'accepted').length;
-  const totalComments = allDocComments.length;
+  // Index suggestions by sectionId for O(1) section-comment lookup
+  const suggestionBySectionId = useMemo(() => {
+    const m = new Map();
+    allDocSuggestions.forEach(s => { if (s.sectionId && !m.has(s.sectionId)) m.set(s.sectionId, s); });
+    return m;
+  }, [allDocSuggestions]);
 
-  // Sort members by join date (created_date)
-  const sortedMembers = [...groupMembers].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+  const getMemberName = (userId) => userIdToProfile.get(userId)?.fullName || userId;
+  const getEmailName = (email) => emailToProfile.get(email)?.fullName || email;
 
-  // Sort suggestions by date
-  const sortedSuggestions = [...allDocSuggestions].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+  // Stats — derived with useMemo
+  const { totalMembers, totalSuggestions, acceptedSuggestions, totalComments } = useMemo(() => ({
+    totalMembers: groupMembers.length,
+    totalSuggestions: allDocSuggestions.length,
+    acceptedSuggestions: allDocSuggestions.filter(s => s.status === 'accepted').length,
+    totalComments: allDocComments.length,
+  }), [groupMembers, allDocSuggestions, allDocComments]);
 
-  // Sort comments by date
-  const sortedComments = [...allDocComments].sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+  const sortedMembers = useMemo(
+    () => [...groupMembers].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)),
+    [groupMembers]
+  );
+  const sortedSuggestions = useMemo(
+    () => [...allDocSuggestions].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)),
+    [allDocSuggestions]
+  );
+  const sortedComments = useMemo(
+    () => [...allDocComments].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)),
+    [allDocComments]
+  );
 
   const statusBadge = (status) => {
     if (status === 'accepted') return <Badge className="bg-green-100 text-green-800 border-green-200 text-xs"><CheckCircle className="w-3 h-3 mr-1" />{iHe ? 'התקבל' : iAr ? 'مقبول' : 'Accepted'}</Badge>;
@@ -174,13 +195,12 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
         {sortedComments.map(c => {
           const plainText = c.content?.replace(/<[^>]*>/g, '') || '';
 
-          // Find the related suggestion for this comment
+          // O(1) lookups via pre-built Maps
           let relatedSuggestion = null;
           if (c.rootEntityType === 'suggestion') {
-            relatedSuggestion = allDocSuggestions.find(s => s.id === c.rootEntityId);
+            relatedSuggestion = suggestionById.get(c.rootEntityId);
           } else if (c.rootEntityType === 'section') {
-            // Find latest pending/accepted suggestion for this section
-            relatedSuggestion = allDocSuggestions.find(s => s.sectionId === c.rootEntityId);
+            relatedSuggestion = suggestionBySectionId.get(c.rootEntityId);
           }
 
           // Build link: if suggestion found → suggestiondetail with commentId anchor

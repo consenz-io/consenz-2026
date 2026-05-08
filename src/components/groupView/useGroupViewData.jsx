@@ -49,26 +49,9 @@ export function useGroupViewData(groupId) {
   });
 
   const docIds = useMemo(() => documents.map(d => d.id), [documents]);
-
-  // Sort docIds for a stable cache key regardless of order changes
   const docIdsSorted = useMemo(() => [...docIds].sort().join(','), [docIds]);
 
-  // Fetch pending suggestions — parallel per-doc to avoid sequential bottleneck
-  const { data: groupSuggestions = [] } = useQuery({
-    queryKey: ['groupSuggestions', groupId, docIdsSorted],
-    queryFn: async () => {
-      if (docIds.length === 0) return [];
-      const perDoc = await Promise.all(
-        docIds.map(id => base44.entities.Suggestion.filter({ documentId: id, status: 'pending' }, null, 50).catch(() => []))
-      );
-      return perDoc.flat();
-    },
-    enabled: docIds.length > 0 && documents.length > 0,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-
-  // Fetch all suggestions (not just pending) — parallel
+  // Fetch ALL suggestions once — pending subset derived via useMemo (no duplicate query)
   const { data: allDocSuggestions = [] } = useQuery({
     queryKey: ['groupAllSuggestions', groupId, docIdsSorted],
     queryFn: async () => {
@@ -83,10 +66,16 @@ export function useGroupViewData(groupId) {
     gcTime: 10 * 60 * 1000,
   });
 
-  // Fetch all votes on group doc suggestions
+  // Derived — no extra network call
+  const groupSuggestions = useMemo(
+    () => allDocSuggestions.filter(s => s.status === 'pending'),
+    [allDocSuggestions]
+  );
+
   const allDocSuggestionIds = useMemo(() => allDocSuggestions.map(s => s.id), [allDocSuggestions]);
   const allDocSuggestionIdsSorted = useMemo(() => [...allDocSuggestionIds].sort().join(','), [allDocSuggestionIds]);
 
+  // Admin-only heavy queries — only run when isAdmin (checked lazily below)
   const { data: allDocVotes = [] } = useQuery({
     queryKey: ['groupAllVotes', groupId, allDocSuggestionIdsSorted],
     queryFn: async () => {
@@ -98,7 +87,6 @@ export function useGroupViewData(groupId) {
     gcTime: 10 * 60 * 1000,
   });
 
-  // Fetch sections for group docs (needed to get section IDs for comment lookup)
   const { data: allDocSections = [] } = useQuery({
     queryKey: ['groupAllSections', groupId, docIdsSorted],
     queryFn: async () => {
@@ -118,8 +106,6 @@ export function useGroupViewData(groupId) {
     [allDocSections]
   );
 
-  // Fetch all comments on group docs (sections + suggestions + document-level)
-  // rootEntityId can be: docId, suggestionId, or sectionId
   const { data: allDocComments = [] } = useQuery({
     queryKey: ['groupAllComments', groupId, docIdsSorted, allDocSuggestionIdsSorted, allDocSectionIdsSorted],
     queryFn: async () => {
@@ -137,7 +123,6 @@ export function useGroupViewData(groupId) {
     gcTime: 10 * 60 * 1000,
   });
 
-  // Fetch DocumentAgreement signers for group docs
   const { data: allDocAgreements = [] } = useQuery({
     queryKey: ['groupAllAgreements', groupId, docIdsSorted],
     queryFn: async () => {
