@@ -634,6 +634,16 @@ export default function DocumentView() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-1 md:p-6 w-full max-w-full overflow-x-hidden pb-24">
       <div className="max-w-6xl mx-auto space-y-2 md:space-y-6 px-1 md:px-4 w-full max-w-full">
         <div className="flex flex-col gap-2 md:gap-4 w-full max-w-full">
+          {document.groupId && (
+            <Link
+              to={`${createPageUrl("GroupView")}?id=${document.groupId}`}
+              className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-blue-600 transition-colors mb-1"
+            >
+              {isRTL ? <ArrowRight className="w-3.5 h-3.5" /> : <ArrowLeft className="w-3.5 h-3.5" />}
+              <span>{language === 'he' ? 'חזרה לקבוצה' : language === 'ar' ? 'العودة إلى المجموعة' : 'Back to Group'}</span>
+            </Link>
+          )}
+
           <div className={`flex items-center gap-2 w-full max-w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
             <h1 id="document-title" className="text-lg md:text-3xl font-bold text-slate-900 flex-1 min-w-0 break-words leading-tight max-w-full" style={{ fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif" }}>
               {(() => {
