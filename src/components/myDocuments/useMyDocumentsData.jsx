@@ -36,8 +36,10 @@ export function useMyDocumentsData() {
   const myDocumentIds = useMemo(() => {
     const suggestedDocIds = suggestions.map(s => s.documentId);
     const interactedDocIds = userInteractions.map(ui => ui.documentId);
-    return [...new Set([...interactedDocIds, ...suggestedDocIds])].sort();
-  }, [suggestions, userInteractions]);
+    // Include documents created by this user (even without interaction)
+    const createdDocIds = allDocuments.filter(d => d.created_by === user?.email).map(d => d.id);
+    return [...new Set([...interactedDocIds, ...suggestedDocIds, ...createdDocIds])].sort();
+  }, [suggestions, userInteractions, allDocuments, user?.email]);
 
   const { data: allSuggestions = [] } = useQuery({
     queryKey: ['allSuggestions', myDocumentIds],

@@ -80,6 +80,10 @@ export default [
   // 1. Global ignores — test/spec/qa files never linted
   {
     ignores: [
+      'src/components/qa/**',
+      'components/qa/**',
+      'src/components/qa/QAReport*',
+      'components/qa/QAReport*',
       '**/__tests__/**',
       'src/**/__tests__/**',
       '**/*.test.js',
