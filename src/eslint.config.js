@@ -2,10 +2,34 @@ import js from '@eslint/js';
 
 export default [
   {
-    ignores: ['**/__tests__/**', '**/*.test.js', '**/*.test.jsx', '**/*.test.ts', '**/*.test.tsx', '**/*.spec.js', '**/*.spec.jsx', '**/qa/QAReport.jsx', '**/qa/QAReport.md.jsx'],
+    ignores: [
+      '**/__tests__/**',
+      '**/*.test.js',
+      '**/*.test.jsx',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/*.spec.js',
+      '**/*.spec.jsx',
+      '**/qa/QAReport.jsx',
+      '**/qa/QAReport.md.jsx',
+      '**/qa/QAReportMd.jsx',
+    ],
   },
   {
     ...js.configs.recommended,
+    files: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
+    ignores: [
+      '**/__tests__/**',
+      '**/*.test.js',
+      '**/*.test.jsx',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/*.spec.js',
+      '**/*.spec.jsx',
+      '**/qa/QAReport.jsx',
+      '**/qa/QAReport.md.jsx',
+      '**/qa/QAReportMd.jsx',
+    ],
     languageOptions: {
       ...js.configs.recommended.languageOptions,
       globals: {

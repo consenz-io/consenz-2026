@@ -98,12 +98,39 @@ export function useGroupViewData(groupId) {
     gcTime: 10 * 60 * 1000,
   });
 
-  // Fetch all comments on group docs (sections + suggestions + document-level)
-  const { data: allDocComments = [] } = useQuery({
-    queryKey: ['groupAllComments', groupId, docIdsSorted],
+  // Fetch sections for group docs (needed to get section IDs for comment lookup)
+  const { data: allDocSections = [] } = useQuery({
+    queryKey: ['groupAllSections', groupId, docIdsSorted],
     queryFn: async () => {
       if (docIds.length === 0) return [];
-      return base44.entities.Comment.filter({ rootEntityId: { $in: docIds } }, null, 500).catch(() => []);
+      const perDoc = await Promise.all(
+        docIds.map(id => base44.entities.Section.filter({ documentId: id }, null, 200).catch(() => []))
+      );
+      return perDoc.flat();
+    },
+    enabled: docIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  const allDocSectionIdsSorted = useMemo(
+    () => [...allDocSections.map(s => s.id)].sort().join(','),
+    [allDocSections]
+  );
+
+  // Fetch all comments on group docs (sections + suggestions + document-level)
+  // rootEntityId can be: docId, suggestionId, or sectionId
+  const { data: allDocComments = [] } = useQuery({
+    queryKey: ['groupAllComments', groupId, docIdsSorted, allDocSuggestionIdsSorted, allDocSectionIdsSorted],
+    queryFn: async () => {
+      if (docIds.length === 0) return [];
+      const allRootEntityIds = [
+        ...docIds,
+        ...allDocSuggestions.map(s => s.id),
+        ...allDocSections.map(s => s.id),
+      ];
+      if (allRootEntityIds.length === 0) return [];
+      return base44.entities.Comment.filter({ rootEntityId: { $in: allRootEntityIds } }, null, 1000).catch(() => []);
     },
     enabled: docIds.length > 0,
     staleTime: 5 * 60 * 1000,
@@ -189,10 +216,12 @@ export function useGroupViewData(groupId) {
     allDocVotes.forEach(v => {
       if (groupSuggestionIds.has(v.suggestionId) && v.userId) ids.add(v.userId);
     });
+    const groupSectionIds = new Set(allDocSections.filter(s => groupDocIds.has(s.documentId)).map(s => s.id));
     allDocComments.forEach(c => {
       if (!c.created_by) return;
       const inGroup = (c.rootEntityType === 'document' && groupDocIds.has(c.rootEntityId)) ||
-                      (c.rootEntityType === 'suggestion' && groupSuggestionIds.has(c.rootEntityId));
+                      (c.rootEntityType === 'suggestion' && groupSuggestionIds.has(c.rootEntityId)) ||
+                      (c.rootEntityType === 'section' && groupSectionIds.has(c.rootEntityId));
       if (inGroup) { const uid = emailToUserId.get(c.created_by); if (uid) ids.add(uid); }
     });
     allDocAgreements.forEach(a => {
@@ -200,7 +229,7 @@ export function useGroupViewData(groupId) {
     });
 
     return [...ids];
-  }, [groupId, groupMembers, documents, publicProfiles, allDocSuggestions, allDocVotes, allDocComments, allDocAgreements]);
+  }, [groupId, groupMembers, documents, publicProfiles, allDocSuggestions, allDocVotes, allDocComments, allDocAgreements, allDocSections]);
 
   const { data: userVotes = [] } = useQuery({
     queryKey: ['userVotes', currentUser?.id],
