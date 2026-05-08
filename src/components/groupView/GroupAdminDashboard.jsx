@@ -151,7 +151,7 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
                 </p>
               </div>
               <Link
-                to={`${createPageUrl("DocumentView")}?id=${s.documentId}#suggestion-${s.id}`}
+                to={`${createPageUrl("suggestiondetail")}?id=${s.id}`}
                 className="text-blue-500 hover:text-blue-700 shrink-0 mt-0.5"
                 title={iHe ? 'צפה בהצעה' : 'View suggestion'}
               >
