@@ -86,13 +86,15 @@ export function useMyDocumentsData() {
     staleTime: 2 * 60 * 1000,
   });
 
-  // Derive the full set of my documents (including voted ones)
+  // Derive the full set of my documents (including voted ones and created ones)
   const myDocuments = useMemo(() => {
     const votedSuggestions = allSuggestions.filter(s => votes.some(v => v.suggestionId === s.id));
     const votedDocIds = votedSuggestions.map(s => s.documentId);
     const allMyIds = new Set([...myDocumentIds, ...votedDocIds]);
-    return allDocuments.filter(doc => allMyIds.has(doc.id));
-  }, [allDocuments, myDocumentIds, allSuggestions, votes]);
+    return allDocuments.filter(doc =>
+      allMyIds.has(doc.id) || doc.created_by === user?.email
+    );
+  }, [allDocuments, myDocumentIds, allSuggestions, votes, user?.email]);
 
   const votedIds = useMemo(() => new Set(votes.map(v => v.suggestionId)), [votes]);
 
