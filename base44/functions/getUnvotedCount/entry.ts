@@ -13,18 +13,20 @@ Deno.serve(async (req) => {
 
   // Fetch only the data we need, filtered server-side
   const [userVotes, userCreatedSuggestions, pendingSuggestions, allInteractions] = await Promise.all([
-    // Votes — filter by created_by (email) since userId filter doesn't work server-side
-    serviceBase44.entities.Vote.list('-created_date', 500),
+    // Fetch votes by userId — correct server-side filter, no limit issue
+    serviceBase44.entities.Vote.filter({ userId: user.id }, null, 1000),
     serviceBase44.entities.Suggestion.filter({ created_by: user.email }, null, 200),
-    serviceBase44.entities.Suggestion.filter({ status: 'pending' }, null, 300),
+    serviceBase44.entities.Suggestion.filter({ status: 'pending' }, null, 500),
     serviceBase44.entities.UserInteraction.filter({ userId: user.id }, null, 100),
   ]);
 
-  // Votes by current user (filter by created_by email)
-  const votedSuggestionIds = new Set(
-    userVotes
-      .filter(v => v.created_by === user.email)
-      .map(v => v.suggestionId)
+  // Votes by current user
+  const votedSuggestionIds = new Set(userVotes.map(v => v.suggestionId));
+
+  // Filter out expired suggestions (timerEndsAt in the past)
+  const now = new Date();
+  const activePendingSuggestions = pendingSuggestions.filter(s =>
+    !s.timerEndsAt || new Date(s.timerEndsAt) > now
   );
 
   // Build set of document IDs the user participated in
@@ -36,15 +38,15 @@ Deno.serve(async (req) => {
   // Docs where user interacted
   allInteractions.forEach(ui => ui.documentId && participatedDocIds.add(ui.documentId));
   
-  // Docs where user voted on suggestions
+  // Docs where user voted on suggestions (check all pending, not just active)
   pendingSuggestions.forEach(s => {
     if (votedSuggestionIds.has(s.id) && s.documentId) {
       participatedDocIds.add(s.documentId);
     }
   });
 
-  // Count pending suggestions in participated docs that user hasn't voted on and didn't create
-  const count = pendingSuggestions.filter(s =>
+  // Count only active (non-expired) pending suggestions in participated docs that user hasn't voted on and didn't create
+  const count = activePendingSuggestions.filter(s =>
     s.type !== 'edit_suggestion' &&
     participatedDocIds.has(s.documentId) &&
     s.created_by !== user.email &&

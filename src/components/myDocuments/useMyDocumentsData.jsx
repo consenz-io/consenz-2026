@@ -94,16 +94,20 @@ export function useMyDocumentsData() {
     return allDocuments.filter(doc => allMyIds.has(doc.id));
   }, [allDocuments, myDocumentIds, allSuggestions, votes]);
 
+  const votedIds = useMemo(() => new Set(votes.map(v => v.suggestionId)), [votes]);
+
   const getUnvotedCount = useCallback((docId) => {
     if (!user?.id) return 0;
-    const pending = allSuggestions.filter(s =>
+    const now = new Date();
+    const active = allSuggestions.filter(s =>
       s.documentId === docId &&
       s.status === 'pending' &&
       s.type !== 'edit_suggestion' &&
-      s.created_by !== user.email
+      s.created_by !== user.email &&
+      (!s.timerEndsAt || new Date(s.timerEndsAt) > now)
     );
-    return pending.filter(s => !votes.some(v => v.suggestionId === s.id)).length;
-  }, [user?.id, user?.email, allSuggestions, votes]);
+    return active.filter(s => !votedIds.has(s.id)).length;
+  }, [user?.id, user?.email, allSuggestions, votedIds]);
 
   return {
     user,

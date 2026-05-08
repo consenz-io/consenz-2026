@@ -66,11 +66,14 @@ export function useGroupViewData(groupId) {
     gcTime: 10 * 60 * 1000,
   });
 
-  // Derived — no extra network call
-  const groupSuggestions = useMemo(
-    () => allDocSuggestions.filter(s => s.status === 'pending'),
-    [allDocSuggestions]
-  );
+  // Derived — no extra network call. Filter out expired suggestions.
+  const groupSuggestions = useMemo(() => {
+    const now = new Date();
+    return allDocSuggestions.filter(s =>
+      s.status === 'pending' &&
+      (!s.timerEndsAt || new Date(s.timerEndsAt) > now)
+    );
+  }, [allDocSuggestions]);
 
   const allDocSuggestionIds = useMemo(() => allDocSuggestions.map(s => s.id), [allDocSuggestions]);
   const allDocSuggestionIdsSorted = useMemo(() => [...allDocSuggestionIds].sort().join(','), [allDocSuggestionIds]);
