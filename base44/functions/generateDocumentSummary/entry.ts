@@ -151,6 +151,9 @@ Sections written by admin during document creation (baseline content, NOT user c
 Sections that exist because a user suggestion was accepted (real user contributions): ${userContributedSections.length} sections
 
 === SUGGESTIONS (with arguments and comments) ===
+PENDING - Open for voting (${pending.length}):
+${pending.map(s => `  • ${fmtSuggestionFull(s)}`).join('\n') || '  (none)'}
+
 Accepted by community consensus (${acceptedByConsensus.length}):
 ${acceptedByConsensus.map(s => `  • ${fmtSuggestionFull(s)}`).join('\n') || '  (none)'}
 
