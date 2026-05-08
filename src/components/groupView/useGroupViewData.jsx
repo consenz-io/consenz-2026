@@ -157,23 +157,22 @@ export function useGroupViewData(groupId) {
     })();
   }, [groupId, groupMembers, publicProfiles, allDocSuggestions, queryClient]);
 
-  // Fetch UserInteractions for all group documents
-  const { data: groupUserInteractions = [] } = useQuery({
-    queryKey: ['groupUserInteractions', groupId, docIdsSorted],
-    queryFn: async () => {
-      if (docIds.length === 0) return [];
-      return base44.entities.UserInteraction.filter({ documentId: { $in: docIds } }, null, 1000).catch(() => []);
-    },
-    enabled: docIds.length > 0,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-  });
-
-  // All unique participant userIds: anyone who has a UserInteraction record for any group doc
+  // All unique participant userIds: formal members + suggestion creators + voters + commenters
   const allParticipantUserIds = useMemo(() => {
-    const ids = new Set(groupUserInteractions.map(ui => ui.userId).filter(Boolean));
+    const ids = new Set(groupMembers.map(m => m.userId));
+    const emailToUserId = new Map();
+    publicProfiles.forEach(p => { if (p.email && p.userId) emailToUserId.set(p.email, p.userId); });
+
+    allDocSuggestions.forEach(s => {
+      if (s.created_by) { const uid = emailToUserId.get(s.created_by); if (uid) ids.add(uid); }
+    });
+    allDocVotes.forEach(v => { if (v.userId) ids.add(v.userId); });
+    allDocComments.forEach(c => {
+      if (c.created_by) { const uid = emailToUserId.get(c.created_by); if (uid) ids.add(uid); }
+    });
+
     return [...ids];
-  }, [groupUserInteractions]);
+  }, [groupMembers, publicProfiles, allDocSuggestions, allDocVotes, allDocComments]);
 
   const { data: userVotes = [] } = useQuery({
     queryKey: ['userVotes', currentUser?.id],
