@@ -616,11 +616,7 @@ export default function SuggestionDetail() {
                 {suggestion.status === 'pending' && suggestion.timerEndsAt &&
                   <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="sm" />
                 }
-                {suggestion.status === 'accepted' && suggestion.updated_date &&
-                  <span className="text-xs text-slate-500">
-                    {t('acceptedOn')} {new Date(suggestion.updated_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                }
+
                 {suggestion.approvedByAdmin && suggestion.status === 'accepted' &&
                   <Badge variant="outline" className="flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
                     <ShieldCheck className="w-3 h-3" />
@@ -755,6 +751,7 @@ export default function SuggestionDetail() {
                       voteMutation={voteMutation}
                       isRTL={isRTL}
                       readOnly={true}
+                      acceptedDate={suggestion.status === 'accepted' ? suggestion.updated_date : undefined}
                     />
                   : <>
                       {/* For pending suggestions: use VotingProgressSection (same as sidebar/document) */}
