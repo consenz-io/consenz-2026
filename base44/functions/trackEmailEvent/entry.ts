@@ -24,18 +24,18 @@ Deno.serve(async (req) => {
     }
   };
 
-  // For click events — redirect immediately, track asynchronously
+  // For click events — track FIRST (await), then redirect
   if (type === 'click' && redirectUrl) {
-    track('clickCount'); // intentionally not awaited
+    await track('clickCount');
     return new Response(null, {
       status: 302,
       headers: { Location: redirectUrl },
     });
   }
 
-  // For open pixel — return 1x1 GIF, track asynchronously
+  // For open pixel — track first, then return pixel
   if (type === 'open') {
-    track('openCount'); // intentionally not awaited
+    await track('openCount');
   }
 
   const pixel = new Uint8Array([
