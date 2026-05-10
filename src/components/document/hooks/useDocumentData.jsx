@@ -66,18 +66,13 @@ export function useDocumentData(documentId) {
   const { data: aggregatedData } = useQuery({
     queryKey: ['documentAggregatedData', documentId],
     queryFn: async () => {
-      // Read IDs from the already-populated cache — avoids duplicate network requests
-      const cachedSuggestions = queryClient.getQueryData(['suggestions', documentId]) || [];
-      const cachedSections = queryClient.getQueryData(['sections', documentId]) || [];
-
-      // Only re-fetch if cache is empty (e.g. cold load)
+      // Always fetch fresh sections and suggestions so sectionIds are never stale.
+      // Using the cache here caused a bug: when a new section was created, the aggregated
+      // query would run with the old cached sectionIds before sections had refreshed,
+      // meaning comments/votes for the new section were never fetched.
       const [allSuggestions, allSections] = await Promise.all([
-        cachedSuggestions.length > 0
-          ? Promise.resolve(cachedSuggestions)
-          : base44.entities.Suggestion.filter({ documentId }, '-created_date').catch(() => []),
-        cachedSections.length > 0
-          ? Promise.resolve(cachedSections)
-          : base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
+        base44.entities.Suggestion.filter({ documentId }, '-created_date').catch(() => []),
+        base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
       ]);
       const suggestionIds = allSuggestions.map(s => s.id);
       const sectionIds = allSections.map(s => s.id);
