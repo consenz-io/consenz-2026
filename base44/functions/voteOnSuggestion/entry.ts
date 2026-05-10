@@ -227,9 +227,7 @@ Deno.serve(async (req) => {
       }
 
       accepted = true;
-      // Safety net: release lock after 60s in case the promise never settles
-      setTimeout(() => processingAcceptance.delete(lockKey), 60000);
-      console.log('[VOTE FUNCTION] Auto-accept scheduled in background');
+      console.log('[VOTE FUNCTION] processAcceptance completed, suggestion accepted');
     }
 
     return Response.json({

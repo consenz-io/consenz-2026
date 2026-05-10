@@ -156,8 +156,12 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'Already processed by another instance' });
     }
 
-    // We own the lock — immediately mark as accepted so no other instance can proceed
-    await base44.asServiceRole.entities.Suggestion.update(suggestionId, { status: 'accepted' });
+    // We own the lock — for non-new_section types, mark accepted immediately so no other instance can proceed.
+    // For new_section: we cannot mark accepted yet because sectionId is not known until after Section.create.
+    // We will mark it accepted atomically together with sectionId at the end of the new_section block.
+    if (suggestion.type !== 'new_section') {
+      await base44.asServiceRole.entities.Suggestion.update(suggestionId, { status: 'accepted' });
+    }
 
     // Calculate contributors and consensus
     const totalUsers = await calculateContributors(base44, documentId);
@@ -227,10 +231,11 @@ Deno.serve(async (req) => {
           order: suggestion.newTopicOrder ?? (maxOrder + 1),
           originalLanguage: newTopicLanguage
         });
-        targetTopicId = newTopic.id;
+        targetTopicId = newTopic?.id;
       }
 
       if (!targetTopicId) {
+        console.error('[PROCESS ACCEPTANCE] No targetTopicId for new_section — aborting without accepting');
         return Response.json({ error: 'No topicId' }, { status: 400 });
       }
 
@@ -300,6 +305,7 @@ Deno.serve(async (req) => {
         translations: {}
       });
 
+      // Atomically mark accepted + set sectionId now that the section exists
       await base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
         type: 'edit_section',
         sectionId: newSection.id,
@@ -307,7 +313,6 @@ Deno.serve(async (req) => {
         originalContent: suggestion.newContent,
         suggestionConsensus: boundedConsensus,
         participantsAtAcceptance: totalUsers,
-        threshold: newThreshold,
         parentSuggestionId: null
       });
 
