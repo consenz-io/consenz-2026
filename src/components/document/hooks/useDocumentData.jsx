@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 
 /**
@@ -21,7 +21,7 @@ export function useDocumentData(documentId) {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: topics = [], isLoading: topicsLoading, isError: topicsError } = useQuery({
+  const { data: topics = [], isLoading: topicsLoading } = useQuery({
     queryKey: ['topics', documentId],
     queryFn: () => base44.entities.Topic.filter({ documentId }, 'order').catch(() => []),
     enabled: !!documentId,
@@ -31,11 +31,11 @@ export function useDocumentData(documentId) {
     refetchOnWindowFocus: false,
     retry: 3,
     retryDelay: 1000,
-    // NOTE: no placeholderData — using it caused stale data from a previous document
-    // to show when navigating between documents (same prev reference across queryKey changes)
+    // keepPreviousData: show old data during refetch so the page never goes blank
+    placeholderData: keepPreviousData,
   });
 
-  const { data: sections = [], isLoading: sectionsLoading, isError: sectionsError } = useQuery({
+  const { data: sections = [], isLoading: sectionsLoading } = useQuery({
     queryKey: ['sections', documentId],
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
     enabled: !!documentId,
@@ -45,10 +45,11 @@ export function useDocumentData(documentId) {
     refetchOnWindowFocus: false,
     retry: 3,
     retryDelay: 1000,
-    // NOTE: no placeholderData — same reason as topics above
+    // keepPreviousData: show old data during refetch so the page never goes blank
+    placeholderData: keepPreviousData,
   });
 
-  const { data: suggestions = [], isLoading: suggestionsLoading, isError: suggestionsError } = useQuery({
+  const { data: suggestions = [], isLoading: suggestionsLoading } = useQuery({
     queryKey: ['suggestions', documentId],
     queryFn: async () => {
       if (!documentId) return [];
@@ -56,10 +57,12 @@ export function useDocumentData(documentId) {
       return results || [];
     },
     enabled: !!documentId,
-    staleTime: 0,           // Always fetch fresh — suggestions change frequently
+    staleTime: 0,
     gcTime: 10 * 60 * 1000,
-    refetchOnMount: true,   // Re-fetch when navigating back to this page
+    refetchOnMount: true,
     retry: 2,
+    // keepPreviousData: show old data during refetch so the page never goes blank
+    placeholderData: keepPreviousData,
   });
 
   // Stable key: only keyed by documentId — avoids a new query on every render
@@ -194,9 +197,9 @@ export function useDocumentData(documentId) {
   const documentAgreements = React.useMemo(() => documentMetadata?.agreements || [], [documentMetadata?.agreements]);
   const documentVersions = React.useMemo(() => documentMetadata?.versions || [], [documentMetadata?.versions]);
 
-  // Wait for document AND both topics+sections before showing content
-  // Previously (topicsLoading && sectionsLoading) would stop waiting as soon as
-  // ONE of them finished — causing the page to render with the other still empty.
+  // Wait for document AND both topics+sections before showing content.
+  // With keepPreviousData, isLoading stays false during refetch (good — no flicker).
+  // On a fresh documentId (navigation between docs), isLoading will be true until first data arrives.
   const isInitialLoading = docLoading || topicsLoading || sectionsLoading;
 
   return {
