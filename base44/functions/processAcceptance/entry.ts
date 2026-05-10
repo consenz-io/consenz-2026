@@ -305,6 +305,23 @@ Deno.serve(async (req) => {
         translations: {}
       });
 
+      // Re-link any pending edit_suggestion children to the new section
+      const childEditSuggestions = await base44.asServiceRole.entities.Suggestion.filter({
+        parentSuggestionId: suggestion.id,
+        type: 'edit_suggestion'
+      });
+      if (childEditSuggestions.length > 0) {
+        console.log('[PROCESS ACCEPTANCE] Re-linking', childEditSuggestions.length, 'child edit_suggestions to new section', newSection.id);
+        await Promise.all(
+          childEditSuggestions.map(child =>
+            base44.asServiceRole.entities.Suggestion.update(child.id, {
+              sectionId: newSection.id,
+              type: 'edit_section'
+            })
+          )
+        );
+      }
+
       // Atomically mark accepted + set sectionId now that the section exists
       await base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
         type: 'edit_section',
