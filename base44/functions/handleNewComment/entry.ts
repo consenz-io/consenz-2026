@@ -70,7 +70,11 @@ Deno.serve(async (req) => {
         return Response.json({ message: 'Suggestion not found' }, { status: 200 });
       }
 
-      const actionUrl = `/suggestiondetail?id=${suggestion.id}&commentId=${comment.id}`;
+      // Fetch the document to build the URL
+      const suggestionDoc = await base44.asServiceRole.entities.Document.filter({ id: suggestion.documentId }).then(d => d[0]);
+      const actionUrl = suggestionDoc
+        ? `/documentview?id=${suggestionDoc.id}&suggestionId=${suggestion.id}&commentId=${comment.id}`
+        : `/documentview?suggestionId=${suggestion.id}&commentId=${comment.id}`;
       const nameReplacements = { name: commenterName };
 
       // Reply notification

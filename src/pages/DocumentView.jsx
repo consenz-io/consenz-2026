@@ -49,6 +49,7 @@ export default function DocumentView() {
   const scrollToSectionId = searchParams.get('scrollTo');
   const commentIdFromUrl = searchParams.get('commentId');
   const openSuggestionFromUrl = searchParams.get('openSuggestion');
+  const suggestionIdFromUrl = searchParams.get('suggestionId');
   const [showCreateSuggestion, setShowCreateSuggestion] = useState(false);
   const [editingSection, setEditingSection] = useState(null);
   const [showTranslated, setShowTranslated] = useState(false);
@@ -395,12 +396,13 @@ export default function DocumentView() {
     }
   }, [topics]);
 
-  // Open suggestion sidebar from URL param
+  // Open suggestion sidebar from URL param (openSuggestion or suggestionId)
   useEffect(() => {
-    if (openSuggestionFromUrl && !openSuggestionId) {
-      setOpenSuggestionId(openSuggestionFromUrl);
+    const idToOpen = openSuggestionFromUrl || suggestionIdFromUrl;
+    if (idToOpen && !openSuggestionId) {
+      setOpenSuggestionId(idToOpen);
     }
-  }, [openSuggestionFromUrl]);
+  }, [openSuggestionFromUrl, suggestionIdFromUrl]);
 
   // Scroll to comment from notification
   useEffect(() => {
@@ -1068,7 +1070,24 @@ export default function DocumentView() {
           <ErrorBoundary inline errorMessage="שגיאה בטעינת ההצעה. לחץ לניסיון חוזר.">
             <SuggestionSidebar
               suggestionId={openSuggestionId}
-              onClose={() => setOpenSuggestionId(null)}
+              onClose={() => {
+                const closedSuggestionId = openSuggestionId;
+                setOpenSuggestionId(null);
+                // After closing, scroll to the suggestion element if it's still pending
+                setTimeout(() => {
+                  const suggestion = suggestions.find(s => s.id === closedSuggestionId);
+                  if (!suggestion || suggestion.status !== 'pending') return;
+                  const elementId = suggestion.sectionId
+                    ? `suggestion-${closedSuggestionId}`
+                    : `suggestion-${closedSuggestionId}`;
+                  const el = window.document?.getElementById(elementId);
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    el.classList.add('ring-4', 'ring-blue-400', 'ring-offset-4');
+                    setTimeout(() => el.classList.remove('ring-4', 'ring-blue-400', 'ring-offset-4'), 2000);
+                  }
+                }, 300);
+              }}
               document={document}
               user={user}
               isAdmin={isAdmin}

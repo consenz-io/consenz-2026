@@ -517,7 +517,7 @@ Deno.serve(async (req) => {
           translations: creatorTranslations,
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
-          actionUrl: `/documentview?id=${document.id}`,
+          actionUrl: `/documentview?id=${document.id}&suggestionId=${suggestion.id}`,
           documentId: document.id,
           documentTitle: document.title
         });
@@ -530,7 +530,7 @@ Deno.serve(async (req) => {
           translations: participantTranslations,
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
-          actionUrl: `/suggestiondetail?id=${suggestion.id}`,
+          actionUrl: `/documentview?id=${document.id}&suggestionId=${suggestion.id}`,
           documentId: document.id,
           documentTitle: document.title
         });
