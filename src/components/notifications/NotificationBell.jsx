@@ -123,24 +123,12 @@ export default function NotificationBell({ user }) {
         markAsReadMutation.mutate(notification.id);
       }
       
-      // If actionUrl already points to documentview, use it directly (handles all new-format URLs)
-      if (notification.actionUrl?.includes('/documentview')) {
-        const normalizedUrl = notification.actionUrl
-          .replace(/\/document-view(\?|#|$)/, '/documentview$1');
-        setTimeout(() => navigate(normalizedUrl), 100);
+      // For suggestion_accepted notifications, always navigate to suggestion detail
+      if (notification.type === 'suggestion_accepted' && notification.relatedEntityId) {
+        setTimeout(() => {
+          navigate(`/suggestiondetail?id=${notification.relatedEntityId}`);
+        }, 100);
         return;
-      }
-
-      // Legacy: suggestion-related notifications that still point to suggestiondetail
-      const suggestionTypes = ['suggestion_accepted', 'vote_on_suggestion', 'suggestion_comment', 'suggestion_expiring', 'new_suggestion_in_followed_document', 'suggestion_rejected', 'comment_reply'];
-      if (suggestionTypes.includes(notification.type) && notification.relatedEntityId && notification.relatedEntityType === 'suggestion') {
-        const docIdMatch = notification.actionUrl?.match(/[?&]id=([^&]+)/);
-        if (docIdMatch) {
-          setTimeout(() => {
-            navigate(`/documentview?id=${docIdMatch[1]}&suggestionId=${notification.relatedEntityId}`);
-          }, 100);
-          return;
-        }
       }
 
       // Navigate only if we have a valid actionUrl
