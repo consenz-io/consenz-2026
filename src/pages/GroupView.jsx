@@ -164,24 +164,14 @@ export default function GroupView() {
         </div>
 
         {/* Activity Dashboard */}
-        <Card className="border-indigo-200 bg-indigo-50/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg text-indigo-800 flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              {language === 'he' ? 'דשבורד פעילות' : language === 'ar' ? 'لوحة النشاط' : 'Activity Dashboard'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <GroupAdminDashboard
-              groupMembers={groupMembers}
-              allDocSuggestions={allDocSuggestions || []}
-              allDocComments={allDocComments || []}
-              documents={documents}
-              publicProfiles={publicProfiles}
-              groupId={groupId}
-            />
-          </CardContent>
-        </Card>
+        <GroupAdminDashboard
+          groupMembers={groupMembers}
+          allDocSuggestions={allDocSuggestions || []}
+          allDocComments={allDocComments || []}
+          documents={documents}
+          publicProfiles={publicProfiles}
+          groupId={groupId}
+        />
 
         {/* Main content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
