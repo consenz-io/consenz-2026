@@ -250,11 +250,7 @@ export default function GroupView() {
                     <span className="truncate">{language === 'he' ? 'משתתפים' : 'Participants'}</span>
                     <span className="text-sm font-normal text-slate-500 shrink-0">({allParticipantUserIds.length})</span>
                   </CardTitle>
-                  {(isAdmin || isMember) && (
-                    <Button size="sm" variant="outline" onClick={() => setShowInviteMember(true)} className="shrink-0">
-                      <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{language === 'he' ? 'הזמן' : 'Invite'}
-                    </Button>
-                  )}
+
                 </div>
               </CardHeader>
               <CardContent>
