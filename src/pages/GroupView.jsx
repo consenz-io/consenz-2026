@@ -165,13 +165,7 @@ export default function GroupView() {
 
         {/* Activity Dashboard */}
         <Card className="border-indigo-200 bg-indigo-50/30">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg text-indigo-800 flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              {language === 'he' ? 'דשבורד פעילות' : language === 'ar' ? 'لوحة النشاط' : 'Activity Dashboard'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             <GroupAdminDashboard
               groupMembers={groupMembers}
               allDocSuggestions={allDocSuggestions || []}
