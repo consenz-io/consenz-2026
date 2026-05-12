@@ -6,47 +6,31 @@ import { useLanguage } from "@/components/LanguageContext";
 import { MessageSquare, Lightbulb, CheckCircle, Clock, XCircle, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 
-function StatCard({ icon: Icon, label, value, color }) {
+function StatCard({ icon: Icon, label, value, color, onClick, isOpen }) {
   return (
-    <div className={`rounded-xl p-4 flex items-center gap-3 ${color}`}>
+    <button
+      onClick={onClick}
+      className={`rounded-xl p-4 flex items-center gap-3 w-full text-left transition-all ${color} ${onClick ? 'hover:opacity-80 cursor-pointer ring-offset-1 ' + (isOpen ? 'ring-2 ring-current' : '') : ''}`}
+    >
       <div className="p-2 bg-white/60 rounded-lg">
         <Icon className="w-5 h-5" />
       </div>
-      <div>
+      <div className="flex-1">
         <p className="text-2xl font-bold">{value}</p>
         <p className="text-xs font-medium opacity-80">{label}</p>
       </div>
-    </div>
-  );
-}
-
-function CollapsibleSection({ title, count, icon: Icon, children, defaultOpen = false }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="border border-slate-200 rounded-xl overflow-hidden">
-      <button
-        className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors"
-        onClick={() => setOpen(o => !o)}
-      >
-        <div className="flex items-center gap-2 font-semibold text-slate-800">
-          <Icon className="w-4 h-4 text-slate-500" />
-          {title}
-          <span className="text-xs font-normal text-slate-500 bg-white border border-slate-200 rounded-full px-2 py-0.5">{count}</span>
-        </div>
-        {open ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-      </button>
-      {open && <div className="divide-y divide-slate-100">{children}</div>}
-    </div>
+      {onClick && (isOpen ? <ChevronUp className="w-4 h-4 opacity-60" /> : <ChevronDown className="w-4 h-4 opacity-60" />)}
+    </button>
   );
 }
 
 export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, allDocComments, documents, publicProfiles, groupId }) {
   const { language } = useLanguage();
+  const [openPanel, setOpenPanel] = useState(null); // 'suggestions' | 'comments' | null
 
   const iHe = language === 'he';
   const iAr = language === 'ar';
 
-  // Stable lookup maps — recomputed only when source arrays change
   const emailToProfile = useMemo(() => {
     const m = new Map();
     publicProfiles.forEach(p => { if (p.email) m.set(p.email, p); });
@@ -55,14 +39,12 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
 
   const docMap = useMemo(() => new Map(documents.map(d => [d.id, d])), [documents]);
 
-  // Index suggestions by id for O(1) lookup in comments loop
   const suggestionById = useMemo(() => {
     const m = new Map();
     allDocSuggestions.forEach(s => m.set(s.id, s));
     return m;
   }, [allDocSuggestions]);
 
-  // Index suggestions by sectionId for O(1) section-comment lookup
   const suggestionBySectionId = useMemo(() => {
     const m = new Map();
     allDocSuggestions.forEach(s => { if (s.sectionId && !m.has(s.sectionId)) m.set(s.sectionId, s); });
@@ -71,7 +53,6 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
 
   const getEmailName = (email) => emailToProfile.get(email)?.fullName || email;
 
-  // Stats — derived with useMemo
   const { totalSuggestions, acceptedSuggestions, totalComments } = useMemo(() => ({
     totalSuggestions: allDocSuggestions.length,
     acceptedSuggestions: allDocSuggestions.filter(s => s.status === 'accepted').length,
@@ -98,102 +79,113 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
     try { return format(new Date(d), 'dd/MM/yyyy HH:mm'); } catch { return '—'; }
   };
 
+  const toggle = (panel) => setOpenPanel(prev => prev === panel ? null : panel);
+
   return (
-    <div className="space-y-5">
-      {/* Stats row */}
+    <div className="space-y-4">
+      {/* Stats row — clickable */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <StatCard icon={Lightbulb} label={iHe ? 'הצעות סה״כ' : iAr ? 'مجموع الاقتراحات' : 'Total Suggestions'} value={totalSuggestions} color="bg-purple-50 text-purple-800" />
-        <StatCard icon={CheckCircle} label={iHe ? 'הצעות שהתקבלו' : iAr ? 'مقبولة' : 'Accepted'} value={acceptedSuggestions} color="bg-green-50 text-green-800" />
-        <StatCard icon={MessageSquare} label={iHe ? 'תגובות' : iAr ? 'تعليقات' : 'Comments'} value={totalComments} color="bg-orange-50 text-orange-800" />
+        <StatCard
+          icon={Lightbulb}
+          label={iHe ? 'הצעות סה״כ' : iAr ? 'مجموع الاقتراحات' : 'Total Suggestions'}
+          value={totalSuggestions}
+          color="bg-purple-50 text-purple-800"
+          onClick={() => toggle('suggestions')}
+          isOpen={openPanel === 'suggestions'}
+        />
+        <StatCard
+          icon={CheckCircle}
+          label={iHe ? 'הצעות שהתקבלו' : iAr ? 'مقبولة' : 'Accepted'}
+          value={acceptedSuggestions}
+          color="bg-green-50 text-green-800"
+        />
+        <StatCard
+          icon={MessageSquare}
+          label={iHe ? 'תגובות' : iAr ? 'تعليقات' : 'Comments'}
+          value={totalComments}
+          color="bg-orange-50 text-orange-800"
+          onClick={() => toggle('comments')}
+          isOpen={openPanel === 'comments'}
+        />
       </div>
 
-      {/* Suggestions list */}
-      <CollapsibleSection
-        title={iHe ? 'רשימת הצעות' : iAr ? 'قائمة الاقتراحات' : 'Suggestions List'}
-        count={totalSuggestions}
-        icon={Lightbulb}
-      >
-        {sortedSuggestions.length === 0 && (
-          <p className="text-sm text-slate-400 text-center py-4">{iHe ? 'אין הצעות' : 'No suggestions'}</p>
-        )}
-        {sortedSuggestions.map(s => {
-          const doc = docMap.get(s.documentId);
-          return (
-            <div key={s.id} className="flex items-start justify-between px-4 py-3 hover:bg-slate-50 transition-colors gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-medium text-slate-800 truncate">{s.title || (iHe ? 'ללא כותרת' : 'Untitled')}</p>
-                  {statusBadge(s.status)}
-                </div>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {getEmailName(s.created_by)} · {fmtDate(s.created_date)}
-                  {doc && <span className="mx-1">· {iHe ? 'מסמך' : 'Doc'}: {doc.title}</span>}
-                </p>
-              </div>
-              <Link
-                to={`${createPageUrl("suggestiondetail")}?id=${s.id}`}
-                className="text-blue-500 hover:text-blue-700 shrink-0 mt-0.5"
-                title={iHe ? 'צפה בהצעה' : 'View suggestion'}
-              >
-                <ExternalLink className="w-4 h-4" />
-              </Link>
-            </div>
-          );
-        })}
-      </CollapsibleSection>
-
-      {/* Comments list */}
-      <CollapsibleSection
-        title={iHe ? 'רשימת תגובות' : iAr ? 'قائمة التعليقات' : 'Comments List'}
-        count={totalComments}
-        icon={MessageSquare}
-      >
-        {sortedComments.length === 0 && (
-          <p className="text-sm text-slate-400 text-center py-4">{iHe ? 'אין תגובות' : 'No comments'}</p>
-        )}
-        {sortedComments.map(c => {
-          const plainText = c.content?.replace(/<[^>]*>/g, '') || '';
-
-          // O(1) lookups via pre-built Maps
-          let relatedSuggestion = null;
-          if (c.rootEntityType === 'suggestion') {
-            relatedSuggestion = suggestionById.get(c.rootEntityId);
-          } else if (c.rootEntityType === 'section') {
-            relatedSuggestion = suggestionBySectionId.get(c.rootEntityId);
-          }
-
-          // Build link: if suggestion found → suggestiondetail with commentId anchor
-          const linkTo = relatedSuggestion
-            ? `${createPageUrl("suggestiondetail")}?id=${relatedSuggestion.id}&commentId=${c.id}`
-            : null;
-
-          const doc = relatedSuggestion ? docMap.get(relatedSuggestion.documentId) : null;
-
-          return (
-            <div key={c.id} className="px-4 py-3 hover:bg-slate-50 transition-colors">
-              <div className="flex items-start justify-between gap-3">
+      {/* Suggestions panel */}
+      {openPanel === 'suggestions' && (
+        <div className="border border-purple-200 rounded-xl overflow-hidden divide-y divide-slate-100">
+          {sortedSuggestions.length === 0 && (
+            <p className="text-sm text-slate-400 text-center py-4">{iHe ? 'אין הצעות' : 'No suggestions'}</p>
+          )}
+          {sortedSuggestions.map(s => {
+            const doc = docMap.get(s.documentId);
+            return (
+              <div key={s.id} className="flex items-start justify-between px-4 py-3 hover:bg-slate-50 transition-colors gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-slate-400 mb-1">
-                    {getEmailName(c.created_by)} · {fmtDate(c.created_date)}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-medium text-slate-800 truncate">{s.title || (iHe ? 'ללא כותרת' : 'Untitled')}</p>
+                    {statusBadge(s.status)}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {getEmailName(s.created_by)} · {fmtDate(s.created_date)}
                     {doc && <span className="mx-1">· {iHe ? 'מסמך' : 'Doc'}: {doc.title}</span>}
-                    {relatedSuggestion && <span className="mx-1">· {iHe ? 'הצעה' : iAr ? 'اقتراح' : 'Suggestion'}: {relatedSuggestion.title}</span>}
                   </p>
-                  <p className="text-sm text-slate-700 line-clamp-2">{plainText || '—'}</p>
                 </div>
-                {linkTo && (
-                  <Link
-                    to={linkTo}
-                    className="text-blue-500 hover:text-blue-700 shrink-0 mt-0.5"
-                    title={iHe ? 'צפה בתגובה בעמוד ההצעה' : 'View comment in suggestion page'}
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </Link>
-                )}
+                <Link
+                  to={`${createPageUrl("suggestiondetail")}?id=${s.id}`}
+                  className="text-blue-500 hover:text-blue-700 shrink-0 mt-0.5"
+                  title={iHe ? 'צפה בהצעה' : 'View suggestion'}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </Link>
               </div>
-            </div>
-          );
-        })}
-      </CollapsibleSection>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Comments panel */}
+      {openPanel === 'comments' && (
+        <div className="border border-orange-200 rounded-xl overflow-hidden divide-y divide-slate-100">
+          {sortedComments.length === 0 && (
+            <p className="text-sm text-slate-400 text-center py-4">{iHe ? 'אין תגובות' : 'No comments'}</p>
+          )}
+          {sortedComments.map(c => {
+            const plainText = c.content?.replace(/<[^>]*>/g, '') || '';
+            let relatedSuggestion = null;
+            if (c.rootEntityType === 'suggestion') {
+              relatedSuggestion = suggestionById.get(c.rootEntityId);
+            } else if (c.rootEntityType === 'section') {
+              relatedSuggestion = suggestionBySectionId.get(c.rootEntityId);
+            }
+            const linkTo = relatedSuggestion
+              ? `${createPageUrl("suggestiondetail")}?id=${relatedSuggestion.id}&commentId=${c.id}`
+              : null;
+            const doc = relatedSuggestion ? docMap.get(relatedSuggestion.documentId) : null;
+            return (
+              <div key={c.id} className="px-4 py-3 hover:bg-slate-50 transition-colors">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-slate-400 mb-1">
+                      {getEmailName(c.created_by)} · {fmtDate(c.created_date)}
+                      {doc && <span className="mx-1">· {iHe ? 'מסמך' : 'Doc'}: {doc.title}</span>}
+                      {relatedSuggestion && <span className="mx-1">· {iHe ? 'הצעה' : iAr ? 'اقتراح' : 'Suggestion'}: {relatedSuggestion.title}</span>}
+                    </p>
+                    <p className="text-sm text-slate-700 line-clamp-2">{plainText || '—'}</p>
+                  </div>
+                  {linkTo && (
+                    <Link
+                      to={linkTo}
+                      className="text-blue-500 hover:text-blue-700 shrink-0 mt-0.5"
+                      title={iHe ? 'צפה בתגובה בעמוד ההצעה' : 'View comment in suggestion page'}
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </Link>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
