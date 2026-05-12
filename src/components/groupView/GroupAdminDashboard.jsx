@@ -107,6 +107,8 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
           label={iHe ? 'הצעות שהתקבלו' : iAr ? 'مقبولة' : 'Accepted'}
           value={acceptedSuggestions}
           color="bg-green-50 text-green-800"
+          onClick={() => toggle('accepted')}
+          isOpen={openPanel === 'accepted'}
         />
         <StatCard
           icon={MessageSquare}
@@ -125,6 +127,39 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
             <p className="text-sm text-slate-400 text-center py-4">{iHe ? 'אין הצעות פתוחות' : 'No open suggestions'}</p>
           )}
           {sortedSuggestions.filter(s => s.status === 'pending' || s.status === 'discussion').map(s => {
+            const doc = docMap.get(s.documentId);
+            return (
+              <div key={s.id} className="flex items-start justify-between px-4 py-3 hover:bg-slate-50 transition-colors gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-medium text-slate-800 truncate">{s.title || (iHe ? 'ללא כותרת' : 'Untitled')}</p>
+                    {statusBadge(s.status)}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {getEmailName(s.created_by)} · {fmtDate(s.created_date)}
+                    {doc && <span className="mx-1">· {iHe ? 'מסמך' : 'Doc'}: {doc.title}</span>}
+                  </p>
+                </div>
+                <Link
+                  to={`${createPageUrl("suggestiondetail")}?id=${s.id}`}
+                  className="text-blue-500 hover:text-blue-700 shrink-0 mt-0.5"
+                  title={iHe ? 'צפה בהצעה' : 'View suggestion'}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Accepted suggestions panel */}
+      {openPanel === 'accepted' && (
+        <div className="border border-green-200 rounded-xl overflow-hidden divide-y divide-slate-100">
+          {sortedSuggestions.filter(s => s.status === 'accepted').length === 0 && (
+            <p className="text-sm text-slate-400 text-center py-4">{iHe ? 'אין הצעות שהתקבלו' : 'No accepted suggestions'}</p>
+          )}
+          {sortedSuggestions.filter(s => s.status === 'accepted').map(s => {
             const doc = docMap.get(s.documentId);
             return (
               <div key={s.id} className="flex items-start justify-between px-4 py-3 hover:bg-slate-50 transition-colors gap-3">
