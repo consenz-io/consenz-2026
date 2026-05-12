@@ -53,9 +53,10 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
 
   const getEmailName = (email) => emailToProfile.get(email)?.fullName || email;
 
-  const { totalSuggestions, acceptedSuggestions, totalComments } = useMemo(() => ({
+  const { totalSuggestions, acceptedSuggestions, pendingSuggestions, totalComments } = useMemo(() => ({
     totalSuggestions: allDocSuggestions.length,
     acceptedSuggestions: allDocSuggestions.filter(s => s.status === 'accepted').length,
+    pendingSuggestions: allDocSuggestions.filter(s => s.status === 'pending' || s.status === 'discussion').length,
     totalComments: allDocComments.length,
   }), [allDocSuggestions, allDocComments]);
 
@@ -84,7 +85,7 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
   return (
     <div className="space-y-4">
       {/* Stats row — clickable */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard
           icon={Lightbulb}
           label={iHe ? 'הצעות סה״כ' : iAr ? 'مجموع الاقتراحات' : 'Total Suggestions'}
@@ -92,6 +93,14 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
           color="bg-purple-50 text-purple-800"
           onClick={() => toggle('suggestions')}
           isOpen={openPanel === 'suggestions'}
+        />
+        <StatCard
+          icon={Clock}
+          label={iHe ? 'הצעות פתוחות' : iAr ? 'اقتراحات مفتوحة' : 'Open Suggestions'}
+          value={pendingSuggestions}
+          color="bg-amber-50 text-amber-800"
+          onClick={() => toggle('pending')}
+          isOpen={openPanel === 'pending'}
         />
         <StatCard
           icon={CheckCircle}
@@ -108,6 +117,39 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
           isOpen={openPanel === 'comments'}
         />
       </div>
+
+      {/* Pending suggestions panel */}
+      {openPanel === 'pending' && (
+        <div className="border border-amber-200 rounded-xl overflow-hidden divide-y divide-slate-100">
+          {sortedSuggestions.filter(s => s.status === 'pending' || s.status === 'discussion').length === 0 && (
+            <p className="text-sm text-slate-400 text-center py-4">{iHe ? 'אין הצעות פתוחות' : 'No open suggestions'}</p>
+          )}
+          {sortedSuggestions.filter(s => s.status === 'pending' || s.status === 'discussion').map(s => {
+            const doc = docMap.get(s.documentId);
+            return (
+              <div key={s.id} className="flex items-start justify-between px-4 py-3 hover:bg-slate-50 transition-colors gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-medium text-slate-800 truncate">{s.title || (iHe ? 'ללא כותרת' : 'Untitled')}</p>
+                    {statusBadge(s.status)}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {getEmailName(s.created_by)} · {fmtDate(s.created_date)}
+                    {doc && <span className="mx-1">· {iHe ? 'מסמך' : 'Doc'}: {doc.title}</span>}
+                  </p>
+                </div>
+                <Link
+                  to={`${createPageUrl("suggestiondetail")}?id=${s.id}`}
+                  className="text-blue-500 hover:text-blue-700 shrink-0 mt-0.5"
+                  title={iHe ? 'צפה בהצעה' : 'View suggestion'}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Suggestions panel */}
       {openPanel === 'suggestions' && (
