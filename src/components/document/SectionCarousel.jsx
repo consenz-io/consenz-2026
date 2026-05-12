@@ -482,14 +482,36 @@ const SectionCarousel = React.memo(function SectionCarousel({
                 {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString('en-GB')}
               </div>
               <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <SectionVoteButtons
-                  section={section}
-                  user={user}
-                  onSuggestEdit={onEditSection}
-                  canParticipate={canParticipate}
-                  onCannotParticipate={() => setShowJoinGroupDialog(true)}
-                  initialVotes={sectionVotes}
-                />
+                {(() => {
+                    // אם הגרסה הנוכחית הגיעה מהצעה שהתקבלה — מציג את הצבעות של ההצעה (read-only)
+                    const acceptedEdit = allDocumentSuggestions
+                      .filter(s => s.sectionId === section.id && s.status === 'accepted' && (s.type === 'edit_section' || s.type === 'new_section'))
+                      .sort((a, b) => new Date(b.updated_date || b.created_date) - new Date(a.updated_date || a.created_date))[0];
+                    
+                    if (acceptedEdit) {
+                      return (
+                        <SectionVoteButtons
+                          section={section}
+                          user={user}
+                          onSuggestEdit={onEditSection}
+                          canParticipate={canParticipate}
+                          onCannotParticipate={() => setShowJoinGroupDialog(true)}
+                          initialVotes={sectionVotes}
+                          acceptedSuggestionVotes={{ pro: acceptedEdit.proVotes || 0, con: acceptedEdit.conVotes || 0 }}
+                        />
+                      );
+                    }
+                    return (
+                      <SectionVoteButtons
+                        section={section}
+                        user={user}
+                        onSuggestEdit={onEditSection}
+                        canParticipate={canParticipate}
+                        onCannotParticipate={() => setShowJoinGroupDialog(true)}
+                        initialVotes={sectionVotes}
+                      />
+                    );
+                  })()}
                 {(() => {
                   const count = typeof getCommentsCount === 'function' ? getCommentsCount(activeCommentEntity.entityType, activeCommentEntity.entityId) : 0;
                   const hasComments = count > 0;
