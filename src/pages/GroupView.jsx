@@ -244,14 +244,14 @@ export default function GroupView() {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="w-5 h-5" />
-                    {language === 'he' ? 'משתתפים' : 'Participants'}
-                    <span className="text-sm font-normal text-slate-500">({allParticipantUserIds.length})</span>
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <CardTitle className="flex items-center gap-2 min-w-0">
+                    <Users className="w-5 h-5 shrink-0" />
+                    <span className="truncate">{language === 'he' ? 'משתתפים' : 'Participants'}</span>
+                    <span className="text-sm font-normal text-slate-500 shrink-0">({allParticipantUserIds.length})</span>
                   </CardTitle>
                   {(isAdmin || isMember) && (
-                    <Button size="sm" variant="outline" onClick={() => setShowInviteMember(true)}>
+                    <Button size="sm" variant="outline" onClick={() => setShowInviteMember(true)} className="shrink-0">
                       <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{language === 'he' ? 'הזמן' : 'Invite'}
                     </Button>
                   )}
