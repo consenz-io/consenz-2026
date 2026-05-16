@@ -129,20 +129,6 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             </div>
           </div>
 
-          {/* Rejection reason badge */}
-          {rejectedDate && (
-            <div className={`flex items-center justify-center gap-1.5 mb-2 px-2 py-1 rounded-lg text-xs font-medium w-fit mx-auto ${
-              suggestion?.rejectedByAdmin
-                ? 'bg-red-50 text-red-700 border border-red-200'
-                : 'bg-orange-50 text-orange-700 border border-orange-200'
-            }`}>
-              {suggestion?.rejectedByAdmin
-                ? <><ShieldX className="w-3 h-3 shrink-0" />{language === 'he' ? 'נדחתה על ידי מנהל' : language === 'ar' ? 'مرفوضة من المشرف' : 'Rejected by admin'}</>
-                : <><Timer className="w-3 h-3 shrink-0" />{language === 'he' ? 'פג תוקף ההצבעה' : language === 'ar' ? 'انتهت مدة التصويت' : 'Voting period expired'}</>
-              }
-            </div>
-          )}
-
           {/* Progress bar */}
           <div className="relative h-3 bg-slate-200 rounded-full overflow-hidden">
             
@@ -176,8 +162,18 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             </p>
           )}
           {rejectedDate && (
-            <p className="text-xs text-center text-slate-400 mt-1">
-              {language === 'he' ? 'נדחתה ב-' : language === 'ar' ? 'تم الرفض في' : 'Rejected on '}
+            <p className="text-xs text-center text-slate-400 mt-1 flex items-center justify-center gap-1">
+              {suggestion?.rejectedByAdmin
+                ? <ShieldX className="w-3 h-3 text-red-400 shrink-0" />
+                : <Timer className="w-3 h-3 text-orange-400 shrink-0" />
+              }
+              <span className={suggestion?.rejectedByAdmin ? 'text-red-400' : 'text-orange-400'}>
+                {suggestion?.rejectedByAdmin
+                  ? (language === 'he' ? 'נדחתה ע"י מנהל' : language === 'ar' ? 'رُفضت بواسطة المشرف' : 'Rejected by admin')
+                  : (language === 'he' ? 'פג תוקף ההצבעה' : language === 'ar' ? 'انتهت مدة التصويت' : 'Voting expired')
+                }
+              </span>
+              <span>·</span>
               {new Date(rejectedDate).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </p>
           )}
