@@ -752,6 +752,7 @@ export default function SuggestionDetail() {
                       isRTL={isRTL}
                       readOnly={true}
                       acceptedDate={suggestion.status === 'accepted' ? suggestion.updated_date : undefined}
+                      rejectedDate={suggestion.status === 'rejected' ? suggestion.updated_date : undefined}
                     />
                   : <>
                       {/* For pending suggestions: use VotingProgressSection (same as sidebar/document) */}

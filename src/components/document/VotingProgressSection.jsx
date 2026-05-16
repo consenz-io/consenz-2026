@@ -38,7 +38,7 @@ function formatRemaining(ms, language) {
  * VotingProgressSection
  * Shows a progress bar toward the acceptance threshold + full-width vote buttons.
  */
-export default function VotingProgressSection({ suggestion, document, userVote, voteMutation, isRTL, readOnly = false, onLoginRequired, acceptedDate }) {
+export default function VotingProgressSection({ suggestion, document, userVote, voteMutation, isRTL, readOnly = false, onLoginRequired, acceptedDate, rejectedDate }) {
   const { t, language } = useLanguage();
   const msRemaining = useTimeRemaining(suggestion?.timerEndsAt);
   const timeLabel = formatRemaining(msRemaining, language);
@@ -159,6 +159,12 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             <p className="text-xs text-center text-slate-400 mt-1">
               {suggestion?.language === 'he' || (typeof document === 'object' && document?.originalLanguage === 'he') ? 'התקבלה ב-' : 'Accepted on '}
               {new Date(acceptedDate).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            </p>
+          )}
+          {rejectedDate && (
+            <p className="text-xs text-center text-slate-400 mt-1">
+              {language === 'he' ? 'נדחתה ב-' : language === 'ar' ? 'تم الرفض في' : 'Rejected on '}
+              {new Date(rejectedDate).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </p>
           )}
         </div>
