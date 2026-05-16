@@ -348,7 +348,7 @@ export default function SuggestionDetail() {
           changeDescription: `לפני: ${suggestion.title}`, version: nextVersion, changeType: 'suggestion_accepted', suggestionId: suggestion.id
         }));
         await new Promise((r) => setTimeout(r, 300));
-        await retryWithBackoff(() => base44.entities.Section.update(section.id, { content: suggestion.newContent, lastEditedBy: user.id }));
+        await retryWithBackoff(() => base44.entities.Section.update(section.id, { content: suggestion.newContent, lastEditedBy: user.id, originalLanguage: suggestion.originalLanguage || 'he', translations: {} }));
         await new Promise((r) => setTimeout(r, 300));
         await retryWithBackoff(() => base44.entities.DocumentVersion.create({
           documentId: suggestion.documentId, sectionId: section.id, content: suggestion.newContent,
@@ -370,13 +370,18 @@ export default function SuggestionDetail() {
         }
         const newSection = await retryWithBackoff(() => base44.entities.Section.create({
           documentId: suggestion.documentId, topicId: suggestion.topicId,
-          content: suggestion.newContent, order: newOrder, lastEditedBy: user.id
+          content: suggestion.newContent, order: newOrder, lastEditedBy: user.id,
+          originalLanguage: suggestion.originalLanguage || 'he', translations: {}
         }));
         await new Promise((r) => setTimeout(r, 300));
         await retryWithBackoff(() => base44.entities.DocumentVersion.create({
           documentId: suggestion.documentId, sectionId: newSection.id, content: suggestion.newContent,
           changeDescription: suggestion.title, version: 1, changeType: 'section_created', suggestionId: suggestion.id
         }));
+        // Update suggestion with sectionId so SectionCarousel can link it
+        updateData.sectionId = newSection.id;
+        updateData.type = 'edit_section';
+        updateData.originalContent = suggestion.newContent;
       }
 
       await new Promise((r) => setTimeout(r, 300));
