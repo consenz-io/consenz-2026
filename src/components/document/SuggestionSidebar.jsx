@@ -632,22 +632,33 @@ export default function SuggestionSidebar({
           )}
 
           {/* Voting progress + buttons */}
-          {(document || parentDocument)?.votingButtonsEnabled !== false && suggestion.status === 'pending' && (
+          {(document || parentDocument)?.votingButtonsEnabled !== false && (
             <div className="py-1">
-              {user ? (
+              {suggestion.status === 'pending' ? (
+                user ? (
+                  <VotingProgressSection
+                    suggestion={suggestion}
+                    document={document || parentDocument}
+                    userVote={userVote}
+                    voteMutation={voteMutation}
+                    isRTL={isRTL}
+                  />
+                ) : (
+                  <VotingProgressSection
+                    suggestion={suggestion}
+                    document={document || parentDocument}
+                    userVote={null}
+                    voteMutation={{ isPending: false, mutate: () => {} }}
+                    isRTL={isRTL}
+                    readOnly
+                  />
+                )
+              ) : (
+                // Accepted/rejected: show read-only result
                 <VotingProgressSection
                   suggestion={suggestion}
                   document={document || parentDocument}
                   userVote={userVote}
-                  voteMutation={voteMutation}
-                  isRTL={isRTL}
-                />
-              ) : (
-                // Not logged in: show read-only progress bar only
-                <VotingProgressSection
-                  suggestion={suggestion}
-                  document={document || parentDocument}
-                  userVote={null}
                   voteMutation={{ isPending: false, mutate: () => {} }}
                   isRTL={isRTL}
                   readOnly
