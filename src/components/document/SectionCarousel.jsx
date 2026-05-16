@@ -778,6 +778,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
         sectionId={section.id}
         isOpen={showHistorySidebar}
         onClose={() => setShowHistorySidebar(false)}
+        document={document}
+        user={user}
       />
 
       <JoinGroupDialog

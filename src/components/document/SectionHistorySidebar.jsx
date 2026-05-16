@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -10,10 +10,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { PAGE_NAMES } from "@/components/pageNames";
+import SuggestionSidebar from "@/components/document/SuggestionSidebar";
 
 
-export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
+export default function SectionHistorySidebar({ sectionId, isOpen, onClose, document: parentDocument, user }) {
   const { t, isRTL, language } = useLanguage();
+  const [activeSuggestionId, setActiveSuggestionId] = React.useState(null);
 
   const { data: section, isLoading: sectionLoading } = useQuery({
     queryKey: ['section', sectionId],
@@ -213,11 +215,11 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
                         </div>
                       </div>
 
-                      {/* Clickable overlay via Link */}
+                      {/* Clickable overlay */}
                       {group.suggestionId && (
-                        <Link
-                          to={`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${group.suggestionId}`}
-                          className="absolute inset-0"
+                        <button
+                          className="absolute inset-0 w-full h-full"
+                          onClick={() => setActiveSuggestionId(group.suggestionId)}
                           aria-label="פתח פרטי הצעה"
                         />
                       )}
@@ -228,6 +230,16 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose }) {
             )}
           </div>
         </motion.div>
+
+        {/* Suggestion sidebar — opens on top when a version card is clicked */}
+        {activeSuggestionId && (
+          <SuggestionSidebar
+            suggestionId={activeSuggestionId}
+            onClose={() => setActiveSuggestionId(null)}
+            document={parentDocument}
+            user={user}
+          />
+        )}
       </>}
     </AnimatePresence>
   );
