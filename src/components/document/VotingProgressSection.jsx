@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ThumbsUp, ThumbsDown, Loader2, Clock, ShieldX, Timer } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Loader2, Clock, ShieldX, Timer, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/LanguageContext";
 import { Link } from "react-router-dom";
@@ -38,7 +38,7 @@ function formatRemaining(ms, language) {
  * VotingProgressSection
  * Shows a progress bar toward the acceptance threshold + full-width vote buttons.
  */
-export default function VotingProgressSection({ suggestion, document, userVote, voteMutation, isRTL, readOnly = false, onLoginRequired, acceptedDate, rejectedDate }) {
+export default function VotingProgressSection({ suggestion, document, userVote, voteMutation, isRTL, readOnly = false, onLoginRequired, acceptedDate, rejectedDate, rejectedByAdmin }) {
   const { t, language } = useLanguage();
   const msRemaining = useTimeRemaining(suggestion?.timerEndsAt);
   const timeLabel = formatRemaining(msRemaining, language);
@@ -101,6 +101,24 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
     : votesNeeded === 1
     ? (language === 'he' ? `עוד הצבעת בעד אחת חסרה לאישור` : language === 'ar' ? 'مطلوب مؤيد واحد فقط للموافقة' : '1 more supporter needed')
     : (language === 'he' ? `עוד ${votesNeeded} תומכים דרושים לאישור` : language === 'ar' ? `${votesNeeded} مؤيدين إضافيين مطلوبين للموافقة` : `${votesNeeded} more supporters needed`);
+
+  // Admin-accepted: show a clean status badge instead of the progress bar
+  const isAdminAccepted = suggestion?.approvedByAdmin && suggestion?.status === 'accepted';
+  if (isAdminAccepted) {
+    return (
+      <div className="flex items-center gap-2 py-2 px-3 bg-indigo-50 border border-indigo-200 rounded-xl">
+        <ShieldCheck className="w-4 h-4 text-indigo-500 shrink-0" />
+        <span className="text-sm font-medium text-indigo-700 flex-1">
+          {language === 'he' ? 'אושרה על ידי מנהל' : language === 'ar' ? 'تمت الموافقة من المشرف' : 'Approved by admin'}
+        </span>
+        {acceptedDate && (
+          <span className="text-xs text-indigo-400">
+            {new Date(acceptedDate).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          </span>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
