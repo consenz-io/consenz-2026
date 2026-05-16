@@ -619,7 +619,7 @@ export default function SuggestionDetail() {
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
                 {suggestion.timerEndsAt &&
-                  <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="sm" />
+                  <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="sm" status={suggestion.status} />
                 }
 
                 {suggestion.approvedByAdmin && suggestion.status === 'accepted' &&

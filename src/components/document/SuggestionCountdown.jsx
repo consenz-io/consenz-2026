@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Clock } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
-export default function SuggestionCountdown({ timerEndsAt, size = "sm" }) {
+export default function SuggestionCountdown({ timerEndsAt, size = "sm", status }) {
   const { language } = useLanguage();
   const [timeLeft, setTimeLeft] = useState(null);
 
@@ -25,7 +25,7 @@ export default function SuggestionCountdown({ timerEndsAt, size = "sm" }) {
     return () => clearInterval(interval);
   }, [timerEndsAt]);
 
-  if (!timerEndsAt || !timeLeft) return null;
+  if (!timerEndsAt || !timeLeft || status !== 'pending') return null;
 
   if (timeLeft.expired) {
     const expiredLabel = language === 'he' ? 'הצבעה הסתיימה' : language === 'ar' ? 'انتهى التصويت' : 'Voting ended';
