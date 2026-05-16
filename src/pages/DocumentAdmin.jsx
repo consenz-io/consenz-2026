@@ -664,7 +664,7 @@ export default function DocumentAdmin() {
                 <div className="flex items-center gap-2">
                   <Search className="w-4 h-4 text-slate-400" />
                   <Input
-                    placeholder="Search users by name or email..."
+                    placeholder={t('daSearchUsers')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="flex-1"
@@ -694,13 +694,13 @@ export default function DocumentAdmin() {
                               </Badge>
                               {targetUser.blocked && (
                                 <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">
-                                  Blocked
+                                  {t('daBlocked')}
                                 </Badge>
                               )}
                             </div>
                             <p className="text-sm text-slate-600">{targetUser.email}</p>
                             <p className="text-xs text-slate-400 mt-1">
-                              Points: {targetUser.points || 1000} | Joined: {new Date(targetUser.created_date).toLocaleDateString()}
+                              {t('daPoints')}: {targetUser.points || 1000} | {t('daJoined')}: {new Date(targetUser.created_date).toLocaleDateString()}
                             </p>
                           </div>
                         </div>
@@ -710,7 +710,7 @@ export default function DocumentAdmin() {
                             <Select
                               value={targetUser.role || 'user'}
                               onValueChange={(value) => {
-                                if (confirm(`Change ${targetUser.full_name}'s role to ${value}?`)) {
+                                if (confirm(t('daConfirmRoleChange', { name: targetUser.full_name, role: value }))) {
                                   updateUserMutation.mutate({
                                     userId: targetUser.id,
                                     data: { role: value }
@@ -722,8 +722,8 @@ export default function DocumentAdmin() {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="user">User</SelectItem>
-                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="user">{t('daRoleUser')}</SelectItem>
+                                <SelectItem value="admin">{t('daRoleAdmin')}</SelectItem>
                               </SelectContent>
                             </Select>
 
@@ -731,7 +731,7 @@ export default function DocumentAdmin() {
                               variant="outline"
                               size="sm"
                               onClick={() => {
-                                const action = targetUser.blocked ? 'unblock' : 'block';
+                                const action = targetUser.blocked ? t('daUnblock') : t('daBlock');
                                 if (confirm(`${action} ${targetUser.full_name}?`)) {
                                   updateUserMutation.mutate({
                                     userId: targetUser.id,
@@ -751,7 +751,7 @@ export default function DocumentAdmin() {
                 </div>
 
                 <div className="text-sm text-slate-600 text-center pt-2">
-                  Showing {filteredUsers.length} of {allUsers.length} users
+                  {t('daShowingUsers', { filtered: filteredUsers.length, total: allUsers.length })}
                 </div>
               </div>
             </CardContent>
@@ -771,22 +771,22 @@ export default function DocumentAdmin() {
 
         <Card className="bg-red-50 border-red-200">
           <CardHeader>
-            <CardTitle className="text-red-900">Danger Zone</CardTitle>
-            <CardDescription className="text-red-700">Irreversible actions</CardDescription>
+            <CardTitle className="text-red-900">{t('daDangerZone')}</CardTitle>
+            <CardDescription className="text-red-700">{t('daIrreversibleActions')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium text-red-900">Delete Document</p>
-                <p className="text-sm text-red-700">This will permanently delete the document and all its data</p>
+                <p className="font-medium text-red-900">{t('daDeleteDocument')}</p>
+                <p className="text-sm text-red-700">{t('daDeleteDocumentDesc')}</p>
               </div>
               <Button
                 variant="destructive"
                 onClick={handleDelete}
                 disabled={deleteDocMutation.isPending}
               >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
+                <Trash2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                {t('daDelete')}
               </Button>
             </div>
           </CardContent>
