@@ -632,7 +632,7 @@ export default function SuggestionSidebar({
           )}
 
           {/* Voting progress + buttons */}
-          {(document || parentDocument)?.votingButtonsEnabled && suggestion.status === 'pending' && (
+          {(document || parentDocument)?.votingButtonsEnabled !== false && suggestion.status === 'pending' && (
             <div className="py-1">
               {user ? (
                 <VotingProgressSection
