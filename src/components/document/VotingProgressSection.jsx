@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ThumbsUp, ThumbsDown, Loader2, Clock } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Loader2, Clock, ShieldX, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/LanguageContext";
 import { Link } from "react-router-dom";
@@ -128,6 +128,20 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
               </span>
             </div>
           </div>
+
+          {/* Rejection reason badge */}
+          {rejectedDate && (
+            <div className={`flex items-center justify-center gap-1.5 mb-2 px-2 py-1 rounded-lg text-xs font-medium w-fit mx-auto ${
+              suggestion?.rejectedByAdmin
+                ? 'bg-red-50 text-red-700 border border-red-200'
+                : 'bg-orange-50 text-orange-700 border border-orange-200'
+            }`}>
+              {suggestion?.rejectedByAdmin
+                ? <><ShieldX className="w-3 h-3 shrink-0" />{language === 'he' ? 'נדחתה על ידי מנהל' : language === 'ar' ? 'مرفوضة من المشرف' : 'Rejected by admin'}</>
+                : <><Timer className="w-3 h-3 shrink-0" />{language === 'he' ? 'פג תוקף ההצבעה' : language === 'ar' ? 'انتهت مدة التصويت' : 'Voting period expired'}</>
+              }
+            </div>
+          )}
 
           {/* Progress bar */}
           <div className="relative h-3 bg-slate-200 rounded-full overflow-hidden">
