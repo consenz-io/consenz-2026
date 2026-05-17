@@ -11,10 +11,10 @@ export default function GroupMemberRow({ userId, profile, role }) {
     <div className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50">
       <Link to={`${createPageUrl("Profile")}?userId=${userId}`} className="flex items-center gap-2 flex-1 min-w-0">
         <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-          {profile?.fullName?.charAt(0)?.toUpperCase() || (language === 'he' ? 'מ' : 'U')}
+          {profile?.fullName?.charAt(0)?.toUpperCase() || 'U'}
         </div>
         <p className="text-sm font-medium text-slate-900 hover:text-blue-600 transition-colors truncate">
-          {profile?.fullName || (language === 'he' ? 'משתמש' : language === 'ar' ? 'مستخدم' : 'User')}
+          {profile?.fullName || userId}
         </p>
       </Link>
       {role === 'admin' && (
