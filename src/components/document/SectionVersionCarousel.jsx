@@ -127,6 +127,15 @@ function SuggestionMeta({ suggestionId, user, getUserName, document }) {
       
 
       {/* Comments toggle */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => setShowSuggComments((v) => !v)}
+        className="h-7 text-xs text-slate-500 hover:text-blue-600 px-2"
+      >
+        <MessageSquare className="w-3 h-3 mr-1" />
+        {t("comments")} ({suggestionComments.length})
+      </Button>
       
 
 
