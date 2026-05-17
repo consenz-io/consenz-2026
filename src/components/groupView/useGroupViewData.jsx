@@ -78,15 +78,12 @@ export function useGroupViewData(groupId) {
   const allDocSuggestionIds = useMemo(() => allDocSuggestions.map(s => s.id), [allDocSuggestions]);
   const allDocSuggestionIdsSorted = useMemo(() => [...allDocSuggestionIds].sort().join(','), [allDocSuggestionIds]);
 
-  // Admin-only heavy queries — fetch per-suggestion to avoid unsupported $in operator
+  // Admin-only heavy queries — only run when isAdmin (checked lazily below)
   const { data: allDocVotes = [] } = useQuery({
     queryKey: ['groupAllVotes', groupId, allDocSuggestionIdsSorted],
     queryFn: async () => {
       if (allDocSuggestionIds.length === 0) return [];
-      const results = await Promise.all(
-        allDocSuggestionIds.map(id => base44.entities.Vote.filter({ suggestionId: id }, null, 200).catch(() => []))
-      );
-      return results.flat();
+      return base44.entities.Vote.filter({ suggestionId: { $in: allDocSuggestionIds } }, null, 1000).catch(() => []);
     },
     enabled: allDocSuggestionIds.length > 0,
     staleTime: 5 * 60 * 1000,
@@ -116,17 +113,13 @@ export function useGroupViewData(groupId) {
     queryKey: ['groupAllComments', groupId, docIdsSorted, allDocSuggestionIdsSorted, allDocSectionIdsSorted],
     queryFn: async () => {
       if (docIds.length === 0) return [];
-      // Fetch per entity type separately — $in not supported by SDK
-      const [docComments, sugComments, secComments] = await Promise.all([
-        Promise.all(docIds.map(id => base44.entities.Comment.filter({ rootEntityId: id, rootEntityType: 'document' }, null, 200).catch(() => []))),
-        allDocSuggestions.length > 0
-          ? Promise.all(allDocSuggestions.map(s => base44.entities.Comment.filter({ rootEntityId: s.id, rootEntityType: 'suggestion' }, null, 200).catch(() => [])))
-          : Promise.resolve([]),
-        allDocSections.length > 0
-          ? Promise.all(allDocSections.map(s => base44.entities.Comment.filter({ rootEntityId: s.id, rootEntityType: 'section' }, null, 200).catch(() => [])))
-          : Promise.resolve([]),
-      ]);
-      return [...docComments.flat(), ...sugComments.flat(), ...secComments.flat()];
+      const allRootEntityIds = [
+        ...docIds,
+        ...allDocSuggestions.map(s => s.id),
+        ...allDocSections.map(s => s.id),
+      ];
+      if (allRootEntityIds.length === 0) return [];
+      return base44.entities.Comment.filter({ rootEntityId: { $in: allRootEntityIds } }, null, 1000).catch(() => []);
     },
     enabled: docIds.length > 0,
     staleTime: 5 * 60 * 1000,
@@ -137,32 +130,15 @@ export function useGroupViewData(groupId) {
     queryKey: ['groupAllAgreements', groupId, docIdsSorted],
     queryFn: async () => {
       if (docIds.length === 0) return [];
-      const results = await Promise.all(
-        docIds.map(id => base44.entities.DocumentAgreement.filter({ documentId: id }, null, 200).catch(() => []))
-      );
-      return results.flat();
+      return base44.entities.DocumentAgreement.filter({ documentId: { $in: docIds } }, null, 500).catch(() => []);
     },
     enabled: docIds.length > 0,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 
-  // Auto-add suggestion creators as formal group members if not already members.
-  // IMPORTANT: We track "manually removed" userIds so the auto-add never re-adds
-  // someone that an admin explicitly removed. This set is stored outside the effect
-  // so it survives re-renders, but is scoped to this hook instance (page mount).
-  // A full cross-session solution would require a server-side "blocklist" — for now
-  // this covers the common in-session case.
+  // Auto-add suggestion creators as formal group members if not already members
   const autoAddedRef = React.useRef(new Set());
-  const manuallyRemovedRef = React.useRef(new Set());
-
-  // Expose a way for removeMember actions (in ManageMembersDialog) to mark a userId
-  // as manually removed so the auto-add effect skips it. We attach it to queryClient
-  // meta so ManageMembersDialog can call it without prop-drilling.
-  React.useEffect(() => {
-    queryClient.setQueryData(['__groupRemovedMembers', groupId], manuallyRemovedRef);
-  }, [groupId, queryClient]);
-
   React.useEffect(() => {
     if (!groupId || groupMembers.length === 0 || publicProfiles.length === 0 || allDocSuggestions.length === 0) return;
 
@@ -176,8 +152,8 @@ export function useGroupViewData(groupId) {
       if (s.created_by && !seenEmails.has(s.created_by)) {
         seenEmails.add(s.created_by);
         const uid = emailToUserId.get(s.created_by);
-        // Skip if already a member, manually removed by admin, or already queued this session
-        if (uid && !memberUserIds.has(uid) && !autoAddedRef.current.has(uid) && !manuallyRemovedRef.current.has(uid)) {
+        // Skip if already a member OR already queued in this session for this group
+        if (uid && !memberUserIds.has(uid) && !autoAddedRef.current.has(uid)) {
           autoAddedRef.current.add(uid);
           toAdd.push(uid);
         }
@@ -186,10 +162,13 @@ export function useGroupViewData(groupId) {
 
     if (toAdd.length === 0) return;
 
+    // Use bulkCreate if available, otherwise allSettled with error handling
     (async () => {
       try {
         const membersToCreate = toAdd.map(userId => ({ groupId, userId, role: 'member' }));
+        // Batch create for better performance
         await base44.entities.GroupMember.bulkCreate(membersToCreate).catch(async () => {
+          // Fallback: Create one by one if bulk fails
           await Promise.all(
             membersToCreate.map(m => base44.entities.GroupMember.create(m).catch(err => {
               console.error('[AUTO-ADD] Failed to add member:', err);
