@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { calcGroupParticipants } from "@/lib/groupParticipants";
 
 export function useGroupsData() {
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     retry: false,
@@ -128,7 +128,7 @@ export function useGroupsData() {
   return {
     currentUser,
     visibleGroups,
-    isLoading: membersLoading || (groupIds.length > 0 && groupsLoading),
+    isLoading: userLoading || (!!currentUser?.id && membersLoading) || (groupIds.length > 0 && groupsLoading),
     getDocCount,
     getMemberCount,
     getParticipantCount,
