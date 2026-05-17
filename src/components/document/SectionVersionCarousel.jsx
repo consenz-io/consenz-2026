@@ -330,45 +330,14 @@ export default function SectionVersionCarousel({
         </button>
 
         <div className="text-center flex-1 px-2">
-          <div className="flex flex-col items-center gap-0.5">
-            <div className={`flex items-center gap-1.5 flex-wrap justify-center ${isRTL ? "flex-row-reverse" : ""}`}>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border font-medium ${getChangeTypeBadge(currentVer?.changeType)}`}>
-                {getChangeTypeIcon(currentVer?.changeType)}
-                {getChangeTypeLabel(currentVer?.changeType)}
-              </span>
-              {currentVer?.changeDescription && (
-                <span className="text-xs font-semibold text-teal-800 truncate max-w-[140px]">
-                  {typeof currentVer.changeDescription === "string"
-                    ? currentVer.changeDescription
-                    : currentVer.changeDescription?.title || ""}
-                </span>
-              )}
-            </div>
-            <div className={`flex items-center gap-2 text-[10px] text-teal-600 flex-wrap justify-center ${isRTL ? "flex-row-reverse" : ""}`}>
-              {currentVer?.created_by && (
-                <span>{t("by")} {localGetUserName(currentVer.created_by)}</span>
-              )}
-              <span>·</span>
-              <span>{new Date(currentVer?.created_date).toLocaleDateString(isRTL ? "he-IL" : "en-GB")}</span>
-              <span>·</span>
-              <span>{safeIndex + 1} / {versionGroups.length}</span>
-              {group.suggestionId && (
-                <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.suggestionId}`} className="inline-flex items-center gap-0.5 text-emerald-700 font-semibold hover:underline">
-                  <ExternalLink className="w-2.5 h-2.5" />
-                  {t("viewFullDiscussion")}
-                </Link>
-              )}
-              {isAdmin && (
-                <button
-                  onClick={() => setRestoreTarget(currentVer)}
-                  disabled={restoreMutation.isPending}
-                  className="inline-flex items-center gap-0.5 text-teal-700 font-semibold hover:underline disabled:opacity-40"
-                >
-                  <RotateCcw className="w-2.5 h-2.5" />
-                  {t("restoreVersion")}
-                </button>
-              )}
-            </div>
+          <div className={`flex items-center gap-2 text-[10px] text-teal-600 flex-wrap justify-center ${isRTL ? "flex-row-reverse" : ""}`}>
+            {currentVer?.created_by && (
+              <span>{t("by")} {localGetUserName(currentVer.created_by)}</span>
+            )}
+            <span>·</span>
+            <span>{new Date(currentVer?.created_date).toLocaleDateString(isRTL ? "he-IL" : "en-GB")}</span>
+            <span>·</span>
+            <span>{safeIndex + 1} / {versionGroups.length}</span>
           </div>
         </div>
 
