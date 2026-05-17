@@ -324,9 +324,8 @@ export default function SectionVersionCarousel({
       {/* ── Nav bar ───────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-2 bg-teal-100/70 border border-teal-200 rounded-lg px-3 py-2">
         <button
-          onClick={() => setCurrentIndex((i) => Math.min(i + 1, versionGroups.length - 1))}
-          disabled={safeIndex >= versionGroups.length - 1}
-          className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-teal-300 bg-white text-teal-700 hover:bg-teal-100 hover:border-teal-500 hover:shadow-md active:scale-95 disabled:opacity-30 transition-all shadow-sm"
+          onClick={() => setCurrentIndex((i) => (i + 1) % versionGroups.length)}
+          className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-teal-300 bg-white text-teal-700 hover:bg-teal-100 hover:border-teal-500 hover:shadow-md active:scale-95 transition-all shadow-sm"
           aria-label={isRTL ? t("nextSuggestion") : t("previousSuggestion")}
         >
           {isRTL ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
@@ -350,9 +349,8 @@ export default function SectionVersionCarousel({
         </div>
 
         <button
-          onClick={() => setCurrentIndex((i) => Math.max(i - 1, 0))}
-          disabled={safeIndex === 0}
-          className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-teal-300 bg-white text-teal-700 hover:bg-teal-100 hover:border-teal-500 hover:shadow-md active:scale-95 disabled:opacity-30 transition-all shadow-sm"
+          onClick={() => setCurrentIndex((i) => (i - 1 + versionGroups.length) % versionGroups.length)}
+          className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-teal-300 bg-white text-teal-700 hover:bg-teal-100 hover:border-teal-500 hover:shadow-md active:scale-95 transition-all shadow-sm"
           aria-label={isRTL ? t("previousSuggestion") : t("nextSuggestion")}
         >
           {isRTL ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
