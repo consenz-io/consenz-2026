@@ -195,12 +195,16 @@ export default function SectionVersionCarousel({
     staleTime: 0,
   });
 
+  // FIXED: For section comments in version carousel, filter by section only
+  // All versions of the same section share the same section comments
   const { data: sectionComments = [] } = useQuery({
     queryKey: ["sectionComments", sectionId],
     queryFn: () =>
       base44.entities.Comment.filter({ rootEntityType: "section", rootEntityId: sectionId }),
     enabled: !!sectionId,
     initialData: [],
+    staleTime: 0, // Always fresh
+    refetchOnMount: true,
   });
 
   // ── Version processing ────────────────────────────────────────────────────

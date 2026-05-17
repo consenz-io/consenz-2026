@@ -934,6 +934,7 @@ export default function DocumentView() {
                     entityType="document"
                     entityId={documentId}
                     user={user}
+                    scrollToCommentId={commentIdFromUrl}
                   />
                 </div>
               )}
