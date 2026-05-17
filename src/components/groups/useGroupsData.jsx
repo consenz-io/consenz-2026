@@ -85,10 +85,17 @@ export function useGroupsData() {
     gcTime: 15 * 60 * 1000,
   });
 
+  const sectionIds = useMemo(() => groupAllSections.map(s => s.id).sort(), [groupAllSections]);
+
+  const allRootEntityIds = useMemo(
+    () => [...docIds, ...suggestionIds, ...sectionIds],
+    [docIds, suggestionIds, sectionIds]
+  );
+
   const { data: groupAllComments = [] } = useQuery({
-    queryKey: ['groupsPageAllComments', docIds],
-    queryFn: () => base44.entities.Comment.filter({ rootEntityId: { $in: docIds } }, null, 500),
-    enabled: docIds.length > 0,
+    queryKey: ['groupsPageAllComments', allRootEntityIds],
+    queryFn: () => base44.entities.Comment.filter({ rootEntityId: { $in: allRootEntityIds } }, null, 1000),
+    enabled: allRootEntityIds.length > 0,
     placeholderData: [],
     staleTime: 5 * 60 * 1000,
     gcTime: 15 * 60 * 1000,

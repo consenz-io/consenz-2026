@@ -30,7 +30,7 @@ export function useHomeData() {
 
   const { data: documents = [] } = useQuery({
     queryKey: ['publicDocuments'],
-    queryFn: () => base44.entities.Document.list('-created_date', 20),
+    queryFn: () => base44.entities.Document.list('-created_date', 200),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -159,7 +159,7 @@ export function useHomeData() {
       );
     });
     return counts;
-  }, [groups, groupMembers, documents, allSuggestions, allVotes, allComments, publicProfiles]);
+  }, [groups, groupMembers, documents, allSuggestions, allVotes, allComments, publicProfiles, allAgreements, allSections]);
 
   // ── Mutation: translate document title ────────────────────────────────────
   const translateDocumentMutation = useMutation({
