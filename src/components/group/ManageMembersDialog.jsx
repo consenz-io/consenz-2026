@@ -19,6 +19,7 @@ import {
   AlertCircle, CheckCircle, Lock, Globe 
 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import { calcGroupParticipants } from "@/lib/groupParticipants";
 
 export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupDeleted }) {
   const { language } = useLanguage();
@@ -58,31 +59,64 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
     staleTime: 10 * 60 * 1000,
   });
 
-  const docIds = groupDocuments.map(d => d.id);
+  const docIds = useMemo(() => groupDocuments.map(d => d.id), [groupDocuments]);
 
   const { data: allDocSuggestions = [] } = useQuery({
     queryKey: ['groupAllSuggestions', groupId, docIds.join(',')],
     queryFn: async () => {
       if (docIds.length === 0) return [];
-      const results = [];
-      for (const id of docIds) {
-        const sug = await base44.entities.Suggestion.filter({ documentId: id }, null, 200);
-        results.push(...sug);
-      }
-      return results;
+      const results = await Promise.all(
+        docIds.map(id => base44.entities.Suggestion.filter({ documentId: id }, null, 200))
+      );
+      return results.flat();
     },
     enabled: docIds.length > 0 && isOpen,
     staleTime: 10 * 60 * 1000,
   });
 
-  // Build the full participant list: formal members + suggestion creators
+  const suggestionIds = useMemo(() => allDocSuggestions.map(s => s.id), [allDocSuggestions]);
+
+  const { data: allDocVotes = [] } = useQuery({
+    queryKey: ['groupAllVotes', groupId, suggestionIds.join(',')],
+    queryFn: () => base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } }, null, 1000),
+    enabled: suggestionIds.length > 0 && isOpen,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const { data: allDocSections = [] } = useQuery({
+    queryKey: ['groupAllSections', groupId, docIds.join(',')],
+    queryFn: () => base44.entities.Section.filter({ documentId: { $in: docIds } }, null, 500),
+    enabled: docIds.length > 0 && isOpen,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const allRootEntityIds = useMemo(
+    () => [...docIds, ...suggestionIds, ...allDocSections.map(s => s.id)],
+    [docIds, suggestionIds, allDocSections]
+  );
+
+  const { data: allDocComments = [] } = useQuery({
+    queryKey: ['groupAllComments', groupId, allRootEntityIds.join(',')],
+    queryFn: () => base44.entities.Comment.filter({ rootEntityId: { $in: allRootEntityIds } }, null, 1000),
+    enabled: allRootEntityIds.length > 0 && isOpen,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const { data: allDocAgreements = [] } = useQuery({
+    queryKey: ['groupAllAgreements', groupId, docIds.join(',')],
+    queryFn: () => base44.entities.DocumentAgreement.filter({ documentId: { $in: docIds } }, null, 500),
+    enabled: docIds.length > 0 && isOpen,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  // Build the full participant list using the unified calcGroupParticipants
   const allParticipants = useMemo(() => {
     const emailToProfile = new Map();
     publicProfiles.forEach(p => { if (p.email) emailToProfile.set(p.email, p); });
 
     const memberUserIds = new Set(groupMembers.map(m => m.userId));
 
-    // Collect emails of suggestion creators who are not formal members
+    // Collect suggestion creators who are not formal members (for the "extra" list in the UI)
     const extraProfiles = [];
     const seenEmails = new Set();
     allDocSuggestions.forEach(s => {
@@ -95,8 +129,13 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
       }
     });
 
-    return { extraProfiles };
-  }, [groupMembers, publicProfiles, allDocSuggestions]);
+    // Total count uses the same unified function as all other views
+    const totalCount = calcGroupParticipants(
+      groupId, groupMembers, groupDocuments, allDocSuggestions, allDocVotes, allDocComments, publicProfiles, allDocAgreements, allDocSections
+    ).size;
+
+    return { extraProfiles, totalCount };
+  }, [groupId, groupMembers, groupDocuments, publicProfiles, allDocSuggestions, allDocVotes, allDocComments, allDocAgreements, allDocSections]);
 
   const isAdmin = groupMembers.some(
     m => m.userId === currentUser?.id && m.role === 'admin'
@@ -471,7 +510,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
 
         <div className="space-y-3">
           <h3 className="font-semibold text-sm text-slate-700">
-            {language === 'he' ? 'חברי הקבוצה' : 'Group Members'} ({groupMembers.length + allParticipants.extraProfiles.length} {language === 'he' ? 'משתתפים' : 'participants'})
+            {language === 'he' ? 'חברי הקבוצה' : 'Group Members'} ({allParticipants.totalCount} {language === 'he' ? 'משתתפים' : 'participants'})
           </h3>
           
           {groupMembers.map((member) => {
