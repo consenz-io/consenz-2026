@@ -174,6 +174,12 @@ export default function SectionVersionCarousel({
   const [restoreTarget, setRestoreTarget] = useState(null);
   const [error, setError] = useState(null);
 
+  const { data: publicProfiles = [] } = useQuery({
+    queryKey: ["publicProfiles"],
+    queryFn: () => base44.entities.UserPublicProfile.list(),
+    staleTime: 60000,
+  });
+
   // ── Data ──────────────────────────────────────────────────────────────────
   const { data: section } = useQuery({
     queryKey: ["section", sectionId],
@@ -274,7 +280,8 @@ export default function SectionVersionCarousel({
 
   const localGetUserName = (email) => {
     if (getUserName) return getUserName(email);
-    return email || "User";
+    const profile = publicProfiles.find((p) => p.email === email);
+    return profile?.fullName || email || "User";
   };
 
   // ── Empty / loading states ────────────────────────────────────────────────
