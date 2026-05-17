@@ -27,10 +27,12 @@ import { useLanguage } from "@/components/LanguageContext";
 import SectionDiff from "./SectionDiff";
 import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
+import VotingProgressSection from "./VotingProgressSection";
 
 // ─── SuggestionMeta ────────────────────────────────────────────────────────
-function SuggestionMeta({ suggestionId, user, getUserName }) {
+function SuggestionMeta({ suggestionId, user, getUserName, document }) {
   const { t, isRTL, language } = useLanguage();
+  const queryClient = useQueryClient();
 
   const { data: suggestion } = useQuery({
     queryKey: ["suggestion", suggestionId],
@@ -59,6 +61,28 @@ function SuggestionMeta({ suggestionId, user, getUserName }) {
     initialData: [],
   });
 
+  const { data: userVote } = useQuery({
+    queryKey: ["vote", suggestionId, user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const votes = await base44.entities.Vote.filter({ suggestionId, userId: user.id });
+      return votes?.[0] ?? null;
+    },
+    enabled: !!suggestionId && !!user?.id,
+    staleTime: 10000,
+  });
+
+  const voteMutation = useMutation({
+    mutationFn: async (voteType) => {
+      if (!user?.id) throw new Error("login required");
+      await base44.functions.invoke("voteOnSuggestion", { suggestionId, vote: voteType, userId: user.id });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vote", suggestionId, user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["suggestion", suggestionId] });
+    },
+  });
+
   const [showSuggComments, setShowSuggComments] = useState(false);
 
   if (!suggestion) return null;
@@ -68,6 +92,10 @@ function SuggestionMeta({ suggestionId, user, getUserName }) {
     const u = users.find((u) => u.email === email);
     return u?.full_name || email || "User";
   };
+
+  const isReadOnly = suggestion.status !== "pending";
+  const acceptedDate = suggestion.status === "accepted" ? suggestion.updated_date : null;
+  const rejectedDate = suggestion.status === "rejected" ? suggestion.updated_date : null;
 
   return (
     <div className="mt-3 rounded-lg border border-teal-200 bg-teal-50/60 p-3 space-y-2">
@@ -84,19 +112,30 @@ function SuggestionMeta({ suggestionId, user, getUserName }) {
         </div>
       )}
 
-      <div className={`flex items-center justify-between flex-wrap gap-2 text-xs ${isRTL ? "flex-row-reverse" : ""}`}>
-        <div className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse" : ""}`}>
-          <span className="text-green-700 font-semibold">
-            ▲ {suggestion.proVotes || 0} {t("pro")}
-          </span>
-          <span className="text-red-600 font-semibold">
-            ▼ {suggestion.conVotes || 0} {t("con")}
-          </span>
-          <Badge className="bg-green-100 text-green-800 border-green-300 text-[10px]">
-            {suggestion.status === "accepted" ? t("accepted") : suggestion.status}
-          </Badge>
-        </div>
+      {/* Voting progress + buttons */}
+      <VotingProgressSection
+        suggestion={suggestion}
+        document={document}
+        userVote={userVote}
+        voteMutation={voteMutation}
+        isRTL={isRTL}
+        readOnly={isReadOnly}
+        acceptedDate={acceptedDate}
+        rejectedDate={rejectedDate}
+        rejectedByAdmin={suggestion.rejectedByAdmin}
+      />
 
+      {/* Comments toggle */}
+      <div className={`flex items-center justify-between flex-wrap gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+        <div className="text-[10px] text-slate-400">
+          {t("publishedBy")}{" "}
+          <Link
+            to={`${createPageUrl("Profile")}?userId=${users.find((u) => u.email === suggestion.created_by)?.id}`}
+            className="hover:underline text-blue-500"
+          >
+            {localGetUserName(suggestion.created_by)}
+          </Link>
+        </div>
         <Button
           variant="ghost"
           size="sm"
@@ -113,21 +152,6 @@ function SuggestionMeta({ suggestionId, user, getUserName }) {
           <CommentsSection entityType="suggestion" entityId={suggestionId} user={user} />
         </div>
       )}
-
-      <div className="text-[10px] text-slate-400">
-        {t("publishedBy")}{" "}
-        <Link
-          to={`${createPageUrl("Profile")}?userId=${users.find((u) => u.email === suggestion.created_by)?.id}`}
-          className="hover:underline text-blue-500"
-        >
-          {localGetUserName(suggestion.created_by)}
-        </Link>
-        {suggestion.status === "accepted" && suggestion.updated_date && (
-          <span className="text-green-600 font-medium ms-2">
-            · {t("acceptedOn")} {new Date(suggestion.updated_date).toLocaleDateString(language === "he" ? "he-IL" : language === "ar" ? "ar" : "en-GB")}
-          </span>
-        )}
-      </div>
     </div>
   );
 }
@@ -421,6 +445,7 @@ export default function SectionVersionCarousel({
               suggestionId={group.suggestionId}
               user={user}
               getUserName={localGetUserName}
+              document={document}
             />
           )}
         </div>
