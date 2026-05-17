@@ -141,10 +141,19 @@ export function useGroupsData() {
     ? myMemberships.some(m => m.groupId === groupId && m.userId === currentUser.id && m.role === 'admin')
     : false;
 
+  // isLoading must stay true until we have a definitive answer about which groups the user belongs to.
+  // The critical edge case: currentUser arrives from cache (userLoading=false) but the memberships
+  // query hasn't fired yet (enabled just became true). We guard this by checking fetchStatus.
+  const isLoadingFinal =
+    userLoading ||
+    !currentUser ||               // user not resolved yet
+    membersLoading ||             // memberships still fetching
+    (groupIds.length > 0 && groupsLoading); // groups themselves loading
+
   return {
     currentUser,
     visibleGroups,
-    isLoading: userLoading || (!!currentUser?.id && membersLoading) || (groupIds.length > 0 && groupsLoading),
+    isLoading: isLoadingFinal,
     getDocCount,
     getMemberCount,
     getParticipantCount,
