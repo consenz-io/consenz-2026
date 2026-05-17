@@ -41,13 +41,13 @@ export function useHomeData() {
   });
 
   const { data: allSuggestions = [] } = useQuery({
-    queryKey: ['allSuggestions'],
+    queryKey: ['allSuggestions_home'],
     queryFn: () => base44.entities.Suggestion.list('-created_date', 500),
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: allVotes = [] } = useQuery({
-    queryKey: ['allVotes'],
+    queryKey: ['allVotes_home'],
     queryFn: () => base44.entities.Vote.list('-created_date', 500),
     staleTime: 5 * 60 * 1000,
   });
@@ -69,13 +69,13 @@ export function useHomeData() {
   });
 
   const { data: allComments = [] } = useQuery({
-    queryKey: ['allComments'],
+    queryKey: ['allComments_home'],
     queryFn: () => base44.entities.Comment.list('-created_date', 500),
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: allSections = [] } = useQuery({
-    queryKey: ['allSections'],
+    queryKey: ['allSections_home'],
     queryFn: () => base44.entities.Section.list('-created_date', 500),
     staleTime: 5 * 60 * 1000,
   });

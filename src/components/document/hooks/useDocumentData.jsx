@@ -115,8 +115,15 @@ export function useDocumentData(documentId) {
     aggregatedDataRef.current = aggregatedData;
 
     const { comments = [], publicProfiles: profiles = [] } = aggregatedData;
+    // Merge into the publicProfiles cache (don't overwrite with a partial list)
     if (profiles.length > 0) {
-      queryClient.setQueryData(['publicProfiles'], profiles);
+      queryClient.setQueryData(['publicProfiles'], (old) => {
+        if (!old || old.length === 0) return profiles;
+        // Merge: keep existing entries and add/update with fresh ones
+        const map = new Map(old.map(p => [p.id, p]));
+        profiles.forEach(p => map.set(p.id, p));
+        return Array.from(map.values());
+      });
     }
 
     // Group comments by type+id in a single pass
