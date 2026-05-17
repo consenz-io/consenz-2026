@@ -381,7 +381,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-1 md:gap-2 relative z-10">
+        <div className="flex items-center gap-1 md:gap-2">
           {/* כפתור היסטוריה / חזרה */}
           {historyMode ? (
             <Button
