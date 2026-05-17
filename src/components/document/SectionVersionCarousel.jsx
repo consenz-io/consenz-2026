@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  History, MessageSquare, Clock, RotateCcw, ExternalLink,
+  History, MessageSquare, RotateCcw, ExternalLink,
   ChevronLeft, ChevronRight, CheckCircle2, PlusCircle, Edit2,
   X
 } from "lucide-react";
@@ -298,14 +298,47 @@ export default function SectionVersionCarousel({
           {isRTL ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
         </button>
 
-        <div className="text-center flex-1">
-          <span className="text-xs font-semibold text-teal-800">
-            {t("version")} {currentVer?.version}
-          </span>
-          <span className="text-xs text-teal-600 mx-2">·</span>
-          <span className="text-xs text-teal-600">
-            {safeIndex + 1} / {versionGroups.length}
-          </span>
+        <div className="text-center flex-1 px-2">
+          <div className="flex flex-col items-center gap-0.5">
+            <div className={`flex items-center gap-1.5 flex-wrap justify-center ${isRTL ? "flex-row-reverse" : ""}`}>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border font-medium ${getChangeTypeBadge(currentVer?.changeType)}`}>
+                {getChangeTypeIcon(currentVer?.changeType)}
+                {getChangeTypeLabel(currentVer?.changeType)}
+              </span>
+              {currentVer?.changeDescription && (
+                <span className="text-xs font-semibold text-teal-800 truncate max-w-[140px]">
+                  {typeof currentVer.changeDescription === "string"
+                    ? currentVer.changeDescription
+                    : currentVer.changeDescription?.title || ""}
+                </span>
+              )}
+            </div>
+            <div className={`flex items-center gap-2 text-[10px] text-teal-600 flex-wrap justify-center ${isRTL ? "flex-row-reverse" : ""}`}>
+              {currentVer?.created_by && (
+                <span>{t("by")} {localGetUserName(currentVer.created_by)}</span>
+              )}
+              <span>·</span>
+              <span>{new Date(currentVer?.created_date).toLocaleDateString(isRTL ? "he-IL" : "en-GB")}</span>
+              <span>·</span>
+              <span>{safeIndex + 1} / {versionGroups.length}</span>
+              {group.suggestionId && (
+                <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.suggestionId}`} className="inline-flex items-center gap-0.5 text-emerald-700 font-semibold hover:underline">
+                  <ExternalLink className="w-2.5 h-2.5" />
+                  {t("viewFullDiscussion")}
+                </Link>
+              )}
+              {isAdmin && (
+                <button
+                  onClick={() => setRestoreTarget(currentVer)}
+                  disabled={restoreMutation.isPending}
+                  className="inline-flex items-center gap-0.5 text-teal-700 font-semibold hover:underline disabled:opacity-40"
+                >
+                  <RotateCcw className="w-2.5 h-2.5" />
+                  {t("restoreVersion")}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         <button
@@ -336,54 +369,6 @@ export default function SectionVersionCarousel({
 
       {/* ── Version card ──────────────────────────────────────────────────── */}
       <div className="rounded-lg border border-teal-200 bg-white/80 overflow-hidden">
-        {/* meta header */}
-        <div className={`flex items-start justify-between gap-3 p-3 border-b border-teal-100 bg-teal-50/50 ${isRTL ? "flex-row-reverse" : ""}`}>
-          <div className="flex-1 min-w-0 space-y-1">
-            <div className={`flex items-center gap-2 flex-wrap ${isRTL ? "flex-row-reverse" : ""}`}>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border font-medium ${getChangeTypeBadge(currentVer?.changeType)}`}>
-                {getChangeTypeIcon(currentVer?.changeType)}
-                {getChangeTypeLabel(currentVer?.changeType)}
-              </span>
-              {group.suggestionId && (
-                <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.suggestionId}`}>
-                  <Badge className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer text-[10px] flex items-center gap-1">
-                    <ExternalLink className="w-2.5 h-2.5" />
-                    {t("viewFullDiscussion")}
-                  </Badge>
-                </Link>
-              )}
-            </div>
-            {currentVer?.changeDescription && (
-              <p className={`text-xs font-semibold text-slate-700 ${isRTL ? "text-right" : ""}`}>
-                {typeof currentVer.changeDescription === "string"
-                  ? currentVer.changeDescription
-                  : currentVer.changeDescription?.title || t("changeWithoutDescription")}
-              </p>
-            )}
-            <div className={`flex items-center gap-3 text-[10px] text-slate-400 ${isRTL ? "flex-row-reverse" : ""}`}>
-              <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {new Date(currentVer?.created_date).toLocaleString(isRTL ? "he-IL" : "en-US")}
-              </span>
-              {currentVer?.created_by && (
-                <span>{t("by")} {localGetUserName(currentVer.created_by)}</span>
-              )}
-            </div>
-          </div>
-          {isAdmin && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setRestoreTarget(currentVer)}
-              disabled={restoreMutation.isPending}
-              className="flex-shrink-0 text-xs h-7 border-teal-300 text-teal-700 hover:bg-teal-50"
-            >
-              <RotateCcw className={`w-3 h-3 ${isRTL ? "ml-1" : "mr-1"}`} />
-              {t("restoreVersion")}
-            </Button>
-          )}
-        </div>
-
         {/* diff / content */}
         <div className="p-3">
           {prevVer ? (
