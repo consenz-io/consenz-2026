@@ -335,11 +335,24 @@ export default function SectionVersionCarousel({
           <div className="flex flex-col items-center gap-0.5">
             {(() => {
               const creatorEmail = currentSuggestion?.created_by || currentVer?.created_by;
-              return creatorEmail ? (
-                <span className="text-sm font-bold text-teal-700">
-                  {t("by")} {localGetUserName(creatorEmail)}
-                </span>
-              ) : null;
+              const changeType = currentVer?.changeType;
+              const badgeClass = changeType === "suggestion_accepted"
+                ? "bg-green-100 text-green-800 border border-green-300"
+                : changeType === "section_created"
+                  ? "bg-blue-100 text-blue-800 border border-blue-300"
+                  : "bg-slate-100 text-slate-700 border border-slate-300";
+              return (
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${badgeClass}`}>
+                    {getChangeTypeLabel(changeType)}
+                  </span>
+                  {creatorEmail && (
+                    <span className="text-sm font-bold text-teal-700">
+                      {t("by")} {localGetUserName(creatorEmail)}
+                    </span>
+                  )}
+                </div>
+              );
             })()}
             <span className="text-[10px] text-slate-400">
               {new Date(currentVer?.created_date).toLocaleDateString(isRTL ? "he-IL" : "en-GB", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
