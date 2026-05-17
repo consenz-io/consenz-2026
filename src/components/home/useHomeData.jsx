@@ -76,7 +76,7 @@ export function useHomeData() {
 
   const { data: allSections = [] } = useQuery({
     queryKey: ['allSections_home'],
-    queryFn: () => base44.entities.Section.list('-created_date', 500),
+    queryFn: () => base44.entities.Section.list(null, 1000),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -155,7 +155,7 @@ export function useHomeData() {
     const counts = {};
     groups.forEach(group => {
       counts[group.id] = calcGroupParticipants(
-        group.id, groupMembers, documents, allSuggestions, allVotes, allComments, publicProfiles
+        group.id, groupMembers, documents, allSuggestions, allVotes, allComments, publicProfiles, allAgreements, allSections
       );
     });
     return counts;

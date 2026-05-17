@@ -5,20 +5,21 @@
  *   1. Is a formal GroupMember of the group, OR
  *   2. Created a suggestion in any document belonging to the group, OR
  *   3. Voted on a suggestion in any group document, OR
- *   4. Commented in any group document, OR
+ *   4. Commented in any group document / suggestion / section, OR
  *   5. Signed a DocumentAgreement in any group document.
  *
  * All lookups go through UserPublicProfile (email → userId) to deduplicate
  * across the different activity types.
  *
  * @param {string}   groupId
- * @param {object[]} groupMembers      - all GroupMember records (or for this group)
- * @param {object[]} documents         - all Document records
- * @param {object[]} suggestions       - all Suggestion records
- * @param {object[]} votes             - all Vote records
- * @param {object[]} comments          - all Comment records
- * @param {object[]} publicProfiles    - all UserPublicProfile records
- * @param {object[]} agreements        - all DocumentAgreement records (optional)
+ * @param {object[]} groupMembers      - GroupMember records
+ * @param {object[]} documents         - Document records
+ * @param {object[]} suggestions       - Suggestion records
+ * @param {object[]} votes             - Vote records
+ * @param {object[]} comments          - Comment records
+ * @param {object[]} publicProfiles    - UserPublicProfile records
+ * @param {object[]} agreements        - DocumentAgreement records (optional)
+ * @param {object[]} sections          - Section records (optional, needed for section comments)
  * @returns {number} count of unique participants
  */
 export function calcGroupParticipants(
@@ -29,7 +30,8 @@ export function calcGroupParticipants(
   votes,
   comments,
   publicProfiles,
-  agreements = []
+  agreements = [],
+  sections = []
 ) {
   // Build email → userId map from public profiles
   const emailToUserId = new Map();
@@ -70,12 +72,18 @@ export function calcGroupParticipants(
     }
   });
 
-  // 4. Commenters in group docs / suggestions
+  // Gather section IDs for those docs (requires sections param)
+  const groupSectionIds = new Set(
+    sections.filter(s => groupDocIds.has(s.documentId)).map(s => s.id)
+  );
+
+  // 4. Commenters in group docs / suggestions / sections
   comments.forEach(c => {
     if (!c.created_by) return;
     const isInGroup =
       (c.rootEntityType === 'document'   && groupDocIds.has(c.rootEntityId)) ||
-      (c.rootEntityType === 'suggestion' && groupSuggestionIds.has(c.rootEntityId));
+      (c.rootEntityType === 'suggestion' && groupSuggestionIds.has(c.rootEntityId)) ||
+      (c.rootEntityType === 'section'    && groupSectionIds.has(c.rootEntityId));
     if (isInGroup) {
       const uid = emailToUserId.get(c.created_by);
       if (uid) ids.add(uid);

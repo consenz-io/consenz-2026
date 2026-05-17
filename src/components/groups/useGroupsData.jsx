@@ -103,8 +103,17 @@ export function useGroupsData() {
     gcTime: 15 * 60 * 1000,
   });
 
+  const { data: groupAllSections = [] } = useQuery({
+    queryKey: ['groupsPageAllSections', docIds],
+    queryFn: () => base44.entities.Section.filter({ documentId: { $in: docIds } }, null, 1000),
+    enabled: docIds.length > 0,
+    placeholderData: [],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+  });
+
   const getParticipantCount = (groupId) =>
-    calcGroupParticipants(groupId, groupMembers, documents, groupAllSuggestions, groupAllVotes, groupAllComments, publicProfiles, groupAllAgreements);
+    calcGroupParticipants(groupId, groupMembers, documents, groupAllSuggestions, groupAllVotes, groupAllComments, publicProfiles, groupAllAgreements, groupAllSections);
 
   // Visible groups: hidden groups only visible to members/admins/creators
   const visibleGroups = useMemo(() => {
