@@ -51,8 +51,14 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
 
   const proVotes = suggestion.proVotes || 0;
   const conVotes = suggestion.conVotes || 0;
-  const threshold = Math.max(2, document?.threshold || 2);
   const delta = proVotes - conVotes;
+
+  // For accepted suggestions, freeze the threshold at what it was at acceptance time.
+  // At the moment of acceptance, delta >= threshold exactly, so delta itself is the frozen threshold.
+  const isAccepted = suggestion?.status === 'accepted';
+  const threshold = isAccepted
+    ? Math.max(2, delta)
+    : Math.max(2, document?.threshold || 2);
 
   // How many more pro votes needed
   const votesNeeded = Math.max(0, threshold - delta);
