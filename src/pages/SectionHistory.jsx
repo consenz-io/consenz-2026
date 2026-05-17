@@ -6,7 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { History, MessageSquare, Clock, RotateCcw, ExternalLink } from "lucide-react";
+import { History, MessageSquare, Clock, RotateCcw, ExternalLink, List, GalleryHorizontal } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
@@ -14,15 +14,17 @@ import SectionDiff from "../components/document/SectionDiff";
 import CommentsSection from "../components/document/CommentsSection";
 import TranslatableContent from "../components/document/TranslatableContent";
 import PageHeader from "../components/PageHeader";
+import SectionVersionCarousel from "../components/document/SectionVersionCarousel";
 
 export default function SectionHistory() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const sectionId = searchParams.get('id');
   const commentId = searchParams.get('commentId');
   const [showComments, setShowComments] = useState({});
   const [error, setError] = useState(null);
+  const [carouselView, setCarouselView] = useState(false);
 
   const { data: section, isLoading: sectionLoading } = useQuery({
     queryKey: ['section', sectionId],
@@ -256,8 +258,54 @@ export default function SectionHistory() {
           </Alert>
         )}
 
-        {/* Version History */}
-        {versionGroups.length > 0 ? (
+        {/* View Toggle */}
+        {versionGroups.length > 0 && (
+          <div className={`flex justify-center ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className="inline-flex rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
+              <button
+                onClick={() => setCarouselView(false)}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all ${
+                  !carouselView
+                    ? 'bg-slate-800 text-white'
+                    : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <List className="w-4 h-4" />
+                {isRTL ? 'תצוגת רשימה' : language === 'ar' ? 'قائمة' : 'List'}
+              </button>
+              <button
+                onClick={() => setCarouselView(true)}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all ${
+                  carouselView
+                    ? 'bg-teal-600 text-white'
+                    : 'text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                <GalleryHorizontal className="w-4 h-4" />
+                {isRTL ? 'תצוגת קרוסלה' : language === 'ar' ? 'عرض كاروسيل' : 'Carousel'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Carousel View */}
+        {carouselView && versionGroups.length > 0 && (
+          <Card className="bg-teal-50 border-teal-200 shadow-md">
+            <CardContent className="p-4 md:p-6">
+              <SectionVersionCarousel
+                sectionId={sectionId}
+                documentId={document?.id}
+                document={document}
+                user={user}
+                getUserName={getUserName}
+                isAdmin={isAdmin}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Version History List */}
+        {!carouselView && versionGroups.length > 0 ? (
           <div className="space-y-4">
             {versionGroups.filter(g => g.version && g.version.changeType).map((group, groupIndex) => {
               const currentVer = group.version;
@@ -379,7 +427,7 @@ export default function SectionHistory() {
               );
             })}
           </div>
-        ) : (
+        ) : !carouselView ? (
           <Card className="bg-white border-slate-200">
             <CardContent className="p-6 md:p-12 text-center">
               <History className="w-12 h-12 md:w-16 md:h-16 text-slate-300 mx-auto mb-4" />
@@ -387,7 +435,7 @@ export default function SectionHistory() {
               <p className="text-sm md:text-base text-slate-600">{t('sectionChangesAutomaticallySaved')}</p>
             </CardContent>
           </Card>
-        )}
+        ) : null}
       </div>
     </div>
   );

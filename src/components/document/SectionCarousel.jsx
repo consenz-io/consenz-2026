@@ -3,11 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, History, Edit, MessageSquare, Trash2, X } from "lucide-react";
+import SectionVersionCarousel from "./SectionVersionCarousel";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import DeleteSectionDialog from "./DeleteSectionDialog";
-import SectionHistorySidebar from "./SectionHistorySidebar";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import SectionDiff from "./SectionDiff";
 import VotesNeededCounter from "./VotesNeededCounter";
@@ -164,8 +164,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
   }, [currentSuggestionId, allViews]);
   const [showTranslated, setShowTranslated] = useState({});
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showHistorySidebar, setShowHistorySidebar] = useState(false);
   const [showJoinGroupDialog, setShowJoinGroupDialog] = useState(false);
+  const [historyMode, setHistoryMode] = useState(false);
   
   // Effect to scroll to newly created suggestion (including edit_suggestion children)
   React.useEffect(() => {
@@ -356,35 +356,72 @@ const SectionCarousel = React.memo(function SectionCarousel({
   }, [targetSuggestionId]);
 
   return (
-    <div id={currentSuggestionDisplayId} className={`group relative p-3 md:p-6 border-2 rounded-lg hover:shadow-md transition-all bg-gradient-to-br from-white to-slate-50/30 ${flashingSection ? 'suggestion-accepted-flash border-green-400' : 'border-slate-300 hover:border-blue-400'}`}>
+    <div
+      id={currentSuggestionDisplayId}
+      className={`group relative p-3 md:p-6 border-2 rounded-lg hover:shadow-md transition-all duration-300 ${
+        historyMode
+          ? 'border-teal-400 bg-gradient-to-br from-teal-50 to-cyan-50/40 shadow-md'
+          : flashingSection
+            ? 'suggestion-accepted-flash border-green-400 bg-gradient-to-br from-white to-slate-50/30'
+            : 'border-slate-300 hover:border-blue-400 bg-gradient-to-br from-white to-slate-50/30'
+      }`}
+    >
       {/* כותרת סעיף עם אינדיקטור */}
       <div className="flex items-center justify-between mb-3 md:mb-4">
         <div className="flex items-center gap-2 md:gap-3">
-          <div className="text-xs md:text-sm font-medium text-slate-500">
-            {t('section')} {sectionIndex + 1}
+          <div className={`text-xs md:text-sm font-medium ${historyMode ? 'text-teal-700' : 'text-slate-500'}`}>
+            {historyMode
+              ? <span className="flex items-center gap-1"><History className="w-3.5 h-3.5" />{t('history')}</span>
+              : `${t('section')} ${sectionIndex + 1}`
+            }
           </div>
-          {allViews.length > 1 && (
+          {!historyMode && allViews.length > 1 && (
             <Badge variant="outline" className="text-[10px] md:text-xs">
               {currentIndex + 1} / {allViews.length}
             </Badge>
           )}
         </div>
         <div className="flex items-center gap-1 md:gap-2 relative z-10">
-          {/* כפתור היסטוריה - פותח sidebar */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => { e.stopPropagation(); setShowHistorySidebar(true); }}
-            className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-blue-600 h-7 md:h-8 px-2 md:px-3"
-          >
-            <History className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-            <span className="hidden md:inline">{t('history')}</span>
-          </Button>
+          {/* כפתור היסטוריה / חזרה */}
+          {historyMode ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); setHistoryMode(false); }}
+              className="text-teal-700 hover:text-teal-900 hover:bg-teal-100 h-7 md:h-8 px-2 md:px-3 border border-teal-300 bg-teal-50"
+            >
+              <X className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              <span className="hidden md:inline text-xs">{t('currentVersion')}</span>
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => { e.stopPropagation(); setHistoryMode(true); }}
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-teal-700 hover:bg-teal-50 h-7 md:h-8 px-2 md:px-3"
+            >
+              <History className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              <span className="hidden md:inline">{t('history')}</span>
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* כפתורי דפדוף */}
-      {allViews.length > 1 && (
+      {/* ── מצב היסטוריה ─────────────────────────────────────────────── */}
+      {historyMode && (
+        <SectionVersionCarousel
+          sectionId={section.id}
+          documentId={document?.id}
+          document={document}
+          user={user}
+          getUserName={getUserName}
+          isAdmin={isAdmin}
+          onClose={() => setHistoryMode(false)}
+        />
+      )}
+
+      {/* כפתורי דפדוף — מוסתרים במצב היסטוריה */}
+      {!historyMode && allViews.length > 1 && (
         <div className={`mb-4 border-b-2 p-3 rounded-lg shadow-sm ${
           currentView?.data?.type === 'delete_section' 
             ? 'border-red-300 bg-gradient-to-r from-red-50 to-pink-50' 
@@ -463,8 +500,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
         </div>
       )}
 
-      {/* תוכן */}
-      <div className="min-h-[40px]">
+      {/* תוכן — מוסתר במצב היסטוריה */}
+      <div className={`min-h-[40px] ${historyMode ? 'hidden' : ''}`}>
         {!currentView ? null : currentView.type === 'current' ? (
           // תצוגת תוכן נוכחי
           <>
@@ -708,7 +745,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
       </div>
 
       {/* כפתורים מרכזיים - ערוך/תגובה בתצוגה נוכחית */}
-      {isFirstView && (
+      {isFirstView && !historyMode && (
         <div className={`flex flex-wrap gap-1 mt-4 pt-4 border-t border-slate-200 ${isRTL ? 'justify-end' : 'justify-start'}`}>
           <Button
             variant="ghost"
@@ -774,13 +811,6 @@ const SectionCarousel = React.memo(function SectionCarousel({
         isDeleting={deleteSectionMutation.isPending}
       />
       
-      <SectionHistorySidebar
-        sectionId={section.id}
-        isOpen={showHistorySidebar}
-        onClose={() => setShowHistorySidebar(false)}
-        document={document}
-        user={user}
-      />
 
       <JoinGroupDialog
         isOpen={showJoinGroupDialog}
