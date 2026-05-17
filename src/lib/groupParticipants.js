@@ -20,7 +20,7 @@
  * @param {object[]} publicProfiles    - UserPublicProfile records
  * @param {object[]} agreements        - DocumentAgreement records (optional)
  * @param {object[]} sections          - Section records (optional, needed for section comments)
- * @returns {number} count of unique participants
+ * @returns {Set<string>} set of unique participant userIds
  */
 export function calcGroupParticipants(
   groupId,
@@ -50,7 +50,7 @@ export function calcGroupParticipants(
   const groupDocIds = new Set(
     documents.filter(d => d.groupId === groupId).map(d => d.id)
   );
-  if (groupDocIds.size === 0) return ids.size;
+  if (groupDocIds.size === 0) return ids;
 
   // Gather suggestion IDs for those docs
   const groupSuggestionIds = new Set();
@@ -97,5 +97,5 @@ export function calcGroupParticipants(
     }
   });
 
-  return ids.size;
+  return ids;
 }

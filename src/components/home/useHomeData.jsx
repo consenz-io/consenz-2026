@@ -156,7 +156,7 @@ export function useHomeData() {
     groups.forEach(group => {
       counts[group.id] = calcGroupParticipants(
         group.id, groupMembers, documents, allSuggestions, allVotes, allComments, publicProfiles, allAgreements, allSections
-      );
+      ).size;
     });
     return counts;
   }, [groups, groupMembers, documents, allSuggestions, allVotes, allComments, publicProfiles, allAgreements, allSections]);

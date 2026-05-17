@@ -184,13 +184,10 @@ export function useGroupViewData(groupId) {
   }, [groupId, groupMembers, publicProfiles, allDocSuggestions, queryClient]);
 
   // All unique participant userIds — via unified calcGroupParticipants (single source of truth)
-  const participantCount = useMemo(() =>
-    calcGroupParticipants(groupId, groupMembers, documents, allDocSuggestions, allDocVotes, allDocComments, publicProfiles, allDocAgreements, allDocSections),
+  const allParticipantUserIds = useMemo(() =>
+    Array.from(calcGroupParticipants(groupId, groupMembers, documents, allDocSuggestions, allDocVotes, allDocComments, publicProfiles, allDocAgreements, allDocSections)),
     [groupId, groupMembers, documents, allDocSuggestions, allDocVotes, allDocComments, publicProfiles, allDocAgreements, allDocSections]
   );
-
-  // Keep allParticipantUserIds as a simple count array for backward compatibility
-  const allParticipantUserIds = useMemo(() => Array.from({ length: participantCount }, (_, i) => i), [participantCount]);
 
   const { data: userVotes = [] } = useQuery({
     queryKey: ['userVotes', currentUser?.id],

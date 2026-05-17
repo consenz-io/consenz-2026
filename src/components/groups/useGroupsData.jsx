@@ -120,7 +120,7 @@ export function useGroupsData() {
   });
 
   const getParticipantCount = (groupId) =>
-    calcGroupParticipants(groupId, groupMembers, documents, groupAllSuggestions, groupAllVotes, groupAllComments, publicProfiles, groupAllAgreements, groupAllSections);
+    calcGroupParticipants(groupId, groupMembers, documents, groupAllSuggestions, groupAllVotes, groupAllComments, publicProfiles, groupAllAgreements, groupAllSections).size;
 
   // Visible groups: hidden groups only visible to members/admins/creators
   const visibleGroups = useMemo(() => {
