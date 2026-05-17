@@ -27,6 +27,8 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
   const [inviteEmail, setInviteEmail] = useState("");
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [confirmRemoveMemberId, setConfirmRemoveMemberId] = useState(null);
+  const [confirmDeleteGroup, setConfirmDeleteGroup] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -137,15 +139,16 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
     return { extraProfiles, totalCount };
   }, [groupId, groupMembers, groupDocuments, publicProfiles, allDocSuggestions, allDocVotes, allDocComments, allDocAgreements, allDocSections]);
 
-  const isAdmin = groupMembers.some(
-    m => m.userId === currentUser?.id && m.role === 'admin'
-  );
-
   const { data: group } = useQuery({
     queryKey: ['group', groupId],
     queryFn: () => base44.entities.Group.filter({ id: groupId }).then(groups => groups[0]),
     enabled: !!groupId,
   });
+
+  // Compute isAdmin AFTER all queries — avoids false-negative during loading
+  const isAdmin = !!(currentUser?.id && groupMembers.some(
+    m => m.userId === currentUser.id && m.role === 'admin'
+  ));
 
   const inviteMemberMutation = useMutation({
     mutationFn: async (email) => {
@@ -321,10 +324,6 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
     inviteMemberMutation.mutate(inviteEmail);
   };
 
-  if (!isAdmin) {
-    return null;
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -339,6 +338,18 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
               : 'Manage group settings, add new members and set admins'}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Guard: currentUser not yet loaded — show spinner instead of blank/null */}
+        {!currentUser ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-6 h-6 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
+          </div>
+        ) : !isAdmin ? (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{language === 'he' ? 'אין הרשאת ניהול לקבוצה זו' : 'No admin permission for this group'}</AlertDescription>
+          </Alert>
+        ) : (<>
 
         {error && (
           <Alert variant="destructive">
@@ -493,19 +504,35 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
           <p className="text-xs text-slate-500">
             {language === 'he' ? 'פעולה זו אינה הפיכה. כל הנתונים יימחקו לצמיתות.' : 'This action is irreversible. All data will be permanently deleted.'}
           </p>
-          <Button
-            variant="outline"
-            className="text-red-600 border-red-200 hover:bg-red-50"
-            onClick={async () => {
-              if (!confirm(language === 'he' ? 'האם למחוק את הקבוצה לצמיתות? פעולה זו אינה הפיכה.' : 'Permanently delete this group? This cannot be undone.')) return;
-              await base44.entities.Group.delete(groupId);
-              onClose();
-              onGroupDeleted?.();
-            }}
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            {language === 'he' ? 'מחק קבוצה' : 'Delete Group'}
-          </Button>
+          {confirmDeleteGroup ? (
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-red-600">{language === 'he' ? 'האם אתה בטוח?' : 'Are you sure?'}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-600 border-red-300 hover:bg-red-50"
+                onClick={async () => {
+                  await base44.entities.Group.delete(groupId);
+                  onClose();
+                  onGroupDeleted?.();
+                }}
+              >
+                {language === 'he' ? 'אשר מחיקה' : 'Confirm Delete'}
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteGroup(false)}>
+                {language === 'he' ? 'בטל' : 'Cancel'}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              className="text-red-600 border-red-200 hover:bg-red-50"
+              onClick={() => setConfirmDeleteGroup(true)}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {language === 'he' ? 'מחק קבוצה' : 'Delete Group'}
+            </Button>
+          )}
         </div>
 
         <div className="space-y-3">
@@ -572,24 +599,38 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                           </>
                         )}
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          if (window.confirm(
-                            language === 'he' 
-                              ? 'האם אתה בטוח שברצונך להסיר חבר זה?' 
-                              : 'Are you sure you want to remove this member?'
-                          )) {
-                            removeMemberMutation.mutate(member.id);
-                          }
-                        }}
-                        disabled={removeMemberMutation.isPending}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        title={language === 'he' ? 'הסר מהקבוצה' : 'Remove from group'}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {confirmRemoveMemberId === member.id ? (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:bg-red-50 text-xs px-2"
+                            onClick={() => { removeMemberMutation.mutate(member.id); setConfirmRemoveMemberId(null); }}
+                            disabled={removeMemberMutation.isPending}
+                          >
+                            {language === 'he' ? 'אשר' : 'Confirm'}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-slate-500 text-xs px-2"
+                            onClick={() => setConfirmRemoveMemberId(null)}
+                          >
+                            {language === 'he' ? 'בטל' : 'Cancel'}
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setConfirmRemoveMemberId(member.id)}
+                          disabled={removeMemberMutation.isPending}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          title={language === 'he' ? 'הסר מהקבוצה' : 'Remove from group'}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </>
                   )}
                 </div>
@@ -647,6 +688,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
             </>
           )}
         </div>
+        </>)}
       </DialogContent>
     </Dialog>
   );
