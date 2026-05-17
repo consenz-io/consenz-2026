@@ -127,17 +127,17 @@ function SuggestionMeta({ suggestionId, user, getUserName, document }) {
       
 
       {/* Comments toggle */}
-      <div className={`flex items-center justify-end flex-wrap gap-2 hidden ${isRTL ? "flex-row-reverse" : ""}`}>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowSuggComments((v) => !v)}
-          className="h-7 text-xs text-slate-500 hover:text-blue-600 px-2 hidden">
-          
-          <MessageSquare className={`w-3 h-3 ${isRTL ? "ml-1" : "mr-1"}`} />
-          {t("comments")} ({suggestionComments.length})
-        </Button>
-      </div>
+      
+
+
+
+
+
+
+
+
+
+      
 
       {showSuggComments &&
       <div className="pt-2 border-t border-teal-200">
