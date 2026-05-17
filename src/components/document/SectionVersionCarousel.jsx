@@ -411,28 +411,6 @@ export default function SectionVersionCarousel({
             />
           )}
 
-          {/* section comments */}
-          <div className="mt-3 pt-3 border-t border-teal-100">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowSectionComments((v) => !v)}
-              className={`h-7 text-xs px-2 ${
-                sectionComments.length > 0
-                  ? "font-semibold text-blue-700 border border-blue-300 bg-blue-50 hover:bg-blue-100"
-                  : "text-slate-500 hover:text-blue-600"
-              }`}
-            >
-              <MessageSquare className={`w-3 h-3 ${isRTL ? "ml-1" : "mr-1"} ${sectionComments.length > 0 ? "fill-blue-200" : ""}`} />
-              {t("comments")} ({sectionComments.length})
-            </Button>
-            {showSectionComments && (
-              <div className="mt-2">
-                <CommentsSection entityType="section" entityId={sectionId} user={user} />
-              </div>
-            )}
-          </div>
-
           {/* suggestion meta */}
           {group.suggestionId && (
             <SuggestionMeta
