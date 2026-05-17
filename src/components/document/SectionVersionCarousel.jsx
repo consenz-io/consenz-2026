@@ -423,22 +423,18 @@ export default function SectionVersionCarousel({
         </div>
 
         {/* section comments - bottom of card */}
-        <div className="px-3 pb-3 pt-2 border-t border-teal-100">
+        <div className={`px-3 pb-3 pt-2 border-t border-teal-100 flex items-center justify-end flex-wrap gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
          <Button
            variant="ghost"
            size="sm"
            onClick={() => setShowSectionComments((v) => !v)}
-           className={`h-7 text-xs px-2 ${
-             sectionComments.length > 0
-               ? "font-semibold text-blue-700 border border-blue-300 bg-blue-50 hover:bg-blue-100"
-               : "text-slate-500 hover:text-blue-600"
-           }`}
+           className="h-7 text-xs text-slate-500 hover:text-blue-600 px-2"
          >
-           <MessageSquare className={`w-3 h-3 ${isRTL ? "ml-1" : "mr-1"} ${sectionComments.length > 0 ? "fill-blue-200" : ""}`} />
+           <MessageSquare className={`w-3 h-3 ${isRTL ? "ml-1" : "mr-1"}`} />
            {t("comments")} ({sectionComments.length})
          </Button>
          {showSectionComments && (
-           <div className="mt-2">
+           <div className="w-full mt-2 pt-2 border-t border-teal-200">
              <CommentsSection entityType="section" entityId={sectionId} user={user} />
            </div>
          )}
