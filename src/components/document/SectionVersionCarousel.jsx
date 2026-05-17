@@ -335,10 +335,22 @@ export default function SectionVersionCarousel({
           <div className="flex flex-col items-center gap-0.5">
             {(() => {
               const creatorEmail = currentSuggestion?.created_by || currentVer?.created_by;
-              return creatorEmail ? (
-                <span className="text-sm font-bold text-teal-700">
-                  {t("by")} {localGetUserName(creatorEmail)}
-                </span>
+              const changeType = currentVer?.changeType;
+              const userName = creatorEmail ? localGetUserName(creatorEmail) : null;
+
+              let label = null;
+              if (changeType === 'section_created') {
+                label = language === 'he' ? `סעיף נוצר על ידי ${userName}` : language === 'ar' ? `تم إنشاء القسم بواسطة ${userName}` : `Section created by ${userName}`;
+              } else if (changeType === 'suggestion_accepted') {
+                label = language === 'he' ? `הצעת עריכה על ידי ${userName}` : language === 'ar' ? `اقتراح تعديل بواسطة ${userName}` : `Edit suggestion by ${userName}`;
+              } else if (changeType === 'direct_edit') {
+                label = language === 'he' ? `עריכה על ידי אדמין` : language === 'ar' ? `تعديل مباشر بواسطة المسؤول` : `Direct edit by admin`;
+              } else if (userName) {
+                label = `${t('by')} ${userName}`;
+              }
+
+              return label ? (
+                <span className="text-sm font-bold text-teal-700">{label}</span>
               ) : null;
             })()}
             <span className="text-[10px] text-slate-400">
