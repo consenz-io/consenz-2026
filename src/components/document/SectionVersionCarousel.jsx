@@ -125,24 +125,7 @@ function SuggestionMeta({ suggestionId, user, getUserName, document }) {
         rejectedByAdmin={suggestion.rejectedByAdmin}
       />
 
-      {/* Comments toggle */}
-      <div className={`flex items-center justify-end flex-wrap gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowSuggComments((v) => !v)}
-          className="h-7 text-xs text-slate-500 hover:text-blue-600 px-2"
-        >
-          <MessageSquare className={`w-3 h-3 ${isRTL ? "ml-1" : "mr-1"}`} />
-          {t("comments")} ({suggestionComments.length})
-        </Button>
-      </div>
 
-      {showSuggComments && (
-        <div className="pt-2 border-t border-teal-200">
-          <CommentsSection entityType="suggestion" entityId={suggestionId} user={user} />
-        </div>
-      )}
     </div>
   );
 }
