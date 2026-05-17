@@ -76,20 +76,35 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
 
   const suggestionIds = useMemo(() => allDocSuggestions.map(s => s.id), [allDocSuggestions]);
 
+  // Bug fix: $in not supported — fetch per-doc in parallel
   const { data: allDocVotes = [] } = useQuery({
     queryKey: ['groupAllVotes', groupId, suggestionIds.join(',')],
-    queryFn: () => base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } }, null, 1000),
+    queryFn: async () => {
+      if (suggestionIds.length === 0) return [];
+      const results = await Promise.all(
+        suggestionIds.map(id => base44.entities.Vote.filter({ suggestionId: id }, null, 200))
+      );
+      return results.flat();
+    },
     enabled: suggestionIds.length > 0 && isOpen,
     staleTime: 10 * 60 * 1000,
   });
 
   const { data: allDocSections = [] } = useQuery({
     queryKey: ['groupAllSections', groupId, docIds.join(',')],
-    queryFn: () => base44.entities.Section.filter({ documentId: { $in: docIds } }, null, 500),
+    queryFn: async () => {
+      if (docIds.length === 0) return [];
+      const results = await Promise.all(
+        docIds.map(id => base44.entities.Section.filter({ documentId: id }, null, 200))
+      );
+      return results.flat();
+    },
     enabled: docIds.length > 0 && isOpen,
     staleTime: 10 * 60 * 1000,
   });
 
+  // Bug fix: build allRootEntityIds as a memo — sections arrive async so this will
+  // correctly re-derive once allDocSections resolves
   const allRootEntityIds = useMemo(
     () => [...docIds, ...suggestionIds, ...allDocSections.map(s => s.id)],
     [docIds, suggestionIds, allDocSections]
@@ -97,14 +112,35 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
 
   const { data: allDocComments = [] } = useQuery({
     queryKey: ['groupAllComments', groupId, allRootEntityIds.join(',')],
-    queryFn: () => base44.entities.Comment.filter({ rootEntityId: { $in: allRootEntityIds } }, null, 1000),
+    queryFn: async () => {
+      if (allRootEntityIds.length === 0) return [];
+      // Fetch comments per doc, suggestion, and section separately to avoid $in
+      const [docComments, sugComments, secComments] = await Promise.all([
+        docIds.length > 0
+          ? Promise.all(docIds.map(id => base44.entities.Comment.filter({ rootEntityId: id, rootEntityType: 'document' }, null, 200)))
+          : Promise.resolve([[]]),
+        suggestionIds.length > 0
+          ? Promise.all(suggestionIds.map(id => base44.entities.Comment.filter({ rootEntityId: id, rootEntityType: 'suggestion' }, null, 200)))
+          : Promise.resolve([[]]),
+        allDocSections.length > 0
+          ? Promise.all(allDocSections.map(s => base44.entities.Comment.filter({ rootEntityId: s.id, rootEntityType: 'section' }, null, 200)))
+          : Promise.resolve([[]]),
+      ]);
+      return [...docComments.flat(), ...sugComments.flat(), ...secComments.flat()];
+    },
     enabled: allRootEntityIds.length > 0 && isOpen,
     staleTime: 10 * 60 * 1000,
   });
 
   const { data: allDocAgreements = [] } = useQuery({
     queryKey: ['groupAllAgreements', groupId, docIds.join(',')],
-    queryFn: () => base44.entities.DocumentAgreement.filter({ documentId: { $in: docIds } }, null, 500),
+    queryFn: async () => {
+      if (docIds.length === 0) return [];
+      const results = await Promise.all(
+        docIds.map(id => base44.entities.DocumentAgreement.filter({ documentId: id }, null, 200))
+      );
+      return results.flat();
+    },
     enabled: docIds.length > 0 && isOpen,
     staleTime: 10 * 60 * 1000,
   });
@@ -321,10 +357,8 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
     inviteMemberMutation.mutate(inviteEmail);
   };
 
-  if (!isAdmin) {
-    return null;
-  }
-
+  // Bug fix: don't return null during loading — causes unmount/remount loop that
+  // loses state and restarts all queries. Render the Dialog (possibly empty) instead.
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -339,6 +373,13 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
               : 'Manage group settings, add new members and set admins'}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Bug fix: guard content behind isAdmin check — don't return null above */}
+        {!isAdmin ? (
+          <div className="py-8 text-center text-slate-500 text-sm">
+            {language === 'he' ? 'טוען...' : 'Loading...'}
+          </div>
+        ) : (<>
 
         {error && (
           <Alert variant="destructive">
@@ -622,6 +663,9 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                       variant="outline"
                       size="sm"
                       onClick={async () => {
+                        // Bug fix: guard against duplicate membership records
+                        const already = groupMembers.find(m => m.userId === profile.userId);
+                        if (already) return;
                         await base44.entities.GroupMember.create({ groupId, userId: profile.userId, role: 'member' });
                         queryClient.invalidateQueries({ queryKey: ['groupMembers', groupId] });
                       }}
@@ -634,6 +678,9 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                       size="sm"
                       className="text-purple-700 border-purple-200 hover:bg-purple-50"
                       onClick={async () => {
+                        // Bug fix: guard against duplicate membership records
+                        const already = groupMembers.find(m => m.userId === profile.userId);
+                        if (already) return;
                         await base44.entities.GroupMember.create({ groupId, userId: profile.userId, role: 'admin' });
                         queryClient.invalidateQueries({ queryKey: ['groupMembers', groupId] });
                       }}
@@ -647,6 +694,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
             </>
           )}
         </div>
+        </>)}
       </DialogContent>
     </Dialog>
   );
