@@ -16,13 +16,13 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  AlertDialogTitle } from
+"@/components/ui/alert-dialog";
 import {
   History, MessageSquare, RotateCcw, ExternalLink,
   ChevronLeft, ChevronRight, CheckCircle2, PlusCircle, Edit2,
-  X
-} from "lucide-react";
+  X } from
+"lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import SectionDiff from "./SectionDiff";
 import CommentsSection from "./CommentsSection";
@@ -42,24 +42,24 @@ function SuggestionMeta({ suggestionId, user, getUserName, document }) {
       return res?.[0] ?? null;
     },
     enabled: !!suggestionId,
-    staleTime: 5000,
+    staleTime: 5000
   });
 
   const { data: suggestionComments = [] } = useQuery({
     queryKey: ["suggestionComments", suggestionId],
     queryFn: () =>
-      base44.entities.Comment.filter({
-        rootEntityType: "suggestion",
-        rootEntityId: suggestionId,
-      }),
+    base44.entities.Comment.filter({
+      rootEntityType: "suggestion",
+      rootEntityId: suggestionId
+    }),
     enabled: !!suggestionId,
-    initialData: [],
+    initialData: []
   });
 
   const { data: users = [] } = useQuery({
     queryKey: ["users"],
     queryFn: () => base44.entities.User.list(),
-    initialData: [],
+    initialData: []
   });
 
   const { data: userVote } = useQuery({
@@ -70,7 +70,7 @@ function SuggestionMeta({ suggestionId, user, getUserName, document }) {
       return votes?.[0] ?? null;
     },
     enabled: !!suggestionId && !!user?.id,
-    staleTime: 10000,
+    staleTime: 10000
   });
 
   const voteMutation = useMutation({
@@ -81,7 +81,7 @@ function SuggestionMeta({ suggestionId, user, getUserName, document }) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["vote", suggestionId, user?.id] });
       queryClient.invalidateQueries({ queryKey: ["suggestion", suggestionId] });
-    },
+    }
   });
 
   const [showSuggComments, setShowSuggComments] = useState(false);
@@ -100,18 +100,18 @@ function SuggestionMeta({ suggestionId, user, getUserName, document }) {
 
   return (
     <div className="mt-3 rounded-lg border border-teal-200 bg-teal-50/60 p-3 space-y-2">
-      {suggestion.explanation && (
-        <div>
+      {suggestion.explanation &&
+      <div>
           <p className="text-xs font-semibold text-slate-600 mb-1">{t("explanationForSuggestion")}</p>
           <TranslatableContent
-            content={suggestion.explanation}
-            entity={suggestion}
-            entityType="Suggestion"
-            fieldName="explanation"
-            className="text-xs text-slate-600"
-          />
+          content={suggestion.explanation}
+          entity={suggestion}
+          entityType="Suggestion"
+          fieldName="explanation"
+          className="text-xs text-slate-600" />
+        
         </div>
-      )}
+      }
 
       {/* Voting progress + buttons */}
       <VotingProgressSection
@@ -123,29 +123,29 @@ function SuggestionMeta({ suggestionId, user, getUserName, document }) {
         readOnly={isReadOnly}
         acceptedDate={acceptedDate}
         rejectedDate={rejectedDate}
-        rejectedByAdmin={suggestion.rejectedByAdmin}
-      />
+        rejectedByAdmin={suggestion.rejectedByAdmin} />
+      
 
       {/* Comments toggle */}
-      <div className={`flex items-center justify-end flex-wrap gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+      <div className={`flex items-center justify-end flex-wrap gap-2 hidden ${isRTL ? "flex-row-reverse" : ""}`}>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setShowSuggComments((v) => !v)}
-          className="h-7 text-xs text-slate-500 hover:text-blue-600 px-2"
-        >
+          className="h-7 text-xs text-slate-500 hover:text-blue-600 px-2 hidden">
+          
           <MessageSquare className={`w-3 h-3 ${isRTL ? "ml-1" : "mr-1"}`} />
           {t("comments")} ({suggestionComments.length})
         </Button>
       </div>
 
-      {showSuggComments && (
-        <div className="pt-2 border-t border-teal-200">
+      {showSuggComments &&
+      <div className="pt-2 border-t border-teal-200">
           <CommentsSection entityType="suggestion" entityId={suggestionId} user={user} />
         </div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }
 
 // ─── SectionVersionCarousel (main export) ──────────────────────────────────
@@ -156,7 +156,7 @@ export default function SectionVersionCarousel({
   user,
   getUserName,
   isAdmin,
-  onClose, // optional callback — shows an X button to exit history mode
+  onClose // optional callback — shows an X button to exit history mode
 }) {
   const { t, isRTL, language } = useLanguage();
   const queryClient = useQueryClient();
@@ -169,7 +169,7 @@ export default function SectionVersionCarousel({
   const { data: publicProfiles = [] } = useQuery({
     queryKey: ["publicProfiles"],
     queryFn: () => base44.entities.UserPublicProfile.list(),
-    staleTime: 60000,
+    staleTime: 60000
   });
 
   // ── Data ──────────────────────────────────────────────────────────────────
@@ -180,7 +180,7 @@ export default function SectionVersionCarousel({
       return res?.[0] ?? null;
     },
     enabled: !!sectionId,
-    staleTime: 5000,
+    staleTime: 5000
   });
 
   const { data: versions = [], isLoading: versionsLoading } = useQuery({
@@ -193,7 +193,7 @@ export default function SectionVersionCarousel({
     },
     initialData: [],
     enabled: !!sectionId && !!documentId,
-    staleTime: 0,
+    staleTime: 0
   });
 
   // FIXED: For section comments in version carousel, filter by section only
@@ -201,25 +201,25 @@ export default function SectionVersionCarousel({
   const { data: sectionComments = [] } = useQuery({
     queryKey: ["sectionComments", sectionId],
     queryFn: () =>
-      base44.entities.Comment.filter({ rootEntityType: "section", rootEntityId: sectionId }),
+    base44.entities.Comment.filter({ rootEntityType: "section", rootEntityId: sectionId }),
     enabled: !!sectionId,
     initialData: [],
     staleTime: 0, // Always fresh
-    refetchOnMount: true,
+    refetchOnMount: true
   });
 
   // ── Version processing ────────────────────────────────────────────────────
-  const sortedVersions = [...versions]
-    .sort((a, b) => (b.version || 0) - (a.version || 0))
-    .filter((v, i, arr) => {
-      if (i === arr.length - 1) return true;
-      return v.content !== arr[i + 1]?.content;
-    });
+  const sortedVersions = [...versions].
+  sort((a, b) => (b.version || 0) - (a.version || 0)).
+  filter((v, i, arr) => {
+    if (i === arr.length - 1) return true;
+    return v.content !== arr[i + 1]?.content;
+  });
 
   const versionGroups = sortedVersions.map((ver, i) => ({
     version: ver,
     previousVersion: sortedVersions[i + 1] ?? null,
-    suggestionId: ver.suggestionId ?? null,
+    suggestionId: ver.suggestionId ?? null
   })).filter((g) => g.version?.changeType);
 
   // ── Restore mutation ──────────────────────────────────────────────────────
@@ -234,11 +234,11 @@ export default function SectionVersionCarousel({
         content: section?.content ?? "",
         changeDescription: t("restoredFromVersion", { version: versionToRestore.version }),
         version: nextVer,
-        changeType: "direct_edit",
+        changeType: "direct_edit"
       });
       await base44.entities.Section.update(sectionId, {
         content: versionToRestore.content,
-        lastEditedBy: user?.id,
+        lastEditedBy: user?.id
       });
     },
     onSuccess: () => {
@@ -251,7 +251,7 @@ export default function SectionVersionCarousel({
       setError(err.message);
       setRestoreTarget(null);
       setTimeout(() => setError(null), 5000);
-    },
+    }
   });
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -289,7 +289,7 @@ export default function SectionVersionCarousel({
       return res?.[0] ?? null;
     },
     enabled: !!currentGroup?.suggestionId,
-    staleTime: 30000,
+    staleTime: 30000
   });
 
   // ── Empty / loading states ────────────────────────────────────────────────
@@ -298,8 +298,8 @@ export default function SectionVersionCarousel({
       <div className="space-y-3 p-1">
         <Skeleton className="h-10 w-full rounded-lg" />
         <Skeleton className="h-32 w-full rounded-lg" />
-      </div>
-    );
+      </div>);
+
   }
 
   if (versionGroups.length === 0) {
@@ -308,8 +308,8 @@ export default function SectionVersionCarousel({
         <History className="w-10 h-10 text-teal-300 mx-auto mb-3" />
         <p className="text-sm font-medium text-slate-600">{t("noPreviousVersions")}</p>
         <p className="text-xs text-slate-400 mt-1">{t("sectionChangesAutomaticallySaved")}</p>
-      </div>
-    );
+      </div>);
+
   }
 
   const safeIndex = Math.min(currentIndex, versionGroups.length - 1);
@@ -320,19 +320,19 @@ export default function SectionVersionCarousel({
   return (
     <div className="space-y-3">
       {/* ── Error ─────────────────────────────────────────────────────────── */}
-      {error && (
-        <Alert variant="destructive">
+      {error &&
+      <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
-      )}
+      }
 
       {/* ── Nav bar ───────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-2 bg-teal-100/70 border border-teal-200 rounded-lg px-3 py-2">
         <button
           onClick={() => setCurrentIndex((i) => (i + 1) % versionGroups.length)}
           className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-teal-300 bg-white text-teal-700 hover:bg-teal-100 hover:border-teal-500 hover:shadow-md active:scale-95 transition-all shadow-sm"
-          aria-label={isRTL ? t("nextSuggestion") : t("previousSuggestion")}
-        >
+          aria-label={isRTL ? t("nextSuggestion") : t("previousSuggestion")}>
+          
           {isRTL ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
         </button>
 
@@ -354,9 +354,9 @@ export default function SectionVersionCarousel({
                 label = `${t('by')} ${userName}`;
               }
 
-              return label ? (
-                <span className="text-sm font-bold text-teal-700">{label}</span>
-              ) : null;
+              return label ?
+              <span className="text-sm font-bold text-teal-700">{label}</span> :
+              null;
             })()}
             <span className="text-[10px] text-slate-400">
               {new Date(currentVer?.created_date).toLocaleDateString(isRTL ? "he-IL" : "en-GB", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -368,76 +368,76 @@ export default function SectionVersionCarousel({
         <button
           onClick={() => setCurrentIndex((i) => (i - 1 + versionGroups.length) % versionGroups.length)}
           className="flex items-center justify-center w-10 h-10 rounded-xl border-2 border-teal-300 bg-white text-teal-700 hover:bg-teal-100 hover:border-teal-500 hover:shadow-md active:scale-95 transition-all shadow-sm"
-          aria-label={isRTL ? t("previousSuggestion") : t("nextSuggestion")}
-        >
+          aria-label={isRTL ? t("previousSuggestion") : t("nextSuggestion")}>
+          
           {isRTL ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
         </button>
       </div>
 
       {/* ── Dot indicators ────────────────────────────────────────────────── */}
       <div className="flex items-center justify-center gap-1.5">
-        {versionGroups.map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => setCurrentIndex(idx)}
-            className={`rounded-full transition-all duration-200 ${
-              idx === safeIndex
-                ? "w-5 h-2.5 bg-teal-500"
-                : "w-2 h-2 bg-teal-200 hover:bg-teal-400"
-            }`}
-            aria-label={`${t("version")} ${versionGroups[idx]?.version?.version}`}
-          />
-        ))}
+        {versionGroups.map((_, idx) =>
+        <button
+          key={idx}
+          onClick={() => setCurrentIndex(idx)}
+          className={`rounded-full transition-all duration-200 ${
+          idx === safeIndex ?
+          "w-5 h-2.5 bg-teal-500" :
+          "w-2 h-2 bg-teal-200 hover:bg-teal-400"}`
+          }
+          aria-label={`${t("version")} ${versionGroups[idx]?.version?.version}`} />
+
+        )}
       </div>
 
       {/* ── Version card ──────────────────────────────────────────────────── */}
       <div className="rounded-lg border border-teal-200 bg-white/80 overflow-hidden">
         {/* diff / content */}
         <div className="p-3">
-          {prevVer ? (
-            <SectionDiff
-              key={`${currentVer?.id}-${prevVer?.id}`}
-              originalContent={prevVer.content}
-              newContent={currentVer?.content}
-              documentId={documentId}
-              sectionId={sectionId}
-            />
-          ) : (
-            <div
-              className="prose prose-sm max-w-none text-slate-700 p-3 bg-slate-50 rounded-lg"
-              style={{
-                direction: isRTL ? "rtl" : "ltr",
-                textAlign: isRTL ? "right" : "left",
-                fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
-                fontSize: "1rem",
-                lineHeight: "1.75",
-              }}
-              dangerouslySetInnerHTML={{ __html: currentVer?.content }}
-            />
-          )}
+          {prevVer ?
+          <SectionDiff
+            key={`${currentVer?.id}-${prevVer?.id}`}
+            originalContent={prevVer.content}
+            newContent={currentVer?.content}
+            documentId={documentId}
+            sectionId={sectionId} /> :
+
+
+          <div
+            className="prose prose-sm max-w-none text-slate-700 p-3 bg-slate-50 rounded-lg"
+            style={{
+              direction: isRTL ? "rtl" : "ltr",
+              textAlign: isRTL ? "right" : "left",
+              fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+              fontSize: "1rem",
+              lineHeight: "1.75"
+            }}
+            dangerouslySetInnerHTML={{ __html: currentVer?.content }} />
+
+          }
 
           {/* suggestion meta */}
-          {group.suggestionId && (
-            <SuggestionMeta
-              suggestionId={group.suggestionId}
-              user={user}
-              getUserName={localGetUserName}
-              document={document}
-            />
-          )}
+          {group.suggestionId &&
+          <SuggestionMeta
+            suggestionId={group.suggestionId}
+            user={user}
+            getUserName={localGetUserName}
+            document={document} />
+
+          }
         </div>
 
         {/* comments - show suggestion comments if this is suggestion_accepted, else section comments */}
          <SectionCommentsFooter
-           group={group}
-           sectionId={sectionId}
-           sectionComments={sectionComments}
-           showSectionComments={showSectionComments}
-           setShowSectionComments={setShowSectionComments}
-           user={user}
-           isRTL={isRTL}
-           t={t}
-         />
+          group={group}
+          sectionId={sectionId}
+          sectionComments={sectionComments}
+          showSectionComments={showSectionComments}
+          setShowSectionComments={setShowSectionComments}
+          user={user}
+          isRTL={isRTL}
+          t={t} />
+        
         </div>
 
         {/* ── Restore confirm dialog ─────────────────────────────────────────── */}
@@ -451,13 +451,13 @@ export default function SectionVersionCarousel({
             <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => restoreTarget && restoreMutation.mutate(restoreTarget)}
-              disabled={restoreMutation.isPending}
-            >
+              disabled={restoreMutation.isPending}>
+              
               {t("restoreVersion")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
+    </div>);
+
 }
