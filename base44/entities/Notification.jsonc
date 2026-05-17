@@ -17,7 +17,8 @@
         "suggestion_expiring",
         "comment_reply",
         "new_suggestion_in_followed_document",
-        "document_comment"
+        "document_comment",
+        "group_join_request"
       ],
       "description": "Type of notification"
     },

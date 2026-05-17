@@ -281,6 +281,13 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
 
   const removeMemberMutation = useMutation({
     mutationFn: async (memberId) => {
+      // Bug fix: mark userId as manually removed BEFORE deleting, so the auto-add
+      // effect in useGroupViewData doesn't immediately re-add this user.
+      const member = groupMembers.find(m => m.id === memberId);
+      if (member?.userId) {
+        const removedRef = queryClient.getQueryData(['__groupRemovedMembers', groupId]);
+        if (removedRef?.current) removedRef.current.add(member.userId);
+      }
       await base44.entities.GroupMember.delete(memberId);
     },
     onSuccess: () => {
