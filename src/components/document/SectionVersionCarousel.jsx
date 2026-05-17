@@ -126,16 +126,7 @@ function SuggestionMeta({ suggestionId, user, getUserName, document }) {
       />
 
       {/* Comments toggle */}
-      <div className={`flex items-center justify-between flex-wrap gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
-        <div className="text-[10px] text-slate-400">
-          {t("publishedBy")}{" "}
-          <Link
-            to={`${createPageUrl("Profile")}?userId=${users.find((u) => u.email === suggestion.created_by)?.id}`}
-            className="hover:underline text-blue-500"
-          >
-            {localGetUserName(suggestion.created_by)}
-          </Link>
-        </div>
+      <div className={`flex items-center justify-end flex-wrap gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
         <Button
           variant="ghost"
           size="sm"
@@ -284,6 +275,18 @@ export default function SectionVersionCarousel({
     return profile?.fullName || email || "User";
   };
 
+  // Load suggestion creator for nav bar — must be before any early returns
+  const currentGroup = versionGroups[Math.min(currentIndex, versionGroups.length - 1)];
+  const { data: currentSuggestion } = useQuery({
+    queryKey: ["suggestion", currentGroup?.suggestionId ?? null],
+    queryFn: async () => {
+      const res = await base44.entities.Suggestion.filter({ id: currentGroup.suggestionId });
+      return res?.[0] ?? null;
+    },
+    enabled: !!currentGroup?.suggestionId,
+    staleTime: 30000,
+  });
+
   // ── Empty / loading states ────────────────────────────────────────────────
   if (versionsLoading) {
     return (
@@ -331,9 +334,10 @@ export default function SectionVersionCarousel({
 
         <div className="text-center flex-1 px-2">
           <div className={`flex items-center gap-2 text-[10px] text-teal-600 flex-wrap justify-center ${isRTL ? "flex-row-reverse" : ""}`}>
-            {currentVer?.created_by && (
-              <span>{t("by")} {localGetUserName(currentVer.created_by)}</span>
-            )}
+            {(() => {
+              const creatorEmail = currentSuggestion?.created_by || currentVer?.created_by;
+              return creatorEmail ? <span>{t("by")} {localGetUserName(creatorEmail)}</span> : null;
+            })()}
             <span>·</span>
             <span>{new Date(currentVer?.created_date).toLocaleDateString(isRTL ? "he-IL" : "en-GB")}</span>
             <span>·</span>
