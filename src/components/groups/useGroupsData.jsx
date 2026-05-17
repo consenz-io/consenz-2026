@@ -67,7 +67,7 @@ export function useGroupsData() {
   // Step 6: Fetch all suggestions, votes, comments for group docs (participant counting)
   const { data: groupAllSuggestions = [] } = useQuery({
     queryKey: ['groupsPageAllSuggestions', docIds],
-    queryFn: () => base44.entities.Suggestion.filter({ documentId: { $in: docIds } }, null, 500),
+    queryFn: () => base44.entities.Suggestion.filter({ documentId: { $in: docIds } }, null, 2000),
     enabled: docIds.length > 0,
     placeholderData: [],
     staleTime: 5 * 60 * 1000,
@@ -78,7 +78,7 @@ export function useGroupsData() {
 
   const { data: groupAllVotes = [] } = useQuery({
     queryKey: ['groupsPageAllVotes', suggestionIds],
-    queryFn: () => base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } }, null, 1000),
+    queryFn: () => base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } }, null, 2000),
     enabled: suggestionIds.length > 0,
     placeholderData: [],
     staleTime: 5 * 60 * 1000,
@@ -112,7 +112,7 @@ export function useGroupsData() {
 
   const { data: groupAllComments = [] } = useQuery({
     queryKey: ['groupsPageAllComments', allRootEntityIds],
-    queryFn: () => base44.entities.Comment.filter({ rootEntityId: { $in: allRootEntityIds } }, null, 1000),
+    queryFn: () => base44.entities.Comment.filter({ rootEntityId: { $in: allRootEntityIds } }, null, 2000),
     enabled: allRootEntityIds.length > 0,
     placeholderData: [],
     staleTime: 5 * 60 * 1000,

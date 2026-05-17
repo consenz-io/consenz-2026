@@ -213,9 +213,9 @@ export default function GroupView() {
                                   className={snapshot.isDragging ? 'opacity-70 shadow-lg rounded-lg' : ''}
                                 >
                                   <GroupDocumentRow
-                                   doc={doc}
-                                   unvotedCount={getUnvotedCount(doc.id)}
-                                   participantCount={groupMembers.length}
+                                  doc={doc}
+                                  unvotedCount={getUnvotedCount(doc.id)}
+                                  participantCount={allParticipantUserIds.length}
                                   />
                                 </div>
                               )}
