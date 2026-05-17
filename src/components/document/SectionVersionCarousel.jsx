@@ -333,15 +333,19 @@ export default function SectionVersionCarousel({
         </button>
 
         <div className="text-center flex-1 px-2">
-          <div className={`flex items-center gap-2 text-[10px] text-teal-600 flex-wrap justify-center ${isRTL ? "flex-row-reverse" : ""}`}>
+          <div className="flex flex-col items-center gap-0.5">
             {(() => {
               const creatorEmail = currentSuggestion?.created_by || currentVer?.created_by;
-              return creatorEmail ? <span>{t("by")} {localGetUserName(creatorEmail)}</span> : null;
+              return creatorEmail ? (
+                <span className="text-sm font-bold text-teal-700">
+                  {t("by")} {localGetUserName(creatorEmail)}
+                </span>
+              ) : null;
             })()}
-            <span>·</span>
-            <span>{new Date(currentVer?.created_date).toLocaleDateString(isRTL ? "he-IL" : "en-GB")}</span>
-            <span>·</span>
-            <span>{safeIndex + 1} / {versionGroups.length}</span>
+            <span className="text-[10px] text-slate-400">
+              {new Date(currentVer?.created_date).toLocaleDateString(isRTL ? "he-IL" : "en-GB", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              {" · "}{safeIndex + 1} / {versionGroups.length}
+            </span>
           </div>
         </div>
 
