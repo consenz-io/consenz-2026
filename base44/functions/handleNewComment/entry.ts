@@ -120,7 +120,18 @@ Deno.serve(async (req) => {
         return Response.json({ message: 'Section not found' }, { status: 200 });
       }
 
-      const actionUrl = `/documentview?id=${section.documentId}&commentId=${comment.id}`;
+      // Try to find the latest accepted suggestion for this section, so the notification
+      // links to the suggestion detail page (where section comments are visible in context).
+      // Fall back to documentview if no accepted suggestion exists for this section.
+      const acceptedSuggestions = await base44.asServiceRole.entities.Suggestion.filter({
+        sectionId: comment.rootEntityId,
+        status: 'accepted'
+      });
+      const latestAccepted = acceptedSuggestions.sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
+
+      const actionUrl = latestAccepted
+        ? `/suggestiondetail?id=${latestAccepted.id}&commentId=${comment.id}`
+        : `/documentview?id=${section.documentId}&commentId=${comment.id}`;
       const nameReplacements = { name: commenterName };
 
       // Reply notification
