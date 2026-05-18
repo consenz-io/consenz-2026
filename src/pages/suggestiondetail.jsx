@@ -609,7 +609,7 @@ export default function SuggestionDetail() {
                 }
 
                 <span className="text-xs text-slate-500">
-                  {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${users.find((u) => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
+                  {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${(publicProfiles.find((p) => p.email === suggestion.created_by)?.userId) || (users.find((u) => u.email === suggestion.created_by)?.id)}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
                 </span>
                 {suggestion.created_date &&
                   <span className="text-xs text-slate-400">
