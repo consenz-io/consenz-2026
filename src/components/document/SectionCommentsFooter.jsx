@@ -1,10 +1,10 @@
 import React from "react";
-import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { MessageSquare } from "lucide-react";
 import CommentsSection from "./CommentsSection";
 
+// SectionCommentsFooter renders ONLY for non-suggestion versions (direct_edit, section_created).
+// For suggestion_accepted versions, SuggestionMeta owns the comment button/thread.
 export default function SectionCommentsFooter({
   group,
   sectionId,
@@ -15,18 +15,10 @@ export default function SectionCommentsFooter({
   isRTL,
   t,
 }) {
-  const { data: suggestionComments = [] } = useQuery({
-    queryKey: ["suggestionComments", group.suggestionId],
-    queryFn: () =>
-      base44.entities.Comment.filter({
-        rootEntityType: "suggestion",
-        rootEntityId: group.suggestionId,
-      }),
-    enabled: !!group.suggestionId,
-    initialData: [],
-  });
+  // If this version came from a suggestion, SuggestionMeta handles comments — render nothing here.
+  if (group.suggestionId) return null;
 
-  const commentCount = group.suggestionId ? suggestionComments.length : sectionComments.length;
+  const commentCount = sectionComments.length;
 
   return (
     <div className={`px-3 pb-3 pt-2 border-t border-teal-100 flex items-center justify-end flex-wrap gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
@@ -42,8 +34,8 @@ export default function SectionCommentsFooter({
       {showSectionComments && (
         <div className="w-full mt-2 pt-2 border-t border-teal-200">
           <CommentsSection
-            entityType={group.suggestionId ? "suggestion" : "section"}
-            entityId={group.suggestionId || sectionId}
+            entityType="section"
+            entityId={sectionId}
             user={user}
           />
         </div>
