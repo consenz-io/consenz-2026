@@ -278,7 +278,7 @@ export default function SectionVersionCarousel({
     );
   }
 
-  if (versionGroups.length === 0) {
+  if (!versionsLoading && versionGroups.length === 0) {
     return (
       <div className="text-center py-10 px-4">
         <History className="w-10 h-10 text-teal-300 mx-auto mb-3" />
