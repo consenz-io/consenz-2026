@@ -73,6 +73,11 @@ export default function UnderstandingConsensus() {
 
   const totalUsers = contributorsCount || 1;
   const consensuses = document?.consensuses || [];
+
+  // Find participants count at the time the last suggestion was accepted
+  const acceptedSuggestions = (suggestions || []).filter(s => s.status === 'accepted' && s.participantsAtAcceptance);
+  const lastAcceptedSuggestion = acceptedSuggestions.sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
+  const participantsAtLastAcceptance = lastAcceptedSuggestion?.participantsAtAcceptance || totalUsers;
   
   // מד הקונצנזוס הממוצע - ערך בין 0 ל-1 (מוגבל למקסימום 1)
   const documentConsensusMeter = consensuses.length > 0 
@@ -227,8 +232,8 @@ export default function UnderstandingConsensus() {
                 </div>
                 <div className="text-3xl text-slate-400 font-light">×</div>
                 <div className="bg-white rounded-xl p-4 shadow-sm border-2 border-blue-200 min-w-[140px]">
-                  <div className="text-2xl font-bold text-blue-700">{totalUsers}</div>
-                  <div className="text-xs text-slate-500 mt-1">{t('participants')}</div>
+                  <div className="text-2xl font-bold text-blue-700">{participantsAtLastAcceptance}</div>
+                  <div className="text-xs text-slate-500 mt-1">{language === 'he' ? 'משתתפים בעת הקבלה' : language === 'ar' ? 'المشاركون عند القبول' : 'Participants at acceptance'}</div>
                 </div>
                 <div className="text-3xl text-slate-400 font-light">=</div>
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 shadow-sm border-2 border-green-300 min-w-[140px]">
@@ -237,7 +242,7 @@ export default function UnderstandingConsensus() {
                 </div>
               </div>
               <p className="text-center text-sm text-slate-500 mt-4">
-                {language === 'he' ? 'הסף הנוכחי חושב בעת קבלת ההצעה האחרונה' : 'Current threshold calculated when last suggestion was accepted'}
+                {language === 'he' ? 'הסף הנוכחי חושב בעת קבלת ההצעה האחרונה — מספר המשתתפים כפי שהיה באותו הרגע' : language === 'ar' ? 'تم حساب الحد الحالي عند قبول الاقتراح الأخير — عدد المشاركين في تلك اللحظة' : 'Current threshold was calculated when the last suggestion was accepted — participants count at that moment'}
               </p>
             </div>
           </CardContent>
