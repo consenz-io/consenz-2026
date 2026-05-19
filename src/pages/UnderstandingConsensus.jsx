@@ -152,7 +152,7 @@ export default function UnderstandingConsensus() {
                   <Users className="w-6 h-6" />
                 </div>
                 <h3 className="font-bold text-base mb-1">
-                  {language === 'he' ? 'משתתפים בעת הקבלה' : language === 'ar' ? 'المشاركون عند القبول' : 'Participants at acceptance'}
+                  {language === 'he' ? 'משתתפים בעת יצירת הגרסה האחרונה' : language === 'ar' ? 'المشاركون عند القبول' : 'Participants at acceptance'}
                 </h3>
                 <p className="text-blue-200 text-xs mb-4">
                   {language === 'he' ? 'מספר המשתתפים כשהתקבלה ההצעה האחרונה' : language === 'ar' ? 'عدد المشاركين عند قبول آخر اقتراح' : 'Participants when last suggestion was accepted'}
