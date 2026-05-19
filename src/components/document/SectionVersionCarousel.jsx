@@ -177,7 +177,7 @@ export default function SectionVersionCarousel({
     staleTime: 5000,
   });
 
-  const { data: versions = [], isLoading: versionsLoading } = useQuery({
+  const { data: versions = [], isLoading: versionsLoading, isFetching: versionsFetching } = useQuery({
     queryKey: ["versions", sectionId, documentId],
     queryFn: async () => {
       if (!documentId) return [];
@@ -269,7 +269,7 @@ export default function SectionVersionCarousel({
   });
 
   // ── Empty / loading states ─────────────────────────────────────────────────
-  if (versionsLoading) {
+  if (versionsLoading || versionsFetching) {
     return (
       <div className="space-y-3 p-1">
         <Skeleton className="h-10 w-full rounded-lg" />
