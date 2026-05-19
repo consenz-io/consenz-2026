@@ -121,65 +121,72 @@ export default function UnderstandingConsensus() {
           backUrl={returnUrl || `${createPageUrl("DocumentView")}?id=${documentId}`}
         />
 
-        {/* Hero Section - שני המושגים המרכזיים */}
-        <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${isRTL ? 'direction-rtl' : ''}`} dir={isRTL ? 'rtl' : 'ltr'}>
-          {/* מד הקונצנזוס */}
-          <Card className="bg-gradient-to-br from-indigo-600 to-purple-700 text-white border-0 shadow-xl">
-            <CardContent className="p-6">
-              <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+        {/* Hero Section - הסבר ויזואלי על החישוב */}
+        <Card className="border-0 shadow-xl overflow-hidden">
+          <CardContent className="p-0">
+            <div className={`grid grid-cols-1 md:grid-cols-3`} dir={isRTL ? 'rtl' : 'ltr'}>
+
+              {/* עמודה 1: מד הקונצנזוס */}
+              <div className="bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-6 flex flex-col items-center justify-center text-center">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
                   <Gauge className="w-6 h-6" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg">{t('consensusMeterLabel')}</h3>
-                  <p className="text-indigo-200 text-sm">{t('consensusMeterRange')}</p>
-                </div>
-              </div>
-              <div className="text-center py-4">
+                <h3 className="font-bold text-base mb-1">{t('consensusMeterLabel')}</h3>
+                <p className="text-indigo-200 text-xs mb-4">
+                  {language === 'he' ? 'ממוצע ההסכמה על שינויים שהתקבלו' : language === 'ar' ? 'متوسط الموافقة على التغييرات المقبولة' : 'Average agreement on accepted changes'}
+                </p>
                 <div className="text-5xl font-bold">{(documentConsensusMeter * 100).toFixed(0)}%</div>
-                <p className="text-indigo-200 text-sm mt-2">{t('consensusMeterDescription')}</p>
-              </div>
-              {/* Progress bar */}
-              <div className="mt-4">
-                <div className="h-3 bg-white/20 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-white rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(100, documentConsensusMeter * 100)}%` }}
-                  />
-                </div>
-                <div className="flex justify-between text-xs text-indigo-200 mt-1">
-                  <span>0%</span>
-                  <span>100%</span>
+                <div className="mt-4 w-full">
+                  <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                    <div className="h-full bg-white rounded-full" style={{ width: `${Math.min(100, documentConsensusMeter * 100)}%` }} />
+                  </div>
+                  <div className="flex justify-between text-xs text-indigo-200 mt-1">
+                    <span>0%</span><span>100%</span>
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* רף התמיכה הדרוש */}
-          <Card className="bg-gradient-to-br from-blue-600 to-cyan-600 text-white border-0 shadow-xl">
-            <CardContent className="p-6">
-              <div className={`flex items-center gap-3 mb-4 ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+              {/* עמודה 2: משתתפים בעת הקבלה האחרונה */}
+              <div className="bg-gradient-to-br from-blue-600 to-cyan-600 text-white p-6 flex flex-col items-center justify-center text-center">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
+                  <Users className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-base mb-1">
+                  {language === 'he' ? 'משתתפים בעת הקבלה' : language === 'ar' ? 'المشاركون عند القبول' : 'Participants at acceptance'}
+                </h3>
+                <p className="text-blue-200 text-xs mb-4">
+                  {language === 'he' ? 'מספר המשתתפים כשהתקבלה ההצעה האחרונה' : language === 'ar' ? 'عدد المشاركين عند قبول آخر اقتراح' : 'Participants when last suggestion was accepted'}
+                </p>
+                <div className="text-5xl font-bold">{participantsAtLastAcceptance}</div>
+                <div className="mt-4 bg-white/10 rounded-lg px-4 py-2 text-xs text-blue-100">
+                  {language === 'he' ? `סה"כ משתתפים כיום: ${totalUsers}` : language === 'ar' ? `إجمالي المشاركين الحاليين: ${totalUsers}` : `Current total participants: ${totalUsers}`}
+                </div>
+              </div>
+
+              {/* עמודה 3: רף התמיכה - התוצאה */}
+              <div className="bg-gradient-to-br from-emerald-600 to-teal-600 text-white p-6 flex flex-col items-center justify-center text-center relative">
+                {/* סמל = */}
+                <div className="absolute top-1/2 -translate-y-1/2 left-0 -translate-x-1/2 md:flex hidden w-8 h-8 bg-white rounded-full items-center justify-center shadow-lg z-10">
+                  <span className="text-slate-700 font-bold text-lg">=</span>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
                   <Scale className="w-6 h-6" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg">{t('supportThresholdLabel')}</h3>
-                  <p className="text-blue-200 text-sm">{t('supportThresholdSubtitle')}</p>
+                <h3 className="font-bold text-base mb-1">{t('supportThresholdLabel')}</h3>
+                <p className="text-emerald-100 text-xs mb-4">
+                  {language === 'he' ? 'פער תומכים-מתנגדים הדרוש לאישור הצעה' : language === 'ar' ? 'فرق المؤيدين والمعارضين المطلوب لقبول اقتراح' : 'Required pro-con gap to approve a suggestion'}
+                </p>
+                <div className="text-5xl font-bold">{threshold}</div>
+                <div className="mt-4 bg-white/10 rounded-lg px-4 py-2 text-xs text-emerald-100">
+                  {language === 'he'
+                    ? `${(documentConsensusMeter * 100).toFixed(0)}% × ${participantsAtLastAcceptance} = ${threshold}`
+                    : `${(documentConsensusMeter * 100).toFixed(0)}% × ${participantsAtLastAcceptance} = ${threshold}`}
                 </div>
               </div>
-              <div className="text-center py-4">
-                <div className="text-5xl font-bold">{threshold}</div>
-                <p className="text-blue-200 text-sm mt-2">{t('supportThresholdDescription')}</p>
-              </div>
-              {/* משתתפים */}
-              <div className={`mt-4 bg-white/10 rounded-lg p-3 flex items-center justify-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                <Users className="w-5 h-5" />
-                <span className="font-semibold">{totalUsers}</span>
-                <span className="text-blue-200">{t('totalParticipantsInDoc')}</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+
+            </div>
+          </CardContent>
+        </Card>
 
         {/* הסבר על המנגנון */}
         <Card className="bg-amber-50 border-amber-200">
