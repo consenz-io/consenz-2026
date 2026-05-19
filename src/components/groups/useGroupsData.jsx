@@ -11,7 +11,7 @@ export function useGroupsData() {
   });
 
   // Step 1: Fetch only this user's memberships
-  const { data: myMemberships = [], isLoading: membersLoading } = useQuery({
+  const { data: myMemberships = [], isLoading: membersLoading, isFetching: membersFetching } = useQuery({
     queryKey: ['myGroupMemberships', currentUser?.id],
     queryFn: () => base44.entities.GroupMember.filter({ userId: currentUser.id }),
     enabled: !!currentUser?.id,
@@ -148,6 +148,7 @@ export function useGroupsData() {
     userLoading ||
     !currentUser ||               // user not resolved yet
     membersLoading ||             // memberships still fetching
+    membersFetching ||            // memberships fetching (incl. placeholderData state)
     (groupIds.length > 0 && groupsLoading); // groups themselves loading
 
   return {
