@@ -166,7 +166,7 @@ export default function UnderstandingConsensus() {
               {/* עמודה 3: רף התמיכה - התוצאה */}
               <div className="bg-gradient-to-br from-emerald-600 to-teal-600 text-white p-6 flex flex-col items-center justify-center text-center relative">
                 {/* סמל = */}
-                <div className="absolute top-1/2 -translate-y-1/2 left-0 -translate-x-1/2 md:flex hidden w-8 h-8 bg-white rounded-full items-center justify-center shadow-lg z-10">
+                <div className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-0 translate-x-1/2' : 'left-0 -translate-x-1/2'} md:flex hidden w-8 h-8 bg-white rounded-full items-center justify-center shadow-lg z-10`}>
                   <span className="text-slate-700 font-bold text-lg">=</span>
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
