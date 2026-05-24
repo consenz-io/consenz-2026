@@ -387,7 +387,7 @@ export default function SectionVersionCarousel({
           )}
 
           {/* SuggestionMeta owns the comment button for suggestion_accepted versions */}
-          {group.suggestionId && (
+          {group.suggestionId && currentVer?.changeType !== "section_created" && (
             <SuggestionMeta
               suggestionId={group.suggestionId}
               user={user}
