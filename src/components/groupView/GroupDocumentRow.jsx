@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Bell } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import TranslatableContent from "@/components/document/TranslatableContent";
+import TranslatableText from "@/components/utils/TranslatableText";
 
 export default function GroupDocumentRow({ doc, unvotedCount, participantCount }) {
   const { language } = useLanguage();
@@ -25,11 +27,20 @@ export default function GroupDocumentRow({ doc, unvotedCount, participantCount }
         </div>
       )}
       <div className="p-4">
-        <h3 className="font-semibold text-slate-900">{doc.title}</h3>
+        <TranslatableContent
+          content={doc.title}
+          entity={doc}
+          entityType="Document"
+          fieldName="title"
+          renderContent={(text) => <h3 className="font-semibold text-slate-900">{text}</h3>}
+        />
         {doc.description && (
-          <p
-            className="text-sm text-slate-500 line-clamp-2 mt-1"
-            dangerouslySetInnerHTML={{ __html: doc.description }}
+          <TranslatableContent
+            content={doc.description}
+            entity={doc}
+            entityType="Document"
+            fieldName="description"
+            className="text-sm text-slate-500 mt-1"
           />
         )}
       </div>

@@ -9,6 +9,7 @@ import { Users, Lock, Globe, Plus, FileText } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "@/components/PageHeader";
 import { useGroupsData } from "@/components/groups/useGroupsData";
+import TranslatableText from "@/components/utils/TranslatableText";
 
 export default function Groups() {
   const { isRTL, language } = useLanguage();
@@ -75,9 +76,13 @@ export default function Groups() {
                     <CardHeader>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <CardTitle className="text-xl truncate">{group.name}</CardTitle>
+                          <CardTitle className="text-xl">
+                            <TranslatableText text={group.name} className="font-bold" />
+                          </CardTitle>
                           {group.description && (
-                            <CardDescription className="line-clamp-2 mt-2">{group.description}</CardDescription>
+                            <div className="mt-2">
+                              <TranslatableText text={group.description} className="text-sm text-slate-500 line-clamp-2" />
+                            </div>
                           )}
                         </div>
                         <Badge variant="outline" className={badge.cls}>

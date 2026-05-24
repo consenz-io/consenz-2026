@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Users, Lock, Globe } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import TranslatableText from "@/components/utils/TranslatableText";
 
 export default function GroupCard({ group, docCount, participantsCount, isAdmin }) {
   const { language } = useLanguage();
@@ -34,7 +35,9 @@ export default function GroupCard({ group, docCount, participantsCount, isAdmin 
       <Card className="bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-200 h-full">
         <CardHeader>
           <div className="flex flex-col gap-2">
-            <CardTitle className="text-lg break-words">{group.name}</CardTitle>
+            <CardTitle className="text-lg">
+              <TranslatableText text={group.name} className="font-bold break-words" />
+            </CardTitle>
             <div className="flex flex-wrap items-center gap-1">
               <Badge variant="outline" className={visual.cls}>
                 <visual.Icon className="w-3 h-3 mr-1" />
@@ -50,7 +53,9 @@ export default function GroupCard({ group, docCount, participantsCount, isAdmin 
         </CardHeader>
         <CardContent>
           {group.description && (
-            <p className="text-sm text-slate-600 mb-3 line-clamp-2">{group.description}</p>
+            <div className="mb-3">
+              <TranslatableText text={group.description} className="text-sm text-slate-600 line-clamp-2" />
+            </div>
           )}
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm text-slate-600">
