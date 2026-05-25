@@ -362,20 +362,20 @@ export default function Profile() {
                   {(user.bio || (isOwnProfile && currentUser)) && (
                   <div>
                     <Label htmlFor="bio" className="text-sm font-medium text-slate-700">
-                      ביו
+                      {language === 'he' ? 'ביו' : language === 'ar' ? 'نبذة' : 'Bio'}
                     </Label>
                     {isEditing ? (
                     <textarea
                       id="bio"
                       value={formData.bio}
                       onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                      placeholder="ספר/י קצת על עצמך..."
+                      placeholder={language === 'he' ? 'ספר/י קצת על עצמך...' : language === 'ar' ? 'أخبرنا قليلاً عن نفسك...' : 'Tell us a little about yourself...'}
                       className="w-full mt-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px] resize-y"
                       dir={isRTL ? 'rtl' : 'ltr'}
                     />
                   ) : (
                     <p className="text-slate-700 mt-1 whitespace-pre-wrap" dir={isRTL ? 'rtl' : 'ltr'}>
-                      {user.bio || <span className="text-slate-400 italic">לא הוזן ביו</span>}
+                      {user.bio || <span className="text-slate-400 italic">{language === 'he' ? 'לא הוזן ביו' : language === 'ar' ? 'لم تتم إضافة نبذة' : 'No bio added'}</span>}
                     </p>
                     )}
                     </div>
@@ -384,7 +384,7 @@ export default function Profile() {
                 {(user.linkedin || user.twitter || user.facebook || user.instagram || user.website || (isOwnProfile && currentUser)) && (
                   <div>
                     <Label className="text-sm font-medium text-slate-700 mb-2 block">
-                      רשתות חברתיות וקישורים
+                      {language === 'he' ? 'רשתות חברתיות וקישורים' : language === 'ar' ? 'الشبكات الاجتماعية والروابط' : 'Social Networks & Links'}
                     </Label>
                     <div className="space-y-2 md:space-y-3">
                       {(user.linkedin || isEditing) && (
@@ -407,7 +407,7 @@ export default function Profile() {
                               {user.linkedin}
                             </a>
                           ) : (
-                            <span className="text-slate-400 text-xs md:text-sm italic">לא הוזן</span>
+                            <span className="text-slate-400 text-xs md:text-sm italic">{language === 'he' ? 'לא הוזן' : language === 'ar' ? 'لم يُضف' : 'Not added'}</span>
                           )}
                         </div>
                       )}
@@ -432,7 +432,7 @@ export default function Profile() {
                               {user.twitter}
                             </a>
                           ) : (
-                            <span className="text-slate-400 text-xs md:text-sm italic">לא הוזן</span>
+                            <span className="text-slate-400 text-xs md:text-sm italic">{language === 'he' ? 'לא הוזן' : language === 'ar' ? 'لم يُضف' : 'Not added'}</span>
                           )}
                         </div>
                       )}
@@ -457,7 +457,7 @@ export default function Profile() {
                               {user.facebook}
                             </a>
                           ) : (
-                            <span className="text-slate-400 text-xs md:text-sm italic">לא הוזן</span>
+                            <span className="text-slate-400 text-xs md:text-sm italic">{language === 'he' ? 'לא הוזן' : language === 'ar' ? 'لم يُضف' : 'Not added'}</span>
                           )}
                         </div>
                       )}
@@ -482,7 +482,7 @@ export default function Profile() {
                               {user.instagram}
                             </a>
                           ) : (
-                            <span className="text-slate-400 text-xs md:text-sm italic">לא הוזן</span>
+                            <span className="text-slate-400 text-xs md:text-sm italic">{language === 'he' ? 'לא הוזן' : language === 'ar' ? 'لم يُضف' : 'Not added'}</span>
                           )}
                         </div>
                       )}
@@ -507,7 +507,7 @@ export default function Profile() {
                               {user.website}
                             </a>
                           ) : (
-                            <span className="text-slate-400 text-xs md:text-sm italic">לא הוזן</span>
+                            <span className="text-slate-400 text-xs md:text-sm italic">{language === 'he' ? 'לא הוזן' : language === 'ar' ? 'لم يُضف' : 'Not added'}</span>
                           )}
                         </div>
                       )}
@@ -519,7 +519,7 @@ export default function Profile() {
 
             <div className="border-t pt-4">
               <p className="text-xs text-slate-500">
-                Member since {formatLocalDate(user.created_date, 'DD/MM/YYYY')}
+                {language === 'he' ? 'חבר מאז' : language === 'ar' ? 'عضو منذ' : 'Member since'} {formatLocalDate(user.created_date, 'DD/MM/YYYY')}
               </p>
             </div>
           </CardContent>
@@ -565,7 +565,7 @@ export default function Profile() {
               <div className="border-t pt-4">
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <p className="text-sm text-yellow-800">
-                    {language === 'he' ? 'בפיתוח' : '...'}
+                    {language === 'he' ? 'בפיתוח' : language === 'ar' ? 'قيد التطوير' : 'Under development'}
                   </p>
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-3">
@@ -581,7 +581,7 @@ export default function Profile() {
               <div className="border-t pt-4">
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <p className="text-sm text-yellow-800">
-                    {language === 'he' ? 'בפיתוח' : '...'}
+                    {language === 'he' ? 'בפיתוח' : language === 'ar' ? 'قيد التطوير' : 'Under development'}
                   </p>
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-3">
@@ -612,12 +612,12 @@ export default function Profile() {
               <TabsContent value="comments" className="mt-4">
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <p className="text-sm text-yellow-800">
-                    {language === 'he' ? 'בפיתוח' : '...'}
+                    {language === 'he' ? 'בפיתוח' : language === 'ar' ? 'قيد التطوير' : 'Under development'}
                   </p>
                 </div>
                 {userComments.length === 0 ? (
                   <p className="text-slate-500 text-sm text-center py-8">
-                    {language === 'he' ? '...' : language === 'ar' ? '...' : '...'}
+                    {language === 'he' ? 'אין תגובות עדיין' : language === 'ar' ? 'لا توجد تعليقات بعد' : 'No comments yet'}
                   </p>
                 ) : (
                   <div className="space-y-3">
@@ -663,12 +663,12 @@ export default function Profile() {
               <TabsContent value="suggestions" className="mt-4">
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <p className="text-sm text-yellow-800">
-                    {language === 'he' ? 'רכיב הפעילות מנוטרל לצורך בדיקה - מוצגים נתוני פלייסהולדר' : 'Activity component disabled for testing - showing placeholder data'}
+                    {language === 'he' ? 'רכיב הפעילות מנוטרל לצורך בדיקה - מוצגים נתוני פלייסהולדר' : language === 'ar' ? 'مكوّن النشاط معطّل للاختبار - عرض بيانات بديلة' : 'Activity component disabled for testing - showing placeholder data'}
                   </p>
                 </div>
                 {userSuggestions.length === 0 ? (
                   <p className="text-slate-500 text-sm text-center py-8">
-                    {language === 'he' ? 'נתוני פלייסהולדר - אין הצעות' : language === 'ar' ? 'بيانات بديلة - لا مقترحات' : 'Placeholder data - No suggestions'}
+                    {language === 'he' ? 'אין הצעות עדיין' : language === 'ar' ? 'لا توجد مقترحات بعد' : 'No suggestions yet'}
                   </p>
                 ) : (
                   <div className="space-y-3">
@@ -713,12 +713,12 @@ export default function Profile() {
               <TabsContent value="votes" className="mt-4">
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <p className="text-sm text-yellow-800">
-                    {language === 'he' ? 'רכיב הפעילות מנוטרל לצורך בדיקה - מוצגים נתוני פלייסהולדר' : 'Activity component disabled for testing - showing placeholder data'}
+                    {language === 'he' ? 'רכיב הפעילות מנוטרל לצורך בדיקה - מוצגים נתוני פלייסהולדר' : language === 'ar' ? 'مكوّن النشاط معطّل للاختبار - عرض بيانات بديلة' : 'Activity component disabled for testing - showing placeholder data'}
                   </p>
                 </div>
                 {userVotes.length === 0 ? (
                   <p className="text-slate-500 text-sm text-center py-8">
-                    {language === 'he' ? 'נתוני פלייסהולדר - אין הצבעות' : language === 'ar' ? 'بيانات بديلة - لا تصويتات' : 'Placeholder data - No votes'}
+                    {language === 'he' ? 'אין הצבעות עדיין' : language === 'ar' ? 'لا توجد تصويتات بعد' : 'No votes yet'}
                   </p>
                 ) : (
                   <div className="space-y-3">
@@ -743,7 +743,7 @@ export default function Profile() {
                               </span>
                             </div>
                             <p className="text-sm text-slate-700">
-                              {language === 'he' ? 'הצבעה על הצעה' : language === 'ar' ? 'تصويت على مقترح' : 'Vote on suggestion'}
+                              {language === 'he' ? 'הצבעה על הצעה' : language === 'ar' ? 'تصويت على مقترح' : 'Voted on a suggestion'}
                             </p>
                           </div>
                           <ArrowRight className={`w-4 h-4 text-slate-400 shrink-0 ${isRTL ? 'rotate-180' : ''}`} />
