@@ -15,8 +15,7 @@ import { FileText, Plus, Trash2, AlertCircle, Upload, Loader2, CheckCircle, Merg
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
-import InsufficientPointsDialog from "../components/InsufficientPointsDialog";
-import PointsCostConfirmDialog from "../components/PointsCostConfirmDialog";
+
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -35,10 +34,7 @@ export default function CreateDocument() {
   const queryClient = useQueryClient();
   const [error, setError] = useState(null);
   const [creationMode, setCreationMode] = useState("manual");
-  const [showInsufficientPointsDialog, setShowInsufficientPointsDialog] = useState(false);
-  const [showPointsConfirm, setShowPointsConfirm] = useState(false);
-  const [pendingDocData, setPendingDocData] = useState(null);
-  const [pointsCheckCompleted, setPointsCheckCompleted] = useState(false);
+
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
@@ -109,34 +105,7 @@ export default function CreateDocument() {
     }
   }, [groupId]);
 
-  // Check points requirement before allowing document creation
-  useEffect(() => {
-    if (!user || userLoading) return;
 
-    // If admin or group admin - skip points check
-    if (user.role === 'admin' || isGroupAdmin) {
-      setPointsCheckCompleted(true);
-      return;
-    }
-
-    // Check if user already confirmed in this session
-    const sessionConfirmed = sessionStorage.getItem('consenz_document_points_confirmed');
-    if (sessionConfirmed === 'true') {
-      setPointsCheckCompleted(true);
-      return;
-    }
-
-    // Check points
-    const currentPoints = user.points || 1000;
-    if (currentPoints < 1001) {
-      setShowInsufficientPointsDialog(true);
-      setPointsCheckCompleted(false);
-    } else {
-      // Has enough points - show confirmation
-      setShowPointsConfirm(true);
-      setPointsCheckCompleted(false);
-    }
-  }, [user, userLoading, isGroupAdmin]);
 
   const validateUrlName = (urlName) => {
     if (!urlName || urlName.trim() === "") {
@@ -323,30 +292,6 @@ Return JSON with title, topics array (each with title and sections array with co
         throw new Error('User not authenticated');
       }
       
-      const isAdmin = user.role === 'admin' || isGroupAdmin;
-      
-      if (!isAdmin) {
-        // Check if user has enough points (1001 required to create document)
-        const currentPoints = user.points || 1000;
-        if (currentPoints < 1001) {
-          throw new Error('INSUFFICIENT_POINTS');
-        }
-
-        // Deduct 1001 points from user
-        await base44.auth.updateMe({
-          points: currentPoints - 1001
-        });
-
-        // Create points transaction record
-        await base44.entities.PointsTransaction.create({
-          userId: user.id,
-          amount: -1001,
-          action: 'suggestion_created',
-          description: `יצירת מסמך חדש: ${data.title}`,
-          relatedEntityType: 'document'
-        });
-      }
-      
       // NOTE: Public profile already ensured by Layout on mount - no need to check here
 
       const doc = await base44.entities.Document.create({
@@ -432,11 +377,7 @@ Return JSON with title, topics array (each with title and sections array with co
     },
     onError: (err) => {
       console.error("Document creation error:", err);
-      if (err.message === 'INSUFFICIENT_POINTS') {
-        setShowInsufficientPointsDialog(true);
-      } else {
-        setError(err.message || "Failed to create document. Please try again.");
-      }
+      setError(err.message || "Failed to create document. Please try again.");
     },
   });
 
@@ -471,36 +412,7 @@ Return JSON with title, topics array (each with title and sections array with co
       return;
     }
 
-    // Check if should show points confirmation dialog (skip for admins and group admins)
-    const isAdmin = user?.role === 'admin' || isGroupAdmin;
-    const skipConfirm = localStorage.getItem('consenz_skip_points_confirm_document') === 'true';
-    const currentPoints = user?.points || 1000;
-    
-    if (!isAdmin && !skipConfirm && currentPoints >= 1001) {
-      setPendingDocData({ ...formData, topics: validTopics });
-      setShowPointsConfirm(true);
-      return;
-    }
-
     createDocMutation.mutate({ ...formData, topics: validTopics });
-  };
-
-  const handleConfirmPoints = () => {
-    if (pendingDocData) {
-      createDocMutation.mutate(pendingDocData);
-      setPendingDocData(null);
-    }
-  };
-
-  const handleInitialPointsConfirm = () => {
-    sessionStorage.setItem('consenz_document_points_confirmed', 'true');
-    setPointsCheckCompleted(true);
-    setShowPointsConfirm(false);
-  };
-
-  const handleInsufficientPointsClose = () => {
-    setShowInsufficientPointsDialog(false);
-    navigate(createPageUrl("Home"));
   };
 
   const addTopic = () => {
@@ -592,65 +504,11 @@ Return JSON with title, topics array (each with title and sections array with co
   }
 
   return (
-    <>
-      <InsufficientPointsDialog
-        isOpen={showInsufficientPointsDialog}
-        onClose={handleInsufficientPointsClose}
-        requiredPoints={1001}
-        currentPoints={user?.points || 1000}
-        actionType="document"
-      />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <PageHeader title={t('createNewDocument')} />
 
-      <PointsCostConfirmDialog
-        isOpen={showPointsConfirm && !pendingDocData}
-        onClose={() => {
-          if (pendingDocData) {
-            // This is the final confirmation before creation
-            setShowPointsConfirm(false);
-            setPendingDocData(null);
-          } else {
-            // This is the initial confirmation - go back to home
-            setShowPointsConfirm(false);
-            navigate(createPageUrl("Home"));
-          }
-        }}
-        onConfirm={pendingDocData ? handleConfirmPoints : handleInitialPointsConfirm}
-        cost={1001}
-        currentPoints={user?.points || 1000}
-        actionType="document"
-      />
-      
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-        <PageHeader 
-          title={t('createNewDocument')}
-        />
-        
-        {!pointsCheckCompleted && (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          </div>
-        )}
-        
-        {pointsCheckCompleted && (
-          <>
         <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>{t('fillDetailsBelow')}</p>
-
-        {user && user.role !== 'admin' && !isGroupAdmin && (
-          <Alert className="bg-blue-50 border-blue-200">
-            <AlertDescription className="text-blue-900">
-              {t('cdCostAlert', { points: user.points || 1000 })}
-            </AlertDescription>
-          </Alert>
-        )}
-        
-        {user && (user.role === 'admin' || isGroupAdmin) && (
-          <Alert className="bg-green-50 border-green-200">
-            <AlertDescription className="text-green-900">
-              {user.role === 'admin' ? t('cdAdminAlert') : t('cdGroupAdminAlert')}
-            </AlertDescription>
-          </Alert>
-        )}
 
         {error && (
           <Alert variant="destructive" className="mb-6">
@@ -963,10 +821,7 @@ Return JSON with title, topics array (each with title and sections array with co
             </div>
           </form>
         )}
-        </>
-        )}
-        </div>
       </div>
-    </>
+    </div>
   );
 }
