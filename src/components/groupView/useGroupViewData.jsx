@@ -274,7 +274,10 @@ export function useGroupViewData(groupId) {
     currentUser, group, groupMembers, allParticipantUserIds, documents, publicProfiles,
     allDocSuggestions, allDocComments,
     isAdmin, isMember, getUnvotedCount,
-    isLoading: groupLoading || groupFetching || membersLoading || documentsLoading,
+    // IMPORTANT: must wait for BOTH group AND members before releasing the privacy guard.
+    // If we release early (group resolved, members still loading), isMember=false briefly
+    // and a private/hidden group's content would flash before being gated.
+    isLoading: groupLoading || groupFetching || membersLoading,
     joinGroupMutation, leaveGroupMutation, requestAccessMutation,
     queryClient,
     navigate,

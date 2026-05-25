@@ -16,8 +16,8 @@ export function useGroupsData() {
     queryFn: () => base44.entities.GroupMember.filter({ userId: currentUser.id }),
     enabled: !!currentUser?.id,
     placeholderData: [],
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes cache
+    staleTime: 0, // Always revalidate — membership changes must reflect immediately
+    gcTime: 5 * 60 * 1000,
   });
 
   const groupIds = useMemo(() => myMemberships.map(m => m.groupId).sort(), [myMemberships]);
@@ -122,18 +122,24 @@ export function useGroupsData() {
   const getParticipantCount = (groupId) =>
     calcGroupParticipants(groupId, groupMembers, documents, groupAllSuggestions, groupAllVotes, groupAllComments, publicProfiles, groupAllAgreements, groupAllSections).size;
 
-  // Visible groups: hidden groups only visible to members/admins/creators
+  // Visible groups: apply privacy rules based on fresh membership data
+  // - public: always visible
+  // - private: only visible to members, admins, or creators
+  // - hidden: only visible to members, admins, or creators
   const visibleGroups = useMemo(() => {
     if (!currentUser) return [];
+    // Don't render anything until memberships have been confirmed (not just from placeholder)
+    if (membersFetching && myMemberships.length === 0) return [];
     return groups.filter((group) => {
-      if (group.status === 'public' || group.status === 'private') return true;
-      // hidden group — user is a member (already fetched only their groups), admin, or creator
-      const isAdmin = currentUser.role === 'admin';
+      const isSystemAdmin = currentUser.role === 'admin';
       const isCreator = group.created_by === currentUser.email;
       const isMember = myMemberships.some(m => m.groupId === group.id);
-      return isMember || isAdmin || isCreator;
+      const hasAccess = isMember || isSystemAdmin || isCreator;
+      if (group.status === 'public') return true;
+      // private and hidden: require confirmed membership/admin/creator
+      return hasAccess;
     });
-  }, [groups, myMemberships, currentUser]);
+  }, [groups, myMemberships, currentUser, membersFetching]);
 
   const getDocCount = (groupId) => documents.filter(d => d.groupId === groupId).length;
   const getMemberCount = (groupId) => groupMembers.filter(m => m.groupId === groupId).length;
