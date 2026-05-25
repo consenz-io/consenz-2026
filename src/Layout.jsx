@@ -370,34 +370,41 @@ function LayoutContent({ children, currentPageName }) {
           style={{ '--sidebar-width': '16rem' }}
         >
           <header className={`bg-white/80 backdrop-blur-sm border-b border-slate-200 ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'fixed md:inset-inline-start-64 md:w-[calc(100vw-16rem)]' : 'sticky'} top-0 z-30 w-full ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'shadow-md' : ''}`} role="banner">
-            <div className={`flex items-center ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'justify-center' : 'justify-between'} gap-2 px-2 md:px-6 ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'py-3 md:py-5' : 'py-2 md:py-4'}`}>
-              {/* Left side: Sidebar Trigger + Logo - entire area clickable on mobile */}
-              <MobileMenuButton isRTL={isRTL} nudgeActive={user && totalUnvotedSuggestions > 0 && showUnvotedNudge} />
+            <div className="flex items-center gap-2 px-2 md:px-6 py-2 md:py-4 w-full min-w-0">
+              {/* Left side: Sidebar Trigger + Logo */}
+              <div className="flex-shrink-0">
+                <MobileMenuButton isRTL={isRTL} nudgeActive={false} />
+              </div>
 
-              {/* Center: Unvoted Suggestions Nudge */}
+              {/* Center: Unvoted Suggestions Nudge — takes remaining space, never overflows */}
               {user && totalUnvotedSuggestions > 0 && showUnvotedNudge && (
-                <Link 
-                  to={createPageUrl("MyDocuments")} 
-                  className="flex-1 max-w-2xl mx-auto px-4"
+                <Link
+                  to={createPageUrl("MyDocuments")}
+                  className="flex-1 min-w-0 mx-1 md:mx-4"
                   onClick={() => {
                     setShowUnvotedNudge(false);
                     sessionStorage.setItem('hideUnvotedNudge', 'true');
                   }}
                 >
-                  <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 bg-orange-50 border-2 border-orange-300 rounded-lg hover:bg-orange-100 transition-all shadow-lg hover:shadow-xl cursor-pointer">
-                    <div className="w-7 h-7 md:w-8 md:h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm md:text-base font-bold animate-pulse flex-shrink-0">
+                  <div className="flex items-center gap-2 px-2 md:px-4 py-2 bg-orange-50 border-2 border-orange-300 rounded-lg hover:bg-orange-100 transition-all shadow-lg cursor-pointer">
+                    <div className="w-7 h-7 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold animate-pulse flex-shrink-0">
                       {totalUnvotedSuggestions > 9 ? '9+' : totalUnvotedSuggestions}
                     </div>
-                    <span className="text-sm md:text-base font-semibold text-orange-900 flex-1 truncate">
+                    <span className="text-xs md:text-sm font-semibold text-orange-900 truncate min-w-0">
                       {language === 'he' ? 'הצעות ממתינות להצבעתך' : language === 'ar' ? 'اقتراحات تنتظر تصويتك' : 'Suggestions awaiting your vote'}
                     </span>
                   </div>
                 </Link>
               )}
 
+              {/* Spacer when nudge is not shown */}
+              {!(user && totalUnvotedSuggestions > 0 && showUnvotedNudge) && (
+                <div className="flex-1" />
+              )}
+
               {/* Right side: Notification Bell + Points Badge */}
               {user && (
-                <div className={`flex items-center gap-1 ${isRTL ? 'mr-auto' : 'ml-auto'}`}>
+                <div className="flex items-center gap-1 flex-shrink-0">
                   <FloatingNotificationBell />
                   <FloatingPointsBadge />
                 </div>
@@ -405,7 +412,7 @@ function LayoutContent({ children, currentPageName }) {
             </div>
           </header>
 
-          <div className={`flex-1 overflow-auto max-w-full min-w-0 ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'pt-20 md:pt-24' : ''}`}>
+          <div className={`flex-1 overflow-auto max-w-full min-w-0 ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'pt-16' : ''}`}>
             {children}
           </div>
           </main>
