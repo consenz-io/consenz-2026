@@ -29,7 +29,8 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
       const response = await base44.functions.invoke('sendGroupInvitation', {
         groupId,
         email: emailAddress,
-        groupName
+        groupName,
+        language
       });
       
       if (!response.data.success) {
