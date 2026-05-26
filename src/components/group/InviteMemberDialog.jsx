@@ -77,7 +77,7 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
   });
 
   const inviteUrl = inviteToken 
-    ? `${window.location.origin}/login?groupInvite=${inviteToken}`
+    ? `https://consenz.net/login?groupInvite=${inviteToken}`
     : '';
 
   const handleCopyLink = () => {

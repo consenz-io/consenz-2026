@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
       status: 'pending'
     });
 
-    const inviteUrl = `https://app.consenz.io/login?groupInvite=${token}`;
+    const inviteUrl = `https://consenz.net/login?groupInvite=${token}`;
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
     const emailRes = await fetch('https://api.resend.com/emails', {
