@@ -45,7 +45,7 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
       queryClient.invalidateQueries({ queryKey: ['groupInvitations', groupId] });
     },
     onError: (err) => {
-      setError(err.message || (language === 'he' ? 'שגיאה בשליחת ההזמנה' : 'Error sending invitation'));
+      setError(err.message || (language === 'he' ? 'שגיאה בשליחת ההזמנה' : language === 'ar' ? 'خطأ في إرسال الدعوة' : 'Error sending invitation'));
     },
   });
 
@@ -73,7 +73,7 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
       queryClient.invalidateQueries({ queryKey: ['groupInvitations', groupId] });
     },
     onError: (err) => {
-      setError(err.message || (language === 'he' ? 'שגיאה ביצירת קישור' : 'Error creating link'));
+      setError(err.message || (language === 'he' ? 'שגיאה ביצירת קישור' : language === 'ar' ? 'خطأ في إنشاء الرابط' : 'Error creating link'));
     },
   });
 
@@ -89,7 +89,7 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
 
   const handleSendEmail = () => {
     if (!email || !email.includes('@')) {
-      setError(language === 'he' ? 'נא להזין כתובת אימייל תקינה' : 'Please enter a valid email address');
+      setError(language === 'he' ? 'נא להזין כתובת אימייל תקינה' : language === 'ar' ? 'يرجى إدخال عنوان بريد إلكتروني صحيح' : 'Please enter a valid email address');
       return;
     }
     sendEmailInviteMutation.mutate(email);
@@ -109,7 +109,7 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {language === 'he' ? 'הזמן חבר חדש' : 'Invite New Member'}
+            {language === 'he' ? 'הזמן חבר חדש' : language === 'ar' ? 'دعوة عضو جديد' : 'Invite New Member'}
           </DialogTitle>
         </DialogHeader>
 
@@ -126,7 +126,7 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
               }`}
             >
               <Mail className={`w-4 h-4 inline ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {language === 'he' ? 'שליחה למייל' : 'Send by Email'}
+              {language === 'he' ? 'שליחה למייל' : language === 'ar' ? 'إرسال بالبريد' : 'Send by Email'}
             </button>
             <button
               type="button"
@@ -138,7 +138,7 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
               }`}
             >
               <LinkIcon className={`w-4 h-4 inline ${isRTL ? 'ml-2' : 'mr-2'}`} />
-              {language === 'he' ? 'יצירת קישור' : 'Create Link'}
+              {language === 'he' ? 'יצירת קישור' : language === 'ar' ? 'إنشاء رابط' : 'Create Link'}
             </button>
           </div>
 
@@ -147,6 +147,8 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
               <p className="text-sm text-slate-600">
                 {language === 'he' 
                   ? 'הזן כתובת אימייל ושלח הזמנה ישירה. ההזמנה תכלול קישור להצטרפות לקבוצה.'
+                  : language === 'ar'
+                  ? 'أدخل عنوان البريد الإلكتروني وأرسل دعوة مباشرة. ستتضمن الدعوة رابطاً للانضمام إلى المجموعة.'
                   : 'Enter an email address to send a direct invitation. The invitation will include a link to join the group.'}
               </p>
 
@@ -161,14 +163,14 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
                 <Alert className="bg-green-50 border-green-200">
                   <CheckCircle className="h-4 w-4 text-green-600" />
                   <AlertDescription className="text-green-800">
-                    {language === 'he' ? 'ההזמנה נשלחה בהצלחה!' : 'Invitation sent successfully!'}
+                    {language === 'he' ? 'ההזמנה נשלחה בהצלחה!' : language === 'ar' ? 'تم إرسال الدعوة بنجاح!' : 'Invitation sent successfully!'}
                   </AlertDescription>
                 </Alert>
               )}
 
               <div className="space-y-2">
                 <Label htmlFor="email">
-                  {language === 'he' ? 'כתובת אימייל' : 'Email Address'}
+                  {language === 'he' ? 'כתובת אימייל' : language === 'ar' ? 'عنوان البريد الإلكتروني' : 'Email Address'}
                 </Label>
                 <Input
                   id="email"
@@ -188,8 +190,8 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
               >
                 <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 {sendEmailInviteMutation.isPending 
-                  ? (language === 'he' ? 'שולח...' : 'Sending...') 
-                  : (language === 'he' ? 'שלח הזמנה' : 'Send Invitation')}
+                  ? (language === 'he' ? 'שולח...' : language === 'ar' ? 'جارٍ الإرسال...' : 'Sending...') 
+                  : (language === 'he' ? 'שלח הזמנה' : language === 'ar' ? 'إرسال الدعوة' : 'Send Invitation')}
               </Button>
             </>
           ) : !inviteToken ? (
@@ -197,6 +199,8 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
               <p className="text-sm text-slate-600">
                 {language === 'he' 
                   ? 'צור קישור הזמנה שתוכל לשתף עם אנשים. כל מי שנרשם דרך הקישור יתווסף אוטומטית לקבוצה.'
+                  : language === 'ar'
+                  ? 'أنشئ رابط دعوة لمشاركته مع الآخرين. سيُضاف تلقائياً كل من يسجّل عبر هذا الرابط إلى المجموعة.'
                   : 'Create an invitation link to share with others. Anyone who signs up through this link will automatically be added to the group.'}
               </p>
 
@@ -214,8 +218,8 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
               >
                 <LinkIcon className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 {generateInviteMutation.isPending 
-                  ? (language === 'he' ? 'יוצר...' : 'Creating...') 
-                  : (language === 'he' ? 'צור קישור הזמנה' : 'Create Invitation Link')}
+                  ? (language === 'he' ? 'יוצר...' : language === 'ar' ? 'جارٍ الإنشاء...' : 'Creating...') 
+                  : (language === 'he' ? 'צור קישור הזמנה' : language === 'ar' ? 'إنشاء رابط الدعوة' : 'Create Invitation Link')}
               </Button>
             </>
           ) : (
@@ -223,13 +227,13 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
               <Alert className="bg-green-50 border-green-200">
                 <CheckCircle className="h-4 w-4 text-green-600" />
                 <AlertDescription className="text-green-800">
-                  {language === 'he' ? 'קישור ההזמנה נוצר בהצלחה!' : 'Invitation link created successfully!'}
+                  {language === 'he' ? 'קישור ההזמנה נוצר בהצלחה!' : language === 'ar' ? 'تم إنشاء رابط الدعوة بنجاح!' : 'Invitation link created successfully!'}
                 </AlertDescription>
               </Alert>
 
               <div className="space-y-2">
                 <Label>
-                  {language === 'he' ? 'קישור ההזמנה' : 'Invitation Link'}
+                  {language === 'he' ? 'קישור ההזמנה' : language === 'ar' ? 'رابط الدعوة' : 'Invitation Link'}
                 </Label>
                 <div className="flex gap-2">
                   <Input
@@ -253,6 +257,8 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
                 <p className="text-xs text-slate-500">
                   {language === 'he' 
                     ? 'העתק את הקישור ושלח אותו למי שתרצה להזמין'
+                    : language === 'ar'
+                    ? 'انسخ هذا الرابط وأرسله إلى من تريد دعوته'
                     : 'Copy this link and send it to anyone you want to invite'}
                 </p>
               </div>
@@ -266,8 +272,8 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
               onClick={handleClose}
             >
               {inviteToken 
-                ? (language === 'he' ? 'סיום' : 'Done')
-                : (language === 'he' ? 'ביטול' : 'Cancel')}
+                ? (language === 'he' ? 'סיום' : language === 'ar' ? 'إنهاء' : 'Done')
+                : (language === 'he' ? 'ביטול' : language === 'ar' ? 'إلغاء' : 'Cancel')}
             </Button>
           </DialogFooter>
         </div>

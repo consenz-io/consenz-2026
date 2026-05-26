@@ -74,7 +74,7 @@ export default function GroupView() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-6xl mx-auto">
-          <Alert><AlertCircle className="h-4 w-4" /><AlertDescription>{language === 'he' ? 'קבוצה לא נמצאה' : 'Group not found'}</AlertDescription></Alert>
+          <Alert><AlertCircle className="h-4 w-4" /><AlertDescription>{language === 'he' ? 'קבוצה לא נמצאה' : language === 'ar' ? 'المجموعة غير موجودة' : 'Group not found'}</AlertDescription></Alert>
         </div>
       </div>
     );
@@ -87,7 +87,7 @@ export default function GroupView() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-6xl mx-auto">
-          <Alert><Lock className="h-4 w-4" /><AlertDescription>{language === 'he' ? 'קבוצה חסויה - אינה זמינה' : 'Hidden group - not available'}</AlertDescription></Alert>
+          <Alert><Lock className="h-4 w-4" /><AlertDescription>{language === 'he' ? 'קבוצה חסויה - אינה זמינה' : language === 'ar' ? 'مجموعة مخفية - غير متاحة' : 'Hidden group - not available'}</AlertDescription></Alert>
         </div>
       </div>
     );
@@ -97,19 +97,19 @@ export default function GroupView() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-6xl mx-auto space-y-4">
-          <Alert><Lock className="h-4 w-4" /><AlertDescription>{language === 'he' ? 'קבוצה פרטית - נדרשת חברות' : 'Private group - membership required'}</AlertDescription></Alert>
+          <Alert><Lock className="h-4 w-4" /><AlertDescription>{language === 'he' ? 'קבוצה פרטית - נדרשת חברות' : language === 'ar' ? 'مجموعة خاصة - العضوية مطلوبة' : 'Private group - membership required'}</AlertDescription></Alert>
           {currentUser && (
             <Card className="bg-white">
-              <CardHeader><CardTitle className="text-lg">{language === 'he' ? 'מעוניין להצטרף?' : 'Want to join?'}</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="text-lg">{language === 'he' ? 'מעוניין להצטרף?' : language === 'ar' ? 'هل تريد الانضمام؟' : 'Want to join?'}</CardTitle></CardHeader>
               <CardContent className="space-y-3">
-                <p className="text-slate-600 text-sm">{language === 'he' ? 'שלח בקשה לאדמיני הקבוצה' : 'Send a request to the group admins'}</p>
+                <p className="text-slate-600 text-sm">{language === 'he' ? 'שלח בקשה לאדמיני הקבוצה' : language === 'ar' ? 'أرسل طلباً إلى مديري المجموعة' : 'Send a request to the group admins'}</p>
                 <Button onClick={() => requestAccessMutation.mutate()} disabled={requestAccessMutation.isPending || requestAccessMutation.isSuccess} className="bg-gradient-to-r from-blue-600 to-indigo-600">
                   <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {requestAccessMutation.isSuccess ? (language === 'he' ? 'הבקשה נשלחה' : 'Request sent') : (language === 'he' ? 'שלח בקשה להצטרפות' : 'Request to join')}
+                  {requestAccessMutation.isSuccess ? (language === 'he' ? 'הבקשה נשלחה' : language === 'ar' ? 'تم إرسال الطلب' : 'Request sent') : (language === 'he' ? 'שלח בקשה להצטרפות' : language === 'ar' ? 'إرسال طلب انضمام' : 'Request to join')}
                 </Button>
                 {requestAccessMutation.isSuccess && (
                   <Alert className="bg-green-50 border-green-200">
-                    <AlertDescription className="text-green-800">{language === 'he' ? 'הבקשה נשלחה בהצלחה' : 'Request sent successfully'}</AlertDescription>
+                    <AlertDescription className="text-green-800">{language === 'he' ? 'הבקשה נשלחה בהצלחה' : language === 'ar' ? 'تم إرسال الطلب بنجاح' : 'Request sent successfully'}</AlertDescription>
                   </Alert>
                 )}
               </CardContent>
@@ -121,7 +121,7 @@ export default function GroupView() {
   }
 
   const statusBadgeCls = group.status === 'private' ? 'bg-amber-50 text-amber-700 border-amber-200' : group.status === 'hidden' ? 'bg-slate-100 text-slate-700 border-slate-300' : 'bg-blue-50 text-blue-700 border-blue-200';
-  const statusLabel = group.status === 'private' ? (language === 'he' ? 'פרטי' : 'Private') : group.status === 'hidden' ? (language === 'he' ? 'חסוי' : 'Hidden') : (language === 'he' ? 'ציבורי' : 'Public');
+  const statusLabel = group.status === 'private' ? (language === 'he' ? 'פרטי' : language === 'ar' ? 'خاص' : 'Private') : group.status === 'hidden' ? (language === 'he' ? 'חסוי' : language === 'ar' ? 'مخفي' : 'Hidden') : (language === 'he' ? 'ציבורי' : language === 'ar' ? 'عام' : 'Public');
   const StatusIcon = group.status === 'public' ? Globe : Lock;
 
   return (
@@ -140,24 +140,24 @@ export default function GroupView() {
                 <StatusIcon className="w-3 h-3 mr-1" />{statusLabel}
               </Badge>
               <Badge variant="outline"><Users className="w-3 h-3 mr-1" />{allParticipantUserIds.length} {language === 'he' ? 'משתתפים' : language === 'ar' ? 'مشاركون' : 'participants'}</Badge>
-              {isAdmin && <Badge className="bg-purple-100 text-purple-800 border-purple-200">{language === 'he' ? 'מנהל' : 'Admin'}</Badge>}
+              {isAdmin && <Badge className="bg-purple-100 text-purple-800 border-purple-200">{language === 'he' ? 'מנהל' : language === 'ar' ? 'مدير' : 'Admin'}</Badge>}
             </div>
           </div>
           <div className="flex gap-2">
 
             {isAdmin && (
               <Button variant="outline" onClick={() => setShowManageMembers(true)}>
-                <Settings className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{language === 'he' ? 'ניהול' : 'Manage'}
+                <Settings className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{language === 'he' ? 'ניהול' : language === 'ar' ? 'إدارة' : 'Manage'}
               </Button>
             )}
             {currentUser && !isMember && group.status === 'public' && (
               <Button onClick={() => joinGroupMutation.mutate()} disabled={joinGroupMutation.isPending} className="bg-gradient-to-r from-blue-600 to-indigo-600">
-                <UserPlus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{language === 'he' ? 'הצטרף לקבוצה' : 'Join Group'}
+                <UserPlus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{language === 'he' ? 'הצטרף לקבוצה' : language === 'ar' ? 'انضم إلى المجموعة' : 'Join Group'}
               </Button>
             )}
             {isMember && !isAdmin && (
               <Button variant="outline" onClick={() => leaveGroupMutation.mutate()} disabled={leaveGroupMutation.isPending}>
-                {language === 'he' ? 'עזוב קבוצה' : 'Leave Group'}
+                {language === 'he' ? 'עזוב קבוצה' : language === 'ar' ? 'مغادرة المجموعة' : 'Leave Group'}
               </Button>
             )}
           </div>
@@ -180,12 +180,12 @@ export default function GroupView() {
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <CardTitle className="flex items-center gap-2">
-                    <FileText className="w-5 h-5" />{language === 'he' ? 'מסמכי הקבוצה' : 'Group Documents'}
+                    <FileText className="w-5 h-5" />{language === 'he' ? 'מסמכי הקבוצה' : language === 'ar' ? 'مستندات المجموعة' : 'Group Documents'}
                   </CardTitle>
                   {isMember && (
                     <Link to={`${createPageUrl("CreateDocument")}?groupId=${groupId}`}>
                       <Button size="sm" className="bg-gradient-to-r from-blue-600 to-indigo-600">
-                        <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{language === 'he' ? 'מסמך חדש' : 'New Document'}
+                        <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{language === 'he' ? 'מסמך חדש' : language === 'ar' ? 'مستند جديد' : 'New Document'}
                       </Button>
                     </Link>
                   )}
@@ -193,7 +193,7 @@ export default function GroupView() {
               </CardHeader>
               <CardContent>
                 {displayedDocs.length === 0 ? (
-                  <p className="text-slate-500 text-center py-8">{language === 'he' ? 'אין עדיין מסמכים בקבוצה זו' : 'No documents in this group yet'}</p>
+                  <p className="text-slate-500 text-center py-8">{language === 'he' ? 'אין עדיין מסמכים בקבוצה זו' : language === 'ar' ? 'لا توجد مستندات في هذه المجموعة بعد' : 'No documents in this group yet'}</p>
                 ) : (
                   <DragDropContext onDragEnd={handleDragEnd}>
                     <Droppable droppableId="group-documents">
@@ -237,12 +237,12 @@ export default function GroupView() {
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <CardTitle className="flex items-center gap-2 min-w-0">
                     <Users className="w-5 h-5 shrink-0" />
-                    <span className="truncate">{language === 'he' ? 'משתתפים' : 'Participants'}</span>
+                    <span className="truncate">{language === 'he' ? 'משתתפים' : language === 'ar' ? 'المشاركون' : 'Participants'}</span>
                     <span className="text-sm font-normal text-slate-500 shrink-0">({allParticipantUserIds.length})</span>
                   </CardTitle>
                   {(isAdmin || isMember) && (
                     <Button size="sm" variant="outline" onClick={() => setShowInviteMember(true)} className="shrink-0">
-                      <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{language === 'he' ? 'הזמן' : 'Invite'}
+                      <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{language === 'he' ? 'הזמן' : language === 'ar' ? 'دعوة' : 'Invite'}
                     </Button>
                   )}
                 </div>

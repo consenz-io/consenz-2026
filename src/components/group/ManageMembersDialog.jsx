@@ -156,7 +156,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
       
       // Validate email
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-        throw new Error(language === 'he' ? 'כתובת אימייל לא תקינה' : 'Invalid email address');
+        throw new Error(language === 'he' ? 'כתובת אימייל לא תקינה' : language === 'ar' ? 'عنوان البريد الإلكتروني غير صالح' : 'Invalid email address');
       }
 
       // Check if user exists
@@ -169,7 +169,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
         // Check if already a member
         const existingMember = groupMembers.find(m => m.userId === user.id);
         if (existingMember) {
-          throw new Error(language === 'he' ? 'משתמש כבר חבר בקבוצה' : 'User is already a member');
+          throw new Error(language === 'he' ? 'משתמש כבר חבר בקבוצה' : language === 'ar' ? 'المستخدم عضو بالفعل في المجموعة' : 'User is already a member');
         }
 
         // Add as member
@@ -188,9 +188,13 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
             to: trimmedEmail,
             subject: language === 'he' 
               ? `נוספת לקבוצה: ${groupName}`
+              : language === 'ar'
+              ? `تمت إضافتك إلى المجموعة: ${groupName}`
               : `You were added to group: ${groupName}`,
             body: language === 'he'
               ? `שלום ${user.full_name},\n\n${adminName} הוסיף אותך לקבוצה "${groupName}".\n\nכעת תוכל לראות ולהשתתף במסמכים של הקבוצה.\n\nבברכה,\nצוות Consenz`
+              : language === 'ar'
+              ? `مرحباً ${user.full_name},\n\nقام ${adminName} بإضافتك إلى مجموعة "${groupName}".\n\nيمكنك الآن عرض مستندات المجموعة والمشاركة فيها.\n\nمع تحيات فريق Consenz`
               : `Hello ${user.full_name},\n\n${adminName} added you to the group "${groupName}".\n\nYou can now view and participate in the group's documents.\n\nBest regards,\nConsenz Team`
           });
         } catch (emailError) {
@@ -209,7 +213,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
         });
 
         if (!response.data.success) {
-          throw new Error(response.data.error || (language === 'he' ? 'שגיאה בשליחת הזמנה' : 'Error sending invitation'));
+          throw new Error(response.data.error || (language === 'he' ? 'שגיאה בשליחת הזמנה' : language === 'ar' ? 'خطأ في إرسال الدعوة' : 'Error sending invitation'));
         }
 
         return { type: 'invitation_sent', email: trimmedEmail };
@@ -220,9 +224,9 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
       queryClient.invalidateQueries({ queryKey: ['groupInvitations', groupId] });
       
       if (result.type === 'existing_user') {
-        setSuccess(language === 'he' ? 'חבר נוסף בהצלחה!' : 'Member added successfully!');
+        setSuccess(language === 'he' ? 'חבר נוסף בהצלחה!' : language === 'ar' ? 'تمت إضافة العضو بنجاح!' : 'Member added successfully!');
       } else {
-        setSuccess(language === 'he' ? 'הזמנה נשלחה בהצלחה במייל!' : 'Invitation sent successfully via email!');
+        setSuccess(language === 'he' ? 'הזמנה נשלחה בהצלחה במייל!' : language === 'ar' ? 'تم إرسال الدعوة بنجاح عبر البريد الإلكتروني!' : 'Invitation sent successfully via email!');
       }
       
       setInviteEmail("");
@@ -291,13 +295,13 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
       queryClient.invalidateQueries({ queryKey: ['groupMembers', groupId] });
       queryClient.invalidateQueries({ queryKey: ['joinRequests', groupId] });
       const message = variables.approved 
-        ? (language === 'he' ? 'הבקשה אושרה והמשתמש נוסף לקבוצה' : 'Request approved and user added')
-        : (language === 'he' ? 'הבקשה נדחתה' : 'Request rejected');
+        ? (language === 'he' ? 'הבקשה אושרה והמשתמש נוסף לקבוצה' : language === 'ar' ? 'تمت الموافقة على الطلب وإضافة المستخدم' : 'Request approved and user added')
+        : (language === 'he' ? 'הבקשה נדחתה' : language === 'ar' ? 'تم رفض الطلب' : 'Request rejected');
       setSuccess(message);
       setTimeout(() => setSuccess(null), 3000);
     },
     onError: () => {
-      setError(language === 'he' ? 'שגיאה בטיפול בבקשה' : 'Error handling request');
+      setError(language === 'he' ? 'שגיאה בטיפול בבקשה' : language === 'ar' ? 'خطأ في معالجة الطلب' : 'Error handling request');
       setTimeout(() => setError(null), 5000);
     },
   });
@@ -309,11 +313,11 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['group', groupId] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
-      setSuccess(language === 'he' ? 'הגדרות הקבוצה עודכנו בהצלחה' : 'Group settings updated successfully');
+      setSuccess(language === 'he' ? 'הגדרות הקבוצה עודכנו בהצלחה' : language === 'ar' ? 'تم تحديث إعدادات المجموعة بنجاح' : 'Group settings updated successfully');
       setTimeout(() => setSuccess(null), 3000);
     },
     onError: () => {
-      setError(language === 'he' ? 'שגיאה בעדכון הגדרות הקבוצה' : 'Error updating group settings');
+      setError(language === 'he' ? 'שגיאה בעדכון הגדרות הקבוצה' : language === 'ar' ? 'خطأ في تحديث إعدادات المجموعة' : 'Error updating group settings');
       setTimeout(() => setError(null), 5000);
     },
   });
@@ -330,11 +334,13 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="w-5 h-5" />
-            {language === 'he' ? 'ניהול הקבוצה' : 'Manage Group'}
+            {language === 'he' ? 'ניהול הקבוצה' : language === 'ar' ? 'إدارة المجموعة' : 'Manage Group'}
           </DialogTitle>
           <DialogDescription>
             {language === 'he' 
               ? 'נהל את הגדרות הקבוצה, הוסף חברים חדשים והגדר אדמינים'
+              : language === 'ar'
+              ? 'إدارة إعدادات المجموعة وإضافة أعضاء جدد وتعيين المديرين'
               : 'Manage group settings, add new members and set admins'}
           </DialogDescription>
         </DialogHeader>
@@ -347,7 +353,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
         ) : !isAdmin ? (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{language === 'he' ? 'אין הרשאת ניהול לקבוצה זו' : 'No admin permission for this group'}</AlertDescription>
+            <AlertDescription>{language === 'he' ? 'אין הרשאת ניהול לקבוצה זו' : language === 'ar' ? 'لا توجد صلاحية إدارة لهذه المجموعة' : 'No admin permission for this group'}</AlertDescription>
           </Alert>
         ) : (<>
 
@@ -367,10 +373,10 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
 
         <div className="space-y-3 border-b pb-4">
           <h3 className="font-semibold text-sm text-slate-700">
-            {language === 'he' ? 'הגדרות קבוצה' : 'Group Settings'}
+            {language === 'he' ? 'הגדרות קבוצה' : language === 'ar' ? 'إعدادات المجموعة' : 'Group Settings'}
           </h3>
           <div className="space-y-2">
-            <Label>{language === 'he' ? 'פרטיות הקבוצה' : 'Group Privacy'}</Label>
+            <Label>{language === 'he' ? 'פרטיות הקבוצה' : language === 'ar' ? 'خصوصية المجموعة' : 'Group Privacy'}</Label>
             <RadioGroup
               value={group?.status || 'public'}
               onValueChange={(value) => updateGroupStatusMutation.mutate(value)}
@@ -380,10 +386,10 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                 <Label htmlFor="public-manage" className="flex-1 cursor-pointer text-right">
                   <div className="flex items-center justify-end gap-2 font-medium mb-1">
                     <Globe className="w-4 h-4" />
-                    {language === 'he' ? 'ציבורי' : 'Public'}
+                    {language === 'he' ? 'ציבורי' : language === 'ar' ? 'عام' : 'Public'}
                   </div>
                   <p className="text-xs text-slate-500">
-                    {language === 'he' ? 'כולם יכולים לראות ולהצטרף' : 'Everyone can see and join'}
+                    {language === 'he' ? 'כולם יכולים לראות ולהצטרף' : language === 'ar' ? 'يمكن للجميع الرؤية والانضمام' : 'Everyone can see and join'}
                   </p>
                 </Label>
               </div>
@@ -393,10 +399,10 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                 <Label htmlFor="private-manage" className="flex-1 cursor-pointer text-right">
                   <div className="flex items-center justify-end gap-2 font-medium mb-1">
                     <Lock className="w-4 h-4" />
-                    {language === 'he' ? 'פרטי' : 'Private'}
+                    {language === 'he' ? 'פרטי' : language === 'ar' ? 'خاص' : 'Private'}
                   </div>
                   <p className="text-xs text-slate-500">
-                    {language === 'he' ? 'כולם יכולים לראות, דרושה אישור' : 'Everyone can see, approval required'}
+                    {language === 'he' ? 'כולם יכולים לראות, דרושה אישור' : language === 'ar' ? 'يمكن للجميع الرؤية، يتطلب موافقة' : 'Everyone can see, approval required'}
                   </p>
                 </Label>
               </div>
@@ -406,10 +412,10 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                 <Label htmlFor="hidden-manage" className="flex-1 cursor-pointer text-right">
                   <div className="flex items-center justify-end gap-2 font-medium mb-1">
                     <Lock className="w-4 h-4" />
-                    {language === 'he' ? 'חסוי' : 'Hidden'}
+                    {language === 'he' ? 'חסוי' : language === 'ar' ? 'مخفي' : 'Hidden'}
                   </div>
                   <p className="text-xs text-slate-500">
-                    {language === 'he' ? 'רק חברים ומנהלי מערכת' : 'Only members and system admins'}
+                    {language === 'he' ? 'רק חברים ומנהלי מערכת' : language === 'ar' ? 'الأعضاء ومديرو النظام فقط' : 'Only members and system admins'}
                   </p>
                 </Label>
               </div>
@@ -420,7 +426,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
         {joinRequests.length > 0 && (
           <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <h3 className="font-semibold text-sm text-blue-900">
-              {language === 'he' ? 'בקשות הצטרפות ממתינות' : 'Pending Join Requests'}
+              {language === 'he' ? 'בקשות הצטרפות ממתינות' : language === 'ar' ? 'طلبات الانضمام المعلّقة' : 'Pending Join Requests'}
             </h3>
             <div className="space-y-2">
               {joinRequests.map((request) => (
@@ -446,7 +452,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                       })}
                       disabled={handleJoinRequestMutation.isPending}
                     >
-                      {language === 'he' ? 'אשר' : 'Approve'}
+                      {language === 'he' ? 'אשר' : language === 'ar' ? 'موافقة' : 'Approve'}
                     </Button>
                     <Button
                       size="sm"
@@ -459,7 +465,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                       })}
                       disabled={handleJoinRequestMutation.isPending}
                     >
-                      {language === 'he' ? 'דחה' : 'Reject'}
+                      {language === 'he' ? 'דחה' : language === 'ar' ? 'رفض' : 'Reject'}
                     </Button>
                   </div>
                 </div>
@@ -471,13 +477,13 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
         <form onSubmit={handleInvite} className="space-y-4 border-b pb-4">
           <div className="space-y-2">
             <Label htmlFor="invite-email">
-              {language === 'he' ? 'הזמן חבר חדש' : 'Invite New Member'}
+              {language === 'he' ? 'הזמן חבר חדש' : language === 'ar' ? 'دعوة عضو جديد' : 'Invite New Member'}
             </Label>
             <div className="flex gap-2">
               <Input
                 id="invite-email"
                 type="email"
-                placeholder={language === 'he' ? 'הזן כתובת אימייל...' : 'Enter email address...'}
+                placeholder={language === 'he' ? 'הזן כתובת אימייל...' : language === 'ar' ? 'أدخل عنوان البريد الإلكتروني...' : 'Enter email address...'}
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
               />
@@ -486,12 +492,14 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                 disabled={inviteMemberMutation.isPending || !inviteEmail.trim()}
               >
                 <Mail className="w-4 h-4 mr-2" />
-                {language === 'he' ? 'הזמן' : 'Invite'}
+                {language === 'he' ? 'הזמן' : language === 'ar' ? 'دعوة' : 'Invite'}
               </Button>
             </div>
             <p className="text-xs text-slate-500">
               {language === 'he' 
                 ? 'אם המשתמש לא רשום, ישלח לו מייל הזמנה'
+                : language === 'ar'
+                ? 'إذا لم يكن المستخدم مسجلاً، سيتلقى بريداً إلكترونياً بالدعوة'
                 : 'If user is not registered, they will receive an invitation email'}
             </p>
           </div>
@@ -499,14 +507,14 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
 
         <div className="space-y-3 border-b pb-4">
           <h3 className="font-semibold text-sm text-red-700">
-            {language === 'he' ? 'מחיקת קבוצה' : 'Delete Group'}
+            {language === 'he' ? 'מחיקת קבוצה' : language === 'ar' ? 'حذف المجموعة' : 'Delete Group'}
           </h3>
           <p className="text-xs text-slate-500">
-            {language === 'he' ? 'פעולה זו אינה הפיכה. כל הנתונים יימחקו לצמיתות.' : 'This action is irreversible. All data will be permanently deleted.'}
+            {language === 'he' ? 'פעולה זו אינה הפיכה. כל הנתונים יימחקו לצמיתות.' : language === 'ar' ? 'هذا الإجراء لا يمكن التراجع عنه. سيتم حذف جميع البيانات نهائياً.' : 'This action is irreversible. All data will be permanently deleted.'}
           </p>
           {confirmDeleteGroup ? (
             <div className="flex items-center gap-2">
-              <p className="text-xs text-red-600">{language === 'he' ? 'האם אתה בטוח?' : 'Are you sure?'}</p>
+              <p className="text-xs text-red-600">{language === 'he' ? 'האם אתה בטוח?' : language === 'ar' ? 'هل أنت متأكد؟' : 'Are you sure?'}</p>
               <Button
                 variant="outline"
                 size="sm"
@@ -517,10 +525,10 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                   onGroupDeleted?.();
                 }}
               >
-                {language === 'he' ? 'אשר מחיקה' : 'Confirm Delete'}
+                {language === 'he' ? 'אשר מחיקה' : language === 'ar' ? 'تأكيد الحذف' : 'Confirm Delete'}
               </Button>
               <Button variant="ghost" size="sm" onClick={() => setConfirmDeleteGroup(false)}>
-                {language === 'he' ? 'בטל' : 'Cancel'}
+                {language === 'he' ? 'בטל' : language === 'ar' ? 'إلغاء' : 'Cancel'}
               </Button>
             </div>
           ) : (
@@ -530,14 +538,14 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
               onClick={() => setConfirmDeleteGroup(true)}
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              {language === 'he' ? 'מחק קבוצה' : 'Delete Group'}
+              {language === 'he' ? 'מחק קבוצה' : language === 'ar' ? 'حذف المجموعة' : 'Delete Group'}
             </Button>
           )}
         </div>
 
         <div className="space-y-3">
           <h3 className="font-semibold text-sm text-slate-700">
-            {language === 'he' ? 'חברי הקבוצה' : 'Group Members'} ({allParticipants.totalCount} {language === 'he' ? 'משתתפים' : 'participants'})
+            {language === 'he' ? 'חברי הקבוצה' : language === 'ar' ? 'أعضاء المجموعة' : 'Group Members'} ({allParticipants.totalCount} {language === 'he' ? 'משתתפים' : language === 'ar' ? 'مشاركون' : 'participants'})
           </h3>
           
           {groupMembers.map((member) => {
@@ -558,7 +566,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                       {profile?.fullName || member.userId}
                       {isCurrentUser && (
                         <span className="text-xs text-slate-500 mr-2">
-                          ({language === 'he' ? 'את/ה' : 'You'})
+                          ({language === 'he' ? 'את/ה' : language === 'ar' ? 'أنت' : 'You'})
                         </span>
                       )}
                     </p>
@@ -566,7 +574,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                   </div>
                   {member.role === 'admin' && (
                     <Badge className="bg-purple-100 text-purple-800 border-purple-200">
-                      {language === 'he' ? 'מנהל' : 'Admin'}
+                      {language === 'he' ? 'מנהל' : language === 'ar' ? 'مدير' : 'Admin'}
                     </Badge>
                   )}
                 </div>
@@ -583,19 +591,19 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                         })}
                         disabled={toggleAdminMutation.isPending}
                         title={member.role === 'admin' 
-                          ? (language === 'he' ? 'הורד מאדמין' : 'Remove admin')
-                          : (language === 'he' ? 'הפוך לאדמין' : 'Make admin')
+                          ? (language === 'he' ? 'הורד מאדמין' : language === 'ar' ? 'إزالة صلاحية المدير' : 'Remove admin')
+                          : (language === 'he' ? 'הפוך לאדמין' : language === 'ar' ? 'تعيين كمدير' : 'Make admin')
                         }
                       >
                         {member.role === 'admin' ? (
                           <>
                             <ShieldOff className="w-4 h-4 mr-1" />
-                            {language === 'he' ? 'יוזר' : 'User'}
+                            {language === 'he' ? 'יוזר' : language === 'ar' ? 'مستخدم' : 'User'}
                           </>
                         ) : (
                           <>
                             <Shield className="w-4 h-4 mr-1" />
-                            {language === 'he' ? 'אדמין' : 'Admin'}
+                            {language === 'he' ? 'אדמין' : language === 'ar' ? 'مدير' : 'Admin'}
                           </>
                         )}
                       </Button>
@@ -608,7 +616,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                             onClick={() => { removeMemberMutation.mutate(member.id); setConfirmRemoveMemberId(null); }}
                             disabled={removeMemberMutation.isPending}
                           >
-                            {language === 'he' ? 'אשר' : 'Confirm'}
+                            {language === 'he' ? 'אשר' : language === 'ar' ? 'تأكيد' : 'Confirm'}
                           </Button>
                           <Button
                             variant="ghost"
@@ -616,7 +624,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                             className="text-slate-500 text-xs px-2"
                             onClick={() => setConfirmRemoveMemberId(null)}
                           >
-                            {language === 'he' ? 'בטל' : 'Cancel'}
+                            {language === 'he' ? 'בטל' : language === 'ar' ? 'إلغاء' : 'Cancel'}
                           </Button>
                         </div>
                       ) : (
@@ -626,7 +634,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                           onClick={() => setConfirmRemoveMemberId(member.id)}
                           disabled={removeMemberMutation.isPending}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          title={language === 'he' ? 'הסר מהקבוצה' : 'Remove from group'}
+                          title={language === 'he' ? 'הסר מהקבוצה' : language === 'ar' ? 'إزالة من المجموعة' : 'Remove from group'}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -642,7 +650,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
           {allParticipants.extraProfiles.length > 0 && (
             <>
               <p className="text-xs text-slate-400 pt-2 border-t">
-                {language === 'he' ? 'משתתפים נוספים (הגישו הצעות)' : 'Additional participants (submitted suggestions)'}
+                {language === 'he' ? 'משתתפים נוספים (הגישו הצעות)' : language === 'ar' ? 'مشاركون إضافيون (قدّموا اقتراحات)' : 'Additional participants (submitted suggestions)'}
               </p>
               {allParticipants.extraProfiles.map((profile) => (
                 <div
@@ -668,7 +676,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                       }}
                     >
                       <UserPlus className="w-4 h-4 mr-1" />
-                      {language === 'he' ? 'הוסף כחבר' : 'Add as member'}
+                      {language === 'he' ? 'הוסף כחבר' : language === 'ar' ? 'إضافة كعضو' : 'Add as member'}
                     </Button>
                     <Button
                       variant="outline"
@@ -680,7 +688,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                       }}
                     >
                       <Shield className="w-4 h-4 mr-1" />
-                      {language === 'he' ? 'הפוך לאדמין' : 'Make admin'}
+                      {language === 'he' ? 'הפוך לאדמין' : language === 'ar' ? 'تعيين كمدير' : 'Make admin'}
                     </Button>
                   </div>
                 </div>
