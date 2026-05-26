@@ -823,20 +823,14 @@ ${text}`;
                                 ) : isViewingHistory && hasChanged ? (
                                 <div 
                                   id={`change-${section.id}`} 
-                                  className="border-l-4 border-amber-400 pl-3 py-2 bg-amber-50/30 rounded"
+                                  className={`border-l-4 border-amber-400 pl-3 py-2 bg-amber-50/30 rounded ${currentSnapshot?.suggestionId ? 'cursor-pointer hover:bg-amber-100/50 transition-colors' : ''}`}
+                                  onClick={() => currentSnapshot?.suggestionId && setOpenSuggestionId(currentSnapshot.suggestionId)}
                                 >
-                                  <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center mb-2">
                                     <Badge className="bg-amber-100 text-amber-800 text-xs">
                                       {language === 'he' ? '✏️ שינוי בגרסה זו' : language === 'ar' ? '✏️ تغيير في هذا الإصدار' : '✏️ Changed in this version'}
+                                      {currentSnapshot?.suggestionId && (language === 'he' ? ' - לחץ לצפייה בדיון' : language === 'ar' ? ' - انقر لعرض النقاش' : ' - Click to view discussion')}
                                     </Badge>
-                                    {currentSnapshot?.suggestionId && (
-                                      <button
-                                        onClick={() => setOpenSuggestionId(currentSnapshot.suggestionId)}
-                                        className="text-[11px] text-blue-600 hover:underline"
-                                      >
-                                        {language === 'he' ? 'צפה בדיון' : language === 'ar' ? 'عرض النقاش' : 'View discussion'}
-                                      </button>
-                                    )}
                                   </div>
                                   <InlineDiff
                                     originalContent={oldContent}
