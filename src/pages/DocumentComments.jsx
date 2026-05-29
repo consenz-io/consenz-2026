@@ -1,24 +1,18 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowRight, ArrowLeft, MessageSquare, FileText,
-  Languages, Loader2, ExternalLink, ChevronDown, ChevronUp,
-  Clock, ThumbsUp, Hash, BookOpen, SortAsc, SortDesc, Filter
+  ExternalLink, ChevronDown, ChevronUp,
+  ThumbsUp, BookOpen, SortAsc, Filter
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import { formatLocalDateTime } from "@/components/utils/dateFormatter";
-
-const detectLanguage = (text) => {
-  if (/[\u0590-\u05FF]/.test(text)) return 'he';
-  if (/[\u0600-\u06FF]/.test(text)) return 'ar';
-  return 'en';
-};
 
 const SORT_OPTIONS = {
   recent: 'recent',
@@ -27,26 +21,29 @@ const SORT_OPTIONS = {
   topic: 'topic',
 };
 
+// ─── Pure helpers ────────────────────────────────────────────────────────────
+
+const stripHtml = (html) => (html || '').replace(/<[^>]*>/g, '');
+
 function AvatarInitial({ name, size = 'sm' }) {
   const initial = (name || '?').charAt(0).toUpperCase();
-  const colors = ['from-blue-500 to-indigo-500', 'from-green-500 to-teal-500', 'from-purple-500 to-pink-500', 'from-orange-500 to-red-500', 'from-cyan-500 to-blue-500'];
-  const colorIdx = (name?.charCodeAt(0) || 0) % colors.length;
+  const COLORS = ['from-blue-500 to-indigo-500', 'from-green-500 to-teal-500', 'from-purple-500 to-pink-500', 'from-orange-500 to-red-500', 'from-cyan-500 to-blue-500'];
+  const colorIdx = (name?.charCodeAt(0) || 0) % COLORS.length;
   const sz = size === 'sm' ? 'w-7 h-7 text-xs' : 'w-9 h-9 text-sm';
   return (
-    <div className={`${sz} rounded-full bg-gradient-to-br ${colors[colorIdx]} flex items-center justify-center flex-shrink-0`}>
+    <div className={`${sz} rounded-full bg-gradient-to-br ${COLORS[colorIdx]} flex items-center justify-center flex-shrink-0`}>
       <span className="text-white font-semibold">{initial}</span>
     </div>
   );
 }
 
-function CommentRow({ comment, getUserName, getUserId, language, isRTL, level = 0 }) {
-  const name = getUserName(comment.created_by);
-  const userId = getUserId(comment.created_by);
+// Memoized — only re-renders when comment data or language changes
+const CommentRow = React.memo(function CommentRow({ comment, name, userId, isRTL }) {
   const likeCount = (comment.likes || []).length;
   return (
     <div
       id={`comment-${comment.id}`}
-      className={`flex gap-2.5 ${level > 0 ? 'mt-2 pl-4 md:pl-8 border-l-2 border-slate-100' : ''}`}
+      className={`flex gap-2.5 ${comment._level > 0 ? 'mt-2 pl-4 md:pl-8 border-l-2 border-slate-100' : ''}`}
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       <Link to={`${createPageUrl("Profile")}?userId=${userId}`} className="flex-shrink-0 mt-0.5">
@@ -68,23 +65,18 @@ function CommentRow({ comment, getUserName, getUserId, language, isRTL, level = 
           )}
         </div>
         <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words">
-          {(comment.content || '').replace(/<[^>]*>/g, '')}
+          {stripHtml(comment.content)}
         </p>
       </div>
     </div>
   );
-}
+});
 
 function SectionContextBlock({ section, topicTitle, sectionNumber, isRTL, language, onNavigate }) {
   const [expanded, setExpanded] = React.useState(false);
-  if (!section) return null;
-
-  const tempDiv = typeof window !== 'undefined' ? window.document.createElement('div') : null;
-  let text = '';
-  if (tempDiv) {
-    tempDiv.innerHTML = section.content || '';
-    text = (tempDiv.textContent || tempDiv.innerText || '').trim();
-  }
+  // Compute plain text once, not on every render
+  const text = React.useMemo(() => stripHtml(section?.content), [section?.content]);
+  if (!section || !text) return null;
 
   const SHORT_LEN = 120;
   const isLong = text.length > SHORT_LEN;
@@ -110,51 +102,50 @@ function SectionContextBlock({ section, topicTitle, sectionNumber, isRTL, langua
           {language === 'he' ? 'עבור לסעיף' : language === 'ar' ? 'انتقل إلى المقطع' : 'Go to section'}
         </button>
       </div>
-      {text && (
-        <div>
-          <p
-            className="text-sm text-slate-700 leading-relaxed"
-            style={{ fontFamily: "'Times New Roman', Georgia, serif" }}
-            dir={isRTL ? 'rtl' : 'ltr'}
+      <div>
+        <p
+          className="text-sm text-slate-700 leading-relaxed"
+          style={{ fontFamily: "'Times New Roman', Georgia, serif" }}
+          dir={isRTL ? 'rtl' : 'ltr'}
+        >
+          {displayText}
+        </p>
+        {isLong && (
+          <button
+            onClick={() => setExpanded(v => !v)}
+            className="mt-1 flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
           >
-            {displayText}
-          </p>
-          {isLong && (
-            <button
-              onClick={() => setExpanded(v => !v)}
-              className="mt-1 flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
-            >
-              {expanded
-                ? <><ChevronUp className="w-3 h-3" />{language === 'he' ? 'פחות' : language === 'ar' ? 'أقل' : 'Less'}</>
-                : <><ChevronDown className="w-3 h-3" />{language === 'he' ? 'עוד' : language === 'ar' ? 'المزيد' : 'More'}</>
-              }
-            </button>
-          )}
-        </div>
-      )}
+            {expanded
+              ? <><ChevronUp className="w-3 h-3" />{language === 'he' ? 'פחות' : language === 'ar' ? 'أقل' : 'Less'}</>
+              : <><ChevronDown className="w-3 h-3" />{language === 'he' ? 'עוד' : language === 'ar' ? 'المزيد' : 'More'}</>
+            }
+          </button>
+        )}
+      </div>
     </div>
   );
 }
 
-function GroupCard({ group, getUserName, getUserId, language, isRTL, documentId, getSectionNumber, getTopicName }) {
+// Memoized card — only re-renders if group data or display-related props change
+const GroupCard = React.memo(function GroupCard({ group, profileMap, language, isRTL, documentId, sectionMeta }) {
   const [collapsed, setCollapsed] = React.useState(false);
-  const topLevelComments = group.comments.filter(c => !c.parentCommentId);
-  const replyComments = group.comments.filter(c => !!c.parentCommentId);
+
+  const topLevelComments = React.useMemo(() => group.comments.filter(c => !c.parentCommentId), [group.comments]);
+  const replyComments = React.useMemo(() => group.comments.filter(c => !!c.parentCommentId), [group.comments]);
   const totalCount = group.comments.length;
 
-  const navigateToSection = () => {
-    if (group.type === 'section') {
-      window.open(`${createPageUrl("DocumentView")}?id=${documentId}&scrollTo=${group.entityId}`, '_self');
-    }
-  };
+  const { topicTitle, sectionNum } = sectionMeta || {};
 
-  const topicTitle = group.type === 'section' && group.section
-    ? getTopicName(group.section.topicId)
-    : group.type === 'suggestion'
-    ? null
-    : null;
+  const navigateToSection = React.useCallback(() => {
+    window.open(`${createPageUrl("DocumentView")}?id=${documentId}&scrollTo=${group.entityId}`, '_self');
+  }, [documentId, group.entityId]);
 
-  const sectionNum = group.type === 'section' ? getSectionNumber(group.entityId) : null;
+  const previewText = React.useMemo(() =>
+    collapsed && topLevelComments[0]
+      ? stripHtml(topLevelComments[0].content).substring(0, 80)
+      : null,
+    [collapsed, topLevelComments]
+  );
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
@@ -201,11 +192,8 @@ function GroupCard({ group, getUserName, getUserId, language, isRTL, documentId,
               </>
             )}
           </div>
-          {/* Latest comment preview when collapsed */}
-          {collapsed && topLevelComments[0] && (
-            <p className="text-xs text-slate-400 mt-0.5 truncate">
-              {(topLevelComments[0].content || '').replace(/<[^>]*>/g, '').substring(0, 80)}
-            </p>
+          {previewText && (
+            <p className="text-xs text-slate-400 mt-0.5 truncate">{previewText}</p>
           )}
         </div>
         <div className="flex-shrink-0">
@@ -219,7 +207,6 @@ function GroupCard({ group, getUserName, getUserId, language, isRTL, documentId,
       {/* Card Body */}
       {!collapsed && (
         <div className="px-4 py-3">
-          {/* Section context block */}
           {group.type === 'section' && group.section && (
             <SectionContextBlock
               section={group.section}
@@ -231,7 +218,6 @@ function GroupCard({ group, getUserName, getUserId, language, isRTL, documentId,
             />
           )}
 
-          {/* Suggestion link */}
           {group.type === 'suggestion' && group.suggestion && (
             <div className="rounded-lg border border-amber-100 bg-amber-50/60 p-3 mb-3">
               <Link
@@ -244,37 +230,35 @@ function GroupCard({ group, getUserName, getUserId, language, isRTL, documentId,
             </div>
           )}
 
-          {/* Comment thread */}
           <div className="space-y-3">
             {topLevelComments.map(comment => {
+              const profile = profileMap[comment.created_by] || {};
               const replies = replyComments.filter(r => r.parentCommentId === comment.id);
               return (
                 <div key={comment.id}>
                   <CommentRow
                     comment={comment}
-                    getUserName={getUserName}
-                    getUserId={getUserId}
-                    language={language}
+                    name={profile.name || (comment.created_by || '?').split('@')[0]}
+                    userId={profile.userId || ''}
                     isRTL={isRTL}
-                    level={0}
                   />
-                  {replies.map(reply => (
-                    <CommentRow
-                      key={reply.id}
-                      comment={reply}
-                      getUserName={getUserName}
-                      getUserId={getUserId}
-                      language={language}
-                      isRTL={isRTL}
-                      level={1}
-                    />
-                  ))}
+                  {replies.map(reply => {
+                    const rProfile = profileMap[reply.created_by] || {};
+                    return (
+                      <CommentRow
+                        key={reply.id}
+                        comment={{ ...reply, _level: 1 }}
+                        name={rProfile.name || (reply.created_by || '?').split('@')[0]}
+                        userId={rProfile.userId || ''}
+                        isRTL={isRTL}
+                      />
+                    );
+                  })}
                 </div>
               );
             })}
           </div>
 
-          {/* Footer nav link */}
           {group.type === 'section' && (
             <div className="mt-3 pt-3 border-t border-slate-100 flex justify-end">
               <Link
@@ -290,110 +274,146 @@ function GroupCard({ group, getUserName, getUserId, language, isRTL, documentId,
       )}
     </div>
   );
-}
+});
 
 export default function DocumentComments() {
   const { t, isRTL, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
   const [sortBy, setSortBy] = React.useState(SORT_OPTIONS.recent);
-  const [filterType, setFilterType] = React.useState('all'); // all | section | suggestion
+  const [filterType, setFilterType] = React.useState('all');
 
   const { data: doc, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
     queryFn: () => base44.entities.Document.filter({ id: documentId }).then(docs => docs[0]),
     enabled: !!documentId,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: sections = [] } = useQuery({
     queryKey: ['sections', documentId],
     queryFn: () => base44.entities.Section.filter({ documentId }),
     enabled: !!documentId,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: topics = [] } = useQuery({
     queryKey: ['topics', documentId],
     queryFn: () => base44.entities.Topic.filter({ documentId }),
     enabled: !!documentId,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: suggestions = [] } = useQuery({
     queryKey: ['suggestions', documentId],
     queryFn: () => base44.entities.Suggestion.filter({ documentId }),
     enabled: !!documentId,
+    staleTime: 2 * 60 * 1000,
   });
+
+  // Build Sets/Maps once for O(1) lookups instead of O(n) finds inside queries
+  const sectionIdSet = React.useMemo(() => new Set(sections.map(s => s.id)), [sections]);
+  const suggestionIdSet = React.useMemo(() => new Set(suggestions.map(s => s.id)), [suggestions]);
 
   const { data: sectionComments = [], isLoading: loadingSC } = useQuery({
     queryKey: ['allSectionComments', documentId],
     queryFn: async () => {
-      const sectionIds = sections.map(s => s.id);
-      if (sectionIds.length === 0) return [];
       const all = await base44.entities.Comment.filter({ rootEntityType: 'section' });
-      return all.filter(c => sectionIds.includes(c.rootEntityId));
+      return all.filter(c => sectionIdSet.has(c.rootEntityId));
     },
-    enabled: sections.length > 0,
+    enabled: sectionIdSet.size > 0,
+    staleTime: 60 * 1000,
   });
 
   const { data: suggestionComments = [], isLoading: loadingSSC } = useQuery({
     queryKey: ['allSuggestionComments', documentId],
     queryFn: async () => {
-      const suggestionIds = suggestions.map(s => s.id);
-      if (suggestionIds.length === 0) return [];
       const all = await base44.entities.Comment.filter({ rootEntityType: 'suggestion' });
-      return all.filter(c => suggestionIds.includes(c.rootEntityId));
+      return all.filter(c => suggestionIdSet.has(c.rootEntityId));
     },
-    enabled: suggestions.length > 0,
+    enabled: suggestionIdSet.size > 0,
+    staleTime: 60 * 1000,
   });
 
   const { data: publicProfiles = [] } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
-    initialData: [],
+    staleTime: 10 * 60 * 1000,
   });
 
-  const getUserName = React.useCallback((email) => {
-    if (!email) return '?';
-    const profile = publicProfiles.find(p => p.email === email);
-    if (profile?.fullName) return profile.fullName;
-    return email.split('@')[0];
+  // O(1) lookup map: email → {name, userId}
+  const profileMap = React.useMemo(() => {
+    const map = {};
+    for (const p of publicProfiles) {
+      map[p.email] = { name: p.fullName, userId: p.userId };
+    }
+    return map;
   }, [publicProfiles]);
 
-  const getUserId = React.useCallback((email) => {
-    const profile = publicProfiles.find(p => p.email === email);
-    return profile?.userId || '';
-  }, [publicProfiles]);
+  // Pre-sort topics once; reuse in sectionMetas below
+  const sortedTopics = React.useMemo(
+    () => [...topics].sort((a, b) => a.order - b.order),
+    [topics]
+  );
 
-  const getTopicName = React.useCallback((topicId) => {
-    const topic = topics.find(t => t.id === topicId);
-    if (!topic) return '';
-    const translated = topic.translations?.[language]?.title;
-    return (typeof translated === 'string' ? translated : topic.title) || '';
-  }, [topics, language]);
+  // topicId → index map for O(1) topic order lookup
+  const topicOrderMap = React.useMemo(() => {
+    const map = {};
+    sortedTopics.forEach((t, i) => { map[t.id] = i; });
+    return map;
+  }, [sortedTopics]);
 
-  const getSectionNumber = React.useCallback((sectionId) => {
-    const section = sections.find(s => s.id === sectionId);
-    if (!section) return '';
-    const sortedTopics = [...topics].sort((a, b) => a.order - b.order);
-    const topicIdx = sortedTopics.findIndex(t => t.id === section.topicId);
-    if (topicIdx === -1) return '';
-    const topicSections = sections.filter(s => s.topicId === section.topicId).sort((a, b) => a.order - b.order);
-    const secIdx = topicSections.findIndex(s => s.id === sectionId);
-    if (secIdx === -1) return '';
-    return `${topicIdx + 1}.${secIdx + 1}`;
-  }, [sections, topics]);
-
-  const getSectionTopicOrder = React.useCallback((sectionId) => {
-    const section = sections.find(s => s.id === sectionId);
-    if (!section) return 9999;
-    const sortedTopics = [...topics].sort((a, b) => a.order - b.order);
-    return sortedTopics.findIndex(t => t.id === section.topicId);
-  }, [sections, topics]);
+  // sectionId → {topicTitle, sectionNum, topicOrder} — computed once
+  const sectionMetas = React.useMemo(() => {
+    const meta = {};
+    // Group sections by topicId
+    const byTopic = {};
+    for (const s of sections) {
+      if (!byTopic[s.topicId]) byTopic[s.topicId] = [];
+      byTopic[s.topicId].push(s);
+    }
+    // Sort each topic's sections
+    for (const topicId of Object.keys(byTopic)) {
+      byTopic[topicId].sort((a, b) => a.order - b.order);
+    }
+    for (const s of sections) {
+      const topicIdx = topicOrderMap[s.topicId] ?? -1;
+      const topic = sortedTopics[topicIdx];
+      const topicTitle = topic
+        ? ((typeof topic.translations?.[language]?.title === 'string'
+            ? topic.translations[language].title
+            : topic.title) || '')
+        : '';
+      const secArr = byTopic[s.topicId] || [];
+      const secIdx = secArr.findIndex(x => x.id === s.id);
+      meta[s.id] = {
+        topicTitle,
+        sectionNum: topicIdx !== -1 && secIdx !== -1 ? `${topicIdx + 1}.${secIdx + 1}` : '',
+        topicOrder: topicIdx,
+      };
+    }
+    return meta;
+  }, [sections, sortedTopics, topicOrderMap, language]);
 
   const acceptedSuggestionToSectionMap = React.useMemo(() => {
     const map = {};
-    suggestions.forEach(s => {
+    for (const s of suggestions) {
       if (s.status === 'accepted' && s.sectionId) map[s.id] = s.sectionId;
-    });
+    }
+    return map;
+  }, [suggestions]);
+
+  // O(1) section lookup map
+  const sectionById = React.useMemo(() => {
+    const map = {};
+    for (const s of sections) map[s.id] = s;
+    return map;
+  }, [sections]);
+
+  // O(1) suggestion lookup map
+  const suggestionById = React.useMemo(() => {
+    const map = {};
+    for (const s of suggestions) map[s.id] = s;
     return map;
   }, [suggestions]);
 
@@ -401,89 +421,97 @@ export default function DocumentComments() {
     const sectionGroups = {};
     const suggestionGroups = {};
 
-    sectionComments.forEach(comment => {
+    for (const comment of sectionComments) {
       const id = comment.rootEntityId;
       if (!sectionGroups[id]) {
-        const section = sections.find(s => s.id === id);
-        sectionGroups[id] = { type: 'section', entityId: id, section, comments: [] };
+        sectionGroups[id] = { type: 'section', entityId: id, section: sectionById[id], comments: [] };
       }
       sectionGroups[id].comments.push(comment);
-    });
+    }
 
-    suggestionComments.forEach(comment => {
+    // Use a Set to deduplicate comment IDs per group efficiently
+    const sectionCommentSets = {};
+    for (const id of Object.keys(sectionGroups)) {
+      sectionCommentSets[id] = new Set(sectionGroups[id].comments.map(c => c.id));
+    }
+
+    for (const comment of suggestionComments) {
       const suggestionId = comment.rootEntityId;
       const linkedSectionId = acceptedSuggestionToSectionMap[suggestionId];
 
       if (linkedSectionId) {
         if (!sectionGroups[linkedSectionId]) {
-          const section = sections.find(s => s.id === linkedSectionId);
-          sectionGroups[linkedSectionId] = { type: 'section', entityId: linkedSectionId, section, comments: [] };
+          sectionGroups[linkedSectionId] = { type: 'section', entityId: linkedSectionId, section: sectionById[linkedSectionId], comments: [] };
+          sectionCommentSets[linkedSectionId] = new Set();
         }
-        if (!sectionGroups[linkedSectionId].comments.some(c => c.id === comment.id)) {
+        if (!sectionCommentSets[linkedSectionId].has(comment.id)) {
+          sectionCommentSets[linkedSectionId].add(comment.id);
           sectionGroups[linkedSectionId].comments.push(comment);
         }
       } else {
         if (!suggestionGroups[suggestionId]) {
-          const suggestion = suggestions.find(s => s.id === suggestionId);
-          suggestionGroups[suggestionId] = { type: 'suggestion', entityId: suggestionId, suggestion, comments: [] };
+          suggestionGroups[suggestionId] = { type: 'suggestion', entityId: suggestionId, suggestion: suggestionById[suggestionId], comments: [] };
         }
-        if (!suggestionGroups[suggestionId].comments.some(c => c.id === comment.id)) {
-          suggestionGroups[suggestionId].comments.push(comment);
-        }
+        suggestionGroups[suggestionId].comments.push(comment);
       }
-    });
+    }
 
     let groups = [
       ...Object.values(sectionGroups),
       ...Object.values(suggestionGroups),
     ].filter(g => g.comments.length > 0);
 
-    // Apply filter
     if (filterType === 'section') groups = groups.filter(g => g.type === 'section');
     if (filterType === 'suggestion') groups = groups.filter(g => g.type === 'suggestion');
 
-    // Apply sort
-    if (sortBy === SORT_OPTIONS.recent) {
-      groups.sort((a, b) => {
-        const aDate = Math.max(...a.comments.map(c => new Date(c.created_date).getTime()));
-        const bDate = Math.max(...b.comments.map(c => new Date(c.created_date).getTime()));
-        return bDate - aDate;
-      });
-    } else if (sortBy === SORT_OPTIONS.oldest) {
-      groups.sort((a, b) => {
-        const aDate = Math.min(...a.comments.map(c => new Date(c.created_date).getTime()));
-        const bDate = Math.min(...b.comments.map(c => new Date(c.created_date).getTime()));
-        return aDate - bDate;
-      });
+    // Pre-compute sort keys to avoid redundant work inside comparator
+    if (sortBy === SORT_OPTIONS.recent || sortBy === SORT_OPTIONS.oldest) {
+      const fn = sortBy === SORT_OPTIONS.recent ? Math.max : Math.min;
+      const withKey = groups.map(g => ({
+        g,
+        key: fn(...g.comments.map(c => new Date(c.created_date).getTime())),
+      }));
+      withKey.sort((a, b) => sortBy === SORT_OPTIONS.recent ? b.key - a.key : a.key - b.key);
+      groups = withKey.map(x => x.g);
     } else if (sortBy === SORT_OPTIONS.most_comments) {
       groups.sort((a, b) => b.comments.length - a.comments.length);
     } else if (sortBy === SORT_OPTIONS.topic) {
       groups.sort((a, b) => {
         if (a.type !== b.type) return a.type === 'section' ? -1 : 1;
         if (a.type === 'section') {
-          const topicA = getSectionTopicOrder(a.entityId);
-          const topicB = getSectionTopicOrder(b.entityId);
-          if (topicA !== topicB) return topicA - topicB;
-          const numA = getSectionNumber(a.entityId) || '';
-          const numB = getSectionNumber(b.entityId) || '';
-          return numA.localeCompare(numB, undefined, { numeric: true });
+          const oA = sectionMetas[a.entityId]?.topicOrder ?? 9999;
+          const oB = sectionMetas[b.entityId]?.topicOrder ?? 9999;
+          if (oA !== oB) return oA - oB;
+          const nA = sectionMetas[a.entityId]?.sectionNum || '';
+          const nB = sectionMetas[b.entityId]?.sectionNum || '';
+          return nA.localeCompare(nB, undefined, { numeric: true });
         }
         return 0;
       });
     }
 
     return groups;
-  }, [sectionComments, suggestionComments, sections, suggestions, topics, acceptedSuggestionToSectionMap, sortBy, filterType, getSectionTopicOrder, getSectionNumber]);
+  }, [sectionComments, suggestionComments, sectionById, suggestionById, acceptedSuggestionToSectionMap, sortBy, filterType, sectionMetas]);
 
-  const totalComments = groupedComments.reduce((acc, g) => acc + g.comments.length, 0);
+  const totalComments = React.useMemo(
+    () => groupedComments.reduce((acc, g) => acc + g.comments.length, 0),
+    [groupedComments]
+  );
+
   const isLoading = docLoading || loadingSC || loadingSSC;
 
-  const sortLabel = {
+  const sortLabel = React.useMemo(() => ({
     [SORT_OPTIONS.recent]: language === 'he' ? 'עדכני ראשון' : language === 'ar' ? 'الأحدث أولاً' : 'Most recent',
     [SORT_OPTIONS.oldest]: language === 'he' ? 'ישן ראשון' : language === 'ar' ? 'الأقدم أولاً' : 'Oldest first',
     [SORT_OPTIONS.most_comments]: language === 'he' ? 'הכי הרבה תגובות' : language === 'ar' ? 'الأكثر تعليقاً' : 'Most comments',
     [SORT_OPTIONS.topic]: language === 'he' ? 'לפי נושא' : language === 'ar' ? 'حسب الموضوع' : 'By topic',
-  };
+  }), [language]);
+
+  const filterOptions = React.useMemo(() => [
+    { value: 'all', label: language === 'he' ? 'הכל' : language === 'ar' ? 'الكل' : 'All' },
+    { value: 'section', label: language === 'he' ? 'סעיפים' : language === 'ar' ? 'المقاطع' : 'Sections' },
+    { value: 'suggestion', label: language === 'he' ? 'הצעות' : language === 'ar' ? 'الاقتراحات' : 'Suggestions' },
+  ], [language]);
 
   if (docLoading) {
     return (
@@ -539,7 +567,6 @@ export default function DocumentComments() {
         {/* Toolbar */}
         {groupedComments.length > 0 && (
           <div className={`flex items-center gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
-            {/* Sort */}
             <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1 shadow-sm">
               <SortAsc className="w-3.5 h-3.5 text-slate-400 mx-1 flex-shrink-0" />
               {Object.entries(sortLabel).map(([key, label]) => (
@@ -547,9 +574,7 @@ export default function DocumentComments() {
                   key={key}
                   onClick={() => setSortBy(key)}
                   className={`text-xs px-2 py-1 rounded-md transition-colors font-medium ${
-                    sortBy === key
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-600 hover:bg-slate-100'
+                    sortBy === key ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
                   {label}
@@ -557,21 +582,14 @@ export default function DocumentComments() {
               ))}
             </div>
 
-            {/* Filter */}
             <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1 shadow-sm">
               <Filter className="w-3.5 h-3.5 text-slate-400 mx-1 flex-shrink-0" />
-              {[
-                { value: 'all', label: language === 'he' ? 'הכל' : language === 'ar' ? 'الكل' : 'All' },
-                { value: 'section', label: language === 'he' ? 'סעיפים' : language === 'ar' ? 'المقاطع' : 'Sections' },
-                { value: 'suggestion', label: language === 'he' ? 'הצעות' : language === 'ar' ? 'الاقتراحات' : 'Suggestions' },
-              ].map(opt => (
+              {filterOptions.map(opt => (
                 <button
                   key={opt.value}
                   onClick={() => setFilterType(opt.value)}
                   className={`text-xs px-2 py-1 rounded-md transition-colors font-medium ${
-                    filterType === opt.value
-                      ? 'bg-slate-700 text-white shadow-sm'
-                      : 'text-slate-600 hover:bg-slate-100'
+                    filterType === opt.value ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
                   {opt.label}
@@ -615,17 +633,15 @@ export default function DocumentComments() {
         {/* Comment Groups */}
         {!isLoading && groupedComments.length > 0 && (
           <div className="space-y-3">
-            {groupedComments.map((group, idx) => (
+            {groupedComments.map(group => (
               <GroupCard
                 key={`${group.type}-${group.entityId}`}
                 group={group}
-                getUserName={getUserName}
-                getUserId={getUserId}
+                profileMap={profileMap}
                 language={language}
                 isRTL={isRTL}
                 documentId={documentId}
-                getSectionNumber={getSectionNumber}
-                getTopicName={getTopicName}
+                sectionMeta={group.type === 'section' ? sectionMetas[group.entityId] : null}
               />
             ))}
           </div>
