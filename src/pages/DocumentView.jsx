@@ -959,7 +959,7 @@ export default function DocumentView() {
                 <span className="text-sm font-medium text-orange-800 text-center">
                   {language === 'he' ? 'הצעות ממתינות להצבעתך' : language === 'ar' ? 'اقتراحات بانتظار تصويتك' : 'Suggestions awaiting your vote'}
                 </span>
-                <span className="text-xs text-orange-500 font-medium group-hover:text-orange-700 transition-colors shrink-0 flex items-center gap-1">
+                <span className="shrink-0 flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-2.5 py-1 rounded-full animate-bounce transition-colors">
                   {language === 'he' ? 'להצבעה' : language === 'ar' ? 'للتصويت' : 'Vote now'}
                   <ChevronDown className="w-3 h-3" />
                 </span>
