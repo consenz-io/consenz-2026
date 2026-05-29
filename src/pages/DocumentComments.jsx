@@ -160,7 +160,7 @@ function GroupCard({ group, getUserName, getUserId, language, isRTL, documentId,
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
       {/* Card Header */}
       <div
-        className={`flex items-start gap-3 px-4 py-3 cursor-pointer select-none ${collapsed ? '' : 'border-b border-slate-100'}`}
+        className={`flex items-start gap-3 px-4 py-3 cursor-pointer select-none ${isRTL ? 'flex-row-reverse text-right' : ''} ${collapsed ? '' : 'border-b border-slate-100'}`}
         onClick={() => setCollapsed(v => !v)}
         role="button"
         aria-expanded={!collapsed}
