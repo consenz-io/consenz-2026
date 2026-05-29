@@ -944,10 +944,15 @@ export default function DocumentView() {
         </div>
 
         <div className="flex flex-col gap-2 md:gap-3 w-full max-w-full">
-          {/* Open suggestions — full width */}
+          {/* Open suggestions — full width CTA */}
           <button
             type="button"
-            className={`w-full bg-orange-50 border-2 border-orange-300 rounded-lg px-4 py-3 hover:bg-orange-100 hover:shadow-xl transition-all flex items-center justify-between gap-3 relative overflow-hidden ${pendingSuggestions.length > 0 ? 'cursor-pointer shadow-lg' : 'cursor-default'}`}
+            disabled={pendingSuggestions.length === 0}
+            className={`w-full rounded-xl px-4 py-3.5 transition-all flex items-center justify-between gap-3 relative overflow-hidden group
+              ${pendingSuggestions.length > 0
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 shadow-lg hover:shadow-xl cursor-pointer active:scale-[0.99]'
+                : 'bg-slate-100 border border-slate-200 cursor-default'
+              }`}
             onClick={() => {
               if (pendingSuggestions.length > 0) {
                 setShowSuggestionNav(true);
@@ -956,17 +961,31 @@ export default function DocumentView() {
             }}
             aria-label={`${pendingSuggestions.length} ${language === 'he' ? 'הצעות פתוחות' : 'open suggestions'}. ${pendingSuggestions.length > 0 ? (language === 'he' ? 'לחץ לניווט להצעות' : 'Click to navigate to suggestions') : ''}`}
           >
+            {/* Subtle shine effect */}
+            {pendingSuggestions.length > 0 && (
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 pointer-events-none" />
+            )}
+
             <div className="flex items-center gap-3">
-              <MessageSquare className="w-6 h-6 md:w-7 md:h-7 text-orange-600 shrink-0" aria-hidden="true" />
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${pendingSuggestions.length > 0 ? 'bg-white/20' : 'bg-slate-200'}`}>
+                <MessageSquare className={`w-5 h-5 ${pendingSuggestions.length > 0 ? 'text-white' : 'text-slate-400'}`} aria-hidden="true" />
+              </div>
               <div className="text-start">
-                <div className="text-xl md:text-2xl font-bold text-orange-900 leading-none">{pendingSuggestions.length}</div>
-                <div className="text-xs md:text-sm text-orange-700 font-medium mt-0.5">{language === 'he' ? 'הצעות פתוחות' : language === 'ar' ? 'مقترحات مفتوحة' : 'Open Suggestions'}</div>
+                <div className={`text-2xl md:text-3xl font-extrabold leading-none ${pendingSuggestions.length > 0 ? 'text-white' : 'text-slate-400'}`}>
+                  {pendingSuggestions.length}
+                </div>
+                <div className={`text-xs md:text-sm font-semibold mt-0.5 ${pendingSuggestions.length > 0 ? 'text-orange-100' : 'text-slate-400'}`}>
+                  {pendingSuggestions.length === 0
+                    ? (language === 'he' ? 'אין הצעות פתוחות' : language === 'ar' ? 'لا اقتراحات مفتوحة' : 'No open suggestions')
+                    : (language === 'he' ? 'הצעות ממתינות להצבעתך' : language === 'ar' ? 'اقتراحات تنتظر تصويتك' : 'Suggestions awaiting your vote')}
+                </div>
               </div>
             </div>
+
             {pendingSuggestions.length > 0 && (
-              <div className="flex items-center gap-1.5 text-orange-600 text-xs font-medium bg-orange-100 border border-orange-200 rounded-full px-3 py-1 shrink-0">
-                <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
-                {language === 'he' ? 'גלול בין ההצעות' : language === 'ar' ? 'تصفح الاقتراحات' : 'Scroll through suggestions'}
+              <div className="flex items-center gap-2 bg-white text-orange-600 text-xs font-bold rounded-lg px-3 py-2 shrink-0 shadow-sm">
+                <ChevronDown className="w-3.5 h-3.5 animate-bounce" aria-hidden="true" />
+                {language === 'he' ? 'לחץ להצבעה' : language === 'ar' ? 'انقر للتصويت' : 'Vote now'}
               </div>
             )}
           </button>
