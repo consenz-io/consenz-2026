@@ -476,7 +476,6 @@ export default function DocumentComments() {
   }, [sectionComments, suggestionComments, sections, suggestions, topics, acceptedSuggestionToSectionMap, sortBy, filterType, getSectionTopicOrder, getSectionNumber]);
 
   const totalComments = groupedComments.reduce((acc, g) => acc + g.comments.length, 0);
-  const BackArrow = isRTL ? ArrowRight : ArrowLeft;
   const isLoading = docLoading || loadingSC || loadingSSC;
 
   const sortLabel = {
@@ -515,10 +514,10 @@ export default function DocumentComments() {
       {/* Sticky Header */}
       <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-sm border-b border-slate-200 shadow-sm">
         <div className="max-w-3xl mx-auto px-4 py-3">
-          <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className="flex items-center gap-3">
             <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
-              <Button variant="ghost" size="icon" className="h-9 w-9 flex-shrink-0">
-                <BackArrow className="w-4 h-4" />
+              <Button variant="outline" size="icon" className="h-9 w-9 flex-shrink-0 shrink-0">
+                {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
               </Button>
             </Link>
             <div className="flex-1 min-w-0">
