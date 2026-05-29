@@ -983,30 +983,34 @@ export default function DocumentView() {
             </div>
           )}
 
-          {/* Other counters — 3 columns */}
-          <div className="grid grid-cols-3 gap-2 md:gap-3 w-full">
+          {/* Other counters — 4 columns */}
+          <div className="grid grid-cols-4 gap-1.5 md:gap-2 w-full">
             <button
               type="button"
-              className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-blue-400 hover:shadow-lg transition-all"
+              className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-2.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-blue-400 hover:shadow-md transition-all"
               onClick={() => setShowContributorsModal(true)}
-              aria-label={`${contributorsCount} ${t('contributors')}. ${language === 'he' ? 'לחץ לצפייה ברשימה' : 'Click to view list'}`}
+              aria-label={`${contributorsCount} ${t('contributors')}`}
             >
-              <Users className="w-4 h-4 md:w-6 md:h-6 text-blue-600" aria-hidden="true" />
-              <div className="text-base md:text-xl font-bold text-slate-900">{contributorsCount}</div>
-              <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('contributors')}</div>
+              <Users className="w-3.5 h-3.5 md:w-5 md:h-5 text-blue-600" aria-hidden="true" />
+              <div className="text-sm md:text-lg font-bold text-slate-900">{contributorsCount}</div>
+              <div className="text-[8px] md:text-[10px] text-slate-500 text-center leading-tight">{t('contributors')}</div>
             </button>
+            <Link
+              to={`${createPageUrl("DocumentComments")}?id=${documentId}`}
+              className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-2.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-green-400 hover:shadow-md transition-all"
+              aria-label={`${allComments.length} ${language === 'he' ? 'תגובות' : language === 'ar' ? 'تعليقات' : 'comments'}`}
+            >
+              <MessageSquare className="w-3.5 h-3.5 md:w-5 md:h-5 text-green-600" aria-hidden="true" />
+              <div className="text-sm md:text-lg font-bold text-slate-900">{allComments.length}</div>
+              <div className="text-[8px] md:text-[10px] text-slate-500 text-center leading-tight">{language === 'he' ? 'תגובות' : language === 'ar' ? 'تعليقات' : 'Comments'}</div>
+            </Link>
             <Link 
               to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
-              className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-purple-400 transition-all"
-              aria-label={`${(() => {
-                const consensuses = document.consensuses || [];
-                if (consensuses.length === 0) return '0';
-                const avg = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-                return (Math.min(100, avg * 100)).toFixed(0);
-              })()}% ${t('consensus')}. ${language === 'he' ? 'לחץ להסבר על הקונצנזוס' : 'Click to learn about consensus'}`}
+              className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-2.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-purple-400 hover:shadow-md transition-all"
+              aria-label={`${t('consensus')}`}
             >
-              <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-purple-600" aria-hidden="true" />
-              <div className="text-base md:text-xl font-bold text-slate-900">
+              <TrendingUp className="w-3.5 h-3.5 md:w-5 md:h-5 text-purple-600" aria-hidden="true" />
+              <div className="text-sm md:text-lg font-bold text-slate-900">
                 {(() => {
                   const consensuses = document.consensuses || [];
                   if (consensuses.length === 0) return '0';
@@ -1014,16 +1018,16 @@ export default function DocumentView() {
                   return (Math.min(100, avg * 100)).toFixed(0);
                 })()}%
               </div>
-              <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('consensus')}</div>
+              <div className="text-[8px] md:text-[10px] text-slate-500 text-center leading-tight">{t('consensus')}</div>
             </Link>
             <Link 
               to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`}
-              className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-teal-400 hover:shadow-lg transition-all"
-              aria-label={`${versionCount} ${language === 'he' ? 'גרסאות' : language === 'ar' ? 'الإصدارات' : 'versions'}. ${language === 'he' ? 'לחץ לצפייה בהיסטוריה' : 'Click to view history'}`}
+              className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-2.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-teal-400 hover:shadow-md transition-all"
+              aria-label={`${versionCount} ${language === 'he' ? 'גרסאות' : 'versions'}`}
             >
-              <Clock className="w-4 h-4 md:w-6 md:h-6 text-teal-600" aria-hidden="true" />
-              <div className="text-base md:text-xl font-bold text-slate-900">{versionCount}</div>
-              <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{language === 'he' ? 'גרסאות' : language === 'ar' ? 'الإصدارات' : 'Versions'}</div>
+              <Clock className="w-3.5 h-3.5 md:w-5 md:h-5 text-teal-600" aria-hidden="true" />
+              <div className="text-sm md:text-lg font-bold text-slate-900">{versionCount}</div>
+              <div className="text-[8px] md:text-[10px] text-slate-500 text-center leading-tight">{language === 'he' ? 'גרסאות' : language === 'ar' ? 'الإصدارات' : 'Versions'}</div>
             </Link>
           </div>
         </div>
