@@ -946,27 +946,38 @@ export default function DocumentView() {
         <div className="flex flex-col gap-2 md:gap-3 w-full max-w-full">
           {/* Open suggestions — inline nudge */}
           {pendingSuggestions.length > 0 ? (
-            <button
-              type="button"
-              onClick={() => { setShowSuggestionNav(true); scrollToSuggestion(currentSuggestionIndex); }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-orange-200 bg-orange-50 hover:bg-orange-100 hover:border-orange-300 transition-all group cursor-pointer"
-              aria-label={`${pendingSuggestions.length} ${language === 'he' ? 'הצעות פתוחות' : 'open suggestions'} — ${language === 'he' ? 'לחץ לניווט' : 'click to navigate'}`}
-            >
-              <span className="flex items-center justify-center w-7 h-7 rounded-full bg-orange-500 text-white text-sm font-bold shrink-0">
-                {pendingSuggestions.length}
-              </span>
-              <span className="flex-1 text-sm font-medium text-orange-800 text-start">
-                {language === 'he' ? 'הצעות ממתינות להצבעתך' : language === 'ar' ? 'اقتراحات بانتظار تصويتك' : 'Suggestions awaiting your vote'}
-              </span>
-              <span className="text-xs text-orange-500 font-medium group-hover:text-orange-700 transition-colors shrink-0 flex items-center gap-1">
-                {language === 'he' ? 'הצבע עכשיו' : language === 'ar' ? 'صوّت الآن' : 'Vote now'}
-                <ChevronDown className="w-3 h-3" />
-              </span>
-            </button>
+            <div className="relative group/tip w-full">
+              <button
+                type="button"
+                onClick={() => { setShowSuggestionNav(true); scrollToSuggestion(currentSuggestionIndex); }}
+                className="w-full flex items-center justify-center gap-3 px-3 py-2.5 rounded-lg border border-orange-200 bg-orange-50 hover:bg-orange-100 hover:border-orange-300 transition-all group cursor-pointer"
+                aria-label={`${pendingSuggestions.length} ${language === 'he' ? 'הצעות פתוחות' : 'open suggestions'} — ${language === 'he' ? 'לחץ לניווט' : 'click to navigate'}`}
+              >
+                <span className="flex items-center justify-center w-7 h-7 rounded-full bg-orange-500 text-white text-sm font-bold shrink-0">
+                  {pendingSuggestions.length}
+                </span>
+                <span className="text-sm font-medium text-orange-800 text-center">
+                  {language === 'he' ? 'הצעות ממתינות להצבעתך' : language === 'ar' ? 'اقتراحات بانتظار تصويتك' : 'Suggestions awaiting your vote'}
+                </span>
+                <span className="text-xs text-orange-500 font-medium group-hover:text-orange-700 transition-colors shrink-0 flex items-center gap-1">
+                  {language === 'he' ? 'הצבע עכשיו' : language === 'ar' ? 'صوّت الآن' : 'Vote now'}
+                  <ChevronDown className="w-3 h-3" />
+                </span>
+              </button>
+              {/* Tooltip */}
+              <div className={`absolute z-50 bottom-full mb-2 left-1/2 -translate-x-1/2 w-64 bg-slate-800 text-white text-xs rounded-lg px-3 py-2.5 shadow-xl opacity-0 group-hover/tip:opacity-100 pointer-events-none transition-opacity duration-200 text-center leading-relaxed`}>
+                {language === 'he'
+                  ? 'הצעות פתוחות הן שינויים שמשתתפים הציעו למסמך וממתינות להצבעה. ההצבעה שלך קובעת אם השינוי יתקבל — כל קול משפיע!'
+                  : language === 'ar'
+                  ? 'الاقتراحات المفتوحة هي تغييرات مقترحة من المشاركين وتنتظر التصويت. صوتك يحدد ما إذا كان التغيير سيُقبل — كل صوت مهم!'
+                  : 'Open suggestions are changes proposed by participants, waiting for a vote. Your vote determines whether the change is accepted — every vote counts!'}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+              </div>
+            </div>
           ) : (
-            <div className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-slate-200 bg-white/60">
+            <div className="w-full flex items-center justify-center gap-3 px-3 py-2.5 rounded-lg border border-slate-200 bg-white/60">
               <span className="flex items-center justify-center w-7 h-7 rounded-full bg-slate-200 text-slate-500 text-sm font-bold shrink-0">0</span>
-              <span className="text-sm text-slate-400">
+              <span className="text-sm text-slate-400 text-center">
                 {language === 'he' ? 'אין הצעות פתוחות כרגע' : language === 'ar' ? 'لا توجد اقتراحات مفتوحة' : 'No open suggestions'}
               </span>
             </div>
