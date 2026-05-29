@@ -960,7 +960,7 @@ export default function DocumentView() {
                   {language === 'he' ? 'הצעות ממתינות להצבעתך' : language === 'ar' ? 'اقتراحات بانتظار تصويتك' : 'Suggestions awaiting your vote'}
                 </span>
                 <span className="text-xs text-orange-500 font-medium group-hover:text-orange-700 transition-colors shrink-0 flex items-center gap-1">
-                  {language === 'he' ? 'הצבע עכשיו' : language === 'ar' ? 'صوّت الآن' : 'Vote now'}
+                  {language === 'he' ? 'להצבעה' : language === 'ar' ? 'للتصويت' : 'Vote now'}
                   <ChevronDown className="w-3 h-3" />
                 </span>
               </button>
