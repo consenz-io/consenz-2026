@@ -128,6 +128,7 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
           )}
           {sortedSuggestions.filter(s => s.status === 'pending' || s.status === 'discussion').map(s => {
             const doc = docMap.get(s.documentId);
+            const preview = s.newContent?.replace(/<[^>]*>/g, '').trim();
             return (
               <div key={s.id} className="flex items-start justify-between px-4 py-3 hover:bg-slate-50 transition-colors gap-3">
                 <div className="flex-1 min-w-0">
@@ -139,6 +140,9 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
                     {getEmailName(s.created_by)} · {fmtDate(s.created_date)}
                     {doc && <span className="mx-1">· {iHe ? 'מסמך' : 'Doc'}: {doc.title}</span>}
                   </p>
+                  {preview && (
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2 bg-slate-50 rounded px-2 py-1 border border-slate-100">{preview}</p>
+                  )}
                 </div>
                 <Link
                   to={`${createPageUrl("suggestiondetail")}?id=${s.id}`}
@@ -161,6 +165,7 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
           )}
           {sortedSuggestions.filter(s => s.status === 'accepted').map(s => {
             const doc = docMap.get(s.documentId);
+            const preview = s.newContent?.replace(/<[^>]*>/g, '').trim();
             return (
               <div key={s.id} className="flex items-start justify-between px-4 py-3 hover:bg-slate-50 transition-colors gap-3">
                 <div className="flex-1 min-w-0">
@@ -172,6 +177,9 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
                     {getEmailName(s.created_by)} · {fmtDate(s.created_date)}
                     {doc && <span className="mx-1">· {iHe ? 'מסמך' : 'Doc'}: {doc.title}</span>}
                   </p>
+                  {preview && (
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2 bg-slate-50 rounded px-2 py-1 border border-slate-100">{preview}</p>
+                  )}
                 </div>
                 <Link
                   to={`${createPageUrl("suggestiondetail")}?id=${s.id}`}
@@ -194,6 +202,7 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
           )}
           {sortedSuggestions.map(s => {
             const doc = docMap.get(s.documentId);
+            const preview = s.newContent?.replace(/<[^>]*>/g, '').trim();
             return (
               <div key={s.id} className="flex items-start justify-between px-4 py-3 hover:bg-slate-50 transition-colors gap-3">
                 <div className="flex-1 min-w-0">
@@ -205,6 +214,9 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
                     {getEmailName(s.created_by)} · {fmtDate(s.created_date)}
                     {doc && <span className="mx-1">· {iHe ? 'מסמך' : 'Doc'}: {doc.title}</span>}
                   </p>
+                  {preview && (
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2 bg-slate-50 rounded px-2 py-1 border border-slate-100">{preview}</p>
+                  )}
                 </div>
                 <Link
                   to={`${createPageUrl("suggestiondetail")}?id=${s.id}`}
