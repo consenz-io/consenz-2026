@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle, ChevronLeft, ChevronRight, MoreVertical, Clock, AlertCircle } from "lucide-react";
+import { Settings, Users, TrendingUp, MessageSquare, Plus, ArrowLeft, ArrowRight, History, FileText, Languages, Loader2, Edit2, Save, X, CheckCircle, ChevronLeft, ChevronRight, ChevronDown, MoreVertical, Clock, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
@@ -943,20 +943,11 @@ export default function DocumentView() {
 
         </div>
 
-        <div className="grid grid-cols-4 gap-2 md:gap-4 w-full max-w-full">
+        <div className="flex flex-col gap-2 md:gap-3 w-full max-w-full">
+          {/* Open suggestions — full width */}
           <button
             type="button"
-            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-blue-400 hover:shadow-lg transition-all"
-            onClick={() => setShowContributorsModal(true)}
-            aria-label={`${contributorsCount} ${t('contributors')}. ${language === 'he' ? 'לחץ לצפייה ברשימה' : 'Click to view list'}`}
-          >
-            <Users className="w-4 h-4 md:w-6 md:h-6 text-blue-600" aria-hidden="true" />
-            <div className="text-base md:text-xl font-bold text-slate-900">{contributorsCount}</div>
-            <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('contributors')}</div>
-          </button>
-          <button
-            type="button"
-            className={`bg-orange-50 border-2 border-orange-300 rounded-lg p-2 md:p-3 hover:bg-orange-100 hover:shadow-xl transition-all flex flex-col items-center justify-center gap-1 relative overflow-hidden ${pendingSuggestions.length > 0 ? 'cursor-pointer shadow-lg' : 'cursor-default'}`}
+            className={`w-full bg-orange-50 border-2 border-orange-300 rounded-lg px-4 py-3 hover:bg-orange-100 hover:shadow-xl transition-all flex items-center justify-between gap-3 relative overflow-hidden ${pendingSuggestions.length > 0 ? 'cursor-pointer shadow-lg' : 'cursor-default'}`}
             onClick={() => {
               if (pendingSuggestions.length > 0) {
                 setShowSuggestionNav(true);
@@ -965,41 +956,64 @@ export default function DocumentView() {
             }}
             aria-label={`${pendingSuggestions.length} ${language === 'he' ? 'הצעות פתוחות' : 'open suggestions'}. ${pendingSuggestions.length > 0 ? (language === 'he' ? 'לחץ לניווט להצעות' : 'Click to navigate to suggestions') : ''}`}
           >
-
-            <MessageSquare className="w-5 h-5 md:w-7 md:h-7 text-orange-600" aria-hidden="true" />
-            <div className="text-lg md:text-2xl font-bold text-orange-900">{pendingSuggestions.length}</div>
-            <div className="text-[10px] md:text-sm text-orange-700 text-center leading-tight font-medium">{language === 'he' ? 'הצעות פתוחות' : language === 'ar' ? 'مقترحات مفتوحة' : 'Open Suggestions'}</div>
+            <div className="flex items-center gap-3">
+              <MessageSquare className="w-6 h-6 md:w-7 md:h-7 text-orange-600 shrink-0" aria-hidden="true" />
+              <div className="text-start">
+                <div className="text-xl md:text-2xl font-bold text-orange-900 leading-none">{pendingSuggestions.length}</div>
+                <div className="text-xs md:text-sm text-orange-700 font-medium mt-0.5">{language === 'he' ? 'הצעות פתוחות' : language === 'ar' ? 'مقترحات مفتوحة' : 'Open Suggestions'}</div>
+              </div>
+            </div>
+            {pendingSuggestions.length > 0 && (
+              <div className="flex items-center gap-1.5 text-orange-600 text-xs font-medium bg-orange-100 border border-orange-200 rounded-full px-3 py-1 shrink-0">
+                <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
+                {language === 'he' ? 'גלול בין ההצעות' : language === 'ar' ? 'تصفح الاقتراحات' : 'Scroll through suggestions'}
+              </div>
+            )}
           </button>
-          <Link 
-            to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
-            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-purple-400 transition-all"
-            aria-label={`${(() => {
-              const consensuses = document.consensuses || [];
-              if (consensuses.length === 0) return '0';
-              const avg = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-              return (Math.min(100, avg * 100)).toFixed(0);
-            })()}% ${t('consensus')}. ${language === 'he' ? 'לחץ להסבר על הקונצנזוס' : 'Click to learn about consensus'}`}
-          >
-            <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-purple-600" aria-hidden="true" />
-            <div className="text-base md:text-xl font-bold text-slate-900">
-              {(() => {
+
+          {/* Other counters — 3 columns */}
+          <div className="grid grid-cols-3 gap-2 md:gap-3 w-full">
+            <button
+              type="button"
+              className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-blue-400 hover:shadow-lg transition-all"
+              onClick={() => setShowContributorsModal(true)}
+              aria-label={`${contributorsCount} ${t('contributors')}. ${language === 'he' ? 'לחץ לצפייה ברשימה' : 'Click to view list'}`}
+            >
+              <Users className="w-4 h-4 md:w-6 md:h-6 text-blue-600" aria-hidden="true" />
+              <div className="text-base md:text-xl font-bold text-slate-900">{contributorsCount}</div>
+              <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('contributors')}</div>
+            </button>
+            <Link 
+              to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
+              className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-purple-400 transition-all"
+              aria-label={`${(() => {
                 const consensuses = document.consensuses || [];
                 if (consensuses.length === 0) return '0';
                 const avg = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
                 return (Math.min(100, avg * 100)).toFixed(0);
-              })()}%
-            </div>
-            <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('consensus')}</div>
-          </Link>
-          <Link 
-            to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`}
-            className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-teal-400 hover:shadow-lg transition-all"
-            aria-label={`${versionCount} ${language === 'he' ? 'גרסאות' : language === 'ar' ? 'الإصدارات' : 'versions'}. ${language === 'he' ? 'לחץ לצפייה בהיסטוריה' : 'Click to view history'}`}
-          >
-            <Clock className="w-4 h-4 md:w-6 md:h-6 text-teal-600" aria-hidden="true" />
-            <div className="text-base md:text-xl font-bold text-slate-900">{versionCount}</div>
-            <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{language === 'he' ? 'גרסאות' : language === 'ar' ? 'الإصدارات' : 'Versions'}</div>
-          </Link>
+              })()}% ${t('consensus')}. ${language === 'he' ? 'לחץ להסבר על הקונצנזוס' : 'Click to learn about consensus'}`}
+            >
+              <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-purple-600" aria-hidden="true" />
+              <div className="text-base md:text-xl font-bold text-slate-900">
+                {(() => {
+                  const consensuses = document.consensuses || [];
+                  if (consensuses.length === 0) return '0';
+                  const avg = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
+                  return (Math.min(100, avg * 100)).toFixed(0);
+                })()}%
+              </div>
+              <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{t('consensus')}</div>
+            </Link>
+            <Link 
+              to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`}
+              className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-2 md:p-3 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-teal-400 hover:shadow-lg transition-all"
+              aria-label={`${versionCount} ${language === 'he' ? 'גרסאות' : language === 'ar' ? 'الإصدارات' : 'versions'}. ${language === 'he' ? 'לחץ לצפייה בהיסטוריה' : 'Click to view history'}`}
+            >
+              <Clock className="w-4 h-4 md:w-6 md:h-6 text-teal-600" aria-hidden="true" />
+              <div className="text-base md:text-xl font-bold text-slate-900">{versionCount}</div>
+              <div className="text-[9px] md:text-xs text-slate-600 text-center leading-tight">{language === 'he' ? 'גרסאות' : language === 'ar' ? 'الإصدارات' : 'Versions'}</div>
+            </Link>
+          </div>
         </div>
 
         <ErrorBoundary inline errorMessage="שגיאה בטעינת תוכן המסמך. לחץ לניסיון חוזר.">
