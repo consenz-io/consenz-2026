@@ -515,7 +515,12 @@ export default function DocumentComments() {
       {/* Sticky Header */}
       <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-sm border-b border-slate-200 shadow-sm">
         <div className="max-w-3xl mx-auto px-4 py-3">
-          <div className="flex items-center gap-3">
+          <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
+              <Button variant="ghost" size="icon" className="h-9 w-9 flex-shrink-0">
+                <BackArrow className="w-4 h-4" />
+              </Button>
+            </Link>
             <div className="flex-1 min-w-0">
               <h1 className="text-base md:text-lg font-bold text-slate-900 leading-tight">
                 {language === 'he' ? 'כל התגובות' : language === 'ar' ? 'جميع التعليقات' : 'All Comments'}
@@ -527,11 +532,6 @@ export default function DocumentComments() {
                 {totalComments}
               </Badge>
             )}
-            <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`} className="ms-auto flex-shrink-0">
-              <Button variant="ghost" size="icon" className="h-9 w-9">
-                <BackArrow className="w-4 h-4" />
-              </Button>
-            </Link>
           </div>
         </div>
       </div>
