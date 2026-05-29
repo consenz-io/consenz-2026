@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   ArrowRight, ArrowLeft, MessageSquare, FileText,
   ExternalLink, ChevronDown, ChevronUp,
-  ThumbsUp, BookOpen, SortAsc, Filter
+  ThumbsUp, BookOpen, Filter, ChevronRight
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
@@ -40,31 +40,33 @@ function AvatarInitial({ name, size = 'sm' }) {
 // Memoized — only re-renders when comment data or language changes
 const CommentRow = React.memo(function CommentRow({ comment, name, userId, isRTL }) {
   const likeCount = (comment.likes || []).length;
+  const isReply = comment._level > 0;
   return (
     <div
       id={`comment-${comment.id}`}
-      className={`flex gap-2.5 ${comment._level > 0 ? 'mt-2 pl-4 md:pl-8 border-l-2 border-slate-100' : ''}`}
+      className={`flex gap-3 ${isReply ? 'mt-3 ps-4 md:ps-8 border-s-2 border-slate-100' : ''}`}
       dir={isRTL ? 'rtl' : 'ltr'}
     >
       <Link to={`${createPageUrl("Profile")}?userId=${userId}`} className="flex-shrink-0 mt-0.5">
         <AvatarInitial name={name} size="sm" />
       </Link>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-          <Link to={`${createPageUrl("Profile")}?userId=${userId}`} className="text-sm font-semibold text-slate-800 hover:text-blue-600 transition-colors">
+        <div className={`flex items-center gap-2 flex-wrap mb-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <Link to={`${createPageUrl("Profile")}?userId=${userId}`} className="text-xs font-medium text-slate-500 hover:text-blue-600 transition-colors">
             {name}
           </Link>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-slate-300">·</span>
+          <span className="text-xs text-slate-300">
             {formatLocalDateTime(comment.created_date, 'DD/MM HH:mm')}
           </span>
           {likeCount > 0 && (
-            <span className="flex items-center gap-0.5 text-xs text-slate-400">
+            <span className="flex items-center gap-0.5 text-xs text-slate-300">
               <ThumbsUp className="w-3 h-3" />
               {likeCount}
             </span>
           )}
         </div>
-        <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words">
+        <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap break-words" style={{ textAlign: 'start' }}>
           {stripHtml(comment.content)}
         </p>
       </div>
@@ -73,55 +75,55 @@ const CommentRow = React.memo(function CommentRow({ comment, name, userId, isRTL
 });
 
 function SectionContextBlock({ section, topicTitle, sectionNumber, isRTL, language, onNavigate }) {
+  // Collapsed by default — show only metadata, expand to read text
   const [expanded, setExpanded] = React.useState(false);
-  // Compute plain text once, not on every render
   const text = React.useMemo(() => stripHtml(section?.content), [section?.content]);
-  if (!section || !text) return null;
-
-  const SHORT_LEN = 120;
-  const isLong = text.length > SHORT_LEN;
-  const displayText = expanded ? text : (isLong ? text.substring(0, SHORT_LEN) + '…' : text);
+  if (!section) return null;
 
   return (
-    <div className="rounded-lg border border-blue-100 bg-blue-50/60 p-3 mb-3">
-      <div className={`flex items-center gap-2 mb-1.5 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
-        <div className="flex items-center gap-1.5">
-          <BookOpen className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+    <div className="rounded-lg border border-slate-100 bg-slate-50 mb-4 overflow-hidden">
+      {/* Always-visible header row */}
+      <button
+        className={`w-full flex items-center gap-2 px-3 py-2.5 hover:bg-slate-100 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}
+        onClick={() => setExpanded(v => !v)}
+        aria-expanded={expanded}
+      >
+        <BookOpen className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+        <div className={`flex items-center gap-1.5 flex-1 min-w-0 flex-wrap ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
           {topicTitle && (
-            <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">{topicTitle}</span>
+            <span className="text-xs font-medium text-slate-500">{topicTitle}</span>
           )}
           {sectionNumber && (
-            <span className="text-xs text-blue-500 font-mono">§{sectionNumber}</span>
+            <span className="text-xs text-slate-400 font-mono">§{sectionNumber}</span>
           )}
         </div>
-        <button
-          onClick={onNavigate}
-          className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium ml-auto transition-colors"
-        >
-          <ExternalLink className="w-3 h-3" />
-          {language === 'he' ? 'עבור לסעיף' : language === 'ar' ? 'انتقل إلى المقطع' : 'Go to section'}
-        </button>
-      </div>
-      <div>
-        <p
-          className="text-sm text-slate-700 leading-relaxed"
-          style={{ fontFamily: "'Times New Roman', Georgia, serif" }}
-          dir={isRTL ? 'rtl' : 'ltr'}
-        >
-          {displayText}
-        </p>
-        {isLong && (
+        <div className={`flex items-center gap-2 flex-shrink-0 ${isRTL ? 'me-auto ms-0' : 'ms-auto me-0'}`}>
           <button
-            onClick={() => setExpanded(v => !v)}
-            className="mt-1 flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
+            onClick={(e) => { e.stopPropagation(); onNavigate(); }}
+            className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 font-medium transition-colors"
           >
-            {expanded
-              ? <><ChevronUp className="w-3 h-3" />{language === 'he' ? 'פחות' : language === 'ar' ? 'أقل' : 'Less'}</>
-              : <><ChevronDown className="w-3 h-3" />{language === 'he' ? 'עוד' : language === 'ar' ? 'المزيد' : 'More'}</>
-            }
+            <ExternalLink className="w-3 h-3" />
+            {language === 'he' ? 'עבור' : language === 'ar' ? 'انتقل' : 'Go'}
           </button>
-        )}
-      </div>
+          {text && (expanded
+            ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+            : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+          )}
+        </div>
+      </button>
+
+      {/* Expandable text */}
+      {expanded && text && (
+        <div className="px-3 pb-3 pt-1 border-t border-slate-100">
+          <p
+            className="text-sm text-slate-600 leading-relaxed"
+            style={{ fontFamily: "'Times New Roman', Georgia, serif", textAlign: 'start' }}
+            dir={isRTL ? 'rtl' : 'ltr'}
+          >
+            {text}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -142,71 +144,65 @@ const GroupCard = React.memo(function GroupCard({ group, profileMap, language, i
 
   const previewText = React.useMemo(() =>
     collapsed && topLevelComments[0]
-      ? stripHtml(topLevelComments[0].content).substring(0, 80)
+      ? stripHtml(topLevelComments[0].content).substring(0, 90)
       : null,
     [collapsed, topLevelComments]
   );
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
       {/* Card Header */}
       <div
-        className={`flex items-start gap-3 px-4 py-3 cursor-pointer select-none ${isRTL ? 'flex-row-reverse text-right' : ''} ${collapsed ? '' : 'border-b border-slate-100'}`}
+        className={`flex items-center gap-3 px-5 py-4 cursor-pointer select-none ${isRTL ? 'flex-row-reverse' : ''} ${collapsed ? '' : 'border-b border-slate-100'}`}
         onClick={() => setCollapsed(v => !v)}
         role="button"
         aria-expanded={!collapsed}
       >
-        <div className={`mt-0.5 flex-shrink-0 rounded-lg p-1.5 ${group.type === 'section' ? 'bg-blue-50' : 'bg-amber-50'}`}>
+        <div className={`flex-shrink-0 rounded-lg p-1.5 ${group.type === 'section' ? 'bg-blue-50' : 'bg-amber-50'}`}>
           {group.type === 'section'
-            ? <FileText className="w-4 h-4 text-blue-600" />
-            : <MessageSquare className="w-4 h-4 text-amber-600" />
+            ? <FileText className="w-4 h-4 text-blue-500" />
+            : <MessageSquare className="w-4 h-4 text-amber-500" />
           }
         </div>
         <div className="flex-1 min-w-0">
-          <div className={`flex items-center gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex items-center gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`} style={{ textAlign: 'start' }}>
             {group.type === 'section' ? (
               <>
                 {topicTitle && (
-                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">{topicTitle}</span>
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{topicTitle}</span>
                 )}
-                {sectionNum && <span className="text-xs text-slate-400 font-mono">§{sectionNum}</span>}
-                {totalCount > 0 && (
-                  <Badge className="bg-green-100 text-green-700 border-0 text-xs px-1.5 py-0 h-5 font-medium">
-                    <MessageSquare className="w-3 h-3 mr-1" />
-                    {totalCount}
-                  </Badge>
-                )}
+                {sectionNum && <span className="text-xs text-slate-300 font-mono">§{sectionNum}</span>}
+                <Badge className="bg-green-50 text-green-600 border-0 text-xs px-1.5 py-0 h-5 font-medium">
+                  {totalCount}
+                </Badge>
               </>
             ) : (
               <>
-                <span className="text-xs font-medium text-amber-700 uppercase tracking-wide">
+                <span className="text-xs font-semibold text-amber-500 uppercase tracking-wider">
                   {language === 'he' ? 'הצעה' : language === 'ar' ? 'اقتراح' : 'Suggestion'}
                 </span>
-                <span className="text-sm font-medium text-slate-800 truncate">{group.suggestion?.title}</span>
-                {totalCount > 0 && (
-                  <Badge className="bg-amber-100 text-amber-700 border-0 text-xs px-1.5 py-0 h-5">
-                    <MessageSquare className="w-3 h-3 mr-1" />
-                    {totalCount}
-                  </Badge>
-                )}
+                <span className="text-sm font-medium text-slate-700 truncate">{group.suggestion?.title}</span>
+                <Badge className="bg-amber-50 text-amber-600 border-0 text-xs px-1.5 py-0 h-5">
+                  {totalCount}
+                </Badge>
               </>
             )}
           </div>
           {previewText && (
-            <p className="text-xs text-slate-400 mt-0.5 truncate">{previewText}</p>
+            <p className="text-xs text-slate-400 mt-0.5 truncate" style={{ textAlign: 'start' }}>{previewText}</p>
           )}
         </div>
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 text-slate-300">
           {collapsed
-            ? <ChevronDown className="w-4 h-4 text-slate-400" />
-            : <ChevronUp className="w-4 h-4 text-slate-400" />
+            ? <ChevronDown className="w-4 h-4" />
+            : <ChevronUp className="w-4 h-4" />
           }
         </div>
       </div>
 
       {/* Card Body */}
       {!collapsed && (
-        <div className="px-4 py-3">
+        <div className="px-5 py-5">
           {group.type === 'section' && group.section && (
             <SectionContextBlock
               section={group.section}
@@ -219,18 +215,19 @@ const GroupCard = React.memo(function GroupCard({ group, profileMap, language, i
           )}
 
           {group.type === 'suggestion' && group.suggestion && (
-            <div className="rounded-lg border border-amber-100 bg-amber-50/60 p-3 mb-3">
+            <div className="rounded-lg border border-amber-100 bg-amber-50/40 px-3 py-2.5 mb-5">
               <Link
                 to={`${createPageUrl("SuggestionDetail")}?id=${group.entityId}`}
-                className="flex items-center gap-2 text-sm text-amber-700 font-medium hover:text-amber-900 transition-colors"
+                className={`flex items-center gap-2 text-sm text-amber-700 font-medium hover:text-amber-900 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}
               >
                 <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
-                {group.suggestion.title}
+                <span style={{ textAlign: 'start' }}>{group.suggestion.title}</span>
               </Link>
             </div>
           )}
 
-          <div className="space-y-3">
+          {/* Divider between context and comments */}
+          <div className="space-y-4">
             {topLevelComments.map(comment => {
               const profile = profileMap[comment.created_by] || {};
               const replies = replyComments.filter(r => r.parentCommentId === comment.id);
@@ -260,10 +257,10 @@ const GroupCard = React.memo(function GroupCard({ group, profileMap, language, i
           </div>
 
           {group.type === 'section' && (
-            <div className="mt-3 pt-3 border-t border-slate-100 flex justify-end">
+            <div className={`mt-5 pt-4 border-t border-slate-100 flex ${isRTL ? 'justify-start' : 'justify-end'}`}>
               <Link
                 to={`${createPageUrl("DocumentView")}?id=${documentId}&scrollTo=${group.entityId}`}
-                className="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                className={`flex items-center gap-1.5 text-xs text-blue-500 hover:text-blue-700 font-medium transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 {language === 'he' ? 'פתח במסמך' : language === 'ar' ? 'فتح في المستند' : 'Open in document'}
@@ -548,7 +545,7 @@ export default function DocumentComments() {
                 {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
               </Button>
             </Link>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0" style={{ textAlign: 'start' }}>
               <h1 className="text-base md:text-lg font-bold text-slate-900 leading-tight">
                 {language === 'he' ? 'כל התגובות' : language === 'ar' ? 'جميع التعليقات' : 'All Comments'}
               </h1>
@@ -563,33 +560,35 @@ export default function DocumentComments() {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-4 md:py-6 space-y-4">
+      <div className="max-w-3xl mx-auto px-4 py-5 md:py-8 space-y-5">
         {/* Toolbar */}
         {groupedComments.length > 0 && (
           <div className={`flex items-center gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
-            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1 shadow-sm">
-              <SortAsc className="w-3.5 h-3.5 text-slate-400 mx-1 flex-shrink-0" />
-              {Object.entries(sortLabel).map(([key, label]) => (
-                <button
-                  key={key}
-                  onClick={() => setSortBy(key)}
-                  className={`text-xs px-2 py-1 rounded-md transition-colors font-medium ${
-                    sortBy === key ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+            {/* Sort — single compact dropdown */}
+            <div className={`flex items-center gap-1.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <Filter className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value)}
+                className="text-xs text-slate-600 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-300 cursor-pointer"
+                style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+              >
+                {Object.entries(sortLabel).map(([key, label]) => (
+                  <option key={key} value={key}>{label}</option>
+                ))}
+              </select>
             </div>
 
-            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-1 shadow-sm">
-              <Filter className="w-3.5 h-3.5 text-slate-400 mx-1 flex-shrink-0" />
+            {/* Filter pills */}
+            <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
               {filterOptions.map(opt => (
                 <button
                   key={opt.value}
                   onClick={() => setFilterType(opt.value)}
-                  className={`text-xs px-2 py-1 rounded-md transition-colors font-medium ${
-                    filterType === opt.value ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'
+                  className={`text-xs px-3 py-1.5 rounded-full transition-colors font-medium border ${
+                    filterType === opt.value
+                      ? 'bg-slate-800 text-white border-slate-800'
+                      : 'text-slate-500 border-slate-200 bg-white hover:bg-slate-50'
                   }`}
                 >
                   {opt.label}
@@ -597,8 +596,8 @@ export default function DocumentComments() {
               ))}
             </div>
 
-            <span className="text-xs text-slate-400 ml-auto">
-              {groupedComments.length} {language === 'he' ? 'סעיפים/הצעות' : language === 'ar' ? 'مقطع/اقتراح' : 'threads'}
+            <span className={`text-xs text-slate-300 ${isRTL ? 'me-auto' : 'ms-auto'}`}>
+              {groupedComments.length} {language === 'he' ? 'שרשורים' : language === 'ar' ? 'مقطع' : 'threads'}
             </span>
           </div>
         )}
@@ -632,7 +631,7 @@ export default function DocumentComments() {
 
         {/* Comment Groups */}
         {!isLoading && groupedComments.length > 0 && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {groupedComments.map(group => (
               <GroupCard
                 key={`${group.type}-${group.entityId}`}
