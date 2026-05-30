@@ -75,19 +75,13 @@ const CommentRow = React.memo(function CommentRow({ comment, name, userId, isRTL
 });
 
 function SectionContextBlock({ section, topicTitle, sectionNumber, isRTL, language, onNavigate }) {
-  // Collapsed by default — show only metadata, expand to read text
-  const [expanded, setExpanded] = React.useState(false);
   const text = React.useMemo(() => stripHtml(section?.content), [section?.content]);
   if (!section) return null;
 
   return (
     <div className="rounded-lg border border-slate-100 bg-slate-50 mb-4 overflow-hidden">
-      {/* Always-visible header row */}
-      <button
-        className={`w-full flex items-center gap-2 px-3 py-2.5 hover:bg-slate-100 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}
-        onClick={() => setExpanded(v => !v)}
-        aria-expanded={expanded}
-      >
+      {/* Header row */}
+      <div className={`flex items-center gap-2 px-3 py-2.5 border-b border-slate-100 ${isRTL ? 'flex-row-reverse' : ''}`}>
         <BookOpen className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
         <div className={`flex items-center gap-1.5 flex-1 min-w-0 flex-wrap ${isRTL ? 'flex-row-reverse justify-end' : ''}`}>
           {topicTitle && (
@@ -97,26 +91,20 @@ function SectionContextBlock({ section, topicTitle, sectionNumber, isRTL, langua
             <span className="text-xs text-slate-400 font-mono">§{sectionNumber}</span>
           )}
         </div>
-        <div className={`flex items-center gap-2 flex-shrink-0 ${isRTL ? 'me-auto ms-0' : 'ms-auto me-0'}`}>
-          <button
-            onClick={(e) => { e.stopPropagation(); onNavigate(); }}
-            className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 font-medium transition-colors"
-          >
-            <ExternalLink className="w-3 h-3" />
-            {language === 'he' ? 'עבור' : language === 'ar' ? 'انتقل' : 'Go'}
-          </button>
-          {text && (expanded
-            ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
-            : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-          )}
-        </div>
-      </button>
+        <button
+          onClick={onNavigate}
+          className={`flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 font-medium transition-colors flex-shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}
+        >
+          <ExternalLink className="w-3 h-3" />
+          {language === 'he' ? 'עבור' : language === 'ar' ? 'انتقل' : 'Go'}
+        </button>
+      </div>
 
-      {/* Expandable text */}
-      {expanded && text && (
-        <div className="px-3 pb-3 pt-1 border-t border-slate-100">
+      {/* Always-visible text */}
+      {text && (
+        <div className="px-3 py-3">
           <p
-            className="text-sm text-slate-600 leading-relaxed"
+            className="text-base text-slate-700 leading-relaxed"
             style={{ fontFamily: "'Times New Roman', Georgia, serif", textAlign: 'start' }}
             dir={isRTL ? 'rtl' : 'ltr'}
           >
