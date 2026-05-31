@@ -211,6 +211,15 @@ const GroupCard = React.memo(function GroupCard({ group, profileMap, language, i
                 <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
                 <span style={{ textAlign: 'start' }}>{group.suggestion.title}</span>
               </Link>
+              {group.suggestion.newContent && (
+                <p
+                  className="text-base text-slate-700 leading-relaxed mt-2 pt-2 border-t border-amber-100"
+                  style={{ fontFamily: "'Times New Roman', Georgia, serif", textAlign: 'start' }}
+                  dir={isRTL ? 'rtl' : 'ltr'}
+                >
+                  {stripHtml(group.suggestion.newContent)}
+                </p>
+              )}
             </div>
           )}
 
