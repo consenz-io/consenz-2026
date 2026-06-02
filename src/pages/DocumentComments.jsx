@@ -50,26 +50,26 @@ const CommentRow = React.memo(function CommentRow({ comment, name, userId, isRTL
       <Link to={`${createPageUrl("Profile")}?userId=${userId}`} className="flex-shrink-0 mt-0.5">
         <AvatarInitial name={name} size="sm" />
       </Link>
-      <div className="flex-1 min-w-0">
-        <div className={`flex items-center gap-2 flex-wrap mb-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-          <Link to={`${createPageUrl("Profile")}?userId=${userId}`} className="text-xs font-medium text-slate-500 hover:text-blue-600 transition-colors">
-            {name}
-          </Link>
-          <span className="text-xs text-slate-300">·</span>
-          <span className="text-xs text-slate-300">
-            {formatLocalDateTime(comment.created_date, 'DD/MM HH:mm')}
-          </span>
-          {likeCount > 0 && (
-            <span className="flex items-center gap-0.5 text-xs text-slate-300">
-              <ThumbsUp className="w-3 h-3" />
-              {likeCount}
+      <div className="flex-1 min-w-0" dir={isRTL ? 'rtl' : 'ltr'}>
+          <div className={`flex items-center gap-2 flex-wrap mb-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <Link to={`${createPageUrl("Profile")}?userId=${userId}`} className="text-xs font-medium text-slate-500 hover:text-blue-600 transition-colors">
+              {name}
+            </Link>
+            <span className="text-xs text-slate-300">·</span>
+            <span className="text-xs text-slate-300">
+              {formatLocalDateTime(comment.created_date, 'DD/MM HH:mm')}
             </span>
-          )}
+            {likeCount > 0 && (
+              <span className="flex items-center gap-0.5 text-xs text-slate-300">
+                <ThumbsUp className="w-3 h-3" />
+                {likeCount}
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap break-words" style={{ textAlign: 'start' }}>
+            {stripHtml(comment.content)}
+          </p>
         </div>
-        <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap break-words" style={{ textAlign: 'start' }}>
-          {stripHtml(comment.content)}
-        </p>
-      </div>
     </div>
   );
 });
@@ -153,7 +153,7 @@ const GroupCard = React.memo(function GroupCard({ group, profileMap, language, i
             : <MessageSquare className="w-4 h-4 text-amber-500" />
           }
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0" dir={isRTL ? 'rtl' : 'ltr'}>
           <div className={`flex items-center gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`} style={{ textAlign: 'start' }}>
             {group.type === 'section' ? (
               <>
@@ -191,7 +191,7 @@ const GroupCard = React.memo(function GroupCard({ group, profileMap, language, i
 
       {/* Card Body */}
       {!collapsed && (
-        <div className="px-5 py-5">
+        <div className="px-5 py-5" dir={isRTL ? 'rtl' : 'ltr'}>
           {group.type === 'section' && group.section && (
             <SectionContextBlock
               section={group.section}
