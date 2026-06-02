@@ -1,0 +1,38 @@
+{
+  "name": "GroupJoinRequest",
+  "type": "object",
+  "properties": {
+    "groupId": {
+      "type": "string",
+      "description": "Group ID"
+    },
+    "userId": {
+      "type": "string",
+      "description": "User ID requesting to join"
+    },
+    "userEmail": {
+      "type": "string",
+      "description": "User email"
+    },
+    "userName": {
+      "type": "string",
+      "description": "User full name"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Request status"
+    }
+  },
+  "required": [
+    "groupId",
+    "userId",
+    "userEmail",
+    "userName"
+  ]
+}

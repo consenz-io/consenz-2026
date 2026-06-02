@@ -1,0 +1,43 @@
+{
+  "name": "GroupInvitation",
+  "type": "object",
+  "properties": {
+    "groupId": {
+      "type": "string",
+      "description": "Group ID"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Invited user email"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted"
+      ],
+      "default": "pending",
+      "description": "Invitation status"
+    },
+    "invitedBy": {
+      "type": "string",
+      "description": "User ID who sent the invitation"
+    },
+    "token": {
+      "type": "string",
+      "description": "Unique invitation token"
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the invitation expires"
+    }
+  },
+  "required": [
+    "groupId",
+    "email",
+    "invitedBy",
+    "token"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "ConvincedClick",
+  "type": "object",
+  "properties": {
+    "argumentId": {
+      "type": "string",
+      "description": "Argument ID"
+    },
+    "userId": {
+      "type": "string",
+      "description": "User who was convinced"
+    }
+  },
+  "required": [
+    "argumentId",
+    "userId"
+  ]
+}

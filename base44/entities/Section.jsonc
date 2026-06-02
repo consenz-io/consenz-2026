@@ -1,0 +1,47 @@
+{
+  "name": "Section",
+  "type": "object",
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "description": "Parent document ID"
+    },
+    "topicId": {
+      "type": "string",
+      "description": "Parent topic ID"
+    },
+    "content": {
+      "type": "string",
+      "description": "Section content (rich text HTML)"
+    },
+    "order": {
+      "type": "number",
+      "description": "Display order within topic"
+    },
+    "lastEditedBy": {
+      "type": "string",
+      "description": "User ID of last editor"
+    },
+    "originalLanguage": {
+      "type": "string",
+      "enum": [
+        "en",
+        "he",
+        "ar"
+      ],
+      "default": "he",
+      "description": "Original language of the content"
+    },
+    "translations": {
+      "type": "object",
+      "description": "Cached translations {language_code: translated_content}",
+      "default": {}
+    }
+  },
+  "required": [
+    "documentId",
+    "topicId",
+    "content",
+    "order"
+  ]
+}

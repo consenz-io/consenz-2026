@@ -1,0 +1,94 @@
+{
+  "name": "User",
+  "type": "object",
+  "permissions": {
+    "read": "public"
+  },
+  "properties": {
+    "suggestionsCreated": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of suggestions created by the user"
+    },
+    "points": {
+      "type": "number",
+      "default": 1000,
+      "description": "User's gamification points"
+    },
+    "blocked": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the user is blocked"
+    },
+    "bio": {
+      "type": "string",
+      "description": "User bio"
+    },
+    "linkedin": {
+      "type": "string",
+      "description": "LinkedIn profile URL"
+    },
+    "twitter": {
+      "type": "string",
+      "description": "Twitter profile URL"
+    },
+    "facebook": {
+      "type": "string",
+      "description": "Facebook profile URL"
+    },
+    "instagram": {
+      "type": "string",
+      "description": "Instagram profile URL"
+    },
+    "website": {
+      "type": "string",
+      "description": "Personal website URL"
+    },
+    "preferredLanguage": {
+      "type": "string",
+      "enum": [
+        "en",
+        "he",
+        "ar"
+      ],
+      "default": "he",
+      "description": "Preferred language for notifications"
+    },
+    "emailDigestFrequency": {
+      "type": "string",
+      "enum": [
+        "none",
+        "daily",
+        "weekly"
+      ],
+      "default": "weekly",
+      "description": "Email digest frequency preference"
+    },
+    "emailDigestTypes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "new_suggestion_in_followed_document",
+          "suggestion_status_changed",
+          "reply_to_my_comment",
+          "reply_to_my_suggestion",
+          "new_vote_on_suggestion",
+          "suggestion_expiring"
+        ]
+      },
+      "default": [
+        "new_suggestion_in_followed_document",
+        "reply_to_my_comment",
+        "reply_to_my_suggestion"
+      ],
+      "description": "Types of notifications to include in email digest"
+    },
+    "lastDigestSentAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time email digest was sent"
+    }
+  },
+  "required": []
+}

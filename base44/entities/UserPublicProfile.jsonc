@@ -1,0 +1,33 @@
+{
+  "name": "UserPublicProfile",
+  "type": "object",
+  "permissions": {
+    "create": "authenticated",
+    "read": "public",
+    "update": "authenticated",
+    "delete": "authenticated"
+  },
+  "properties": {
+    "userId": {
+      "type": "string",
+      "description": "User ID reference"
+    },
+    "email": {
+      "type": "string",
+      "description": "User email for lookups"
+    },
+    "fullName": {
+      "type": "string",
+      "description": "User display name"
+    },
+    "avatar": {
+      "type": "string",
+      "description": "Avatar URL (optional)"
+    }
+  },
+  "required": [
+    "userId",
+    "email",
+    "fullName"
+  ]
+}

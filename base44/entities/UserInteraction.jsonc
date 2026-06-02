@@ -1,0 +1,23 @@
+{
+  "name": "UserInteraction",
+  "type": "object",
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "description": "Document ID"
+    },
+    "userId": {
+      "type": "string",
+      "description": "User ID"
+    },
+    "firstInteractionAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "First interaction timestamp"
+    }
+  },
+  "required": [
+    "documentId",
+    "userId"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "name": "Invitation",
+  "type": "object",
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "description": "Document ID"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Invited user email"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted"
+      ],
+      "default": "pending",
+      "description": "Invitation status"
+    },
+    "invitedBy": {
+      "type": "string",
+      "description": "User ID who sent the invitation"
+    },
+    "token": {
+      "type": "string",
+      "description": "Unique invitation token"
+    }
+  },
+  "required": [
+    "documentId",
+    "email",
+    "invitedBy",
+    "token"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "DocumentAgreement",
+  "type": "object",
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "description": "Document ID"
+    },
+    "userId": {
+      "type": "string",
+      "description": "User ID who signed"
+    },
+    "userEmail": {
+      "type": "string",
+      "description": "User email for easy lookup"
+    }
+  },
+  "required": [
+    "documentId",
+    "userId",
+    "userEmail"
+  ]
+}

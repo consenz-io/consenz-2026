@@ -1,0 +1,38 @@
+{
+  "name": "Topic",
+  "type": "object",
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "description": "Parent document ID"
+    },
+    "title": {
+      "type": "string",
+      "description": "Topic title"
+    },
+    "order": {
+      "type": "number",
+      "description": "Display order"
+    },
+    "originalLanguage": {
+      "type": "string",
+      "enum": [
+        "en",
+        "he",
+        "ar"
+      ],
+      "default": "he",
+      "description": "Original language of the content"
+    },
+    "translations": {
+      "type": "object",
+      "description": "Cached translations {language_code: translated_title}",
+      "default": {}
+    }
+  },
+  "required": [
+    "documentId",
+    "title",
+    "order"
+  ]
+}

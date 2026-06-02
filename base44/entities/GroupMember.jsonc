@@ -1,0 +1,27 @@
+{
+  "name": "GroupMember",
+  "type": "object",
+  "properties": {
+    "groupId": {
+      "type": "string",
+      "description": "Group ID"
+    },
+    "userId": {
+      "type": "string",
+      "description": "User ID"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "member"
+      ],
+      "default": "member",
+      "description": "Member role in the group"
+    }
+  },
+  "required": [
+    "groupId",
+    "userId"
+  ]
+}

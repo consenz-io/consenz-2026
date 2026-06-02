@@ -1,0 +1,57 @@
+{
+  "name": "TopicEditSuggestion",
+  "type": "object",
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "description": "Parent document ID"
+    },
+    "topicId": {
+      "type": "string",
+      "description": "Topic being edited"
+    },
+    "originalTitle": {
+      "type": "string",
+      "description": "Original topic title at time of suggestion"
+    },
+    "newTitle": {
+      "type": "string",
+      "description": "Proposed new title"
+    },
+    "explanation": {
+      "type": "string",
+      "description": "Explanation for the change"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Current status"
+    },
+    "proVotes": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of pro votes"
+    },
+    "conVotes": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of con votes"
+    },
+    "timerEndsAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When voting period ends"
+    }
+  },
+  "required": [
+    "documentId",
+    "topicId",
+    "originalTitle",
+    "newTitle"
+  ]
+}

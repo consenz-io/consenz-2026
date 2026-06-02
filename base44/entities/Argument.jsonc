@@ -1,0 +1,32 @@
+{
+  "name": "Argument",
+  "type": "object",
+  "properties": {
+    "suggestionId": {
+      "type": "string",
+      "description": "Parent suggestion ID"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "pro",
+        "con"
+      ],
+      "description": "Argument stance"
+    },
+    "content": {
+      "type": "string",
+      "description": "Argument content"
+    },
+    "convincedCount": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of users convinced by this argument"
+    }
+  },
+  "required": [
+    "suggestionId",
+    "type",
+    "content"
+  ]
+}

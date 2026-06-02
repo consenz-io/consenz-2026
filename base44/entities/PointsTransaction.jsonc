@@ -1,0 +1,48 @@
+{
+  "name": "PointsTransaction",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string",
+      "description": "User ID who performed the action"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Points change (positive or negative)"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "suggestion_created",
+        "vote_received",
+        "vote_canceled",
+        "suggestion_accepted",
+        "vote_influenced_acceptance"
+      ],
+      "description": "Type of action"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the transaction"
+    },
+    "relatedEntityId": {
+      "type": "string",
+      "description": "Related entity ID (suggestion, vote, etc.)"
+    },
+    "relatedEntityType": {
+      "type": "string",
+      "enum": [
+        "suggestion",
+        "vote",
+        "document"
+      ],
+      "description": "Type of related entity"
+    }
+  },
+  "required": [
+    "userId",
+    "amount",
+    "action",
+    "description"
+  ]
+}

@@ -145,6 +145,7 @@ const GroupCard = React.memo(function GroupCard({ group, profileMap, language, i
         onClick={() => setCollapsed(v => !v)}
         role="button"
         aria-expanded={!collapsed}
+        dir={isRTL ? 'rtl' : 'ltr'}
       >
         <div className={`flex-shrink-0 rounded-lg p-1.5 ${group.type === 'section' ? 'bg-blue-50' : 'bg-amber-50'}`}>
           {group.type === 'section'

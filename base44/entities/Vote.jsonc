@@ -1,0 +1,27 @@
+{
+  "name": "Vote",
+  "type": "object",
+  "properties": {
+    "suggestionId": {
+      "type": "string",
+      "description": "Suggestion being voted on"
+    },
+    "userId": {
+      "type": "string",
+      "description": "User who voted"
+    },
+    "vote": {
+      "type": "string",
+      "enum": [
+        "pro",
+        "con"
+      ],
+      "description": "Vote direction"
+    }
+  },
+  "required": [
+    "suggestionId",
+    "userId",
+    "vote"
+  ]
+}
