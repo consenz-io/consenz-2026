@@ -54,22 +54,18 @@ export const tutorialStrings = {
     'comment.practice.success': 'התגובה פורסמה',
     'newclause.explain.heading': 'חסר משהו במסמך?',
     'newclause.explain.body': 'אם לדעתכם המסמך צריך נושא שעדיין לא מוזכר — אפשר להציע סעיף חדש לגמרי. אם הקהילה תסכים, הוא ייכנס למסמך.',
-    'newclause.button.encourage.heading': 'הנה כפתור "הוסף סעיף"',
-    'newclause.button.encourage.body': 'העמידו את סמן העכבר או לחצו על מסך המגע מתחת הסעיף שאחריו תרצו להוסיף סעיף חדש, ולחצו על הכפתור הזה.',
-    'newclause.select.topic.heading': 'בחרו איזה נושא יקבל את הסעיף החדש',
-    'newclause.select.topic.body': 'הסעיף החדש יתווסף לנושא שתבחרו. בחרו את הנושא המתאים ביותר מהרשימה.',
-    'newclause.content.heading': 'הזינו את התוכן של הסעיף החדש',
-    'newclause.content.body': 'כתבו את הטקסט של הסעיף החדש שאתם מציעים.',
-    'newclause.content.success': 'טוב! עכשיו אפשר להוסיף הסבר.',
-    'newclause.explanation.heading': 'הוסיפו הסבר (אופציונלי)',
-    'newclause.explanation.body': 'הסביר למה אתם חושבים שהסעיף הזה חשוב. זה יעזור לקהילה להבין את ההצעה שלכם.',
-    'newclause.submit.heading': 'שלחו את ההצעה',
-    'newclause.submit.body': 'לחצו על כפתור "שלח" כדי לפרסם את הצעתכם. הקהילה תוכל להצביע עליה.',
-    'newclause.submit.success': 'ההצעה פורסמה. הקהילה יכולה עכשיו להצביע עליה',
+    'newclause.hover.heading': 'העמידו את העכבר בין סעיפים כדי להוסיף סעיף חדש',
+    'newclause.hover.body': 'כשתעמידו את העכבר בין שני סעיפים, יופיע כפתור להוספת סעיף חדש. כפתור הארה זה יראה לכם את הכפתור גם ללא ריחוף.',
+    'newclause.button.heading': 'לחצו על כפתור "הוסף סעיף"',
+    'newclause.button.body': 'לחיצה על הכפתור תפתח חלון לכתיבת ההצעה החדשה שלכם.',
+    'newclause.modal.heading': 'חלון ההצעה החדשה נפתח',
+    'newclause.modal.body': 'כאן תוכלו למלא את פרטי הסעיף החדש — תוכן, נושא, והסבר. כשהבנתם את התהליך, אפשר לסגור את החלון ולהמשיך בסיור.',
     'editclause.explain.heading': 'לא מסכימים עם ניסוח קיים?',
     'editclause.explain.body': 'אפשר להציע לנסח מחדש כל סעיף — או להציע למחוק אותו לגמרי. גם שינויים כאלה עוברים הצבעה, וגם הם יכולים לשנות את המסמך.',
-    'editclause.practice.heading': 'בחרו סעיף קיים והציעו לו ניסוח אחר',
-    'editclause.practice.success': 'הצעת השינוי פורסמה',
+    'editclause.hover.heading': 'העמידו את העכבר על סעיף כדי לחשוף את כפתורי העריכה',
+    'editclause.hover.body': 'ברגע שתעמידו את העכבר על סעיף, יופיעו כפתורים להצעת שינויים. כפתור הארה זה יראה לכם את הכפתורים גם ללא ריחוף, כדי שתהיו בטוחים איפה הם נמצאים.',
+    'editclause.modal.heading': 'חלון הצעת השינוי נפתח',
+    'editclause.modal.body': 'כאן תזינו את השינוי המוצע ואת ההסבר עבור חברי הקהילה. כשהבנתם כיצד מתחילים, אפשר לסגור את החלון ולהמשיך בסיור.',
     'consensus.explain.heading': 'מתי הצעה מתקבלת?',
     'consensus.explain.body': 'לא מספיק רוב — צריך קונסנזוס. הצעה מתקבלת כשפער הקולות בעדה עובר את הרף. הרף מחושב מממוצע ההסכמה ההיסטורי של הקהילה: ככל שהחלטות קודמות התקבלו בהסכמה רחבה יותר — כך הרף לאישורים הבאים גבוה יותר. המסמך מחמיר עם עצמו ככל שהוא בשל יותר.',
     'versions.explain.heading': 'המסמך חי ומשתנה',
@@ -416,102 +412,84 @@ export const TUTORIAL_STEPS = [
     body: 'browse.encourage.body',
   },
   
-  // 12. Edit existing section (practice)
+  // 12. Edit existing section - explain concept
   {
     id: 'editclause-explain',
     type: 'explain',
-    targetSelector: '.clause-edit-button',
-    tooltipPosition: 'top',
+    targetSelector: '.section-card',
+    tooltipPosition: 'bottom',
     heading: 'editclause.explain.heading',
     body: 'editclause.explain.body',
   },
   
+  // 13. Edit - hover discovery
   {
-    id: 'editclause-practice',
-    type: 'practice',
+    id: 'editclause-hover',
+    type: 'encourage',
     requiresAuth: true,
-    targetSelector: '.clause-edit-button',
-    tooltipPosition: 'top',
-    heading: 'editclause.practice.heading',
-    body: '',
-    successMessage: 'editclause.practice.success',
-    completionEvent: 'proposal:clause-edited',
+    targetSelector: '.section-card',
+    tooltipPosition: 'bottom',
+    heading: 'editclause.hover.heading',
+    body: 'editclause.hover.body',
   },
   
-  // 13-14. New section workflow
+  // 14. Edit - modal opening
+  {
+    id: 'editclause-modal',
+    type: 'encourage',
+    requiresAuth: true,
+    targetSelector: '.create-suggestion-modal',
+    tooltipPosition: 'bottom',
+    heading: 'editclause.modal.heading',
+    body: 'editclause.modal.body',
+    completionEvent: 'create-suggestion-modal:opened',
+  },
+  
+  // 15. New section - explain concept
   {
     id: 'newclause-explain',
     type: 'explain',
-    targetSelector: '.add-clause-button',
+    targetSelector: '.section-insert-space',
     tooltipPosition: 'bottom',
     heading: 'newclause.explain.heading',
     body: 'newclause.explain.body',
   },
   
+  // 16. New section - hover discovery
   {
-    id: 'newclause-button-encourage',
+    id: 'newclause-hover',
+    type: 'encourage',
+    requiresAuth: true,
+    targetSelector: '.section-insert-space',
+    tooltipPosition: 'bottom',
+    heading: 'newclause.hover.heading',
+    body: 'newclause.hover.body',
+  },
+  
+  // 17. New section - button click
+  {
+    id: 'newclause-button',
     type: 'encourage',
     requiresAuth: true,
     targetSelector: '.add-clause-button',
     tooltipPosition: 'bottom',
-    heading: 'newclause.button.encourage.heading',
-    body: 'newclause.button.encourage.body',
+    heading: 'newclause.button.heading',
+    body: 'newclause.button.body',
     completionEvent: 'create-suggestion-modal:opened',
   },
   
+  // 18. New section - modal opening
   {
-    id: 'newclause-select-topic',
+    id: 'newclause-modal',
     type: 'encourage',
     requiresAuth: true,
-    targetSelector: '.create-suggestion-modal select, .create-suggestion-modal [role="combobox"]',
-    tooltipPosition: 'top',
-    heading: 'newclause.select.topic.heading',
-    body: 'newclause.select.topic.body',
-  },
-  
-  {
-    id: 'newclause-content',
-    type: 'practice',
-    requiresAuth: true,
-    targetSelector: '.create-suggestion-modal [placeholder*="תוכן"], .create-suggestion-modal textarea[placeholder*="Content"], .create-suggestion-modal textarea[placeholder*="محتوى"]',
-    tooltipPosition: 'top',
-    heading: 'newclause.content.heading',
-    body: 'newclause.content.body',
-    successMessage: 'newclause.content.success',
-    completionEvent: 'newclause-content:filled',
-  },
-  
-  {
-    id: 'newclause-explanation',
-    type: 'encourage',
-    requiresAuth: true,
-    targetSelector: '.create-suggestion-modal [placeholder*="הסבר"], .create-suggestion-modal input[placeholder*="Explanation"], .create-suggestion-modal input[placeholder*="شرح"]',
-    tooltipPosition: 'top',
-    heading: 'newclause.explanation.heading',
-    body: 'newclause.explanation.body',
-  },
-  
-  {
-    id: 'newclause-submit',
-    type: 'practice',
-    requiresAuth: true,
-    targetSelector: '.create-suggestion-modal button[type="submit"]',
-    tooltipPosition: 'top',
-    heading: 'newclause.submit.heading',
-    body: 'newclause.submit.body',
-    successMessage: 'newclause.submit.success',
-    completionEvent: 'proposal:clause-added',
-  },
-  
-  // 15. Inserting between sections
-  {
-    id: 'new-section-hover-encourage',
-    type: 'encourage',
-    targetSelector: '.section-insert-space',
+    targetSelector: '.create-suggestion-modal',
     tooltipPosition: 'bottom',
-    heading: 'new.section.hover.encourage.heading',
-    body: 'new.section.hover.encourage.body',
+    heading: 'newclause.modal.heading',
+    body: 'newclause.modal.body',
   },
+  
+
   
   // 16. Version history
   {
