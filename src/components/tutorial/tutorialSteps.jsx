@@ -304,8 +304,8 @@ export const TUTORIAL_STEPS = [
     type: 'explain',
     targetSelector: '.document-title-section',
     tooltipPosition: 'bottom',
-    heading: 'docData.heading',
-    body: 'docData.body',
+    heading: 'doc.title.heading',
+    body: 'doc.title.body',
   },
   {
     id: 'doc-counters-explain',
