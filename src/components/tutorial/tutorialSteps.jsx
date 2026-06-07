@@ -345,17 +345,6 @@ export const TUTORIAL_STEPS = [
     body: 'comment.explain.body',
   },
   {
-    id: 'comment-practice',
-    type: 'practice',
-    requiresAuth: true,
-    targetSelector: '.proposal-comment-input',
-    tooltipPosition: 'top',
-    heading: 'comment.practice.heading',
-    body: '',
-    successMessage: 'comment.practice.success',
-    completionEvent: 'proposal:commented',
-  },
-  {
     id: 'section-hover-encourage',
     type: 'encourage',
     targetSelector: '.section-card',
