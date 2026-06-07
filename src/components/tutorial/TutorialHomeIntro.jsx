@@ -25,7 +25,7 @@ export default function TutorialHomeIntro({ step, onSkip, isRTL }) {
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
   const tooltipRef = useRef(null);
 
-  // Position tooltip below target + scroll into view
+  // Position tooltip below target
   useEffect(() => {
     function update() {
       const el = document.querySelector(step.targetSelector);
@@ -46,13 +46,14 @@ export default function TutorialHomeIntro({ step, onSkip, isRTL }) {
     };
   }, [step.targetSelector]);
 
-  // Scroll tooltip into view when it appears
+  // Scroll target element into view on mount
   useEffect(() => {
-    if (!tooltipStyle || !tooltipRef.current) return;
+    const el = document.querySelector(step.targetSelector);
+    if (!el) return;
     setTimeout(() => {
-      tooltipRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 100);
-  }, [tooltipStyle?.top]);
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+  }, [step.targetSelector]);
 
   // Spotlight on target (no scrim — only box-shadow ring)
   useEffect(() => {
