@@ -21,10 +21,12 @@ export function useGroupsData() {
   });
 
   const groupIds = useMemo(() => myMemberships.map(m => m.groupId).sort(), [myMemberships]);
+  // Stable string key — prevents new array ref from triggering cache miss on every render
+  const groupIdsKey = useMemo(() => groupIds.join(','), [groupIds]);
 
   // Step 2: Fetch only the groups the user belongs to
   const { data: groups = [], isLoading: groupsLoading } = useQuery({
-    queryKey: ['myGroups', groupIds],
+    queryKey: ['myGroups', groupIdsKey],
     queryFn: () => base44.entities.Group.filter({ id: { $in: groupIds } }, '-created_date'),
     enabled: groupIds.length > 0,
     placeholderData: [],
@@ -34,7 +36,7 @@ export function useGroupsData() {
 
   // Step 3: Fetch member counts for those groups
   const { data: groupMembers = [] } = useQuery({
-    queryKey: ['groupMembersForGroups', groupIds],
+    queryKey: ['groupMembersForGroups', groupIdsKey],
     queryFn: () => base44.entities.GroupMember.filter({ groupId: { $in: groupIds } }),
     enabled: groupIds.length > 0,
     placeholderData: [],
@@ -44,7 +46,7 @@ export function useGroupsData() {
 
   // Step 4: Fetch documents in those groups
   const { data: documents = [] } = useQuery({
-    queryKey: ['groupDocuments', groupIds],
+    queryKey: ['groupDocuments', groupIdsKey],
     queryFn: () => base44.entities.Document.filter({ groupId: { $in: groupIds } }),
     enabled: groupIds.length > 0,
     placeholderData: [],
@@ -53,6 +55,7 @@ export function useGroupsData() {
   });
 
   const docIds = useMemo(() => documents.map(d => d.id).sort(), [documents]);
+  const docIdsKey = useMemo(() => docIds.join(','), [docIds]);
 
   // Step 5: Fetch public profiles for email→userId mapping
   const { data: publicProfiles = [] } = useQuery({
@@ -66,7 +69,7 @@ export function useGroupsData() {
 
   // Step 6: Fetch all suggestions, votes, comments for group docs (participant counting)
   const { data: groupAllSuggestions = [] } = useQuery({
-    queryKey: ['groupsPageAllSuggestions', docIds],
+    queryKey: ['groupsPageAllSuggestions', docIdsKey],
     queryFn: () => base44.entities.Suggestion.filter({ documentId: { $in: docIds } }, null, 2000),
     enabled: docIds.length > 0,
     placeholderData: [],
@@ -75,9 +78,10 @@ export function useGroupsData() {
   });
 
   const suggestionIds = useMemo(() => groupAllSuggestions.map(s => s.id).sort(), [groupAllSuggestions]);
+  const suggestionIdsKey = useMemo(() => suggestionIds.join(','), [suggestionIds]);
 
   const { data: groupAllVotes = [] } = useQuery({
-    queryKey: ['groupsPageAllVotes', suggestionIds],
+    queryKey: ['groupsPageAllVotes', suggestionIdsKey],
     queryFn: () => base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } }, null, 2000),
     enabled: suggestionIds.length > 0,
     placeholderData: [],
@@ -86,7 +90,7 @@ export function useGroupsData() {
   });
 
   const { data: groupAllSections = [] } = useQuery({
-    queryKey: ['groupsPageAllSections', docIds],
+    queryKey: ['groupsPageAllSections', docIdsKey],
     queryFn: () => base44.entities.Section.filter({ documentId: { $in: docIds } }, null, 1000),
     enabled: docIds.length > 0,
     placeholderData: [],
@@ -95,7 +99,7 @@ export function useGroupsData() {
   });
 
   const { data: groupAllAgreements = [] } = useQuery({
-    queryKey: ['groupsPageAllAgreements', docIds],
+    queryKey: ['groupsPageAllAgreements', docIdsKey],
     queryFn: () => base44.entities.DocumentAgreement.filter({ documentId: { $in: docIds } }, null, 500),
     enabled: docIds.length > 0,
     placeholderData: [],
@@ -104,6 +108,12 @@ export function useGroupsData() {
   });
 
   const sectionIds = useMemo(() => groupAllSections.map(s => s.id).sort(), [groupAllSections]);
+  const sectionIdsKey = useMemo(() => sectionIds.join(','), [sectionIds]);
+
+  const allRootEntityIdsKey = useMemo(
+    () => [docIdsKey, suggestionIdsKey, sectionIdsKey].join('|'),
+    [docIdsKey, suggestionIdsKey, sectionIdsKey]
+  );
 
   const allRootEntityIds = useMemo(
     () => [...docIds, ...suggestionIds, ...sectionIds],
@@ -111,7 +121,7 @@ export function useGroupsData() {
   );
 
   const { data: groupAllComments = [] } = useQuery({
-    queryKey: ['groupsPageAllComments', allRootEntityIds],
+    queryKey: ['groupsPageAllComments', allRootEntityIdsKey],
     queryFn: () => base44.entities.Comment.filter({ rootEntityId: { $in: allRootEntityIds } }, null, 2000),
     enabled: allRootEntityIds.length > 0,
     placeholderData: [],
@@ -128,8 +138,8 @@ export function useGroupsData() {
   // - hidden: only visible to members, admins, or creators
   const visibleGroups = useMemo(() => {
     if (!currentUser) return [];
-    // Don't render anything until memberships have been confirmed (not just from placeholder)
-    if (membersFetching && myMemberships.length === 0) return [];
+    // Only block render if we've never loaded memberships yet (first fetch, not background refetch)
+    if (membersLoading && myMemberships.length === 0) return [];
     return groups.filter((group) => {
       const isSystemAdmin = currentUser.role === 'admin';
       const isCreator = group.created_by === currentUser.email;
@@ -153,8 +163,7 @@ export function useGroupsData() {
   const isLoadingFinal =
     userLoading ||
     !currentUser ||               // user not resolved yet
-    membersLoading ||             // memberships still fetching
-    membersFetching ||            // memberships fetching (incl. placeholderData state)
+    membersLoading ||             // memberships first fetch (not background refetch)
     (groupIds.length > 0 && groupsLoading); // groups themselves loading
 
   return {

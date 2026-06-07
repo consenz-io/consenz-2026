@@ -62,7 +62,7 @@ function LayoutContent({ children, currentPageName }) {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     retry: false,
-    staleTime: 0, // Always fresh for auth
+    staleTime: 60 * 1000, // 1 minute — prevents cascading refetch on every render while still staying fresh
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 
