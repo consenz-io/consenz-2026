@@ -299,6 +299,7 @@ export const HOME_INTRO_STEP = {
 
 /** @type {Array} */
 export const TUTORIAL_STEPS = [
+  // 1. Foundation: Document title & description
   {
     id: 'doc-title-explain',
     type: 'explain',
@@ -307,6 +308,8 @@ export const TUTORIAL_STEPS = [
     heading: 'doc.title.heading',
     body: 'doc.title.body',
   },
+  
+  // 2. Community stats
   {
     id: 'doc-counters-explain',
     type: 'explain',
@@ -315,6 +318,8 @@ export const TUTORIAL_STEPS = [
     heading: 'doc.counters.heading',
     body: 'doc.counters.body',
   },
+  
+  // 3. Document structure
   {
     id: 'doc-sections-explain',
     type: 'explain',
@@ -323,14 +328,8 @@ export const TUTORIAL_STEPS = [
     heading: 'doc.sections.heading',
     body: 'doc.sections.body',
   },
-  {
-    id: 'doc-title-counter-explain',
-    type: 'explain',
-    targetSelector: '.document-title-section',
-    tooltipPosition: 'bottom',
-    heading: 'doc.title.counter.heading',
-    body: 'doc.title.counter.body',
-  },
+  
+  // 4. Voting (core mechanic)
   {
     id: 'vote-explain',
     type: 'explain',
@@ -339,131 +338,8 @@ export const TUTORIAL_STEPS = [
     heading: 'vote.explain.heading',
     body: 'vote.explain.body',
   },
-  {
-    id: 'comment-counter-encourage',
-    type: 'encourage',
-    targetSelector: '.proposal-comments-counter',
-    tooltipPosition: 'top',
-    heading: 'comment.counter.encourage.heading',
-    body: 'comment.counter.encourage.body',
-  },
-  {
-    id: 'comment-explain',
-    type: 'explain',
-    targetSelector: '.proposal-comment-input',
-    tooltipPosition: 'top',
-    heading: 'comment.explain.heading',
-    body: 'comment.explain.body',
-  },
-  {
-    id: 'section-hover-encourage',
-    type: 'encourage',
-    targetSelector: '.section-card',
-    tooltipPosition: 'bottom',
-    heading: 'section.hover.encourage.heading',
-    body: 'section.hover.encourage.body',
-  },
-  {
-    id: 'newclause-explain',
-    type: 'explain',
-    targetSelector: '.add-clause-button',
-    tooltipPosition: 'bottom',
-    heading: 'newclause.explain.heading',
-    body: 'newclause.explain.body',
-  },
-  {
-    id: 'newclause-button-encourage',
-    type: 'encourage',
-    requiresAuth: true,
-    targetSelector: '.add-clause-button',
-    tooltipPosition: 'bottom',
-    heading: 'newclause.button.encourage.heading',
-    body: 'newclause.button.encourage.body',
-    completionEvent: 'create-suggestion-modal:opened',
-  },
-  {
-    id: 'newclause-select-topic',
-    type: 'encourage',
-    requiresAuth: true,
-    targetSelector: '.create-suggestion-modal select, .create-suggestion-modal [role="combobox"]',
-    tooltipPosition: 'top',
-    heading: 'newclause.select.topic.heading',
-    body: 'newclause.select.topic.body',
-  },
-  {
-    id: 'newclause-content',
-    type: 'practice',
-    requiresAuth: true,
-    targetSelector: '.create-suggestion-modal [placeholder*="תוכן"], .create-suggestion-modal textarea[placeholder*="Content"], .create-suggestion-modal textarea[placeholder*="محتوى"]',
-    tooltipPosition: 'top',
-    heading: 'newclause.content.heading',
-    body: 'newclause.content.body',
-    successMessage: 'newclause.content.success',
-    completionEvent: 'newclause-content:filled',
-  },
-  {
-    id: 'newclause-explanation',
-    type: 'encourage',
-    requiresAuth: true,
-    targetSelector: '.create-suggestion-modal [placeholder*="הסבר"], .create-suggestion-modal input[placeholder*="Explanation"], .create-suggestion-modal input[placeholder*="شرح"]',
-    tooltipPosition: 'top',
-    heading: 'newclause.explanation.heading',
-    body: 'newclause.explanation.body',
-  },
-  {
-    id: 'newclause-submit',
-    type: 'practice',
-    requiresAuth: true,
-    targetSelector: '.create-suggestion-modal button[type="submit"]',
-    tooltipPosition: 'top',
-    heading: 'newclause.submit.heading',
-    body: 'newclause.submit.body',
-    successMessage: 'newclause.submit.success',
-    completionEvent: 'proposal:clause-added',
-  },
-  {
-    id: 'new-section-hover-encourage',
-    type: 'encourage',
-    targetSelector: '.section-insert-space',
-    tooltipPosition: 'bottom',
-    heading: 'new.section.hover.encourage.heading',
-    body: 'new.section.hover.encourage.body',
-  },
-  {
-    id: 'editclause-explain',
-    type: 'explain',
-    targetSelector: '.clause-edit-button',
-    tooltipPosition: 'top',
-    heading: 'editclause.explain.heading',
-    body: 'editclause.explain.body',
-  },
-  {
-    id: 'editclause-practice',
-    type: 'practice',
-    requiresAuth: true,
-    targetSelector: '.clause-edit-button',
-    tooltipPosition: 'top',
-    heading: 'editclause.practice.heading',
-    body: '',
-    successMessage: 'editclause.practice.success',
-    completionEvent: 'proposal:clause-edited',
-  },
-  {
-    id: 'browse-explain',
-    type: 'explain',
-    targetSelector: '.proposal-navigation-arrows',
-    tooltipPosition: 'bottom',
-    heading: 'browse.explain.heading',
-    body: 'browse.explain.body',
-  },
-  {
-    id: 'browse-encourage',
-    type: 'encourage',
-    targetSelector: '.proposal-navigation-arrows',
-    tooltipPosition: 'bottom',
-    heading: 'browse.encourage.heading',
-    body: 'browse.encourage.body',
-  },
+  
+  // 5. Consensus threshold
   {
     id: 'consensus-explain',
     type: 'explain',
@@ -472,34 +348,8 @@ export const TUTORIAL_STEPS = [
     heading: 'consensus.explain.heading',
     body: 'consensus.explain.body',
   },
-  {
-    id: 'versions-explain',
-    type: 'explain',
-    targetSelector: '.versions-tab-button',
-    tooltipPosition: 'bottom',
-    heading: 'versions.explain.heading',
-    body: 'versions.explain.body',
-  },
-  {
-    id: 'versions-navigate',
-    type: 'practice',
-    targetSelector: '.versions-tab-button',
-    tooltipPosition: 'bottom',
-    heading: 'versions.navigate.heading',
-    body: '',
-    successMessage: 'versions.navigate.success',
-    completionEvent: 'versions:opened',
-  },
-  {
-    id: 'versions-browse',
-    type: 'practice',
-    targetSelector: '.versions-list',
-    tooltipPosition: 'right',
-    heading: 'versions.browse.heading',
-    body: '',
-    successMessage: 'versions.browse.success',
-    completionEvent: 'versions:selected',
-  },
+  
+  // 6. Points system (before participation)
   {
     id: 'points-explain',
     type: 'explain',
@@ -515,6 +365,187 @@ export const TUTORIAL_STEPS = [
       { label: 'points.explain.reward.accepted', value: '+500' },
     ],
   },
+  
+  // 7. Viewing comments (before writing them)
+  {
+    id: 'comment-counter-encourage',
+    type: 'encourage',
+    targetSelector: '.proposal-comments-counter',
+    tooltipPosition: 'top',
+    heading: 'comment.counter.encourage.heading',
+    body: 'comment.counter.encourage.body',
+  },
+  
+  // 8. Writing comments
+  {
+    id: 'comment-explain',
+    type: 'explain',
+    targetSelector: '.proposal-comment-input',
+    tooltipPosition: 'top',
+    heading: 'comment.explain.heading',
+    body: 'comment.explain.body',
+  },
+  
+  // 9. Hovering on sections (edit affordance)
+  {
+    id: 'section-hover-encourage',
+    type: 'encourage',
+    targetSelector: '.section-card',
+    tooltipPosition: 'bottom',
+    heading: 'section.hover.encourage.heading',
+    body: 'section.hover.encourage.body',
+  },
+  
+  // 10. Browsing proposals (viewing versions)
+  {
+    id: 'browse-explain',
+    type: 'explain',
+    targetSelector: '.proposal-navigation-arrows',
+    tooltipPosition: 'bottom',
+    heading: 'browse.explain.heading',
+    body: 'browse.explain.body',
+  },
+  
+  // 11. Browsing encouragement
+  {
+    id: 'browse-encourage',
+    type: 'encourage',
+    targetSelector: '.proposal-navigation-arrows',
+    tooltipPosition: 'bottom',
+    heading: 'browse.encourage.heading',
+    body: 'browse.encourage.body',
+  },
+  
+  // 12. Edit existing section (practice)
+  {
+    id: 'editclause-explain',
+    type: 'explain',
+    targetSelector: '.clause-edit-button',
+    tooltipPosition: 'top',
+    heading: 'editclause.explain.heading',
+    body: 'editclause.explain.body',
+  },
+  
+  {
+    id: 'editclause-practice',
+    type: 'practice',
+    requiresAuth: true,
+    targetSelector: '.clause-edit-button',
+    tooltipPosition: 'top',
+    heading: 'editclause.practice.heading',
+    body: '',
+    successMessage: 'editclause.practice.success',
+    completionEvent: 'proposal:clause-edited',
+  },
+  
+  // 13-14. New section workflow
+  {
+    id: 'newclause-explain',
+    type: 'explain',
+    targetSelector: '.add-clause-button',
+    tooltipPosition: 'bottom',
+    heading: 'newclause.explain.heading',
+    body: 'newclause.explain.body',
+  },
+  
+  {
+    id: 'newclause-button-encourage',
+    type: 'encourage',
+    requiresAuth: true,
+    targetSelector: '.add-clause-button',
+    tooltipPosition: 'bottom',
+    heading: 'newclause.button.encourage.heading',
+    body: 'newclause.button.encourage.body',
+    completionEvent: 'create-suggestion-modal:opened',
+  },
+  
+  {
+    id: 'newclause-select-topic',
+    type: 'encourage',
+    requiresAuth: true,
+    targetSelector: '.create-suggestion-modal select, .create-suggestion-modal [role="combobox"]',
+    tooltipPosition: 'top',
+    heading: 'newclause.select.topic.heading',
+    body: 'newclause.select.topic.body',
+  },
+  
+  {
+    id: 'newclause-content',
+    type: 'practice',
+    requiresAuth: true,
+    targetSelector: '.create-suggestion-modal [placeholder*="תוכן"], .create-suggestion-modal textarea[placeholder*="Content"], .create-suggestion-modal textarea[placeholder*="محتوى"]',
+    tooltipPosition: 'top',
+    heading: 'newclause.content.heading',
+    body: 'newclause.content.body',
+    successMessage: 'newclause.content.success',
+    completionEvent: 'newclause-content:filled',
+  },
+  
+  {
+    id: 'newclause-explanation',
+    type: 'encourage',
+    requiresAuth: true,
+    targetSelector: '.create-suggestion-modal [placeholder*="הסבר"], .create-suggestion-modal input[placeholder*="Explanation"], .create-suggestion-modal input[placeholder*="شرح"]',
+    tooltipPosition: 'top',
+    heading: 'newclause.explanation.heading',
+    body: 'newclause.explanation.body',
+  },
+  
+  {
+    id: 'newclause-submit',
+    type: 'practice',
+    requiresAuth: true,
+    targetSelector: '.create-suggestion-modal button[type="submit"]',
+    tooltipPosition: 'top',
+    heading: 'newclause.submit.heading',
+    body: 'newclause.submit.body',
+    successMessage: 'newclause.submit.success',
+    completionEvent: 'proposal:clause-added',
+  },
+  
+  // 15. Inserting between sections
+  {
+    id: 'new-section-hover-encourage',
+    type: 'encourage',
+    targetSelector: '.section-insert-space',
+    tooltipPosition: 'bottom',
+    heading: 'new.section.hover.encourage.heading',
+    body: 'new.section.hover.encourage.body',
+  },
+  
+  // 16. Version history
+  {
+    id: 'versions-explain',
+    type: 'explain',
+    targetSelector: '.versions-tab-button',
+    tooltipPosition: 'bottom',
+    heading: 'versions.explain.heading',
+    body: 'versions.explain.body',
+  },
+  
+  {
+    id: 'versions-navigate',
+    type: 'practice',
+    targetSelector: '.versions-tab-button',
+    tooltipPosition: 'bottom',
+    heading: 'versions.navigate.heading',
+    body: '',
+    successMessage: 'versions.navigate.success',
+    completionEvent: 'versions:opened',
+  },
+  
+  {
+    id: 'versions-browse',
+    type: 'practice',
+    targetSelector: '.versions-list',
+    tooltipPosition: 'right',
+    heading: 'versions.browse.heading',
+    body: '',
+    successMessage: 'versions.browse.success',
+    completionEvent: 'versions:selected',
+  },
+  
+  // 17. Closing screen
   {
     id: 'closing',
     type: 'closing',
