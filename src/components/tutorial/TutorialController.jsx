@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTutorial } from './useTutorial';
-import { TUTORIAL_STEPS, HOME_INTRO_STEP } from './tutorialSteps';
+import { TUTORIAL_STEPS, HOME_INTRO_STEP, GROUP_INTRO_STEP } from './tutorialSteps';
 import TutorialWelcome from './TutorialWelcome';
 import TutorialOverlay from './TutorialOverlay';
 import TutorialTooltip from './TutorialTooltip';
@@ -10,12 +10,15 @@ import TutorialClosingScreen from './TutorialClosingScreen';
 import { useLanguage } from '@/components/LanguageContext';
 
 function isDocumentPage(pathname) {
-  // Document pages typically contain /DocumentView or /document in the path
   return /\/(DocumentView|document)/i.test(pathname) || pathname.includes('urlName');
 }
 
 function isHomePage(pathname) {
   return pathname === '/' || pathname === '/Home' || pathname === '';
+}
+
+function isGroupPage(pathname) {
+  return /\/GroupView/i.test(pathname);
 }
 
 export default function TutorialController() {
@@ -63,9 +66,16 @@ export default function TutorialController() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // intentionally run once on mount
 
-  // ── Resume when navigating TO a document page from home-intro ───────────
+  // ── Transition: home-intro → group page ─────────────────────────────────
   useEffect(() => {
-    if (phase === 'home-intro' && homeStepSeen && isDocumentPage(location.pathname)) {
+    if (phase === 'home-intro' && homeStepSeen && isGroupPage(location.pathname)) {
+      // Stay in home-intro phase but switch to group step — handled in render
+    }
+  }, [location.pathname, phase, homeStepSeen]);
+
+  // ── Resume when navigating TO a document page ────────────────────────────
+  useEffect(() => {
+    if ((phase === 'home-intro') && homeStepSeen && isDocumentPage(location.pathname)) {
       resumeOnDocumentPage();
     }
   }, [location.pathname, phase, homeStepSeen, resumeOnDocumentPage]);
@@ -104,6 +114,16 @@ export default function TutorialController() {
   }
 
   if (phase === 'home-intro') {
+    // On group page — show the group-level intro step
+    if (isGroupPage(location.pathname)) {
+      return (
+        <TutorialHomeIntro
+          step={GROUP_INTRO_STEP}
+          onSkip={skipTutorial}
+          isRTL={isRTL}
+        />
+      );
+    }
     return (
       <TutorialHomeIntro
         step={HOME_INTRO_STEP}

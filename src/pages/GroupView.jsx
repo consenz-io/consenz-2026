@@ -199,7 +199,7 @@ export default function GroupView() {
                     <Droppable droppableId="group-documents">
                       {(provided) => (
                         <div
-                          className="space-y-3"
+                          className="group-documents-list space-y-3"
                           {...provided.droppableProps}
                           ref={provided.innerRef}
                         >

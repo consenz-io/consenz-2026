@@ -17,6 +17,8 @@ export const tutorialStrings = {
   he: {
     'home.groups.heading': 'הכל מתחיל מקבוצה',
     'home.groups.body': 'כל קבוצה מנהלת מסמכים משותפים. לחצו על קבוצה כדי לראות את המסמכים שלה — ומשם תוכלו להיכנס לאחד מהם.',
+    'group.docs.heading': 'בחרו מסמך כדי להמשיך',
+    'group.docs.body': 'אלה המסמכים המשותפים של הקבוצה. לחצו על אחד מהם כדי להיכנס ולהתחיל להשתתף.',
     'browse.explain.heading': 'לכל סעיף יש כמה גרסאות',
     'browse.explain.body': 'חברי הקהילה מציעים שינויים לכל סעיף. החצים מאפשרים לעבור ביניהם ולראות מה כל אחד מציע.',
     'browse.practice.heading': 'השתמשו בחצים כדי לעבור בין ההצעות לאחד הסעיפים',
@@ -63,6 +65,8 @@ export const tutorialStrings = {
   ar: {
     'home.groups.heading': 'كل شيء يبدأ من مجموعة',
     'home.groups.body': 'كل مجموعة تدير وثائق مشتركة. اضغطوا على مجموعة لرؤية وثائقها — ومن هناك يمكنكم الدخول إلى إحداها.',
+    'group.docs.heading': 'اختاروا وثيقة للمتابعة',
+    'group.docs.body': 'هذه هي الوثائق المشتركة للمجموعة. اضغطوا على إحداها للدخول والمشاركة.',
     'browse.explain.heading': 'لكل بند عدة نسخ',
     'browse.explain.body': 'يقترح أعضاء المجتمع تعديلات على كل بند. تتيح لكم الأسهم التنقل بينها ورؤية ما يقترحه كل شخص.',
     'browse.practice.heading': 'استخدموا الأسهم للتنقل بين المقترحات',
@@ -109,6 +113,8 @@ export const tutorialStrings = {
   en: {
     'home.groups.heading': 'Everything starts with a group',
     'home.groups.body': 'Each group manages shared documents. Click on a group to see its documents — and from there you can enter one.',
+    'group.docs.heading': 'Pick a document to continue',
+    'group.docs.body': "These are the group's shared documents. Click one to enter and start participating.",
     'browse.explain.heading': 'Each clause has multiple versions',
     'browse.explain.body': 'Community members propose changes to each clause. Use the arrows to browse between proposals and see what each one suggests.',
     'browse.practice.heading': 'Use the arrows to browse proposals on any clause',
@@ -165,8 +171,23 @@ export function tTutorial(key, language = 'he') {
 }
 
 /**
+ * Mid-tutorial step shown on the group page.
+ * Guides the user to click a document.
+ */
+export const GROUP_INTRO_STEP = {
+  id: 'group-intro',
+  type: 'practice',
+  targetSelector: '.group-documents-list',
+  tooltipPosition: 'bottom',
+  heading: 'group.docs.heading',
+  body: 'group.docs.body',
+  successMessage: 'מעולה, בואו נתחיל',
+  completionEvent: 'document:entered',
+};
+
+/**
  * Pre-tutorial step shown on the home page.
- * No progress dots, no scrim — spotlight only on .documents-list.
+ * No progress dots, no scrim — spotlight only on .groups-list.
  */
 export const HOME_INTRO_STEP = {
   id: 'home-intro',
