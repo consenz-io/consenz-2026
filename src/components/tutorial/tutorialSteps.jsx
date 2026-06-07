@@ -369,7 +369,7 @@ export const TUTORIAL_STEPS = [
     heading: 'newclause.practice.heading',
     body: '',
     successMessage: 'newclause.practice.success',
-    completionEvent: 'proposal:clause-added',
+    completionEvent: 'section-insert-space:visible',
   },
   {
     id: 'new-section-hover-encourage',
