@@ -66,6 +66,18 @@ export const tutorialStrings = {
     'editclause.hover.body': 'ברגע שתעמידו את העכבר על סעיף, יופיעו כפתורים להצעת שינויים. כפתור הארה זה יראה לכם את הכפתורים גם ללא ריחוף, כדי שתהיו בטוחים איפה הם נמצאים.',
     'editclause.modal.heading': 'חלון הצעת השינוי נפתח',
     'editclause.modal.body': 'כאן תזינו את השינוי המוצע ואת ההסבר עבור חברי הקהילה. כשהבנתם כיצד מתחילים, אפשר לסגור את החלון ולהמשיך בסיור.',
+    'deleteclause.explain.heading': 'לא רוצים סעיף זה במסמך?',
+    'deleteclause.explain.body': 'אפשר להציע למחוק סעיף קיים אם לדעתכם הוא לא רלוונטי או לא מדויק. הקהילה תצביע על הצעת המחיקה, כמו על כל שינוי אחר.',
+    'consensus.meter.heading': 'מד הקונסנזוס מראה קרבה לאישור',
+    'consensus.meter.body': 'הבר הזה מראה כמה קולות דרושים כדי שהצעה תתקבל. זה תלוי בהסכמה ההיסטורית של הקהילה — המסמכים בשלים דורשים הסכמה יותר רחבה.',
+    'versions.counter.heading': 'קאונטר הגרסאות ממעיל את ההיסטוריה',
+    'versions.counter.body': 'המספר הזה מראה כמה גרסאות של המסמך קיימות כרגע. כל גרסה היא מצב שנאישר על ידי הקהילה.',
+    'cleanview.browse.heading': 'דפדוף בין גרסאות קודמות',
+    'cleanview.browse.body': 'בחרו בגרסה קודמת כדי לראות איך המסמך נראה בשלב קודם.',
+    'cleanview.diff.heading': 'זיהוי סוגי השינויים',
+    'cleanview.diff.body': 'ירוק = תוכן שנוסף, אדום = תוכן שהוסר. כך תוכלו להבין בדיוק מה השתנה.',
+    'cleanview.discussion.heading': 'פרטי הדיון על השינוי',
+    'cleanview.discussion.body': 'לחצו לראות את הדיון המלא — הצעות, הצבעות, ותגובות שהובילו להחלטה הזאת.',
     'consensus.explain.heading': 'מתי הצעה מתקבלת?',
     'consensus.explain.body': 'לא מספיק רוב — צריך קונסנזוס. הצעה מתקבלת כשפער הקולות בעדה עובר את הרף. הרף מחושב מממוצע ההסכמה ההיסטורי של הקהילה: ככל שהחלטות קודמות התקבלו בהסכמה רחבה יותר — כך הרף לאישורים הבאים גבוה יותר. המסמך מחמיר עם עצמו ככל שהוא בשל יותר.',
     'versions.explain.heading': 'המסמך חי ומשתנה',
@@ -325,7 +337,37 @@ export const TUTORIAL_STEPS = [
     body: 'doc.sections.body',
   },
   
-  // 4. Voting (core mechanic)
+  // 4. Proposal editing - explain concept
+  {
+    id: 'editproposal-explain',
+    type: 'explain',
+    targetSelector: '.section-card',
+    tooltipPosition: 'bottom',
+    heading: 'editclause.explain.heading',
+    body: 'editclause.explain.body',
+  },
+  
+  // 5. Browsing proposals (viewing versions)
+  {
+    id: 'browse-explain',
+    type: 'explain',
+    targetSelector: '.proposal-navigation-arrows',
+    tooltipPosition: 'bottom',
+    heading: 'browse.explain.heading',
+    body: 'browse.explain.body',
+  },
+  
+  // 6. Browsing encouragement
+  {
+    id: 'browse-encourage',
+    type: 'encourage',
+    targetSelector: '.proposal-navigation-arrows',
+    tooltipPosition: 'bottom',
+    heading: 'browse.encourage.heading',
+    body: 'browse.encourage.body',
+  },
+  
+  // 7. Voting (core mechanic)
   {
     id: 'vote-explain',
     type: 'explain',
@@ -335,17 +377,167 @@ export const TUTORIAL_STEPS = [
     body: 'vote.explain.body',
   },
   
-  // 5. Consensus threshold
+  // 8. Writing comments
   {
-    id: 'consensus-explain',
+    id: 'comment-explain',
+    type: 'explain',
+    targetSelector: '.proposal-comment-input',
+    tooltipPosition: 'top',
+    heading: 'comment.explain.heading',
+    body: 'comment.explain.body',
+  },
+  
+  // 9. Submit comment practice
+  {
+    id: 'comment-practice',
+    type: 'encourage',
+    requiresAuth: true,
+    targetSelector: '.proposal-comment-input',
+    tooltipPosition: 'top',
+    heading: 'comment.practice.heading',
+    body: 'comment.practice.body',
+    completionEvent: 'comment:submitted',
+  },
+  
+  // 10. Edit existing clause - discovery
+  {
+    id: 'editclause-hover',
+    type: 'encourage',
+    requiresAuth: true,
+    targetSelector: '.section-card',
+    tooltipPosition: 'bottom',
+    heading: 'editclause.hover.heading',
+    body: 'editclause.hover.body',
+  },
+  
+  // 11. Edit - modal opening
+  {
+    id: 'editclause-modal',
+    type: 'encourage',
+    requiresAuth: true,
+    targetSelector: '.create-suggestion-modal',
+    tooltipPosition: 'bottom',
+    heading: 'editclause.modal.heading',
+    body: 'editclause.modal.body',
+    completionEvent: 'create-suggestion-modal:opened',
+  },
+  
+  // 12. Delete section - explain
+  {
+    id: 'deleteclause-explain',
+    type: 'explain',
+    targetSelector: '.section-card',
+    tooltipPosition: 'bottom',
+    heading: 'deleteclause.explain.heading',
+    body: 'deleteclause.explain.body',
+  },
+  
+  // 13. New section - explain concept
+  {
+    id: 'newclause-explain',
+    type: 'explain',
+    targetSelector: '.section-insert-space',
+    tooltipPosition: 'bottom',
+    heading: 'newclause.explain.heading',
+    body: 'newclause.explain.body',
+  },
+  
+  // 14. New section - hover discovery (includes affordance)
+  {
+    id: 'newclause-hover',
+    type: 'encourage',
+    requiresAuth: true,
+    targetSelector: '.section-insert-space',
+    tooltipPosition: 'bottom',
+    heading: 'newclause.hover.heading',
+    body: 'newclause.hover.body',
+  },
+  
+  // 15. New section - button click
+  {
+    id: 'newclause-button',
+    type: 'encourage',
+    requiresAuth: true,
+    targetSelector: '.add-clause-button',
+    tooltipPosition: 'bottom',
+    heading: 'newclause.button.heading',
+    body: 'newclause.button.body',
+    completionEvent: 'create-suggestion-modal:opened',
+  },
+  
+  // 16. New section - modal opening
+  {
+    id: 'newclause-modal',
+    type: 'encourage',
+    requiresAuth: true,
+    targetSelector: '.create-suggestion-modal',
+    tooltipPosition: 'bottom',
+    heading: 'newclause.modal.heading',
+    body: 'newclause.modal.body',
+  },
+  
+  // 17. Consensus meter explanation
+  {
+    id: 'consensus-meter-explain',
     type: 'explain',
     targetSelector: '.consensus-meter',
     tooltipPosition: 'bottom',
-    heading: 'consensus.explain.heading',
-    body: 'consensus.explain.body',
+    heading: 'consensus.meter.heading',
+    body: 'consensus.meter.body',
   },
   
-  // 6. Points system (before participation)
+  // 18. Versions counter
+  {
+    id: 'versions-counter-explain',
+    type: 'explain',
+    targetSelector: '[data-testid="versions-counter"]',
+    tooltipPosition: 'bottom',
+    heading: 'versions.counter.heading',
+    body: 'versions.counter.body',
+  },
+  
+  // 19. Encourage entering versions page
+  {
+    id: 'versions-navigate',
+    type: 'encourage',
+    targetSelector: '.versions-tab-button',
+    tooltipPosition: 'bottom',
+    heading: 'versions.navigate.heading',
+    body: 'versions.navigate.body',
+    completionEvent: 'versions:opened',
+  },
+  
+  // 20. DocumentCleanView - browse previous versions
+  {
+    id: 'cleanview-browse',
+    type: 'explain',
+    targetSelector: '.versions-list',
+    tooltipPosition: 'right',
+    heading: 'cleanview.browse.heading',
+    body: 'cleanview.browse.body',
+  },
+  
+  // 21. DocumentCleanView - identify changes
+  {
+    id: 'cleanview-diff',
+    type: 'explain',
+    targetSelector: '.document-diff',
+    tooltipPosition: 'left',
+    heading: 'cleanview.diff.heading',
+    body: 'cleanview.diff.body',
+  },
+  
+  // 22. DocumentCleanView - discussion details
+  {
+    id: 'cleanview-discussion',
+    type: 'encourage',
+    targetSelector: '.suggestion-details-link, [data-testid="discussion-button"]',
+    tooltipPosition: 'bottom',
+    heading: 'cleanview.discussion.heading',
+    body: 'cleanview.discussion.body',
+  },
+  
+  // 23. Points system
   {
     id: 'points-explain',
     type: 'explain',
@@ -362,168 +554,7 @@ export const TUTORIAL_STEPS = [
     ],
   },
   
-  // 7. Viewing comments (before writing them)
-  {
-    id: 'comment-counter-encourage',
-    type: 'encourage',
-    targetSelector: '.proposal-comments-counter',
-    tooltipPosition: 'top',
-    heading: 'comment.counter.encourage.heading',
-    body: 'comment.counter.encourage.body',
-  },
-  
-  // 8. Writing comments
-  {
-    id: 'comment-explain',
-    type: 'explain',
-    targetSelector: '.proposal-comment-input',
-    tooltipPosition: 'top',
-    heading: 'comment.explain.heading',
-    body: 'comment.explain.body',
-  },
-  
-  // 9. Hovering on sections (edit affordance)
-  {
-    id: 'section-hover-encourage',
-    type: 'encourage',
-    targetSelector: '.section-card',
-    tooltipPosition: 'bottom',
-    heading: 'section.hover.encourage.heading',
-    body: 'section.hover.encourage.body',
-  },
-  
-  // 10. Browsing proposals (viewing versions)
-  {
-    id: 'browse-explain',
-    type: 'explain',
-    targetSelector: '.proposal-navigation-arrows',
-    tooltipPosition: 'bottom',
-    heading: 'browse.explain.heading',
-    body: 'browse.explain.body',
-  },
-  
-  // 11. Browsing encouragement
-  {
-    id: 'browse-encourage',
-    type: 'encourage',
-    targetSelector: '.proposal-navigation-arrows',
-    tooltipPosition: 'bottom',
-    heading: 'browse.encourage.heading',
-    body: 'browse.encourage.body',
-  },
-  
-  // 12. Edit existing section - explain concept
-  {
-    id: 'editclause-explain',
-    type: 'explain',
-    targetSelector: '.section-card',
-    tooltipPosition: 'bottom',
-    heading: 'editclause.explain.heading',
-    body: 'editclause.explain.body',
-  },
-  
-  // 13. Edit - hover discovery
-  {
-    id: 'editclause-hover',
-    type: 'encourage',
-    requiresAuth: true,
-    targetSelector: '.section-card',
-    tooltipPosition: 'bottom',
-    heading: 'editclause.hover.heading',
-    body: 'editclause.hover.body',
-  },
-  
-  // 14. Edit - modal opening
-  {
-    id: 'editclause-modal',
-    type: 'encourage',
-    requiresAuth: true,
-    targetSelector: '.create-suggestion-modal',
-    tooltipPosition: 'bottom',
-    heading: 'editclause.modal.heading',
-    body: 'editclause.modal.body',
-    completionEvent: 'create-suggestion-modal:opened',
-  },
-  
-  // 15. New section - explain concept
-  {
-    id: 'newclause-explain',
-    type: 'explain',
-    targetSelector: '.section-insert-space',
-    tooltipPosition: 'bottom',
-    heading: 'newclause.explain.heading',
-    body: 'newclause.explain.body',
-  },
-  
-  // 16. New section - hover discovery
-  {
-    id: 'newclause-hover',
-    type: 'encourage',
-    requiresAuth: true,
-    targetSelector: '.section-insert-space',
-    tooltipPosition: 'bottom',
-    heading: 'newclause.hover.heading',
-    body: 'newclause.hover.body',
-  },
-  
-  // 17. New section - button click
-  {
-    id: 'newclause-button',
-    type: 'encourage',
-    requiresAuth: true,
-    targetSelector: '.add-clause-button',
-    tooltipPosition: 'bottom',
-    heading: 'newclause.button.heading',
-    body: 'newclause.button.body',
-    completionEvent: 'create-suggestion-modal:opened',
-  },
-  
-  // 18. New section - modal opening
-  {
-    id: 'newclause-modal',
-    type: 'encourage',
-    requiresAuth: true,
-    targetSelector: '.create-suggestion-modal',
-    tooltipPosition: 'bottom',
-    heading: 'newclause.modal.heading',
-    body: 'newclause.modal.body',
-  },
-  
-
-  
-  // 16. Version history
-  {
-    id: 'versions-explain',
-    type: 'explain',
-    targetSelector: '.versions-tab-button',
-    tooltipPosition: 'bottom',
-    heading: 'versions.explain.heading',
-    body: 'versions.explain.body',
-  },
-  
-  {
-    id: 'versions-navigate',
-    type: 'practice',
-    targetSelector: '.versions-tab-button',
-    tooltipPosition: 'bottom',
-    heading: 'versions.navigate.heading',
-    body: '',
-    successMessage: 'versions.navigate.success',
-    completionEvent: 'versions:opened',
-  },
-  
-  {
-    id: 'versions-browse',
-    type: 'practice',
-    targetSelector: '.versions-list',
-    tooltipPosition: 'right',
-    heading: 'versions.browse.heading',
-    body: '',
-    successMessage: 'versions.browse.success',
-    completionEvent: 'versions:selected',
-  },
-  
-  // 17. Closing screen
+  // 24. Closing screen
   {
     id: 'closing',
     type: 'closing',
