@@ -652,7 +652,7 @@ export default function DocumentView() {
             </Link>
           )}
 
-          <div className={`flex items-center gap-2 w-full max-w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className={`document-title-area flex items-center gap-2 w-full max-w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
             <h1 id="document-title" className="text-lg md:text-3xl font-bold text-slate-900 flex-1 min-w-0 break-words leading-tight max-w-full" style={{ fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif" }}>
               {(() => {
                 const translatedTitle = document.translations?.[language]?.title;
@@ -951,7 +951,7 @@ export default function DocumentView() {
 
         </div>
 
-        <div className="flex flex-col gap-2 md:gap-3 w-full max-w-full">
+        <div className="document-counters flex flex-col gap-2 md:gap-3 w-full max-w-full">
           {/* Open suggestions — inline nudge */}
           {pendingSuggestions.length > 0 ? (
             <div className="relative group/tip w-full">
@@ -1033,6 +1033,7 @@ export default function DocumentView() {
           </div>
         </div>
 
+        <div className="document-sections-area w-full">
         <ErrorBoundary inline errorMessage="שגיאה בטעינת תוכן המסמך. לחץ לניסיון חוזר.">
           <DocumentContent
               document={document}
@@ -1052,6 +1053,7 @@ export default function DocumentView() {
               onEditSuggestion={handleEditSuggestion}
           />
         </ErrorBoundary>
+        </div>
       </div>
 
       {showSummaryDialog && document && !isInitialLoading && (
