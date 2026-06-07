@@ -6,6 +6,7 @@ import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
 import { Toaster } from "sonner";
 import { initBrowserNotifications } from "@/components/notifications/browserNotifications";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import TutorialController from "@/components/tutorial/TutorialController";
 import {
   Sidebar,
   SidebarContent,
@@ -430,6 +431,7 @@ function LayoutContent({ children, currentPageName }) {
              )}
 
              <AccessibilityAnnouncer />
+      <TutorialController />
               </div>
               </SidebarProvider>
               );
