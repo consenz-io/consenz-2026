@@ -27,10 +27,15 @@ export default function GroupCard({ group, docCount, participantsCount, isAdmin 
   };
   const visual = privacyVisual[group.status] || privacyVisual.public;
 
+  const handleClick = () => {
+    window.dispatchEvent(new CustomEvent('document:entered'));
+  };
+
   return (
     <Link
       to={`${createPageUrl("GroupView")}?id=${group.id}`}
       aria-label={`${group.name}. ${statusLabel[group.status]?.[language] || ''}. ${docCount} ${docsLabel[language]}, ${participantsCount} ${membersLabel[language]}`}
+      onClick={handleClick}
     >
       <Card className="bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-200 h-full">
         <CardHeader>
