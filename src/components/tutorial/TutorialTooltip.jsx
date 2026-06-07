@@ -112,6 +112,22 @@ export default function TutorialTooltip({
       setResolvedPosition(rp);
       setPos(getTooltipStyle(rect, rp));
     }
+
+    // Scroll the target element into view first, then update position
+    const el = document.querySelector(step.targetSelector);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      // Re-compute position after scroll settles
+      const timer = setTimeout(update, 400);
+      window.addEventListener('scroll', update, { passive: true });
+      window.addEventListener('resize', update);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('scroll', update);
+        window.removeEventListener('resize', update);
+      };
+    }
+
     update();
     window.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
