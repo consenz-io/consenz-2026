@@ -54,6 +54,9 @@ export const tutorialStrings = {
     'closing.body': 'עכשיו אתם יודעים איך Consenz עובדת. כל הצעה שתגישו, כל הצבעה שתתנו — מעצבת את המסמך הזה יחד עם שאר הקהילה.',
     'closing.cta': 'בואו נתחיל',
     'nav.restart': 'סיור בפלטפורמה',
+    'signup.prompt.heading': 'כדי להמשיך צריך להירשם',
+    'signup.prompt.body': 'ההרשמה חינמית ולוקחת שניות. אחרי ההרשמה תחזרו בדיוק לכאן.',
+    'signup.prompt.cta': 'הרשמה',
   },
   ar: {
     'browse.explain.heading': 'لكل بند عدة نسخ',
@@ -95,6 +98,9 @@ export const tutorialStrings = {
     'closing.body': 'الآن تعرفون كيف تعمل Consenz. كل مقترح تقدمونه، وكل تصويت تمنحونه — يُشكّل هذه الوثيقة مع بقية المجتمع.',
     'closing.cta': 'لنبدأ',
     'nav.restart': 'جولة في المنصة',
+    'signup.prompt.heading': 'للمتابعة يجب التسجيل',
+    'signup.prompt.body': 'التسجيل مجاني ويستغرق ثوانٍ. بعد التسجيل ستعودون إلى هنا مباشرة.',
+    'signup.prompt.cta': 'تسجيل',
   },
   en: {
     'browse.explain.heading': 'Each clause has multiple versions',
@@ -136,6 +142,9 @@ export const tutorialStrings = {
     'closing.body': 'Now you know how Consenz works. Every proposal you submit, every vote you cast — shapes this document together with the rest of the community.',
     'closing.cta': 'Let\'s go',
     'nav.restart': 'Platform tour',
+    'signup.prompt.heading': "You'll need an account to continue",
+    'signup.prompt.body': "Signing up is free and takes seconds. After registering you'll be brought right back here.",
+    'signup.prompt.cta': 'Sign up',
   },
 };
 
@@ -195,6 +204,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'vote-practice',
     type: 'practice',
+    requiresAuth: true,
     targetSelector: '.proposal-vote-buttons',
     tooltipPosition: 'top',
     heading: 'vote.practice.heading',
@@ -213,6 +223,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'comment-practice',
     type: 'practice',
+    requiresAuth: true,
     targetSelector: '.proposal-comment-input',
     tooltipPosition: 'top',
     heading: 'comment.practice.heading',
@@ -231,6 +242,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'newclause-practice',
     type: 'practice',
+    requiresAuth: true,
     targetSelector: '.add-clause-button',
     tooltipPosition: 'bottom',
     heading: 'newclause.practice.heading',
@@ -249,6 +261,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'editclause-practice',
     type: 'practice',
+    requiresAuth: true,
     targetSelector: '.clause-edit-button',
     tooltipPosition: 'top',
     heading: 'editclause.practice.heading',

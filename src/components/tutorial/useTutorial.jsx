@@ -50,7 +50,7 @@ async function pushServerTutorialState(localState) {
       tutorialSkipped: isSkipped,
     });
   } catch {
-    // non-blocking — local state is source of truth during session
+    // non-blocking
   }
 }
 
@@ -62,25 +62,34 @@ export function useTutorial(steps = []) {
   const [phase, setPhase] = useState('idle');
   const [practiceCompleted, setPracticeCompleted] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Debounced server-push ref
   const pushTimerRef = useRef(null);
-  const scheduleServerPush = useCallback((localState) => {
-    clearTimeout(pushTimerRef.current);
-    pushTimerRef.current = setTimeout(() => pushServerTutorialState(localState), 3000);
+
+  // Check auth on mount
+  useEffect(() => {
+    base44.auth.isAuthenticated().then(setIsAuthenticated).catch(() => setIsAuthenticated(false));
   }, []);
 
-  // On mount: hydrate from server if localStorage is empty, then resume if active
+  const scheduleServerPush = useCallback((localState) => {
+    if (!isAuthenticated) return; // no server sync for anonymous users
+    clearTimeout(pushTimerRef.current);
+    pushTimerRef.current = setTimeout(() => pushServerTutorialState(localState), 3000);
+  }, [isAuthenticated]);
+
+  // On mount: hydrate from server if authenticated and localStorage is empty
   useEffect(() => {
     async function hydrate() {
       const local = loadState();
       const hasLocalData = !!localStorage.getItem(STORAGE_KEY);
 
-      if (!hasLocalData) {
-        // Try to hydrate from server
+      const authed = await base44.auth.isAuthenticated().catch(() => false);
+      setIsAuthenticated(authed);
+
+      if (!hasLocalData && authed) {
         const server = await fetchServerTutorialState();
         if (server && !server.tutorialSkipped && !server.tutorialCompleted) {
-          // Mid-tutorial on another device — resume from server step
           const hydrated = {
             ...defaultState(),
             active: true,
@@ -95,7 +104,6 @@ export function useTutorial(steps = []) {
           return;
         }
         if (server?.tutorialCompleted || server?.tutorialSkipped) {
-          // Already done on another device — mark done locally so auto-start skips
           const done = { ...defaultState(), active: false, currentStep: 1 };
           saveState(done);
           setState(done);
@@ -103,7 +111,15 @@ export function useTutorial(steps = []) {
         }
       }
 
-      // Resume active local session
+      // On successful registration: merge localStorage state to server
+      if (authed && hasLocalData) {
+        const localRaw = loadState();
+        // If localStorage has active tutorial data, push it to server
+        if (localRaw.active || localRaw.currentStep > 0) {
+          pushServerTutorialState(localRaw);
+        }
+      }
+
       if (local.active && steps.length > 0 && local.currentStep < steps.length) {
         setState(local);
         setPhase('running');
@@ -113,23 +129,45 @@ export function useTutorial(steps = []) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [steps.length]);
 
-  // Persist on every state change + schedule server push
+  // Persist on every state change + schedule server push (authenticated only)
   useEffect(() => {
     saveState(state);
     scheduleServerPush(state);
   }, [state, scheduleServerPush]);
 
-  // Listen for practice completion events (document steps only)
+  // Listen for practice completion events
   useEffect(() => {
     if (phase !== 'running' || !steps.length) return;
     const step = steps[state.currentStep];
     if (!step || step.type !== 'practice' || !step.completionEvent) return;
 
     setPracticeCompleted(false);
-    const handler = () => setPracticeCompleted(true);
+    setShowSignupPrompt(false);
+
+    const handler = () => {
+      // If step requiresAuth and user is not authenticated, show signup prompt instead
+      if (step.requiresAuth && !isAuthenticated) {
+        setShowSignupPrompt(true);
+        return;
+      }
+      setPracticeCompleted(true);
+    };
     window.addEventListener(step.completionEvent, handler);
-    return () => window.removeEventListener(step.completionEvent, handler);
-  }, [phase, state.currentStep, steps]);
+
+    // Also listen for auth-blocked events (triggered by the app when an unauthenticated
+    // user tries to perform a gated action)
+    const authBlockedHandler = () => {
+      if (step.requiresAuth && !isAuthenticated) {
+        setShowSignupPrompt(true);
+      }
+    };
+    window.addEventListener('tutorial:auth-required', authBlockedHandler);
+
+    return () => {
+      window.removeEventListener(step.completionEvent, handler);
+      window.removeEventListener('tutorial:auth-required', authBlockedHandler);
+    };
+  }, [phase, state.currentStep, steps, isAuthenticated]);
 
   // Listen for home-intro completion event
   useEffect(() => {
@@ -155,6 +193,7 @@ export function useTutorial(steps = []) {
     setState(fresh);
     setPracticeCompleted(false);
     setShowSuccess(false);
+    setShowSignupPrompt(false);
     setPhase('welcome');
     startTutorial._entryPoint = entryPoint;
   }, []);
@@ -188,10 +227,12 @@ export function useTutorial(steps = []) {
     setPhase('idle');
     setPracticeCompleted(false);
     setShowSuccess(false);
-    // Immediate server push on explicit skip/complete
-    pushServerTutorialState(done);
-    clearTimeout(pushTimerRef.current);
-  }, []);
+    setShowSignupPrompt(false);
+    if (isAuthenticated) {
+      pushServerTutorialState(done);
+      clearTimeout(pushTimerRef.current);
+    }
+  }, [isAuthenticated]);
 
   const goNext = useCallback(() => {
     const step = steps[state.currentStep];
@@ -204,6 +245,7 @@ export function useTutorial(steps = []) {
       setTimeout(() => {
         setShowSuccess(false);
         setPracticeCompleted(false);
+        setShowSignupPrompt(false);
         setState(prev => {
           const nextIdx = prev.currentStep + 1;
           if (nextIdx >= steps.length) {
@@ -243,6 +285,7 @@ export function useTutorial(steps = []) {
     });
     setPracticeCompleted(false);
     setShowSuccess(false);
+    setShowSignupPrompt(false);
   }, []);
 
   const restartTutorial = useCallback((entryPoint = 'document') => {
@@ -256,6 +299,8 @@ export function useTutorial(steps = []) {
     completedSteps: state.completedSteps,
     practiceCompleted,
     showSuccess,
+    showSignupPrompt,
+    isAuthenticated,
     startTutorial,
     beginFromWelcome,
     resumeOnDocumentPage,

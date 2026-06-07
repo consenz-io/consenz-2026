@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, X } from 'lucide-react';
+import { CheckCircle, X, UserPlus } from 'lucide-react';
 import { tTutorial } from './tutorialSteps';
 import { useLanguage } from '@/components/LanguageContext';
+import { base44 } from '@/api/base44Client';
 
 const TOOLTIP_WIDTH = 320;
 const TOOLTIP_HEIGHT = 200; // estimate for positioning
@@ -92,6 +93,8 @@ export default function TutorialTooltip({
   onSkip,
   practiceCompleted,
   showSuccess,
+  showSignupPrompt,
+  isAuthenticated,
   isRTL,
 }) {
   const { language } = useLanguage();
@@ -191,6 +194,18 @@ export default function TutorialTooltip({
         <div className="flex flex-col items-center gap-2 py-3 text-center">
           <CheckCircle className="w-10 h-10 text-green-500" />
           <p className="font-semibold text-green-700">{successMessage}</p>
+        </div>
+      ) : showSignupPrompt ? (
+        <div className="flex flex-col items-center gap-3 py-2 text-center">
+          <UserPlus className="w-9 h-9 text-blue-500" />
+          <h3 className="font-bold text-slate-900 text-base">{tTutorial('signup.prompt.heading', language)}</h3>
+          <p className="text-sm text-slate-600 leading-relaxed">{tTutorial('signup.prompt.body', language)}</p>
+          <Button
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={() => base44.auth.redirectToLogin(window.location.href)}
+          >
+            {tTutorial('signup.prompt.cta', language)}
+          </Button>
         </div>
       ) : (
         <>

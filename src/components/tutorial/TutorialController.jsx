@@ -29,6 +29,8 @@ export default function TutorialController() {
     homeStepSeen,
     practiceCompleted,
     showSuccess,
+    showSignupPrompt,
+    isAuthenticated,
     startTutorial,
     beginFromWelcome,
     resumeOnDocumentPage,
@@ -138,6 +140,8 @@ export default function TutorialController() {
           onSkip={skipTutorial}
           practiceCompleted={practiceCompleted}
           showSuccess={showSuccess}
+          showSignupPrompt={showSignupPrompt}
+          isAuthenticated={isAuthenticated}
           isRTL={isRTL}
         />
       </TutorialOverlay>
