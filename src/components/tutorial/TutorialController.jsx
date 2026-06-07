@@ -113,6 +113,41 @@ export default function TutorialController() {
     return () => { el.style.animation = ''; };
   }, [phase, currentStep]);
 
+  // ── Handle editclause-hover: reset carousel and show edit buttons ──────────
+  useEffect(() => {
+    if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
+    const step = TUTORIAL_STEPS[currentStep];
+    if (!step || step.id !== 'editclause-hover') return;
+
+    // Reset carousel to original section view (if any carousel exists)
+    const carouselCurrentView = document.querySelector('[data-testid="carousel-current-view"]');
+    if (carouselCurrentView) {
+      // Dispatch a custom event to force carousel back to current view
+      window.dispatchEvent(new CustomEvent('tutorial:resetCarousel'));
+    }
+
+    // Hover on section-card to reveal edit/delete buttons
+    const sectionCard = document.querySelector('.section-card');
+    if (sectionCard) {
+      // Simulate hover state by adding a class or setting inline style
+      sectionCard.style.pointerEvents = 'none'; // Prevent actual hover interference
+      
+      // Reveal edit/delete buttons by simulating hover
+      const editDeleteButtons = sectionCard.querySelector('[class*="opacity-0"][class*="group-hover"]');
+      if (editDeleteButtons) {
+        editDeleteButtons.style.opacity = '1';
+      }
+
+      // Clean up on unmount
+      return () => {
+        sectionCard.style.pointerEvents = '';
+        if (editDeleteButtons) {
+          editDeleteButtons.style.opacity = '';
+        }
+      };
+    }
+  }, [phase, currentStep]);
+
   // ── Render ────────────────────────────────────────────────────────────────
   if (phase === 'idle' || phase === 'done') return null;
 

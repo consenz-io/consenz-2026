@@ -64,6 +64,8 @@ export const tutorialStrings = {
     'editclause.explain.body': 'אפשר להציע לנסח מחדש כל סעיף — או להציע למחוק אותו לגמרי. גם שינויים כאלה עוברים הצבעה, וגם הם יכולים לשנות את המסמך.',
     'editclause.hover.heading': 'העמידו את העכבר על סעיף כדי לחשוף את כפתורי העריכה',
     'editclause.hover.body': 'ברגע שתעמידו את העכבר על סעיף, יופיעו כפתורים להצעת שינויים. כפתור הארה זה יראה לכם את הכפתורים גם ללא ריחוף, כדי שתהיו בטוחים איפה הם נמצאים.',
+    'editclause.buttons.heading': 'כפתורי הצעת עריכה ומחיקה',
+    'editclause.buttons.body': 'כאן תוכלו להציע עריכה לסעיף או מחיקה שלו. הקהילה תצביע על ההצעה שלכם.',
     'editclause.modal.heading': 'חלון הצעת השינוי נפתח',
     'editclause.modal.body': 'כאן תזינו את השינוי המוצע ואת ההסבר עבור חברי הקהילה. כשהבנתם כיצד מתחילים, אפשר לסגור את החלון ולהמשיך בסיור.',
     'deleteclause.explain.heading': 'לא רוצים סעיף זה במסמך?',
@@ -408,6 +410,16 @@ export const TUTORIAL_STEPS = [
     tooltipPosition: 'bottom',
     heading: 'editclause.hover.heading',
     body: 'editclause.hover.body',
+  },
+  
+  // 10.5. Edit buttons explanation
+  {
+    id: 'editclause-buttons',
+    type: 'explain',
+    targetSelector: '.section-card',
+    tooltipPosition: 'bottom',
+    heading: 'editclause.buttons.heading',
+    body: 'editclause.buttons.body',
   },
   
   // 11. Edit - modal opening
