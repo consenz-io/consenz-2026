@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -368,6 +368,13 @@ const SectionCarousel = React.memo(function SectionCarousel({
             : 'border-slate-300 hover:border-blue-400 bg-gradient-to-br from-white to-slate-50/30'
       }`}
     >
+      {/* רמז ערעור קבוע (אייקון עריכה) - גלוי תמיד ולא רק בריחוף */}
+      {isFirstView && !historyMode && (
+        <div className="absolute top-3 end-3 md:top-4 md:end-4 flex items-center gap-1 pointer-events-none opacity-40 group-hover:opacity-0 transition-opacity">
+          <Edit className="w-4 h-4 text-slate-600" />
+        </div>
+      )}
+
       {/* כותרת סעיף עם אינדיקטור */}
       <div className="flex items-center justify-between mb-3 md:mb-4">
         <div className="flex items-center gap-2 md:gap-3">
