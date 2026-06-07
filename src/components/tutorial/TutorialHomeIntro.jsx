@@ -14,21 +14,30 @@ const ARROW_SIZE = 10;
  * - Tooltip anchored below the target
  * - No progress dots, no Back button
  */
-export default function TutorialHomeIntro({ step, onSkip, isRTL }) {
+export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL }) {
   const { language } = useLanguage();
-  const heading = tTutorial(step.heading, language) || step.heading;
-  const body = tTutorial(step.body, language) || step.body;
-  const successMsg = tTutorial(step.successMessage, language) || step.successMessage;
+  const [activeStep, setActiveStep] = useState(step);
+  const heading = tTutorial(activeStep.heading, language) || activeStep.heading;
+  const body = tTutorial(activeStep.body, language) || activeStep.body;
+  const successMsg = tTutorial(activeStep.successMessage, language) || activeStep.successMessage;
   const [tooltipStyle, setTooltipStyle] = useState(null);
   const [practiceCompleted, setPracticeCompleted] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
   const tooltipRef = useRef(null);
 
+  // Reset state when step changes
+  useEffect(() => {
+    setActiveStep(step);
+    setPracticeCompleted(false);
+    setShowSuccess(false);
+    setTooltipStyle(null);
+  }, [step]);
+
   // Position tooltip below target
   useEffect(() => {
     function update() {
-      const el = document.querySelector(step.targetSelector);
+      const el = document.querySelector(activeStep.targetSelector);
       if (!el) return;
       const rect = el.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
@@ -44,20 +53,20 @@ export default function TutorialHomeIntro({ step, onSkip, isRTL }) {
       window.removeEventListener('scroll', update);
       window.removeEventListener('resize', update);
     };
-  }, [step.targetSelector]);
+  }, [activeStep.targetSelector]);
 
   // Scroll target element into view on mount
   useEffect(() => {
-    const el = document.querySelector(step.targetSelector);
+    const el = document.querySelector(activeStep.targetSelector);
     if (!el) return;
     setTimeout(() => {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 300);
-  }, [step.targetSelector]);
+  }, [activeStep.targetSelector]);
 
   // Spotlight on target (no scrim — only box-shadow ring)
   useEffect(() => {
-    const el = document.querySelector(step.targetSelector);
+    const el = document.querySelector(activeStep.targetSelector);
     if (!el) return;
     const radius = window.getComputedStyle(el).borderRadius || '8px';
     el.style.position = 'relative';
@@ -71,20 +80,26 @@ export default function TutorialHomeIntro({ step, onSkip, isRTL }) {
       el.style.boxShadow = '';
       el.style.transition = '';
     };
-  }, [step.targetSelector]);
+  }, [activeStep.targetSelector]);
 
   // Listen for completion event
   useEffect(() => {
-    if (!step.completionEvent) return;
+    if (!activeStep.completionEvent) return;
     const handler = () => {
       setPracticeCompleted(true);
-      if (step.successMessage) {
+      if (activeStep.successMessage) {
         setShowSuccess(true);
       }
     };
-    window.addEventListener(step.completionEvent, handler);
-    return () => window.removeEventListener(step.completionEvent, handler);
-  }, [step.completionEvent, step.successMessage]);
+    window.addEventListener(activeStep.completionEvent, handler);
+    return () => window.removeEventListener(activeStep.completionEvent, handler);
+  }, [activeStep.completionEvent, activeStep.successMessage]);
+
+  const handleNext = () => {
+    if (nextStep && activeStep.type === 'explain') {
+      setActiveStep(nextStep);
+    }
+  };
 
   if (!tooltipStyle) return null;
 
@@ -129,6 +144,14 @@ export default function TutorialHomeIntro({ step, onSkip, isRTL }) {
           <>
             <h3 className="font-bold text-slate-900 text-base mb-1 pr-5">{heading}</h3>
             {body && <p className="text-sm text-slate-600 leading-relaxed mb-3">{body}</p>}
+            {activeStep.type === 'explain' && nextStep && (
+              <button
+                onClick={handleNext}
+                className="w-full mt-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                {isRTL ? 'הבא' : 'Next'}
+              </button>
+            )}
           </>
         )}
       </div>

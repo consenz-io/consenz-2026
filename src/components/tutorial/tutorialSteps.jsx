@@ -17,6 +17,8 @@ export const tutorialStrings = {
   he: {
     'home.groups.heading': 'הכל מתחיל מקבוצה',
     'home.groups.body': 'כל קבוצה מנהלת מסמכים משותפים. לחצו על קבוצה כדי לראות את המסמכים שלה — ומשם תוכלו להיכנס לאחד מהם.',
+    'group.explain.heading': 'ברוכים הבאים לקבוצה',
+    'group.explain.body': 'קבוצה היא מרחב שיתוף פעולה — כאן מתנהלים דיונים, מוצעות שינויים ומתקבלות החלטות יחד. כל קבוצה מכילה מסמכים משותפים שהחברים בה כותבים ומעצבים ביחד.',
     'group.docs.heading': 'בחרו מסמך כדי להמשיך',
     'group.docs.body': 'אלה המסמכים המשותפים של הקבוצה. לחצו על אחד מהם כדי להיכנס ולהתחיל להשתתף.',
     'browse.explain.heading': 'לכל סעיף יש כמה גרסאות',
@@ -65,6 +67,8 @@ export const tutorialStrings = {
   ar: {
     'home.groups.heading': 'كل شيء يبدأ من مجموعة',
     'home.groups.body': 'كل مجموعة تدير وثائق مشتركة. اضغطوا على مجموعة لرؤية وثائقها — ومن هناك يمكنكم الدخول إلى إحداها.',
+    'group.explain.heading': 'مرحباً بكم في المجموعة',
+    'group.explain.body': 'المجموعة هي فضاء للتعاون — هنا تجري النقاشات، تُقترح التعديلات وتُتخذ القرارات معاً. تحتوي كل مجموعة على وثائق مشتركة يكتبها الأعضاء ويشكّلونها سوياً.',
     'group.docs.heading': 'اختاروا وثيقة للمتابعة',
     'group.docs.body': 'هذه هي الوثائق المشتركة للمجموعة. اضغطوا على إحداها للدخول والمشاركة.',
     'browse.explain.heading': 'لكل بند عدة نسخ',
@@ -113,6 +117,8 @@ export const tutorialStrings = {
   en: {
     'home.groups.heading': 'Everything starts with a group',
     'home.groups.body': 'Each group manages shared documents. Click on a group to see its documents — and from there you can enter one.',
+    'group.explain.heading': 'Welcome to the group',
+    'group.explain.body': 'A group is a collaboration space — this is where discussions happen, changes are proposed, and decisions are made together. Each group contains shared documents that members write and shape collectively.',
     'group.docs.heading': 'Pick a document to continue',
     'group.docs.body': "These are the group's shared documents. Click one to enter and start participating.",
     'browse.explain.heading': 'Each clause has multiple versions',
@@ -171,9 +177,19 @@ export function tTutorial(key, language = 'he') {
 }
 
 /**
- * Mid-tutorial step shown on the group page.
- * Guides the user to click a document.
+ * Mid-tutorial steps shown on the group page.
+ * Step 1: Explain what a group is.
+ * Step 2: Guide user to click a document.
  */
+export const GROUP_EXPLAIN_STEP = {
+  id: 'group-explain',
+  type: 'explain',
+  targetSelector: '.group-header',
+  tooltipPosition: 'bottom',
+  heading: 'group.explain.heading',
+  body: 'group.explain.body',
+};
+
 export const GROUP_INTRO_STEP = {
   id: 'group-intro',
   type: 'practice',

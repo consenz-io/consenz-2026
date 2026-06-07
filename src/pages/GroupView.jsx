@@ -129,7 +129,7 @@ export default function GroupView() {
       <div className="max-w-6xl mx-auto space-y-6">
 
         {/* Header */}
-        <div className="flex justify-between items-start">
+        <div className="group-header flex justify-between items-start">
           <div className="space-y-2">
             <PageHeader title={group.name} backUrl={createPageUrl("Groups")} />
             {group.description && (
