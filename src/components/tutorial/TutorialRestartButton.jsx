@@ -25,9 +25,11 @@ export default function TutorialRestartButton() {
   }, [location]);
 
   const handleRestart = () => {
+    const onDoc = isDocumentPage(location.pathname);
+
     const fresh = {
       active: true,
-      homeStepSeen: true,
+      homeStepSeen: onDoc, // skip home-intro if already on a document
       currentStep: 0,
       completedSteps: [],
     };
@@ -35,14 +37,12 @@ export default function TutorialRestartButton() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
     } catch {}
 
-    const onDoc = isDocumentPage(location.pathname);
-
     if (window.restartTutorial) {
       window.restartTutorial(onDoc ? 'document' : 'home');
       return;
     }
 
-    // Fallback: if on home, stay here; if on doc, reload
+    // Fallback
     if (onDoc) {
       window.location.reload();
     } else {

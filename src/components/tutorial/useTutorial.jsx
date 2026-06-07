@@ -289,7 +289,23 @@ export function useTutorial(steps = []) {
   }, []);
 
   const restartTutorial = useCallback((entryPoint = 'document') => {
-    startTutorial(entryPoint);
+    if (entryPoint === 'document') {
+      // Skip welcome and go straight to running from step 0
+      const fresh = {
+        active: true,
+        homeStepSeen: true,
+        currentStep: 0,
+        completedSteps: [],
+      };
+      saveState(fresh);
+      setState(fresh);
+      setPracticeCompleted(false);
+      setShowSuccess(false);
+      setShowSignupPrompt(false);
+      setPhase('running');
+    } else {
+      startTutorial(entryPoint);
+    }
   }, [startTutorial]);
 
   return {
