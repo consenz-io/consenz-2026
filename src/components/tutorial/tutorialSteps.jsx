@@ -416,17 +416,7 @@ export const TUTORIAL_STEPS = [
     body: 'browse.encourage.body',
   },
   
-  // 12. Why edit proposals exist
-  {
-    id: 'edit-proposals-explain',
-    type: 'explain',
-    targetSelector: '.proposal-navigation-arrows',
-    tooltipPosition: 'bottom',
-    heading: 'browse.explain.heading',
-    body: 'browse.explain.body',
-  },
-  
-  // 13. Edit existing section (practice)
+  // 12. Edit existing section (practice)
   {
     id: 'editclause-explain',
     type: 'explain',
