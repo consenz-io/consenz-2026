@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle } from 'lucide-react';
+import { tTutorial } from './tutorialSteps';
+import { useLanguage } from '@/components/LanguageContext';
 
 const TOOLTIP_WIDTH = 320;
 const ARROW_SIZE = 10;
@@ -12,6 +14,10 @@ const ARROW_SIZE = 10;
  * - No progress dots, no Back button
  */
 export default function TutorialHomeIntro({ step, onSkip, isRTL }) {
+  const { language } = useLanguage();
+  const heading = tTutorial(step.heading, language) || step.heading;
+  const body = tTutorial(step.body, language) || step.body;
+  const successMsg = tTutorial(step.successMessage, language) || step.successMessage;
   const [tooltipStyle, setTooltipStyle] = useState(null);
   const [practiceCompleted, setPracticeCompleted] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -94,12 +100,12 @@ export default function TutorialHomeIntro({ step, onSkip, isRTL }) {
       {showSuccess ? (
         <div className="flex flex-col items-center gap-2 py-3 text-center">
           <CheckCircle className="w-10 h-10 text-green-500" />
-          <p className="font-semibold text-green-700">{step.successMessage}</p>
+          <p className="font-semibold text-green-700">{successMsg}</p>
         </div>
       ) : (
         <>
-          <h3 className="font-bold text-slate-900 text-base mb-1">{step.heading}</h3>
-          <p className="text-sm text-slate-600 leading-relaxed mb-3">{step.body}</p>
+          <h3 className="font-bold text-slate-900 text-base mb-1">{heading}</h3>
+          {body && <p className="text-sm text-slate-600 leading-relaxed mb-3">{body}</p>}
         </>
       )}
 

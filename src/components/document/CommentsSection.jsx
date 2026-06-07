@@ -471,6 +471,7 @@ export default function CommentsSection({ entityType, entityId, user, scrollToCo
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['comments', entityType, entityId] });
       setError(null);
+      window.dispatchEvent(new CustomEvent('proposal:commented'));
     },
     onError: (err, variables, context) => {
       if (context?.previousComments) {
@@ -593,7 +594,7 @@ export default function CommentsSection({ entityType, entityId, user, scrollToCo
             return;
           }
           handleSubmit(e);
-        }} className="space-y-2 mt-6 pt-6 border-t border-slate-200">
+        }} className="proposal-comment-input space-y-2 mt-6 pt-6 border-t border-slate-200">
           <Textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}

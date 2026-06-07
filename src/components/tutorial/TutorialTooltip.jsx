@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle } from 'lucide-react';
+import { tTutorial } from './tutorialSteps';
+import { useLanguage } from '@/components/LanguageContext';
 
 const TOOLTIP_WIDTH = 320;
 const TOOLTIP_HEIGHT = 200; // estimate for positioning
@@ -92,6 +94,11 @@ export default function TutorialTooltip({
   showSuccess,
   isRTL,
 }) {
+  const { language } = useLanguage();
+  const heading = tTutorial(step.heading, language);
+  const body = tTutorial(step.body, language);
+  const successMessage = tTutorial(step.successMessage, language);
+
   const [pos, setPos] = useState(null);
   const [resolvedPosition, setResolvedPosition] = useState('bottom');
   const tooltipRef = useRef(null);
@@ -132,18 +139,18 @@ export default function TutorialTooltip({
       <ArrowEl position={resolvedPosition} isRTL={isRTL} />
 
       {/* Success state */}
-      {showSuccess && step.successMessage ? (
+      {showSuccess && successMessage ? (
         <div className="flex flex-col items-center gap-2 py-3 text-center">
           <CheckCircle className="w-10 h-10 text-green-500" />
-          <p className="font-semibold text-green-700">{step.successMessage}</p>
+          <p className="font-semibold text-green-700">{successMessage}</p>
         </div>
       ) : (
         <>
           {/* Heading */}
-          <h3 className="font-bold text-slate-900 text-base mb-1">{step.heading}</h3>
+          <h3 className="font-bold text-slate-900 text-base mb-1">{heading}</h3>
 
           {/* Body */}
-          <p className="text-sm text-slate-600 mb-3 leading-relaxed">{step.body}</p>
+          {body && <p className="text-sm text-slate-600 mb-3 leading-relaxed">{body}</p>}
 
           {/* Progress dots */}
           <div className="flex items-center gap-1.5 justify-center mb-3">

@@ -172,6 +172,8 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
       
       // Emit event for layout to update unvoted count (optimistic decrement)
       window.dispatchEvent(new CustomEvent('consenz:vote-cast'));
+      // Emit event for tutorial completion detection
+      window.dispatchEvent(new CustomEvent('proposal:voted'));
       
       // Real-time subscriptions (in DocumentView) will handle all further updates
       // (section content, suggestion status, document threshold) once processAcceptance completes.

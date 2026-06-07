@@ -214,12 +214,14 @@ const SectionCarousel = React.memo(function SectionCarousel({
     if (!allViews || allViews.length === 0) return;
     const nextIndex = (currentIndex + 1) % allViews.length;
     setCurrentSuggestionId(allViews[nextIndex]?.id);
+    window.dispatchEvent(new CustomEvent('proposal:navigated'));
   };
 
   const handlePrev = () => {
     if (!allViews || allViews.length === 0) return;
     const prevIndex = (currentIndex - 1 + allViews.length) % allViews.length;
     setCurrentSuggestionId(allViews[prevIndex]?.id);
+    window.dispatchEvent(new CustomEvent('proposal:navigated'));
   };
 
   const isFirstView = currentIndex === 0;
@@ -422,7 +424,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
 
       {/* כפתורי דפדוף — מוסתרים במצב היסטוריה */}
       {!historyMode && allViews.length > 1 && (
-        <div className={`mb-4 border-b-2 p-3 rounded-lg shadow-sm ${
+        <div className={`proposal-navigation-arrows mb-4 border-b-2 p-3 rounded-lg shadow-sm ${
           currentView?.data?.type === 'delete_section' 
             ? 'border-red-300 bg-gradient-to-r from-red-50 to-pink-50' 
             : 'border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50'
@@ -668,7 +670,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
             {(
               <div className="mt-4 space-y-2">
                 {document?.votingButtonsEnabled && (
-                  <div onClick={(e) => e.stopPropagation()}>
+                  <div className="proposal-vote-buttons" onClick={(e) => e.stopPropagation()}>
                     {user && canParticipate ? (
                       <VotingProgressSection
                         suggestion={currentView.data}
