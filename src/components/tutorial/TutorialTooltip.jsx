@@ -251,7 +251,7 @@ export default function TutorialTooltip({
           </div>
 
           {/* Footer */}
-          <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -259,7 +259,7 @@ export default function TutorialTooltip({
               disabled={stepIndex === 0}
               className="flex-1 text-slate-500"
             >
-              {isRTL ? 'הבא' : 'Back'}
+              {isRTL ? 'הקודם' : 'Back'}
             </Button>
 
             {isPractice && nextDisabled ? (
@@ -269,7 +269,7 @@ export default function TutorialTooltip({
                 disabled
                 className="flex-1 text-slate-400 cursor-not-allowed opacity-60"
               >
-                {isRTL ? 'המשך' : 'Next'}
+                {isRTL ? 'הבא' : 'Next'}
               </Button>
             ) : (
               <Button
@@ -279,7 +279,7 @@ export default function TutorialTooltip({
               >
                 {stepIndex === totalSteps - 1
                   ? (isRTL ? 'סיום' : 'Finish')
-                  : (isRTL ? 'המשך' : 'Next')}
+                  : (isRTL ? 'הבא' : 'Next')}
               </Button>
             )}
           </div>
