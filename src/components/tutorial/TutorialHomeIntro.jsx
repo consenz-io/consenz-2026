@@ -72,7 +72,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL }) {
     el.style.position = 'relative';
     el.style.zIndex = '10001';
     el.style.borderRadius = radius;
-    el.style.boxShadow = '0 0 0 6px rgba(59,130,246,0.4), 0 0 0 12px rgba(59,130,246,0.15)';
+    el.style.boxShadow = '0 0 0 9999px rgba(0,0,0,0.5)';
     el.style.transition = 'box-shadow 0.3s ease';
     return () => {
       el.style.position = '';
