@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, X } from 'lucide-react';
 import { tTutorial } from './tutorialSteps';
 import { useLanguage } from '@/components/LanguageContext';
 
@@ -101,6 +101,7 @@ export default function TutorialTooltip({
 
   const [pos, setPos] = useState(null);
   const [resolvedPosition, setResolvedPosition] = useState('bottom');
+  const [showConfirm, setShowConfirm] = useState(false);
   const tooltipRef = useRef(null);
 
   useEffect(() => {
@@ -143,6 +144,29 @@ export default function TutorialTooltip({
   const nextDisabled = isPractice && !practiceCompleted;
 
   return (
+    <>
+    {/* Confirm skip dialog */}
+    {showConfirm && (
+      <div className="fixed inset-0 z-[10010] flex items-center justify-center bg-black/40 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-6 flex flex-col gap-4" dir={isRTL ? 'rtl' : 'ltr'}>
+          <p className="text-slate-800 font-semibold text-center text-base">
+            {isRTL ? 'לסיים את הסיור?' : 'Exit the tour?'}
+          </p>
+          <p className="text-slate-500 text-sm text-center">
+            {isRTL ? 'תמיד אפשר להתחיל אותו מחדש מתפריט הניווט.' : 'You can always restart it from the navigation menu.'}
+          </p>
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setShowConfirm(false)}>
+              {isRTL ? 'המשך סיור' : 'Continue'}
+            </Button>
+            <Button className="flex-1 bg-red-500 hover:bg-red-600 text-white" onClick={() => { setShowConfirm(false); onSkip(); }}>
+              {isRTL ? 'סיים' : 'Exit'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    )}
+
     <div
       ref={tooltipRef}
       className="fixed z-[10002] bg-white rounded-xl shadow-2xl border border-slate-200 p-4"
@@ -152,6 +176,14 @@ export default function TutorialTooltip({
       aria-modal="false"
       aria-label={step.heading}
     >
+      {/* Close button */}
+      <button
+        onClick={() => setShowConfirm(true)}
+        className="absolute top-2 end-2 text-slate-400 hover:text-slate-600 transition-colors"
+        aria-label={isRTL ? 'סגור' : 'Close'}
+      >
+        <X className="w-4 h-4" />
+      </button>
       <ArrowEl position={resolvedPosition} isRTL={isRTL} />
 
       {/* Success state */}
@@ -239,15 +271,7 @@ export default function TutorialTooltip({
         </>
       )}
 
-      {/* Skip link */}
-      <div className="mt-2 text-center">
-        <button
-          onClick={onSkip}
-          className="text-xs text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors"
-        >
-          דלג על הסיור
-        </button>
-      </div>
     </div>
+    </>
   );
 }
