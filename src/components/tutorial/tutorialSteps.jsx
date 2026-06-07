@@ -401,7 +401,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'cleanview-changetype',
     type: 'explain',
-    targetSelector: '.version-metadata',
+    targetSelector: '.versions-counter',
     tooltipPosition: 'bottom',
     heading: 'cleanview.changetype.heading',
     body: 'cleanview.changetype.body',
