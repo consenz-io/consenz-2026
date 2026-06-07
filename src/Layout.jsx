@@ -261,7 +261,9 @@ function LayoutContent({ children, currentPageName }) {
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
-                  
+                  <SidebarMenuItem>
+                    <TutorialRestartButton />
+                  </SidebarMenuItem>
 
                 </SidebarMenu>
               </SidebarGroupContent>
@@ -307,17 +309,6 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
-
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
-                {language === 'he' ? 'עזרה' : language === 'ar' ? 'مساعدة' : 'Help'}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <div className="px-1 py-1">
-                  <TutorialRestartButton />
-                </div>
-              </SidebarGroupContent>
-            </SidebarGroup>
 
             <SidebarGroup>
               <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
@@ -444,8 +435,7 @@ function LayoutContent({ children, currentPageName }) {
 
              <AccessibilityAnnouncer />
       <TutorialController />
-      {/* Floating help button — always visible */}
-      <TutorialRestartButton floating />
+
               </div>
               </SidebarProvider>
               );

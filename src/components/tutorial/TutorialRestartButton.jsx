@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { HelpCircle, PlayCircle, X } from 'lucide-react';
+import { PlayCircle } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageContext';
 import { tTutorial } from './tutorialSteps';
 
@@ -11,9 +11,11 @@ function isDocumentPage(pathname) {
   return /\/(DocumentView|document)/i.test(pathname) || pathname.includes('urlName');
 }
 
-function useRestartLogic() {
+export default function TutorialRestartButton() {
+  const { language } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
+  const label = tTutorial('nav.restart', language);
 
   // Track last visited document URL
   useEffect(() => {
@@ -57,118 +59,13 @@ function useRestartLogic() {
     }
   };
 
-  return handleRestart;
-}
-
-/** Inline sidebar button */
-function SidebarButton({ label, isRTL }) {
-  const [open, setOpen] = useState(false);
-  const popoverRef = useRef(null);
-  const handleRestart = useRestartLogic();
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e) => {
-      if (popoverRef.current && !popoverRef.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
   return (
-    <div ref={popoverRef} className="relative">
-      <button
-        onClick={() => setOpen(prev => !prev)}
-        className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-colors"
-        aria-expanded={open}
-      >
-        <HelpCircle className="w-4 h-4 flex-shrink-0" />
-        <span>{label}</span>
-      </button>
-
-      {open && (
-        <div
-          className={`absolute z-50 bottom-full mb-2 ${isRTL ? 'right-0' : 'left-0'} w-52 bg-white border border-slate-200 rounded-xl shadow-xl p-2`}
-          dir={isRTL ? 'rtl' : 'ltr'}
-        >
-          <button
-            onClick={() => { setOpen(false); handleRestart(); }}
-            className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium transition-colors text-start"
-          >
-            <PlayCircle className="w-4 h-4 flex-shrink-0" />
-            {label}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Floating `?` button anchored bottom-inline-end */
-function FloatingButton({ label, isRTL }) {
-  const [open, setOpen] = useState(false);
-  const popoverRef = useRef(null);
-  const handleRestart = useRestartLogic();
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e) => {
-      if (popoverRef.current && !popoverRef.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
-  return (
-    <div
-      ref={popoverRef}
-      className="fixed z-40"
-      style={{ insetBlockEnd: '1.5rem', insetInlineEnd: '1.5rem' }}
+    <button
+      onClick={handleRestart}
+      className="flex items-center gap-3 w-full px-3 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 min-h-[44px]"
     >
-      {/* Popover */}
-      {open && (
-        <div
-          className={`absolute bottom-full mb-3 ${isRTL ? 'right-0' : 'right-0'} w-56 bg-white border border-slate-200 rounded-xl shadow-xl p-3`}
-          dir={isRTL ? 'rtl' : 'ltr'}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-              {isRTL ? 'עזרה' : 'Help'}
-            </span>
-            <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600">
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-          <button
-            onClick={() => { setOpen(false); handleRestart(); }}
-            className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium transition-colors text-start"
-          >
-            <PlayCircle className="w-4 h-4 flex-shrink-0" />
-            {label}
-          </button>
-        </div>
-      )}
-
-      {/* The `?` button */}
-      <button
-        onClick={() => setOpen(prev => !prev)}
-        className="w-11 h-11 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center justify-center text-lg font-bold transition-all hover:scale-110 focus:ring-4 focus:ring-blue-300"
-        aria-label={label}
-        title={label}
-      >
-        ?
-      </button>
-    </div>
+      <PlayCircle className="w-4 h-4 flex-shrink-0" />
+      <span>{label}</span>
+    </button>
   );
-}
-
-export default function TutorialRestartButton({ floating = false }) {
-  const { language, isRTL } = useLanguage();
-  const label = tTutorial('nav.restart', language);
-
-  if (floating) {
-    return <FloatingButton label={label} isRTL={isRTL} />;
-  }
-
-  return <SidebarButton label={label} isRTL={isRTL} />;
 }
