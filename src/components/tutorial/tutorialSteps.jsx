@@ -2,7 +2,7 @@
  * TutorialStep interface:
  * {
  *   id: string,
- *   type: 'explain' | 'practice' | 'closing',
+ *   type: 'explain' | 'practice' | 'encourage' | 'closing',
  *   targetSelector: string,
  *   tooltipPosition: 'top' | 'bottom' | 'left' | 'right' | 'auto',
  *   heading: string,           // i18n key
@@ -11,6 +11,9 @@
  *   completionEvent?: string,
  *   table?: Array<{label: string, value: string}>
  * }
+ * 
+ * Note: 'encourage' type allows users to click "Next" without completing any action — 
+ * it's a motivational tooltip that suggests optional interactions but doesn't block progression.
  */
 
 export const tutorialStrings = {
@@ -29,6 +32,14 @@ export const tutorialStrings = {
     'doc.sections.body': 'המסמך מחולק לנושאים וסעיפים. כל סעיף מכיל תוכן שנוצר בשיתוף פעולה, ואפשר להציע לו שינויים.',
     'browse.explain.heading': 'לכל סעיף יש כמה גרסאות',
     'browse.explain.body': 'חברי הקהילה מציעים שינויים לכל סעיף. החצים מאפשרים לעבור ביניהם ולראות מה כל אחד מציע.',
+    'browse.encourage.heading': 'בואו נדפדף בין הגרסאות',
+    'browse.encourage.body': 'השתמש בחצים כדי לראות הצעות שונות. אפשר ללחוץ ״הבא״ גם בלי לדפדף — הטוטריאל לא חייב אינטרקציה!',
+    'comment.counter.encourage.heading': 'ראו את התגובות הקיימות',
+    'comment.counter.encourage.body': 'לחצו על מספר התגובות כדי לראות מה אחרים אומרים. זו דרך טובה להבין את ההצעה עמוקות יותר.',
+    'section.hover.encourage.heading': 'ריחוף על סעיף כדי להציע שינוי',
+    'section.hover.encourage.body': 'כשתעמיד/י את העכבר על סעיף, יופיעו כפתורים שמאפשרים לך להציע עריכה או מחיקה.',
+    'new.section.hover.encourage.heading': 'ריחוף בין סעיפים להוסיף סעיף חדש',
+    'new.section.hover.encourage.body': 'כשתעמיד/י את העכבר בין שני סעיפים, יופיע כפתור להוספת סעיף חדש בתא הזה.',
     'browse.practice.heading': 'השתמשו בחצים כדי לעבור בין ההצעות לאחד הסעיפים',
     'browse.practice.success': 'טוב. ככה אפשר תמיד לראות מה הקהילה מציעה לכל חלק במסמך',
     'vote.explain.heading': 'ההצבעה שלכם מעצבת את המסמך',
@@ -85,6 +96,14 @@ export const tutorialStrings = {
     'doc.sections.body': 'الوثيقة مقسمة إلى مواضيع وبنود. كل بند يحتوي على محتوى أُنشئ بشكل تعاوني، ويمكن اقتراح تعديلات عليه.',
     'browse.explain.heading': 'لكل بند عدة نسخ',
     'browse.explain.body': 'يقترح أعضاء المجتمع تعديلات على كل بند. تتيح لكم الأسهم التنقل بينها ورؤية ما يقترحه كل شخص.',
+    'browse.encourage.heading': 'لنتصفح الإصدارات المختلفة',
+    'browse.encourage.body': 'استخدموا الأسهم لرؤية مقترحات مختلفة. يمكنكم الضغط على "التالي" حتى بدون التصفح — الجولة لا تفرض عليكم التفاعل!',
+    'comment.counter.encourage.heading': 'شاهدوا التعليقات الموجودة',
+    'comment.counter.encourage.body': 'اضغطوا على عدد التعليقات لرؤية ما يقول الآخرون. هذه طريقة جيدة لفهم المقترح بعمق أكبر.',
+    'section.hover.encourage.heading': 'مرروا المؤشر على البند لاقتراح تعديل',
+    'section.hover.encourage.body': 'عندما تمررون المؤشر على بند، ستظهر أزرار تتيح لكم اقتراح تعديل أو حذف.',
+    'new.section.hover.encourage.heading': 'مرروا المؤشر بين البنود لإضافة بند جديد',
+    'new.section.hover.encourage.body': 'عندما تمررون المؤشر بين بندين، سيظهر زر لإضافة بند جديد في هذا الفراغ.',
     'browse.practice.heading': 'استخدموا الأسهم للتنقل بين المقترحات',
     'browse.practice.success': 'ممتاز. هكذا يمكن دائماً معرفة ما يقترحه المجتمع لكل جزء من الوثيقة',
     'vote.explain.heading': 'تصويتكم يشكّل الوثيقة',
@@ -141,6 +160,14 @@ export const tutorialStrings = {
     'doc.sections.body': 'The document is divided into topics and sections. Each section contains collaboratively created content, and you can propose changes to it.',
     'browse.explain.heading': 'Each clause has multiple versions',
     'browse.explain.body': 'Community members propose changes to each clause. Use the arrows to browse between proposals and see what each one suggests.',
+    'browse.encourage.heading': 'Let\'s browse between versions',
+    'browse.encourage.body': 'Use the arrows to see different proposals. You can click "Next" even without browsing — the tour doesn\'t require interaction!',
+    'comment.counter.encourage.heading': 'See the existing comments',
+    'comment.counter.encourage.body': 'Click the comment count to see what others are saying. It\'s a good way to understand the proposal more deeply.',
+    'section.hover.encourage.heading': 'Hover on a section to propose changes',
+    'section.hover.encourage.body': 'When you hover on a section, buttons will appear that let you propose an edit or deletion.',
+    'new.section.hover.encourage.heading': 'Hover between sections to add a new one',
+    'new.section.hover.encourage.body': 'When you hover between two sections, a button will appear to add a new section in that space.',
     'browse.practice.heading': 'Use the arrows to browse proposals on any clause',
     'browse.practice.success': 'Nice — you can always flip through proposals this way',
     'vote.explain.heading': 'Your vote shapes the document',
@@ -269,6 +296,14 @@ export const TUTORIAL_STEPS = [
     body: 'browse.explain.body',
   },
   {
+    id: 'browse-encourage',
+    type: 'encourage',
+    targetSelector: '.proposal-navigation-arrows',
+    tooltipPosition: 'bottom',
+    heading: 'browse.encourage.heading',
+    body: 'browse.encourage.body',
+  },
+  {
     id: 'browse-practice',
     type: 'practice',
     targetSelector: '.proposal-navigation-arrows',
@@ -298,6 +333,14 @@ export const TUTORIAL_STEPS = [
     completionEvent: 'proposal:voted',
   },
   {
+    id: 'comment-counter-encourage',
+    type: 'encourage',
+    targetSelector: '.proposal-comments-counter',
+    tooltipPosition: 'top',
+    heading: 'comment.counter.encourage.heading',
+    body: 'comment.counter.encourage.body',
+  },
+  {
     id: 'comment-explain',
     type: 'explain',
     targetSelector: '.proposal-comment-input',
@@ -317,6 +360,14 @@ export const TUTORIAL_STEPS = [
     completionEvent: 'proposal:commented',
   },
   {
+    id: 'section-hover-encourage',
+    type: 'encourage',
+    targetSelector: '.section-card',
+    tooltipPosition: 'bottom',
+    heading: 'section.hover.encourage.heading',
+    body: 'section.hover.encourage.body',
+  },
+  {
     id: 'newclause-explain',
     type: 'explain',
     targetSelector: '.add-clause-button',
@@ -334,6 +385,14 @@ export const TUTORIAL_STEPS = [
     body: '',
     successMessage: 'newclause.practice.success',
     completionEvent: 'proposal:clause-added',
+  },
+  {
+    id: 'new-section-hover-encourage',
+    type: 'encourage',
+    targetSelector: '.section-insert-space',
+    tooltipPosition: 'bottom',
+    heading: 'new.section.hover.encourage.heading',
+    body: 'new.section.hover.encourage.body',
   },
   {
     id: 'editclause-explain',

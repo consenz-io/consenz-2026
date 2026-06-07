@@ -144,6 +144,7 @@ export default function TutorialTooltip({
   if (!pos) return null;
 
   const isPractice = step.type === 'practice';
+  const isEncourage = step.type === 'encourage';
   const nextDisabled = isPractice && !practiceCompleted;
 
   return (
@@ -275,7 +276,7 @@ export default function TutorialTooltip({
               <Button
                 size="sm"
                 onClick={onNext}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                className={`flex-1 ${isEncourage ? 'bg-amber-500 hover:bg-amber-600' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
               >
                 {stepIndex === totalSteps - 1
                   ? (isRTL ? 'סיום' : 'Finish')
