@@ -310,16 +310,6 @@ export const TUTORIAL_STEPS = [
     body: 'browse.encourage.body',
   },
   {
-    id: 'browse-practice',
-    type: 'practice',
-    targetSelector: '.proposal-navigation-arrows',
-    tooltipPosition: 'bottom',
-    heading: 'browse.practice.heading',
-    body: '',
-    successMessage: 'browse.practice.success',
-    completionEvent: 'proposal:navigated',
-  },
-  {
     id: 'vote-explain',
     type: 'explain',
     targetSelector: '.proposal-vote-buttons',
