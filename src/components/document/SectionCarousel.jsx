@@ -360,7 +360,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
   return (
     <div
       id={currentSuggestionDisplayId}
-      className={`group relative p-3 md:p-6 border-2 rounded-lg hover:shadow-md transition-all duration-300 ${
+      className={`section-card group relative p-3 md:p-6 border-2 rounded-lg hover:shadow-md transition-all duration-300 ${
         historyMode
           ? 'border-teal-400 bg-gradient-to-br from-teal-50 to-cyan-50/40 shadow-md'
           : flashingSection
