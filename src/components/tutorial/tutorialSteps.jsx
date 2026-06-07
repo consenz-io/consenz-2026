@@ -15,6 +15,8 @@
 
 export const tutorialStrings = {
   he: {
+    'home.groups.heading': 'הכל מתחיל מקבוצה',
+    'home.groups.body': 'כל קבוצה מנהלת מסמכים משותפים. לחצו על קבוצה כדי לראות את המסמכים שלה — ומשם תוכלו להיכנס לאחד מהם.',
     'browse.explain.heading': 'לכל סעיף יש כמה גרסאות',
     'browse.explain.body': 'חברי הקהילה מציעים שינויים לכל סעיף. החצים מאפשרים לעבור ביניהם ולראות מה כל אחד מציע.',
     'browse.practice.heading': 'השתמשו בחצים כדי לעבור בין ההצעות לאחד הסעיפים',
@@ -59,6 +61,8 @@ export const tutorialStrings = {
     'signup.prompt.cta': 'הרשמה',
   },
   ar: {
+    'home.groups.heading': 'كل شيء يبدأ من مجموعة',
+    'home.groups.body': 'كل مجموعة تدير وثائق مشتركة. اضغطوا على مجموعة لرؤية وثائقها — ومن هناك يمكنكم الدخول إلى إحداها.',
     'browse.explain.heading': 'لكل بند عدة نسخ',
     'browse.explain.body': 'يقترح أعضاء المجتمع تعديلات على كل بند. تتيح لكم الأسهم التنقل بينها ورؤية ما يقترحه كل شخص.',
     'browse.practice.heading': 'استخدموا الأسهم للتنقل بين المقترحات',
@@ -103,6 +107,8 @@ export const tutorialStrings = {
     'signup.prompt.cta': 'تسجيل',
   },
   en: {
+    'home.groups.heading': 'Everything starts with a group',
+    'home.groups.body': 'Each group manages shared documents. Click on a group to see its documents — and from there you can enter one.',
     'browse.explain.heading': 'Each clause has multiple versions',
     'browse.explain.body': 'Community members propose changes to each clause. Use the arrows to browse between proposals and see what each one suggests.',
     'browse.practice.heading': 'Use the arrows to browse proposals on any clause',
@@ -165,10 +171,10 @@ export function tTutorial(key, language = 'he') {
 export const HOME_INTRO_STEP = {
   id: 'home-intro',
   type: 'practice',
-  targetSelector: '.documents-list',
+  targetSelector: '.groups-list',
   tooltipPosition: 'bottom',
-  heading: 'איך מתחילים?',
-  body: 'כדי להתחיל, בחר מסמך מהרשימה כאן למטה — הסיור המלא יחכה לך בפנים.',
+  heading: 'home.groups.heading',
+  body: 'home.groups.body',
   successMessage: 'מעולה, בואו נתחיל',
   completionEvent: 'document:entered',
 };

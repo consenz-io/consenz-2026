@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { CheckCircle } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { CheckCircle, X } from 'lucide-react';
 import { tTutorial } from './tutorialSteps';
 import { useLanguage } from '@/components/LanguageContext';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const TOOLTIP_WIDTH = 320;
 const ARROW_SIZE = 10;
@@ -21,8 +22,10 @@ export default function TutorialHomeIntro({ step, onSkip, isRTL }) {
   const [tooltipStyle, setTooltipStyle] = useState(null);
   const [practiceCompleted, setPracticeCompleted] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showSkipConfirm, setShowSkipConfirm] = useState(false);
+  const tooltipRef = useRef(null);
 
-  // Position tooltip below target
+  // Position tooltip below target + scroll into view
   useEffect(() => {
     function update() {
       const el = document.querySelector(step.targetSelector);
@@ -42,6 +45,14 @@ export default function TutorialHomeIntro({ step, onSkip, isRTL }) {
       window.removeEventListener('resize', update);
     };
   }, [step.targetSelector]);
+
+  // Scroll tooltip into view when it appears
+  useEffect(() => {
+    if (!tooltipStyle || !tooltipRef.current) return;
+    setTimeout(() => {
+      tooltipRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+  }, [tooltipStyle?.top]);
 
   // Spotlight on target (no scrim — only box-shadow ring)
   useEffect(() => {
@@ -77,47 +88,64 @@ export default function TutorialHomeIntro({ step, onSkip, isRTL }) {
   if (!tooltipStyle) return null;
 
   return (
-    <div
-      className="fixed z-[10002] bg-white rounded-xl shadow-2xl border border-slate-200 p-4"
-      style={{ width: TOOLTIP_WIDTH, position: 'fixed', ...tooltipStyle }}
-      dir={isRTL ? 'rtl' : 'ltr'}
-      role="dialog"
-      aria-label={step.heading}
-    >
-      {/* Arrow pointing up */}
+    <>
       <div
-        className="absolute w-0 h-0"
-        style={{
-          borderLeft: '10px solid transparent',
-          borderRight: '10px solid transparent',
-          borderBottom: '10px solid white',
-          top: -10,
-          left: '50%',
-          transform: 'translateX(-50%)',
-        }}
-      />
-
-      {showSuccess ? (
-        <div className="flex flex-col items-center gap-2 py-3 text-center">
-          <CheckCircle className="w-10 h-10 text-green-500" />
-          <p className="font-semibold text-green-700">{successMsg}</p>
-        </div>
-      ) : (
-        <>
-          <h3 className="font-bold text-slate-900 text-base mb-1">{heading}</h3>
-          {body && <p className="text-sm text-slate-600 leading-relaxed mb-3">{body}</p>}
-        </>
-      )}
-
-      {/* Skip link */}
-      <div className="text-center mt-1">
+        ref={tooltipRef}
+        className="fixed z-[10002] bg-white rounded-xl shadow-2xl border border-slate-200 p-4"
+        style={{ width: TOOLTIP_WIDTH, position: 'fixed', ...tooltipStyle }}
+        dir={isRTL ? 'rtl' : 'ltr'}
+        role="dialog"
+        aria-label={step.heading}
+      >
+        {/* X button */}
         <button
-          onClick={onSkip}
-          className="text-xs text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors"
+          onClick={() => setShowSkipConfirm(true)}
+          className="absolute top-2 end-2 text-slate-400 hover:text-slate-600 transition-colors p-1 rounded"
+          aria-label={isRTL ? 'סגור' : 'Close'}
         >
-          {isRTL ? 'דלג על הסיור' : 'Skip tour'}
+          <X className="w-4 h-4" />
         </button>
+
+        {/* Arrow pointing up */}
+        <div
+          className="absolute w-0 h-0"
+          style={{
+            borderLeft: '10px solid transparent',
+            borderRight: '10px solid transparent',
+            borderBottom: '10px solid white',
+            top: -10,
+            left: '50%',
+            transform: 'translateX(-50%)',
+          }}
+        />
+
+        {showSuccess ? (
+          <div className="flex flex-col items-center gap-2 py-3 text-center">
+            <CheckCircle className="w-10 h-10 text-green-500" />
+            <p className="font-semibold text-green-700">{successMsg}</p>
+          </div>
+        ) : (
+          <>
+            <h3 className="font-bold text-slate-900 text-base mb-1 pr-5">{heading}</h3>
+            {body && <p className="text-sm text-slate-600 leading-relaxed mb-3">{body}</p>}
+          </>
+        )}
       </div>
-    </div>
+
+      <AlertDialog open={showSkipConfirm} onOpenChange={setShowSkipConfirm}>
+        <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{isRTL ? 'לצאת מהסיור?' : 'Exit the tour?'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {isRTL ? 'תמיד אפשר להפעיל אותו מחדש מהתפריט.' : 'You can always restart it from the menu.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{isRTL ? 'המשך' : 'Continue'}</AlertDialogCancel>
+            <AlertDialogAction onClick={onSkip}>{isRTL ? 'צא מהסיור' : 'Exit tour'}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

@@ -15,10 +15,15 @@ export default function GroupDocumentRow({ doc, unvotedCount, participantCount }
     en: `${unvotedCount} awaiting vote`,
   };
 
+  const handleClick = () => {
+    window.dispatchEvent(new Event('document:entered'));
+  };
+
   return (
     <Link
       to={`${createPageUrl("DocumentView")}?id=${doc.id}`}
       className={`block overflow-hidden border rounded-lg hover:bg-slate-50 transition-colors ${unvotedCount > 0 ? 'ring-2 ring-orange-400' : ''}`}
+      onClick={handleClick}
     >
       {unvotedCount > 0 && (
         <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3 py-1.5 text-xs font-medium flex items-center gap-2">

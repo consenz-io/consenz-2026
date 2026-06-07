@@ -67,7 +67,7 @@ export default function GroupsSection({ groups, groupsLoading, groupMembers, doc
           </CardContent>
         </Card>
       ) : (
-        <div className="documents-list grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="groups-list grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {visibleGroups.map(group => {
             const groupDocs   = documents.filter(d => d.groupId === group.id);
             const members     = groupMembers.filter(m => m.groupId === group.id);
