@@ -328,6 +328,13 @@ export default function CreateSuggestionModal({
         return;
       }
 
+      // Dispatch tutorial completion events based on suggestion type
+      if (result?.type === 'new_section') {
+        window.dispatchEvent(new CustomEvent('proposal:clause-added'));
+      } else if (result?.type === 'edit_section' || result?.type === 'delete_section' || result?.type === 'edit_suggestion') {
+        window.dispatchEvent(new CustomEvent('proposal:clause-edited'));
+      }
+
       // CRITICAL: Update all caches BEFORE creating auto-vote to ensure instant UI update
       if (user && result?.id) {
         // עדכון קאש ההצעות עם ההצעה החדשה כולל הצבעת בעד ראשונה
