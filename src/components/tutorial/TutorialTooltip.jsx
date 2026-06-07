@@ -121,12 +121,20 @@ export default function TutorialTooltip({
     const el = document.querySelector(step.targetSelector);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-      // Re-compute position after scroll settles
-      const timer = setTimeout(update, 400);
+      // Use requestAnimationFrame repeatedly to wait for scroll and layout to settle
+      let frameCount = 0;
+      const checkAndUpdate = () => {
+        frameCount++;
+        update();
+        // Check position multiple times to account for scroll animation
+        if (frameCount < 10) {
+          requestAnimationFrame(checkAndUpdate);
+        }
+      };
+      requestAnimationFrame(checkAndUpdate);
       window.addEventListener('scroll', update, { passive: true });
       window.addEventListener('resize', update);
       return () => {
-        clearTimeout(timer);
         window.removeEventListener('scroll', update);
         window.removeEventListener('resize', update);
       };
