@@ -444,6 +444,8 @@ function LayoutContent({ children, currentPageName }) {
 
              <AccessibilityAnnouncer />
       <TutorialController />
+      {/* Floating help button — always visible */}
+      <TutorialRestartButton floating />
               </div>
               </SidebarProvider>
               );

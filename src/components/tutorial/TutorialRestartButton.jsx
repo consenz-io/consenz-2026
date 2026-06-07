@@ -11,13 +11,9 @@ function isDocumentPage(pathname) {
   return /\/(DocumentView|document)/i.test(pathname) || pathname.includes('urlName');
 }
 
-export default function TutorialRestartButton() {
-  const { language, isRTL } = useLanguage();
+function useRestartLogic() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
-  const popoverRef = useRef(null);
-  const label = tTutorial('nav.restart', language);
 
   // Track last visited document URL
   useEffect(() => {
@@ -26,22 +22,7 @@ export default function TutorialRestartButton() {
     }
   }, [location]);
 
-  // Close popover on outside click
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e) => {
-      if (popoverRef.current && !popoverRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
   const handleRestart = () => {
-    setOpen(false);
-
-    // Reset localStorage state
     const fresh = {
       active: true,
       homeStepSeen: true,
@@ -55,7 +36,6 @@ export default function TutorialRestartButton() {
     const onDoc = isDocumentPage(location.pathname);
 
     if (onDoc) {
-      // Already on a document page — let TutorialController pick it up
       if (window.restartTutorial) {
         window.restartTutorial('document');
       } else {
@@ -64,15 +44,12 @@ export default function TutorialRestartButton() {
       return;
     }
 
-    // Navigate to last visited document if available
     const lastDoc = sessionStorage.getItem(LAST_DOC_KEY);
     if (lastDoc) {
       navigate(lastDoc);
-      // TutorialController will resume on mount via loadState
       return;
     }
 
-    // No document visited — show home intro
     if (window.restartTutorial) {
       window.restartTutorial('home');
     } else {
@@ -80,46 +57,42 @@ export default function TutorialRestartButton() {
     }
   };
 
+  return handleRestart;
+}
+
+/** Inline sidebar button */
+function SidebarButton({ label, isRTL }) {
+  const [open, setOpen] = useState(false);
+  const popoverRef = useRef(null);
+  const handleRestart = useRestartLogic();
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
   return (
-    <div
-      ref={popoverRef}
-      className="relative"
-      style={{ position: 'relative' }}
-    >
-      {/* Trigger button */}
+    <div ref={popoverRef} className="relative">
       <button
         onClick={() => setOpen(prev => !prev)}
         className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-colors"
         aria-expanded={open}
-        aria-haspopup="true"
-        aria-label={label}
       >
         <HelpCircle className="w-4 h-4 flex-shrink-0" />
         <span>{label}</span>
       </button>
 
-      {/* Popover */}
       {open && (
         <div
-          className={`absolute z-50 bottom-full mb-2 ${isRTL ? 'right-0' : 'left-0'} w-56 bg-white border border-slate-200 rounded-xl shadow-xl p-3`}
+          className={`absolute z-50 bottom-full mb-2 ${isRTL ? 'right-0' : 'left-0'} w-52 bg-white border border-slate-200 rounded-xl shadow-xl p-2`}
           dir={isRTL ? 'rtl' : 'ltr'}
-          role="dialog"
-          aria-label={label}
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-              {language === 'he' ? 'עזרה' : language === 'ar' ? 'مساعدة' : 'Help'}
-            </span>
-            <button
-              onClick={() => setOpen(false)}
-              className="text-slate-400 hover:text-slate-600 transition-colors"
-              aria-label="Close"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
           <button
-            onClick={handleRestart}
+            onClick={() => { setOpen(false); handleRestart(); }}
             className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium transition-colors text-start"
           >
             <PlayCircle className="w-4 h-4 flex-shrink-0" />
@@ -129,4 +102,73 @@ export default function TutorialRestartButton() {
       )}
     </div>
   );
+}
+
+/** Floating `?` button anchored bottom-inline-end */
+function FloatingButton({ label, isRTL }) {
+  const [open, setOpen] = useState(false);
+  const popoverRef = useRef(null);
+  const handleRestart = useRestartLogic();
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  return (
+    <div
+      ref={popoverRef}
+      className="fixed z-40"
+      style={{ insetBlockEnd: '1.5rem', insetInlineEnd: '1.5rem' }}
+    >
+      {/* Popover */}
+      {open && (
+        <div
+          className={`absolute bottom-full mb-3 ${isRTL ? 'right-0' : 'right-0'} w-56 bg-white border border-slate-200 rounded-xl shadow-xl p-3`}
+          dir={isRTL ? 'rtl' : 'ltr'}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              {isRTL ? 'עזרה' : 'Help'}
+            </span>
+            <button onClick={() => setOpen(false)} className="text-slate-400 hover:text-slate-600">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <button
+            onClick={() => { setOpen(false); handleRestart(); }}
+            className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-medium transition-colors text-start"
+          >
+            <PlayCircle className="w-4 h-4 flex-shrink-0" />
+            {label}
+          </button>
+        </div>
+      )}
+
+      {/* The `?` button */}
+      <button
+        onClick={() => setOpen(prev => !prev)}
+        className="w-11 h-11 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center justify-center text-lg font-bold transition-all hover:scale-110 focus:ring-4 focus:ring-blue-300"
+        aria-label={label}
+        title={label}
+      >
+        ?
+      </button>
+    </div>
+  );
+}
+
+export default function TutorialRestartButton({ floating = false }) {
+  const { language, isRTL } = useLanguage();
+  const label = tTutorial('nav.restart', language);
+
+  if (floating) {
+    return <FloatingButton label={label} isRTL={isRTL} />;
+  }
+
+  return <SidebarButton label={label} isRTL={isRTL} />;
 }
