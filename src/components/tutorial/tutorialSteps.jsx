@@ -266,7 +266,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'doc-title-explain',
     type: 'explain',
-    targetSelector: '.document-title-area',
+    targetSelector: '.document-title-section',
     tooltipPosition: 'bottom',
     heading: 'doc.title.heading',
     body: 'doc.title.body',

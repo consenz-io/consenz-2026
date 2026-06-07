@@ -652,6 +652,7 @@ export default function DocumentView() {
             </Link>
           )}
 
+          <div className={`document-title-section space-y-4 md:space-y-6 w-full max-w-full`}>
           <div className={`document-title-area flex items-center gap-2 w-full max-w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
             <h1 id="document-title" className="text-lg md:text-3xl font-bold text-slate-900 flex-1 min-w-0 break-words leading-tight max-w-full" style={{ fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif" }}>
               {(() => {
@@ -946,10 +947,10 @@ export default function DocumentView() {
                   />
                 </div>
               )}
-            </div>
+              </div>
+              </div>
 
-
-        </div>
+              </div>
 
         <div className="document-counters flex flex-col gap-2 md:gap-3 w-full max-w-full">
           {/* Open suggestions — inline nudge */}
