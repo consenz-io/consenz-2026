@@ -255,11 +255,11 @@ export default function LearnMore() {
             </Button>
           </Link>
           
-          <div className={`text-center space-y-6`} dir={isRTL ? 'rtl' : 'ltr'}>
+          <div className="text-center space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
             <h1 className="text-5xl md:text-6xl font-bold text-slate-900">
               {getLocalizedText("How Consenz Works?", "איך Consenz עובד?", "كيف يعمل Consenz؟")}
             </h1>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto" style={{ textAlign: 'start' }}>
               {getLocalizedText(
                 "A platform for democratic collaboration in drafting policy documents, constitutions, and decisions using dynamic consensus algorithms",
                 "פלטפורמה לשיתוף פעולה דמוקרטי בניסוח מסמכי מדיניות, חוקות והחלטות באמצעות אלגוריתמי קונצנזוס דינמיים",
@@ -316,17 +316,17 @@ export default function LearnMore() {
           <CardContent>
             <div className="space-y-4">
               {steps[activeStep].steps.map((stepText, index) => (
-                <div key={index} className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div key={index} className="flex items-start gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
                   <div className={`flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br ${steps[activeStep].color} flex items-center justify-center text-white font-bold shadow-lg`}>
                     {index + 1}
                   </div>
-                  <p className={`text-slate-700 pt-1 flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>{stepText}</p>
+                  <p className="text-slate-700 pt-1 flex-1" style={{ textAlign: 'start' }}>{stepText}</p>
                 </div>
               ))}
             </div>
 
             {/* Navigation Buttons */}
-            <div className={`flex justify-between mt-8 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <div className="flex justify-between mt-8" dir={isRTL ? 'rtl' : 'ltr'}>
               <Button
                 variant="outline"
                 onClick={() => setActiveStep(Math.max(0, activeStep - 1))}
@@ -387,14 +387,14 @@ export default function LearnMore() {
           {/* Costs Table */}
           <Card className="bg-white/80 backdrop-blur-sm border-red-200">
             <CardHeader className="bg-gradient-to-br from-red-50 to-orange-50">
-              <CardTitle className={`text-xl ${isRTL ? 'text-right' : 'text-left'}`}>
+              <CardTitle className="text-xl" style={{ textAlign: 'start' }}>
                 {getLocalizedText("Costs", "עלויות", "التكاليف")}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-4">
-                <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200" dir={isRTL ? 'rtl' : 'ltr'}>
+                  <div style={{ textAlign: 'start' }}>
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Create Document", "פרסום מסמך", "نشر وثيقة")}
                     </p>
@@ -405,8 +405,8 @@ export default function LearnMore() {
                   <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0">-1001</Badge>
                 </div>
                 
-                <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200" dir={isRTL ? 'rtl' : 'ltr'}>
+                  <div style={{ textAlign: 'start' }}>
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Edit Section Suggestion", "הצעה לעריכת סעיף", "اقتراح تعديل قسم")}
                     </p>
@@ -417,8 +417,8 @@ export default function LearnMore() {
                   <Badge className="bg-red-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0">-200</Badge>
                 </div>
                 
-                <div className={`flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200" dir={isRTL ? 'rtl' : 'ltr'}>
+                  <div style={{ textAlign: 'start' }}>
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("New Section Suggestion", "הצעה לסעיף חדש", "اقتراح قسم جديد")}
                     </p>
@@ -435,14 +435,14 @@ export default function LearnMore() {
           {/* Rewards Table */}
           <Card className="bg-white/80 backdrop-blur-sm border-green-200">
             <CardHeader className="bg-gradient-to-br from-green-50 to-emerald-50">
-              <CardTitle className={`text-xl ${isRTL ? 'text-right' : 'text-left'}`}>
+              <CardTitle className="text-xl" style={{ textAlign: 'start' }}>
                 {getLocalizedText("Rewards", "תגמולים", "المكافآت")}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-4">
-                <div className={`flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200" dir={isRTL ? 'rtl' : 'ltr'}>
+                  <div style={{ textAlign: 'start' }}>
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Receive Pro Vote", "קבלת הצבעה בעד", "تلقي تصويت مع")}
                     </p>
@@ -453,8 +453,8 @@ export default function LearnMore() {
                   <Badge className="bg-green-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0">+10</Badge>
                 </div>
 
-                <div className={`flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200" dir={isRTL ? 'rtl' : 'ltr'}>
+                  <div style={{ textAlign: 'start' }}>
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Suggestion Accepted", "הצעה התקבלה", "المقترح مقبول")}
                     </p>
@@ -465,8 +465,8 @@ export default function LearnMore() {
                   <Badge className="bg-blue-600 text-white text-lg px-4 py-2 whitespace-nowrap flex-shrink-0">+500</Badge>
                 </div>
 
-                <div className={`flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200" dir={isRTL ? 'rtl' : 'ltr'}>
+                  <div style={{ textAlign: 'start' }}>
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Decisive Vote", "הצבעה מכרעת", "تصويت حاسم")}
                     </p>
@@ -491,13 +491,13 @@ export default function LearnMore() {
           <CardContent>
             <div className="space-y-6">
               {/* Noise Filtering */}
-              <div className={`p-4 bg-white rounded-lg border border-slate-200 ${isRTL ? 'text-right' : 'text-left'}`}>
-                <h4 className={`font-bold text-slate-900 mb-3 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="p-4 bg-white rounded-lg border border-slate-200" dir={isRTL ? 'rtl' : 'ltr'}>
+                <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2" style={{ textAlign: 'start' }}>
                   <Badge className="bg-red-600">1</Badge>
                   {getLocalizedText("Noise Filtering Mechanism", "מנגנון סינון רעשים", "آلية تصفية الضوضاء")}
                 </h4>
                 <div className="space-y-3">
-                  <div>
+                  <div style={{ textAlign: 'start' }}>
                     <p className="font-semibold text-slate-800 mb-1">
                       {getLocalizedText("Entry Cost Creates Quality Threshold", "מחיר כניסה יוצר סף איכות", "تكلفة الدخول تخلق عتبة جودة")}
                     </p>
@@ -510,7 +510,7 @@ export default function LearnMore() {
                     </p>
                   </div>
                   
-                  <div>
+                  <div style={{ textAlign: 'start' }}>
                     <p className="font-semibold text-slate-800 mb-1">
                       {getLocalizedText("Risk vs. Reward Calculation", "חישוב סיכון מול תמורה", "حساب المخاطرة مقابل المكافأة")}
                     </p>
@@ -523,7 +523,7 @@ export default function LearnMore() {
                     </p>
                   </div>
                   
-                  <div>
+                  <div style={{ textAlign: 'start' }}>
                     <p className="font-semibold text-slate-800 mb-1">
                       {getLocalizedText("Self-Regulation Without Censorship", "ויסות עצמי ללא צנזורה", "التنظيم الذاتي بدون رقابة")}
                     </p>
@@ -539,13 +539,13 @@ export default function LearnMore() {
               </div>
 
               {/* Positive Incentives */}
-              <div className={`p-4 bg-white rounded-lg border border-slate-200 ${isRTL ? 'text-right' : 'text-left'}`}>
-                <h4 className={`font-bold text-slate-900 mb-3 flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className="p-4 bg-white rounded-lg border border-slate-200" dir={isRTL ? 'rtl' : 'ltr'}>
+                <h4 className="font-bold text-slate-900 mb-3 flex items-center gap-2" style={{ textAlign: 'start' }}>
                   <Badge className="bg-green-600">2</Badge>
                   {getLocalizedText("Creating Positive Incentives", "יצירת תמריצים חיוביים", "خلق حوافز إيجابية")}
                 </h4>
                 <div className="space-y-3">
-                  <div>
+                  <div style={{ textAlign: 'start' }}>
                     <p className="font-semibold text-slate-800 mb-1">
                       {getLocalizedText("Reward for Community Support", "תגמול עבור תמיכה קהילתית", "مكافأة لدعم المجتمع")}
                     </p>
@@ -558,7 +558,7 @@ export default function LearnMore() {
                     </p>
                   </div>
                   
-                  <div>
+                  <div style={{ textAlign: 'start' }}>
                     <p className="font-semibold text-slate-800 mb-1">
                       {getLocalizedText("Big Bonus for Acceptance", "בונוס גדול על קבלה", "مكافأة كبيرة للقبول")}
                     </p>
@@ -571,7 +571,7 @@ export default function LearnMore() {
                     </p>
                   </div>
                   
-                  <div>
+                  <div style={{ textAlign: 'start' }}>
                     <p className="font-semibold text-slate-800 mb-1">
                       {getLocalizedText("Building Reputation Score", "בניית ציון מוניטין", "بناء نقاط السمعة")}
                     </p>
@@ -587,8 +587,8 @@ export default function LearnMore() {
               </div>
 
               {/* Key Insight */}
-              <div className={`p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-300 ${isRTL ? 'text-right' : 'text-left'}`}>
-                <p className="font-bold text-amber-900 mb-2">
+              <div className="p-4 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-300" dir={isRTL ? 'rtl' : 'ltr'}>
+                <p className="font-bold text-amber-900 mb-2" style={{ textAlign: 'start' }}>
                   {getLocalizedText("Key Insight:", "תובנה מרכזית:", "رؤية رئيسية:")}
                 </p>
                 <p className="text-sm text-amber-800">
@@ -604,7 +604,7 @@ export default function LearnMore() {
         </Card>
 
         <div className="mt-8 p-6 bg-amber-50 border border-amber-200 rounded-lg">
-          <p className={`text-sm text-amber-900 ${isRTL ? 'text-right' : 'text-left'}`}>
+          <p className="text-sm text-amber-900" style={{ textAlign: 'start' }}>
             <strong>
               {getLocalizedText("Note:", "שים לב:", "ملاحظة:")}
             </strong>{" "}
@@ -632,11 +632,11 @@ export default function LearnMore() {
           {features.map((feature, index) => (
             <Card key={index} className="bg-white/80 backdrop-blur-sm border-slate-200 hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
-                <div className={`flex items-start gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="flex items-start gap-4" dir={isRTL ? 'rtl' : 'ltr'}>
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
                     {React.createElement(feature.icon, { className: "w-6 h-6 text-white" })}
                   </div>
-                  <div className={isRTL ? 'text-right' : 'text-left'}>
+                  <div style={{ textAlign: 'start' }}>
                     <h3 className="font-bold text-slate-900 mb-2">{feature.title}</h3>
                     <p className="text-sm text-slate-600">{feature.description}</p>
                   </div>
@@ -651,7 +651,7 @@ export default function LearnMore() {
       <section id="consensus-calculation" className="max-w-7xl mx-auto px-6 py-16" dir={isRTL ? 'rtl' : 'ltr'}>
         <Card className="bg-gradient-to-br from-slate-50 to-blue-50 border-slate-200">
           <CardHeader>
-            <CardTitle className={`text-2xl ${isRTL ? 'text-right' : 'text-left'}`}>
+            <CardTitle className="text-2xl" style={{ textAlign: 'start' }}>
               {getLocalizedText(
                 "How is the Consensus Threshold Calculated?",
                 "איך מחושב סף הקונצנזוס?",
@@ -662,9 +662,9 @@ export default function LearnMore() {
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <div className="p-4 bg-white rounded-lg border border-slate-200">
-                <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="flex items-start gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
                   <Badge className="bg-blue-600 flex-shrink-0 self-start">1</Badge>
-                  <div className={`${isRTL ? 'text-right' : 'text-left'} flex-1`}>
+                  <div className="flex-1" style={{ textAlign: 'start' }}>
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Start with default value", "התחלה עם ערך ברירת מחדל", "البدء بقيمة افتراضية")}
                     </p>
@@ -680,9 +680,9 @@ export default function LearnMore() {
               </div>
 
               <div className="p-4 bg-white rounded-lg border border-slate-200">
-                <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="flex items-start gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
                   <Badge className="bg-indigo-600 flex-shrink-0 self-start">2</Badge>
-                  <div className={`${isRTL ? 'text-right' : 'text-left'} flex-1`}>
+                  <div className="flex-1" style={{ textAlign: 'start' }}>
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Collect data from accepted suggestions", "איסוף נתונים מהצעות שהתקבלו", "جمع البيانات من المقترحات المقبولة")}
                     </p>
@@ -698,9 +698,9 @@ export default function LearnMore() {
               </div>
 
               <div className="p-4 bg-white rounded-lg border border-slate-200">
-                <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="flex items-start gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
                   <Badge className="bg-purple-600 flex-shrink-0 self-start">3</Badge>
-                  <div className={`${isRTL ? 'text-right' : 'text-left'} flex-1`}>
+                  <div className="flex-1" style={{ textAlign: 'start' }}>
                     <p className="font-semibold text-slate-900">
                       {getLocalizedText("Dynamic threshold update", "עדכון דינמי של הסף", "تحديث عتبة ديناميكي")}
                     </p>
@@ -716,8 +716,8 @@ export default function LearnMore() {
               </div>
 
               <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                <div className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                  <div className={`${isRTL ? 'text-right' : 'text-left'} flex-1`}>
+                <div className="flex items-start gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
+                  <div className="flex-1" style={{ textAlign: 'start' }}>
                     <p className="font-semibold text-green-900">
                       {getLocalizedText("Result: Community-adapted algorithm", "תוצאה: אלגוריתם מותאם לקהילה", "النتيجة: خوارزمية متكيفة مع المجتمع")}
                     </p>
@@ -725,7 +725,7 @@ export default function LearnMore() {
                       {getLocalizedText(
                         "The system learns the voting patterns of the community and adapts to the required consensus level",
                         "המערכת לומדת את דפוסי ההצבעה של הקהילה ומתאימה את עצמה לרמת הקונצנזוס הנדרשת",
-                        "يتعلم النظام أنماط التصويت في المجتمع ويتكيف مع مستوى الإجماع المطلوب"
+                        "يتعلم النظام أنماط التصويت في المجتمع ويتكيف مع مستوى الإجماع المطלוب"
                       )}
                     </p>
                   </div>
@@ -736,20 +736,20 @@ export default function LearnMore() {
 
             {/* Visual Example */}
             <div className="mt-8">
-              <h4 className={`font-bold text-slate-900 mb-4 ${isRTL ? 'text-right' : 'text-left'}`}>
+              <h4 className="font-bold text-slate-900 mb-4" style={{ textAlign: 'start' }}>
                 {getLocalizedText("Numerical Example", "דוגמה מספרית", "مثال رقمي")}
               </h4>
               <div className="grid md:grid-cols-2 gap-4">
-                <div className={`p-4 bg-blue-50 rounded-lg border border-blue-200 ${isRTL ? 'text-right' : 'text-left'}`}>
-                  <p className="text-sm font-medium text-blue-900 mb-2">
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200" dir={isRTL ? 'rtl' : 'ltr'}>
+                  <p className="text-sm font-medium text-blue-900 mb-2" style={{ textAlign: 'start' }}>
                     {getLocalizedText("Suggestion 1 Accepted", "הצעה 1 התקבלה", "المقترح 1 مقبول")}
                   </p>
-                  <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
                       <ThumbsUp className="w-4 h-4 text-green-600" />
                       <span className="font-bold">8</span>
                     </div>
-                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className="flex items-center gap-2">
                       <ThumbsDown className="w-4 h-4 text-red-600" />
                       <span className="font-bold">2</span>
                     </div>
@@ -759,16 +759,16 @@ export default function LearnMore() {
                   </div>
                 </div>
 
-                <div className={`p-4 bg-purple-50 rounded-lg border border-purple-200 ${isRTL ? 'text-right' : 'text-left'}`}>
-                  <p className="text-sm font-medium text-purple-900 mb-2">
+                <div className="p-4 bg-purple-50 rounded-lg border border-purple-200" dir={isRTL ? 'rtl' : 'ltr'}>
+                  <p className="text-sm font-medium text-purple-900 mb-2" style={{ textAlign: 'start' }}>
                     {getLocalizedText("Suggestion 2 Accepted", "הצעה 2 התקבלה", "المقترح 2 مقبول")}
                   </p>
-                  <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
                       <ThumbsUp className="w-4 h-4 text-green-600" />
                       <span className="font-bold">5</span>
                     </div>
-                    <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className="flex items-center gap-2">
                       <ThumbsDown className="w-4 h-4 text-red-600" />
                       <span className="font-bold">1</span>
                     </div>
@@ -779,18 +779,18 @@ export default function LearnMore() {
                 </div>
               </div>
 
-              <div className={`mt-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200 ${isRTL ? 'text-right' : 'text-left'}`}>
-                <p className="font-bold text-indigo-900 mb-2">
+              <div className="mt-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200" dir={isRTL ? 'rtl' : 'ltr'}>
+                <p className="font-bold text-indigo-900 mb-2" style={{ textAlign: 'start' }}>
                   {getLocalizedText("New Threshold", "הסף החדש", "العتبة الجديدة")}
                 </p>
-                <p className="text-sm text-slate-700">
+                <p className="text-sm text-slate-700" style={{ textAlign: 'start' }}>
                   {getLocalizedText(
                     "Average: (6 + 4) / 2 = 5 → New threshold: 5",
                     "ממוצע: (6 + 4) / 2 = 5 → הסף החדש: 5",
                     "متوسط: (6 + 4) / 2 = 5 ← العتبة الجديدة: 5"
                   )}
                 </p>
-                <p className="text-xs text-slate-600 mt-2">
+                <p className="text-xs text-slate-600 mt-2" style={{ textAlign: 'start' }}>
                   {getLocalizedText(
                     "New suggestions will need a delta of at least 5 to be auto-accepted",
                     "הצעות חדשות יצטרכו דלתא של לפחות 5 כדי להתקבל אוטומטית",
