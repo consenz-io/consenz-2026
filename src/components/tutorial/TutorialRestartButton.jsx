@@ -37,23 +37,14 @@ export default function TutorialRestartButton() {
 
     const onDoc = isDocumentPage(location.pathname);
 
-    if (onDoc) {
-      if (window.restartTutorial) {
-        window.restartTutorial('document');
-      } else {
-        window.location.reload();
-      }
-      return;
-    }
-
-    const lastDoc = sessionStorage.getItem(LAST_DOC_KEY);
-    if (lastDoc) {
-      navigate(lastDoc);
-      return;
-    }
-
     if (window.restartTutorial) {
-      window.restartTutorial('home');
+      window.restartTutorial(onDoc ? 'document' : 'home');
+      return;
+    }
+
+    // Fallback: if on home, stay here; if on doc, reload
+    if (onDoc) {
+      window.location.reload();
     } else {
       navigate('/');
     }
