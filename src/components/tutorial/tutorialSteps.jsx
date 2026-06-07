@@ -399,14 +399,6 @@ export const TUTORIAL_STEPS = [
     body: 'cleanview.version.body',
   },
   {
-    id: 'cleanview-changetype',
-    type: 'explain',
-    targetSelector: '.versions-counter',
-    tooltipPosition: 'bottom',
-    heading: 'cleanview.changetype.heading',
-    body: 'cleanview.changetype.body',
-  },
-  {
     id: 'cleanview-discuss',
     type: 'explain',
     targetSelector: '.section-content-clickable',
