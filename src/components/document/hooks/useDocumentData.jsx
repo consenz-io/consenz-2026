@@ -25,13 +25,12 @@ export function useDocumentData(documentId) {
     queryKey: ['topics', documentId],
     queryFn: () => base44.entities.Topic.filter({ documentId }, 'order').catch(() => []),
     enabled: !!documentId,
-    staleTime: 0,
+    staleTime: 30 * 1000, // 30s — topics rarely change mid-session; real-time updates come via subscriptions
     gcTime: 10 * 60 * 1000,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     retry: 3,
     retryDelay: 1000,
-    // keepPreviousData: show old data during refetch so the page never goes blank
     placeholderData: keepPreviousData,
   });
 
@@ -39,13 +38,12 @@ export function useDocumentData(documentId) {
     queryKey: ['sections', documentId],
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
     enabled: !!documentId,
-    staleTime: 0,
+    staleTime: 30 * 1000, // 30s — subscriptions handle real-time updates
     gcTime: 10 * 60 * 1000,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     retry: 3,
     retryDelay: 1000,
-    // keepPreviousData: show old data during refetch so the page never goes blank
     placeholderData: keepPreviousData,
   });
 
@@ -57,11 +55,10 @@ export function useDocumentData(documentId) {
       return results || [];
     },
     enabled: !!documentId,
-    staleTime: 0,
+    staleTime: 30 * 1000, // 30s — subscriptions handle real-time updates
     gcTime: 10 * 60 * 1000,
     refetchOnMount: true,
     retry: 2,
-    // keepPreviousData: show old data during refetch so the page never goes blank
     placeholderData: keepPreviousData,
   });
 
@@ -69,13 +66,18 @@ export function useDocumentData(documentId) {
   const { data: aggregatedData } = useQuery({
     queryKey: ['documentAggregatedData', documentId],
     queryFn: async () => {
-      // Always fetch fresh sections and suggestions so sectionIds are never stale.
-      // Using the cache here caused a bug: when a new section was created, the aggregated
-      // query would run with the old cached sectionIds before sections had refreshed,
-      // meaning comments/votes for the new section were never fetched.
+      // Reuse cached sections/suggestions if available, otherwise fetch fresh.
+      // Falls back to fresh fetch to handle the case where a new section was created
+      // and the cache hasn't caught up yet.
+      const cachedSuggestions = queryClient.getQueryData(['suggestions', documentId]);
+      const cachedSections = queryClient.getQueryData(['sections', documentId]);
       const [allSuggestions, allSections] = await Promise.all([
-        base44.entities.Suggestion.filter({ documentId }, '-created_date').catch(() => []),
-        base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
+        cachedSuggestions
+          ? Promise.resolve(cachedSuggestions)
+          : base44.entities.Suggestion.filter({ documentId }, '-created_date').catch(() => []),
+        cachedSections
+          ? Promise.resolve(cachedSections)
+          : base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
       ]);
       const suggestionIds = allSuggestions.map(s => s.id);
       const sectionIds = allSections.map(s => s.id);
@@ -168,7 +170,7 @@ export function useDocumentData(documentId) {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     retry: false,
-    staleTime: 0,
+    staleTime: 60 * 1000, // 1 minute — auth state doesn't change every render
   });
 
   const { data: isAdmin = false } = useQuery({

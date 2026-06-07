@@ -117,6 +117,14 @@ export default function DocumentView() {
     [allComments, documentId]
   );
 
+  // Consensus percentage — memoized to avoid recalculation on every render
+  const consensusPct = React.useMemo(() => {
+    const consensuses = document?.consensuses || [];
+    if (consensuses.length === 0) return '0';
+    const avg = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
+    return Math.min(100, avg * 100).toFixed(0);
+  }, [document?.consensuses]);
+
   // Version count = number of unique accepted changes + 1 (current state)
   // Deduplicate by version number to avoid counting multiple section changes per suggestion
   const versionCount = React.useMemo(() => {
@@ -1010,14 +1018,7 @@ export default function DocumentView() {
               aria-label={`${t('consensus')}`}
             >
               <TrendingUp className="w-3.5 h-3.5 md:w-5 md:h-5 text-purple-600" aria-hidden="true" />
-              <div className="text-sm md:text-lg font-bold text-slate-900">
-                {(() => {
-                  const consensuses = document.consensuses || [];
-                  if (consensuses.length === 0) return '0';
-                  const avg = consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length;
-                  return (Math.min(100, avg * 100)).toFixed(0);
-                })()}%
-              </div>
+              <div className="text-sm md:text-lg font-bold text-slate-900">{consensusPct}%</div>
               <div className="text-[8px] md:text-[10px] text-slate-500 text-center leading-tight">{t('consensus')}</div>
             </Link>
             <Link 

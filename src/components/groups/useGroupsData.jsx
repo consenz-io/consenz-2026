@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { calcGroupParticipants } from "@/lib/groupParticipants";
@@ -149,13 +149,33 @@ export function useGroupsData() {
       // private and hidden: require confirmed membership/admin/creator
       return hasAccess;
     });
-  }, [groups, myMemberships, currentUser, membersFetching]);
+  }, [groups, myMemberships, currentUser, membersLoading]);
 
-  const getDocCount = (groupId) => documents.filter(d => d.groupId === groupId).length;
-  const getMemberCount = (groupId) => groupMembers.filter(m => m.groupId === groupId).length;
-  const isGroupAdmin = (groupId) => currentUser
-    ? myMemberships.some(m => m.groupId === groupId && m.userId === currentUser.id && m.role === 'admin')
-    : false;
+  // Pre-build O(1) count maps — avoids O(n) filter per group on every render
+  const docCountByGroup = useMemo(() => {
+    const map = new Map();
+    for (const d of documents) map.set(d.groupId, (map.get(d.groupId) ?? 0) + 1);
+    return map;
+  }, [documents]);
+
+  const memberCountByGroup = useMemo(() => {
+    const map = new Map();
+    for (const m of groupMembers) map.set(m.groupId, (map.get(m.groupId) ?? 0) + 1);
+    return map;
+  }, [groupMembers]);
+
+  const adminGroupIds = useMemo(() => {
+    if (!currentUser?.id) return new Set();
+    return new Set(
+      myMemberships
+        .filter(m => m.userId === currentUser.id && m.role === 'admin')
+        .map(m => m.groupId)
+    );
+  }, [myMemberships, currentUser?.id]);
+
+  const getDocCount = useCallback((groupId) => docCountByGroup.get(groupId) ?? 0, [docCountByGroup]);
+  const getMemberCount = useCallback((groupId) => memberCountByGroup.get(groupId) ?? 0, [memberCountByGroup]);
+  const isGroupAdmin = useCallback((groupId) => adminGroupIds.has(groupId), [adminGroupIds]);
 
   // isLoading must stay true until we have a definitive answer about which groups the user belongs to.
   // The critical edge case: currentUser arrives from cache (userLoading=false) but the memberships

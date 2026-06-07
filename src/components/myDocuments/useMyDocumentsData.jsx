@@ -61,8 +61,11 @@ export function useMyDocumentsData() {
     return [...new Set([...interactedDocIds, ...suggestedDocIds, ...createdDocIds, ...votedDocIds])].sort();
   }, [suggestions, userInteractions, allDocuments, user?.email, votedSuggestions]);
 
+  // Stable string key — prevents cache miss due to array reference change on every render
+  const myDocumentIdsKey = useMemo(() => myDocumentIds.join(','), [myDocumentIds]);
+
   const { data: allSuggestions = [] } = useQuery({
-    queryKey: ['allSuggestions', myDocumentIds],
+    queryKey: ['allSuggestions', myDocumentIdsKey],
     queryFn: () => myDocumentIds.length > 0
       ? base44.entities.Suggestion.filter({ documentId: { $in: myDocumentIds } })
       : Promise.resolve([]),
@@ -88,7 +91,7 @@ export function useMyDocumentsData() {
   });
 
   const { data: allSections = [] } = useQuery({
-    queryKey: ['allSections', myDocumentIds],
+    queryKey: ['allSections', myDocumentIdsKey],
     queryFn: () => myDocumentIds.length > 0
       ? base44.entities.Section.filter({ documentId: { $in: myDocumentIds } })
       : Promise.resolve([]),
