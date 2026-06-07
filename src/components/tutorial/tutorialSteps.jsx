@@ -327,17 +327,6 @@ export const TUTORIAL_STEPS = [
     body: 'vote.explain.body',
   },
   {
-    id: 'vote-practice',
-    type: 'practice',
-    requiresAuth: true,
-    targetSelector: '.proposal-vote-buttons',
-    tooltipPosition: 'top',
-    heading: 'vote.practice.heading',
-    body: '',
-    successMessage: 'vote.practice.success',
-    completionEvent: 'proposal:voted',
-  },
-  {
     id: 'comment-counter-encourage',
     type: 'encourage',
     targetSelector: '.proposal-comments-counter',
