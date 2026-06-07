@@ -152,6 +152,25 @@ export default function TutorialTooltip({
           {/* Body */}
           {body && <p className="text-sm text-slate-600 mb-3 leading-relaxed">{body}</p>}
 
+          {/* Points table */}
+          {step.table && step.table.length > 0 && (
+            <table className="w-full text-xs mb-3 border-collapse">
+              <tbody>
+                {step.table.map((row, i) => {
+                  const isCost = row.value.startsWith('−') || row.value.startsWith('-');
+                  return (
+                    <tr key={i} className="border-b border-slate-100 last:border-0">
+                      <td className="py-1 text-slate-600 text-start">{tTutorial(row.label, language)}</td>
+                      <td className={`py-1 font-bold text-end ${isCost ? 'text-red-600' : 'text-green-600'}`}>
+                        {row.value}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+
           {/* Progress dots */}
           <div className="flex items-center gap-1.5 justify-center mb-3">
             {Array.from({ length: totalSteps }).map((_, i) => (

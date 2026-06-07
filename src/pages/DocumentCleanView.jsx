@@ -85,6 +85,11 @@ export default function DocumentCleanView() {
     refetchOnMount: true,
   });
 
+  // Dispatch tutorial event when user lands on this page
+  React.useEffect(() => {
+    window.dispatchEvent(new CustomEvent('versions:opened'));
+  }, []);
+
   // Subscribe to DocumentVersion changes to refresh version history in real-time
   React.useEffect(() => {
     if (!documentId) return;

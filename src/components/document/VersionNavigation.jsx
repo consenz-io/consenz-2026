@@ -42,7 +42,7 @@ export default function VersionNavigation({
     : null;
 
   return (
-    <div className="fixed bottom-0 right-0 z-50 print:hidden" style={{ left: 'var(--sidebar-nav-width, 16rem)' }}>
+    <div className="versions-list fixed bottom-0 right-0 z-50 print:hidden" style={{ left: 'var(--sidebar-nav-width, 16rem)' }}>
       <div className="bg-white border-t-2 border-slate-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
         <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
           
@@ -50,10 +50,11 @@ export default function VersionNavigation({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => isRTL
-              ? onNavigate(Math.min(currentIndex + 1, totalVersions - 1))
-              : onNavigate(Math.min(currentIndex + 1, totalVersions - 1))
-            }
+            onClick={() => {
+              const next = Math.min(currentIndex + 1, totalVersions - 1);
+              onNavigate(next);
+              if (next > 0) window.dispatchEvent(new CustomEvent('versions:selected'));
+            }}
             disabled={isLoading || !hasMultipleVersions || isOldestVersion}
             className="h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
           >
@@ -80,7 +81,11 @@ export default function VersionNavigation({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onNavigate(Math.max(0, currentIndex - 1))}
+            onClick={() => {
+              const prev = Math.max(0, currentIndex - 1);
+              onNavigate(prev);
+              if (prev > 0) window.dispatchEvent(new CustomEvent('versions:selected'));
+            }}
             disabled={isLoading || !hasMultipleVersions || isCurrentVersion}
             className="h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
           >

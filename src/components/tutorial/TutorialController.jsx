@@ -6,6 +6,7 @@ import TutorialWelcome from './TutorialWelcome';
 import TutorialOverlay from './TutorialOverlay';
 import TutorialTooltip from './TutorialTooltip';
 import TutorialHomeIntro from './TutorialHomeIntro';
+import TutorialClosingScreen from './TutorialClosingScreen';
 import { useLanguage } from '@/components/LanguageContext';
 
 function isDocumentPage(pathname) {
@@ -114,6 +115,17 @@ export default function TutorialController() {
     if (!TUTORIAL_STEPS.length) return null;
     const step = TUTORIAL_STEPS[currentStep];
     if (!step) return null;
+
+    // Closing step — no scrim, no spotlight, fullscreen modal
+    if (step.type === 'closing') {
+      return (
+        <TutorialClosingScreen
+          step={step}
+          onDone={skipTutorial}
+          isRTL={isRTL}
+        />
+      );
+    }
 
     return (
       <TutorialOverlay targetSelector={step.targetSelector}>

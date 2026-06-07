@@ -1014,7 +1014,7 @@ export default function DocumentView() {
             </Link>
             <Link 
               to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
-              className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-2.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-purple-400 hover:shadow-md transition-all"
+              className="consensus-meter bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-2.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-purple-400 hover:shadow-md transition-all"
               aria-label={`${t('consensus')}`}
             >
               <TrendingUp className="w-3.5 h-3.5 md:w-5 md:h-5 text-purple-600" aria-hidden="true" />
@@ -1023,7 +1023,7 @@ export default function DocumentView() {
             </Link>
             <Link 
               to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`}
-              className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-2.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-teal-400 hover:shadow-md transition-all"
+              className="versions-tab-button bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-2.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-teal-400 hover:shadow-md transition-all"
               aria-label={`${versionCount} ${language === 'he' ? 'גרסאות' : 'versions'}`}
             >
               <Clock className="w-3.5 h-3.5 md:w-5 md:h-5 text-teal-600" aria-hidden="true" />
