@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { base44 } from '@/api/base44Client';
 
 const STORAGE_KEY = 'consenz_tutorial';
 
@@ -25,12 +26,36 @@ function saveState(state) {
   } catch {}
 }
 
+// ─── Server sync helpers ──────────────────────────────────────────────────────
+
+async function fetchServerTutorialState() {
+  try {
+    const user = await base44.auth.me();
+    if (!user) return null;
+    const { tutorialCompleted, tutorialLastStep, tutorialSkipped } = user;
+    if (tutorialCompleted === undefined && tutorialLastStep === undefined) return null;
+    return { tutorialCompleted, tutorialLastStep, tutorialSkipped };
+  } catch {
+    return null;
+  }
+}
+
+async function pushServerTutorialState(localState) {
+  try {
+    const isCompleted = !localState.active && localState.currentStep > 0;
+    const isSkipped = !localState.active && localState.currentStep === 0 && localState.completedSteps?.length === 0;
+    await base44.auth.updateMe({
+      tutorialCompleted: isCompleted,
+      tutorialLastStep: localState.currentStep ?? 0,
+      tutorialSkipped: isSkipped,
+    });
+  } catch {
+    // non-blocking — local state is source of truth during session
+  }
+}
+
 /**
  * phase: 'idle' | 'welcome' | 'home-intro' | 'running' | 'done'
- *
- * Entry points:
- *  - 'home' entry: welcome → home-intro → (user clicks doc) → running
- *  - 'document' entry: welcome → running directly (skip home-intro)
  */
 export function useTutorial(steps = []) {
   const [state, setState] = useState(loadState);
@@ -38,20 +63,61 @@ export function useTutorial(steps = []) {
   const [practiceCompleted, setPracticeCompleted] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // On mount: resume if tutorial was active
+  // Debounced server-push ref
+  const pushTimerRef = useRef(null);
+  const scheduleServerPush = useCallback((localState) => {
+    clearTimeout(pushTimerRef.current);
+    pushTimerRef.current = setTimeout(() => pushServerTutorialState(localState), 3000);
+  }, []);
+
+  // On mount: hydrate from server if localStorage is empty, then resume if active
   useEffect(() => {
-    const s = loadState();
-    if (!s.active || steps.length === 0) return;
-    setState(s);
-    if (s.currentStep < steps.length) {
-      setPhase('running');
+    async function hydrate() {
+      const local = loadState();
+      const hasLocalData = !!localStorage.getItem(STORAGE_KEY);
+
+      if (!hasLocalData) {
+        // Try to hydrate from server
+        const server = await fetchServerTutorialState();
+        if (server && !server.tutorialSkipped && !server.tutorialCompleted) {
+          // Mid-tutorial on another device — resume from server step
+          const hydrated = {
+            ...defaultState(),
+            active: true,
+            currentStep: server.tutorialLastStep ?? 0,
+            homeStepSeen: true,
+          };
+          saveState(hydrated);
+          setState(hydrated);
+          if (steps.length > 0 && hydrated.currentStep < steps.length) {
+            setPhase('running');
+          }
+          return;
+        }
+        if (server?.tutorialCompleted || server?.tutorialSkipped) {
+          // Already done on another device — mark done locally so auto-start skips
+          const done = { ...defaultState(), active: false, currentStep: 1 };
+          saveState(done);
+          setState(done);
+          return;
+        }
+      }
+
+      // Resume active local session
+      if (local.active && steps.length > 0 && local.currentStep < steps.length) {
+        setState(local);
+        setPhase('running');
+      }
     }
+    hydrate();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [steps.length]);
 
-  // Persist on every state change
+  // Persist on every state change + schedule server push
   useEffect(() => {
     saveState(state);
-  }, [state]);
+    scheduleServerPush(state);
+  }, [state, scheduleServerPush]);
 
   // Listen for practice completion events (document steps only)
   useEffect(() => {
@@ -75,18 +141,13 @@ export function useTutorial(steps = []) {
         saveState(next);
         return next;
       });
-      // Don't change phase here — TutorialController handles page transition
     };
     window.addEventListener('document:entered', handler);
     return () => window.removeEventListener('document:entered', handler);
   }, [phase]);
 
-  // ─── Public actions ────────────────────────────────────────────────────────
+  // ─── Public actions ─────────────────────────────────────────────────────────
 
-  /**
-   * Called at session start.
-   * entryPoint: 'home' | 'document'
-   */
   const startTutorial = useCallback((entryPoint = 'document') => {
     const fresh = defaultState();
     fresh.active = true;
@@ -95,7 +156,6 @@ export function useTutorial(steps = []) {
     setPracticeCompleted(false);
     setShowSuccess(false);
     setPhase('welcome');
-    // Store entry point for beginFromWelcome to use
     startTutorial._entryPoint = entryPoint;
   }, []);
 
@@ -113,10 +173,6 @@ export function useTutorial(steps = []) {
     }
   }, [startTutorial]);
 
-  /**
-   * Called when navigating to a document page.
-   * If tutorial is in home-intro phase (homeStepSeen just became true), resume.
-   */
   const resumeOnDocumentPage = useCallback(() => {
     const s = loadState();
     if (s.active && s.homeStepSeen && s.currentStep < steps.length) {
@@ -132,6 +188,9 @@ export function useTutorial(steps = []) {
     setPhase('idle');
     setPracticeCompleted(false);
     setShowSuccess(false);
+    // Immediate server push on explicit skip/complete
+    pushServerTutorialState(done);
+    clearTimeout(pushTimerRef.current);
   }, []);
 
   const goNext = useCallback(() => {

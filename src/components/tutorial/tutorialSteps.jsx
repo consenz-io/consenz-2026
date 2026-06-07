@@ -2,13 +2,14 @@
  * TutorialStep interface:
  * {
  *   id: string,
- *   type: 'explain' | 'practice',
+ *   type: 'explain' | 'practice' | 'closing',
  *   targetSelector: string,
  *   tooltipPosition: 'top' | 'bottom' | 'left' | 'right' | 'auto',
  *   heading: string,           // i18n key
  *   body: string,              // i18n key (empty string = no body)
  *   successMessage?: string,   // i18n key
- *   completionEvent?: string
+ *   completionEvent?: string,
+ *   table?: Array<{label: string, value: string}>
  * }
  */
 
@@ -52,6 +53,7 @@ export const tutorialStrings = {
     'closing.heading': 'מוכנים לתרום',
     'closing.body': 'עכשיו אתם יודעים איך Consenz עובדת. כל הצעה שתגישו, כל הצבעה שתתנו — מעצבת את המסמך הזה יחד עם שאר הקהילה.',
     'closing.cta': 'בואו נתחיל',
+    'nav.restart': 'סיור בפלטפורמה',
   },
   ar: {
     'browse.explain.heading': 'لكل بند عدة نسخ',
@@ -92,6 +94,7 @@ export const tutorialStrings = {
     'closing.heading': 'أنتم مستعدون للمساهمة',
     'closing.body': 'الآن تعرفون كيف تعمل Consenz. كل مقترح تقدمونه، وكل تصويت تمنحونه — يُشكّل هذه الوثيقة مع بقية المجتمع.',
     'closing.cta': 'لنبدأ',
+    'nav.restart': 'جولة في المنصة',
   },
   en: {
     'browse.explain.heading': 'Each clause has multiple versions',
@@ -132,6 +135,7 @@ export const tutorialStrings = {
     'closing.heading': 'You\'re ready to contribute',
     'closing.body': 'Now you know how Consenz works. Every proposal you submit, every vote you cast — shapes this document together with the rest of the community.',
     'closing.cta': 'Let\'s go',
+    'nav.restart': 'Platform tour',
   },
 };
 
@@ -296,8 +300,8 @@ export const TUTORIAL_STEPS = [
     heading: 'points.explain.heading',
     body: 'points.explain.body',
     table: [
-      { label: 'points.explain.cost.edit',    value: '−200' },
-      { label: 'points.explain.cost.new',     value: '−350' },
+      { label: 'points.explain.cost.edit',       value: '−200' },
+      { label: 'points.explain.cost.new',        value: '−350' },
       { label: 'points.explain.reward.upvote',   value: '+10'  },
       { label: 'points.explain.reward.aligned',  value: '+50'  },
       { label: 'points.explain.reward.accepted', value: '+500' },
