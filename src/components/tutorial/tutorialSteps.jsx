@@ -340,7 +340,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'versions-counter-practice',
     type: 'practice',
-    targetSelector: '.document-counters button:has-text("versions")',
+    targetSelector: '.versions-counter',
     tooltipPosition: 'bottom',
     heading: 'versions.counter.heading',
     body: 'versions.counter.body',
