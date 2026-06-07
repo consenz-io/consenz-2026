@@ -87,6 +87,19 @@ export default function TutorialController() {
     return () => { delete window.restartTutorial; };
   }, [restartTutorial, location.pathname]);
 
+  // ── Skip missing target elements ────────────────────────────────────────────
+  useEffect(() => {
+    if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
+    const step = TUTORIAL_STEPS[currentStep];
+    if (!step || !step.targetSelector || step.type === 'closing') return;
+
+    const el = document.querySelector(step.targetSelector);
+    if (!el) {
+      // Target doesn't exist, auto-advance
+      goNext();
+    }
+  }, [phase, currentStep, goNext]);
+
   // ── Practice pulse on target ─────────────────────────────────────────────
   useEffect(() => {
     if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
