@@ -69,10 +69,22 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL }) {
     const el = document.querySelector(activeStep.targetSelector);
     if (!el) return;
     const radius = window.getComputedStyle(el).borderRadius || '8px';
+    
+    // Get the element's bounding rect to determine if we need to expand the spotlight
+    const rect = el.getBoundingClientRect();
+    let expandedHeight = rect.height;
+    
+    // If target contains a carousel, expand spotlight to include carousel content below
+    const carousel = el.querySelector('[role="region"]') || el.nextElementSibling;
+    if (carousel) {
+      const carouselRect = carousel.getBoundingClientRect();
+      expandedHeight = carouselRect.bottom - rect.top + 20; // +20px for padding
+    }
+    
     el.style.position = 'relative';
     el.style.zIndex = '10001';
     el.style.borderRadius = radius;
-    el.style.boxShadow = '0 0 0 6px rgba(59,130,246,0.4), 0 0 0 12px rgba(59,130,246,0.15)';
+    el.style.boxShadow = `0 0 0 6px rgba(59,130,246,0.4), 0 0 0 12px rgba(59,130,246,0.15), inset 0 0 0 ${expandedHeight}px rgba(59,130,246,0.05)`;
     el.style.transition = 'box-shadow 0.3s ease';
     return () => {
       el.style.position = '';
