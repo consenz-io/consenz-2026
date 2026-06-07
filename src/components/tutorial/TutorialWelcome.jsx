@@ -15,7 +15,7 @@ export default function TutorialWelcome({ onStart, onSkip, isRTL }) {
 
         {/* Headline — placeholder, content added later */}
         <h2 className="text-xl font-bold text-slate-900 text-center">
-          ברוכים הבאים ל-Consenz
+          ברוכים ל-Consenz
         </h2>
 
         {/* Body — placeholder */}
@@ -29,14 +29,14 @@ export default function TutorialWelcome({ onStart, onSkip, isRTL }) {
             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
             onClick={onStart}
           >
-            קבל סיור קצר
+            קבלו סיור קצר
           </Button>
           <Button
             variant="ghost"
             className="w-full text-slate-500"
             onClick={onSkip}
           >
-            אני מכיר, דלג
+            מכירים את המערכת? דלגו
           </Button>
         </div>
       </div>
