@@ -551,14 +551,16 @@ ${text}`;
 
   return (
     <div className="min-h-screen bg-white">
-      <VersionNavigation
-        currentIndex={currentVersionIndex}
-        totalVersions={totalVersionCount}
-        onNavigate={setCurrentVersionIndex}
-        currentSnapshot={currentSnapshot}
-        language={language}
-        isRTL={isRTL}
-      />
+      <div className="version-navigation-arrows">
+        <VersionNavigation
+          currentIndex={currentVersionIndex}
+          totalVersions={totalVersionCount}
+          onNavigate={setCurrentVersionIndex}
+          currentSnapshot={currentSnapshot}
+          language={language}
+          isRTL={isRTL}
+        />
+      </div>
       {/* Header - Hidden on print */}
       <div className="bg-slate-50 border-b border-slate-200 p-3 md:p-4 print:hidden sticky top-0 z-10">
         <div className="max-w-4xl mx-auto">
@@ -585,7 +587,7 @@ ${text}`;
         {/* Version Metadata */}
         {currentVersionIndex > 0 && currentSnapshot && (
           <div 
-            className={`mb-4 p-3 border rounded-lg text-xs text-slate-700 ${
+            className={`version-metadata mb-4 p-3 border rounded-lg text-xs text-slate-700 ${
               currentSnapshot.isDirectEdit
                 ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200'
                 : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'
@@ -776,7 +778,7 @@ ${text}`;
                                 {isDeletedSection ? (
                                  <div 
                                    id={`change-${section.id}`} 
-                                   className="border-l-4 border-red-500 pl-3 py-2 bg-red-50 rounded cursor-pointer hover:bg-red-100 transition-colors"
+                                   className="section-content-clickable border-l-4 border-red-500 pl-3 py-2 bg-red-50 rounded cursor-pointer hover:bg-red-100 transition-colors"
                                    onClick={() => openSectionDiscussion(section, currentSnapshot?.suggestionId)}
                                    >
                                     <Badge className="mb-2 bg-red-100 text-red-800 text-xs">
@@ -795,7 +797,7 @@ ${text}`;
                                 ) : isDirectlyEdited ? (
                                   <div
                                     id={`change-${section.id}`}
-                                    className="border-l-4 border-amber-500 pl-3 py-2 bg-amber-50 rounded cursor-pointer hover:bg-amber-100 transition-colors"
+                                    className="section-content-clickable border-l-4 border-amber-500 pl-3 py-2 bg-amber-50 rounded cursor-pointer hover:bg-amber-100 transition-colors"
                                     onClick={() => openSectionDiscussion(section, currentSnapshot?.suggestionId)}
                                   >
                                     <Badge className="mb-2 bg-amber-100 text-amber-800 text-xs">
@@ -809,7 +811,7 @@ ${text}`;
                                 ) : isViewingHistory && isNewlyCreatedSection ? (
                                   <div 
                                     id={`change-${section.id}`} 
-                                    className="bg-green-50 border-l-4 border-green-500 p-3 rounded cursor-pointer hover:bg-green-100 transition-colors"
+                                    className="section-content-clickable bg-green-50 border-l-4 border-green-500 p-3 rounded cursor-pointer hover:bg-green-100 transition-colors"
                                     onClick={() => openSectionDiscussion(section, currentSnapshot?.suggestionId)}
                                   >
                                     <Badge className="mb-2 bg-green-100 text-green-800 text-xs">
@@ -828,7 +830,7 @@ ${text}`;
                                 ) : isViewingHistory && hasChanged ? (
                                 <div 
                                   id={`change-${section.id}`} 
-                                  className={`border-l-4 border-amber-400 pl-3 py-2 bg-amber-50/30 rounded ${currentSnapshot?.suggestionId ? 'cursor-pointer hover:bg-amber-100/50 transition-colors' : ''}`}
+                                  className={`section-content-clickable border-l-4 border-amber-400 pl-3 py-2 bg-amber-50/30 rounded ${currentSnapshot?.suggestionId ? 'cursor-pointer hover:bg-amber-100/50 transition-colors' : ''}`}
                                   onClick={() => currentSnapshot?.suggestionId && setOpenSuggestionId(currentSnapshot.suggestionId)}
                                 >
                                   <div className="flex items-center mb-2">
@@ -845,7 +847,7 @@ ${text}`;
                                 ) : (
                                 <>
                                     <div 
-                                      className={`text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none cursor-pointer hover:bg-slate-50/50 p-2 rounded transition-colors ${openingSectionId === section.id ? 'opacity-60 pointer-events-none' : ''}`}
+                                      className={`section-content-clickable text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none cursor-pointer hover:bg-slate-50/50 p-2 rounded transition-colors ${openingSectionId === section.id ? 'opacity-60 pointer-events-none' : ''}`}
                                       onClick={() => openSectionDiscussion(section)}
                                       style={{ 
                                         fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
