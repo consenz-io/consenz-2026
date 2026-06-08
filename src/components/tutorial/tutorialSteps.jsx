@@ -358,7 +358,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'browse-explain',
     type: 'explain',
-    targetSelector: '.proposal-navigation-arrows',
+    targetSelector: '.section-card',
     tooltipPosition: 'bottom',
     heading: 'browse.explain.heading',
     body: 'browse.explain.body',
