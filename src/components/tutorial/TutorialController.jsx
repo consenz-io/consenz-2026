@@ -315,6 +315,15 @@ export default function TutorialController() {
         return;
       }
 
+      // For newclause-close-modal: close the modal when clicking Next
+      if (step.id === 'newclause-close-modal') {
+        // Dispatch event to close the modal
+        window.dispatchEvent(new CustomEvent('tutorial:closeModal'));
+        // Advance to next step
+        handleNext();
+        return;
+      }
+
       if (step.navigateOnNext) {
         // Close any open modal first
         window.dispatchEvent(new CustomEvent('tutorial:closeModal'));

@@ -1,68 +1,27 @@
-/**
- * TutorialStep interface:
- * {
- *   id: string,
- *   type: 'explain' | 'practice' | 'encourage' | 'closing',
- *   targetSelector: string,
- *   tooltipPosition: 'top' | 'bottom' | 'left' | 'right' | 'auto',
- *   heading: string,           // i18n key
- *   body: string,              // i18n key (empty string = no body)
- *   successMessage?: string,   // i18n key
- *   completionEvent?: string,
- *   table?: Array<{label: string, value: string}>
- * }
- * 
- * Note: 'encourage' type allows users to click "Next" without completing any action — 
- * it's a motivational tooltip that suggests optional interactions but doesn't block progression.
- */
+import React from 'react';
+import { useLanguage } from '@/components/LanguageContext';
 
+/**
+ * Tutorial i18n strings — organized by language and key.
+ * These are referenced by tutorial steps via their heading/body keys.
+ */
 export const tutorialStrings = {
   he: {
-    'home.groups.heading': 'קבוצה היא מרחב שיתוף פעולה',
-    'home.groups.body': 'חברי הקבוצה כותבים מסמכים ביחד, מציעים שינויים, ומצביעים על כל הצעה. לחצו על קבוצה כדי לראות את המסמכים שלה ולהתחיל להשתתף.',
+    'home.groups.heading': 'מה זה הקבוצה שלי?',
+    'home.groups.body': 'חברים בקבוצה כותבים מסמכים ביחד, מציעים שינויים, והקהילה מצביעה על כל הצעה. לחצו על קבוצה כדי לראות את המסמכים שלה ולהתחיל להשתתף.',
     'group.explain.heading': 'ברוכים הבאים לקבוצה',
-    'group.explain.body': 'קבוצה היא מרחב שיתוף פעולה — כאן מתנהלים דיונים, מוצעות שינויים ומתקבלות החלטות יחד. כל קבוצה מכילה מסמכים משותפים שהחברים בה כותבים ומעצבים ביחד.',
+    'group.explain.body': 'הקבוצה היא מרחב שיתוף — כאן מתנהלים דיונים, מוצעות שינויים, והחלטות מתקבלות ביחד. כל קבוצה מכילה מסמכים משותפים שחברים כותבים ומעצבים בשיתוף.',
     'group.docs.heading': 'מסמכי הקבוצה',
-    'group.docs.body': 'אלה המסמכים המשותפים של הקבוצה. לחצו על אחד מהם כדי להיכנס ולהתחיל להשתתף.',
-    'doc.title.heading': 'כותרת המסמך ותיאורו',
-    'doc.title.body': 'כאן מופיעים שם המסמך והרקע שלו — מה הוא עוסק בו ומה מטרתו. קראו אותו לפני שצוללים לסעיפים.',
-    'doc.counters.heading': 'נתוני המסמך במבט מהיר',
-    'doc.counters.body': 'הספרות האלה מראות כמה משתתפים פועלים במסמך, כמה תגובות נרשמו, מה רמת הקונצנזוס — וכמה גרסאות כבר התקבלו. אפשר ללחוץ על כל נתון כדי לקבל מידע נוסף: רשימת המשתתפים, הסבר על מד הקונצנזוס, וצפייה בגרסאות המסמך.',
+    'group.docs.body': 'אלה הם המסמכים המשותפים של הקבוצה. לחצו על אחד כדי להיכנס ולהתחיל להשתתף.',
+    'doc.title.heading': 'כותרת המסמך והתיאור שלו',
+    'doc.title.body': 'כאן מופיע שם המסמך והרקע שלו — מה הוא עוסק בו ומה הכוונה שלו. קראו אותם לפני שאתם צוללים לסעיפים.',
+    'doc.counters.heading': 'סטטיסטיקת המסמך בהצצה',
+    'doc.counters.body': 'המספרים הללו מראים כמה משתתפים פעילים במסמך, כמה הערות תויעדו, רמת קונסנזוס — וכמה גרסאות אושרו. אפשר ללחוץ על כל סטטיסטיקה כדי ללמוד עוד: לראות את רשימת המשתתפים, להבין את מד הקונסנזוס, או לדפדף בגרסאות המסמך.',
     'doc.sections.heading': 'סעיפי המסמך',
-    'doc.sections.body': 'המסמך מחולק לנושאים וסעיפים. כל סעיף מכיל תוכן שנוצר בשיתוף פעולה, ואפשר להציע לו שינויים.',
-    'doc.title.counter.heading': 'קראו את הכותרת והתיאור של המסמך',
-    'doc.title.counter.body': 'הכותרת מספרת לכם על מה המסמך. התיאור מוסבר את ההקשר ומה מטרת המסמך. זה עוזר להבין מה הקהילה בונה ביחד.',
-    'browse.explain.heading': 'לכל סעיף יש כמה גרסאות',
-    'browse.explain.body': 'חברי הקהילה מציעים שינויים לכל סעיף. החצים מאפשרים לעבור ביניהם ולראות מה כל אחד מציע.',
-    'browse.encourage.heading': 'בואו נדפדף בין הגרסאות',
-    'browse.encourage.body': 'כדי לראות אילו שינויים המשתתפים בדיון הציעו לעריכת הסעיף. לחצו על כפתורי הדפדוף בין הצעות עריכה לסעיף להמשך.',
-    'comment.counter.encourage.heading': 'ראו את התגובות הקיימות',
-    'comment.counter.encourage.body': 'לחצו על מספר התגובות כדי לראות מה אחרים אומרים. זו דרך טובה להבין את ההצעה עמוקות יותר.',
-    'section.hover.encourage.heading': 'ריחוף על סעיף כדי להציע שינוי',
-    'section.hover.encourage.body': 'כשתעמיד/י את העכבר על סעיף, יופיעו כפתורים שמאפשרים לך להציע עריכה או מחיקה.',
-    'new.section.hover.encourage.heading': 'ריחוף בין סעיפים להוסיף סעיף חדש',
-    'new.section.hover.encourage.body': 'כשתעמיד/י את העכבר בין שני סעיפים, יופיע כפתור להוספת סעיף חדש בתא הזה.',
-    'browse.practice.heading': 'כדי לדפדף בין הצעות העריכה השונות',
-    'browse.practice.success': 'טוב. ככה אפשר תמיד לראות מה הקהילה מציעה לכל חלק במסמך',
-    'vote.explain.heading': 'ההצבעה שלכם מעצבת את המסמך',
-    'vote.explain.body': 'כל קול קובע. הצבעה בעד מקרבת הצעה לאישור. הצבעה נגד מרחיקה אותה. ההצעה שתצבור מספיק תמיכה תיכנס למסמך.',
-    'vote.practice.heading': 'הצביעו על הצעה שמצאתם מעניינת',
-    'vote.practice.success': 'ההצבעה נרשמה ותשפיע על תוצאת ההצעה',
-    'comment.explain.heading': 'יש מה להוסיף?',
-    'comment.explain.body': 'תגובות עוזרות למציע להבין מה עובד ומה לא. זה המקום לשאול, להסביר, או לשכנע.',
-    'comment.practice.heading': 'כתבו תגובה קצרה על אחת ההצעות',
-    'comment.practice.success': 'התגובה פורסמה',
-    'newclause.explain.heading': 'חסר משהו במסמך?',
-    'newclause.explain.body': 'אפשר להציע סעיף חדש לגמרי — הכפתור מופיע בין הסעיפים. במחשב: העמידו את סמן העכבר בין שני סעיפים. במובייל: לחצו על המסך בין שני סעיפים.',
-    'newclause.modal.explain.heading': 'איך ממלאים את חלון הוספת הסעיף',
-    'newclause.modal.explain.body': 'החלון מכיל שלושה חלקים:\n\n• **נושא** — בחרו לאיזה נושא קיים ישתייך הסעיף, או צרו נושא חדש לגמרי.\n\n• **תוכן** — כתבו כאן את טקסט הסעיף עצמו — מה שתרצו שייכנס למסמך.\n\n• **הסבר** — הסבירו לקהילה למה הסעיף הזה חשוב ומה הוא מוסיף. זה עוזר לאחרים להצביע בצורה מושכלת.',
-    'newclause.hover.heading': 'העמידו את העכבר בין סעיפים כדי להוסיף סעיף חדש',
-    'newclause.hover.body': 'כשתעמידו את העכבר בין שני סעיפים, יופיע כפתור להוספת סעיף חדש. כפתור הארה זה יראה לכם את הכפתור גם ללא ריחוף.',
-    'newclause.button.heading': 'לחצו על כפתור "הוסף סעיף"',
-    'newclause.button.body': 'לחיצה על הכפתור תפתח חלון לכתיבת ההצעה החדשה שלכם.',
-    'newclause.modal.heading': 'ככה נראה חלון הצעת סעיף חדש',
-    'newclause.modal.body': 'כאן ממלאים את פרטי הסעיף החדש — תוכן, נושא, והסבר. לחצו "הבא" להמשך הסיור.',
-    'editclause.explain.heading': 'סעיפי המסמך — ואיך משנים אותם',
+    'doc.sections.body': 'המסמך מחולק לנושאים וסעיפים. כל סעיף מכיל תוכן שנוצר בשיתוף, ואתם יכולים להציע שינויים לו.',
+    'doc.title.counter.heading': 'קראו את כותרת המסמך והתיאור',
+    'doc.title.counter.body': 'הכותרת אומרת לכם על מה המסמך. התיאור מסביר את ההקשר וההכוונה. זה עוזר לכם להבין מה הקהילה בונה ביחד.',
+    'editclause.explain.heading': 'סעיפי מסמך — וכיצד לשנותם',
     'editclause.explain.body': 'המסמך מחולק לנושאים וסעיפים. לא מסכימים עם נוסח הסעיף? אפשר לפרסם הצעה לשינוי או למחיקת הסעיף. כל הצעה תועמד להצבעה, ואם תקבל מספיק תמיכה תתווסף אוטומטית למסמך.',
     'editclause.hover.heading': 'העמידו את העכבר על סעיף כדי לחשוף את כפתורי העריכה',
     'editclause.hover.body': 'ברגע שתעמידו את העכבר על סעיף, יופיעו כפתורים להצעת שינויים. כפתור הארה זה יראה לכם את הכפתורים גם ללא ריחוף, כדי שתהיו בטוחים איפה הם נמצאים.',
@@ -70,6 +29,10 @@ export const tutorialStrings = {
     'editclause.buttons.body': 'אלה הכפתורים להצעת עריכה או מחיקת הסעיף — הם מוצגים כשמעבירים את סמן העכבר מעל הסעיף, או בלחיצה על הסעיף במסך מגע.',
     'editclause.modal.heading': 'ככה נראה חלון הצעת שינוי',
     'editclause.modal.body': 'כאן ממלאים את השינוי המוצע ואת ההסבר עבור חברי הקהילה. לחצו "הבא" להמשך הסיור.',
+    'browse.explain.heading': 'לכל סעיף יש כמה גרסאות',
+    'browse.explain.body': 'חברים בקהילה מציעים שינויים לכל סעיף. השתמשו בחצים כדי לדפדף בין ההצעות וראו מה כל אחת מוצעת.',
+    'browse.encourage.heading': 'בואו נדפדף בין גרסאות',
+    'browse.encourage.body': 'כדי לראות איזה שינויים הציעו המשתתפים בדיון לעריכת הסעיף. לחצו על כפתורי הדפדוף בין הצעות העריכה כדי להמשיך.',
     'deleteclause.explain.heading': 'לא רוצים סעיף זה במסמך?',
     'deleteclause.explain.body': 'אפשר להציע למחוק סעיף קיים אם לדעתכם הוא לא רלוונטי או לא מדויק. הקהילה תצביע על הצעת המחיקה, כמו על כל שינוי אחר.',
     'consensus.meter.heading': 'מד הקונסנזוס מראה קרבה לאישור',
@@ -82,6 +45,28 @@ export const tutorialStrings = {
     'cleanview.diff.body': 'ירוק = תוכן שנוסף, אדום = תוכן שהוסר. כך תוכלו להבין בדיוק מה השתנה.',
     'cleanview.discussion.heading': 'פרטי הדיון על השינוי',
     'cleanview.discussion.body': 'לחצו לראות את הדיון המלא — הצעות, הצבעות, ותגובות שהובילו להחלטה הזאת.',
+    'vote.explain.heading': 'ההצבעה שלכם מעצבת את המסמך',
+    'vote.explain.body': 'כל הצבעה חשובה. הצבעה בעד הצעה מקרבת אותה לאישור. הצבעה נגדה מרחיקה אותה. הצעה שמקבלת מספיק תמיכה הופכת לחלק מהמסמך.',
+    'comment.explain.heading': 'יש לכם משהו להוסיף?',
+    'comment.explain.body': 'הערות עוזרות למחבר ההצעה להבין מה עובד ומה לא. זה המקום לשאול, להסביר, ולשכנע.',
+    'newclause.explain.heading': 'משהו חסר מהמסמך?',
+    'newclause.explain.body': 'אתם יכולים להציע סעיף חדש לגמרי — הכפתור מופיע בין סעיפים. בדסקטופ: העמידו את העכבר בין שני סעיפים. בנייד: לחצו על המסך בין שני סעיפים.',
+    'newclause.modal.explain.heading': 'כיצד למלא את טופס הסעיף החדש',
+    'newclause.modal.explain.body': 'הטופס יש שלושה חלקים:\n\n• **נושא** — בחרו איזה נושא קיים הסעיף ישייך, או צרו נושא חדש לגמרי.\n\n• **תוכן** — כתבו כאן את הטקסט של הסעיף עצמו — מה אתם רוצים להוסיף למסמך.\n\n• **הסבר** — הסבירו לקהילה למה הסעיף הזה חשוב ומה הוא מוסיף. זה עוזר לאחרים להצביע בהיכרות מלאה.',
+    'newclause.button.encourage.heading': 'הנה כפתור "הוסף סעיף"',
+    'newclause.button.encourage.body': 'העמידו את העכבר או לחצו על המסך מתחת לסעיף שאחריו אתם רוצים להוסיף סעיף חדש, ולחצו על הכפתור הזה.',
+    'newclause.select.topic.heading': 'בחרו איזה נושא יקבל את הסעיף החדש',
+    'newclause.select.topic.body': 'הסעיף החדש יתווסף לנושא שתבחרו. בחרו את הנושא המתאים ביותר מהרשימה.',
+    'newclause.content.heading': 'הזינו את תוכן הסעיף החדש',
+    'newclause.content.body': 'כתבו את הטקסט של הסעיף החדש שאתם מציעים.',
+    'newclause.content.success': 'מעולה! עכשיו אתם יכולים להוסיף הסבר.',
+    'newclause.explanation.heading': 'הוסיפו הסבר (אופציונלי)',
+    'newclause.explanation.body': 'הסבירו למה אתם חושבים שהסעיף הזה חשוב. זה יעזור לקהילה להבין את ההצעה שלכם.',
+    'newclause.submit.heading': 'שלחו את ההצעה שלכם',
+    'newclause.submit.body': 'לחצו על כפתור "שלח" כדי לפרסם את ההצעה שלכם. הקהילה תוכל להצביע עליה.',
+    'newclause.submit.success': 'תם הצעתך פרסומה. הקהילה יכולה כעת להצביע עליה',
+    'newclause.close.heading': 'אתם מוכנים להוסיף סעיפים',
+    'newclause.close.body': 'עכשיו אתם יודעים כיצד להציע סעיף חדש. לחצו הבא כדי לסגור חלון זה וחקרו עוד יותר.',
     'consensus.explain.heading': 'מתי הצעה מתקבלת?',
     'consensus.explain.body': 'לא מספיק רוב — צריך קונסנזוס. הצעה מתקבלת כשפער הקולות בעדה עובר את הרף. הרף מחושב מממוצע ההסכמה ההיסטורי של הקהילה: ככל שהחלטות קודמות התקבלו בהסכמה רחבה יותר — כך הרף לאישורים הבאים גבוה יותר. המסמך מחמיר עם עצמו ככל שהוא בשל יותר.',
     'versions.explain.heading': 'המסמך חי ומשתנה',
@@ -156,6 +141,8 @@ export const tutorialStrings = {
     'newclause.submit.heading': 'شارِكوا اقتراحكم',
     'newclause.submit.body': 'اضغطوا على زر "إرسال" لنشر اقتراحكم. سيتمكن المجتمع من التصويت عليه.',
     'newclause.submit.success': 'تم نشر المقترح. يمكن للمجتمع الآن التصويت عليه',
+    'newclause.close.heading': 'أنتم مستعدون لإضافة بنود',
+    'newclause.close.body': 'الآن تعرفون كيفية اقتراح بند جديد. انقروا "التالي" لإغلاق هذه النافذة واستكشفوا المزيد من الميزات.',
     'editclause.explain.heading': 'بنود الوثيقة — وكيفية تعديلها',
     'editclause.explain.body': 'الوثيقة مقسمة إلى مواضيع وبنود، وكل بند هو محتوى أُنشئ بشكل تعاوني. لا توافقون على صياغة موجودة؟ يمكنكم اقتراح إعادة صياغة أي بند — أو اقتراح حذفه كلياً. هذه التغييرات أيضاً تخضع للتصويت، وإذا وافق المجتمع — ستُدرج في الوثيقة.',
     'newclause.modal.heading': 'هكذا يبدو نافذة اقتراح بند جديد',
@@ -238,6 +225,8 @@ export const tutorialStrings = {
     'newclause.submit.heading': 'Submit your proposal',
     'newclause.submit.body': 'Click the "Submit" button to publish your proposal. The community will be able to vote on it.',
     'newclause.submit.success': 'Your proposal is live. The community can now vote on it',
+    'newclause.close.heading': 'You\'re ready to add sections',
+    'newclause.close.body': 'Now you know how to propose a new section. Click Next to close this window and explore more features.',
     'editclause.explain.heading': 'Document sections — and how to change them',
     'editclause.explain.body': 'The document is divided into topics and sections, each one collaboratively created content. Disagree with existing wording? You can propose rewording any clause — or propose deleting it entirely. These changes go through a vote too, and if the community agrees, they become part of the document.',
     'newclause.modal.heading': 'This is what the new section proposal window looks like',
@@ -405,7 +394,7 @@ export const TUTORIAL_STEPS = [
     body: 'newclause.explain.body',
   },
 
-  // 14. New section modal - explain the form fields
+  // 14. New section modal - explain the form
   {
     id: 'newclause-modal-explain',
     type: 'explain',
@@ -414,6 +403,16 @@ export const TUTORIAL_STEPS = [
     heading: 'newclause.modal.explain.heading',
     body: 'newclause.modal.explain.body',
     triggerEvent: 'modal:new-section-opened',
+  },
+
+  // 15. Close modal step
+  {
+    id: 'newclause-close-modal',
+    type: 'explain',
+    targetSelector: '.create-suggestion-modal',
+    tooltipPosition: 'left',
+    heading: 'newclause.close.heading',
+    body: 'newclause.close.body',
   },
   
   // Closing screen
