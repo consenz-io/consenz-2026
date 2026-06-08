@@ -261,15 +261,7 @@ export default function TutorialTooltip({
 
           {/* Footer */}
           <div className="flex items-center gap-2">
-            {isEncourage ? (
-              <Button
-                size="sm"
-                onClick={onNext}
-                className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
-              >
-                {isRTL ? 'הבנתי' : 'Got it'}
-              </Button>
-            ) : (
+            {false ? null : (
               <>
                 <Button
                   variant="ghost"

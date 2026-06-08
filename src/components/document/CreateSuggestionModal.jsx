@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import {
@@ -68,6 +68,13 @@ export default function CreateSuggestionModal({
   const queryClient = useQueryClient();
   const { t, isRTL, language } = useLanguage();
   const [error, setError] = useState(null);
+
+  // Close when tutorial requests it
+  useEffect(() => {
+    const handler = () => onClose();
+    document.addEventListener('tutorial:closeModal', handler);
+    return () => document.removeEventListener('tutorial:closeModal', handler);
+  }, [onClose]);
   const [isLoadingTranslation, setIsLoadingTranslation] = useState(false);
   const [showInsufficientPointsDialog, setShowInsufficientPointsDialog] = useState(false);
   const [showPointsConfirm, setShowPointsConfirm] = useState(false);

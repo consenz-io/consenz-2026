@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useEffect, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTutorial } from './useTutorial';
 import { TUTORIAL_STEPS, HOME_INTRO_STEP, GROUP_INTRO_STEP, GROUP_EXPLAIN_STEP } from './tutorialSteps';
 import TutorialWelcome from './TutorialWelcome';
@@ -24,6 +24,7 @@ function isGroupPage(pathname) {
 export default function TutorialController() {
   const { isRTL, language } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const {
     phase,
@@ -236,13 +237,22 @@ export default function TutorialController() {
 
     const overlaySelector = step.targetSelector;
 
+    const handleNext = () => {
+      if (step.navigateOnNext) {
+        // Close any open modal first
+        document.dispatchEvent(new CustomEvent('tutorial:closeModal'));
+        navigate(`/${step.navigateOnNext}`);
+      }
+      goNext();
+    };
+
     return (
       <TutorialOverlay targetSelector={overlaySelector}>
         <TutorialTooltip
           step={step}
           stepIndex={currentStep}
           totalSteps={TUTORIAL_STEPS.length}
-          onNext={goNext}
+          onNext={handleNext}
           onBack={goBack}
           onSkip={skipTutorial}
           practiceCompleted={practiceCompleted}
