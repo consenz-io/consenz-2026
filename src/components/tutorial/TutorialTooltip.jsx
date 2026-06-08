@@ -279,6 +279,20 @@ export default function TutorialTooltip({
             ))}
           </div>
 
+          {/* Learn More Link */}
+          {step.learnMoreLink && (
+            <div className="mb-3">
+              <a
+                href={step.learnMoreLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-600 hover:text-blue-700 underline"
+              >
+                {isRTL ? 'למד עוד על חישוב הרף' : 'Learn more about threshold calculation'}
+              </a>
+            </div>
+          )}
+
           {/* Footer */}
           <div className="flex items-center gap-2">
             {false ? null : (
