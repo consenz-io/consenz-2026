@@ -241,12 +241,16 @@ export function useTutorial(steps = []) {
     if (step.type === 'practice' && !practiceCompleted) return;
 
     if (step.type === 'practice' && practiceCompleted && !showSuccess) {
+      const stepAtClick = state.currentStep;
       setShowSuccess(true);
       setTimeout(() => {
         setShowSuccess(false);
         setPracticeCompleted(false);
         setShowSignupPrompt(false);
         setState(prev => {
+          // Only advance if we're still on the same step — prevents double-advance
+          // if the user clicked Next manually while the success animation was running.
+          if (prev.currentStep !== stepAtClick) return prev;
           const nextIdx = prev.currentStep + 1;
           if (nextIdx >= steps.length) {
             const done = { ...prev, active: false, currentStep: nextIdx, completedSteps: [...prev.completedSteps, prev.currentStep] };
