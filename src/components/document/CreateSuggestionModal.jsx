@@ -566,8 +566,8 @@ export default function CreateSuggestionModal({
           )}
 
           {isNewSection && (
-            <div className="space-y-2">
-              <Label htmlFor="topic">{t('topic')}</Label>
+            <div className="space-y-2" id="topic">
+              <Label htmlFor="topic-select">{t('topic')}</Label>
               <div className="flex items-center gap-2 mb-2">
                 <input
                   type="checkbox"
@@ -582,6 +582,7 @@ export default function CreateSuggestionModal({
               </div>
               {isCreatingNewTopic ? (
                 <Input
+                  id="topic-select"
                   value={newTopicName}
                   onChange={(e) => setNewTopicName(e.target.value)}
                   placeholder={t('enterNewTopicName')}
@@ -593,6 +594,7 @@ export default function CreateSuggestionModal({
                   onValueChange={(value) => setFormData({ ...formData, topicId: value })}
                 >
                   <SelectTrigger 
+                    id="topic-select"
                     className={isRTL ? "text-right" : "text-left"}
                     dir={isRTL ? "rtl" : "ltr"}
                     style={{ textAlign: isRTL ? 'right' : 'left' }}

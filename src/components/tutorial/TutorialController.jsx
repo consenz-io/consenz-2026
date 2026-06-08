@@ -324,9 +324,9 @@ export default function TutorialController() {
       handleNext();
     };
 
-    // Modal-based steps (e.g., newclause-modal-explain inside CreateSuggestionModal)
-    // don't use TutorialOverlay — the modal provides its own backdrop
-    const isModalStep = step.id.includes('modal');
+    // Modal-based steps inside CreateSuggestionModal don't use TutorialOverlay
+    // The modal provides its own backdrop and we render tooltip directly
+    const isModalStep = step.id.includes('topic-explain') || step.id.includes('content-explain') || step.id.includes('explanation-explain');
 
     return isModalStep ? (
       <TutorialTooltip
