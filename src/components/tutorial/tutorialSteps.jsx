@@ -405,15 +405,35 @@ export const TUTORIAL_STEPS = [
     body: 'newclause.explain.body',
   },
 
-  // 14. New section modal - explain the form fields
+  // 14. New section modal - explain topic selection
   {
-    id: 'newclause-modal-explain',
+    id: 'newclause-topic-explain',
     type: 'explain',
-    targetSelector: '.create-suggestion-modal',
+    targetSelector: '#topic',
     tooltipPosition: 'left',
-    heading: 'newclause.modal.explain.heading',
-    body: 'newclause.modal.explain.body',
+    heading: 'newclause.select.topic.heading',
+    body: 'newclause.select.topic.body',
     triggerEvent: 'modal:new-section-opened',
+  },
+
+  // 15. New section modal - explain content field
+  {
+    id: 'newclause-content-explain',
+    type: 'explain',
+    targetSelector: '#content',
+    tooltipPosition: 'left',
+    heading: 'newclause.content.heading',
+    body: 'newclause.content.body',
+  },
+
+  // 16. New section modal - explain explanation field
+  {
+    id: 'newclause-explanation-explain',
+    type: 'explain',
+    targetSelector: '#explanation',
+    tooltipPosition: 'left',
+    heading: 'newclause.explanation.heading',
+    body: 'newclause.explanation.body',
   },
   
   // Closing screen

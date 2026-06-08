@@ -171,10 +171,11 @@ export default function TutorialController() {
     };
   }, [phase, currentStep]);
 
-  // ── Handle modal:new-section-opened → advance to newclause-modal-explain ────
+  // ── Handle modal:new-section-opened → advance to newclause-topic-explain ────
   useEffect(() => {
     if (phase !== 'running') return;
     const newclauseExplainIndex = TUTORIAL_STEPS.findIndex(s => s.id === 'newclause-explain');
+    const newclauseTopicIndex = TUTORIAL_STEPS.findIndex(s => s.id === 'newclause-topic-explain');
     const handler = () => {
       // Only auto-advance if we're currently on newclause-explain
       if (currentStep === newclauseExplainIndex) {
