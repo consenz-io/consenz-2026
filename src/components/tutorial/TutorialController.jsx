@@ -98,6 +98,9 @@ export default function TutorialController() {
     const timer = setTimeout(() => {
       const el = document.querySelector(step.targetSelector);
       if (!el) {
+        // For editclause-buttons: buttons are hidden (opacity-0) so selector won't find them;
+        // use .section-card as the spotlight target instead of skipping
+        if (step.id === 'editclause-buttons') return;
         goNext();
       }
     }, 600);
@@ -116,6 +119,38 @@ export default function TutorialController() {
 
     el.style.animation = 'tutorial-pulse-ring 1.5s ease-out infinite';
     return () => { el.style.animation = ''; };
+  }, [phase, currentStep]);
+
+  // ── Handle editclause-buttons: force-show edit/delete buttons on section card ──
+  useEffect(() => {
+    if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
+    const step = TUTORIAL_STEPS[currentStep];
+    if (!step || step.id !== 'editclause-buttons') return;
+
+    const sectionCard = document.querySelector('.section-card');
+    if (!sectionCard) return;
+
+    // Add CSS class to section-card that forces hover state via CSS
+    sectionCard.classList.add('tutorial-force-hover');
+
+    // Also inline-override any opacity-0 elements inside the card
+    const styleOverrides = [];
+    sectionCard.querySelectorAll('*').forEach(el => {
+      const classList = el.className || '';
+      if (typeof classList === 'string' && classList.includes('opacity-0')) {
+        styleOverrides.push({ el, original: el.style.opacity, originalTransition: el.style.transition });
+        el.style.opacity = '1';
+        el.style.transition = 'none';
+      }
+    });
+
+    return () => {
+      sectionCard.classList.remove('tutorial-force-hover');
+      styleOverrides.forEach(({ el, original, originalTransition }) => {
+        el.style.opacity = original;
+        el.style.transition = originalTransition;
+      });
+    };
   }, [phase, currentStep]);
 
   // ── Handle editclause-hover: reset carousel and show edit buttons ──────────
@@ -204,8 +239,13 @@ export default function TutorialController() {
       );
     }
 
+    // For editclause-buttons: buttons are hidden so use .section-card as spotlight target
+    const overlaySelector = (step.id === 'editclause-buttons' && !document.querySelector(step.targetSelector))
+      ? '.section-card'
+      : step.targetSelector;
+
     return (
-      <TutorialOverlay targetSelector={step.targetSelector}>
+      <TutorialOverlay targetSelector={overlaySelector}>
         <TutorialTooltip
           step={step}
           stepIndex={currentStep}

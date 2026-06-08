@@ -65,7 +65,7 @@ export const tutorialStrings = {
     'editclause.hover.heading': 'העמידו את העכבר על סעיף כדי לחשוף את כפתורי העריכה',
     'editclause.hover.body': 'ברגע שתעמידו את העכבר על סעיף, יופיעו כפתורים להצעת שינויים. כפתור הארה זה יראה לכם את הכפתורים גם ללא ריחוף, כדי שתהיו בטוחים איפה הם נמצאים.',
     'editclause.buttons.heading': 'כפתורי הצעת עריכה ומחיקה',
-    'editclause.buttons.body': 'כאן תוכלו להציע עריכה לסעיף או מחיקה שלו. הקהילה תצביע על ההצעה שלכם.',
+    'editclause.buttons.body': 'אלה הכפתורים להצעת עריכה או מחיקת הסעיף — הם מוצגים כשמעבירים את סמן העכבר מעל הסעיף, או בלחיצה על הסעיף במסך מגע.',
     'editclause.modal.heading': 'חלון הצעת השינוי נפתח',
     'editclause.modal.body': 'כאן תזינו את השינוי המוצע ואת ההסבר עבור חברי הקהילה. כשהבנתם כיצד מתחילים, אפשר לסגור את החלון ולהמשיך בסיור.',
     'deleteclause.explain.heading': 'לא רוצים סעיף זה במסמך?',
@@ -154,6 +154,8 @@ export const tutorialStrings = {
     'newclause.submit.success': 'تم نشر المقترح. يمكن للمجتمع الآن التصويت عليه',
     'editclause.explain.heading': 'بنود الوثيقة — وكيفية تعديلها',
     'editclause.explain.body': 'الوثيقة مقسمة إلى مواضيع وبنود، وكل بند هو محتوى أُنشئ بشكل تعاوني. لا توافقون على صياغة موجودة؟ يمكنكم اقتراح إعادة صياغة أي بند — أو اقتراح حذفه كلياً. هذه التغييرات أيضاً تخضع للتصويت، وإذا وافق المجتمع — ستُدرج في الوثيقة.',
+    'editclause.buttons.heading': 'أزرار اقتراح التعديل والحذف',
+    'editclause.buttons.body': 'هذه هي الأزرار لاقتراح تعديل البند أو حذفه — تظهر عند تمرير مؤشر الماوس فوق البند، أو عند الضغط على البند في شاشات اللمس.',
     'editclause.practice.heading': 'اختاروا بنداً موجوداً واقترحوا له صياغة مختلفة',
     'editclause.practice.success': 'تم نشر مقترح التعديل',
     'consensus.explain.heading': 'متى يُقبل المقترح؟',
@@ -230,6 +232,8 @@ export const tutorialStrings = {
     'newclause.submit.success': 'Your proposal is live. The community can now vote on it',
     'editclause.explain.heading': 'Document sections — and how to change them',
     'editclause.explain.body': 'The document is divided into topics and sections, each one collaboratively created content. Disagree with existing wording? You can propose rewording any clause — or propose deleting it entirely. These changes go through a vote too, and if the community agrees, they become part of the document.',
+    'editclause.buttons.heading': 'Edit and delete proposal buttons',
+    'editclause.buttons.body': 'These are the buttons to propose an edit or deletion for a section — they appear when you hover your mouse over the section, or when you tap the section on a touch screen.',
     'editclause.practice.heading': 'Pick an existing clause and propose different wording',
     'editclause.practice.success': 'Your change proposal is live',
     'consensus.explain.heading': 'When does a proposal get accepted?',
@@ -339,14 +343,15 @@ export const TUTORIAL_STEPS = [
     body: 'editclause.explain.body',
   },
   
-  // 3.5. Edit buttons explanation
+  // 3.5. Edit buttons explanation — spotlight on the actual action buttons
   {
     id: 'editclause-buttons',
     type: 'explain',
-    targetSelector: '.section-card',
+    targetSelector: '.section-card-actions, [data-testid="section-actions"], .section-actions',
     tooltipPosition: 'bottom',
     heading: 'editclause.buttons.heading',
     body: 'editclause.buttons.body',
+    forceRevealTarget: true,
   },
   
   // 5. Browsing proposals (viewing versions)
