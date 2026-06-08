@@ -93,11 +93,16 @@ export default function TutorialController() {
     const step = TUTORIAL_STEPS[currentStep];
     if (!step || !step.targetSelector || step.type === 'closing') return;
 
-    const el = document.querySelector(step.targetSelector);
-    if (!el) {
-      // Target doesn't exist, auto-advance
-      goNext();
-    }
+    // Wait for DOM to settle before checking — prevents skipping valid steps
+    // that haven't rendered yet (e.g. on initial document page load)
+    const timer = setTimeout(() => {
+      const el = document.querySelector(step.targetSelector);
+      if (!el) {
+        goNext();
+      }
+    }, 600);
+
+    return () => clearTimeout(timer);
   }, [phase, currentStep, goNext]);
 
   // ── Practice pulse on target ─────────────────────────────────────────────
