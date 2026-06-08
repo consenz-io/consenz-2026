@@ -171,20 +171,6 @@ export default function TutorialController() {
     };
   }, [phase, currentStep]);
 
-  // ── Handle modal:new-section-opened → advance to newclause-modal-explain ────
-  useEffect(() => {
-    if (phase !== 'running') return;
-    const newclauseExplainIndex = TUTORIAL_STEPS.findIndex(s => s.id === 'newclause-explain');
-    const handler = () => {
-      // Only auto-advance if we're currently on newclause-explain
-      if (currentStep === newclauseExplainIndex) {
-        goNext();
-      }
-    };
-    window.addEventListener('modal:new-section-opened', handler);
-    return () => window.removeEventListener('modal:new-section-opened', handler);
-  }, [phase, currentStep, goNext]);
-
   // ── Handle newclause-explain: force-show the insert-section button ──────────
   useEffect(() => {
     if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
@@ -298,32 +284,6 @@ export default function TutorialController() {
     const overlaySelector = step.targetSelector;
 
     const handleNextStep = () => {
-      // For newclause-explain: clicking Next should open the insert-section modal
-      // instead of advancing manually — the modal:new-section-opened event will advance the step
-      if (step.id === 'newclause-explain') {
-        // Find the actual Button element inside the section-insert-space
-        const insertSpace = document.querySelector('.section-insert-space');
-        if (insertSpace) {
-          const btn = insertSpace.querySelector('button');
-          if (btn) {
-            btn.click();
-            return; // don't call goNext — wait for modal:new-section-opened event
-          }
-        }
-        // Fallback: dispatch event directly to trigger modal open
-        window.dispatchEvent(new CustomEvent('tutorial:openNewSectionModal'));
-        return;
-      }
-
-      // For newclause-close-modal: close the modal when clicking Next
-      if (step.id === 'newclause-close-modal') {
-        // Dispatch event to close the modal
-        window.dispatchEvent(new CustomEvent('tutorial:closeModal'));
-        // Advance to next step
-        handleNext();
-        return;
-      }
-
       if (step.navigateOnNext) {
         // Close any open modal first
         window.dispatchEvent(new CustomEvent('tutorial:closeModal'));
@@ -332,25 +292,7 @@ export default function TutorialController() {
       handleNext();
     };
 
-    // Modal-based steps (e.g., newclause-modal-explain inside CreateSuggestionModal)
-    // don't use TutorialOverlay — the modal provides its own backdrop
-    const isModalStep = step.id.includes('modal');
-
-    return isModalStep ? (
-      <TutorialTooltip
-        step={step}
-        stepIndex={currentStep}
-        totalSteps={TUTORIAL_STEPS.length}
-        onNext={handleNextStep}
-        onBack={handleBack}
-        onSkip={skipTutorial}
-        practiceCompleted={practiceCompleted}
-        showSuccess={showSuccess}
-        showSignupPrompt={showSignupPrompt}
-        isAuthenticated={isAuthenticated}
-        isRTL={isRTL}
-      />
-    ) : (
+    return (
       <TutorialOverlay targetSelector={overlaySelector}>
         <TutorialTooltip
           step={step}

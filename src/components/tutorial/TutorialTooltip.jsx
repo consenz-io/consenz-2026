@@ -6,27 +6,6 @@ import { useLanguage } from '@/components/LanguageContext';
 import { base44 } from '@/api/base44Client';
 
 const TOOLTIP_WIDTH = 320;
-
-// Render body text with basic markdown: **bold** and \n\n paragraph breaks
-function RichBody({ text }) {
-  if (!text) return null;
-  const paragraphs = text.split(/\n\n/);
-  return (
-    <div className="text-sm text-slate-600 mb-3 leading-relaxed space-y-1.5">
-      {paragraphs.map((para, i) => {
-        // Split on **bold** markers
-        const parts = para.split(/\*\*(.+?)\*\*/g);
-        return (
-          <p key={i}>
-            {parts.map((part, j) =>
-              j % 2 === 1 ? <strong key={j}>{part}</strong> : part
-            )}
-          </p>
-        );
-      })}
-    </div>
-  );
-}
 const TOOLTIP_HEIGHT = 200; // estimate for positioning
 const ARROW_SIZE = 10;
 
@@ -242,7 +221,7 @@ export default function TutorialTooltip({
           <h3 className="font-bold text-slate-900 text-base mb-1">{heading}</h3>
 
           {/* Body */}
-          {body && <RichBody text={body} />}
+          {body && <p className="text-sm text-slate-600 mb-3 leading-relaxed">{body}</p>}
 
           {/* Points table */}
           {step.table && step.table.length > 0 && (

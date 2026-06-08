@@ -75,7 +75,6 @@ export default function CreateSuggestionModal({
     window.addEventListener('tutorial:closeModal', handler);
     return () => window.removeEventListener('tutorial:closeModal', handler);
   }, [onClose]);
-
   const [isLoadingTranslation, setIsLoadingTranslation] = useState(false);
   const [showInsufficientPointsDialog, setShowInsufficientPointsDialog] = useState(false);
   const [showPointsConfirm, setShowPointsConfirm] = useState(false);
@@ -90,13 +89,6 @@ export default function CreateSuggestionModal({
   
   const isNewSection = editingSection?.isNew;
   const isEditingSuggestion = !!editingSuggestion;
-
-  // Notify tutorial when a new-section modal opens
-  useEffect(() => {
-    if (isNewSection) {
-      window.dispatchEvent(new CustomEvent('modal:new-section-opened'));
-    }
-  }, [isNewSection]);
   const isDirectEdit = editingSection?.isDirectEdit || false;
   const isDeleteSection = isDeletingSuggestion || false;
   const existingSection = !isNewSection && !isEditingSuggestion ? sections.find(s => s.id === editingSection?.id) : null;
@@ -503,7 +495,7 @@ export default function CreateSuggestionModal({
       />
       
       <Dialog open onOpenChange={onClose}>
-        <DialogContent className="create-suggestion-modal max-w-2xl max-h-[90vh] overflow-y-auto" aria-labelledby="suggestion-modal-title" aria-describedby="suggestion-modal-description">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-labelledby="suggestion-modal-title" aria-describedby="suggestion-modal-description">
         <DialogHeader className={isRTL ? "text-start" : "text-start"}>
           <DialogTitle id="suggestion-modal-title" className="text-start">
             {isDeleteSection 
