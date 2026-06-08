@@ -298,6 +298,16 @@ export default function TutorialController() {
     const overlaySelector = step.targetSelector;
 
     const handleNextStep = () => {
+      // For newclause-explain: clicking Next should open the insert-section modal
+      // instead of advancing manually — the modal:new-section-opened event will advance the step
+      if (step.id === 'newclause-explain') {
+        const insertBtn = document.querySelector('.section-insert-space .tutorial-force-insert-btn');
+        if (insertBtn) {
+          insertBtn.click();
+          return; // don't call goNext — wait for modal:new-section-opened event
+        }
+      }
+
       if (step.navigateOnNext) {
         // Close any open modal first
         window.dispatchEvent(new CustomEvent('tutorial:closeModal'));
