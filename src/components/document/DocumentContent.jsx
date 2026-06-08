@@ -271,6 +271,22 @@ export default function DocumentContent({
     }));
   }, []);
 
+  // Tutorial: open new-section modal when TutorialController requests it
+  React.useEffect(() => {
+    const handler = () => {
+      if (!user) return;
+      if (!canParticipate) return;
+      const firstTopic = topics[0];
+      const firstSection = firstTopic ? (sectionsByTopicId.get(firstTopic.id) || [])[0] : null;
+      if (firstTopic) {
+        const insertPos = firstSection ? firstSection.order + 1 : 0;
+        onNewSection(firstTopic.id, insertPos);
+      }
+    };
+    window.addEventListener('tutorial:openNewSectionModal', handler);
+    return () => window.removeEventListener('tutorial:openNewSectionModal', handler);
+  }, [topics, sectionsByTopicId, onNewSection, user, canParticipate]);
+
   const translateTopicMutation = useMutation({
     mutationFn: async (topic) => {
       const languagePrompts = { en: "English", he: "Hebrew", ar: "Arabic" };

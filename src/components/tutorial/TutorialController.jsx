@@ -301,11 +301,18 @@ export default function TutorialController() {
       // For newclause-explain: clicking Next should open the insert-section modal
       // instead of advancing manually — the modal:new-section-opened event will advance the step
       if (step.id === 'newclause-explain') {
-        const insertBtn = document.querySelector('.section-insert-space .tutorial-force-insert-btn');
-        if (insertBtn) {
-          insertBtn.click();
-          return; // don't call goNext — wait for modal:new-section-opened event
+        // Find the actual Button element inside the section-insert-space
+        const insertSpace = document.querySelector('.section-insert-space');
+        if (insertSpace) {
+          const btn = insertSpace.querySelector('button');
+          if (btn) {
+            btn.click();
+            return; // don't call goNext — wait for modal:new-section-opened event
+          }
         }
+        // Fallback: dispatch event directly to trigger modal open
+        window.dispatchEvent(new CustomEvent('tutorial:openNewSectionModal'));
+        return;
       }
 
       if (step.navigateOnNext) {
