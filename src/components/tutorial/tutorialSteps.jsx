@@ -444,18 +444,6 @@ export const TUTORIAL_STEPS = [
     completionEvent: 'create-suggestion-modal:opened',
   },
   
-  // 16. New section - modal opening
-  {
-    id: 'newclause-modal',
-    type: 'encourage',
-    requiresAuth: true,
-    targetSelector: '.create-suggestion-modal',
-    tooltipPosition: 'bottom',
-    heading: 'newclause.modal.heading',
-    body: 'newclause.modal.body',
-    navigateOnNext: 'DocumentCleanView',
-  },
-  
   // 17. Consensus meter explanation
   {
     id: 'consensus-meter-explain',
