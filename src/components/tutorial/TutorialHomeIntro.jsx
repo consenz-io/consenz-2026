@@ -43,7 +43,8 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL }) {
       const centerX = rect.left + rect.width / 2;
       setTooltipStyle({
         left: Math.max(8, Math.min(window.innerWidth - TOOLTIP_WIDTH - 8, centerX - TOOLTIP_WIDTH / 2)),
-        top: rect.bottom + ARROW_SIZE + 12,
+        top: rect.top - ARROW_SIZE - 12,
+        transform: 'translateY(-100%)',
       });
     }
     update();
@@ -122,14 +123,14 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL }) {
           <X className="w-4 h-4" />
         </button>
 
-        {/* Arrow pointing up */}
+        {/* Arrow pointing down */}
         <div
           className="absolute w-0 h-0"
           style={{
             borderLeft: '10px solid transparent',
             borderRight: '10px solid transparent',
-            borderBottom: '10px solid white',
-            top: -10,
+            borderTop: '10px solid white',
+            bottom: -10,
             left: '50%',
             transform: 'translateX(-50%)',
           }}
