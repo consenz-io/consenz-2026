@@ -347,7 +347,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'editclause-buttons',
     type: 'explain',
-    targetSelector: '.section-card-actions, [data-testid="section-actions"], .section-actions',
+    targetSelector: '.section-action-buttons',
     tooltipPosition: 'bottom',
     heading: 'editclause.buttons.heading',
     body: 'editclause.buttons.body',

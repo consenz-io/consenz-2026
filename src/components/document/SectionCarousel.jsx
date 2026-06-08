@@ -755,7 +755,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
 
       {/* כפתורים מרכזיים - ערוך/תגובה בתצוגה נוכחית */}
       {isFirstView && !historyMode && (
-        <div className={`flex flex-wrap gap-1 mt-4 pt-4 border-t border-slate-200 ${isRTL ? 'justify-end' : 'justify-start'}`}>
+        <div className={`section-action-buttons flex flex-wrap gap-1 mt-4 pt-4 border-t border-slate-200 ${isRTL ? 'justify-end' : 'justify-start'}`}>
           <Button
             variant="ghost"
             size="sm"

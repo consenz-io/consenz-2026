@@ -167,16 +167,9 @@ button:focus-visible {
   animation: suggestion-accepted-flash 0.9s ease-in-out 3;
 }
 
-/* Tutorial: force hover state on section cards to reveal edit/delete buttons */
-.tutorial-force-hover .group-hover\:opacity-100 {
+/* Tutorial: force-show action buttons inside .section-action-buttons during tutorial step */
+.section-action-buttons.tutorial-force-hover .opacity-0,
+.tutorial-force-hover .section-action-buttons .opacity-0 {
   opacity: 1 !important;
-}
-.tutorial-force-hover [class*="group-hover:opacity-100"] {
-  opacity: 1 !important;
-}
-.tutorial-force-hover [class*="group-hover:flex"] {
-  display: flex !important;
-}
-.tutorial-force-hover [class*="group-hover:block"] {
-  display: block !important;
+  transition: none !important;
 }
