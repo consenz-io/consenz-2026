@@ -407,18 +407,6 @@ export const TUTORIAL_STEPS = [
     completionEvent: 'comment:submitted',
   },
   
-  // 11. Edit - modal opening
-  {
-    id: 'editclause-modal',
-    type: 'encourage',
-    requiresAuth: true,
-    targetSelector: '.create-suggestion-modal',
-    tooltipPosition: 'bottom',
-    heading: 'editclause.modal.heading',
-    body: 'editclause.modal.body',
-    completionEvent: 'create-suggestion-modal:opened',
-  },
-  
   // 13. New section - explain concept
   {
     id: 'newclause-explain',
