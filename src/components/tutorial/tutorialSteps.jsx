@@ -95,8 +95,6 @@ export const tutorialStrings = {
     'points.explain.reward.upvote': 'כל הצבעת בעד על ההצעה',
     'points.explain.reward.aligned': 'הצבעה בכיוון הקהילה',
     'points.explain.reward.accepted': 'הצעה שהתקבלה',
-    'consensus.counter.explain.heading': 'רף התומכים ומד הקונסנזוס',
-    'consensus.counter.explain.body': 'להרחבה על חישוב רף התומכים הדרוש ומד הקונסנזוס — לחצו כאן.',
     'closing.heading': 'מוכנים לתרום',
     'closing.body': 'עכשיו אתם יודעים איך Consenz עובדת. כל הצעה שתגישו, כל הצבעה שתתנו — מעצבת את המסמך הזה יחד עם שאר הקהילה.',
     'closing.cta': 'בואו נתחיל',
@@ -177,8 +175,6 @@ export const tutorialStrings = {
     'points.explain.reward.upvote': 'كل تصويت لصالح مقترحكم',
     'points.explain.reward.aligned': 'التصويت في اتجاه المجتمع',
     'points.explain.reward.accepted': 'مقترح تم قبوله',
-    'consensus.counter.explain.heading': 'عتبة الدعم ومقياس التوافق',
-    'consensus.counter.explain.body': 'للتوسع في كيفية حساب عتبة الدعم المطلوبة ومقياس التوافق — اضغطوا هنا.',
     'closing.heading': 'أنتم مستعدون للمساهمة',
     'closing.body': 'الآن تعرفون كيف تعمل Consenz. كل مقترح تقدمونه، وكل تصويت تمنحونه — يُشكّل هذه الوثيقة مع بقية المجتمع.',
     'closing.cta': 'لنبدأ',
@@ -259,8 +255,6 @@ export const tutorialStrings = {
     'points.explain.reward.upvote': 'Each upvote on your proposal',
     'points.explain.reward.aligned': 'Voting in line with the community',
     'points.explain.reward.accepted': 'Proposal accepted',
-    'consensus.counter.explain.heading': 'Support threshold & consensus meter',
-    'consensus.counter.explain.body': 'To learn more about how the required support threshold and consensus meter are calculated — click here.',
     'closing.heading': 'You\'re ready to contribute',
     'closing.body': 'Now you know how Consenz works. Every proposal you submit, every vote you cast — shapes this document together with the rest of the community.',
     'closing.cta': 'Let\'s go',
@@ -403,16 +397,6 @@ export const TUTORIAL_STEPS = [
     tooltipPosition: 'bottom',
     heading: 'newclause.explain.heading',
     body: 'newclause.explain.body',
-  },
-
-  // 14. Consensus counter — link to UnderstandingConsensus page
-  {
-    id: 'consensus-counter-explain',
-    type: 'explain',
-    targetSelector: '.consensus-meter',
-    tooltipPosition: 'bottom',
-    heading: 'consensus.counter.explain.heading',
-    body: 'consensus.counter.explain.body',
   },
   
   // Closing screen
