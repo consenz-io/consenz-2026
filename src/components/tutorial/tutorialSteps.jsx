@@ -329,17 +329,7 @@ export const TUTORIAL_STEPS = [
     body: 'doc.counters.body',
   },
   
-  // 3. Document structure
-  {
-    id: 'doc-sections-explain',
-    type: 'explain',
-    targetSelector: '.document-sections-area',
-    tooltipPosition: 'top',
-    heading: 'doc.sections.heading',
-    body: 'doc.sections.body',
-  },
-  
-  // 4. Proposal editing - explain concept
+  // 3. Proposal editing - explain concept
   {
     id: 'editproposal-explain',
     type: 'explain',
