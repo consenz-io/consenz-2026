@@ -284,7 +284,7 @@ export const GROUP_EXPLAIN_STEP = {
   id: 'group-explain',
   type: 'explain',
   targetSelector: '.group-header',
-  tooltipPosition: 'sidebar',
+  tooltipPosition: 'fixed-top-left',
   heading: 'group.explain.heading',
   body: 'group.explain.body',
 };
@@ -293,7 +293,7 @@ export const GROUP_INTRO_STEP = {
   id: 'group-intro',
   type: 'practice',
   targetSelector: '.group-documents-list',
-  tooltipPosition: 'right',
+  tooltipPosition: 'fixed-top-left',
   heading: 'group.docs.heading',
   body: 'group.docs.body',
   successMessage: 'מעולה, בואו נתחיל',

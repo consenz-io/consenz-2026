@@ -44,13 +44,13 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL }) {
       const rect = el.getBoundingClientRect();
       const position = activeStep.tooltipPosition;
 
-      if (position === 'sidebar') {
-        // Fixed position next to sidebar — always visible regardless of scroll
+      if (position === 'sidebar' || position === 'fixed-top-left') {
+        // Fixed position in top-left of content area — always fully visible
         const sidebar = document.querySelector('[data-sidebar="sidebar"]') || document.querySelector('aside');
-        const sidebarWidth = sidebar ? sidebar.getBoundingClientRect().width : 256;
+        const sidebarWidth = sidebar ? sidebar.getBoundingClientRect().width : 0;
         setArrowDirection('none');
         setTooltipStyle({
-          left: sidebarWidth + 24,
+          left: Math.max(16, sidebarWidth + 16),
           top: 80,
           transform: 'none',
         });
