@@ -54,6 +54,8 @@ export const tutorialStrings = {
     'comment.practice.success': 'התגובה פורסמה',
     'newclause.explain.heading': 'חסר משהו במסמך?',
     'newclause.explain.body': 'אפשר להציע סעיף חדש לגמרי — הכפתור מופיע בין הסעיפים. במחשב: העמידו את סמן העכבר בין שני סעיפים. במובייל: לחצו על המסך בין שני סעיפים.',
+    'newclause.modal.explain.heading': 'איך ממלאים את חלון הוספת הסעיף',
+    'newclause.modal.explain.body': 'החלון מכיל שלושה חלקים:\n\n• **נושא** — בחרו לאיזה נושא קיים ישתייך הסעיף, או צרו נושא חדש לגמרי.\n\n• **תוכן** — כתבו כאן את טקסט הסעיף עצמו — מה שתרצו שייכנס למסמך.\n\n• **הסבר** — הסבירו לקהילה למה הסעיף הזה חשוב ומה הוא מוסיף. זה עוזר לאחרים להצביע בצורה מושכלת.',
     'newclause.hover.heading': 'העמידו את העכבר בין סעיפים כדי להוסיף סעיף חדש',
     'newclause.hover.body': 'כשתעמידו את העכבר בין שני סעיפים, יופיע כפתור להוספת סעיף חדש. כפתור הארה זה יראה לכם את הכפתור גם ללא ריחוף.',
     'newclause.button.heading': 'לחצו על כפתור "הוסף סעיף"',
@@ -140,6 +142,8 @@ export const tutorialStrings = {
     'comment.practice.success': 'تم نشر تعليقكم',
     'newclause.explain.heading': 'هل يغيب شيء عن الوثيقة؟',
     'newclause.explain.body': 'يمكنكم اقتراح بند جديد كلياً — الزر يظهر بين البنود. على الحاسوب: مرروا مؤشر الفأرة بين بندين. على الجوال: اضغطوا على الشاشة بين بندين.',
+    'newclause.modal.explain.heading': 'كيف تملؤون نافذة إضافة البند',
+    'newclause.modal.explain.body': 'النافذة تحتوي على ثلاثة أجزاء:\n\n• **الموضوع** — اختاروا إلى أي موضوع موجود سينتمي البند، أو أنشئوا موضوعاً جديداً.\n\n• **المحتوى** — اكتبوا هنا نص البند نفسه — ما تريدون إدراجه في الوثيقة.\n\n• **الشرح** — وضّحوا للمجتمع لماذا هذا البند مهم وما الذي يضيفه. هذا يساعد الآخرين على التصويت بوعي.',
     'newclause.button.encourage.heading': 'هنا زر "إضافة بند"',
     'newclause.button.encourage.body': 'مرروا المؤشر أو اضغطوا على الشاشة أسفل البند الذي بعده تريدون إضافة بند جديد، واضغطوا على هذا الزر.',
     'newclause.select.topic.heading': 'اختاروا أي موضوع سيستقبل البند الجديد',
@@ -220,6 +224,8 @@ export const tutorialStrings = {
     'comment.practice.success': 'Your comment is live',
     'newclause.explain.heading': 'Something missing from the document?',
     'newclause.explain.body': 'You can propose a brand-new clause — the button appears between sections. On desktop: hover your mouse between two sections. On mobile: tap the screen between two sections.',
+    'newclause.modal.explain.heading': 'How to fill in the new section form',
+    'newclause.modal.explain.body': 'The form has three parts:\n\n• **Topic** — choose which existing topic the section belongs to, or create a brand-new topic.\n\n• **Content** — write the actual text of the section here — what you want added to the document.\n\n• **Explanation** — tell the community why this section matters and what it adds. This helps others vote with full context.',
     'newclause.button.encourage.heading': 'Here\'s the "Add section" button',
     'newclause.button.encourage.body': 'Hover your mouse or tap on the screen below the section after which you want to add a new clause, and click this button.',
     'newclause.select.topic.heading': 'Choose which topic will receive the new section',
@@ -397,6 +403,17 @@ export const TUTORIAL_STEPS = [
     tooltipPosition: 'bottom',
     heading: 'newclause.explain.heading',
     body: 'newclause.explain.body',
+  },
+
+  // 14. New section modal - explain the form fields
+  {
+    id: 'newclause-modal-explain',
+    type: 'explain',
+    targetSelector: '.create-suggestion-modal',
+    tooltipPosition: 'left',
+    heading: 'newclause.modal.explain.heading',
+    body: 'newclause.modal.explain.body',
+    triggerEvent: 'modal:new-section-opened',
   },
   
   // Closing screen

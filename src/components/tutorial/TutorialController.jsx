@@ -171,6 +171,20 @@ export default function TutorialController() {
     };
   }, [phase, currentStep]);
 
+  // ── Handle modal:new-section-opened → advance to newclause-modal-explain ────
+  useEffect(() => {
+    if (phase !== 'running') return;
+    const newclauseExplainIndex = TUTORIAL_STEPS.findIndex(s => s.id === 'newclause-explain');
+    const handler = () => {
+      // Only auto-advance if we're currently on newclause-explain
+      if (currentStep === newclauseExplainIndex) {
+        goNext();
+      }
+    };
+    window.addEventListener('modal:new-section-opened', handler);
+    return () => window.removeEventListener('modal:new-section-opened', handler);
+  }, [phase, currentStep, goNext]);
+
   // ── Handle newclause-explain: force-show the insert-section button ──────────
   useEffect(() => {
     if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
