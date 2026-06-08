@@ -432,18 +432,6 @@ export const TUTORIAL_STEPS = [
     body: 'newclause.hover.body',
   },
   
-  // 15. New section - button click
-  {
-    id: 'newclause-button',
-    type: 'encourage',
-    requiresAuth: true,
-    targetSelector: '.add-clause-button',
-    tooltipPosition: 'bottom',
-    heading: 'newclause.button.heading',
-    body: 'newclause.button.body',
-    completionEvent: 'create-suggestion-modal:opened',
-  },
-  
   // 17. Consensus meter explanation
   {
     id: 'consensus-meter-explain',
