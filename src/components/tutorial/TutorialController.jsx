@@ -89,31 +89,35 @@ export default function TutorialController() {
   }, [restartTutorial, location.pathname]);
 
   // ── Skip missing target elements ────────────────────────────────────────────
-  // Track whether the user manually navigated so we don't auto-skip on top of it
   const manualNavRef = useRef(false);
 
   const handleNext = useCallback((...args) => {
     manualNavRef.current = true;
-    // Reset after a tick so the next step's effect starts fresh
-    setTimeout(() => { manualNavRef.current = false; }, 0);
     goNext(...args);
   }, [goNext]);
 
   const handleBack = useCallback((...args) => {
     manualNavRef.current = true;
-    setTimeout(() => { manualNavRef.current = false; }, 0);
     goBack(...args);
   }, [goBack]);
+
+  // Reset manualNavRef after each step change
+  useEffect(() => {
+    manualNavRef.current = false;
+  }, [currentStep]);
 
   useEffect(() => {
     if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
     const step = TUTORIAL_STEPS[currentStep];
     if (!step || !step.targetSelector || step.type === 'closing') return;
 
-    // Wait for DOM to settle before checking — prevents skipping valid steps
-    // that haven't rendered yet (e.g. on initial document page load)
+    // 'explain' and 'encourage' steps must NEVER be auto-skipped —
+    // the user must click Next/Back to move through them.
+    if (step.type === 'explain' || step.type === 'encourage') return;
+
+    // For practice steps only: auto-skip if the target element is genuinely
+    // missing from the DOM (e.g. user navigated away from the document page).
     const timer = setTimeout(() => {
-      // If user already navigated manually during this window, don't auto-skip
       if (manualNavRef.current) return;
       const el = document.querySelector(step.targetSelector);
       if (!el) {
