@@ -284,7 +284,7 @@ export const GROUP_EXPLAIN_STEP = {
   id: 'group-explain',
   type: 'explain',
   targetSelector: '.group-header',
-  tooltipPosition: 'bottom',
+  tooltipPosition: 'sidebar',
   heading: 'group.explain.heading',
   body: 'group.explain.body',
 };

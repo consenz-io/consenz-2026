@@ -34,7 +34,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL }) {
     setTooltipStyle(null);
   }, [step]);
 
-  const [arrowDirection, setArrowDirection] = useState('down'); // 'up' | 'down' | 'left' | 'right'
+  const [arrowDirection, setArrowDirection] = useState('down'); // 'up' | 'down' | 'left' | 'right' | 'none'
 
   // Position tooltip based on tooltipPosition hint, with fallbacks
   useEffect(() => {
@@ -43,6 +43,19 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL }) {
       if (!el) return;
       const rect = el.getBoundingClientRect();
       const position = activeStep.tooltipPosition;
+
+      if (position === 'sidebar') {
+        // Fixed position next to sidebar — always visible regardless of scroll
+        const sidebar = document.querySelector('[data-sidebar="sidebar"]') || document.querySelector('aside');
+        const sidebarWidth = sidebar ? sidebar.getBoundingClientRect().width : 256;
+        setArrowDirection('none');
+        setTooltipStyle({
+          left: sidebarWidth + 24,
+          top: 80,
+          transform: 'none',
+        });
+        return;
+      }
 
       if (position === 'right') {
         // Place to the right of the element
@@ -158,7 +171,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL }) {
         </button>
 
         {/* Arrow — direction depends on tooltip placement */}
-        <div
+        {arrowDirection !== 'none' && <div
           className="absolute w-0 h-0"
           style={
             arrowDirection === 'down' ? {
@@ -191,7 +204,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL }) {
               transform: 'translateY(-50%)',
             }
           }
-        />
+        />}
 
         {showSuccess ? (
           <div className="flex flex-col items-center gap-2 py-3 text-center">
