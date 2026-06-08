@@ -407,17 +407,6 @@ export const TUTORIAL_STEPS = [
     completionEvent: 'comment:submitted',
   },
   
-  // 10. Edit existing clause - discovery
-  {
-    id: 'editclause-hover',
-    type: 'encourage',
-    requiresAuth: true,
-    targetSelector: '.section-card',
-    tooltipPosition: 'bottom',
-    heading: 'editclause.hover.heading',
-    body: 'editclause.hover.body',
-  },
-  
   // 11. Edit - modal opening
   {
     id: 'editclause-modal',
