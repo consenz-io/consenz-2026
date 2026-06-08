@@ -18,8 +18,8 @@
 
 export const tutorialStrings = {
   he: {
-    'home.groups.heading': 'הכל מתחיל מקבוצה',
-    'home.groups.body': 'כל קבוצה מנהלת מסמכים משותפים. לחצו על קבוצה כדי לראות את המסמכים שלה — ומשם תוכלו להיכנס לאחד מהם.',
+    'home.groups.heading': 'קבוצה היא מרחב שיתוף פעולה',
+    'home.groups.body': 'חברי הקבוצה כותבים מסמכים ביחד, מציעים שינויים, ומצביעים על כל הצעה. לחצו על קבוצה כדי לראות את המסמכים שלה ולהתחיל להשתתף.',
     'group.explain.heading': 'ברוכים הבאים לקבוצה',
     'group.explain.body': 'קבוצה היא מרחב שיתוף פעולה — כאן מתנהלים דיונים, מוצעות שינויים ומתקבלות החלטות יחד. כל קבוצה מכילה מסמכים משותפים שהחברים בה כותבים ומעצבים ביחד.',
     'group.docs.heading': 'בחרו מסמך כדי להמשיך',
@@ -104,8 +104,8 @@ export const tutorialStrings = {
     'signup.prompt.cta': 'הרשמה',
   },
   ar: {
-    'home.groups.heading': 'كل شيء يبدأ من مجموعة',
-    'home.groups.body': 'كل مجموعة تدير وثائق مشتركة. اضغطوا على مجموعة لرؤية وثائقها — ومن هناك يمكنكم الدخول إلى إحداها.',
+    'home.groups.heading': 'المجموعة هي فضاء للتعاون',
+    'home.groups.body': 'يكتب أعضاء المجموعة وثائق معاً، يقترحون تعديلات، ويصوتون على كل اقتراح. اضغطوا على مجموعة لرؤية وثائقها والمشاركة.',
     'group.explain.heading': 'مرحباً بكم في المجموعة',
     'group.explain.body': 'المجموعة هي فضاء للتعاون — هنا تجري النقاشات، تُقترح التعديلات وتُتخذ القرارات معاً. تحتوي كل مجموعة على وثائق مشتركة يكتبها الأعضاء ويشكّلونها سوياً.',
     'group.docs.heading': 'اختاروا وثيقة للمتابعة',
@@ -180,8 +180,8 @@ export const tutorialStrings = {
     'signup.prompt.cta': 'تسجيل',
   },
   en: {
-    'home.groups.heading': 'Everything starts with a group',
-    'home.groups.body': 'Each group manages shared documents. Click on a group to see its documents — and from there you can enter one.',
+    'home.groups.heading': 'A group is a collaboration space',
+    'home.groups.body': 'Group members write documents together, propose changes, and vote on every suggestion. Click a group to see its documents and start participating.',
     'group.explain.heading': 'Welcome to the group',
     'group.explain.body': 'A group is a collaboration space — this is where discussions happen, changes are proposed, and decisions are made together. Each group contains shared documents that members write and shape collectively.',
     'group.docs.heading': 'Pick a document to continue',
