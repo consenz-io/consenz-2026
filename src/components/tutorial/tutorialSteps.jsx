@@ -466,16 +466,6 @@ export const TUTORIAL_STEPS = [
     body: 'consensus.meter.body',
   },
   
-  // 18. Versions counter
-  {
-    id: 'versions-counter-explain',
-    type: 'explain',
-    targetSelector: '[data-testid="versions-counter"]',
-    tooltipPosition: 'bottom',
-    heading: 'versions.counter.heading',
-    body: 'versions.counter.body',
-  },
-  
   // 19. Encourage entering versions page
   {
     id: 'versions-navigate',
