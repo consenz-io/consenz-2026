@@ -97,6 +97,8 @@ export const tutorialStrings = {
     'points.explain.reward.accepted': 'הצעה שהתקבלה',
     'consensus.meter.explain.heading': 'מד הקונסנזוס מראה איך מעצבים את המסמך',
     'consensus.meter.explain.body': 'הבר הזה מראה מה רף התמיכה הדרוש להצעה להתקבל. הרף הזה משתנה לפי היסטוריית ההצבעה של הקהילה — יותר קפדני במסמכים מפותחים, יותר גמיש במסמכים חדשים. לחצו כדי ללמוד איך הוא מחושב.',
+    'versions.counter.explain.heading': 'קאונטר הגרסאות מראה את ההיסטוריה',
+    'versions.counter.explain.body': 'המספר הזה מראה כמה גרסאות קיימות של המסמך. כל גרסה היא חלק מההיסטוריה של המסמך — מצב שהקהילה אישרה. לחצו כדי לראות את כל הגרסאות והשינויים שהתרחשו.',
     'closing.heading': 'מוכנים לתרום',
     'closing.body': 'עכשיו אתם יודעים איך Consenz עובדת. כל הצעה שתגישו, כל הצבעה שתתנו — מעצבת את המסמך הזה יחד עם שאר הקהילה.',
     'closing.cta': 'בואו נתחיל',
@@ -153,6 +155,8 @@ export const tutorialStrings = {
     'newclause.explanation.body': 'اشرحوا لماذا تعتقدون أن هذا البند مهم. هذا سيساعد المجتمع على فهم اقتراحكم.',
     'consensus.meter.explain.heading': 'هذا المقياس يوضح كيف يتشكل التوافق',
     'consensus.meter.explain.body': 'يُظهر الشريط عتبة الدعم المطلوبة لقبول مقترح. تتأقلم هذه العتبة بناءً على أنماط التصويت التاريخية للمجتمع — أصرم للمستندات الناضجة، وأكثر مرونة للمستندات الجديدة. اضغطوا لفهم كيفية حسابها.',
+    'versions.counter.explain.heading': 'عداد الإصدارات يُظهر التاريخ',
+    'versions.counter.explain.body': 'هذا الرقم يُظهر كم إصدار موجود من الوثيقة. كل إصدار هو جزء من تاريخ الوثيقة — حالة وافق عليها المجتمع. اضغطوا لرؤية جميع الإصدارات والتغييرات التي حدثت.',
     'newclause.submit.heading': 'شارِكوا اقتراحكم',
     'newclause.submit.body': 'اضغطوا على زر "إرسال" لنشر اقتراحكم. سيتمكن المجتمع من التصويت عليه.',
     'newclause.submit.success': 'تم نشر المقترح. يمكن للمجتمع الآن التصويت عليه',
@@ -233,6 +237,8 @@ export const tutorialStrings = {
     'newclause.content.success': 'Great! Now you can add an explanation.',
     'newclause.explanation.heading': 'Add an explanation (optional)',
     'newclause.explanation.body': 'Explain why you think this section is important. This will help the community understand your proposal.',
+    'versions.counter.explain.heading': 'The versions counter shows the document\'s history',
+    'versions.counter.explain.body': 'This number shows how many versions of the document exist. Each version is a snapshot of the document at a point when the community approved a change. Click to see all versions and the changes that happened.',
     'newclause.submit.heading': 'Submit your proposal',
     'newclause.submit.body': 'Click the "Submit" button to publish your proposal. The community will be able to vote on it.',
     'newclause.submit.success': 'Your proposal is live. The community can now vote on it',
@@ -411,6 +417,17 @@ export const TUTORIAL_STEPS = [
     tooltipPosition: 'bottom',
     heading: 'consensus.meter.explain.heading',
     body: 'consensus.meter.explain.body',
+  },
+  
+  // 15. Versions counter - learn about document history and navigate to clean view
+  {
+    id: 'versions-counter-explain',
+    type: 'practice',
+    targetSelector: '.versions-counter',
+    tooltipPosition: 'bottom',
+    heading: 'versions.counter.explain.heading',
+    body: 'versions.counter.explain.body',
+    navigateOnNext: 'DocumentCleanView',
   },
   
   // Closing screen
