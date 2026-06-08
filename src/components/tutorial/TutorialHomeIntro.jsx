@@ -34,18 +34,39 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL }) {
     setTooltipStyle(null);
   }, [step]);
 
-  // Position tooltip below target
+  const [arrowDirection, setArrowDirection] = useState('down'); // 'up' | 'down'
+
+  // Position tooltip: prefer above target, fall back to below if not enough space
   useEffect(() => {
     function update() {
       const el = document.querySelector(activeStep.targetSelector);
       if (!el) return;
       const rect = el.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
-      setTooltipStyle({
-        left: Math.max(8, Math.min(window.innerWidth - TOOLTIP_WIDTH - 8, centerX - TOOLTIP_WIDTH / 2)),
-        top: rect.top - ARROW_SIZE - 12,
-        transform: 'translateY(-100%)',
-      });
+      const left = Math.max(8, Math.min(window.innerWidth - TOOLTIP_WIDTH - 8, centerX - TOOLTIP_WIDTH / 2));
+
+      // Estimate tooltip height (~160px) to decide placement
+      const estimatedHeight = 180;
+      const spaceAbove = rect.top;
+      const spaceBelow = window.innerHeight - rect.bottom;
+
+      if (spaceAbove >= estimatedHeight + ARROW_SIZE + 12) {
+        // Place above
+        setArrowDirection('down');
+        setTooltipStyle({
+          left,
+          top: rect.top - ARROW_SIZE - 12,
+          transform: 'translateY(-100%)',
+        });
+      } else {
+        // Place below
+        setArrowDirection('up');
+        setTooltipStyle({
+          left,
+          top: rect.bottom + ARROW_SIZE + 12,
+          transform: 'none',
+        });
+      }
     }
     update();
     window.addEventListener('scroll', update, { passive: true });
@@ -123,14 +144,21 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL }) {
           <X className="w-4 h-4" />
         </button>
 
-        {/* Arrow pointing down */}
+        {/* Arrow — direction depends on tooltip placement */}
         <div
           className="absolute w-0 h-0"
-          style={{
+          style={arrowDirection === 'down' ? {
             borderLeft: '10px solid transparent',
             borderRight: '10px solid transparent',
             borderTop: '10px solid white',
             bottom: -10,
+            left: '50%',
+            transform: 'translateX(-50%)',
+          } : {
+            borderLeft: '10px solid transparent',
+            borderRight: '10px solid transparent',
+            borderBottom: '10px solid white',
+            top: -10,
             left: '50%',
             transform: 'translateX(-50%)',
           }}
