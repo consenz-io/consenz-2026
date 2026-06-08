@@ -467,8 +467,8 @@ export const TUTORIAL_STEPS = [
   {
     id: 'consensus-meter-explain',
     type: 'explain',
-    targetSelector: '.consensus-meter',
-    tooltipPosition: 'bottom',
+    targetSelector: '.proposal-vote-buttons',
+    tooltipPosition: 'top',
     heading: 'consensus.meter.heading',
     body: 'consensus.meter.body',
   },
