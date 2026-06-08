@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTutorial } from './useTutorial';
 import { TUTORIAL_STEPS, HOME_INTRO_STEP, GROUP_INTRO_STEP, GROUP_EXPLAIN_STEP } from './tutorialSteps';
@@ -89,6 +89,22 @@ export default function TutorialController() {
   }, [restartTutorial, location.pathname]);
 
   // ── Skip missing target elements ────────────────────────────────────────────
+  // Track whether the user manually navigated so we don't auto-skip on top of it
+  const manualNavRef = useRef(false);
+
+  const handleNext = useCallback((...args) => {
+    manualNavRef.current = true;
+    // Reset after a tick so the next step's effect starts fresh
+    setTimeout(() => { manualNavRef.current = false; }, 0);
+    goNext(...args);
+  }, [goNext]);
+
+  const handleBack = useCallback((...args) => {
+    manualNavRef.current = true;
+    setTimeout(() => { manualNavRef.current = false; }, 0);
+    goBack(...args);
+  }, [goBack]);
+
   useEffect(() => {
     if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
     const step = TUTORIAL_STEPS[currentStep];
@@ -97,11 +113,13 @@ export default function TutorialController() {
     // Wait for DOM to settle before checking — prevents skipping valid steps
     // that haven't rendered yet (e.g. on initial document page load)
     const timer = setTimeout(() => {
+      // If user already navigated manually during this window, don't auto-skip
+      if (manualNavRef.current) return;
       const el = document.querySelector(step.targetSelector);
       if (!el) {
         goNext();
       }
-    }, 600);
+    }, 800);
 
     return () => clearTimeout(timer);
   }, [phase, currentStep, goNext]);
@@ -237,13 +255,13 @@ export default function TutorialController() {
 
     const overlaySelector = step.targetSelector;
 
-    const handleNext = () => {
+    const handleNextStep = () => {
       if (step.navigateOnNext) {
         // Close any open modal first
         document.dispatchEvent(new CustomEvent('tutorial:closeModal'));
         navigate(`/${step.navigateOnNext}`);
       }
-      goNext();
+      handleNext();
     };
 
     return (
@@ -252,8 +270,8 @@ export default function TutorialController() {
           step={step}
           stepIndex={currentStep}
           totalSteps={TUTORIAL_STEPS.length}
-          onNext={handleNext}
-          onBack={goBack}
+          onNext={handleNextStep}
+          onBack={handleBack}
           onSkip={skipTutorial}
           practiceCompleted={practiceCompleted}
           showSuccess={showSuccess}
