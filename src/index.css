@@ -173,3 +173,9 @@ button:focus-visible {
   opacity: 1 !important;
   transition: none !important;
 }
+
+/* Tutorial: force-show insert-section button during newclause-explain step */
+.tutorial-force-insert-btn {
+  opacity: 1 !important;
+  transition: none !important;
+}
