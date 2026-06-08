@@ -72,8 +72,8 @@ export default function CreateSuggestionModal({
   // Close when tutorial requests it
   useEffect(() => {
     const handler = () => onClose();
-    document.addEventListener('tutorial:closeModal', handler);
-    return () => document.removeEventListener('tutorial:closeModal', handler);
+    window.addEventListener('tutorial:closeModal', handler);
+    return () => window.removeEventListener('tutorial:closeModal', handler);
   }, [onClose]);
   const [isLoadingTranslation, setIsLoadingTranslation] = useState(false);
   const [showInsufficientPointsDialog, setShowInsufficientPointsDialog] = useState(false);

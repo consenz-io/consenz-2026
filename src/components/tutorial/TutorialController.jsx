@@ -286,7 +286,7 @@ export default function TutorialController() {
     const handleNextStep = () => {
       if (step.navigateOnNext) {
         // Close any open modal first
-        document.dispatchEvent(new CustomEvent('tutorial:closeModal'));
+        window.dispatchEvent(new CustomEvent('tutorial:closeModal'));
         navigate(`/${step.navigateOnNext}`);
       }
       handleNext();
