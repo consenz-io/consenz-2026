@@ -405,46 +405,15 @@ export const TUTORIAL_STEPS = [
     body: 'newclause.explain.body',
   },
 
-  // 14. New section modal - explain topic selection
+  // 14. New section modal - explain the form fields
   {
-    id: 'newclause-topic-explain',
+    id: 'newclause-modal-explain',
     type: 'explain',
-    targetSelector: '[data-testid="topic-select"]',
+    targetSelector: '.create-suggestion-modal',
     tooltipPosition: 'left',
-    heading: 'newclause.select.topic.heading',
-    body: 'newclause.select.topic.body',
+    heading: 'newclause.modal.explain.heading',
+    body: 'newclause.modal.explain.body',
     triggerEvent: 'modal:new-section-opened',
-  },
-
-  // 15. New section modal - explain content field
-  {
-    id: 'newclause-content-explain',
-    type: 'explain',
-    targetSelector: '[data-testid="content-editor"]',
-    tooltipPosition: 'left',
-    heading: 'newclause.content.heading',
-    body: 'newclause.content.body',
-  },
-
-  // 16. New section modal - explain explanation field
-  {
-    id: 'newclause-explanation-explain',
-    type: 'explain',
-    targetSelector: '[data-testid="explanation-field"]',
-    tooltipPosition: 'left',
-    heading: 'newclause.explanation.heading',
-    body: 'newclause.explanation.body',
-  },
-
-  // 17. Consensus threshold - explain how it's calculated
-  {
-    id: 'consensus-explain',
-    type: 'explain',
-    targetSelector: '.consensus-threshold-section',
-    tooltipPosition: 'bottom',
-    heading: 'consensus.explain.heading',
-    body: 'consensus.explain.body',
-    learnMoreLink: '/UnderstandingConsensus',
   },
   
   // Closing screen
