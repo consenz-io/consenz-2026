@@ -1,7 +1,29 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 
-export default function TutorialWelcome({ onStart, onSkip, isRTL }) {
+const strings = {
+  he: {
+    headline: 'ברוכים ל-Consenz',
+    body: 'רוצים ללמוד איך הפלטפורמה עובדת? קחו סיור קצר של כמה שניות.',
+    start: 'קבלו סיור קצר',
+    skip: 'מכירים את המערכת? דלגו',
+  },
+  ar: {
+    headline: 'مرحباً بكم في Consenz',
+    body: 'هل تريدون تعلّم كيفية عمل المنصة؟ خذوا جولة قصيرة تستغرق ثوانٍ.',
+    start: 'خذ جولة قصيرة',
+    skip: 'تعرف على النظام؟ تخطَّ',
+  },
+  en: {
+    headline: 'Welcome to Consenz',
+    body: 'Want to learn how the platform works? Take a quick tour in just a few seconds.',
+    start: 'Take a quick tour',
+    skip: 'Already familiar? Skip',
+  },
+};
+
+export default function TutorialWelcome({ onStart, onSkip, isRTL, language = 'he' }) {
+  const lang = strings[language] || strings.he;
   return (
     <div className="fixed inset-0 z-[10002] flex items-center justify-center p-4 bg-black/40" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 flex flex-col gap-4">
@@ -13,30 +35,27 @@ export default function TutorialWelcome({ onStart, onSkip, isRTL }) {
           </svg>
         </div>
 
-        {/* Headline — placeholder, content added later */}
         <h2 className="text-xl font-bold text-slate-900 text-center">
-          ברוכים ל-Consenz
+          {lang.headline}
         </h2>
 
-        {/* Body — placeholder */}
         <p className="text-slate-600 text-sm text-center leading-relaxed">
-          רוצים ללמוד איך הפלטפורמה עובדת? קחו סיור קצר של כמה שניות.
+          {lang.body}
         </p>
 
-        {/* Actions */}
-        <div className={`flex flex-col gap-2 mt-2 ${isRTL ? '' : ''}`}>
+        <div className="flex flex-col gap-2 mt-2">
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
             onClick={onStart}
           >
-            קבלו סיור קצר
+            {lang.start}
           </Button>
           <Button
             variant="ghost"
             className="w-full text-slate-500"
             onClick={onSkip}
           >
-            מכירים את המערכת? דלגו
+            {lang.skip}
           </Button>
         </div>
       </div>

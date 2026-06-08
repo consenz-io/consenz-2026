@@ -22,7 +22,7 @@ function isGroupPage(pathname) {
 }
 
 export default function TutorialController() {
-  const { isRTL } = useLanguage();
+  const { isRTL, language } = useLanguage();
   const location = useLocation();
 
   const {
@@ -157,6 +157,7 @@ export default function TutorialController() {
         onStart={beginFromWelcome}
         onSkip={skipTutorial}
         isRTL={isRTL}
+        language={language}
       />
     );
   }
