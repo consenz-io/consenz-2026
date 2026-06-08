@@ -218,6 +218,9 @@ export default function TutorialTooltip({
         </div>
       ) : (
         <>
+          {/* Heading */}
+          <h3 className="font-bold text-slate-900 text-base mb-1">{heading}</h3>
+
           {/* Body */}
           {body && <p className="text-sm text-slate-600 mb-3 leading-relaxed">{body}</p>}
 
