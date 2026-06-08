@@ -339,6 +339,16 @@ export const TUTORIAL_STEPS = [
     body: 'editclause.explain.body',
   },
   
+  // 3.5. Edit buttons explanation
+  {
+    id: 'editclause-buttons',
+    type: 'explain',
+    targetSelector: '.section-card',
+    tooltipPosition: 'bottom',
+    heading: 'editclause.buttons.heading',
+    body: 'editclause.buttons.body',
+  },
+  
   // 5. Browsing proposals (viewing versions)
   {
     id: 'browse-explain',
@@ -400,16 +410,6 @@ export const TUTORIAL_STEPS = [
     tooltipPosition: 'bottom',
     heading: 'editclause.hover.heading',
     body: 'editclause.hover.body',
-  },
-  
-  // 10.5. Edit buttons explanation
-  {
-    id: 'editclause-buttons',
-    type: 'explain',
-    targetSelector: '.section-card',
-    tooltipPosition: 'bottom',
-    heading: 'editclause.buttons.heading',
-    body: 'editclause.buttons.body',
   },
   
   // 11. Edit - modal opening
