@@ -389,28 +389,6 @@ export const TUTORIAL_STEPS = [
     body: 'vote.explain.body',
   },
   
-  // 8. Writing comments
-  {
-    id: 'comment-explain',
-    type: 'explain',
-    targetSelector: '.proposal-comment-input',
-    tooltipPosition: 'top',
-    heading: 'comment.explain.heading',
-    body: 'comment.explain.body',
-  },
-  
-  // 9. Submit comment practice
-  {
-    id: 'comment-practice',
-    type: 'encourage',
-    requiresAuth: true,
-    targetSelector: '.proposal-comment-input',
-    tooltipPosition: 'top',
-    heading: 'comment.practice.heading',
-    body: 'comment.practice.body',
-    completionEvent: 'comment:submitted',
-  },
-  
   // 13. New section - explain concept
   {
     id: 'newclause-explain',
