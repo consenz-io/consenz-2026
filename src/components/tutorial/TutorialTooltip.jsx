@@ -36,13 +36,13 @@ function getTooltipStyle(rect, position) {
     case 'top':
       return {
         left: Math.max(8, Math.min(window.innerWidth - TOOLTIP_WIDTH - 8, centerX - TOOLTIP_WIDTH / 2)),
-        top: rect.top - ARROW_SIZE - 8 - 120,
+        top: rect.top - ARROW_SIZE - 8,
         transform: 'translateY(-100%)',
       };
     case 'bottom':
       return {
         left: Math.max(8, Math.min(window.innerWidth - TOOLTIP_WIDTH - 8, centerX - TOOLTIP_WIDTH / 2)),
-        top: rect.bottom + ARROW_SIZE + 8 + 120,
+        top: rect.bottom + ARROW_SIZE + 8,
       };
     case 'left':
       return {
