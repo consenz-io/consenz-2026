@@ -323,7 +323,25 @@ export default function TutorialController() {
       handleNext();
     };
 
-    return (
+    // Modal-based steps (e.g., newclause-modal-explain inside CreateSuggestionModal)
+    // don't use TutorialOverlay — the modal provides its own backdrop
+    const isModalStep = step.id.includes('modal');
+
+    return isModalStep ? (
+      <TutorialTooltip
+        step={step}
+        stepIndex={currentStep}
+        totalSteps={TUTORIAL_STEPS.length}
+        onNext={handleNextStep}
+        onBack={handleBack}
+        onSkip={skipTutorial}
+        practiceCompleted={practiceCompleted}
+        showSuccess={showSuccess}
+        showSignupPrompt={showSignupPrompt}
+        isAuthenticated={isAuthenticated}
+        isRTL={isRTL}
+      />
+    ) : (
       <TutorialOverlay targetSelector={overlaySelector}>
         <TutorialTooltip
           step={step}
