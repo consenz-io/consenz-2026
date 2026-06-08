@@ -421,6 +421,16 @@ export const TUTORIAL_STEPS = [
     body: 'newclause.explain.body',
   },
   
+  // 17. Consensus meter explanation
+  {
+    id: 'consensus-meter-explain',
+    type: 'explain',
+    targetSelector: '.proposal-vote-buttons',
+    tooltipPosition: 'top',
+    heading: 'consensus.meter.heading',
+    body: 'consensus.meter.body',
+  },
+
   // 14. New section - hover discovery (includes affordance)
   {
     id: 'newclause-hover',
@@ -430,16 +440,6 @@ export const TUTORIAL_STEPS = [
     tooltipPosition: 'bottom',
     heading: 'newclause.hover.heading',
     body: 'newclause.hover.body',
-  },
-  
-  // 17. Consensus meter explanation
-  {
-    id: 'consensus-meter-explain',
-    type: 'explain',
-    targetSelector: '.proposal-vote-buttons',
-    tooltipPosition: 'top',
-    heading: 'consensus.meter.heading',
-    body: 'consensus.meter.body',
   },
   
   // Closing screen
