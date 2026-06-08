@@ -831,8 +831,8 @@ Return ONLY the translated text:`;
 
                             {index === topicSections.length - 1 && (
                               <>
-                                <div className="group relative h-4 flex items-center justify-center mt-2">
-                                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="section-insert-space group relative h-4 flex items-center justify-center mt-2">
+                                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 tutorial-force-insert-btn transition-opacity">
                                     <div className="h-full flex items-center justify-center">
                                       <Button
                                         size="sm"

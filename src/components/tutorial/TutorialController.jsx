@@ -171,7 +171,29 @@ export default function TutorialController() {
     };
   }, [phase, currentStep]);
 
+  // ── Handle newclause-explain: force-show the insert-section button ──────────
+  useEffect(() => {
+    if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
+    const step = TUTORIAL_STEPS[currentStep];
+    if (!step || step.id !== 'newclause-explain') return;
 
+    // Find the first .section-insert-space and force-reveal its inner button
+    const insertSpace = document.querySelector('.section-insert-space');
+    if (!insertSpace) return;
+
+    const inner = insertSpace.querySelector('.tutorial-force-insert-btn');
+    if (inner) {
+      inner.style.opacity = '1';
+      inner.style.transition = 'none';
+    }
+
+    return () => {
+      if (inner) {
+        inner.style.opacity = '';
+        inner.style.transition = '';
+      }
+    };
+  }, [phase, currentStep]);
 
   // ── Handle editclause-hover: reset carousel and show edit buttons ──────────
   useEffect(() => {

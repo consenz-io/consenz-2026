@@ -52,7 +52,8 @@ export const tutorialStrings = {
     'comment.explain.body': 'תגובות עוזרות למציע להבין מה עובד ומה לא. זה המקום לשאול, להסביר, או לשכנע.',
     'comment.practice.heading': 'כתבו תגובה קצרה על אחת ההצעות',
     'comment.practice.success': 'התגובה פורסמה',
-
+    'newclause.explain.heading': 'חסר משהו במסמך?',
+    'newclause.explain.body': 'אפשר להציע סעיף חדש לגמרי — הכפתור מופיע בין הסעיפים. במחשב: העמידו את סמן העכבר בין שני סעיפים. במובייל: לחצו על המסך בין שני סעיפים.',
     'newclause.hover.heading': 'העמידו את העכבר בין סעיפים כדי להוסיף סעיף חדש',
     'newclause.hover.body': 'כשתעמידו את העכבר בין שני סעיפים, יופיע כפתור להוספת סעיף חדש. כפתור הארה זה יראה לכם את הכפתור גם ללא ריחוף.',
     'newclause.button.heading': 'לחצו על כפתור "הוסף סעיף"',
@@ -137,7 +138,8 @@ export const tutorialStrings = {
     'comment.explain.body': 'تساعد التعليقات صاحب المقترح على فهم ما يناسب وما لا يناسب. هذا هو المكان للسؤال والشرح والإقناع.',
     'comment.practice.heading': 'اكتبوا تعليقاً قصيراً على أحد المقترحات',
     'comment.practice.success': 'تم نشر تعليقكم',
-
+    'newclause.explain.heading': 'هل يغيب شيء عن الوثيقة؟',
+    'newclause.explain.body': 'يمكنكم اقتراح بند جديد كلياً — الزر يظهر بين البنود. على الحاسوب: مرروا مؤشر الفأرة بين بندين. على الجوال: اضغطوا على الشاشة بين بندين.',
     'newclause.button.encourage.heading': 'هنا زر "إضافة بند"',
     'newclause.button.encourage.body': 'مرروا المؤشر أو اضغطوا على الشاشة أسفل البند الذي بعده تريدون إضافة بند جديد، واضغطوا على هذا الزر.',
     'newclause.select.topic.heading': 'اختاروا أي موضوع سيستقبل البند الجديد',
@@ -216,7 +218,8 @@ export const tutorialStrings = {
     'comment.explain.body': "Comments help the author understand what works and what doesn't. This is the place to ask, explain, or persuade.",
     'comment.practice.heading': 'Write a short comment on any proposal',
     'comment.practice.success': 'Your comment is live',
-
+    'newclause.explain.heading': 'Something missing from the document?',
+    'newclause.explain.body': 'You can propose a brand-new clause — the button appears between sections. On desktop: hover your mouse between two sections. On mobile: tap the screen between two sections.',
     'newclause.button.encourage.heading': 'Here\'s the "Add section" button',
     'newclause.button.encourage.body': 'Hover your mouse or tap on the screen below the section after which you want to add a new clause, and click this button.',
     'newclause.select.topic.heading': 'Choose which topic will receive the new section',
@@ -386,7 +389,15 @@ export const TUTORIAL_STEPS = [
     body: 'vote.explain.body',
   },
   
-
+  // 13. New section - explain concept
+  {
+    id: 'newclause-explain',
+    type: 'explain',
+    targetSelector: '.section-insert-space',
+    tooltipPosition: 'bottom',
+    heading: 'newclause.explain.heading',
+    body: 'newclause.explain.body',
+  },
   
   // 14. New section - hover discovery (includes affordance)
   {
