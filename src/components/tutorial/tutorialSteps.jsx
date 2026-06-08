@@ -466,48 +466,7 @@ export const TUTORIAL_STEPS = [
     body: 'consensus.meter.body',
   },
   
-  // 19. Encourage entering versions page
-  {
-    id: 'versions-navigate',
-    type: 'encourage',
-    targetSelector: '.versions-tab-button',
-    tooltipPosition: 'bottom',
-    heading: 'versions.navigate.heading',
-    body: 'versions.navigate.body',
-    completionEvent: 'versions:opened',
-  },
-  
-  // 20. DocumentCleanView - browse previous versions
-  {
-    id: 'cleanview-browse',
-    type: 'explain',
-    targetSelector: '.versions-list',
-    tooltipPosition: 'right',
-    heading: 'cleanview.browse.heading',
-    body: 'cleanview.browse.body',
-  },
-  
-  // 21. DocumentCleanView - identify changes
-  {
-    id: 'cleanview-diff',
-    type: 'explain',
-    targetSelector: '.document-diff',
-    tooltipPosition: 'left',
-    heading: 'cleanview.diff.heading',
-    body: 'cleanview.diff.body',
-  },
-  
-  // 22. DocumentCleanView - discussion details
-  {
-    id: 'cleanview-discussion',
-    type: 'encourage',
-    targetSelector: '.suggestion-details-link, [data-testid="discussion-button"]',
-    tooltipPosition: 'bottom',
-    heading: 'cleanview.discussion.heading',
-    body: 'cleanview.discussion.body',
-  },
-  
-  // 23. Closing screen
+  // Closing screen
   {
     id: 'closing',
     type: 'closing',
