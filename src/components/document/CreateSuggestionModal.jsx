@@ -76,12 +76,6 @@ export default function CreateSuggestionModal({
     return () => window.removeEventListener('tutorial:closeModal', handler);
   }, [onClose]);
 
-  // Notify tutorial when a new-section modal opens
-  useEffect(() => {
-    if (isNewSection) {
-      window.dispatchEvent(new CustomEvent('modal:new-section-opened'));
-    }
-  }, [isNewSection]);
   const [isLoadingTranslation, setIsLoadingTranslation] = useState(false);
   const [showInsufficientPointsDialog, setShowInsufficientPointsDialog] = useState(false);
   const [showPointsConfirm, setShowPointsConfirm] = useState(false);
@@ -96,6 +90,13 @@ export default function CreateSuggestionModal({
   
   const isNewSection = editingSection?.isNew;
   const isEditingSuggestion = !!editingSuggestion;
+
+  // Notify tutorial when a new-section modal opens
+  useEffect(() => {
+    if (isNewSection) {
+      window.dispatchEvent(new CustomEvent('modal:new-section-opened'));
+    }
+  }, [isNewSection]);
   const isDirectEdit = editingSection?.isDirectEdit || false;
   const isDeleteSection = isDeletingSuggestion || false;
   const existingSection = !isNewSection && !isEditingSuggestion ? sections.find(s => s.id === editingSection?.id) : null;
