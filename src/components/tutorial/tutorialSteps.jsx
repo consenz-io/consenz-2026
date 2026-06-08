@@ -399,17 +399,6 @@ export const TUTORIAL_STEPS = [
     body: 'newclause.explain.body',
   },
   
-  // 14. New section - hover discovery (includes affordance)
-  {
-    id: 'newclause-hover',
-    type: 'encourage',
-    requiresAuth: true,
-    targetSelector: '.section-insert-space',
-    tooltipPosition: 'bottom',
-    heading: 'newclause.hover.heading',
-    body: 'newclause.hover.body',
-  },
-  
   // Closing screen
   {
     id: 'closing',
