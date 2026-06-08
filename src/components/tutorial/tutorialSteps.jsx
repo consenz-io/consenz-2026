@@ -549,24 +549,7 @@ export const TUTORIAL_STEPS = [
     body: 'cleanview.discussion.body',
   },
   
-  // 23. Points system
-  {
-    id: 'points-explain',
-    type: 'explain',
-    targetSelector: '.user-points-badge',
-    tooltipPosition: 'bottom',
-    heading: 'points.explain.heading',
-    body: 'points.explain.body',
-    table: [
-      { label: 'points.explain.cost.edit',       value: '−200' },
-      { label: 'points.explain.cost.new',        value: '−350' },
-      { label: 'points.explain.reward.upvote',   value: '+10'  },
-      { label: 'points.explain.reward.aligned',  value: '+50'  },
-      { label: 'points.explain.reward.accepted', value: '+500' },
-    ],
-  },
-  
-  // 24. Closing screen
+  // 23. Closing screen
   {
     id: 'closing',
     type: 'closing',
