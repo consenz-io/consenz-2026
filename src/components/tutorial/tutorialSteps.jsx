@@ -95,6 +95,8 @@ export const tutorialStrings = {
     'points.explain.reward.upvote': 'כל הצבעת בעד על ההצעה',
     'points.explain.reward.aligned': 'הצבעה בכיוון הקהילה',
     'points.explain.reward.accepted': 'הצעה שהתקבלה',
+    'consensus.meter.explain.heading': 'מד הקונסנזוס מראה איך מעצבים את המסמך',
+    'consensus.meter.explain.body': 'הבר הזה מראה מה רף התמיכה הדרוש להצעה להתקבל. הרף הזה משתנה לפי היסטוריית ההצבעה של הקהילה — יותר קפדני במסמכים מפותחים, יותר גמיש במסמכים חדשים. לחצו כדי ללמוד איך הוא מחושב.',
     'closing.heading': 'מוכנים לתרום',
     'closing.body': 'עכשיו אתם יודעים איך Consenz עובדת. כל הצעה שתגישו, כל הצבעה שתתנו — מעצבת את המסמך הזה יחד עם שאר הקהילה.',
     'closing.cta': 'בואו נתחיל',
@@ -149,6 +151,8 @@ export const tutorialStrings = {
     'newclause.content.success': 'رائع! الآن يمكنكم إضافة شرح.',
     'newclause.explanation.heading': 'أضيفوا شرحاً (اختياري)',
     'newclause.explanation.body': 'اشرحوا لماذا تعتقدون أن هذا البند مهم. هذا سيساعد المجتمع على فهم اقتراحكم.',
+    'consensus.meter.explain.heading': 'هذا المقياس يوضح كيف يتشكل التوافق',
+    'consensus.meter.explain.body': 'يُظهر الشريط عتبة الدعم المطلوبة لقبول مقترح. تتأقلم هذه العتبة بناءً على أنماط التصويت التاريخية للمجتمع — أصرم للمستندات الناضجة، وأكثر مرونة للمستندات الجديدة. اضغطوا لفهم كيفية حسابها.',
     'newclause.submit.heading': 'شارِكوا اقتراحكم',
     'newclause.submit.body': 'اضغطوا على زر "إرسال" لنشر اقتراحكم. سيتمكن المجتمع من التصويت عليه.',
     'newclause.submit.success': 'تم نشر المقترح. يمكن للمجتمع الآن التصويت عليه',
@@ -397,6 +401,16 @@ export const TUTORIAL_STEPS = [
     tooltipPosition: 'bottom',
     heading: 'newclause.explain.heading',
     body: 'newclause.explain.body',
+  },
+  
+  // 14. Consensus meter - learn about support threshold
+  {
+    id: 'consensus-meter-explain',
+    type: 'explain',
+    targetSelector: '.consensus-meter',
+    tooltipPosition: 'bottom',
+    heading: 'consensus.meter.explain.heading',
+    body: 'consensus.meter.explain.body',
   },
   
   // Closing screen
