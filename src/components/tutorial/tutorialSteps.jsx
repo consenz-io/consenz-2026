@@ -364,14 +364,15 @@ export const TUTORIAL_STEPS = [
     body: 'browse.explain.body',
   },
   
-  // 6. Browsing encouragement
+  // 6. Browsing encouragement — Next unlocks only after user browses
   {
     id: 'browse-encourage',
-    type: 'encourage',
-    targetSelector: '.proposal-navigation-arrows',
+    type: 'practice',
+    targetSelector: '.section-card',
     tooltipPosition: 'bottom',
     heading: 'browse.encourage.heading',
     body: 'browse.encourage.body',
+    completionEvent: 'carousel:navigated',
   },
   
   // 7. Voting (core mechanic)

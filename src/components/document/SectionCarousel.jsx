@@ -214,14 +214,14 @@ const SectionCarousel = React.memo(function SectionCarousel({
     if (!allViews || allViews.length === 0) return;
     const nextIndex = (currentIndex + 1) % allViews.length;
     setCurrentSuggestionId(allViews[nextIndex]?.id);
-    window.dispatchEvent(new CustomEvent('proposal:navigated'));
+    window.dispatchEvent(new CustomEvent('carousel:navigated'));
   };
 
   const handlePrev = () => {
     if (!allViews || allViews.length === 0) return;
     const prevIndex = (currentIndex - 1 + allViews.length) % allViews.length;
     setCurrentSuggestionId(allViews[prevIndex]?.id);
-    window.dispatchEvent(new CustomEvent('proposal:navigated'));
+    window.dispatchEvent(new CustomEvent('carousel:navigated'));
   };
 
   const isFirstView = currentIndex === 0;

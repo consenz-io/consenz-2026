@@ -109,7 +109,8 @@ export default function TutorialController() {
   useEffect(() => {
     if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
     const step = TUTORIAL_STEPS[currentStep];
-    if (!step || step.type !== 'practice') return;
+    // No pulse for browse-encourage (section-card is too large for ring animation)
+    if (!step || step.type !== 'practice' || step.id === 'browse-encourage') return;
 
     const el = document.querySelector(step.targetSelector);
     if (!el) return;
