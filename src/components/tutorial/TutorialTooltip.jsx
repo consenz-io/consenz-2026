@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, X, UserPlus } from 'lucide-react';
 import { tTutorial } from './tutorialSteps';
@@ -176,7 +175,7 @@ export default function TutorialTooltip({
   const isEncourage = step.type === 'encourage';
   const nextDisabled = isPractice && !practiceCompleted;
 
-  const tooltipContent = (
+  return (
     <>
     {/* Confirm skip dialog */}
     {showConfirm && (
@@ -323,6 +322,4 @@ export default function TutorialTooltip({
     </div>
     </>
   );
-
-  return createPortal(tooltipContent, document.body);
 }

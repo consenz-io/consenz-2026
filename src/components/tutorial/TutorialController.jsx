@@ -171,11 +171,10 @@ export default function TutorialController() {
     };
   }, [phase, currentStep]);
 
-  // ── Handle modal:new-section-opened → advance to newclause-topic-explain ────
+  // ── Handle modal:new-section-opened → advance to newclause-modal-explain ────
   useEffect(() => {
     if (phase !== 'running') return;
     const newclauseExplainIndex = TUTORIAL_STEPS.findIndex(s => s.id === 'newclause-explain');
-    const newclauseTopicIndex = TUTORIAL_STEPS.findIndex(s => s.id === 'newclause-topic-explain');
     const handler = () => {
       // Only auto-advance if we're currently on newclause-explain
       if (currentStep === newclauseExplainIndex) {
@@ -324,9 +323,9 @@ export default function TutorialController() {
       handleNext();
     };
 
-    // Modal-based steps inside CreateSuggestionModal don't use TutorialOverlay
-    // The modal provides its own backdrop and we render tooltip directly
-    const isModalStep = step.id.includes('topic-explain') || step.id.includes('content-explain') || step.id.includes('explanation-explain');
+    // Modal-based steps (e.g., newclause-modal-explain inside CreateSuggestionModal)
+    // don't use TutorialOverlay — the modal provides its own backdrop
+    const isModalStep = step.id.includes('modal');
 
     return isModalStep ? (
       <TutorialTooltip
