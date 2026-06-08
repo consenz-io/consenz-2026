@@ -419,16 +419,6 @@ export const TUTORIAL_STEPS = [
     completionEvent: 'create-suggestion-modal:opened',
   },
   
-  // 12. Delete section - explain
-  {
-    id: 'deleteclause-explain',
-    type: 'explain',
-    targetSelector: '.section-card',
-    tooltipPosition: 'bottom',
-    heading: 'deleteclause.explain.heading',
-    body: 'deleteclause.explain.body',
-  },
-  
   // 13. New section - explain concept
   {
     id: 'newclause-explain',
