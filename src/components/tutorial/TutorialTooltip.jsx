@@ -110,7 +110,15 @@ export default function TutorialTooltip({
   useEffect(() => {
     function update() {
       const el = document.querySelector(step.targetSelector);
-      if (!el) return;
+      if (!el) {
+        // Fallback: center of screen
+        setResolvedPosition('bottom');
+        setPos({
+          left: Math.max(8, window.innerWidth / 2 - TOOLTIP_WIDTH / 2),
+          top: Math.max(80, window.innerHeight / 2 - TOOLTIP_HEIGHT / 2),
+        });
+        return;
+      }
       const rect = el.getBoundingClientRect();
       const rp = computePosition(rect, step.tooltipPosition, isRTL);
       setResolvedPosition(rp);
@@ -121,26 +129,19 @@ export default function TutorialTooltip({
     const el = document.querySelector(step.targetSelector);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-      // Use requestAnimationFrame repeatedly to wait for scroll and layout to settle
       let frameCount = 0;
       const checkAndUpdate = () => {
         frameCount++;
         update();
-        // Check position multiple times to account for scroll animation
         if (frameCount < 10) {
           requestAnimationFrame(checkAndUpdate);
         }
       };
       requestAnimationFrame(checkAndUpdate);
-      window.addEventListener('scroll', update, { passive: true });
-      window.addEventListener('resize', update);
-      return () => {
-        window.removeEventListener('scroll', update);
-        window.removeEventListener('resize', update);
-      };
+    } else {
+      update();
     }
 
-    update();
     window.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
     return () => {
@@ -148,8 +149,6 @@ export default function TutorialTooltip({
       window.removeEventListener('resize', update);
     };
   }, [step, isRTL]);
-
-  if (!pos) return null;
 
   const isPractice = step.type === 'practice';
   const isEncourage = step.type === 'encourage';
