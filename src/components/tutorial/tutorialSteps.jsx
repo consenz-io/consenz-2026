@@ -422,8 +422,8 @@ export const TUTORIAL_STEPS = [
   // 15. Versions counter - learn about document history and navigate to clean view
   {
     id: 'versions-counter-explain',
-    type: 'practice',
-    targetSelector: '.versions-counter',
+    type: 'explain',
+    targetSelector: '.versions-tab-button',
     tooltipPosition: 'bottom',
     heading: 'versions.counter.explain.heading',
     body: 'versions.counter.explain.body',

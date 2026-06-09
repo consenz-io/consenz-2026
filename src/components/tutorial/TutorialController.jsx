@@ -287,7 +287,13 @@ export default function TutorialController() {
       if (step.navigateOnNext) {
         // Close any open modal first
         window.dispatchEvent(new CustomEvent('tutorial:closeModal'));
-        navigate(`/${step.navigateOnNext}`);
+        // Preserve current documentId query param if present
+        const params = new URLSearchParams(window.location.search);
+        const documentId = params.get('id');
+        const url = documentId
+          ? `/${step.navigateOnNext}?id=${documentId}`
+          : `/${step.navigateOnNext}`;
+        navigate(url);
       }
       handleNext();
     };
