@@ -97,8 +97,6 @@ export const tutorialStrings = {
     'points.explain.reward.accepted': 'הצעה שהתקבלה',
     'consensus.meter.explain.heading': 'מד הקונסנזוס',
     'consensus.meter.explain.body': 'המד מציג את רמת ההסכמה במסמך. ככל שהיא גבוהה יותר — כך גבוה יותר הרף להצעה להתקבל. לחצו כדי ללמוד איך זה מחושב.',
-    'support.bar.explain.heading': 'בר התמיכה',
-    'support.bar.explain.body': 'הבר הזה מראה כמה קולות צריכה הצעה כדי להתקבל. הוא משתנה בהתאם לרמת הקונסנזוס של המסמך.',
     'versions.counter.explain.heading': 'מסמך חי: היסטוריית הגרסאות',
     'versions.counter.explain.body': 'כל הצעה שהתקבלה יצרה גרסה חדשה ורשמית של המסמך. הספרה הזו מייצגת את כמות הגרסאות שהקהילה אישרה עד היום. בואו נלחץ עליה כדי לראות את היסטוריית השינויים.',
     'versions.browse.explain.heading': 'לראות איך המסמך התפתח',
@@ -201,8 +199,6 @@ export const tutorialStrings = {
     'points.explain.reward.upvote': 'كل تصويت لصالح مقترحكم',
     'points.explain.reward.aligned': 'التصويت في اتجاه المجتمع',
     'points.explain.reward.accepted': 'مقترح تم قبوله',
-    'support.bar.explain.heading': 'شريط الدعم',
-    'support.bar.explain.body': 'يُظهر هذا الشريط كم صوتاً يحتاج المقترح لكي يتم قبوله. يتغير هذا الشريط بناءً على مستوى التوافق في وثيقتكم.',
     'tour.summary.heading': 'ملخص الجولة',
     'tour.summary.body': 'لقد استعرضتم جميع مكوّنات Consenz: رأيتم كيف تُقسَّم الوثيقة إلى مواضيع وبنود، وكيف يُقترح التعديلات ويُصوَّت عليها، وكيف يحدد مقياس التوافق متى يُقبل اقتراح، وكيف يُوثَّق كل إصدار في التاريخ. أنتم الآن مستعدون للمشاركة.',
     'closing.heading': 'أنتم مستعدون للمساهمة',
@@ -303,10 +299,8 @@ export const tutorialStrings = {
     'signup.prompt.heading': "You'll need an account to continue",
     'signup.prompt.body': "Signing up is free and takes seconds. After registering you'll be brought right back here.",
     'signup.prompt.cta': 'Sign up',
-    'support.bar.explain.heading': 'Support Bar',
-    'support.bar.explain.body': 'This bar shows how many votes a proposal needs to be accepted. It adjusts based on your document\'s consensus level.',
-    },
-    };
+  },
+};
 
 /**
  * Resolve an i18n key to the translated string.
@@ -451,17 +445,7 @@ export const TUTORIAL_STEPS = [
     heading: 'consensus.meter.explain.heading',
     body: 'consensus.meter.explain.body',
   },
-
-  // 14.5. Support bar - explain the threshold indicator above voting buttons
-  {
-    id: 'support-bar-explain',
-    type: 'explain',
-    targetSelector: '.proposal-support-bar',
-    tooltipPosition: 'top',
-    heading: 'support.bar.explain.heading',
-    body: 'support.bar.explain.body',
-  },
-
+  
   // 15. Versions counter - learn about document history and navigate to clean view
   {
     id: 'versions-counter-explain',
