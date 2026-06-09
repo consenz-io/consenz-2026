@@ -145,9 +145,11 @@ export function useTutorial(steps = []) {
     setShowSignupPrompt(false);
 
     const handler = () => {
-      // If step requiresAuth and user is not authenticated, show signup prompt instead
+      // If step requiresAuth and user is not authenticated, show signup prompt
+      // but keep practiceCompleted true so they can sign up and continue
       if (step.requiresAuth && !isAuthenticated) {
         setShowSignupPrompt(true);
+        setPracticeCompleted(true); // Keep true so Next is available
         return;
       }
       setPracticeCompleted(true);
@@ -159,6 +161,7 @@ export function useTutorial(steps = []) {
     const authBlockedHandler = () => {
       if (step.requiresAuth && !isAuthenticated) {
         setShowSignupPrompt(true);
+        setPracticeCompleted(true); // Allow Next after signup
       }
     };
     window.addEventListener('tutorial:auth-required', authBlockedHandler);
@@ -291,6 +294,13 @@ export function useTutorial(steps = []) {
     setShowSuccess(false);
     setShowSignupPrompt(false);
   }, []);
+
+  // Ensure practiceCompleted resets when step changes
+  useEffect(() => {
+    setPracticeCompleted(false);
+    setShowSuccess(false);
+    setShowSignupPrompt(false);
+  }, [state.currentStep]);
 
   const restartTutorial = useCallback((entryPoint = 'document') => {
     if (entryPoint === 'document') {
