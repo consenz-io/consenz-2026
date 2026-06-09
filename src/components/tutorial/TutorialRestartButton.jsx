@@ -37,16 +37,16 @@ export default function TutorialRestartButton() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
     } catch {}
 
+    // Trigger tutorial restart
     if (window.restartTutorial) {
       window.restartTutorial(onDoc ? 'document' : 'home');
-      return;
-    }
-
-    // Fallback
-    if (onDoc) {
-      window.location.reload();
     } else {
-      navigate('/');
+      // Fallback if window.restartTutorial not yet ready
+      if (onDoc) {
+        window.location.reload();
+      } else {
+        navigate('/');
+      }
     }
   };
 
