@@ -60,7 +60,7 @@ export default function VersionNavigation({
           >
             {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             {isRTL
-              ? (language === 'he' ? 'גרסה ישנה יותר' : 'إصدار أقدم')
+              ? (language === 'he' ? 'גרסה קודמת' : 'إصدار أقدم')
               : 'Older'}
           </Button>
 
