@@ -259,14 +259,7 @@ export default function TutorialTooltip({
           </div>
 
           {/* Footer */}
-          {step.actionOnNext === 'navigateOlderVersion' ? (
-            <div className="mt-1 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
-              <p className="text-sm font-bold text-blue-800">
-                {isRTL ? '👆 יש ללחוץ על כפתור "גרסה ישנה יותר" כדי להמשיך' : '👆 Click "Older Version" to continue'}
-              </p>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -298,7 +291,6 @@ export default function TutorialTooltip({
                 </Button>
               )}
             </div>
-          )}
         </>
       )}
 
