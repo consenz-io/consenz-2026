@@ -340,7 +340,7 @@ export default function TutorialTooltip({
           {body && (
             <p className="text-sm text-slate-600 mb-3 leading-relaxed">
               {body}
-              {learnMoreText && (
+              {learnMoreText && onOpenPointsModal && (
                 <>
                   {' '}
                   <button

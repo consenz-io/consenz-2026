@@ -304,7 +304,7 @@ export default function TutorialController() {
     if (step.id === 'tour-summary') {
       return (
         <>
-          <div className="fixed inset-0 z-[10000] bg-black/70 pointer-events-none" aria-hidden="true" />
+          <div className="fixed inset-0 z-[10001] bg-black/70 pointer-events-none" aria-hidden="true" />
           <TutorialTooltip
             step={step}
             stepIndex={currentStep}

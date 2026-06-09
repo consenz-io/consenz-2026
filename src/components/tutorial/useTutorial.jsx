@@ -150,6 +150,7 @@ export function useTutorial(steps = []) {
         setShowSignupPrompt(true);
         return;
       }
+      // Keep practiceCompleted true even if signup prompt is already shown
       setPracticeCompleted(true);
     };
     window.addEventListener(step.completionEvent, handler);
@@ -281,15 +282,15 @@ export function useTutorial(steps = []) {
   }, [state.currentStep, steps, practiceCompleted, showSuccess]);
 
   const goBack = useCallback(() => {
+    setPracticeCompleted(false);
+    setShowSuccess(false);
+    setShowSignupPrompt(false);
     setState(prev => {
       if (prev.currentStep === 0) return prev;
       const next = { ...prev, currentStep: prev.currentStep - 1 };
       saveState(next);
       return next;
     });
-    setPracticeCompleted(false);
-    setShowSuccess(false);
-    setShowSignupPrompt(false);
   }, []);
 
   const restartTutorial = useCallback((entryPoint = 'document') => {
