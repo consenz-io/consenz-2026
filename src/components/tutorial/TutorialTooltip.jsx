@@ -259,42 +259,46 @@ export default function TutorialTooltip({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center gap-2">
-            {false ? null : (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onBack}
-                  disabled={stepIndex === 0}
-                  className="flex-1 text-slate-500"
-                >
-                  {isRTL ? 'הקודם' : 'Back'}
-                </Button>
+          {step.actionOnNext === 'navigateOlderVersion' ? (
+            <div className="mt-1 p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+              <p className="text-sm font-bold text-blue-800">
+                {isRTL ? '👆 לחץ על כפתור "גרסה ישנה יותר" כדי להמשיך' : '👆 Click "Older Version" to continue'}
+              </p>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onBack}
+                disabled={stepIndex === 0}
+                className="flex-1 text-slate-500"
+              >
+                {isRTL ? 'הקודם' : 'Back'}
+              </Button>
 
-                {isPractice && nextDisabled ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled
-                    className="flex-1 text-slate-400 cursor-not-allowed opacity-60"
-                  >
-                    {isRTL ? 'הבא' : 'Next'}
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    onClick={onNext}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    {stepIndex === totalSteps - 1
-                      ? (isRTL ? 'סיום' : 'Finish')
-                      : (isRTL ? 'הבא' : 'Next')}
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
+              {isPractice && nextDisabled ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled
+                  className="flex-1 text-slate-400 cursor-not-allowed opacity-60"
+                >
+                  {isRTL ? 'הבא' : 'Next'}
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={onNext}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {stepIndex === totalSteps - 1
+                    ? (isRTL ? 'סיום' : 'Finish')
+                    : (isRTL ? 'הבא' : 'Next')}
+                </Button>
+              )}
+            </div>
+          )}
         </>
       )}
 
