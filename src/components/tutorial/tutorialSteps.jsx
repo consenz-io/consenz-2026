@@ -323,7 +323,7 @@ export const GROUP_EXPLAIN_STEP = {
 export const GROUP_INTRO_STEP = {
   id: 'group-intro',
   type: 'practice',
-  targetSelector: '.group-documents-list',
+  targetSelector: '.group-documents-card',
   tooltipPosition: 'bottom',
   heading: 'group.docs.heading',
   body: 'group.docs.body',
