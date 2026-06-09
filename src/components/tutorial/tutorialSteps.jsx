@@ -489,14 +489,4 @@ export const TUTORIAL_STEPS = [
     body: 'tour.summary.body',
   },
 
-  // Closing screen
-  {
-    id: 'closing',
-    type: 'closing',
-    targetSelector: null,
-    tooltipPosition: null,
-    heading: 'closing.heading',
-    body: 'closing.body',
-    cta: 'closing.cta',
-  },
 ];
