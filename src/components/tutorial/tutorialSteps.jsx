@@ -432,10 +432,11 @@ export const TUTORIAL_STEPS = [
   {
     id: 'support-threshold-explain',
     type: 'explain',
-    targetSelector: '.voting-progress-section',
+    targetSelector: 'div.relative.h-3.bg-slate-200',
     tooltipPosition: 'bottom',
     heading: 'support.threshold.explain.heading',
     body: 'support.threshold.explain.body',
+    forceRevealTarget: true,
   },
 
   // 13. New section - explain concept
