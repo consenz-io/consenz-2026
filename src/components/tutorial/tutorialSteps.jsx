@@ -103,6 +103,7 @@ export const tutorialStrings = {
     'versions.browse.explain.body': 'כל לחיצה על "גרסה ישנה יותר" תראה לכם את המסמך כפי שנראה בשלב קודם — עם הדגשת השינוי שהתרחש בכל גרסה. כך תוכלו לעקוב אחר ההתפתחות של המסמך לאורך הזמן.',
     'versions.change.explain.heading': 'כך נראה שינוי בגרסה',
     'versions.change.explain.body': 'ירוק = תוכן שנוסף, אדום = תוכן שהוסר. כשמדובר בהצעת עריכה שהתקבלה, תוכלו לראות בדיוק אילו מילים השתנו בתוך הסעיף. לחצו על הסעיף המסומן כדי לצפות בדיון שהוביל לשינוי.',
+    'versions.change.cta': 'לחצו על הסעיף המסומן לפתיחת הדיון',
     'sidebar.explain.heading': 'פרטי ההצעה שהובילה לשינוי',
     'sidebar.explain.body': 'כאן תוכלו לראות את הדיון המלא — מה הציעו, כמה הצביעו, ומה הטיעונים שנאמרו. כל שינוי במסמך עבר תהליך כזה של דיון והצבעה קהילתית.',
     'closing.heading': 'מוכנים לתרום',
@@ -167,6 +168,7 @@ export const tutorialStrings = {
     'versions.browse.explain.body': 'كل نقرة على "إصدار أقدم" ستُظهر لكم الوثيقة كما بدت في مرحلة سابقة — مع إبراز التغيير الذي حدث في كل إصدار. هكذا يمكنكم متابعة تطور الوثيقة عبر الزمن.',
     'versions.change.explain.heading': 'هكذا يبدو التغيير في الإصدار',
     'versions.change.explain.body': 'الأخضر = محتوى مُضاف، الأحمر = محتوى محذوف. عندما يتعلق الأمر باقتراح تعديل تم قبوله، يمكنكم رؤية بالضبط أي الكلمات تغيّرت داخل البند. انقروا على البند المُميَّز لعرض النقاش الذي أدى إلى هذا التغيير.',
+    'versions.change.cta': 'اضغطوا على البند المميز لفتح النقاش',
     'sidebar.explain.heading': 'تفاصيل الاقتراح الذي أدى إلى التغيير',
     'sidebar.explain.body': 'هنا يمكنكم رؤية النقاش الكامل — ماذا اقترحوا، كم صوّتوا، وما الحجج التي قيلت. كل تغيير في الوثيقة مرّ بهذه العملية من النقاش والتصويت المجتمعي.',
     'newclause.submit.heading': 'شارِكوا اقتراحكم',
@@ -255,6 +257,7 @@ export const tutorialStrings = {
     'versions.browse.explain.body': 'Each click on "Older version" shows you the document as it looked at a previous stage — with the change that happened in each version highlighted. This way you can follow the document\'s evolution over time.',
     'versions.change.explain.heading': 'This is what a version change looks like',
     'versions.change.explain.body': 'Green = content added, red = content removed. When it\'s an accepted edit proposal, you can see exactly which words changed within the clause. Click the highlighted section to view the discussion that led to this change.',
+    'versions.change.cta': 'Click the highlighted section to open the discussion',
     'sidebar.explain.heading': 'Details of the proposal that led to this change',
     'sidebar.explain.body': 'Here you can see the full discussion — what was proposed, how many voted, and what arguments were made. Every change in the document went through this process of community discussion and voting.',
     'newclause.submit.heading': 'Submit your proposal',
@@ -468,16 +471,19 @@ export const TUTORIAL_STEPS = [
     heading: 'versions.change.explain.heading',
     body: 'versions.change.explain.body',
     completionEvent: 'sidebar:opened',
+    ctaLabel: 'versions.change.cta',
   },
 
   // 18. Sidebar opened — explain the discussion panel
+  // practice type: auto-completes via 'sidebar:already-open' fired by TutorialController on entry
   {
     id: 'sidebar-explain',
-    type: 'explain',
+    type: 'practice',
     targetSelector: '[data-tutorial="suggestion-sidebar"]',
     tooltipPosition: 'sidebar',
     heading: 'sidebar.explain.heading',
     body: 'sidebar.explain.body',
+    completionEvent: 'sidebar:already-open',
     navigateOnNext: 'DocumentView',
   },
 

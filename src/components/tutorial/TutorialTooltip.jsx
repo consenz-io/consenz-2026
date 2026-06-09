@@ -174,6 +174,7 @@ export default function TutorialTooltip({
   const isPractice = step.type === 'practice';
   const isEncourage = step.type === 'encourage';
   const nextDisabled = isPractice && !practiceCompleted;
+  const ctaLabel = step.ctaLabel ? tTutorial(step.ctaLabel, language) : null;
 
   return (
     <>
@@ -280,6 +281,13 @@ export default function TutorialTooltip({
           </div>
 
           {/* Footer */}
+          {ctaLabel && nextDisabled ? (
+            <div className="mt-1">
+              <div className="w-full py-2 px-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium text-center leading-snug">
+                {ctaLabel}
+              </div>
+            </div>
+          ) : (
           <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
@@ -312,6 +320,7 @@ export default function TutorialTooltip({
                 </Button>
               )}
             </div>
+          )}
         </>
       )}
 
