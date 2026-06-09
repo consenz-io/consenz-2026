@@ -101,6 +101,8 @@ export const tutorialStrings = {
     'versions.counter.explain.body': 'המספר הזה מראה כמה גרסאות קיימות של המסמך. כל גרסה היא חלק מההיסטוריה של המסמך — מצב שהקהילה אישרה. לחצו כדי לראות את כל הגרסאות והשינויים שהתרחשו.',
     'versions.browse.explain.heading': 'כאן תוכלו לדפדף בין גרסאות המסמך',
     'versions.browse.explain.body': 'כל לחיצה על "גרסה ישנה יותר" תראה לכם את המסמך כפי שנראה בשלב קודם — עם הדגשת השינוי שהתרחש בכל גרסה. כך תוכלו לעקוב אחר ההתפתחות של המסמך לאורך הזמן.',
+    'versions.change.explain.heading': 'כך נראה שינוי בגרסה',
+    'versions.change.explain.body': 'ירוק = תוכן שנוסף, אדום = תוכן שהוסר. עריכת אדמין מסומנת בכתום, הוספת סעיף חדש בירוק, ומחיקת סעיף באדום. לחצו על הסעיף המסומן כדי לצפות בדיון המלא שהוביל לשינוי הזה.',
     'closing.heading': 'מוכנים לתרום',
     'closing.body': 'עכשיו אתם יודעים איך Consenz עובדת. כל הצעה שתגישו, כל הצבעה שתתנו — מעצבת את המסמך הזה יחד עם שאר הקהילה.',
     'closing.cta': 'בואו נתחיל',
@@ -161,6 +163,8 @@ export const tutorialStrings = {
     'versions.counter.explain.body': 'هذا الرقم يُظهر كم إصدار موجود من الوثيقة. كل إصدار هو جزء من تاريخ الوثيقة — حالة وافق عليها المجتمع. اضغطوا لرؤية جميع الإصدارات والتغييرات التي حدثت.',
     'versions.browse.explain.heading': 'هنا يمكنكم التنقل بين إصدارات الوثيقة',
     'versions.browse.explain.body': 'كل نقرة على "إصدار أقدم" ستُظهر لكم الوثيقة كما بدت في مرحلة سابقة — مع إبراز التغيير الذي حدث في كل إصدار. هكذا يمكنكم متابعة تطور الوثيقة عبر الزمن.',
+    'versions.change.explain.heading': 'هكذا يبدو التغيير في الإصدار',
+    'versions.change.explain.body': 'الأخضر = محتوى مُضاف، الأحمر = محتوى محذوف. تعديل المسؤول يُميَّز بالبرتقالي، إضافة قسم جديد بالأخضر، وحذف قسم بالأحمر. انقروا على القسم المُميَّز لعرض النقاش الكامل الذي أدى إلى هذا التغيير.',
     'newclause.submit.heading': 'شارِكوا اقتراحكم',
     'newclause.submit.body': 'اضغطوا على زر "إرسال" لنشر اقتراحكم. سيتمكن المجتمع من التصويت عليه.',
     'newclause.submit.success': 'تم نشر المقترح. يمكن للمجتمع الآن التصويت عليه',
@@ -245,6 +249,8 @@ export const tutorialStrings = {
     'versions.counter.explain.body': 'This number shows how many versions of the document exist. Each version is a snapshot of the document at a point when the community approved a change. Click to see all versions and the changes that happened.',
     'versions.browse.explain.heading': 'Browse through the document\'s versions',
     'versions.browse.explain.body': 'Each click on "Older version" shows you the document as it looked at a previous stage — with the change that happened in each version highlighted. This way you can follow the document\'s evolution over time.',
+    'versions.change.explain.heading': 'This is what a version change looks like',
+    'versions.change.explain.body': 'Green = content added, red = content removed. Admin edits are highlighted in orange, new sections in green, and deleted sections in red. Click on the highlighted section to view the full discussion that led to this change.',
     'newclause.submit.heading': 'Submit your proposal',
     'newclause.submit.body': 'Click the "Submit" button to publish your proposal. The community will be able to vote on it.',
     'newclause.submit.success': 'Your proposal is live. The community can now vote on it',
@@ -444,6 +450,17 @@ export const TUTORIAL_STEPS = [
     tooltipPosition: 'top',
     heading: 'versions.browse.explain.heading',
     body: 'versions.browse.explain.body',
+    actionOnNext: 'navigateOlderVersion',
+  },
+
+  // 17. Explain the highlighted change in the navigated version
+  {
+    id: 'versions-change-explain',
+    type: 'explain',
+    targetSelector: '[id^="change-"]',
+    tooltipPosition: 'bottom',
+    heading: 'versions.change.explain.heading',
+    body: 'versions.change.explain.body',
   },
 
   // Closing screen

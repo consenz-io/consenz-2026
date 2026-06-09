@@ -295,6 +295,9 @@ export default function TutorialController() {
           : `/${step.navigateOnNext}`;
         navigate(url);
       }
+      if (step.actionOnNext === 'navigateOlderVersion') {
+        window.dispatchEvent(new CustomEvent('tutorial:navigateOlderVersion'));
+      }
       handleNext();
     };
 

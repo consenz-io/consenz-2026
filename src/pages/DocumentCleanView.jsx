@@ -90,6 +90,18 @@ export default function DocumentCleanView() {
     window.dispatchEvent(new CustomEvent('versions:opened'));
   }, []);
 
+  // Listen for tutorial navigate-older-version action
+  const totalVersionCountRef = React.useRef(totalVersionCount);
+  React.useEffect(() => { totalVersionCountRef.current = totalVersionCount; }, [totalVersionCount]);
+  React.useEffect(() => {
+    const handler = () => {
+      const total = totalVersionCountRef.current;
+      setCurrentVersionIndex(prev => Math.min(prev + 1, Math.max(total - 1, 1)));
+    };
+    window.addEventListener('tutorial:navigateOlderVersion', handler);
+    return () => window.removeEventListener('tutorial:navigateOlderVersion', handler);
+  }, []);
+
   // Subscribe to DocumentVersion changes to refresh version history in real-time
   React.useEffect(() => {
     if (!documentId) return;
