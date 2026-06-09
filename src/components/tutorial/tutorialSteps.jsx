@@ -490,6 +490,7 @@ export const TUTORIAL_STEPS = [
     heading: 'versions.change.explain.heading',
     body: 'versions.change.explain.body',
     navigateOnNext: 'DocumentView',
+    additionalSpotlights: ['.version-nav-buttons'],
   },
 
   // 18. Tour summary — back on DocumentView
