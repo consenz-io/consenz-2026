@@ -404,6 +404,7 @@ export default function SuggestionSidebar({
       
       {/* Sidebar */}
       <motion.div 
+        data-tutorial="suggestion-sidebar"
         className={`fixed inset-y-0 ${isRTL ? 'right-0' : 'left-0'} w-full md:w-[500px] shadow-2xl z-50 flex flex-col overflow-hidden`}
         initial={{ x: isRTL ? '100%' : '-100%' }}
         animate={{ 
