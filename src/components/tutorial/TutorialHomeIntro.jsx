@@ -215,6 +215,11 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL }) {
           <>
             <h3 className="font-bold text-slate-900 text-base mb-1 pr-5">{heading}</h3>
             {body && <p className="text-sm text-slate-600 leading-relaxed mb-3">{body}</p>}
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center mb-2">
+              <p className="text-sm font-bold text-blue-800">
+                {isRTL ? '👆 לחץ על אחת הקבוצות כדי להמשיך' : '👆 Click on a group to continue'}
+              </p>
+            </div>
             {activeStep.type === 'explain' && nextStep && (
               <button
                 onClick={handleNext}
