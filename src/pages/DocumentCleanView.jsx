@@ -431,6 +431,7 @@ ${text}`;
   const openSectionDiscussion = async (section, snapshotSuggestionId = null) => {
     if (snapshotSuggestionId) {
       setOpenSuggestionId(snapshotSuggestionId);
+      window.dispatchEvent(new CustomEvent('sidebar:opened'));
       return;
     }
     setOpeningSectionId(section.id);
@@ -462,6 +463,7 @@ ${text}`;
       // Update the local suggestions cache
       queryClient.setQueryData(['suggestions', documentId], (old = []) => [...old, newSugg]);
       setOpenSuggestionId(newSugg.id);
+      window.dispatchEvent(new CustomEvent('sidebar:opened'));
     } finally {
       setOpeningSectionId(null);
     }
@@ -949,12 +951,14 @@ ${text}`;
 
       <React.Suspense fallback={<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"><div className="bg-white p-4 rounded-lg shadow-lg">טוען...</div></div>}>
         {openSuggestionId && (
+          <div data-tutorial="suggestion-sidebar">
           <SuggestionSidebar
             suggestionId={openSuggestionId}
             onClose={() => setOpenSuggestionId(null)}
             document={document}
             user={currentUser || null}
           />
+          </div>
         )}
       </React.Suspense>
     </div>
