@@ -480,6 +480,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
 
           <button
             onClick={handleNext}
+            data-expand-proposal
             className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl border-2 font-bold transition-all shadow-sm
               ${currentView?.data?.type === 'delete_section'
                 ? 'border-red-300 bg-white text-red-600 hover:bg-red-100 hover:border-red-500 hover:shadow-md active:scale-95'

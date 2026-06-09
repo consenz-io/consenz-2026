@@ -399,12 +399,13 @@ export const TUTORIAL_STEPS = [
   
   // 5. Browsing proposals (viewing versions)
   {
-    id: 'browse-explain',
-    type: 'explain',
-    targetSelector: '.section-card',
-    tooltipPosition: 'bottom',
-    heading: 'browse.explain.heading',
-    body: 'browse.explain.body',
+   id: 'browse-explain',
+   type: 'explain',
+   targetSelector: '.section-card',
+   tooltipPosition: 'bottom',
+   heading: 'browse.explain.heading',
+   body: 'browse.explain.body',
+   actionOnNext: 'expandProposal',
   },
   
   // 7. Voting (core mechanic)

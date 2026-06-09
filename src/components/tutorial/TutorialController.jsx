@@ -287,6 +287,14 @@ export default function TutorialController() {
       if (step.actionOnNext === 'navigateOlderVersion') {
         window.dispatchEvent(new CustomEvent('tutorial:navigateOlderVersion'));
       }
+      if (step.actionOnNext === 'expandProposal') {
+        // Expand the proposal carousel to show vote buttons
+        const sectionCard = document.querySelector('.section-card');
+        if (sectionCard) {
+          const expandBtn = sectionCard.querySelector('[data-expand-proposal]');
+          if (expandBtn) expandBtn.click();
+        }
+      }
       handleNext();
     };
 
