@@ -471,13 +471,15 @@ export const TUTORIAL_STEPS = [
   },
 
   // 18. Sidebar opened — explain the discussion panel
+  // practice type: auto-completes via 'sidebar:already-open' fired by TutorialController on entry
   {
     id: 'sidebar-explain',
-    type: 'explain',
+    type: 'practice',
     targetSelector: '[data-tutorial="suggestion-sidebar"]',
     tooltipPosition: 'sidebar',
     heading: 'sidebar.explain.heading',
     body: 'sidebar.explain.body',
+    completionEvent: 'sidebar:already-open',
     navigateOnNext: 'DocumentView',
   },
 

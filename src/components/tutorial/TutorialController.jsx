@@ -195,6 +195,21 @@ export default function TutorialController() {
     };
   }, [phase, currentStep]);
 
+  // ── Handle sidebar-explain: fire completion event immediately (sidebar already open) ──
+  useEffect(() => {
+    if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
+    const step = TUTORIAL_STEPS[currentStep];
+    if (!step || step.id !== 'sidebar-explain') return;
+
+    // The sidebar is already open when this step is reached — fire the completion event
+    // after a short delay so the tooltip renders first and the user sees it briefly.
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('sidebar:already-open'));
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [phase, currentStep]);
+
   // ── Handle editclause-hover: reset carousel and show edit buttons ──────────
   useEffect(() => {
     if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
