@@ -324,7 +324,7 @@ export const GROUP_INTRO_STEP = {
   id: 'group-intro',
   type: 'practice',
   targetSelector: '.group-documents-list',
-  tooltipPosition: 'fixed-top-left',
+  tooltipPosition: 'bottom',
   heading: 'group.docs.heading',
   body: 'group.docs.body',
   successMessage: 'מעולה, בואו נתחיל',
