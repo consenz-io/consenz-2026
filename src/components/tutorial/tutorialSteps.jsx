@@ -474,7 +474,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'versions-browse-explain',
     type: 'explain',
-    targetSelector: '.versions-older-btn',
+    targetSelector: '.versions-list',
     tooltipPosition: 'top',
     heading: 'versions.browse.explain.heading',
     body: 'versions.browse.explain.body',
