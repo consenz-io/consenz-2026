@@ -100,10 +100,12 @@ export default function TutorialTooltip({
   isAuthenticated,
   isRTL,
   isSummary,
+  onOpenPointsModal,
 }) {
   const { language } = useLanguage();
   const heading = tTutorial(step.heading, language);
   const body = tTutorial(step.body, language);
+  const learnMoreText = step.id === 'points-ranking-explain' ? tTutorial('points.ranking.explain.learnMore', language) : null;
   const successMessage = tTutorial(step.successMessage, language);
 
   const [pos, setPos] = useState(null);
@@ -335,7 +337,22 @@ export default function TutorialTooltip({
           <h3 className="font-bold text-slate-900 text-base mb-1">{heading}</h3>
 
           {/* Body */}
-          {body && <p className="text-sm text-slate-600 mb-3 leading-relaxed">{body}</p>}
+          {body && (
+            <p className="text-sm text-slate-600 mb-3 leading-relaxed">
+              {body}
+              {learnMoreText && (
+                <>
+                  {' '}
+                  <button
+                    onClick={onOpenPointsModal}
+                    className="text-blue-600 hover:text-blue-700 underline font-medium"
+                  >
+                    {learnMoreText}
+                  </button>
+                </>
+              )}
+            </p>
+          )}
 
           {/* Points table */}
           {step.table && step.table.length > 0 && (

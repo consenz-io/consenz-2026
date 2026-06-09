@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTutorial } from './useTutorial';
 import { TUTORIAL_STEPS, HOME_INTRO_STEP, GROUP_INTRO_STEP, GROUP_EXPLAIN_STEP } from './tutorialSteps';
@@ -6,6 +6,7 @@ import TutorialWelcome from './TutorialWelcome';
 import TutorialOverlay from './TutorialOverlay';
 import TutorialTooltip from './TutorialTooltip';
 import TutorialHomeIntro from './TutorialHomeIntro';
+import PointsInfoModal from '@/components/points/PointsInfoModal';
 import { useLanguage } from '@/components/LanguageContext';
 
 function isDocumentPage(pathname) {
@@ -24,6 +25,7 @@ export default function TutorialController() {
   const { isRTL, language } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
+  const [showPointsModal, setShowPointsModal] = useState(false);
 
   const {
     phase,
@@ -322,21 +324,25 @@ export default function TutorialController() {
     }
 
     return (
-      <TutorialOverlay targetSelector={overlaySelector}>
-        <TutorialTooltip
-          step={step}
-          stepIndex={currentStep}
-          totalSteps={TUTORIAL_STEPS.length}
-          onNext={handleNextStep}
-          onBack={handleBack}
-          onSkip={skipTutorial}
-          practiceCompleted={practiceCompleted}
-          showSuccess={showSuccess}
-          showSignupPrompt={showSignupPrompt}
-          isAuthenticated={isAuthenticated}
-          isRTL={isRTL}
-        />
-      </TutorialOverlay>
+      <>
+        <TutorialOverlay targetSelector={overlaySelector}>
+          <TutorialTooltip
+            step={step}
+            stepIndex={currentStep}
+            totalSteps={TUTORIAL_STEPS.length}
+            onNext={handleNextStep}
+            onBack={handleBack}
+            onSkip={skipTutorial}
+            practiceCompleted={practiceCompleted}
+            showSuccess={showSuccess}
+            showSignupPrompt={showSignupPrompt}
+            isAuthenticated={isAuthenticated}
+            isRTL={isRTL}
+            onOpenPointsModal={() => setShowPointsModal(true)}
+          />
+        </TutorialOverlay>
+        <PointsInfoModal open={showPointsModal} onClose={() => setShowPointsModal(false)} />
+      </>
     );
   }
 
