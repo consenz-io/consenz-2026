@@ -99,6 +99,8 @@ export const tutorialStrings = {
     'consensus.meter.explain.body': 'הבר הזה מראה מה רף התמיכה הדרוש להצעה להתקבל. הרף הזה משתנה לפי היסטוריית ההצבעה של הקהילה — יותר קפדני במסמכים מפותחים, יותר גמיש במסמכים חדשים. לחצו כדי ללמוד איך הוא מחושב.',
     'versions.counter.explain.heading': 'קאונטר הגרסאות מראה את ההיסטוריה',
     'versions.counter.explain.body': 'המספר הזה מראה כמה גרסאות קיימות של המסמך. כל גרסה היא חלק מההיסטוריה של המסמך — מצב שהקהילה אישרה. לחצו כדי לראות את כל הגרסאות והשינויים שהתרחשו.',
+    'versions.browse.explain.heading': 'כאן תוכלו לדפדף בין גרסאות המסמך',
+    'versions.browse.explain.body': 'כל לחיצה על "גרסה ישנה יותר" תראה לכם את המסמך כפי שנראה בשלב קודם — עם הדגשת השינוי שהתרחש בכל גרסה. כך תוכלו לעקוב אחר ההתפתחות של המסמך לאורך הזמן.',
     'closing.heading': 'מוכנים לתרום',
     'closing.body': 'עכשיו אתם יודעים איך Consenz עובדת. כל הצעה שתגישו, כל הצבעה שתתנו — מעצבת את המסמך הזה יחד עם שאר הקהילה.',
     'closing.cta': 'בואו נתחיל',
@@ -157,6 +159,8 @@ export const tutorialStrings = {
     'consensus.meter.explain.body': 'يُظهر الشريط عتبة الدعم المطلوبة لقبول مقترح. تتأقلم هذه العتبة بناءً على أنماط التصويت التاريخية للمجتمع — أصرم للمستندات الناضجة، وأكثر مرونة للمستندات الجديدة. اضغطوا لفهم كيفية حسابها.',
     'versions.counter.explain.heading': 'عداد الإصدارات يُظهر التاريخ',
     'versions.counter.explain.body': 'هذا الرقم يُظهر كم إصدار موجود من الوثيقة. كل إصدار هو جزء من تاريخ الوثيقة — حالة وافق عليها المجتمع. اضغطوا لرؤية جميع الإصدارات والتغييرات التي حدثت.',
+    'versions.browse.explain.heading': 'هنا يمكنكم التنقل بين إصدارات الوثيقة',
+    'versions.browse.explain.body': 'كل نقرة على "إصدار أقدم" ستُظهر لكم الوثيقة كما بدت في مرحلة سابقة — مع إبراز التغيير الذي حدث في كل إصدار. هكذا يمكنكم متابعة تطور الوثيقة عبر الزمن.',
     'newclause.submit.heading': 'شارِكوا اقتراحكم',
     'newclause.submit.body': 'اضغطوا على زر "إرسال" لنشر اقتراحكم. سيتمكن المجتمع من التصويت عليه.',
     'newclause.submit.success': 'تم نشر المقترح. يمكن للمجتمع الآن التصويت عليه',
@@ -239,6 +243,8 @@ export const tutorialStrings = {
     'newclause.explanation.body': 'Explain why you think this section is important. This will help the community understand your proposal.',
     'versions.counter.explain.heading': 'The versions counter shows the document\'s history',
     'versions.counter.explain.body': 'This number shows how many versions of the document exist. Each version is a snapshot of the document at a point when the community approved a change. Click to see all versions and the changes that happened.',
+    'versions.browse.explain.heading': 'Browse through the document\'s versions',
+    'versions.browse.explain.body': 'Each click on "Older version" shows you the document as it looked at a previous stage — with the change that happened in each version highlighted. This way you can follow the document\'s evolution over time.',
     'newclause.submit.heading': 'Submit your proposal',
     'newclause.submit.body': 'Click the "Submit" button to publish your proposal. The community will be able to vote on it.',
     'newclause.submit.success': 'Your proposal is live. The community can now vote on it',
@@ -430,6 +436,16 @@ export const TUTORIAL_STEPS = [
     navigateOnNext: 'DocumentCleanView',
   },
   
+  // 16. Browse versions — explain the older-version button on DocumentCleanView
+  {
+    id: 'versions-browse-explain',
+    type: 'explain',
+    targetSelector: '.versions-older-btn',
+    tooltipPosition: 'top',
+    heading: 'versions.browse.explain.heading',
+    body: 'versions.browse.explain.body',
+  },
+
   // Closing screen
   {
     id: 'closing',

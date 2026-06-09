@@ -56,7 +56,7 @@ export default function VersionNavigation({
               if (next > 0) window.dispatchEvent(new CustomEvent('versions:selected'));
             }}
             disabled={isLoading || !hasMultipleVersions || isOldestVersion}
-            className="h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
+            className="versions-older-btn h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
           >
             {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             {isRTL
