@@ -36,57 +36,52 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL, ctaTe
 
   const [arrowDirection, setArrowDirection] = useState('down'); // 'up' | 'down' | 'left' | 'right' | 'none'
 
-  // Position tooltip based on tooltipPosition hint, with fallbacks
+  // Position tooltip + spotlight — poll until element is in DOM (handles async data load)
   useEffect(() => {
-    function update() {
-      const el = document.querySelector(activeStep.targetSelector);
-      if (!el) return;
+    let cleanupSpotlight = null;
+
+    function applySpotlight(el) {
+      const radius = window.getComputedStyle(el).borderRadius || '8px';
+      el.style.position = 'relative';
+      el.style.zIndex = '10001';
+      el.style.borderRadius = radius;
+      el.style.boxShadow = '0 0 0 9999px rgba(0,0,0,0.5)';
+      el.style.transition = 'box-shadow 0.3s ease';
+      return () => {
+        el.style.position = '';
+        el.style.zIndex = '';
+        el.style.boxShadow = '';
+        el.style.transition = '';
+      };
+    }
+
+    function updatePosition(el) {
       const rect = el.getBoundingClientRect();
       const position = activeStep.tooltipPosition;
 
       if (position === 'sidebar' || position === 'fixed-top-left') {
-        // Fixed position in top-left of content area — always fully visible
         const sidebar = document.querySelector('[data-sidebar="sidebar"]') || document.querySelector('aside');
         const sidebarWidth = sidebar ? sidebar.getBoundingClientRect().width : 0;
         setArrowDirection('none');
-        setTooltipStyle({
-          left: Math.max(16, sidebarWidth + 16),
-          top: 80,
-          transform: 'none',
-        });
+        setTooltipStyle({ left: Math.max(16, sidebarWidth + 16), top: 80, transform: 'none' });
         return;
       }
-
       if (position === 'right') {
-        // Place to the right of the element
         const top = Math.max(8, Math.min(window.innerHeight - 220, rect.top + rect.height / 2 - 90));
         setArrowDirection('left');
-        setTooltipStyle({
-          left: rect.right + ARROW_SIZE + 12,
-          top,
-          transform: 'none',
-        });
+        setTooltipStyle({ left: rect.right + ARROW_SIZE + 12, top, transform: 'none' });
         return;
       }
-
       if (position === 'left') {
         const top = Math.max(8, Math.min(window.innerHeight - 220, rect.top + rect.height / 2 - 90));
         setArrowDirection('right');
-        setTooltipStyle({
-          left: rect.left - TOOLTIP_WIDTH - ARROW_SIZE - 12,
-          top,
-          transform: 'none',
-        });
+        setTooltipStyle({ left: rect.left - TOOLTIP_WIDTH - ARROW_SIZE - 12, top, transform: 'none' });
         return;
       }
-
-      // Default: prefer above, fall back to below
       const centerX = rect.left + rect.width / 2;
       const left = Math.max(8, Math.min(window.innerWidth - TOOLTIP_WIDTH - 8, centerX - TOOLTIP_WIDTH / 2));
-      const estimatedHeight = 180;
       const spaceAbove = rect.top;
-
-      if (spaceAbove >= estimatedHeight + ARROW_SIZE + 12) {
+      if (spaceAbove >= 180 + ARROW_SIZE + 12) {
         setArrowDirection('down');
         setTooltipStyle({ left, top: rect.top - ARROW_SIZE - 12, transform: 'translateY(-100%)' });
       } else {
@@ -94,41 +89,38 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL, ctaTe
         setTooltipStyle({ left, top: rect.bottom + ARROW_SIZE + 12, transform: 'none' });
       }
     }
-    update();
-    window.addEventListener('scroll', update, { passive: true });
-    window.addEventListener('resize', update);
+
+    function tryInit() {
+      const el = document.querySelector(activeStep.targetSelector);
+      if (!el) return false;
+      updatePosition(el);
+      cleanupSpotlight = applySpotlight(el);
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return true;
+    }
+
+    // Try immediately, then poll every 200ms up to 3s if element not yet in DOM
+    if (!tryInit()) {
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        if (tryInit() || attempts >= 15) clearInterval(interval);
+      }, 200);
+    }
+
+    function handleScroll() {
+      const el = document.querySelector(activeStep.targetSelector);
+      if (el) updatePosition(el);
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll);
     return () => {
-      window.removeEventListener('scroll', update);
-      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+      if (cleanupSpotlight) cleanupSpotlight();
     };
   }, [activeStep.targetSelector, activeStep.tooltipPosition]);
-
-  // Scroll target element into view on mount
-  useEffect(() => {
-    const el = document.querySelector(activeStep.targetSelector);
-    if (!el) return;
-    setTimeout(() => {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 300);
-  }, [activeStep.targetSelector]);
-
-  // Spotlight on target (no scrim — only box-shadow ring)
-  useEffect(() => {
-    const el = document.querySelector(activeStep.targetSelector);
-    if (!el) return;
-    const radius = window.getComputedStyle(el).borderRadius || '8px';
-    el.style.position = 'relative';
-    el.style.zIndex = '10001';
-    el.style.borderRadius = radius;
-    el.style.boxShadow = '0 0 0 9999px rgba(0,0,0,0.5)';
-    el.style.transition = 'box-shadow 0.3s ease';
-    return () => {
-      el.style.position = '';
-      el.style.zIndex = '';
-      el.style.boxShadow = '';
-      el.style.transition = '';
-    };
-  }, [activeStep.targetSelector]);
 
   // Listen for completion event
   useEffect(() => {
