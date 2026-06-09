@@ -478,6 +478,7 @@ export const TUTORIAL_STEPS = [
     tooltipPosition: 'sidebar',
     heading: 'sidebar.explain.heading',
     body: 'sidebar.explain.body',
+    navigateOnNext: 'DocumentView',
   },
 
   // Closing screen
