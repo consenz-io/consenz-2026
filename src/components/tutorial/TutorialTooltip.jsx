@@ -10,6 +10,9 @@ const TOOLTIP_HEIGHT = 200; // estimate for positioning
 const ARROW_SIZE = 10;
 
 function computePosition(rect, preferred, isRTL) {
+  // 'sidebar' is a special virtual position — resolved by the caller
+  if (preferred === 'sidebar') return isRTL ? 'right' : 'left';
+
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const margin = 16;
@@ -109,6 +112,21 @@ export default function TutorialTooltip({
 
   useEffect(() => {
     function update() {
+      // Special 'sidebar' position: float in center of screen with arrow pointing to the side
+      if (step.tooltipPosition === 'sidebar') {
+        const rp = isRTL ? 'right' : 'left';
+        setResolvedPosition(rp);
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        // Place tooltip in horizontal center, vertical center
+        const top = Math.max(80, vh / 2 - TOOLTIP_HEIGHT / 2);
+        const left = isRTL
+          ? Math.max(8, vw / 2 - TOOLTIP_WIDTH / 2)   // center; arrow points right toward sidebar
+          : Math.max(8, vw / 2 - TOOLTIP_WIDTH / 2);  // center; arrow points left toward sidebar
+        setPos({ left, top });
+        return;
+      }
+
       const el = document.querySelector(step.targetSelector);
       if (!el) {
         // Fallback: center of screen
