@@ -256,13 +256,8 @@ export default function TutorialController() {
         />
       );
     }
-    return (
-      <TutorialHomeIntro
-        step={HOME_INTRO_STEP}
-        onSkip={skipTutorial}
-        isRTL={isRTL}
-      />
-    );
+    // On home page — no bubble, wait silently for user to navigate to a group
+    return null;
   }
 
   if (phase === 'running') {
