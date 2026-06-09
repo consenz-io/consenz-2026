@@ -282,6 +282,29 @@ export default function TutorialController() {
       );
     }
 
+    // Tour summary step — full dark overlay, no spotlight, tooltip centered
+    if (step.id === 'tour-summary') {
+      return (
+        <>
+          <div className="fixed inset-0 z-[10000] bg-black/70 pointer-events-none" aria-hidden="true" />
+          <TutorialTooltip
+            step={step}
+            stepIndex={currentStep}
+            totalSteps={TUTORIAL_STEPS.length}
+            onNext={handleNextStep}
+            onBack={handleBack}
+            onSkip={skipTutorial}
+            practiceCompleted={practiceCompleted}
+            showSuccess={showSuccess}
+            showSignupPrompt={showSignupPrompt}
+            isAuthenticated={isAuthenticated}
+            isRTL={isRTL}
+            isSummary
+          />
+        </>
+      );
+    }
+
     const overlaySelector = step.targetSelector;
 
     const handleNextStep = () => {

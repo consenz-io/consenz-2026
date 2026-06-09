@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, X, UserPlus } from 'lucide-react';
+import { CheckCircle, X, UserPlus, PartyPopper } from 'lucide-react';
 import { tTutorial } from './tutorialSteps';
 import { useLanguage } from '@/components/LanguageContext';
 import { base44 } from '@/api/base44Client';
@@ -99,6 +99,7 @@ export default function TutorialTooltip({
   showSignupPrompt,
   isAuthenticated,
   isRTL,
+  isSummary,
 }) {
   const { language } = useLanguage();
   const heading = tTutorial(step.heading, language);
@@ -175,6 +176,97 @@ export default function TutorialTooltip({
   const isEncourage = step.type === 'encourage';
   const nextDisabled = isPractice && !practiceCompleted;
   const ctaLabel = step.ctaLabel ? tTutorial(step.ctaLabel, language) : null;
+
+  // Summary step — centered card, no arrow, finish button
+  if (isSummary) {
+    return (
+      <>
+      {showConfirm && (
+        <div className="fixed inset-0 z-[10010] flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-6 flex flex-col gap-4" dir={isRTL ? 'rtl' : 'ltr'}>
+            <p className="text-slate-800 font-semibold text-center text-base">
+              {isRTL ? 'לסיים את הסיור?' : 'Exit the tour?'}
+            </p>
+            <p className="text-slate-500 text-sm text-center">
+              {isRTL ? 'תמיד אפשר להתחיל אותו מחדש מתפריט הניווט.' : 'You can always restart it from the navigation menu.'}
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setShowConfirm(false)}>
+                {isRTL ? 'המשך סיור' : 'Continue'}
+              </Button>
+              <Button className="flex-1 bg-red-500 hover:bg-red-600 text-white" onClick={() => { setShowConfirm(false); onSkip(); }}>
+                {isRTL ? 'סיים' : 'Exit'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div
+        className="fixed z-[10002] bg-white rounded-2xl shadow-2xl border-2 border-blue-200 p-6 text-center"
+        style={{
+          width: TOOLTIP_WIDTH + 40,
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+        }}
+        dir={isRTL ? 'rtl' : 'ltr'}
+        role="dialog"
+        aria-modal="false"
+        aria-label={heading}
+      >
+        <button
+          onClick={() => setShowConfirm(true)}
+          className="absolute top-3 end-3 text-slate-400 hover:text-slate-600 transition-colors"
+          aria-label={isRTL ? 'סגור' : 'Close'}
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+            <PartyPopper className="w-7 h-7 text-white" />
+          </div>
+          <h3 className="font-bold text-slate-900 text-lg leading-snug">{heading}</h3>
+          <p className="text-sm text-slate-600 leading-relaxed">{body}</p>
+
+          {/* Progress dots */}
+          <div className="flex items-center gap-1.5 justify-center mt-1">
+            {Array.from({ length: totalSteps }).map((_, i) => (
+              <div
+                key={i}
+                className={`rounded-full transition-all duration-200 ${
+                  i === stepIndex
+                    ? 'w-4 h-2 bg-blue-600'
+                    : i < stepIndex
+                    ? 'w-2 h-2 bg-blue-300'
+                    : 'w-2 h-2 bg-slate-200'
+                }`}
+              />
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2 w-full mt-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              className="flex-1 text-slate-500"
+            >
+              {isRTL ? 'הקודם' : 'Back'}
+            </Button>
+            <Button
+              size="sm"
+              onClick={onNext}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+            >
+              {isRTL ? 'סיום' : 'Finish'}
+            </Button>
+          </div>
+        </div>
+      </div>
+      </>
+    );
+  }
 
   return (
     <>
