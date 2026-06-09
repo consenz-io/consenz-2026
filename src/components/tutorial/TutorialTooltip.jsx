@@ -10,6 +10,10 @@ const TOOLTIP_HEIGHT = 200; // estimate for positioning
 const ARROW_SIZE = 10;
 
 function computePosition(rect, preferred, isRTL) {
+  // 'force-left' and 'force-right' skip the fits check entirely
+  if (preferred === 'force-left') return 'left';
+  if (preferred === 'force-right') return 'right';
+
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const margin = 16;
