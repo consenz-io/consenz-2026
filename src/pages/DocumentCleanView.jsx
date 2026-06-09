@@ -843,7 +843,7 @@ ${text}`;
                                 <div 
                                   id={`change-${section.id}`} 
                                   className={`border-l-4 border-amber-400 pl-3 py-2 bg-amber-50/30 rounded ${currentSnapshot?.suggestionId ? 'cursor-pointer hover:bg-amber-100/50 transition-colors' : ''}`}
-                                  onClick={() => currentSnapshot?.suggestionId && setOpenSuggestionId(currentSnapshot.suggestionId)}
+                                  onClick={() => { if (currentSnapshot?.suggestionId) { setOpenSuggestionId(currentSnapshot.suggestionId); window.dispatchEvent(new CustomEvent('sidebar:opened')); } }}
                                 >
                                   <div className="flex items-center mb-2">
                                     <Badge className="bg-amber-100 text-amber-800 text-xs">
