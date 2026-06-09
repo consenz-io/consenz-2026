@@ -383,12 +383,6 @@ export const HOME_INTRO_STEP = {
 
 /** @type {Array} */
 export const TUTORIAL_STEPS = [
-  // 0. Platform introduction (shown before groups explanation on home page)
-  HOME_INTRO_FIRST_STEP,
-
-  // 0.5. Groups selection on home page
-  HOME_INTRO_STEP,
-
   // 1. Foundation: Document title & description
   {
     id: 'doc-title-explain',
