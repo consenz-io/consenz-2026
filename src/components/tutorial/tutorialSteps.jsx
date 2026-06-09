@@ -18,8 +18,6 @@
 
 export const tutorialStrings = {
   he: {
-    'home.intro.heading': 'ברוכים ל-Consenz',
-    'home.intro.body': 'זו פלטפורמה לבניית מסמכים משותפים. קהילות כאן דנות, מציעות שינויים ומחליטות בקונסנזוס. כל קול משנה דברים — אתם יכולים להצביע, להוסיף תגובות ולעצב את המסמך בזמן אמת.',
     'home.groups.heading': 'קבוצה היא מרחב שיתוף פעולה',
     'home.groups.body': 'חברי הקבוצה כותבים מסמכים ביחד, מציעים שינויים, ומצביעים על כל הצעה. לחצו על קבוצה כדי לראות את המסמכים שלה ולהתחיל להשתתף.',
     'group.explain.heading': 'ברוכים הבאים לקבוצה',
@@ -124,8 +122,6 @@ export const tutorialStrings = {
     'signup.prompt.cta': 'הרשמה',
   },
   ar: {
-    'home.intro.heading': 'مرحباً بكم في Consenz',
-    'home.intro.body': 'هذه منصة لبناء الوثائق المشتركة معاً. المجتمعات هنا تنقاش وتقترح تعديلات وتقرر بتوافق. كل صوت مهم — يمكنكم التصويت والتعليق وتشكيل الوثيقة في الوقت الفعلي.',
     'home.groups.heading': 'المجموعة هي فضاء للتعاون',
     'home.groups.body': 'يكتب أعضاء المجموعة وثائق معاً، يقترحون تعديلات، ويصوتون على كل اقتراح. اضغطوا على مجموعة لرؤية وثائقها والمشاركة.',
     'group.explain.heading': 'مرحباً بكم في المجموعة',
@@ -222,8 +218,6 @@ export const tutorialStrings = {
     'signup.prompt.cta': 'تسجيل',
   },
   en: {
-    'home.intro.heading': 'Welcome to Consenz',
-    'home.intro.body': 'This is a collaborative platform for building shared documents together. Communities here discuss, propose changes, and decide by consensus. Everyone\'s voice matters — you can vote, comment, and shape the document in real-time.',
     'home.groups.heading': 'A group is a collaboration space',
     'home.groups.body': 'Group members write documents together, propose changes, and vote on every suggestion. Click a group to see its documents and start participating.',
     'group.explain.heading': 'Welcome to the group',
@@ -352,18 +346,6 @@ export const GROUP_INTRO_STEP = {
   body: 'group.docs.body',
   successMessage: 'מעולה, בואו נתחיל',
   completionEvent: 'document:entered',
-};
-
-/**
- * Intro step shown first on the home page — general platform explanation.
- */
-export const HOME_INTRO_FIRST_STEP = {
-  id: 'home-intro-first',
-  type: 'explain',
-  targetSelector: '.groups-list',
-  tooltipPosition: 'bottom',
-  heading: 'home.intro.heading',
-  body: 'home.intro.body',
 };
 
 /**

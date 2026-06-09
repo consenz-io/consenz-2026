@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTutorial } from './useTutorial';
-import { TUTORIAL_STEPS, HOME_INTRO_STEP, HOME_INTRO_FIRST_STEP, GROUP_INTRO_STEP, GROUP_EXPLAIN_STEP } from './tutorialSteps';
+import { TUTORIAL_STEPS, HOME_INTRO_STEP, GROUP_INTRO_STEP, GROUP_EXPLAIN_STEP } from './tutorialSteps';
 import TutorialWelcome from './TutorialWelcome';
 import TutorialOverlay from './TutorialOverlay';
 import TutorialTooltip from './TutorialTooltip';
@@ -246,28 +246,7 @@ export default function TutorialController() {
   }
 
   if (phase === 'home-intro') {
-    // Show platform intro first, then groups explanation
-    if (currentStep === 0) {
-      return (
-        <TutorialOverlay targetSelector={HOME_INTRO_FIRST_STEP.targetSelector}>
-          <TutorialTooltip
-            step={HOME_INTRO_FIRST_STEP}
-            stepIndex={0}
-            totalSteps={2}
-            onNext={handleNext}
-            onBack={handleBack}
-            onSkip={skipTutorial}
-            practiceCompleted={false}
-            showSuccess={false}
-            showSignupPrompt={false}
-            isAuthenticated={isAuthenticated}
-            isRTL={isRTL}
-          />
-        </TutorialOverlay>
-      );
-    }
-    
-    // On group page — show group documents step directly (skip HOME_INTRO)
+    // On group page — show group documents step directly
     if (isGroupPage(location.pathname)) {
       return (
         <TutorialHomeIntro
