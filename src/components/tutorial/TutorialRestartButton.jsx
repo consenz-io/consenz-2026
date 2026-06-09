@@ -53,6 +53,7 @@ export default function TutorialRestartButton() {
   return (
     <button
       onClick={handleRestart}
+      data-tutorial-restart-btn
       className="flex items-center gap-3 w-full px-3 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 min-h-[44px]"
     >
       <PlayCircle className="w-4 h-4 flex-shrink-0" />

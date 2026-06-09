@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTutorial } from './useTutorial';
 import { TUTORIAL_STEPS, HOME_INTRO_STEP, GROUP_INTRO_STEP, GROUP_EXPLAIN_STEP } from './tutorialSteps';
-import TutorialWelcome from './TutorialWelcome';
+import TutorialWelcomeBubble from './TutorialWelcomeBubble';
 import TutorialOverlay from './TutorialOverlay';
 import TutorialTooltip from './TutorialTooltip';
 import TutorialHomeIntro from './TutorialHomeIntro';
@@ -236,11 +236,12 @@ export default function TutorialController() {
 
   if (phase === 'welcome') {
     return (
-      <TutorialWelcome
+      <TutorialWelcomeBubble
         onStart={beginFromWelcome}
         onSkip={skipTutorial}
         isRTL={isRTL}
         language={language}
+        delay={10000}
       />
     );
   }
