@@ -475,7 +475,7 @@ export const TUTORIAL_STEPS = [
     id: 'sidebar-explain',
     type: 'explain',
     targetSelector: '[data-tutorial="suggestion-sidebar"]',
-    tooltipPosition: 'force-left',
+    tooltipPosition: 'right',
     heading: 'sidebar.explain.heading',
     body: 'sidebar.explain.body',
   },
