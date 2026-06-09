@@ -282,6 +282,26 @@ export default function TutorialController() {
       );
     }
 
+    const overlaySelector = step.targetSelector;
+
+    const handleNextStep = () => {
+      if (step.navigateOnNext) {
+        // Close any open modal first
+        window.dispatchEvent(new CustomEvent('tutorial:closeModal'));
+        // Preserve current documentId query param if present
+        const params = new URLSearchParams(window.location.search);
+        const documentId = params.get('id');
+        const url = documentId
+          ? `/${step.navigateOnNext}?id=${documentId}`
+          : `/${step.navigateOnNext}`;
+        navigate(url);
+      }
+      if (step.actionOnNext === 'navigateOlderVersion') {
+        window.dispatchEvent(new CustomEvent('tutorial:navigateOlderVersion'));
+      }
+      handleNext();
+    };
+
     // Tour summary step — full dark overlay, no spotlight, tooltip centered
     if (step.id === 'tour-summary') {
       return (
@@ -304,26 +324,6 @@ export default function TutorialController() {
         </>
       );
     }
-
-    const overlaySelector = step.targetSelector;
-
-    const handleNextStep = () => {
-      if (step.navigateOnNext) {
-        // Close any open modal first
-        window.dispatchEvent(new CustomEvent('tutorial:closeModal'));
-        // Preserve current documentId query param if present
-        const params = new URLSearchParams(window.location.search);
-        const documentId = params.get('id');
-        const url = documentId
-          ? `/${step.navigateOnNext}?id=${documentId}`
-          : `/${step.navigateOnNext}`;
-        navigate(url);
-      }
-      if (step.actionOnNext === 'navigateOlderVersion') {
-        window.dispatchEvent(new CustomEvent('tutorial:navigateOlderVersion'));
-      }
-      handleNext();
-    };
 
     return (
       <TutorialOverlay targetSelector={overlaySelector}>
