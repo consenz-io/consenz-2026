@@ -65,7 +65,7 @@ export default function PointsInfoModal({ open, onClose }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[88vh] overflow-y-auto z-[9999]" dir={isRTL ? "rtl" : "ltr"}>
+      <DialogContent className="max-w-lg max-h-[88vh] overflow-y-auto" style={{ zIndex: 99999 }} dir={isRTL ? "rtl" : "ltr"}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
             <Sparkles className="w-5 h-5 text-amber-500" />
