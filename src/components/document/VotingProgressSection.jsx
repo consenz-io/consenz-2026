@@ -134,7 +134,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
         className="block group"
         title={language === 'he' ? 'למדו על מנגנון הקונצנזוס' : 'Learn about consensus'}
       >
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-blue-200 transition-colors">
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-blue-200 transition-colors" data-tutorial="support-threshold">
           {/* Labels row */}
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-slate-600">
