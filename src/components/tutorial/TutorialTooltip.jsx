@@ -219,8 +219,7 @@ export default function TutorialTooltip({
         <button
           onClick={() => setShowConfirm(true)}
           className="absolute top-3 end-3 text-slate-400 hover:text-slate-600 transition-colors"
-          aria-label={isRTL ? 'סיום סיור' : 'Exit tour'}
-          title={isRTL ? 'סיום טוטוריאל' : 'Exit tutorial'}
+          aria-label={isRTL ? 'סגור' : 'Close'}
         >
           <X className="w-4 h-4" />
         </button>
@@ -308,8 +307,7 @@ export default function TutorialTooltip({
       <button
         onClick={() => setShowConfirm(true)}
         className="absolute top-2 end-2 text-slate-400 hover:text-slate-600 transition-colors"
-        aria-label={isRTL ? 'סיום סיור' : 'Exit tour'}
-        title={isRTL ? 'סיום טוטוריאל' : 'Exit tutorial'}
+        aria-label={isRTL ? 'סגור' : 'Close'}
       >
         <X className="w-4 h-4" />
       </button>
@@ -342,7 +340,7 @@ export default function TutorialTooltip({
           {body && (
             <p className="text-sm text-slate-600 mb-3 leading-relaxed">
               {body}
-              {learnMoreText && onOpenPointsModal && (
+              {learnMoreText && (
                 <>
                   {' '}
                   <button
