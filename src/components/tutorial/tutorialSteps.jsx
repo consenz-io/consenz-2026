@@ -493,7 +493,7 @@ export const TUTORIAL_STEPS = [
   {
    id: 'points-ranking-explain',
    type: 'explain',
-   targetSelector: '[class*="floating-points"]',
+   targetSelector: '.user-points-badge',
    tooltipPosition: 'bottom',
    heading: 'points.ranking.explain.heading',
    body: 'points.ranking.explain.body',
