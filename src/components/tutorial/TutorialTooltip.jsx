@@ -11,7 +11,7 @@ const ARROW_SIZE = 10;
 
 function computePosition(rect, preferred, isRTL) {
   // 'sidebar' is a special virtual position — resolved by the caller
-  if (preferred === 'sidebar') return isRTL ? 'right' : 'left';
+  if (preferred === 'sidebar') return isRTL ? 'left' : 'right';
 
   const vw = window.innerWidth;
   const vh = window.innerHeight;
@@ -114,7 +114,10 @@ export default function TutorialTooltip({
     function update() {
       // Special 'sidebar' position: float in center of screen with arrow pointing to the side
       if (step.tooltipPosition === 'sidebar') {
-        const rp = isRTL ? 'right' : 'left';
+        // In RTL the sidebar is on the RIGHT, so the arrow must point right → use 'left' position
+        // (ArrowEl 'left' puts the arrow on the right edge of the tooltip, pointing rightward)
+        // In LTR the sidebar is on the LEFT, so arrow points left → use 'right' position
+        const rp = isRTL ? 'left' : 'right';
         setResolvedPosition(rp);
         const vw = window.innerWidth;
         const vh = window.innerHeight;
