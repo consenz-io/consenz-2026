@@ -432,7 +432,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'support-threshold-explain',
     type: 'explain',
-    targetSelector: 'div.relative.h-3.bg-slate-200',
+    targetSelector: 'div.bg-slate-50.border.border-slate-200.rounded-xl',
     tooltipPosition: 'bottom',
     heading: 'support.threshold.explain.heading',
     body: 'support.threshold.explain.body',
