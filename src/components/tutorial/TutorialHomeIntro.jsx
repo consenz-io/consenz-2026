@@ -14,7 +14,7 @@ const ARROW_SIZE = 10;
  * - Tooltip anchored below the target
  * - No progress dots, no Back button
  */
-export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL }) {
+export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL, ctaText }) {
   const { language } = useLanguage();
   const [activeStep, setActiveStep] = useState(step);
   const heading = tTutorial(activeStep.heading, language) || activeStep.heading;
@@ -217,7 +217,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL }) {
             {body && <p className="text-sm text-slate-600 leading-relaxed mb-3">{body}</p>}
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center mb-2">
               <p className="text-sm font-bold text-blue-800">
-                {isRTL ? 'בחרו קבוצה ונמשיך' : 'Click on a group to continue'}
+                {ctaText || (isRTL ? 'בחרו קבוצה ונמשיך' : 'Click on a group to continue')}
               </p>
             </div>
             {activeStep.type === 'explain' && nextStep && (

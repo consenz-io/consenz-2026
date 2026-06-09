@@ -252,6 +252,7 @@ export default function TutorialController() {
           step={GROUP_INTRO_STEP}
           onSkip={skipTutorial}
           isRTL={isRTL}
+          ctaText={isRTL ? 'בחרו מסמך ונמשיך' : 'Click on a document to continue'}
         />
       );
     }
@@ -260,6 +261,7 @@ export default function TutorialController() {
         step={HOME_INTRO_STEP}
         onSkip={skipTutorial}
         isRTL={isRTL}
+        ctaText={isRTL ? 'בחרו קבוצה ונמשיך' : 'Click on a group to continue'}
       />
     );
   }
