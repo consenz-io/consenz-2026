@@ -245,12 +245,11 @@ export default function TutorialController() {
   }
 
   if (phase === 'home-intro') {
-    // On group page — show explain step, then practice step
+    // On group page — show group documents step directly
     if (isGroupPage(location.pathname)) {
       return (
         <TutorialHomeIntro
-          step={GROUP_EXPLAIN_STEP}
-          nextStep={GROUP_INTRO_STEP}
+          step={GROUP_INTRO_STEP}
           onSkip={skipTutorial}
           isRTL={isRTL}
         />
