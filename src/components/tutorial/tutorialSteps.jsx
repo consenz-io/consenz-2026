@@ -106,6 +106,8 @@ export const tutorialStrings = {
     'versions.change.cta': 'לחצו על הסעיף המסומן לפתיחת הדיון',
     'sidebar.explain.heading': 'פרטי ההצעה שהובילה לשינוי',
     'sidebar.explain.body': 'כאן תוכלו לראות את הדיון המלא — מה הציעו, כמה הצביעו, ומה הטיעונים שנאמרו. כל שינוי במסמך עבר תהליך כזה של דיון והצבעה קהילתית.',
+    'tour.summary.heading': 'סיכום הסיור',
+    'tour.summary.body': 'עברתם את כל מרכיבי Consenz: ראיתם כיצד המסמך מחולק לנושאים וסעיפים, כיצד מציעים שינויים ומצביעים עליהם, כיצד מד הקונסנזוס קובע מתי הצעה מתקבלת, וכיצד כל גרסה מתועדת בהיסטוריה. עכשיו אתם מוכנים להשתתף.',
     'closing.heading': 'מוכנים לתרום',
     'closing.body': 'עכשיו אתם יודעים איך Consenz עובדת. כל הצעה שתגישו, כל הצבעה שתתנו — מעצבת את המסמך הזה יחד עם שאר הקהילה.',
     'closing.cta': 'בואו נתחיל',
@@ -197,6 +199,8 @@ export const tutorialStrings = {
     'points.explain.reward.upvote': 'كل تصويت لصالح مقترحكم',
     'points.explain.reward.aligned': 'التصويت في اتجاه المجتمع',
     'points.explain.reward.accepted': 'مقترح تم قبوله',
+    'tour.summary.heading': 'ملخص الجولة',
+    'tour.summary.body': 'لقد استعرضتم جميع مكوّنات Consenz: رأيتم كيف تُقسَّم الوثيقة إلى مواضيع وبنود، وكيف يُقترح التعديلات ويُصوَّت عليها، وكيف يحدد مقياس التوافق متى يُقبل اقتراح، وكيف يُوثَّق كل إصدار في التاريخ. أنتم الآن مستعدون للمشاركة.',
     'closing.heading': 'أنتم مستعدون للمساهمة',
     'closing.body': 'الآن تعرفون كيف تعمل Consenz. كل مقترح تقدمونه، وكل تصويت تمنحونه — يُشكّل هذه الوثيقة مع بقية المجتمع.',
     'closing.cta': 'لنبدأ',
@@ -286,6 +290,8 @@ export const tutorialStrings = {
     'points.explain.reward.upvote': 'Each upvote on your proposal',
     'points.explain.reward.aligned': 'Voting in line with the community',
     'points.explain.reward.accepted': 'Proposal accepted',
+    'tour.summary.heading': 'Tour summary',
+    'tour.summary.body': "You've seen all the key parts of Consenz: how the document is divided into topics and sections, how to propose changes and vote on them, how the consensus meter determines when a proposal passes, and how every version is recorded in history. You're now ready to participate.",
     'closing.heading': 'You\'re ready to contribute',
     'closing.body': 'Now you know how Consenz works. Every proposal you submit, every vote you cast — shapes this document together with the rest of the community.',
     'closing.cta': 'Let\'s go',
@@ -465,24 +471,22 @@ export const TUTORIAL_STEPS = [
   // 17. Explain the highlighted change in the navigated version
   {
     id: 'versions-change-explain',
-    type: 'practice',
+    type: 'explain',
     targetSelector: '[id^="change-"]',
     tooltipPosition: 'bottom',
     heading: 'versions.change.explain.heading',
     body: 'versions.change.explain.body',
-    completionEvent: 'sidebar:opened',
-    ctaLabel: 'versions.change.cta',
+    navigateOnNext: 'DocumentView',
   },
 
-  // 18. Sidebar opened — explain the discussion panel
+  // 18. Tour summary — back on DocumentView
   {
-    id: 'sidebar-explain',
+    id: 'tour-summary',
     type: 'explain',
-    targetSelector: '[data-tutorial="suggestion-sidebar"]',
-    tooltipPosition: 'sidebar',
-    heading: 'sidebar.explain.heading',
-    body: 'sidebar.explain.body',
-    navigateOnNext: 'DocumentView',
+    targetSelector: '.document-title-section',
+    tooltipPosition: 'bottom',
+    heading: 'tour.summary.heading',
+    body: 'tour.summary.body',
   },
 
   // Closing screen
