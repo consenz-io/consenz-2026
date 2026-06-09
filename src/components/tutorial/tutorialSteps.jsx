@@ -108,6 +108,8 @@ export const tutorialStrings = {
     'versions.change.cta': 'לחצו על הסעיף המסומן לפתיחת הדיון',
     'sidebar.explain.heading': 'פרטי ההצעה שהובילה לשינוי',
     'sidebar.explain.body': 'כאן תוכלו לראות את הדיון המלא — מה הציעו, כמה הצביעו, ומה הטיעונים שנאמרו. כל שינוי במסמך עבר תהליך כזה של דיון והצבעה קהילתית.',
+    'points.ranking.explain.heading': 'הניקוד שלך משקף את התרומה שלך',
+    'points.ranking.explain.body': 'הניקוד משמש שני תפקידים: ראשית, הוא מסנן רעש — כשמציעים רעיון, זה עולה נקודות. שנית, הוא משקף השפעה — כשהקהילה תומכת בהצעה שלך, אתה מחזיר הרבה יותר. ככל שהתרומות שלך משפיעות יותר, הניקוד גדל.',
     'tour.summary.heading': 'מצוין! אתם מוכנים להשפיע',
     'tour.summary.body': 'עברתם על כל הכלים של Consenz: קריאת סעיפים, השוואה בין הצעות שונות, הצבעה משפיעה, ומעקב אחר היסטוריית הגרסאות של הקהילה. עכשיו הכוח לעצב את המסמך נמצא בידיים שלכם.',
     'closing.heading': 'מוכנים לתרום',
@@ -201,6 +203,8 @@ export const tutorialStrings = {
     'points.explain.reward.upvote': 'كل تصويت لصالح مقترحكم',
     'points.explain.reward.aligned': 'التصويت في اتجاه المجتمع',
     'points.explain.reward.accepted': 'مقترح تم قبوله',
+    'points.ranking.explain.heading': 'نقاطك تعكس إسهامك',
+    'points.ranking.explain.body': 'النقاط لها وظيفتان: أولاً، تصفي الضوضاء — تقديم فكرة ينفق نقاطاً. ثانياً، تعكس التأثير — عندما يدعم المجتمع اقتراحك، تسترجع أكثر بكثير. كلما كانت إسهاماتك أكثر تأثيراً، تنمو نقاطك.',
     'tour.summary.heading': 'ملخص الجولة',
     'tour.summary.body': 'لقد استعرضتم جميع مكوّنات Consenz: رأيتم كيف تُقسَّم الوثيقة إلى مواضيع وبنود، وكيف يُقترح التعديلات ويُصوَّت عليها، وكيف يحدد مقياس التوافق متى يُقبل اقتراح، وكيف يُوثَّق كل إصدار في التاريخ. أنتم الآن مستعدون للمشاركة.',
     'closing.heading': 'أنتم مستعدون للمساهمة',
@@ -292,6 +296,8 @@ export const tutorialStrings = {
     'points.explain.reward.upvote': 'Each upvote on your proposal',
     'points.explain.reward.aligned': 'Voting in line with the community',
     'points.explain.reward.accepted': 'Proposal accepted',
+    'points.ranking.explain.heading': 'Your points reflect your contribution',
+    'points.ranking.explain.body': 'Points serve two purposes: first, they filter noise — submitting a proposal costs points. Second, they reflect impact — when the community supports your proposal, you get back far more. The more influential your contributions, the more your points grow.',
     'tour.summary.heading': 'Excellent! You\'re ready to make an impact',
     'tour.summary.body': 'You\'ve covered all the tools of Consenz: reading sections, comparing different proposals, voting with real impact, and tracking the community\'s version history. Now the power to shape this document is in your hands.',
     'closing.heading': 'You\'re ready to contribute',
@@ -483,14 +489,24 @@ export const TUTORIAL_STEPS = [
     additionalSpotlights: ['.version-nav-buttons'],
   },
 
-  // 18. Tour summary — back on DocumentView
+  // 18. Points ranking explanation — before tour summary
   {
-    id: 'tour-summary',
-    type: 'explain',
-    targetSelector: '.document-title-section',
-    tooltipPosition: 'bottom',
-    heading: 'tour.summary.heading',
-    body: 'tour.summary.body',
+   id: 'points-ranking-explain',
+   type: 'explain',
+   targetSelector: '[class*="floating-points"]',
+   tooltipPosition: 'bottom',
+   heading: 'points.ranking.explain.heading',
+   body: 'points.ranking.explain.body',
+  },
+
+  // 19. Tour summary — back on DocumentView
+  {
+   id: 'tour-summary',
+   type: 'explain',
+   targetSelector: '.document-title-section',
+   tooltipPosition: 'bottom',
+   heading: 'tour.summary.heading',
+   body: 'tour.summary.body',
   },
 
 ];
