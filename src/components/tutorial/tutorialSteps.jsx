@@ -97,6 +97,8 @@ export const tutorialStrings = {
     'points.explain.reward.accepted': 'הצעה שהתקבלה',
     'consensus.meter.explain.heading': 'מד הקונסנזוס',
     'consensus.meter.explain.body': 'המד מציג את רמת ההסכמה במסמך. ככל שהיא גבוהה יותר — כך גבוה יותר הרף להצעה להתקבל. לחצו כדי ללמוד איך זה מחושב.',
+    'threshold.bar.explain.heading': 'בר התמיכה — כמה קולות דרושים?',
+    'threshold.bar.explain.body': 'הבר הזה מציג כמה קולות בעד דרושים כדי שהצעה תתקבל. ככל שמד הקונסנזוס גבוה יותר — כך גבוה יותר הרף הדרוש. בצעו לחיצה עליו כדי לראות את הקונסנזוס המחושב.',
     'versions.counter.explain.heading': 'מסמך חי: היסטוריית הגרסאות',
     'versions.counter.explain.body': 'כל הצעה שהתקבלה יצרה גרסה חדשה ורשמית של המסמך. הספרה הזו מייצגת את כמות הגרסאות שהקהילה אישרה עד היום. בואו נלחץ עליה כדי לראות את היסטוריית השינויים.',
     'versions.browse.explain.heading': 'לראות איך המסמך התפתח',
@@ -164,6 +166,8 @@ export const tutorialStrings = {
     'newclause.explanation.body': 'اشرحوا لماذا تعتقدون أن هذا البند مهم. هذا سيساعد المجتمع على فهم اقتراحكم.',
     'consensus.meter.explain.heading': 'هذا المقياس يوضح كيف يتشكل التوافق',
     'consensus.meter.explain.body': 'يُظهر الشريط عتبة الدعم المطلوبة لقبول مقترح. تتأقلم هذه العتبة بناءً على أنماط التصويت التاريخية للمجتمع — أصرم للمستندات الناضجة، وأكثر مرونة للمستندات الجديدة. اضغطوا لفهم كيفية حسابها.',
+    'threshold.bar.explain.heading': 'شريط الدعم — كم تصويتاً نحتاج؟',
+    'threshold.bar.explain.body': 'يُظهر هذا الشريط عدد الأصوات المطلوبة لقبول مقترح. كلما ارتفع مقياس التوافق — كلما ارتفعت هذه العتبة. اضغطوا عليه لرؤية مقياس التوافق المحسوب.',
     'versions.counter.explain.heading': 'عداد الإصدارات يُظهر التاريخ',
     'versions.counter.explain.body': 'هذا الرقم يُظهر كم إصدار موجود من الوثيقة. كل إصدار هو جزء من تاريخ الوثيقة — حالة وافق عليها المجتمع. اضغطوا لرؤية جميع الإصدارات والتغييرات التي حدثت.',
     'versions.browse.explain.heading': 'شاهدوا كيف تطورت الوثيقة',
@@ -255,6 +259,8 @@ export const tutorialStrings = {
     'newclause.content.success': 'Great! Now you can add an explanation.',
     'newclause.explanation.heading': 'Add an explanation (optional)',
     'newclause.explanation.body': 'Explain why you think this section is important. This will help the community understand your proposal.',
+    'threshold.bar.explain.heading': 'Support bar — how many votes are needed?',
+    'threshold.bar.explain.body': 'This bar shows how many upvotes are needed for a proposal to pass. The higher the consensus meter — the higher this threshold becomes. Click it to see the calculated consensus level.',
     'versions.counter.explain.heading': 'Living document: version history',
     'versions.counter.explain.body': 'Every accepted proposal created a new official version of the document. This number represents how many versions the community has approved to date. Let\'s click it to see the history of changes.',
     'versions.browse.explain.heading': 'See how the document evolved',
@@ -425,7 +431,17 @@ export const TUTORIAL_STEPS = [
     heading: 'vote.explain.heading',
     body: 'vote.explain.body',
   },
-  
+
+  // 8. Support threshold bar - explain how votes translate to acceptance
+  {
+    id: 'threshold-bar-explain',
+    type: 'explain',
+    targetSelector: '.voting-progress-section',
+    tooltipPosition: 'bottom',
+    heading: 'threshold.bar.explain.heading',
+    body: 'threshold.bar.explain.body',
+  },
+
   // 13. New section - explain concept
   {
     id: 'newclause-explain',
