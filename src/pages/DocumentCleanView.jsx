@@ -90,18 +90,6 @@ export default function DocumentCleanView() {
     window.dispatchEvent(new CustomEvent('versions:opened'));
   }, []);
 
-  // Listen for tutorial navigate-older-version action
-  const totalVersionCountRef = React.useRef(totalVersionCount);
-  React.useEffect(() => { totalVersionCountRef.current = totalVersionCount; }, [totalVersionCount]);
-  React.useEffect(() => {
-    const handler = () => {
-      const total = totalVersionCountRef.current;
-      setCurrentVersionIndex(prev => Math.min(prev + 1, Math.max(total - 1, 1)));
-    };
-    window.addEventListener('tutorial:navigateOlderVersion', handler);
-    return () => window.removeEventListener('tutorial:navigateOlderVersion', handler);
-  }, []);
-
   // Subscribe to DocumentVersion changes to refresh version history in real-time
   React.useEffect(() => {
     if (!documentId) return;
@@ -148,6 +136,18 @@ export default function DocumentCleanView() {
   // Total version count is simply the number of snapshots (current + history)
   // Use 0 while versions are loading so navigation shows a loading state
   const totalVersionCount = versionsLoading ? 0 : (versionGroups.length || 1);
+
+  // Listen for tutorial navigate-older-version action
+  const totalVersionCountRef = React.useRef(totalVersionCount);
+  React.useEffect(() => { totalVersionCountRef.current = totalVersionCount; }, [totalVersionCount]);
+  React.useEffect(() => {
+    const handler = () => {
+      const total = totalVersionCountRef.current;
+      setCurrentVersionIndex(prev => Math.min(prev + 1, Math.max(total - 1, 1)));
+    };
+    window.addEventListener('tutorial:navigateOlderVersion', handler);
+    return () => window.removeEventListener('tutorial:navigateOlderVersion', handler);
+  }, []);
 
   // Get topic title as it was at a specific version
   const getTopicTitleAtVersion = (topicId, versionIndex) => {
