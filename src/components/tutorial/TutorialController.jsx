@@ -68,11 +68,14 @@ export default function TutorialController() {
   }, []); // intentionally run once on mount
 
   // ── Transition: home-intro → group page ─────────────────────────────────
+  // When on home page with no bubble, mark homeStepSeen when user navigates to group or document
   useEffect(() => {
-    if (phase === 'home-intro' && homeStepSeen && isGroupPage(location.pathname)) {
-      // Stay in home-intro phase but switch to group step — handled in render
+    if (phase !== 'home-intro') return;
+    if (isGroupPage(location.pathname) || isDocumentPage(location.pathname)) {
+      // Dispatch document:entered so useTutorial marks homeStepSeen
+      window.dispatchEvent(new CustomEvent('document:entered'));
     }
-  }, [location.pathname, phase, homeStepSeen]);
+  }, [location.pathname, phase]);
 
   // ── Resume when navigating TO a document page ────────────────────────────
   useEffect(() => {
@@ -256,7 +259,7 @@ export default function TutorialController() {
         />
       );
     }
-    // On home page — no bubble, wait silently for user to navigate to a group
+    // On home page — no bubble shown; homeStepSeen is set when user navigates to group/document
     return null;
   }
 
