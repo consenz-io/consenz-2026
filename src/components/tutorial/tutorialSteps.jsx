@@ -96,7 +96,7 @@ export const tutorialStrings = {
     'points.explain.reward.aligned': 'הצבעה בכיוון הקהילה',
     'points.explain.reward.accepted': 'הצעה שהתקבלה',
     'support.threshold.explain.heading': 'רף התומכים הדרוש',
-    'support.threshold.explain.body': 'הבר הזה מציג כמה הצבעות בעד נדרשות לאישור ההצעה. ככל שהתמיכה שקיבלה הגרסה האחרונה של המסמך גבוהה יותר, כך מספר התומכים הדרוש לאישור הצעת עריכה יהיה גבוה יותר.',
+    'support.threshold.explain.body': 'הבר הזה מציג כמה הצבעות בעד חסרות לאישור ההצעה. ככל שהתמיכה שקיבלה הגרסה האחרונה של המסמך גבוהה יותר, כך מספר התומכים הדרוש לאישור הצעת עריכה יהיה גבוה יותר.',
     'consensus.meter.explain.heading': 'מד הקונסנזוס',
     'consensus.meter.explain.body': 'המד מציג את רמת ההסכמה במסמך. ככל שהיא גבוהה יותר — כך גבוה יותר הרף להצעה להתקבל. לחצו כדי ללמוד איך זה מחושב.',
     'versions.counter.explain.heading': 'מסמך חי: היסטוריית הגרסאות',
