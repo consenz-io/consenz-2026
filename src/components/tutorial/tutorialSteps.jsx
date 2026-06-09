@@ -95,6 +95,8 @@ export const tutorialStrings = {
     'points.explain.reward.upvote': 'כל הצבעת בעד על ההצעה',
     'points.explain.reward.aligned': 'הצבעה בכיוון הקהילה',
     'points.explain.reward.accepted': 'הצעה שהתקבלה',
+    'support.threshold.explain.heading': 'רף התומכים הדרוש',
+    'support.threshold.explain.body': 'הבר הזה מציג כמה קולות בעד דרושים כדי שההצעה תתקבל. ככל שאחוז הקונסנזוס של המסמך גבוה יותר, כך גבוה יותר הרף הדרוש.',
     'consensus.meter.explain.heading': 'מד הקונסנזוס',
     'consensus.meter.explain.body': 'המד מציג את רמת ההסכמה במסמך. ככל שהיא גבוהה יותר — כך גבוה יותר הרף להצעה להתקבל. לחצו כדי ללמוד איך זה מחושב.',
     'versions.counter.explain.heading': 'מסמך חי: היסטוריית הגרסאות',
@@ -425,7 +427,17 @@ export const TUTORIAL_STEPS = [
     heading: 'vote.explain.heading',
     body: 'vote.explain.body',
   },
-  
+
+  // 8. Support threshold - explain the support bar above voting buttons
+  {
+    id: 'support-threshold-explain',
+    type: 'explain',
+    targetSelector: '.voting-progress-section',
+    tooltipPosition: 'bottom',
+    heading: 'support.threshold.explain.heading',
+    body: 'support.threshold.explain.body',
+  },
+
   // 13. New section - explain concept
   {
     id: 'newclause-explain',
