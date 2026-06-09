@@ -296,9 +296,6 @@ export default function TutorialController() {
       }
       if (step.actionOnNext === 'navigateOlderVersion') {
         window.dispatchEvent(new CustomEvent('tutorial:navigateOlderVersion'));
-        // Wait for DOM to update (DocumentCleanView has 150ms scroll timer + render)
-        setTimeout(() => handleNext(), 600);
-        return;
       }
       handleNext();
     };
