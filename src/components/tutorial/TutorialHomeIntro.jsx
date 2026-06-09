@@ -217,7 +217,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL }) {
             {body && <p className="text-sm text-slate-600 leading-relaxed mb-3">{body}</p>}
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center mb-2">
               <p className="text-sm font-bold text-blue-800">
-                {isRTL ? '👆 יש ללחוץ על אחד המסמכים כדי להמשיך' : '👆 Click on a group to continue'}
+                {isRTL ? 'בחרו קבוצה ונמשיך' : 'Click on a group to continue'}
               </p>
             </div>
             {activeStep.type === 'explain' && nextStep && (
