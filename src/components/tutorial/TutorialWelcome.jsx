@@ -1,61 +1,81 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { X, HelpCircle } from 'lucide-react';
 
 const strings = {
   he: {
-    headline: 'ברוכים ל-Consenz',
-    body: 'רוצים ללמוד איך הפלטפורמה עובדת? קחו סיור קצר של כמה שניות.',
-    start: 'קבלו סיור קצר',
-    skip: 'מכירים את המערכת? דלגו',
+    headline: 'סיור בפלטפורמה',
+    body: 'רוצים ללמוד איך הפלטפורמה עובדת?',
+    start: 'בואו נתחיל',
+    close: 'סגור',
   },
   ar: {
-    headline: 'مرحباً بكم في Consenz',
-    body: 'هل تريدون تعلّم كيفية عمل المنصة؟ خذوا جولة قصيرة تستغرق ثوانٍ.',
-    start: 'خذ جولة قصيرة',
-    skip: 'تعرف على النظام؟ تخطَّ',
+    headline: 'جولة في المنصة',
+    body: 'هل تريدون تعلّم كيفية عمل المنصة؟',
+    start: 'لنبدأ',
+    close: 'إغلاق',
   },
   en: {
-    headline: 'Welcome to Consenz',
-    body: 'Want to learn how the platform works? Take a quick tour in just a few seconds.',
-    start: 'Take a quick tour',
-    skip: 'Already familiar? Skip',
+    headline: 'Platform Tour',
+    body: 'Want to learn how the platform works?',
+    start: 'Let\'s start',
+    close: 'Close',
   },
 };
 
 export default function TutorialWelcome({ onStart, onSkip, isRTL, language = 'he' }) {
   const lang = strings[language] || strings.he;
+  const [isVisible, setIsVisible] = useState(false);
+
+  // Appear after 20 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 20000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!isVisible) return null;
+
   return (
-    <div className="fixed inset-0 z-[10002] flex items-center justify-center p-4 bg-black/40" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 flex flex-col gap-4">
+    <div 
+      className={`fixed z-[10002] top-6 ${isRTL ? 'left-6' : 'right-6'} max-w-xs w-96`} 
+      dir={isRTL ? 'rtl' : 'ltr'}
+    >
+      {/* Arrow pointer */}
+      <div className={`absolute ${isRTL ? '-left-2' : '-right-2'} top-8 w-4 h-4 bg-white transform rotate-45 shadow-lg`} />
+      
+      {/* Bubble */}
+      <div className="bg-white rounded-xl shadow-2xl border border-blue-200 p-4 relative">
+        {/* Close button */}
+        <button
+          onClick={onSkip}
+          className="absolute top-2 end-2 text-slate-400 hover:text-slate-600 transition-colors"
+          aria-label={isRTL ? 'סגור' : 'Close'}
+        >
+          <X className="w-4 h-4" />
+        </button>
+
         {/* Icon */}
-        <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 16v-4M12 8h.01"/>
-          </svg>
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <HelpCircle className="w-5 h-5 text-white" />
+          </div>
+          <h3 className="font-bold text-slate-900 text-sm">
+            {lang.headline}
+          </h3>
         </div>
 
-        <h2 className="text-xl font-bold text-slate-900 text-center">
-          {lang.headline}
-        </h2>
-
-        <p className="text-slate-600 text-sm text-center leading-relaxed">
+        <p className="text-slate-600 text-xs leading-relaxed mb-3">
           {lang.body}
         </p>
 
-        <div className="flex flex-col gap-2 mt-2">
+        <div className="flex gap-2">
           <Button
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs h-8"
             onClick={onStart}
           >
             {lang.start}
-          </Button>
-          <Button
-            variant="ghost"
-            className="w-full text-slate-500"
-            onClick={onSkip}
-          >
-            {lang.skip}
           </Button>
         </div>
       </div>
