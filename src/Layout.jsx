@@ -31,6 +31,16 @@ import FloatingPointsBadge from "@/components/points/FloatingPointsBadge";
 import { AccessibilityAnnouncer } from "@/components/AccessibilityAnnouncer";
 import { AccessibilityToolbarContent } from "@/components/AccessibilityToolbar";
 
+function MainContentWithSidebarClose({ location, mainContentRef, isRTL, children }) {
+  const { setOpen } = useSidebar();
+
+  React.useEffect(() => {
+    setOpen(false);
+  }, [location.pathname, setOpen]);
+
+  return children;
+}
+
 function MobileMenuButton({ isRTL, nudgeActive }) {
   const { toggleSidebar } = useSidebar();
   return (
@@ -51,7 +61,6 @@ function MobileMenuButton({ isRTL, nudgeActive }) {
 
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
-  const { setOpen } = useSidebar();
   const queryClient = useQueryClient();
   const { language, setLanguage, t, isRTL } = useLanguage();
   const [showScrollTop, setShowScrollTop] = React.useState(false);
@@ -92,8 +101,7 @@ function LayoutContent({ children, currentPageName }) {
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
-    setOpen(false); // Close sidebar on page change
-  }, [location.pathname, setOpen]);
+  }, [location.pathname]);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -366,15 +374,20 @@ function LayoutContent({ children, currentPageName }) {
           </SidebarFooter>
         </Sidebar>
 
-        <main 
-          className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden touch-auto"
-          id="main-content"
-          ref={mainContentRef}
-          tabIndex={-1}
-          role="main"
-          aria-label={isRTL ? 'תוכן ראשי' : 'Main content'}
-          style={{ '--sidebar-width': '16rem' }}
+        <MainContentWithSidebarClose 
+          location={location}
+          mainContentRef={mainContentRef}
+          isRTL={isRTL}
         >
+          <main 
+            className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden touch-auto"
+            id="main-content"
+            ref={mainContentRef}
+            tabIndex={-1}
+            role="main"
+            aria-label={isRTL ? 'תוכן ראשי' : 'Main content'}
+            style={{ '--sidebar-width': '16rem' }}
+          >
           <header className={`bg-white/80 backdrop-blur-sm border-b border-slate-200 ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'fixed md:inset-inline-start-64 md:w-[calc(100vw-16rem)]' : 'sticky'} top-0 z-30 w-full ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'shadow-md' : ''}`} role="banner">
             <div className="flex items-center gap-2 px-2 md:px-6 py-2 md:py-4 w-full min-w-0">
               {/* Left side: Sidebar Trigger + Logo */}
@@ -422,6 +435,7 @@ function LayoutContent({ children, currentPageName }) {
             {children}
           </div>
           </main>
+        </MainContentWithSidebarClose>
 
           {showScrollTop && (
            <button
