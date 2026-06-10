@@ -45,8 +45,27 @@ export default function TutorialGhostVoting({ showNavArrows = false }) {
     const wrapper = window.document.createElement('div');
     wrapper.setAttribute('data-tutorial-ghost', 'true');
     wrapper.style.pointerEvents = 'none';
-    wrapper.style.opacity = '0.6';
+    wrapper.style.opacity = '0.8';
     wrapper.style.animation = 'tutorial-ghost-vote-pulse 1.4s ease-in-out infinite';
+    
+    // Add CSS to colorize the disabled buttons
+    const style = window.document.createElement('style');
+    style.textContent = `
+      [data-tutorial-ghost] button[disabled]:nth-child(1) {
+        background-color: #dcfce7 !important;
+        border-color: #22c55e !important;
+        color: #166534 !important;
+        opacity: 1 !important;
+      }
+      [data-tutorial-ghost] button[disabled]:nth-child(2) {
+        background-color: #fee2e2 !important;
+        border-color: #ef4444 !important;
+        color: #991b1b !important;
+        opacity: 1 !important;
+      }
+    `;
+    wrapper.appendChild(style);
+    
     sectionCard.prepend(wrapper);
     setContainer(wrapper);
 
