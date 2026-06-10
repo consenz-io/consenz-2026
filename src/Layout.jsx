@@ -74,17 +74,16 @@ function LayoutContent({ children, currentPageName }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
-  const { state: sidebarState } = useSidebar();
   const handleSidebarItemClick = React.useCallback(() => {
-    // Close sidebar only on mobile viewport when it's open
-    if (isMobileViewport && sidebarState?.open) {
+    // Close sidebar only on mobile viewport
+    if (isMobileViewport) {
       // Trigger close via a click on the sidebar overlay/trigger
       const sidebarOverlay = document.querySelector('[data-sidebar="overlay"]');
       if (sidebarOverlay) {
         sidebarOverlay.click();
       }
     }
-  }, [isMobileViewport, sidebarState?.open]);
+  }, [isMobileViewport]);
   
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
