@@ -120,6 +120,8 @@ export const tutorialStrings = {
     'closing.cta': 'בואו נתחיל',
     'welcome.intro.heading': 'ברוכים הבאים לסיור',
     'welcome.intro.body': 'בסיור קצר זה תלמדו איך הפלטפורמה עובדת: תקראו מסמך, תדפדפו בין הצעות עריכה, תצביעו על הצעה, ותראו כיצד כל קול מעצב את המסמך המשותף. בסוף — תהיו מוכנים להשפיע.',
+    'welcome.intro.prepare.heading': 'ברוכים הבאים לסיור',
+    'welcome.intro.prepare.body': 'בקבוצה תוכלו לדיון, להשתתף בכתיבה משותפת, ולצפות כיצד הקהילה בונה מסמכים ביחד. בואו נתחיל בהבנת מה זו קבוצה.',
     'nav.restart': 'סיור בפלטפורמה',
     'signup.prompt.heading': 'כדי להמשיך צריך להירשם',
     'signup.prompt.body': 'ההרשמה חינמית ולוקחת שניות. אחרי ההרשמה תחזרו בדיוק לכאן.',
@@ -220,6 +222,8 @@ export const tutorialStrings = {
     'closing.cta': 'لنبدأ',
     'welcome.intro.heading': 'مرحباً بكم في الجولة',
     'welcome.intro.body': 'في هذه الجولة القصيرة ستتعلمون كيفية عمل المنصة: ستقرأون وثيقة، وتتنقلون بين اقتراحات التحرير، وتصوتون على اقتراح، وترون كيف يشكّل كل صوت الوثيقة المشتركة. في النهاية — ستكونون مستعدين للمشاركة.',
+    'welcome.intro.prepare.heading': 'مرحباً بكم في الجولة',
+    'welcome.intro.prepare.body': 'في المجموعة ستتمكنون من النقاش والمشاركة في الكتابة المشتركة، ورؤية كيفية بناء المجتمع للوثائق معاً. لنبدأ بفهم ما هي المجموعة.',
     'nav.restart': 'جولة في المنصة',
     'signup.prompt.heading': 'للمتابعة يجب التسجيل',
     'signup.prompt.body': 'التسجيل مجاني ويستغرق ثوانٍ. بعد التسجيل ستعودون إلى هنا مباشرة.',
@@ -318,6 +322,8 @@ export const tutorialStrings = {
     'closing.cta': 'Let\'s go',
     'welcome.intro.heading': 'Welcome to the Tour',
     'welcome.intro.body': "In this short tour you'll learn how the platform works: read a document, browse edit proposals, vote on one, and see how every voice shapes the shared document. By the end — you'll be ready to make an impact.",
+    'welcome.intro.prepare.heading': 'Welcome to the Tour',
+    'welcome.intro.prepare.body': 'In a group you can discuss, participate in collaborative writing, and see how the community builds documents together. Let\'s start by understanding what a group is.',
     'nav.restart': 'Platform tour',
     'signup.prompt.heading': "You'll need an account to continue",
     'signup.prompt.body': "Signing up is free and takes seconds. After registering you'll be brought right back here.",
@@ -334,6 +340,18 @@ export function tTutorial(key, language = 'he') {
   const lang = tutorialStrings[language] || tutorialStrings.he;
   return lang[key] || tutorialStrings.he[key] || key;
 }
+
+/**
+ * Prepare for group explanation - introduce groups to the user
+ */
+export const WELCOME_INTRO_PREPARE_STEP = {
+  id: 'welcome-intro-prepare',
+  type: 'explain',
+  targetSelector: '.group-header',
+  tooltipPosition: 'fixed-top-left',
+  heading: 'welcome.intro.prepare.heading',
+  body: 'welcome.intro.prepare.body',
+};
 
 /**
  * Mid-tutorial steps shown on the group page.
