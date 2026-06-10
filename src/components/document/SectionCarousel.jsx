@@ -524,62 +524,61 @@ const SectionCarousel = React.memo(function SectionCarousel({
                 <DocumentTextContent content={content} className="text-slate-800" />
               )}
             />
-            <div className={`flex flex-col gap-3 mt-3 ${isRTL ? '' : ''}`}>
-              <div className="text-[10px] md:text-xs text-slate-400">
-                {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString('en-GB')}
-              </div>
-              <div className={`flex flex-wrap items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                {(() => {
-                    // אם הגרסה הנוכחית הגיעה מהצעה שהתקבלה — מציג את הצבעות של ההצעה (read-only)
-                    const acceptedEdit = allDocumentSuggestions
-                      .filter(s => s.sectionId === section.id && s.status === 'accepted' && (s.type === 'edit_section' || s.type === 'new_section'))
-                      .sort((a, b) => new Date(b.updated_date || b.created_date) - new Date(a.updated_date || a.created_date))[0];
-                    
-                    if (acceptedEdit) {
-                      return (
-                        <SectionVoteButtons
-                          section={section}
-                          user={user}
-                          onSuggestEdit={onEditSection}
-                          canParticipate={canParticipate}
-                          onCannotParticipate={() => setShowJoinGroupDialog(true)}
-                          initialVotes={sectionVotes}
-                          acceptedSuggestionVotes={{ pro: acceptedEdit.proVotes || 0, con: acceptedEdit.conVotes || 0 }}
-                        />
-                      );
-                    }
-                    return (
-                      <SectionVoteButtons
-                        section={section}
-                        user={user}
-                        onSuggestEdit={onEditSection}
-                        canParticipate={canParticipate}
-                        onCannotParticipate={() => setShowJoinGroupDialog(true)}
-                        initialVotes={sectionVotes}
-                      />
-                    );
-                  })()}
-                {(() => {
-                  const count = typeof getCommentsCount === 'function' ? getCommentsCount(activeCommentEntity.entityType, activeCommentEntity.entityId) : 0;
-                  const hasComments = count > 0;
-                  return (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleComments(`section-${section.id}`)}
-                      className={`h-7 md:h-8 text-xs px-2 transition-all ${
-                        hasComments
-                          ? 'font-bold text-blue-700 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 shadow-sm'
-                          : 'text-slate-600 hover:text-blue-600'
-                      }`}
-                    >
-                      <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'} ${hasComments ? 'fill-blue-200' : ''}`} />
-                      {t('comments')}{hasComments ? ` (${count})` : ''}
-                    </Button>
-                  );
-                })()}
-              </div>
+            <div className="text-[10px] md:text-xs text-slate-400 mb-4">
+              {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString('en-GB')}
             </div>
+            
+            {/* כפתורי הצבעה עם VotingProgressSection כמו בכרטיס הצעה */}
+            {document?.votingButtonsEnabled && (
+              <div className="proposal-vote-buttons mb-4" onClick={(e) => e.stopPropagation()}>
+                {user && canParticipate ? (
+                  <VotingProgressSection
+                    suggestion={{ ...section, proVotes: 0, conVotes: 0 }}
+                    document={document}
+                    userVote={null}
+                    voteMutation={{
+                      isPending: false,
+                      mutate: () => onEditSection(section)
+                    }}
+                    isRTL={isRTL}
+                    readOnly={true}
+                  />
+                ) : (
+                  <VotingProgressSection
+                    suggestion={{ ...section, proVotes: 0, conVotes: 0 }}
+                    document={document}
+                    userVote={null}
+                    voteMutation={{ isPending: false, mutate: () => {
+                      if (!user) base44.auth.redirectToLogin(window.location.href);
+                      else if (!canParticipate) setShowJoinGroupDialog(true);
+                    }}}
+                    isRTL={isRTL}
+                    readOnly={!user}
+                  />
+                )}
+              </div>
+            )}
+            
+            {/* כפתור תגובות */}
+            {(() => {
+              const count = typeof getCommentsCount === 'function' ? getCommentsCount(activeCommentEntity.entityType, activeCommentEntity.entityId) : 0;
+              const hasComments = count > 0;
+              return (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleComments(`section-${section.id}`)}
+                  className={`h-7 md:h-8 text-xs px-2 transition-all ${
+                    hasComments
+                      ? 'font-bold text-blue-700 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 shadow-sm'
+                      : 'text-slate-600 hover:text-blue-600'
+                  }`}
+                >
+                  <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'} ${hasComments ? 'fill-blue-200' : ''}`} />
+                  {t('comments')}{hasComments ? ` (${count})` : ''}
+                </Button>
+              );
+            })()}
             {showComments[`section-${section.id}`] && (
               <div className="mt-4 pt-4 border-t border-slate-200">
                 <CommentsSection
