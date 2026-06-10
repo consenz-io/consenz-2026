@@ -49,23 +49,12 @@ function MobileMenuButton({ isRTL, nudgeActive }) {
   );
 }
 
-function LayoutContent({ children, currentPageName }) {
-  const location = useLocation();
-  const queryClient = useQueryClient();
-  const { language, setLanguage, t, isRTL } = useLanguage();
-  const [showScrollTop, setShowScrollTop] = React.useState(false);
-  const mainContentRef = React.useRef(null);
-  const [showUnvotedNudge, setShowUnvotedNudge] = React.useState(() => {
-    if (typeof window === 'undefined') return true;
-    return sessionStorage.getItem('hideUnvotedNudge') !== 'true';
-  });
+function SidebarClickHandler({ children }) {
   const { closeSidebar } = useSidebar();
 
-  // Close sidebar on mobile when clicking any interactive element in sidebar
   React.useEffect(() => {
     const handleSidebarClick = (e) => {
       const target = e.target;
-      // Close sidebar on link/button/select clicks
       if (target.tagName === 'A' || target.tagName === 'BUTTON' || target.tagName === 'SELECT') {
         closeSidebar();
       }
@@ -77,6 +66,20 @@ function LayoutContent({ children, currentPageName }) {
     sidebarContent.addEventListener('click', handleSidebarClick);
     return () => sidebarContent.removeEventListener('click', handleSidebarClick);
   }, [closeSidebar]);
+
+  return children;
+}
+
+function LayoutContent({ children, currentPageName }) {
+  const location = useLocation();
+  const queryClient = useQueryClient();
+  const { language, setLanguage, t, isRTL } = useLanguage();
+  const [showScrollTop, setShowScrollTop] = React.useState(false);
+  const mainContentRef = React.useRef(null);
+  const [showUnvotedNudge, setShowUnvotedNudge] = React.useState(() => {
+    if (typeof window === 'undefined') return true;
+    return sessionStorage.getItem('hideUnvotedNudge') !== 'true';
+  });
   
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -228,9 +231,10 @@ function LayoutContent({ children, currentPageName }) {
 
   return (
     <SidebarProvider>
+      <SidebarClickHandler>
       {/* Skip to main content link for keyboard users */}
       <a
-        href="#main-content"
+         href="#main-content"
         onClick={skipToMainContent}
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-blue-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg"
         style={{ position: 'absolute' }}
@@ -455,8 +459,9 @@ function LayoutContent({ children, currentPageName }) {
       <TutorialController />
 
               </div>
-              </SidebarProvider>
-              );
+              </SidebarClickHandler>
+               </SidebarProvider>
+               );
               }
 
 export default function Layout({ children, currentPageName }) {
