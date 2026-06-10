@@ -230,6 +230,68 @@ export default function TutorialController() {
     };
   }, [phase, currentStep]);
 
+  // ── Helper: inject a ghost element before a section card when no proposals exist ──
+  const injectGhostElement = useCallback((ghostClass, innerHTML) => {
+    const sectionCard = document.querySelector('.section-card');
+    if (!sectionCard) return null;
+    // Only inject if no real proposals are visible
+    const hasProposals = !!sectionCard.querySelector('.proposal-navigation-arrows');
+    if (hasProposals) return null;
+    const ghost = window.document.createElement('div');
+    ghost.className = ghostClass;
+    ghost.setAttribute('data-tutorial-ghost', 'true');
+    ghost.innerHTML = innerHTML;
+    sectionCard.prepend(ghost);
+    return () => {
+      const g = sectionCard.querySelector('[data-tutorial-ghost="true"]');
+      if (g) g.remove();
+    };
+  }, []);
+
+  // ── Handle vote-explain: ghost voting buttons when no proposals exist ──────
+  useEffect(() => {
+    if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
+    const step = TUTORIAL_STEPS[currentStep];
+    if (!step || step.id !== 'vote-explain') return;
+
+    const hasRealVoting = !!document.querySelector('.proposal-vote-buttons');
+    if (hasRealVoting) return;
+
+    const cleanup = injectGhostElement('tutorial-ghost-vote-wrap', `
+      <div class="tutorial-ghost-vote-inner">
+        <div class="tutorial-ghost-progress-bar">
+          <div class="tutorial-ghost-bar-fill"></div>
+        </div>
+        <div class="tutorial-ghost-vote-buttons">
+          <div class="tutorial-ghost-vote-btn tutorial-ghost-vote-pro">👍</div>
+          <div class="tutorial-ghost-vote-btn tutorial-ghost-vote-con">👎</div>
+        </div>
+      </div>
+    `);
+    if (cleanup) return cleanup;
+  }, [phase, currentStep, injectGhostElement]);
+
+  // ── Handle support-threshold-explain: ghost support bar when no proposals exist ──
+  useEffect(() => {
+    if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
+    const step = TUTORIAL_STEPS[currentStep];
+    if (!step || step.id !== 'support-threshold-explain') return;
+
+    const hasRealThreshold = !!document.querySelector('[data-tutorial="support-threshold"]');
+    if (hasRealThreshold) return;
+
+    const cleanup = injectGhostElement('tutorial-ghost-threshold-wrap', `
+      <div class="tutorial-ghost-threshold-inner">
+        <div class="tutorial-ghost-threshold-label"></div>
+        <div class="tutorial-ghost-progress-bar">
+          <div class="tutorial-ghost-bar-fill" style="width:55%"></div>
+        </div>
+        <div class="tutorial-ghost-threshold-sublabel"></div>
+      </div>
+    `);
+    if (cleanup) return cleanup;
+  }, [phase, currentStep, injectGhostElement]);
+
   // ── Handle browse-explain: pulse carousel nav area when no suggestions exist ──
   useEffect(() => {
     if (phase !== 'running' || !TUTORIAL_STEPS.length) return;

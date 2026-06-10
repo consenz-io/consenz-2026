@@ -180,6 +180,77 @@ button:focus-visible {
   transition: none !important;
 }
 
+/* Tutorial: ghost voting buttons shown when vote-explain / support-threshold steps are active but no proposals exist */
+@keyframes tutorial-ghost-vote-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.72; }
+}
+
+.tutorial-ghost-vote-wrap,
+.tutorial-ghost-threshold-wrap {
+  margin-bottom: 1rem;
+  border: 2px dashed #93c5fd;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background: linear-gradient(to right, #eff6ff, #f0f9ff);
+  animation: tutorial-ghost-vote-pulse 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.tutorial-ghost-vote-inner,
+.tutorial-ghost-threshold-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tutorial-ghost-progress-bar {
+  height: 0.75rem;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.tutorial-ghost-bar-fill {
+  height: 100%;
+  width: 30%;
+  background: #93c5fd;
+  border-radius: 9999px;
+}
+
+.tutorial-ghost-vote-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tutorial-ghost-vote-btn {
+  flex: 1;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  border: 2px dashed #93c5fd;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  opacity: 0.6;
+}
+
+.tutorial-ghost-threshold-label,
+.tutorial-ghost-threshold-sublabel {
+  height: 0.75rem;
+  border-radius: 0.25rem;
+  background: #bfdbfe;
+  opacity: 0.5;
+  width: 60%;
+  margin: 0 auto;
+}
+
+.tutorial-ghost-threshold-sublabel {
+  width: 40%;
+  height: 0.6rem;
+}
+
 /* Tutorial: ghost nav bar shown when browse-explain step is active but no suggestions exist */
 @keyframes tutorial-ghost-pulse {
   0%, 100% { opacity: 0.35; border-color: #f59e0b; }
