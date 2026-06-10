@@ -565,7 +565,7 @@ export default function TutorialController() {
         ) : (
           <TutorialTooltip {...sharedTooltipProps} />
         )}
-        <PointsInfoModal open={showPointsModal} onClose={() => setShowPointsModal(false)} />
+        {showPointsModal && <PointsInfoModal open={showPointsModal} onClose={() => setShowPointsModal(false)} />}
       </>
     );
   }

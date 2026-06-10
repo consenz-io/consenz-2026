@@ -63,9 +63,13 @@ export default function PointsInfoModal({ open, onClose }) {
     },
   ];
 
+  const handleOpenChange = (isOpen) => {
+    if (!isOpen) onClose();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[88vh] overflow-y-auto" style={{ zIndex: 99999 }} dir={isRTL ? "rtl" : "ltr"}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-lg max-h-[88vh] overflow-y-auto" dir={isRTL ? "rtl" : "ltr"}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
             <Sparkles className="w-5 h-5 text-amber-500" />
