@@ -451,14 +451,14 @@ export const TUTORIAL_STEPS = [
   },
   
   // 7. Voting (core mechanic)
-   {
-     id: 'vote-explain',
-     type: 'explain',
-     targetSelector: '.proposal-vote-buttons',
-     tooltipPosition: 'bottom',
-     heading: 'vote.explain.heading',
-     body: 'vote.explain.body',
-   },
+  {
+    id: 'vote-explain',
+    type: 'explain',
+    targetSelector: '.proposal-vote-buttons',
+    tooltipPosition: 'top',
+    heading: 'vote.explain.heading',
+    body: 'vote.explain.body',
+  },
 
   // 8. Support threshold - explain the support bar above voting buttons
   {
