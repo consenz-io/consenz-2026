@@ -144,12 +144,11 @@ export default function TutorialController() {
     goBack();
   }, [goBack, currentStep, navigate]);
 
-  // Clear navPending whenever location changes (page finished navigating)
+  // On every page navigation: immediately suppress tooltip, then lift suppression after DOM settles
   useEffect(() => {
-    if (navPending) {
-      clearTimeout(navTimerRef.current);
-      navTimerRef.current = setTimeout(() => setNavPending(false), NAV_DELAY_MS);
-    }
+    setNavPending(true);
+    clearTimeout(navTimerRef.current);
+    navTimerRef.current = setTimeout(() => setNavPending(false), NAV_DELAY_MS);
     return () => clearTimeout(navTimerRef.current);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
