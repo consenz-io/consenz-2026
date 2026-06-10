@@ -410,14 +410,15 @@ export default function TutorialController() {
   // ── Render ────────────────────────────────────────────────────────────────
   if (phase === 'idle' || phase === 'done') return null;
 
-  // welcome-intro: full-screen modal shown immediately when tour starts, regardless of page
+  // welcome-intro: small bubble shown after delay when user is authenticated
   if (phase === 'welcome-intro') {
     return (
-      <TutorialWelcome
+      <TutorialWelcomeBubble
         onStart={beginFromWelcome}
         onSkip={skipTutorial}
         isRTL={isRTL}
         language={language}
+        delay={15000}
       />
     );
   }
