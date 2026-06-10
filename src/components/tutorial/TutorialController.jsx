@@ -375,28 +375,28 @@ export default function TutorialController() {
   // ── Skip confirm dialog ────────────────────────────────────────────────────
   const SkipConfirmDialog = showSkipConfirm ? (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-6 flex flex-col gap-4" dir={isRTL ? 'rtl' : 'ltr'}>
-        <p className="text-slate-800 font-semibold text-center text-base">
-          {isRTL ? 'לסיים את הסיור?' : 'Exit the tour?'}
-        </p>
-        <p className="text-slate-500 text-sm text-center">
-          {isRTL ? 'תמיד אפשר להתחיל אותו מחדש מתפריט הניווט.' : 'You can always restart it from the navigation menu.'}
-        </p>
-        <div className="flex gap-2">
-          <button
-            className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium text-sm"
-            onClick={() => setShowSkipConfirm(false)}
-          >
-            {isRTL ? 'המשך סיור' : 'Continue'}
-          </button>
-          <button
-            className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium text-sm"
-            onClick={() => { setShowSkipConfirm(false); skipTutorial(); }}
-          >
-            {isRTL ? 'סיים' : 'Exit'}
-          </button>
-        </div>
+    <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-6 flex flex-col gap-4" dir={isRTL ? 'rtl' : 'ltr'}>
+      <p className="text-slate-800 font-semibold text-center text-base">
+        {language === 'he' ? 'לסיים את הסיור?' : language === 'ar' ? 'إغلاق الجولة؟' : 'Exit the tour?'}
+      </p>
+      <p className="text-slate-500 text-sm text-center">
+        {language === 'he' ? 'תמיד אפשר להתחיל אותו מחדש מתפריט הניווט.' : language === 'ar' ? 'يمكنك دائماً إعادة تشغيله من قائمة التنقل.' : 'You can always restart it from the navigation menu.'}
+      </p>
+      <div className="flex gap-2">
+        <button
+          className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium text-sm"
+          onClick={() => setShowSkipConfirm(false)}
+        >
+          {language === 'he' ? 'המשך סיור' : language === 'ar' ? 'متابعة' : 'Continue'}
+        </button>
+        <button
+          className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium text-sm"
+          onClick={() => { setShowSkipConfirm(false); skipTutorial(); }}
+        >
+          {language === 'he' ? 'סיים' : language === 'ar' ? 'خروج' : 'Exit'}
+        </button>
       </div>
+    </div>
     </div>
   ) : null;
 
@@ -439,7 +439,7 @@ export default function TutorialController() {
             onSkip={skipTutorial}
             onRequestSkip={() => setShowSkipConfirm(true)}
             isRTL={isRTL}
-            ctaText={isRTL ? 'בחרו מסמך ונמשיך' : 'Click on a document to continue'}
+            ctaText={language === 'he' ? 'בחרו מסמך ונמשיך' : language === 'ar' ? 'اختر وثيقة للمتابعة' : 'Click on a document to continue'}
           />
         </>
       );
@@ -452,7 +452,7 @@ export default function TutorialController() {
           onSkip={skipTutorial}
           onRequestSkip={() => setShowSkipConfirm(true)}
           isRTL={isRTL}
-          ctaText={isRTL ? 'בחרו קבוצה ונמשיך' : 'Click on a group to continue'}
+          ctaText={language === 'he' ? 'בחרו קבוצה ונמשיך' : language === 'ar' ? 'اختر مجموعة للمتابعة' : 'Click on a group to continue'}
         />
       </>
     );

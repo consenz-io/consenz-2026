@@ -18,6 +18,8 @@
 
 export const tutorialStrings = {
   he: {
+    'home.intro.success': 'מעולה, בואו נתחיל',
+    'group.intro.success': 'מעולה, בואו נתחיל',
     'home.groups.heading': 'קבוצה היא מרחב שיתוף פעולה',
     'home.groups.body': 'חברי הקבוצה כותבים מסמכים ביחד, מציעים שינויים, ומצביעים על כל הצעה. לחצו על קבוצה כדי לראות את המסמכים שלה ולהתחיל להשתתף.',
     'group.explain.heading': 'ברוכים הבאים לקבוצה',
@@ -124,6 +126,8 @@ export const tutorialStrings = {
     'signup.prompt.cta': 'הרשמה',
   },
   ar: {
+    'home.intro.success': 'رائع، لنبدأ',
+    'group.intro.success': 'رائع، لنبدأ',
     'home.groups.heading': 'المجموعة هي فضاء للتعاون',
     'home.groups.body': 'يكتب أعضاء المجموعة وثائق معاً، يقترحون تعديلات، ويصوتون على كل اقتراح. اضغطوا على مجموعة لرؤية وثائقها والمشاركة.',
     'group.explain.heading': 'مرحباً بكم في المجموعة',
@@ -222,6 +226,8 @@ export const tutorialStrings = {
     'signup.prompt.cta': 'تسجيل',
   },
   en: {
+    'home.intro.success': 'Great, let\'s go',
+    'group.intro.success': 'Great, let\'s go',
     'home.groups.heading': 'A group is a collaboration space',
     'home.groups.body': 'Group members write documents together, propose changes, and vote on every suggestion. Click a group to see its documents and start participating.',
     'group.explain.heading': 'Welcome to the group',
@@ -344,30 +350,30 @@ export const GROUP_EXPLAIN_STEP = {
 };
 
 export const GROUP_INTRO_STEP = {
-  id: 'group-intro',
-  type: 'practice',
-  targetSelector: '.group-documents-card',
-  tooltipPosition: 'left',
-  heading: 'group.docs.heading',
-  body: 'group.docs.body',
-  successMessage: 'מעולה, בואו נתחיל',
-  completionEvent: 'document:entered',
-};
+   id: 'group-intro',
+   type: 'practice',
+   targetSelector: '.group-documents-card',
+   tooltipPosition: 'left',
+   heading: 'group.docs.heading',
+   body: 'group.docs.body',
+   successMessage: 'group.intro.success',
+   completionEvent: 'document:entered',
+ };
 
 /**
  * Pre-tutorial step shown on the home page.
  * No progress dots, no scrim — spotlight only on .groups-list.
  */
 export const HOME_INTRO_STEP = {
-  id: 'home-intro',
-  type: 'practice',
-  targetSelector: '.groups-list',
-  tooltipPosition: 'bottom',
-  heading: 'home.groups.heading',
-  body: 'home.groups.body',
-  successMessage: 'מעולה, בואו נתחיל',
-  completionEvent: 'document:entered',
-};
+   id: 'home-intro',
+   type: 'practice',
+   targetSelector: '.groups-list',
+   tooltipPosition: 'bottom',
+   heading: 'home.groups.heading',
+   body: 'home.groups.body',
+   successMessage: 'home.intro.success',
+   completionEvent: 'document:entered',
+ };
 
 /** @type {Array} */
 export const TUTORIAL_STEPS = [
