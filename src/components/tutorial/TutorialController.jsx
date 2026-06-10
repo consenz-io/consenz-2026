@@ -397,15 +397,18 @@ export default function TutorialController() {
 
   // welcome-intro: small bubble shown after delay when user is authenticated
   if (phase === 'welcome-intro') {
-    // For new authenticated users: show welcome bubble after 15s delay
-    // For unauthenticated users: skip entirely
+    // Check if this is a manual restart (by checking if we have a manual nav flag)
+    const isManualRestart = manualNavRef.current || sessionStorage.getItem('tutorial_manual_restart') === 'true';
+    // For new authenticated users: show welcome bubble after 15s delay (unless manual restart)
+    // For manual restart via button: show immediately
+    const delayMs = isManualRestart ? 0 : (isAuthenticated ? 15000 : 0);
     return (
       <TutorialWelcomeBubble
         onStart={beginFromWelcome}
         onSkip={skipTutorial}
         isRTL={isRTL}
         language={language}
-        delay={isAuthenticated ? 15000 : 0}
+        delay={delayMs}
       />
     );
   }

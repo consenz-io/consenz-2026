@@ -29,10 +29,14 @@ export default function TutorialWelcomeBubble({ onStart, onSkip, isRTL, language
   const [pos, setPos] = useState(null);
   const tooltipRef = useRef(null);
 
-  // Show after delay
+  // Show after delay (0 for immediate, 15000 for auto-start)
   useEffect(() => {
-    const timer = setTimeout(() => setShow(true), delay);
-    return () => clearTimeout(timer);
+    if (delay === 0) {
+      setShow(true);
+    } else {
+      const timer = setTimeout(() => setShow(true), delay);
+      return () => clearTimeout(timer);
+    }
   }, [delay]);
 
   // Position tooltip relative to TutorialRestartButton

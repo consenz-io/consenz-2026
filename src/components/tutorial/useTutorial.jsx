@@ -307,10 +307,15 @@ export function useTutorial(steps = []) {
   }, []);
 
   const restartTutorial = useCallback((entryPoint = 'document') => {
-    // When restarting, ALWAYS go back to beginning for new user experience
+    // When restarting manually, check if we should skip welcome-intro delay
+    const isManualRestart = sessionStorage.getItem('tutorial_manual_restart') === 'true';
+    sessionStorage.removeItem('tutorial_manual_restart'); // Clear flag after reading
+    
+    // For manual restart: go directly to running (skip welcome-intro)
+    // For auto-restart: show welcome-intro with 15s delay
     const fresh = {
       active: true,
-      homeStepSeen: false,
+      homeStepSeen: isManualRestart ? true : false,
       currentStep: 0,
       completedSteps: [],
     };
@@ -319,8 +324,14 @@ export function useTutorial(steps = []) {
     setPracticeCompleted(false);
     setShowSuccess(false);
     setShowSignupPrompt(false);
-    // Always start with welcome-intro to reset the experience
-    setPhase('welcome-intro');
+    
+    if (isManualRestart) {
+      // Skip welcome-intro entirely, go straight to running
+      setPhase('running');
+    } else {
+      // Show welcome-intro with delay
+      setPhase('welcome-intro');
+    }
   }, []);
 
   return {
