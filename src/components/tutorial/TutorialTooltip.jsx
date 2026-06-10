@@ -368,7 +368,7 @@ export default function TutorialTooltip({
                 <>
                   {' '}
                   <button
-                    onClick={onOpenPointsModal}
+                    onClick={() => setTimeout(onOpenPointsModal, 100)}
                     className="text-blue-600 hover:text-blue-700 underline font-medium"
                   >
                     {learnMoreText}
