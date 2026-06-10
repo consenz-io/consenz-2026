@@ -513,7 +513,7 @@ export default function TutorialController() {
       <>
         {SkipConfirmDialog}
         {showGhostVoting && <TutorialGhostVoting showNavArrows={TUTORIAL_STEPS[currentStep]?.id === 'vote-explain'} />}
-        <TutorialOverlay targetSelector={overlaySelector} additionalSpotlights={additionalSpotlights} />
+        {!isMobile && <TutorialOverlay targetSelector={overlaySelector} additionalSpotlights={additionalSpotlights} />}
         {isMobile ? (
           <TutorialMobileSheet {...sharedTooltipProps} />
         ) : (

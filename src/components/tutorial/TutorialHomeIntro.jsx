@@ -1,7 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { CheckCircle, X } from 'lucide-react';
 import { tTutorial } from './tutorialSteps';
 import { useLanguage } from '@/components/LanguageContext';
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState(() => window.innerWidth <= 768);
+  React.useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return isMobile;
+}
 
 const TOOLTIP_WIDTH = 320;
 const ARROW_SIZE = 10;
@@ -15,6 +26,7 @@ const ARROW_SIZE = 10;
  */
 export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSkip, isRTL, ctaText }) {
   const { language } = useLanguage();
+  const isMobile = useIsMobile();
   const [activeStep, setActiveStep] = useState(step);
   const heading = tTutorial(activeStep.heading, language) || activeStep.heading;
   const body = tTutorial(activeStep.body, language) || activeStep.body;
@@ -139,9 +151,46 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
     }
   };
 
+  // Mobile: bottom sheet, no positioning needed
+  if (isMobile) {
+    return createPortal(
+      <div
+        className="fixed bottom-0 inset-x-0 z-[99999] bg-white rounded-t-2xl shadow-2xl border-t border-slate-200 p-5"
+        dir={isRTL ? 'rtl' : 'ltr'}
+        role="dialog"
+        aria-label={step.heading}
+      >
+        <button
+          onClick={() => onRequestSkip ? onRequestSkip() : onSkip()}
+          className="absolute top-3 end-3 text-slate-400 hover:text-slate-600 transition-colors p-1 rounded"
+          aria-label={isRTL ? 'סגור' : 'Close'}
+        >
+          <X className="w-4 h-4" />
+        </button>
+        {showSuccess ? (
+          <div className="flex flex-col items-center gap-2 py-3 text-center">
+            <CheckCircle className="w-10 h-10 text-green-500" />
+            <p className="font-semibold text-green-700">{successMsg}</p>
+          </div>
+        ) : (
+          <>
+            <h3 className="font-bold text-slate-900 text-base mb-1 pe-6">{heading}</h3>
+            {body && <p className="text-sm text-slate-600 leading-relaxed mb-3">{body}</p>}
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+              <p className="text-sm font-bold text-blue-800">
+                {ctaText || (isRTL ? 'בחרו קבוצה ונמשיך' : 'Click on a group to continue')}
+              </p>
+            </div>
+          </>
+        )}
+      </div>,
+      document.body
+    );
+  }
+
   if (!tooltipStyle) return null;
 
-  return (
+  return createPortal(
     <>
       <div
         ref={tooltipRef}
@@ -151,7 +200,6 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
         role="dialog"
         aria-label={step.heading}
       >
-        {/* X button */}
         <button
           onClick={() => onRequestSkip ? onRequestSkip() : onSkip()}
           className="absolute top-2 end-2 text-slate-400 hover:text-slate-600 transition-colors p-1 rounded"
@@ -160,7 +208,6 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
           <X className="w-4 h-4" />
         </button>
 
-        {/* Arrow — direction depends on tooltip placement */}
         {arrowDirection !== 'none' && <div
           className="absolute w-0 h-0"
           style={
@@ -221,7 +268,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
           </>
         )}
       </div>
-
-    </>
+    </>,
+    document.body
   );
 }
