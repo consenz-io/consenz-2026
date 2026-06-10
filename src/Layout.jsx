@@ -31,16 +31,6 @@ import FloatingPointsBadge from "@/components/points/FloatingPointsBadge";
 import { AccessibilityAnnouncer } from "@/components/AccessibilityAnnouncer";
 import { AccessibilityToolbarContent } from "@/components/AccessibilityToolbar";
 
-function MainContentWithSidebarClose({ location, mainContentRef, isRTL, children }) {
-  const { setOpen } = useSidebar();
-
-  React.useEffect(() => {
-    setOpen(false);
-  }, [location.pathname, setOpen]);
-
-  return children;
-}
-
 function MobileMenuButton({ isRTL, nudgeActive }) {
   const { toggleSidebar } = useSidebar();
   return (
@@ -219,7 +209,7 @@ function LayoutContent({ children, currentPageName }) {
   ];
 
   return (
-    <SidebarProvider>
+    <>
       {/* Skip to main content link for keyboard users */}
       <a
          href="#main-content"
@@ -374,20 +364,15 @@ function LayoutContent({ children, currentPageName }) {
           </SidebarFooter>
         </Sidebar>
 
-        <MainContentWithSidebarClose 
-          location={location}
-          mainContentRef={mainContentRef}
-          isRTL={isRTL}
+        <main 
+          className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden touch-auto"
+          id="main-content"
+          ref={mainContentRef}
+          tabIndex={-1}
+          role="main"
+          aria-label={isRTL ? 'תוכן ראשי' : 'Main content'}
+          style={{ '--sidebar-width': '16rem' }}
         >
-          <main 
-            className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden touch-auto"
-            id="main-content"
-            ref={mainContentRef}
-            tabIndex={-1}
-            role="main"
-            aria-label={isRTL ? 'תוכן ראשי' : 'Main content'}
-            style={{ '--sidebar-width': '16rem' }}
-          >
           <header className={`bg-white/80 backdrop-blur-sm border-b border-slate-200 ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'fixed md:inset-inline-start-64 md:w-[calc(100vw-16rem)]' : 'sticky'} top-0 z-30 w-full ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'shadow-md' : ''}`} role="banner">
             <div className="flex items-center gap-2 px-2 md:px-6 py-2 md:py-4 w-full min-w-0">
               {/* Left side: Sidebar Trigger + Logo */}
@@ -435,7 +420,6 @@ function LayoutContent({ children, currentPageName }) {
             {children}
           </div>
           </main>
-        </MainContentWithSidebarClose>
 
           {showScrollTop && (
            <button
@@ -453,7 +437,7 @@ function LayoutContent({ children, currentPageName }) {
       <TutorialController />
 
               </div>
-               </SidebarProvider>
+               </>
                );
               }
 
@@ -461,8 +445,10 @@ export default function Layout({ children, currentPageName }) {
   return (
     <ErrorBoundary>
       <LanguageProvider>
-        <Toaster position="top-center" richColors closeButton />
-        <LayoutContent children={children} currentPageName={currentPageName} />
+        <SidebarProvider>
+          <Toaster position="top-center" richColors closeButton />
+          <LayoutContent children={children} currentPageName={currentPageName} />
+        </SidebarProvider>
       </LanguageProvider>
     </ErrorBoundary>
   );
