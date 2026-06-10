@@ -8,6 +8,7 @@ import TutorialOverlay from './TutorialOverlay';
 import TutorialTooltip from './TutorialTooltip';
 import TutorialHomeIntro from './TutorialHomeIntro';
 import TutorialGhostVoting from './TutorialGhostVoting';
+import TutorialGhostPoints from './TutorialGhostPoints';
 import TutorialMobileSheet from './TutorialMobileSheet';
 import PointsInfoModal from '@/components/points/PointsInfoModal';
 import { useLanguage } from '@/components/LanguageContext';
@@ -311,6 +312,12 @@ export default function TutorialController() {
     return step && (step.id === 'vote-explain' || step.id === 'support-threshold-explain');
   })();
 
+  // ── Derive ghost points state (show when not authenticated and at points-explain step) ──
+  const showGhostPoints = phase === 'running' && TUTORIAL_STEPS.length > 0 && !isAuthenticated && (() => {
+    const step = TUTORIAL_STEPS[currentStep];
+    return step && step.id === 'points-explain';
+  })();
+
   // ── Handle browse-explain: pulse carousel nav area when no suggestions exist ──
   useEffect(() => {
     if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
@@ -565,6 +572,7 @@ export default function TutorialController() {
       <>
         {SkipConfirmDialog}
         {showGhostVoting && <TutorialGhostVoting showNavArrows={TUTORIAL_STEPS[currentStep]?.id === 'vote-explain'} />}
+        {showGhostPoints && <TutorialGhostPoints />}
         {!isMobile && <TutorialOverlay targetSelector={overlaySelector} additionalSpotlights={additionalSpotlights} />}
         {isMobile ? (
           <TutorialMobileSheet {...sharedTooltipProps} />
