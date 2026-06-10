@@ -230,6 +230,39 @@ export default function TutorialController() {
     };
   }, [phase, currentStep]);
 
+  // ── Handle browse-explain: pulse carousel nav area when no suggestions exist ──
+  useEffect(() => {
+    if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
+    const step = TUTORIAL_STEPS[currentStep];
+    if (!step || step.id !== 'browse-explain') return;
+
+    // Check if there are any pending suggestions (carousel nav arrows are shown only when pendingSuggestions > 0)
+    const navArrows = document.querySelector('.proposal-navigation-arrows');
+    if (navArrows) return; // arrows exist — no need to ghost-pulse
+
+    // Find the section card and add a ghost nav area
+    const sectionCard = document.querySelector('.section-card');
+    if (!sectionCard) return;
+
+    // Create a ghost nav bar that mimics the real one but is visually "empty"
+    const ghost = window.document.createElement('div');
+    ghost.className = 'tutorial-ghost-nav';
+    ghost.setAttribute('data-tutorial-ghost', 'true');
+    ghost.innerHTML = `
+      <div class="tutorial-ghost-nav-inner">
+        <div class="tutorial-ghost-btn">‹</div>
+        <div class="tutorial-ghost-label"></div>
+        <div class="tutorial-ghost-btn">›</div>
+      </div>
+    `;
+    sectionCard.prepend(ghost);
+
+    return () => {
+      const g = sectionCard.querySelector('[data-tutorial-ghost="true"]');
+      if (g) g.remove();
+    };
+  }, [phase, currentStep]);
+
   // ── Handle editclause-hover: reset carousel and show edit buttons ──────────
   useEffect(() => {
     if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
