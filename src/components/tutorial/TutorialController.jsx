@@ -238,6 +238,19 @@ export default function TutorialController() {
     return () => { el.style.animation = ''; };
   }, [phase, currentStep]);
 
+  // ── Highlight target with blue outline for all explain/practice steps ──────
+  useEffect(() => {
+    if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
+    const step = TUTORIAL_STEPS[currentStep];
+    if (!step || !step.targetSelector || step.type === 'closing') return;
+
+    const el = document.querySelector(step.targetSelector);
+    if (!el) return;
+
+    el.classList.add('tutorial-highlight-target');
+    return () => { el.classList.remove('tutorial-highlight-target'); };
+  }, [phase, currentStep]);
+
   // ── Handle editclause-buttons: force-show edit/delete buttons on section card ──
   useEffect(() => {
     if (phase !== 'running' || !TUTORIAL_STEPS.length) return;

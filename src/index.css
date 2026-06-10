@@ -180,6 +180,13 @@ button:focus-visible {
   transition: none !important;
 }
 
+/* Tutorial: highlight target with outline */
+.tutorial-highlight-target {
+  outline: 3px solid #3b82f6 !important;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
 /* Tutorial: ghost voting/nav pulse animation */
 @keyframes tutorial-ghost-vote-pulse {
   0%, 100% { opacity: 0.35; }
