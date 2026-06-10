@@ -50,13 +50,13 @@ function MobileMenuButton({ isRTL, nudgeActive }) {
 }
 
 function SidebarInner({ isMobileViewport, navigationItems, language, location, user, t, isRTL, setLanguage, handleLogout }) {
-  const { setOpen } = useSidebar();
+  const { setOpenMobile } = useSidebar();
   
   const closeSidebarOnMobile = React.useCallback(() => {
     if (isMobileViewport) {
-      setOpen(false);
+      setOpenMobile(false);
     }
-  }, [isMobileViewport, setOpen]);
+  }, [isMobileViewport, setOpenMobile]);
   
   return (
     <>
