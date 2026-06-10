@@ -20,8 +20,6 @@ export const tutorialStrings = {
   he: {
     'home.intro.success': 'מעולה, בואו נתחיל',
     'group.intro.success': 'מעולה, בואו נתחיל',
-    'welcome.groups.heading': 'ברוכים הבאים',
-    'welcome.groups.body': 'בואו נלמד איך להשתמש בקבוצה ובמסמכים המשותפים שלה.',
     'home.groups.heading': 'קבוצה היא מרחב שיתוף פעולה',
     'home.groups.body': 'חברי הקבוצה כותבים מסמכים ביחד, מציעים שינויים, ומצביעים על כל הצעה. לחצו על קבוצה כדי לראות את המסמכים שלה ולהתחיל להשתתף.',
     'group.explain.heading': 'ברוכים הבאים לקבוצה',
@@ -131,10 +129,8 @@ export const tutorialStrings = {
   },
   ar: {
     'home.intro.success': 'رائع، لنبدأ',
-   'group.intro.success': 'رائع، لنبدأ',
-   'welcome.groups.heading': 'أهلا بك',
-   'welcome.groups.body': 'لنتعلم كيفية استخدام المجموعة والوثائق المشتركة فيها.',
-   'home.groups.heading': 'المجموعة هي فضاء للتعاون',
+    'group.intro.success': 'رائع، لنبدأ',
+    'home.groups.heading': 'المجموعة هي فضاء للتعاون',
     'home.groups.body': 'يكتب أعضاء المجموعة وثائق معاً، يقترحون تعديلات، ويصوتون على كل اقتراح. اضغطوا على مجموعة لرؤية وثائقها والمشاركة.',
     'group.explain.heading': 'مرحباً بكم في المجموعة',
     'group.explain.body': 'المجموعة هي فضاء للتعاون — هنا تجري النقاشات، تُقترح التعديلات وتُتخذ القرارات معاً. تحتوي كل مجموعة على وثائق مشتركة يكتبها الأعضاء ويشكّلونها سوياً.',
@@ -235,10 +231,8 @@ export const tutorialStrings = {
   },
   en: {
     'home.intro.success': 'Great, let\'s go',
-   'group.intro.success': 'Great, let\'s go',
-   'welcome.groups.heading': 'Welcome',
-   'welcome.groups.body': 'Let\'s learn how to use the group and its shared documents.',
-   'home.groups.heading': 'A group is a collaboration space',
+    'group.intro.success': 'Great, let\'s go',
+    'home.groups.heading': 'A group is a collaboration space',
     'home.groups.body': 'Group members write documents together, propose changes, and vote on every suggestion. Click a group to see its documents and start participating.',
     'group.explain.heading': 'Welcome to the group',
     'group.explain.body': 'A group is a collaboration space — this is where discussions happen, changes are proposed, and decisions are made together. Each group contains shared documents that members write and shape collectively.',
@@ -399,27 +393,12 @@ export const HOME_INTRO_STEP = {
    completionEvent: 'document:entered',
  };
 
-/**
- * Welcome to groups — brief intro before the full group explanation
- */
-export const WELCOME_GROUPS_STEP = {
-  id: 'welcome-groups',
-  type: 'explain',
-  targetSelector: '.group-header',
-  tooltipPosition: 'fixed-top-left',
-  heading: 'welcome.groups.heading',
-  body: 'welcome.groups.body',
-};
-
 /** @type {Array} */
 export const TUTORIAL_STEPS = [
   // -1. Welcome intro prep — shown before group-explain step on group page
   WELCOME_INTRO_PREPARE_STEP,
   
-  // 0. Welcome to groups — quick intro before the detailed explanation
-  WELCOME_GROUPS_STEP,
-  
-  // 1. Foundation: Document title & description
+  // 0. Foundation: Document title & description
   {
     id: 'doc-title-explain',
     type: 'explain',
