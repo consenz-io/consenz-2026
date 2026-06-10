@@ -49,6 +49,108 @@ function MobileMenuButton({ isRTL, nudgeActive }) {
   );
 }
 
+function NavigationWithSidebarClose({ isMobileViewport, navigationItems, location, user }) {
+  const { setOpen } = useSidebar();
+  const handleCloseSidebarOnMobile = React.useCallback(() => {
+    if (isMobileViewport) {
+      setOpen(false);
+    }
+  }, [isMobileViewport, setOpen]);
+  
+  return (
+    <>
+      {navigationItems.map((item) => (
+        <SidebarMenuItem key={item.title}>
+          <SidebarMenuButton 
+            asChild 
+            className={`hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 rounded-lg mb-1 ${
+              location.pathname === item.url ? 'bg-blue-50 text-blue-700' : ''
+            }`}
+          >
+            <Link to={item.url} onClick={handleCloseSidebarOnMobile} className="flex items-center gap-3 px-3 py-3 relative min-h-[44px]">
+              <item.icon className="w-4 h-4" />
+              <span className="font-medium">{item.title}</span>
+              {item.badge && (
+                <span className="absolute top-1 left-1 bg-orange-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                  {item.badge > 9 ? '9+' : item.badge}
+                </span>
+              )}
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ))}
+      <SidebarMenuItem>
+        <div onClick={handleCloseSidebarOnMobile}>
+          <TutorialRestartButton />
+        </div>
+      </SidebarMenuItem>
+    </>
+  );
+}
+
+function LanguageSelectorWithSidebarClose({ isMobileViewport, language, setLanguage, t, isRTL }) {
+  const { setOpen } = useSidebar();
+  const handleCloseSidebarOnMobile = React.useCallback(() => {
+    if (isMobileViewport) {
+      setOpen(false);
+    }
+  }, [isMobileViewport, setOpen]);
+  
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
+        {t('language')}
+      </SidebarGroupLabel>
+      <SidebarGroupContent>
+        <div className="px-3 py-2">
+          <div className="relative">
+            <Languages className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" aria-hidden="true" />
+            <select
+              value={language}
+              onChange={(e) => {
+                setLanguage(e.target.value);
+                handleCloseSidebarOnMobile();
+              }}
+              className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm font-medium bg-white cursor-pointer"
+              aria-label={isRTL ? 'בחירת שפה' : 'Select language'}
+              id="language-selector"
+            >
+              <option value="en">English</option>
+              <option value="ar">العربية</option>
+              <option value="he">עברית</option>
+            </select>
+          </div>
+        </div>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+}
+
+function ProfileLinkWithSidebarClose({ isMobileViewport, user }) {
+  const { setOpen } = useSidebar();
+  const handleCloseSidebarOnMobile = React.useCallback(() => {
+    if (isMobileViewport) {
+      setOpen(false);
+    }
+  }, [isMobileViewport, setOpen]);
+  
+  return (
+    <Link to={createPageUrl("Profile")} onClick={handleCloseSidebarOnMobile} className="flex-1">
+      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer min-h-[44px]">
+        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
+          <span className="text-white font-medium text-sm">
+            {user.full_name?.charAt(0) || 'U'}
+          </span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-slate-900 text-sm truncate">{user.full_name}</p>
+          <p className="text-xs text-slate-500 truncate">{user.email}</p>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -73,17 +175,6 @@ function LayoutContent({ children, currentPageName }) {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  
-  const handleSidebarItemClick = React.useCallback(() => {
-    // Close sidebar only on mobile viewport
-    if (isMobileViewport) {
-      // Trigger close via a click on the sidebar overlay/trigger
-      const sidebarOverlay = document.querySelector('[data-sidebar="overlay"]');
-      if (sidebarOverlay) {
-        sidebarOverlay.click();
-      }
-    }
-  }, [isMobileViewport]);
   
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -266,32 +357,14 @@ function LayoutContent({ children, currentPageName }) {
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {navigationItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton 
-                        asChild 
-                        className={`hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 rounded-lg mb-1 ${
-                          location.pathname === item.url ? 'bg-blue-50 text-blue-700' : ''
-                        }`}
-                      >
-                        <Link to={item.url} onClick={handleSidebarItemClick} className="flex items-center gap-3 px-3 py-3 relative min-h-[44px]">
-                          <item.icon className="w-4 h-4" />
-                          <span className="font-medium">{item.title}</span>
-                          {item.badge && (
-                            <span className="absolute top-1 left-1 bg-orange-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
-                              {item.badge > 9 ? '9+' : item.badge}
-                            </span>
-                          )}
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                  <SidebarMenuItem>
-                    <div onClick={handleSidebarItemClick}>
-                      <TutorialRestartButton />
-                    </div>
-                  </SidebarMenuItem>
-
+                  <NavigationWithSidebarClose 
+                    isMobileViewport={isMobileViewport}
+                    navigationItems={navigationItems}
+                    location={location}
+                    t={t}
+                    user={user}
+                    language={language}
+                  />
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -309,32 +382,7 @@ function LayoutContent({ children, currentPageName }) {
               </SidebarGroup>
             )}
 
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
-                {t('language')}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <div className="px-3 py-2">
-                  <div className="relative">
-                    <Languages className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" aria-hidden="true" />
-                    <select
-                      value={language}
-                      onChange={(e) => {
-                        setLanguage(e.target.value);
-                        handleSidebarItemClick();
-                      }}
-                      className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm font-medium bg-white cursor-pointer"
-                      aria-label={isRTL ? 'בחירת שפה' : 'Select language'}
-                      id="language-selector"
-                    >
-                      <option value="en">English</option>
-                      <option value="ar">العربية</option>
-                      <option value="he">עברית</option>
-                    </select>
-                  </div>
-                </div>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            <LanguageSelectorWithSidebarClose isMobileViewport={isMobileViewport} language={language} setLanguage={setLanguage} t={t} isRTL={isRTL} />
 
 
 
@@ -357,20 +405,8 @@ function LayoutContent({ children, currentPageName }) {
             {user ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Link to={createPageUrl("Profile")} onClick={handleSidebarItemClick} className="flex-1">
-                    <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer min-h-[44px]">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
-                        <span className="text-white font-medium text-sm">
-                          {user.full_name?.charAt(0) || 'U'}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-900 text-sm truncate">{user.full_name}</p>
-                        <p className="text-xs text-slate-500 truncate">{user.email}</p>
-                      </div>
-                      </div>
-                      </Link>
-                      </div>
+                  <ProfileLinkWithSidebarClose isMobileViewport={isMobileViewport} user={user} />
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
