@@ -229,8 +229,8 @@ export default function TutorialTooltip({
         </div>
       )}
       <div
-        className="fixed bg-white shadow-2xl border-2 border-blue-200 p-5 text-center"
-        style={{ borderRadius: mobile ? '16px 16px 0 0' : '16px', zIndex: 99999, ...summaryStyle }}
+        className="fixed shadow-2xl border-2 border-blue-300 p-5 text-center"
+        style={{ borderRadius: mobile ? '16px 16px 0 0' : '16px', zIndex: 99999, background: 'linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%)', ...summaryStyle }}
         dir={isRTL ? 'rtl' : 'ltr'}
         role="dialog"
         aria-modal="false"

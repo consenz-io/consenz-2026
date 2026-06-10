@@ -62,7 +62,8 @@ export default function TutorialMobileSheet({
   if (showSignupPrompt) {
     return (
       <div
-        className="fixed bottom-0 inset-x-0 z-[10002] bg-white rounded-t-2xl shadow-2xl border-t border-slate-200 p-5 pb-safe"
+        className="fixed bottom-0 inset-x-0 z-[10002] rounded-t-2xl shadow-2xl border-t-2 border-blue-300 p-5 pb-safe"
+        style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%)' }}
         dir={isRTL ? 'rtl' : 'ltr'}>
         
         <div className="flex flex-col items-center gap-3 text-center">
@@ -80,7 +81,7 @@ export default function TutorialMobileSheet({
   // Success state
   if (showSuccess && successMessage) {
     return (
-      <div className="fixed bottom-0 inset-x-0 z-[10002] bg-white rounded-t-2xl shadow-2xl border-t border-slate-200 p-5 pb-safe" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="fixed bottom-0 inset-x-0 z-[10002] rounded-t-2xl shadow-2xl border-t-2 border-blue-300 p-5 pb-safe" style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%)' }} dir={isRTL ? 'rtl' : 'ltr'}>
         <div className="flex flex-col items-center gap-2 text-center">
           <CheckCircle className="w-10 h-10 text-green-500" />
           <p className="font-semibold text-green-700">{successMessage}</p>
@@ -93,7 +94,8 @@ export default function TutorialMobileSheet({
   if (isSummary) {
     return (
       <div
-        className="fixed bottom-0 inset-x-0 z-[10002] bg-white rounded-t-2xl shadow-2xl border-t-2 border-blue-200 p-5 pb-safe"
+        className="fixed bottom-0 inset-x-0 z-[10002] rounded-t-2xl shadow-2xl border-t-2 border-blue-300 p-5 pb-safe"
+        style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%)' }}
         dir={isRTL ? 'rtl' : 'ltr'}>
         
         <button onClick={handleSkipRequest} className="absolute top-3 end-3 text-slate-400 hover:text-slate-600">
@@ -121,7 +123,8 @@ export default function TutorialMobileSheet({
 
   return (
     <div
-      className="fixed bottom-0 inset-x-0 z-[10002] bg-white rounded-t-2xl shadow-2xl border-t border-slate-200"
+      className="fixed bottom-0 inset-x-0 z-[10002] rounded-t-2xl shadow-2xl border-t-2 border-blue-300"
+      style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%)' }}
       dir={isRTL ? 'rtl' : 'ltr'}>
       
       {/* Drag handle + close */}
