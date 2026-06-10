@@ -8,8 +8,20 @@ import TutorialOverlay from './TutorialOverlay';
 import TutorialTooltip from './TutorialTooltip';
 import TutorialHomeIntro from './TutorialHomeIntro';
 import TutorialGhostVoting from './TutorialGhostVoting';
+import TutorialMobileSheet from './TutorialMobileSheet';
 import PointsInfoModal from '@/components/points/PointsInfoModal';
 import { useLanguage } from '@/components/LanguageContext';
+
+// Detect mobile viewport (≤768px)
+function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState(() => window.innerWidth <= 768);
+  React.useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return isMobile;
+}
 
 // How long to suppress tooltip rendering after a navigation action (ms).
 // Gives the new page time to mount and render its DOM before we try to find target elements.
@@ -29,6 +41,7 @@ function isGroupPage(pathname) {
 
 export default function TutorialController() {
   const { isRTL, language } = useLanguage();
+  const isMobile = useIsMobile();
   const location = useLocation();
   const navigate = useNavigate();
   const [showPointsModal, setShowPointsModal] = useState(false);
@@ -461,49 +474,51 @@ export default function TutorialController() {
 
     // Tour summary step — full dark overlay, no spotlight, tooltip centered
     if (step.id === 'tour-summary') {
+      const summaryProps = {
+        step, stepIndex: currentStep, totalSteps: TUTORIAL_STEPS.length,
+        onNext: handleNextStep, onBack: handleBack, onSkip: skipTutorial,
+        practiceCompleted, showSuccess, showSignupPrompt, isAuthenticated,
+        isRTL, isSummary: true, onRequestSkip: () => setShowSkipConfirm(true),
+      };
       return (
         <>
           {SkipConfirmDialog}
           <div className="fixed inset-0 z-[10001] bg-black/70 pointer-events-none" aria-hidden="true" />
-          <TutorialTooltip
-            step={step}
-            stepIndex={currentStep}
-            totalSteps={TUTORIAL_STEPS.length}
-            onNext={handleNextStep}
-            onBack={handleBack}
-            onSkip={skipTutorial}
-            practiceCompleted={practiceCompleted}
-            showSuccess={showSuccess}
-            showSignupPrompt={showSignupPrompt}
-            isAuthenticated={isAuthenticated}
-            isRTL={isRTL}
-            isSummary
-            onRequestSkip={() => setShowSkipConfirm(true)}
-          />
+          {isMobile ? (
+            <TutorialMobileSheet {...summaryProps} />
+          ) : (
+            <TutorialTooltip {...summaryProps} />
+          )}
         </>
       );
     }
+
+    const sharedTooltipProps = {
+      step,
+      stepIndex: currentStep,
+      totalSteps: TUTORIAL_STEPS.length,
+      onNext: handleNextStep,
+      onBack: handleBack,
+      onSkip: skipTutorial,
+      practiceCompleted,
+      showSuccess,
+      showSignupPrompt,
+      isAuthenticated,
+      isRTL,
+      onOpenPointsModal: () => setShowPointsModal(true),
+      onRequestSkip: () => setShowSkipConfirm(true),
+    };
 
     return (
       <>
         {SkipConfirmDialog}
         {showGhostVoting && <TutorialGhostVoting showNavArrows={TUTORIAL_STEPS[currentStep]?.id === 'vote-explain'} />}
         <TutorialOverlay targetSelector={overlaySelector} additionalSpotlights={additionalSpotlights}>
-          <TutorialTooltip
-            step={step}
-            stepIndex={currentStep}
-            totalSteps={TUTORIAL_STEPS.length}
-            onNext={handleNextStep}
-            onBack={handleBack}
-            onSkip={skipTutorial}
-            practiceCompleted={practiceCompleted}
-            showSuccess={showSuccess}
-            showSignupPrompt={showSignupPrompt}
-            isAuthenticated={isAuthenticated}
-            isRTL={isRTL}
-            onOpenPointsModal={() => setShowPointsModal(true)}
-            onRequestSkip={() => setShowSkipConfirm(true)}
-          />
+          {isMobile ? (
+            <TutorialMobileSheet {...sharedTooltipProps} />
+          ) : (
+            <TutorialTooltip {...sharedTooltipProps} />
+          )}
         </TutorialOverlay>
         <PointsInfoModal open={showPointsModal} onClose={() => setShowPointsModal(false)} />
       </>
