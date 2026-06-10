@@ -452,6 +452,7 @@ export const TUTORIAL_STEPS = [
     tooltipPosition: 'bottom',
     heading: 'newclause.explain.heading',
     body: 'newclause.explain.body',
+    forceRevealTarget: true,
   },
   
   // 14. Consensus meter - learn about support threshold
