@@ -49,6 +49,15 @@ function MobileMenuButton({ isRTL, nudgeActive }) {
   );
 }
 
+function SidebarNavLink({ to, children, className }) {
+  const { setOpen } = useSidebar();
+  return (
+    <Link to={to} className={className} onClick={() => setOpen(false)}>
+      {children}
+    </Link>
+  );
+}
+
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -249,7 +258,7 @@ function LayoutContent({ children, currentPageName }) {
                           location.pathname === item.url ? 'bg-blue-50 text-blue-700' : ''
                         }`}
                       >
-                        <Link to={item.url} className="flex items-center gap-3 px-3 py-3 relative min-h-[44px]">
+                        <SidebarNavLink to={item.url} className="flex items-center gap-3 px-3 py-3 relative min-h-[44px]">
                           <item.icon className="w-4 h-4" />
                           <span className="font-medium">{item.title}</span>
                           {item.badge && (
@@ -257,7 +266,7 @@ function LayoutContent({ children, currentPageName }) {
                               {item.badge > 9 ? '9+' : item.badge}
                             </span>
                           )}
-                        </Link>
+                        </SidebarNavLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
@@ -327,7 +336,7 @@ function LayoutContent({ children, currentPageName }) {
             {user ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Link to={createPageUrl("Profile")} className="flex-1">
+                  <SidebarNavLink to={createPageUrl("Profile")} className="flex-1">
                     <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer min-h-[44px]">
                       <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
                         <span className="text-white font-medium text-sm">
@@ -339,7 +348,7 @@ function LayoutContent({ children, currentPageName }) {
                         <p className="text-xs text-slate-500 truncate">{user.email}</p>
                       </div>
                       </div>
-                      </Link>
+                      </SidebarNavLink>
                       </div>
                 <Button
                   variant="outline"
