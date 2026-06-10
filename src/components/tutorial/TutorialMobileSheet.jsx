@@ -33,7 +33,7 @@ export default function TutorialMobileSheet({
   const successMessage = tTutorial(step.successMessage, language);
   const ctaLabel = step.ctaLabel ? tTutorial(step.ctaLabel, language) : null;
 
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
 
   const isPractice = step.type === 'practice';
   const nextDisabled = isPractice && !practiceCompleted;
