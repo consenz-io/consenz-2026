@@ -50,13 +50,15 @@ function MobileMenuButton({ isRTL, nudgeActive }) {
 }
 
 function SidebarClickHandler({ children }) {
-  const { closeSidebar } = useSidebar();
+  const sidebar = useSidebar();
   const location = useLocation();
 
   // Close sidebar when page changes
   React.useEffect(() => {
-    closeSidebar();
-  }, [location.pathname, closeSidebar]);
+    if (sidebar?.closeSidebar) {
+      sidebar.closeSidebar();
+    }
+  }, [location.pathname, sidebar]);
 
   return children;
 }
