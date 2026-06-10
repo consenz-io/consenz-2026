@@ -82,11 +82,11 @@ export default function TutorialWelcomeBubble({ onStart, onSkip, isRTL, language
       aria-modal="false"
       aria-label={lang.headline}
     >
-      {/* Arrow */}
+      {/* Arrow pointing toward sidebar */}
       <div
         className="absolute w-0 h-0 border-solid"
         style={{
-          [isRTL ? 'right' : 'left']: isRTL ? -10 : -10,
+          [isRTL ? 'right' : 'left']: -10,
           top: '50%',
           transform: 'translateY(-50%)',
           borderTop: '10px solid transparent',
