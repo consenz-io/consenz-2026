@@ -18,7 +18,7 @@ function isHomePage(pathname) {
 }
 
 function isGroupPage(pathname) {
-  return /\/GroupView/i.test(pathname);
+  return /\/GroupView/i.test(pathname) || /\/group/i.test(pathname);
 }
 
 export default function TutorialController() {

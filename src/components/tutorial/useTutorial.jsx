@@ -294,10 +294,13 @@ export function useTutorial(steps = []) {
   }, []);
 
   const restartTutorial = useCallback((entryPoint = 'document') => {
+    // Read currentStep from localStorage — TutorialRestartButton may have pre-set it
+    // to a context-appropriate step (e.g. versions-browse-explain on DocumentCleanView).
+    const persisted = loadState();
     const fresh = {
       active: true,
       homeStepSeen: entryPoint !== 'home',
-      currentStep: 0,
+      currentStep: persisted.active ? persisted.currentStep : 0,
       completedSteps: [],
     };
     saveState(fresh);
@@ -306,7 +309,7 @@ export function useTutorial(steps = []) {
     setShowSuccess(false);
     setShowSignupPrompt(false);
     // Always skip the welcome bubble when restarting manually — go straight to the tour
-    setPhase(entryPoint === 'home' ? 'home-intro' : 'running');
+    setPhase((entryPoint === 'home' || entryPoint === 'group') ? 'home-intro' : 'running');
   }, []);
 
   return {

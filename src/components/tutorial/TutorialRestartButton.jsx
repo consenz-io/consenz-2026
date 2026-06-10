@@ -2,13 +2,21 @@ import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { PlayCircle } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageContext';
-import { tTutorial } from './tutorialSteps';
+import { tTutorial, TUTORIAL_STEPS } from './tutorialSteps';
 
 const STORAGE_KEY = 'consenz_tutorial';
 const LAST_DOC_KEY = 'consenz_last_doc_url';
 
 function isDocumentPage(pathname) {
   return /\/(DocumentView|document)/i.test(pathname) || pathname.includes('urlName');
+}
+
+function isCleanViewPage(pathname) {
+  return /\/DocumentCleanView/i.test(pathname);
+}
+
+function isGroupPage(pathname) {
+  return /\/GroupView/i.test(pathname);
 }
 
 export default function TutorialRestartButton() {
@@ -25,12 +33,23 @@ export default function TutorialRestartButton() {
   }, [location]);
 
   const handleRestart = () => {
-    const onDoc = isDocumentPage(location.pathname);
+    const pathname = location.pathname;
+    const onCleanView = isCleanViewPage(pathname);
+    const onDoc = isDocumentPage(pathname) && !onCleanView;
+    const onGroup = isGroupPage(pathname);
+
+    // If on DocumentCleanView, start from the versions-browse-explain step
+    // so the tutorial is contextually relevant to what the user sees.
+    let startStep = 0;
+    if (onCleanView) {
+      startStep = TUTORIAL_STEPS.findIndex(s => s.id === 'versions-browse-explain');
+      if (startStep < 0) startStep = 0;
+    }
 
     const fresh = {
       active: true,
-      homeStepSeen: onDoc, // skip home-intro if already on a document
-      currentStep: 0,
+      homeStepSeen: onDoc || onCleanView, // skip home-intro if on a document/cleanview
+      currentStep: startStep,
       completedSteps: [],
     };
     try {
@@ -38,11 +57,11 @@ export default function TutorialRestartButton() {
     } catch {}
 
     // Trigger tutorial restart
+    const entryPoint = (onDoc || onCleanView) ? 'document' : onGroup ? 'group' : 'home';
     if (window.restartTutorial) {
-      window.restartTutorial(onDoc ? 'document' : 'home');
+      window.restartTutorial(entryPoint);
     } else {
-      // Fallback if window.restartTutorial not yet ready
-      if (onDoc) {
+      if (onDoc || onCleanView) {
         window.location.reload();
       } else {
         navigate('/');
