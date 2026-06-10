@@ -32,9 +32,13 @@ async function fetchServerTutorialState() {
   try {
     const user = await base44.auth.me();
     if (!user) return null;
-    const { tutorialCompleted, tutorialLastStep, tutorialSkipped } = user;
-    if (tutorialCompleted === undefined && tutorialLastStep === undefined) return null;
-    return { tutorialCompleted, tutorialLastStep, tutorialSkipped };
+    const { tutorialCompleted, tutorialLastStep, tutorialSkipped, createdDate } = user;
+    // Determine if user is new (created in last 24 hours)
+    const isNewUser = createdDate && (Date.now() - new Date(createdDate).getTime() < 86400000);
+    // If never seen tutorial, they're "new"
+    const neverSeenTutorial = tutorialCompleted === undefined && tutorialLastStep === undefined && tutorialSkipped === undefined;
+    if (!neverSeenTutorial && !isNewUser) return null; // existing user who already completed tutorial
+    return { tutorialCompleted, tutorialLastStep, tutorialSkipped, isNewUser, neverSeenTutorial };
   } catch {
     return null;
   }
@@ -89,26 +93,23 @@ export function useTutorial(steps = []) {
 
       if (!hasLocalData && authed) {
         const server = await fetchServerTutorialState();
-        if (server && !server.tutorialSkipped && !server.tutorialCompleted) {
+        // Only show tutorial to NEW users (created < 24h) or users who never saw it
+        if (server && server.neverSeenTutorial && !server.tutorialSkipped && !server.tutorialCompleted) {
           const hydrated = {
             ...defaultState(),
             active: true,
-            currentStep: server.tutorialLastStep ?? 0,
-            // homeStepSeen must be true only when we're resuming mid-document steps (step > 0).
-            // If lastStep === 0 the user may never have passed home-intro — keep it false.
-            homeStepSeen: (server.tutorialLastStep ?? 0) > 0,
+            currentStep: 0, // Always start from 0 for new users
+            homeStepSeen: false, // New users must see home-intro first
           };
           saveState(hydrated);
           setState(hydrated);
-          if (steps.length > 0 && hydrated.currentStep < steps.length) {
-            // Only jump straight to 'running' if homeStepSeen is confirmed.
-            // Otherwise let the home-intro phase handle the entry.
-            setPhase(hydrated.homeStepSeen ? 'running' : 'home-intro');
-          }
+          // Show welcome bubble after 15 second delay on home page
+          setPhase('welcome-intro');
           return;
         }
-        if (server?.tutorialCompleted || server?.tutorialSkipped) {
-          const done = { ...defaultState(), active: false, currentStep: 1 };
+        // Skip tutorial entirely for existing users or those who already completed it
+        if (server?.tutorialCompleted || server?.tutorialSkipped || (server && !server.neverSeenTutorial)) {
+          const done = { ...defaultState(), active: false };
           saveState(done);
           setState(done);
           return;
@@ -306,13 +307,11 @@ export function useTutorial(steps = []) {
   }, []);
 
   const restartTutorial = useCallback((entryPoint = 'document') => {
-    // Read currentStep from localStorage — TutorialRestartButton may have pre-set it
-    // to a context-appropriate step (e.g. versions-browse-explain on DocumentCleanView).
-    const persisted = loadState();
+    // When restarting, ALWAYS go back to beginning for new user experience
     const fresh = {
       active: true,
-      homeStepSeen: entryPoint !== 'home',
-      currentStep: persisted.active ? persisted.currentStep : 0,
+      homeStepSeen: false,
+      currentStep: 0,
       completedSteps: [],
     };
     saveState(fresh);
@@ -320,8 +319,8 @@ export function useTutorial(steps = []) {
     setPracticeCompleted(false);
     setShowSuccess(false);
     setShowSignupPrompt(false);
-    // Skip the welcome-intro screen when restarting manually — go straight to the tour
-    setPhase((entryPoint === 'home' || entryPoint === 'group') ? 'home-intro' : 'running');
+    // Always start with welcome-intro to reset the experience
+    setPhase('welcome-intro');
   }, []);
 
   return {

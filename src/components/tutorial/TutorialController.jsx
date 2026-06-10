@@ -101,26 +101,11 @@ export default function TutorialController() {
 
   // ── Session-start detection ──────────────────────────────────────────────
   useEffect(() => {
-    // Only trigger on first session load (idle phase)
-    if (phase !== 'idle') return;
-
-    // Check if tutorial has already been completed/skipped
-    try {
-      const raw = localStorage.getItem('consenz_tutorial');
-      if (raw) {
-        const saved = JSON.parse(raw);
-        // If explicitly marked inactive (skipped or done), don't auto-start
-        if (saved.active === false && saved.currentStep > 0) return;
-        // Resume mid-tutorial if active
-        if (saved.active === true) return; // useTutorial mount effect handles this
-      }
-    } catch {}
-
-    // First ever visit — auto-start
-    const entry = isDocumentPage(location.pathname) ? 'document' : 'home';
-    startTutorial(entry);
+    // useTutorial hook handles all auto-start logic via server hydration.
+    // TutorialController just needs to wait for the hook's phase transitions.
+    // No additional auto-start is needed here.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // intentionally run once on mount
+  }, []); // intentionally empty — let useTutorial handle initialization
 
   // ── Transition: home-intro → group page ─────────────────────────────────
   useEffect(() => {
@@ -412,13 +397,15 @@ export default function TutorialController() {
 
   // welcome-intro: small bubble shown after delay when user is authenticated
   if (phase === 'welcome-intro') {
+    // For new authenticated users: show welcome bubble after 15s delay
+    // For unauthenticated users: skip entirely
     return (
       <TutorialWelcomeBubble
         onStart={beginFromWelcome}
         onSkip={skipTutorial}
         isRTL={isRTL}
         language={language}
-        delay={15000}
+        delay={isAuthenticated ? 15000 : 0}
       />
     );
   }
