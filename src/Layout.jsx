@@ -51,29 +51,12 @@ function MobileMenuButton({ isRTL, nudgeActive }) {
 
 function SidebarClickHandler({ children }) {
   const { closeSidebar } = useSidebar();
+  const location = useLocation();
 
+  // Close sidebar when page changes
   React.useEffect(() => {
-    const handleSidebarClick = (e) => {
-      const target = e.target;
-      
-      // Check if click is on link, button, or option elements
-      if (target.tagName === 'A' || target.tagName === 'BUTTON' || target.tagName === 'SELECT' || target.tagName === 'OPTION') {
-        closeSidebar();
-      }
-      
-      // Also check parent elements in case of nested structures
-      const link = target.closest('a, button');
-      if (link) {
-        closeSidebar();
-      }
-    };
-
-    const sidebar = document.getElementById('sidebar');
-    if (!sidebar) return;
-
-    sidebar.addEventListener('click', handleSidebarClick);
-    return () => sidebar.removeEventListener('click', handleSidebarClick);
-  }, [closeSidebar]);
+    closeSidebar();
+  }, [location.pathname, closeSidebar]);
 
   return children;
 }
