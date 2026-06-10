@@ -183,8 +183,10 @@ export default function TutorialController() {
         const sheetHeight = 180;
         const visibleHeight = window.innerHeight - sheetHeight;
         if (rect.top < 0 || rect.bottom > visibleHeight) {
-          const targetY = window.scrollY + rect.top - visibleHeight / 2 + rect.height / 2;
-          window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+          // For .section-insert-space, scroll to show it properly with some padding
+          let targetY = window.scrollY + rect.top - (visibleHeight / 3);
+          targetY = Math.max(0, targetY);
+          window.scrollTo({ top: targetY, behavior: 'smooth' });
         }
         return;
       }
@@ -275,17 +277,11 @@ export default function TutorialController() {
     const insertSpace = document.querySelector('.section-insert-space');
     if (!insertSpace) return;
 
-    const inner = insertSpace.querySelector('.tutorial-force-insert-btn');
-    if (inner) {
-      inner.style.opacity = '1';
-      inner.style.transition = 'none';
-    }
+    // Add class to force-reveal
+    insertSpace.classList.add('tutorial-force-insert-visible');
 
     return () => {
-      if (inner) {
-        inner.style.opacity = '';
-        inner.style.transition = '';
-      }
+      insertSpace.classList.remove('tutorial-force-insert-visible');
     };
   }, [phase, currentStep]);
 
