@@ -513,13 +513,12 @@ export default function TutorialController() {
       <>
         {SkipConfirmDialog}
         {showGhostVoting && <TutorialGhostVoting showNavArrows={TUTORIAL_STEPS[currentStep]?.id === 'vote-explain'} />}
-        <TutorialOverlay targetSelector={overlaySelector} additionalSpotlights={additionalSpotlights}>
-          {isMobile ? (
-            <TutorialMobileSheet {...sharedTooltipProps} />
-          ) : (
-            <TutorialTooltip {...sharedTooltipProps} />
-          )}
-        </TutorialOverlay>
+        <TutorialOverlay targetSelector={overlaySelector} additionalSpotlights={additionalSpotlights} />
+        {isMobile ? (
+          <TutorialMobileSheet {...sharedTooltipProps} />
+        ) : (
+          <TutorialTooltip {...sharedTooltipProps} />
+        )}
         <PointsInfoModal open={showPointsModal} onClose={() => setShowPointsModal(false)} />
       </>
     );
