@@ -471,8 +471,8 @@ export default function TutorialController() {
     const step = TUTORIAL_STEPS[currentStep];
     if (!step) return null;
 
-    // Skip welcome-intro-prepare if not on group page
-    if (step.id === 'welcome-intro-prepare' && !isGroupPage(location.pathname)) {
+    // Skip welcome-intro-prepare if on group page
+    if (step.id === 'welcome-intro-prepare' && isGroupPage(location.pathname)) {
       handleNext();
       return null;
     }
