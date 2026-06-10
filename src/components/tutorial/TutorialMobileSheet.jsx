@@ -142,10 +142,10 @@ export default function TutorialMobileSheet({
       {/* Tap to expand/collapse body */}
       <button
          onClick={() => setExpanded((v) => !v)}
-         className="flex items-center gap-2 text-slate-700 font-bold text-lg flex-1 min-w-0 px-4 py-1 w-full justify-between"
+         className="flex items-center gap-2 text-slate-700 font-bold text-lg flex-1 px-4 py-1 w-full justify-between"
          aria-expanded={expanded}>
 
-         <span className="truncate">{heading}</span>
+         <span className="break-words">{heading}</span>
           {expanded ? <ChevronDown className="w-4 h-4 flex-shrink-0" /> : <ChevronUp className="w-4 h-4 flex-shrink-0" />}
           </button>
 
