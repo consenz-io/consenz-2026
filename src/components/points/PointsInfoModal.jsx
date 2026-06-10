@@ -64,9 +64,8 @@ export default function PointsInfoModal({ open, onClose }) {
   ];
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 100000, pointerEvents: open ? 'auto' : 'none' }}>
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-lg max-h-[88vh] overflow-y-auto" style={{ position: 'relative', zIndex: 100001 }} dir={isRTL ? "rtl" : "ltr"}>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg max-h-[88vh] overflow-y-auto" style={{ zIndex: 50 }} dir={isRTL ? "rtl" : "ltr"}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-lg">
             <Sparkles className="w-5 h-5 text-amber-500" />
@@ -149,6 +148,5 @@ export default function PointsInfoModal({ open, onClose }) {
         </div>
       </DialogContent>
     </Dialog>
-    </div>
   );
 }
