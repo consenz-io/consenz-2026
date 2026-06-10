@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useRef, useState } from 'react';
+import React, { useEffect, useCallback, useRef, useState, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTutorial } from './useTutorial';
 import { TUTORIAL_STEPS, HOME_INTRO_STEP, GROUP_INTRO_STEP, GROUP_EXPLAIN_STEP } from './tutorialSteps';
@@ -16,9 +16,16 @@ import { useLanguage } from '@/components/LanguageContext';
 function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState(() => window.innerWidth <= 768);
   React.useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth <= 768);
+    let timeoutId;
+    const handler = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => setIsMobile(window.innerWidth <= 768), 150);
+    };
     window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
+    return () => {
+      window.removeEventListener('resize', handler);
+      clearTimeout(timeoutId);
+    };
   }, []);
   return isMobile;
 }
@@ -53,18 +60,25 @@ export default function TutorialController() {
   // Suppress tutorial overlay/tooltip when any app modal is open
   const [modalOpen, setModalOpen] = useState(false);
   useEffect(() => {
+    let debounceId;
     function checkModal() {
-      const hasModal = !!(
-        document.querySelector('[role="dialog"][data-state="open"]') ||
-        document.querySelector('[data-radix-dialog-overlay]') ||
-        document.querySelector('[data-radix-alert-dialog-overlay]')
-      );
-      setModalOpen(hasModal);
+      clearTimeout(debounceId);
+      debounceId = setTimeout(() => {
+        const hasModal = !!(
+          document.querySelector('[role="dialog"][data-state="open"]') ||
+          document.querySelector('[data-radix-dialog-overlay]') ||
+          document.querySelector('[data-radix-alert-dialog-overlay]')
+        );
+        setModalOpen(hasModal);
+      }, 50);
     }
     checkModal();
     const observer = new MutationObserver(checkModal);
     observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-state'] });
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      clearTimeout(debounceId);
+    };
   }, []);
 
   const {
@@ -172,29 +186,22 @@ export default function TutorialController() {
     const step = TUTORIAL_STEPS[currentStep];
     if (!step || !step.targetSelector) return;
 
-    // Poll for element up to 2s
-    let attempts = 0;
-    const interval = setInterval(() => {
-      const el = document.querySelector(step.targetSelector);
-      if (el) {
-        clearInterval(interval);
-        // Scroll with offset to keep above the bottom sheet (~180px)
-        const rect = el.getBoundingClientRect();
-        const sheetHeight = 180;
-        const visibleHeight = window.innerHeight - sheetHeight;
-        if (rect.top < 0 || rect.bottom > visibleHeight) {
-          // For .section-insert-space, scroll to show it properly with some padding
-          let targetY = window.scrollY + rect.top - (visibleHeight / 3);
-          targetY = Math.max(0, targetY);
-          window.scrollTo({ top: targetY, behavior: 'smooth' });
-        }
-        return;
-      }
-      attempts++;
-      if (attempts >= 10) clearInterval(interval);
-    }, 200);
+    const el = document.querySelector(step.targetSelector);
+    if (!el) return;
 
-    return () => clearInterval(interval);
+    // Use MutationObserver instead of polling for better performance
+    const scrollToElement = () => {
+      const rect = el.getBoundingClientRect();
+      const sheetHeight = 180;
+      const visibleHeight = window.innerHeight - sheetHeight;
+      if (rect.top < 0 || rect.bottom > visibleHeight) {
+        let targetY = window.scrollY + rect.top - (visibleHeight / 3);
+        targetY = Math.max(0, targetY);
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
+      }
+    };
+
+    scrollToElement();
   }, [isMobile, phase, currentStep]);
 
   // Reset manualNavRef after each step change
@@ -234,8 +241,8 @@ export default function TutorialController() {
     const el = document.querySelector(step.targetSelector);
     if (!el) return;
 
-    el.style.animation = 'tutorial-pulse-ring 1.5s ease-out infinite';
-    return () => { el.style.animation = ''; };
+    el.classList.add('tutorial-pulse-ring'); // Use CSS animation instead of inline style
+    return () => { el.classList.remove('tutorial-pulse-ring'); };
   }, [phase, currentStep]);
 
   // ── Highlight target with blue outline for all explain/practice steps ──────
@@ -372,15 +379,15 @@ export default function TutorialController() {
     }
   }, [phase, currentStep]);
 
-  // ── Skip confirm dialog ────────────────────────────────────────────────────
-  const SkipConfirmDialog = showSkipConfirm ? (
+  // Memoized skip confirm dialog
+  const SkipConfirmDialog = React.useMemo(() => showSkipConfirm ? (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 p-4">
     <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-6 flex flex-col gap-4" dir={isRTL ? 'rtl' : 'ltr'}>
       <p className="text-slate-800 font-semibold text-center text-base">
         {language === 'he' ? 'לסיים את הסיור?' : language === 'ar' ? 'إغلاق الجولة؟' : 'Exit the tour?'}
       </p>
       <p className="text-slate-500 text-sm text-center">
-        {language === 'he' ? 'תמיד אפשר להתחיל אותו מחדש מתפריט הניווט.' : language === 'ar' ? 'يمكنك دائماً إعادة تشغيله من قائمة التنقل.' : 'You can always restart it from the navigation menu.'}
+        {language === 'he' ? 'תמיד אפשר להתחיל אותו מחדש מתפריט הניווט.' : language === 'ar' ? 'يمكنك دائماً إعادة تشغيله من قائمة التנקל.' : 'You can always restart it from the navigation menu.'}
       </p>
       <div className="flex gap-2">
         <button
@@ -398,7 +405,7 @@ export default function TutorialController() {
       </div>
     </div>
     </div>
-  ) : null;
+  ) : null, [showSkipConfirm, isRTL, language, skipTutorial]);
 
   // ── Render ────────────────────────────────────────────────────────────────
   if (phase === 'idle' || phase === 'done') return null;
