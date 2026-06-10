@@ -151,13 +151,7 @@ export default function TutorialMobileSheet({
             {learnMoreText && onOpenPointsModal &&
           <>
                 {' '}
-                <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onOpenPointsModal();
-                  }} 
-                  className="text-blue-600 hover:text-blue-700 underline font-medium">
+                <button onClick={onOpenPointsModal} className="text-blue-600 hover:text-blue-700 underline font-medium">
                   {learnMoreText}
                 </button>
               </>
