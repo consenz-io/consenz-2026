@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CheckCircle, X } from 'lucide-react';
+import { CheckCircle, X, Compass } from 'lucide-react';
 import { tTutorial } from './tutorialSteps';
 import { useLanguage } from '@/components/LanguageContext';
 
@@ -175,7 +175,8 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
   if (isMobile) {
     return createPortal(
       <div
-        className="fixed bottom-0 inset-x-0 z-[99999] bg-white rounded-t-2xl shadow-2xl border-t border-slate-200 p-5"
+        className="fixed bottom-0 inset-x-0 z-[99999] rounded-t-2xl shadow-2xl border-t-4 border-blue-500 p-5 tutorial-highlight-bubble"
+        style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)' }}
         dir={isRTL ? 'rtl' : 'ltr'}
         role="dialog"
         aria-label={step.heading}
@@ -187,14 +188,20 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
         >
           <X className="w-4 h-4" />
         </button>
+        {/* Tour badge */}
+        <div className="flex items-center gap-1 text-blue-600 mb-2">
+          <Compass className="w-3.5 h-3.5" />
+          <span className="text-xs font-bold uppercase tracking-wide">{isRTL ? 'סיור' : 'Tour'}</span>
+        </div>
+
         {showSuccess ? (
-          <div className="flex flex-col items-center gap-2 py-3 text-center">
-            <CheckCircle className="w-10 h-10 text-green-500" />
-            <p className="font-semibold text-green-700">{successMsg}</p>
-          </div>
-        ) : (
-          <>
-            <h3 className="font-bold text-slate-900 text-base mb-1 pe-6">{heading}</h3>
+           <div className="flex flex-col items-center gap-2 py-3 text-center">
+             <CheckCircle className="w-10 h-10 text-green-500" />
+             <p className="font-semibold text-green-700">{successMsg}</p>
+           </div>
+         ) : (
+           <>
+             <h3 className="font-bold text-slate-900 text-lg mb-2 pe-6">{heading}</h3>
             {body && <p className="text-sm text-slate-600 leading-relaxed mb-3">{body}</p>}
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
               <p className="text-sm font-bold text-blue-800">
@@ -214,8 +221,8 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
     <>
       <div
         ref={tooltipRef}
-        className="fixed z-[10002] bg-white rounded-xl shadow-2xl border border-slate-200 p-4"
-        style={{ width: TOOLTIP_WIDTH, position: 'fixed', ...tooltipStyle }}
+        className="fixed z-[10002] rounded-xl shadow-2xl border-l-4 border-blue-500 p-4 tutorial-highlight-bubble"
+        style={{ width: TOOLTIP_WIDTH, position: 'fixed', background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', ...tooltipStyle }}
         dir={isRTL ? 'rtl' : 'ltr'}
         role="dialog"
         aria-label={step.heading}
@@ -228,34 +235,40 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
           <X className="w-4 h-4" />
         </button>
 
+        {/* Tour badge */}
+        <div className="flex items-center gap-1 text-blue-600 mb-2">
+          <Compass className="w-3.5 h-3.5" />
+          <span className="text-xs font-bold uppercase tracking-wide">{isRTL ? 'סיור' : 'Tour'}</span>
+        </div>
+
         {arrowDirection !== 'none' && <div
           className="absolute w-0 h-0"
           style={
             arrowDirection === 'down' ? {
               borderLeft: '10px solid transparent',
               borderRight: '10px solid transparent',
-              borderTop: '10px solid white',
+              borderTop: '10px solid #eff6ff',
               bottom: -10,
               left: '50%',
               transform: 'translateX(-50%)',
             } : arrowDirection === 'up' ? {
               borderLeft: '10px solid transparent',
               borderRight: '10px solid transparent',
-              borderBottom: '10px solid white',
+              borderBottom: '10px solid #eff6ff',
               top: -10,
               left: '50%',
               transform: 'translateX(-50%)',
             } : arrowDirection === 'left' ? {
               borderTop: '10px solid transparent',
               borderBottom: '10px solid transparent',
-              borderRight: '10px solid white',
+              borderRight: '10px solid #eff6ff',
               left: -10,
               top: '50%',
               transform: 'translateY(-50%)',
             } : {
               borderTop: '10px solid transparent',
               borderBottom: '10px solid transparent',
-              borderLeft: '10px solid white',
+              borderLeft: '10px solid #eff6ff',
               right: -10,
               top: '50%',
               transform: 'translateY(-50%)',
@@ -270,7 +283,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
           </div>
         ) : (
           <>
-            <h3 className="font-bold text-slate-900 text-base mb-1 pr-5">{heading}</h3>
+            <h3 className="font-bold text-slate-900 text-lg mb-2 pr-5">{heading}</h3>
             {body && <p className="text-sm text-slate-600 leading-relaxed mb-3">{body}</p>}
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center mb-2">
               <p className="text-sm font-bold text-blue-800">

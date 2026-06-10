@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X, Compass } from 'lucide-react';
 
 const strings = {
   he: {
@@ -75,13 +75,19 @@ export default function TutorialWelcomeBubble({ onStart, onSkip, isRTL, language
   return (
     <div
       ref={tooltipRef}
-      className="fixed z-[10002] bg-white rounded-xl shadow-2xl border border-slate-200 p-4"
-      style={{ width: TOOLTIP_WIDTH, ...pos }}
+      className="fixed z-[10002] rounded-xl shadow-2xl border-l-4 border-blue-500 p-4 tutorial-highlight-bubble"
+      style={{ width: TOOLTIP_WIDTH, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', ...pos }}
       dir={isRTL ? 'rtl' : 'ltr'}
       role="dialog"
       aria-modal="false"
       aria-label={lang.headline}
     >
+      {/* Tour badge */}
+      <div className="flex items-center gap-1 text-blue-600 mb-2">
+        <Compass className="w-3.5 h-3.5" />
+        <span className="text-xs font-bold uppercase tracking-wide">{isRTL ? 'סיור מודרך' : 'Guided Tour'}</span>
+      </div>
+
       {/* Arrow pointing toward sidebar */}
       <div
         className="absolute w-0 h-0 border-solid"
@@ -91,7 +97,7 @@ export default function TutorialWelcomeBubble({ onStart, onSkip, isRTL, language
           transform: 'translateY(-50%)',
           borderTop: '10px solid transparent',
           borderBottom: '10px solid transparent',
-          [isRTL ? 'borderLeft' : 'borderRight']: '10px solid white',
+          [isRTL ? 'borderLeft' : 'borderRight']: '10px solid #eff6ff',
         }}
       />
 
@@ -105,7 +111,7 @@ export default function TutorialWelcomeBubble({ onStart, onSkip, isRTL, language
       </button>
 
       {/* Content */}
-      <h3 className="font-bold text-slate-900 text-base mb-1">{lang.headline}</h3>
+      <h3 className="font-bold text-slate-900 text-lg mb-2">{lang.headline}</h3>
       <p className="text-sm text-slate-600 mb-3 leading-relaxed">{lang.body}</p>
 
       {/* Buttons */}

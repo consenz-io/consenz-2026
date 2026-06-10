@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Compass } from 'lucide-react';
 
 const strings = {
   he: {
@@ -24,9 +25,16 @@ const strings = {
 
 export default function TutorialWelcome({ onStart, onSkip, isRTL, language = 'he' }) {
   const lang = strings[language] || strings.he;
+  const { language: appLanguage = 'he' } = { language };
   return (
     <div className="fixed inset-0 z-[10002] flex items-center justify-center p-4 bg-black/40" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 flex flex-col gap-4">
+      <div className="rounded-2xl shadow-2xl max-w-md w-full p-8 flex flex-col gap-4 tutorial-highlight-bubble" style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', borderLeft: '4px solid #3b82f6' }}>
+        {/* Tour badge */}
+        <div className="flex items-center gap-1 justify-center text-blue-600 mb-1">
+          <Compass className="w-4 h-4" />
+          <span className="text-xs font-bold uppercase tracking-wide">{language === 'he' ? 'סיור מודרך' : language === 'ar' ? 'جولة موجهة' : 'Guided Tour'}</span>
+        </div>
+
         {/* Icon */}
         <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -35,7 +43,7 @@ export default function TutorialWelcome({ onStart, onSkip, isRTL, language = 'he
           </svg>
         </div>
 
-        <h2 className="text-xl font-bold text-slate-900 text-center">
+        <h2 className="text-2xl font-bold text-slate-900 text-center">
           {lang.headline}
         </h2>
 
