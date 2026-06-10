@@ -368,7 +368,10 @@ export default function TutorialTooltip({
                 <>
                   {' '}
                   <button
-                    onClick={onOpenPointsModal}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenPointsModal();
+                    }}
                     className="text-blue-600 hover:text-blue-700 underline font-medium"
                   >
                     {learnMoreText}
