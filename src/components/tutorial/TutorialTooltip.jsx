@@ -9,6 +9,10 @@ const TOOLTIP_WIDTH = 320;
 const TOOLTIP_HEIGHT = 200; // estimate for positioning
 const ARROW_SIZE = 10;
 
+function isMobileViewport() {
+  return typeof window !== 'undefined' && window.innerWidth < 768;
+}
+
 function computePosition(rect, preferred, isRTL) {
   // 'sidebar' is a special virtual position — resolved by the caller
   if (preferred === 'sidebar') return isRTL ? 'left' : 'right';
@@ -191,11 +195,16 @@ export default function TutorialTooltip({
   const nextDisabled = isPractice && !practiceCompleted;
   const ctaLabel = step.ctaLabel ? tTutorial(step.ctaLabel, language) : null;
 
+  const mobile = isMobileViewport();
+
   // Don't render until we have a valid position (target element found in DOM)
-  if (!pos && !isSummary) return null;
+  if (!pos && !isSummary && !mobile) return null;
 
   // Summary step — centered card, no arrow, finish button
   if (isSummary) {
+    const summaryStyle = mobile
+      ? { left: 0, right: 0, bottom: 0, top: 'auto', width: '100%', borderRadius: '16px 16px 0 0', transform: 'none' }
+      : { width: TOOLTIP_WIDTH + 40, left: '50%', top: '50%', transform: 'translate(-50%, -50%)' };
     return (
       <>
       {!hasExternalConfirm && showConfirm && (
@@ -219,13 +228,8 @@ export default function TutorialTooltip({
         </div>
       )}
       <div
-        className="fixed z-[10002] bg-white rounded-2xl shadow-2xl border-2 border-blue-200 p-6 text-center"
-        style={{
-          width: TOOLTIP_WIDTH + 40,
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-        }}
+        className="fixed z-[10002] bg-white shadow-2xl border-2 border-blue-200 p-5 text-center"
+        style={{ borderRadius: mobile ? '16px 16px 0 0' : '16px', ...summaryStyle }}
         dir={isRTL ? 'rtl' : 'ltr'}
         role="dialog"
         aria-modal="false"
@@ -311,8 +315,11 @@ export default function TutorialTooltip({
 
     <div
       ref={tooltipRef}
-      className="fixed z-[10002] bg-white rounded-xl shadow-2xl border border-slate-200 p-4"
-      style={{ width: TOOLTIP_WIDTH, ...pos }}
+      className="fixed z-[10002] bg-white shadow-2xl border border-slate-200"
+      style={mobile
+        ? { left: 0, right: 0, bottom: 0, top: 'auto', width: '100%', borderRadius: '16px 16px 0 0', padding: '16px 16px 24px' }
+        : { width: TOOLTIP_WIDTH, borderRadius: '12px', padding: '16px', ...pos }
+      }
       dir={isRTL ? 'rtl' : 'ltr'}
       role="dialog"
       aria-modal="false"
@@ -326,7 +333,7 @@ export default function TutorialTooltip({
       >
         <X className="w-4 h-4" />
       </button>
-      <ArrowEl position={resolvedPosition} isRTL={isRTL} />
+      {!mobile && <ArrowEl position={resolvedPosition} isRTL={isRTL} />}
 
       {/* Success state */}
       {showSuccess && successMessage ? (
