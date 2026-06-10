@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, X, UserPlus, PartyPopper } from 'lucide-react';
 import { tTutorial } from './tutorialSteps';
@@ -205,7 +206,7 @@ export default function TutorialTooltip({
     const summaryStyle = mobile
       ? { left: 0, right: 0, bottom: 0, top: 'auto', width: '100%', borderRadius: '16px 16px 0 0', transform: 'none' }
       : { width: TOOLTIP_WIDTH + 40, left: '50%', top: '50%', transform: 'translate(-50%, -50%)' };
-    return (
+    return createPortal(
       <>
       {!hasExternalConfirm && showConfirm && (
         <div className="fixed inset-0 z-[10010] flex items-center justify-center bg-black/40 p-4">
@@ -228,8 +229,8 @@ export default function TutorialTooltip({
         </div>
       )}
       <div
-        className="fixed z-[10002] bg-white shadow-2xl border-2 border-blue-200 p-5 text-center"
-        style={{ borderRadius: mobile ? '16px 16px 0 0' : '16px', ...summaryStyle }}
+        className="fixed bg-white shadow-2xl border-2 border-blue-200 p-5 text-center"
+        style={{ borderRadius: mobile ? '16px 16px 0 0' : '16px', zIndex: 99999, ...summaryStyle }}
         dir={isRTL ? 'rtl' : 'ltr'}
         role="dialog"
         aria-modal="false"
@@ -285,11 +286,12 @@ export default function TutorialTooltip({
           </div>
         </div>
       </div>
-      </>
+      </>,
+      document.body
     );
   }
 
-  return (
+  return createPortal(
     <>
     {/* Confirm skip dialog — only rendered when not delegated to parent */}
     {!hasExternalConfirm && showConfirm && (
@@ -315,10 +317,10 @@ export default function TutorialTooltip({
 
     <div
       ref={tooltipRef}
-      className="fixed z-[10002] bg-white shadow-2xl border border-slate-200"
+      className="fixed bg-white shadow-2xl border border-slate-200"
       style={mobile
-        ? { left: 0, right: 0, bottom: 0, top: 'auto', width: '100%', borderRadius: '16px 16px 0 0', padding: '16px 16px 24px' }
-        : { width: TOOLTIP_WIDTH, borderRadius: '12px', padding: '16px', ...pos }
+        ? { left: 0, right: 0, bottom: 0, top: 'auto', width: '100%', borderRadius: '16px 16px 0 0', padding: '16px 16px 24px', zIndex: 99999 }
+        : { width: TOOLTIP_WIDTH, borderRadius: '12px', padding: '16px', zIndex: 10002, ...pos }
       }
       dir={isRTL ? 'rtl' : 'ltr'}
       role="dialog"
@@ -456,6 +458,7 @@ export default function TutorialTooltip({
       )}
 
     </div>
-    </>
+    </>,
+    document.body
   );
 }
