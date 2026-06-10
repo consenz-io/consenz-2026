@@ -55,11 +55,20 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
       el.style.position = 'relative';
       el.style.zIndex = '10001';
       el.style.borderRadius = radius;
-      el.style.boxShadow = '0 0 0 9999px rgba(0,0,0,0.5)';
+      if (isMobile) {
+        // On mobile: use outline ring instead of full scrim so content stays visible
+        el.style.outline = '3px solid #3b82f6';
+        el.style.outlineOffset = '4px';
+        el.style.boxShadow = '0 0 0 6px rgba(59,130,246,0.25)';
+      } else {
+        el.style.boxShadow = '0 0 0 9999px rgba(0,0,0,0.5)';
+      }
       el.style.transition = 'box-shadow 0.3s ease';
       return () => {
         el.style.position = '';
         el.style.zIndex = '';
+        el.style.outline = '';
+        el.style.outlineOffset = '';
         el.style.boxShadow = '';
         el.style.transition = '';
       };
@@ -105,7 +114,18 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
       if (!el) return false;
       updatePosition(el);
       cleanupSpotlight = applySpotlight(el);
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (isMobile) {
+        // Scroll so the element is visible above the bottom sheet (~180px tall)
+        const rect = el.getBoundingClientRect();
+        const sheetHeight = 180;
+        const visibleHeight = window.innerHeight - sheetHeight;
+        if (rect.top < 0 || rect.bottom > visibleHeight) {
+          const targetY = window.scrollY + rect.top - visibleHeight / 2 + rect.height / 2;
+          window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+        }
+      } else {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return true;
     }
 
