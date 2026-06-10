@@ -101,11 +101,26 @@ export default function TutorialController() {
 
   // ── Session-start detection ──────────────────────────────────────────────
   useEffect(() => {
-    // useTutorial hook handles all auto-start logic via server hydration.
-    // TutorialController just needs to wait for the hook's phase transitions.
-    // No additional auto-start is needed here.
+    // Only trigger on first session load (idle phase)
+    if (phase !== 'idle') return;
+
+    // Check if tutorial has already been completed/skipped
+    try {
+      const raw = localStorage.getItem('consenz_tutorial');
+      if (raw) {
+        const saved = JSON.parse(raw);
+        // If explicitly marked inactive (skipped or done), don't auto-start
+        if (saved.active === false && saved.currentStep > 0) return;
+        // Resume mid-tutorial if active
+        if (saved.active === true) return; // useTutorial mount effect handles this
+      }
+    } catch {}
+
+    // First ever visit — auto-start
+    const entry = isDocumentPage(location.pathname) ? 'document' : 'home';
+    startTutorial(entry);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // intentionally empty — let useTutorial handle initialization
+  }, []); // intentionally run once on mount
 
   // ── Transition: home-intro → group page ─────────────────────────────────
   useEffect(() => {
@@ -397,18 +412,13 @@ export default function TutorialController() {
 
   // welcome-intro: small bubble shown after delay when user is authenticated
   if (phase === 'welcome-intro') {
-    // Check if this is a manual restart (by checking if we have a manual nav flag)
-    const isManualRestart = manualNavRef.current || sessionStorage.getItem('tutorial_manual_restart') === 'true';
-    // For new authenticated users: show welcome bubble after 15s delay (unless manual restart)
-    // For manual restart via button: show immediately
-    const delayMs = isManualRestart ? 0 : (isAuthenticated ? 15000 : 0);
     return (
       <TutorialWelcomeBubble
         onStart={beginFromWelcome}
         onSkip={skipTutorial}
         isRTL={isRTL}
         language={language}
-        delay={delayMs}
+        delay={15000}
       />
     );
   }

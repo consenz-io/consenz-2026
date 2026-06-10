@@ -54,8 +54,6 @@ export default function TutorialRestartButton() {
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
-      // Signal that this is a manual restart (not auto-start on first visit)
-      sessionStorage.setItem('tutorial_manual_restart', 'true');
     } catch {}
 
     // Trigger tutorial restart

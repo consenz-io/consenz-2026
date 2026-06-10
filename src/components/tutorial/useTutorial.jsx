@@ -32,13 +32,9 @@ async function fetchServerTutorialState() {
   try {
     const user = await base44.auth.me();
     if (!user) return null;
-    const { tutorialCompleted, tutorialLastStep, tutorialSkipped, createdDate } = user;
-    // Determine if user is new (created in last 24 hours)
-    const isNewUser = createdDate && (Date.now() - new Date(createdDate).getTime() < 86400000);
-    // If never seen tutorial, they're "new"
-    const neverSeenTutorial = tutorialCompleted === undefined && tutorialLastStep === undefined && tutorialSkipped === undefined;
-    if (!neverSeenTutorial && !isNewUser) return null; // existing user who already completed tutorial
-    return { tutorialCompleted, tutorialLastStep, tutorialSkipped, isNewUser, neverSeenTutorial };
+    const { tutorialCompleted, tutorialLastStep, tutorialSkipped } = user;
+    if (tutorialCompleted === undefined && tutorialLastStep === undefined) return null;
+    return { tutorialCompleted, tutorialLastStep, tutorialSkipped };
   } catch {
     return null;
   }
@@ -93,23 +89,26 @@ export function useTutorial(steps = []) {
 
       if (!hasLocalData && authed) {
         const server = await fetchServerTutorialState();
-        // Only show tutorial to NEW users (created < 24h) or users who never saw it
-        if (server && server.neverSeenTutorial && !server.tutorialSkipped && !server.tutorialCompleted) {
+        if (server && !server.tutorialSkipped && !server.tutorialCompleted) {
           const hydrated = {
             ...defaultState(),
             active: true,
-            currentStep: 0, // Always start from 0 for new users
-            homeStepSeen: false, // New users must see home-intro first
+            currentStep: server.tutorialLastStep ?? 0,
+            // homeStepSeen must be true only when we're resuming mid-document steps (step > 0).
+            // If lastStep === 0 the user may never have passed home-intro — keep it false.
+            homeStepSeen: (server.tutorialLastStep ?? 0) > 0,
           };
           saveState(hydrated);
           setState(hydrated);
-          // Show welcome bubble after 15 second delay on home page
-          setPhase('welcome-intro');
+          if (steps.length > 0 && hydrated.currentStep < steps.length) {
+            // Only jump straight to 'running' if homeStepSeen is confirmed.
+            // Otherwise let the home-intro phase handle the entry.
+            setPhase(hydrated.homeStepSeen ? 'running' : 'home-intro');
+          }
           return;
         }
-        // Skip tutorial entirely for existing users or those who already completed it
-        if (server?.tutorialCompleted || server?.tutorialSkipped || (server && !server.neverSeenTutorial)) {
-          const done = { ...defaultState(), active: false };
+        if (server?.tutorialCompleted || server?.tutorialSkipped) {
+          const done = { ...defaultState(), active: false, currentStep: 1 };
           saveState(done);
           setState(done);
           return;
@@ -307,16 +306,13 @@ export function useTutorial(steps = []) {
   }, []);
 
   const restartTutorial = useCallback((entryPoint = 'document') => {
-    // When restarting manually, check if we should skip welcome-intro delay
-    const isManualRestart = sessionStorage.getItem('tutorial_manual_restart') === 'true';
-    sessionStorage.removeItem('tutorial_manual_restart'); // Clear flag after reading
-    
-    // For manual restart: go directly to running (skip welcome-intro)
-    // For auto-restart: show welcome-intro with 15s delay
+    // Read currentStep from localStorage — TutorialRestartButton may have pre-set it
+    // to a context-appropriate step (e.g. versions-browse-explain on DocumentCleanView).
+    const persisted = loadState();
     const fresh = {
       active: true,
-      homeStepSeen: isManualRestart ? true : false,
-      currentStep: 0,
+      homeStepSeen: entryPoint !== 'home',
+      currentStep: persisted.active ? persisted.currentStep : 0,
       completedSteps: [],
     };
     saveState(fresh);
@@ -324,14 +320,8 @@ export function useTutorial(steps = []) {
     setPracticeCompleted(false);
     setShowSuccess(false);
     setShowSignupPrompt(false);
-    
-    if (isManualRestart) {
-      // Skip welcome-intro entirely, go straight to running
-      setPhase('running');
-    } else {
-      // Show welcome-intro with delay
-      setPhase('welcome-intro');
-    }
+    // Skip the welcome-intro screen when restarting manually — go straight to the tour
+    setPhase((entryPoint === 'home' || entryPoint === 'group') ? 'home-intro' : 'running');
   }, []);
 
   return {
