@@ -294,24 +294,20 @@ export function useTutorial(steps = []) {
   }, []);
 
   const restartTutorial = useCallback((entryPoint = 'document') => {
-    if (entryPoint === 'document') {
-      // Skip welcome and go straight to running from step 0
-      const fresh = {
-        active: true,
-        homeStepSeen: true,
-        currentStep: 0,
-        completedSteps: [],
-      };
-      saveState(fresh);
-      setState(fresh);
-      setPracticeCompleted(false);
-      setShowSuccess(false);
-      setShowSignupPrompt(false);
-      setPhase('running');
-    } else {
-      startTutorial(entryPoint);
-    }
-  }, [startTutorial]);
+    const fresh = {
+      active: true,
+      homeStepSeen: entryPoint !== 'home',
+      currentStep: 0,
+      completedSteps: [],
+    };
+    saveState(fresh);
+    setState(fresh);
+    setPracticeCompleted(false);
+    setShowSuccess(false);
+    setShowSignupPrompt(false);
+    // Always skip the welcome bubble when restarting manually — go straight to the tour
+    setPhase(entryPoint === 'home' ? 'home-intro' : 'running');
+  }, []);
 
   return {
     phase,
