@@ -70,6 +70,11 @@ export default function DocumentView() {
   const [editingSuggestion, setEditingSuggestion] = useState(null);
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
 
+  // Fire tutorial event when document page mounts — signals the home-intro step is complete
+  React.useEffect(() => {
+    window.dispatchEvent(new Event('document:entered'));
+  }, []);
+
   // ── Data & Subscriptions (extracted to dedicated hooks) ──────────────────
   const {
     document, topics, sections, suggestions,

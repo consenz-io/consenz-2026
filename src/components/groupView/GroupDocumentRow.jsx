@@ -16,7 +16,8 @@ export default function GroupDocumentRow({ doc, unvotedCount, participantCount }
   };
 
   const handleClick = () => {
-    window.dispatchEvent(new Event('document:entered'));
+    // Note: document:entered is fired by DocumentView on mount, not here.
+    // Firing it on click (before navigation) caused tutorial to advance prematurely.
   };
 
   return (

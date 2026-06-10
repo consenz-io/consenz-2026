@@ -120,14 +120,13 @@ export function useTutorial(steps = []) {
         }
       }
 
-      if (local.active && steps.length > 0 && local.currentStep < steps.length) {
+      if (local.active) {
         setState(local);
-        if (local.homeStepSeen) {
+        if (local.homeStepSeen && local.currentStep < steps.length) {
           setPhase('running');
-        } else {
-          // Tutorial started but user hasn't passed the home-intro yet —
-          // go back to home-intro so they're not dropped into a document step
-          // while on the home/group page.
+        } else if (!local.homeStepSeen) {
+          // Tutorial is active but user hasn't passed home-intro yet (e.g. navigated
+          // to the group page). Stay in home-intro so the correct bubble is shown.
           setPhase('home-intro');
         }
       }
