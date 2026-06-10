@@ -176,10 +176,12 @@ export function useTutorial(steps = []) {
 
     const handler = () => {
       setState(prev => {
-        const next = { ...prev, homeStepSeen: true };
+        const next = { ...prev, homeStepSeen: true, currentStep: 0 };
         saveState(next);
         return next;
       });
+      // Immediately transition to running so welcome-intro is shown on the document page
+      setPhase('running');
     };
     window.addEventListener('document:entered', handler);
     return () => window.removeEventListener('document:entered', handler);

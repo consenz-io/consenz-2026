@@ -77,8 +77,9 @@ export default function TutorialController() {
   }, [location.pathname, phase, homeStepSeen]);
 
   // ── Resume when navigating TO a document page ────────────────────────────
+  // (Only as fallback — primary transition is done via document:entered event in useTutorial)
   useEffect(() => {
-    if ((phase === 'home-intro') && homeStepSeen && isDocumentPage(location.pathname)) {
+    if (phase === 'home-intro' && homeStepSeen && isDocumentPage(location.pathname)) {
       resumeOnDocumentPage();
     }
   }, [location.pathname, phase, homeStepSeen, resumeOnDocumentPage]);
