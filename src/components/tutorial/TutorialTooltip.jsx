@@ -366,6 +366,13 @@ export default function TutorialTooltip({
             </p>
           )}
 
+          {/* Extra hint for points step */}
+          {step.id === 'points-ranking-explain' && (
+            <p className="text-xs text-slate-500 italic mb-3">
+              {isRTL ? 'לחצו על סך הנקודות שלכם כדי לראות איך צוברים נקודות' : 'Click on your total points to see how you earn points'}
+            </p>
+          )}
+
           {/* Points table */}
           {step.table && step.table.length > 0 && (
             <table className="w-full text-xs mb-3 border-collapse">
