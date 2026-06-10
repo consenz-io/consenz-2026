@@ -380,21 +380,37 @@ export const GROUP_INTRO_STEP = {
 
 /**
  * Pre-tutorial step shown on the home page.
+ * Explain what a group is before showing groups list.
+ */
+export const HOME_GROUPS_EXPLAIN_STEP = {
+    id: 'home-groups-explain',
+    type: 'explain',
+    targetSelector: '.groups-section',
+    tooltipPosition: 'fixed-top-left',
+    heading: 'home.groups.heading',
+    body: 'home.groups.body',
+  };
+
+/**
+ * Pre-tutorial step shown on the home page.
  * No progress dots, no scrim — spotlight only on .groups-list.
  */
 export const HOME_INTRO_STEP = {
-   id: 'home-intro',
-   type: 'practice',
-   targetSelector: '.groups-list',
-   tooltipPosition: 'bottom',
-   heading: 'home.groups.heading',
-   body: 'home.groups.body',
-   successMessage: 'home.intro.success',
-   completionEvent: 'document:entered',
- };
+    id: 'home-intro',
+    type: 'practice',
+    targetSelector: '.groups-list',
+    tooltipPosition: 'bottom',
+    heading: 'home.groups.heading',
+    body: 'home.groups.body',
+    successMessage: 'home.intro.success',
+    completionEvent: 'document:entered',
+  };
 
 /** @type {Array} */
 export const TUTORIAL_STEPS = [
+  // -2. Home groups explanation — shown before HOME_INTRO_STEP
+  HOME_GROUPS_EXPLAIN_STEP,
+  
   // -1. Welcome intro prep — shown before group-explain step on group page
   WELCOME_INTRO_PREPARE_STEP,
   
