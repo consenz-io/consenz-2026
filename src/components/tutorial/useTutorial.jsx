@@ -94,12 +94,16 @@ export function useTutorial(steps = []) {
             ...defaultState(),
             active: true,
             currentStep: server.tutorialLastStep ?? 0,
-            homeStepSeen: true,
+            // homeStepSeen must be true only when we're resuming mid-document steps (step > 0).
+            // If lastStep === 0 the user may never have passed home-intro — keep it false.
+            homeStepSeen: (server.tutorialLastStep ?? 0) > 0,
           };
           saveState(hydrated);
           setState(hydrated);
           if (steps.length > 0 && hydrated.currentStep < steps.length) {
-            setPhase('running');
+            // Only jump straight to 'running' if homeStepSeen is confirmed.
+            // Otherwise let the home-intro phase handle the entry.
+            setPhase(hydrated.homeStepSeen ? 'running' : 'home-intro');
           }
           return;
         }

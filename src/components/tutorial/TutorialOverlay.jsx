@@ -5,7 +5,7 @@ import React, { useEffect, useState, useRef } from 'react';
  * Uses box-shadow trick: the TARGET element gets the huge inset shadow,
  * which paints the scrim. The scrim div itself is pointer-events-none.
  */
-export default function TutorialOverlay({ targetSelector, children }) {
+export default function TutorialOverlay({ targetSelector, additionalSpotlights = [], children }) {
   const [targetRect, setTargetRect] = useState(null);
   const styleRef = useRef(null);
 
@@ -66,12 +66,25 @@ export default function TutorialOverlay({ targetSelector, children }) {
     el.style.borderRadius = computedRadius;
     el.style.boxShadow = `0 0 0 9999px rgba(0,0,0,0.6)`;
 
+    // Additional spotlight elements (raised z-index only, no shadow)
+    const additionalEls = additionalSpotlights
+      .map(sel => document.querySelector(sel))
+      .filter(Boolean);
+    additionalEls.forEach(aEl => {
+      aEl.style.position = 'relative';
+      aEl.style.zIndex = '10001';
+    });
+
     return () => {
       el.style.position = '';
       el.style.zIndex = '';
       el.style.boxShadow = '';
+      additionalEls.forEach(aEl => {
+        aEl.style.position = '';
+        aEl.style.zIndex = '';
+      });
     };
-  }, [targetSelector, targetRect]);
+  }, [targetSelector, targetRect, additionalSpotlights]);
 
   return (
     <>

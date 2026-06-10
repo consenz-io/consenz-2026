@@ -70,9 +70,11 @@ export default function DocumentView() {
   const [editingSuggestion, setEditingSuggestion] = useState(null);
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
 
-  // Fire tutorial event when document page mounts — signals the home-intro step is complete
+  // Fire tutorial event when document page mounts — signals the home-intro step is complete.
+  // Small delay ensures useTutorial's effect has registered its listener before the event fires.
   React.useEffect(() => {
-    window.dispatchEvent(new Event('document:entered'));
+    const t = setTimeout(() => window.dispatchEvent(new Event('document:entered')), 100);
+    return () => clearTimeout(t);
   }, []);
 
   // ── Data & Subscriptions (extracted to dedicated hooks) ──────────────────

@@ -124,56 +124,57 @@ export default function TutorialTooltip({
   const tooltipRef = useRef(null);
 
   useEffect(() => {
-    function update() {
-      // Special 'sidebar' position: float in center of screen with arrow pointing to the side
-      if (step.tooltipPosition === 'sidebar') {
-        // In RTL the sidebar is on the RIGHT, so the arrow must point right → use 'left' position
-        // (ArrowEl 'left' puts the arrow on the right edge of the tooltip, pointing rightward)
-        // In LTR the sidebar is on the LEFT, so arrow points left → use 'right' position
-        const rp = isRTL ? 'left' : 'right';
-        setResolvedPosition(rp);
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        // Place tooltip in horizontal center, vertical center
-        const top = Math.max(80, vh / 2 - TOOLTIP_HEIGHT / 2);
-        const left = isRTL
-          ? Math.max(8, vw / 2 - TOOLTIP_WIDTH / 2)   // center; arrow points right toward sidebar
-          : Math.max(8, vw / 2 - TOOLTIP_WIDTH / 2);  // center; arrow points left toward sidebar
-        setPos({ left, top });
-        return;
-      }
+    let pollInterval = null;
+    let pollAttempts = 0;
+    const MAX_POLL_ATTEMPTS = 20; // 20 × 150ms = 3s max wait
 
-      const el = document.querySelector(step.targetSelector);
-      if (!el) {
-        // Fallback: center of screen
-        setResolvedPosition('bottom');
-        setPos({
-          left: Math.max(8, window.innerWidth / 2 - TOOLTIP_WIDTH / 2),
-          top: Math.max(80, window.innerHeight / 2 - TOOLTIP_HEIGHT / 2),
-        });
-        return;
-      }
+    function applyPosition(el) {
       const rect = el.getBoundingClientRect();
       const rp = computePosition(rect, step.tooltipPosition, isRTL);
       setResolvedPosition(rp);
       setPos(getTooltipStyle(rect, rp));
     }
 
-    // Scroll the target element into view first, then update position
-    const el = document.querySelector(step.targetSelector);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-      let frameCount = 0;
-      const checkAndUpdate = () => {
-        frameCount++;
+    function update() {
+      // Special 'sidebar' position — no DOM target needed
+      if (step.tooltipPosition === 'sidebar') {
+        const rp = isRTL ? 'left' : 'right';
+        setResolvedPosition(rp);
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const top = Math.max(80, vh / 2 - TOOLTIP_HEIGHT / 2);
+        const left = Math.max(8, vw / 2 - TOOLTIP_WIDTH / 2);
+        setPos({ left, top });
+        return;
+      }
+
+      const el = document.querySelector(step.targetSelector);
+      if (!el) return; // keep pos=null until element appears
+      applyPosition(el);
+    }
+
+    function tryInit() {
+      if (step.tooltipPosition === 'sidebar') {
         update();
-        if (frameCount < 10) {
-          requestAnimationFrame(checkAndUpdate);
+        return true;
+      }
+      const el = document.querySelector(step.targetSelector);
+      if (!el) return false;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      // Wait for scroll to finish before measuring
+      requestAnimationFrame(() => applyPosition(el));
+      return true;
+    }
+
+    if (!tryInit()) {
+      // Poll until the target appears in the DOM (handles async data loading / page transitions)
+      pollInterval = setInterval(() => {
+        pollAttempts++;
+        if (tryInit() || pollAttempts >= MAX_POLL_ATTEMPTS) {
+          clearInterval(pollInterval);
+          pollInterval = null;
         }
-      };
-      requestAnimationFrame(checkAndUpdate);
-    } else {
-      update();
+      }, 150);
     }
 
     window.addEventListener('scroll', update, { passive: true });
@@ -181,6 +182,7 @@ export default function TutorialTooltip({
     return () => {
       window.removeEventListener('scroll', update);
       window.removeEventListener('resize', update);
+      if (pollInterval) clearInterval(pollInterval);
     };
   }, [step, isRTL]);
 
@@ -188,6 +190,9 @@ export default function TutorialTooltip({
   const isEncourage = step.type === 'encourage';
   const nextDisabled = isPractice && !practiceCompleted;
   const ctaLabel = step.ctaLabel ? tTutorial(step.ctaLabel, language) : null;
+
+  // Don't render until we have a valid position (target element found in DOM)
+  if (!pos && !isSummary) return null;
 
   // Summary step — centered card, no arrow, finish button
   if (isSummary) {

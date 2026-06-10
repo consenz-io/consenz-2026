@@ -10,6 +10,10 @@ import TutorialHomeIntro from './TutorialHomeIntro';
 import PointsInfoModal from '@/components/points/PointsInfoModal';
 import { useLanguage } from '@/components/LanguageContext';
 
+// How long to suppress tooltip rendering after a navigation action (ms).
+// Gives the new page time to mount and render its DOM before we try to find target elements.
+const NAV_DELAY_MS = 600;
+
 function isDocumentPage(pathname) {
   return /\/(DocumentView|document)/i.test(pathname) || pathname.includes('urlName');
 }
@@ -28,6 +32,9 @@ export default function TutorialController() {
   const navigate = useNavigate();
   const [showPointsModal, setShowPointsModal] = useState(false);
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
+  // Suppress tooltip rendering briefly after a page navigation so the new DOM can settle.
+  const [navPending, setNavPending] = useState(false);
+  const navTimerRef = useRef(null);
 
   const {
     phase,
@@ -100,10 +107,34 @@ export default function TutorialController() {
     goNext(...args);
   }, [goNext]);
 
-  const handleBack = useCallback((...args) => {
+  const handleBack = useCallback(() => {
     manualNavRef.current = true;
-    goBack(...args);
-  }, [goBack]);
+    // If the previous step triggered a navigateOnNext, going back means returning to the
+    // origin page. Walk backwards to find the most recent step with a navigateOnNext.
+    if (currentStep > 0) {
+      const prevStep = TUTORIAL_STEPS[currentStep - 1];
+      if (prevStep?.navigateOnNext) {
+        // The current page is prevStep.navigateOnNext. To go back we need the page before
+        // prevStep — which is wherever DocumentView lives (the document page).
+        const params = new URLSearchParams(window.location.search);
+        const documentId = params.get('id');
+        const url = documentId ? `/DocumentView?id=${documentId}` : '/DocumentView';
+        setNavPending(true);
+        navigate(url);
+      }
+    }
+    goBack();
+  }, [goBack, currentStep, navigate]);
+
+  // Clear navPending whenever location changes (page finished navigating)
+  useEffect(() => {
+    if (navPending) {
+      clearTimeout(navTimerRef.current);
+      navTimerRef.current = setTimeout(() => setNavPending(false), NAV_DELAY_MS);
+    }
+    return () => clearTimeout(navTimerRef.current);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   // Reset manualNavRef after each step change
   useEffect(() => {
@@ -325,9 +356,32 @@ export default function TutorialController() {
     const step = TUTORIAL_STEPS[currentStep];
     if (!step) return null;
 
+    // Suppress rendering while waiting for a navigated page to settle
+    if (navPending) return null;
+
     const overlaySelector = step.targetSelector;
+    const additionalSpotlights = step.additionalSpotlights || [];
 
     const handleNextStep = () => {
+      // ── Side-effects that must happen BEFORE advancing the step index ──────
+      if (step.actionOnNext === 'navigateOlderVersion') {
+        // Click the "older version" button directly — same as a real user click.
+        const olderBtn = document.querySelector('.versions-older-btn');
+        if (olderBtn && !olderBtn.disabled) {
+          olderBtn.click();
+        } else {
+          window.dispatchEvent(new CustomEvent('tutorial:navigateOlderVersion'));
+        }
+      }
+
+      if (step.actionOnNext === 'expandProposal') {
+        const sectionCard = document.querySelector('.section-card');
+        if (sectionCard) {
+          const expandBtn = sectionCard.querySelector('[data-expand-proposal]');
+          if (expandBtn) expandBtn.click();
+        }
+      }
+
       if (step.navigateOnNext) {
         // Close any open modal first
         window.dispatchEvent(new CustomEvent('tutorial:closeModal'));
@@ -337,26 +391,12 @@ export default function TutorialController() {
         const url = documentId
           ? `/${step.navigateOnNext}?id=${documentId}`
           : `/${step.navigateOnNext}`;
+        // Suppress tooltip until new page DOM is ready
+        setNavPending(true);
         navigate(url);
       }
-      if (step.actionOnNext === 'navigateOlderVersion') {
-        // Click the "older version" button directly in the DOM, same as a real user click
-        const olderBtn = document.querySelector('.versions-older-btn');
-        if (olderBtn && !olderBtn.disabled) {
-          olderBtn.click();
-        } else {
-          // Fallback: dispatch event for DocumentCleanView handler
-          window.dispatchEvent(new CustomEvent('tutorial:navigateOlderVersion'));
-        }
-      }
-      if (step.actionOnNext === 'expandProposal') {
-        // Expand the proposal carousel to show vote buttons
-        const sectionCard = document.querySelector('.section-card');
-        if (sectionCard) {
-          const expandBtn = sectionCard.querySelector('[data-expand-proposal]');
-          if (expandBtn) expandBtn.click();
-        }
-      }
+
+      // Advance step index — tooltip will be suppressed by navPending if we navigated
       handleNext();
     };
 
@@ -388,7 +428,7 @@ export default function TutorialController() {
     return (
       <>
         {SkipConfirmDialog}
-        <TutorialOverlay targetSelector={overlaySelector}>
+        <TutorialOverlay targetSelector={overlaySelector} additionalSpotlights={additionalSpotlights}>
           <TutorialTooltip
             step={step}
             stepIndex={currentStep}
