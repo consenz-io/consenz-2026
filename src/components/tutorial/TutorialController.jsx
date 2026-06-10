@@ -340,7 +340,14 @@ export default function TutorialController() {
         navigate(url);
       }
       if (step.actionOnNext === 'navigateOlderVersion') {
-        window.dispatchEvent(new CustomEvent('tutorial:navigateOlderVersion'));
+        // Click the "older version" button directly in the DOM, same as a real user click
+        const olderBtn = document.querySelector('.versions-older-btn');
+        if (olderBtn && !olderBtn.disabled) {
+          olderBtn.click();
+        } else {
+          // Fallback: dispatch event for DocumentCleanView handler
+          window.dispatchEvent(new CustomEvent('tutorial:navigateOlderVersion'));
+        }
       }
       if (step.actionOnNext === 'expandProposal') {
         // Expand the proposal carousel to show vote buttons
