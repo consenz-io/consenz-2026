@@ -524,11 +524,11 @@ const SectionCarousel = React.memo(function SectionCarousel({
                 <DocumentTextContent content={content} className="text-slate-800" />
               )}
             />
-            <div className={`flex flex-col md:flex-row items-start md:items-center justify-between mt-3 gap-2 ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+            <div className={`flex flex-col gap-3 mt-3 ${isRTL ? '' : ''}`}>
               <div className="text-[10px] md:text-xs text-slate-400">
                 {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString('en-GB')}
               </div>
-              <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <div className={`flex flex-wrap items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                 {(() => {
                     // אם הגרסה הנוכחית הגיעה מהצעה שהתקבלה — מציג את הצבעות של ההצעה (read-only)
                     const acceptedEdit = allDocumentSuggestions
