@@ -54,7 +54,8 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
   
   const closeSidebarOnMobile = React.useCallback(() => {
     if (isMobileViewport) {
-      setOpenMobile(false);
+      // Use microtask queue to close after current interaction completes
+      Promise.resolve().then(() => setOpenMobile(false));
     }
   }, [isMobileViewport, setOpenMobile]);
   
@@ -100,9 +101,11 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
                 </SidebarMenuItem>
               ))}
               <SidebarMenuItem>
-                <div onClick={closeSidebarOnMobile}>
-                  <TutorialRestartButton />
-                </div>
+               <ErrorBoundary inline>
+                 <div onClick={closeSidebarOnMobile}>
+                   <TutorialRestartButton />
+                 </div>
+               </ErrorBoundary>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -465,7 +468,9 @@ function LayoutContent({ children, currentPageName }) {
              )}
 
              <AccessibilityAnnouncer />
-       <TutorialController />
+       <ErrorBoundary>
+         <TutorialController currentPageName={currentPageName} language={language} isRTL={isRTL} />
+       </ErrorBoundary>
 
               </div>
               </SidebarProvider>
