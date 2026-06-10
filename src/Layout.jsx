@@ -59,6 +59,24 @@ function LayoutContent({ children, currentPageName }) {
     if (typeof window === 'undefined') return true;
     return sessionStorage.getItem('hideUnvotedNudge') !== 'true';
   });
+  const { closeSidebar } = useSidebar();
+
+  // Close sidebar on mobile when clicking any interactive element in sidebar
+  React.useEffect(() => {
+    const handleSidebarClick = (e) => {
+      const target = e.target;
+      // Close sidebar on link/button/select clicks
+      if (target.tagName === 'A' || target.tagName === 'BUTTON' || target.tagName === 'SELECT') {
+        closeSidebar();
+      }
+    };
+
+    const sidebarContent = document.querySelector('[class*="SidebarContent"]');
+    if (!sidebarContent) return;
+
+    sidebarContent.addEventListener('click', handleSidebarClick);
+    return () => sidebarContent.removeEventListener('click', handleSidebarClick);
+  }, [closeSidebar]);
   
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
