@@ -49,22 +49,9 @@ function MobileMenuButton({ isRTL, nudgeActive }) {
   );
 }
 
-function SidebarClickHandler({ children }) {
-  const sidebar = useSidebar();
-  const location = useLocation();
-
-  // Close sidebar when page changes
-  React.useEffect(() => {
-    if (sidebar?.closeSidebar) {
-      sidebar.closeSidebar();
-    }
-  }, [location.pathname, sidebar]);
-
-  return children;
-}
-
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
+  const { setOpen } = useSidebar();
   const queryClient = useQueryClient();
   const { language, setLanguage, t, isRTL } = useLanguage();
   const [showScrollTop, setShowScrollTop] = React.useState(false);
@@ -105,7 +92,8 @@ function LayoutContent({ children, currentPageName }) {
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
-  }, [location.pathname]);
+    setOpen(false); // Close sidebar on page change
+  }, [location.pathname, setOpen]);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -224,7 +212,6 @@ function LayoutContent({ children, currentPageName }) {
 
   return (
     <SidebarProvider>
-      <SidebarClickHandler>
       {/* Skip to main content link for keyboard users */}
       <a
          href="#main-content"
@@ -452,7 +439,6 @@ function LayoutContent({ children, currentPageName }) {
       <TutorialController />
 
               </div>
-              </SidebarClickHandler>
                </SidebarProvider>
                );
               }
