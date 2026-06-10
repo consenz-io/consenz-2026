@@ -50,30 +50,30 @@ function MobileMenuButton({ isRTL, nudgeActive }) {
 }
 
 function SidebarClickHandler({ children }) {
-  const { closeSidebar, open } = useSidebar();
+  const { closeSidebar } = useSidebar();
 
   React.useEffect(() => {
     const handleSidebarClick = (e) => {
       const target = e.target;
-      // Check if clicked element or its parent is a button/link/select
-      const isInteractive = 
-        target.tagName === 'A' || 
-        target.tagName === 'BUTTON' || 
-        target.tagName === 'SELECT' ||
-        target.closest('a') ||
-        target.closest('button');
       
-      if (isInteractive) {
+      // Check if click is on link, button, or option elements
+      if (target.tagName === 'A' || target.tagName === 'BUTTON' || target.tagName === 'SELECT' || target.tagName === 'OPTION') {
+        closeSidebar();
+      }
+      
+      // Also check parent elements in case of nested structures
+      const link = target.closest('a, button');
+      if (link) {
         closeSidebar();
       }
     };
 
-    const sidebar = document.querySelector('[id="sidebar"]');
-    if (!sidebar || !open) return;
+    const sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
 
     sidebar.addEventListener('click', handleSidebarClick);
     return () => sidebar.removeEventListener('click', handleSidebarClick);
-  }, [closeSidebar, open]);
+  }, [closeSidebar]);
 
   return children;
 }
