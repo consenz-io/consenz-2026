@@ -111,7 +111,6 @@ export default function TutorialTooltip({
   const { language } = useLanguage();
   const heading = tTutorial(step.heading, language);
   const body = tTutorial(step.body, language);
-  const learnMoreText = step.id === 'points-ranking-explain' ? tTutorial('points.ranking.explain.learnMore', language) : null;
   const successMessage = tTutorial(step.successMessage, language);
 
   const [pos, setPos] = useState(null);
@@ -364,20 +363,6 @@ export default function TutorialTooltip({
           {body && (
             <p className="text-sm text-slate-600 mb-3 leading-relaxed">
               {body}
-              {learnMoreText && onOpenPointsModal && (
-                <>
-                  {' '}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onOpenPointsModal();
-                    }}
-                    className="text-blue-600 hover:text-blue-700 underline font-medium"
-                  >
-                    {learnMoreText}
-                  </button>
-                </>
-              )}
             </p>
           )}
 
