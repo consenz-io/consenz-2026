@@ -533,7 +533,7 @@ export const TUTORIAL_STEPS = [
    targetSelector: '.user-points-badge',
    tooltipPosition: 'bottom',
    heading: 'points.ranking.explain.heading',
-   body: 'points.ranking.explain.body',
+   body: 'points.ranking.explain.hint',
   },
 
   // 19. Tour summary — back on DocumentView

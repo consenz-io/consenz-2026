@@ -148,14 +148,6 @@ export default function TutorialMobileSheet({
       <div className="px-4 pb-2">
           <p className="text-sm text-slate-600 leading-relaxed">
             {body}
-            {learnMoreText && onOpenPointsModal &&
-          <>
-                {' '}
-                <button onClick={onOpenPointsModal} className="text-blue-600 hover:text-blue-700 underline font-medium">
-                  {learnMoreText}
-                </button>
-              </>
-          }
           </p>
           {/* Points table */}
           {step.table && step.table.length > 0 &&
