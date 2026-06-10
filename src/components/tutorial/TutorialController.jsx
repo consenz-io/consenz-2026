@@ -294,21 +294,29 @@ export default function TutorialController() {
     // On group page — show group documents step directly
     if (isGroupPage(location.pathname)) {
       return (
-        <TutorialHomeIntro
-          step={GROUP_INTRO_STEP}
-          onSkip={skipTutorial}
-          isRTL={isRTL}
-          ctaText={isRTL ? 'בחרו מסמך ונמשיך' : 'Click on a document to continue'}
-        />
+        <>
+          {SkipConfirmDialog}
+          <TutorialHomeIntro
+            step={GROUP_INTRO_STEP}
+            onSkip={skipTutorial}
+            onRequestSkip={() => setShowSkipConfirm(true)}
+            isRTL={isRTL}
+            ctaText={isRTL ? 'בחרו מסמך ונמשיך' : 'Click on a document to continue'}
+          />
+        </>
       );
     }
     return (
-      <TutorialHomeIntro
-        step={HOME_INTRO_STEP}
-        onSkip={skipTutorial}
-        isRTL={isRTL}
-        ctaText={isRTL ? 'בחרו קבוצה ונמשיך' : 'Click on a group to continue'}
-      />
+      <>
+        {SkipConfirmDialog}
+        <TutorialHomeIntro
+          step={HOME_INTRO_STEP}
+          onSkip={skipTutorial}
+          onRequestSkip={() => setShowSkipConfirm(true)}
+          isRTL={isRTL}
+          ctaText={isRTL ? 'בחרו קבוצה ונמשיך' : 'Click on a group to continue'}
+        />
+      </>
     );
   }
 

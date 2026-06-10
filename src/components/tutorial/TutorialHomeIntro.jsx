@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { CheckCircle, X } from 'lucide-react';
 import { tTutorial } from './tutorialSteps';
 import { useLanguage } from '@/components/LanguageContext';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 const TOOLTIP_WIDTH = 320;
 const ARROW_SIZE = 10;
@@ -14,7 +13,7 @@ const ARROW_SIZE = 10;
  * - Tooltip anchored below the target
  * - No progress dots, no Back button
  */
-export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL, ctaText }) {
+export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSkip, isRTL, ctaText }) {
   const { language } = useLanguage();
   const [activeStep, setActiveStep] = useState(step);
   const heading = tTutorial(activeStep.heading, language) || activeStep.heading;
@@ -23,7 +22,6 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL, ctaTe
   const [tooltipStyle, setTooltipStyle] = useState(null);
   const [practiceCompleted, setPracticeCompleted] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [showSkipConfirm, setShowSkipConfirm] = useState(false);
   const tooltipRef = useRef(null);
 
   // Reset state when step changes
@@ -155,7 +153,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL, ctaTe
       >
         {/* X button */}
         <button
-          onClick={() => setShowSkipConfirm(true)}
+          onClick={() => onRequestSkip ? onRequestSkip() : onSkip()}
           className="absolute top-2 end-2 text-slate-400 hover:text-slate-600 transition-colors p-1 rounded"
           aria-label={isRTL ? 'סגור' : 'Close'}
         >
@@ -224,20 +222,6 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, isRTL, ctaTe
         )}
       </div>
 
-      <AlertDialog open={showSkipConfirm} onOpenChange={setShowSkipConfirm}>
-        <AlertDialogContent dir={isRTL ? 'rtl' : 'ltr'}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{isRTL ? 'לצאת מהסיור?' : 'Exit the tour?'}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {isRTL ? 'תמיד אפשר להפעיל אותו מחדש מהתפריט.' : 'You can always restart it from the menu.'}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{isRTL ? 'המשך' : 'Continue'}</AlertDialogCancel>
-            <AlertDialogAction onClick={onSkip}>{isRTL ? 'צא מהסיור' : 'Exit tour'}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
