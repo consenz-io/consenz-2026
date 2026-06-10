@@ -122,7 +122,14 @@ export function useTutorial(steps = []) {
 
       if (local.active && steps.length > 0 && local.currentStep < steps.length) {
         setState(local);
-        setPhase('running');
+        if (local.homeStepSeen) {
+          setPhase('running');
+        } else {
+          // Tutorial started but user hasn't passed the home-intro yet —
+          // go back to home-intro so they're not dropped into a document step
+          // while on the home/group page.
+          setPhase('home-intro');
+        }
       }
     }
     hydrate();
