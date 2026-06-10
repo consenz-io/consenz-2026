@@ -49,9 +49,10 @@ function MobileMenuButton({ isRTL, nudgeActive }) {
   );
 }
 
-function NavigationWithSidebarClose({ isMobileViewport, navigationItems, location, user }) {
+function SidebarInner({ isMobileViewport, navigationItems, language, location, user, t, isRTL, setLanguage, handleLogout }) {
   const { setOpen } = useSidebar();
-  const handleCloseSidebarOnMobile = React.useCallback(() => {
+  
+  const closeSidebarOnMobile = React.useCallback(() => {
     if (isMobileViewport) {
       setOpen(false);
     }
@@ -59,95 +60,144 @@ function NavigationWithSidebarClose({ isMobileViewport, navigationItems, locatio
   
   return (
     <>
-      {navigationItems.map((item) => (
-        <SidebarMenuItem key={item.title}>
-          <SidebarMenuButton 
-            asChild 
-            className={`hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 rounded-lg mb-1 ${
-              location.pathname === item.url ? 'bg-blue-50 text-blue-700' : ''
-            }`}
-          >
-            <Link to={item.url} onClick={handleCloseSidebarOnMobile} className="flex items-center gap-3 px-3 py-3 relative min-h-[44px]">
-              <item.icon className="w-4 h-4" />
-              <span className="font-medium">{item.title}</span>
-              {item.badge && (
-                <span className="absolute top-1 left-1 bg-orange-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
-                  {item.badge > 9 ? '9+' : item.badge}
-                </span>
-              )}
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      ))}
-      <SidebarMenuItem>
-        <div onClick={handleCloseSidebarOnMobile}>
-          <TutorialRestartButton />
-        </div>
-      </SidebarMenuItem>
-    </>
-  );
-}
-
-function LanguageSelectorWithSidebarClose({ isMobileViewport, language, setLanguage, t, isRTL }) {
-  const { setOpen } = useSidebar();
-  const handleCloseSidebarOnMobile = React.useCallback(() => {
-    if (isMobileViewport) {
-      setOpen(false);
-    }
-  }, [isMobileViewport, setOpen]);
-  
-  return (
-    <SidebarGroup>
-      <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
-        {t('language')}
-      </SidebarGroupLabel>
-      <SidebarGroupContent>
-        <div className="px-3 py-2">
-          <div className="relative">
-            <Languages className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" aria-hidden="true" />
-            <select
-              value={language}
-              onChange={(e) => {
-                setLanguage(e.target.value);
-                handleCloseSidebarOnMobile();
-              }}
-              className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm font-medium bg-white cursor-pointer"
-              aria-label={isRTL ? 'בחירת שפה' : 'Select language'}
-              id="language-selector"
-            >
-              <option value="en">English</option>
-              <option value="ar">العربية</option>
-              <option value="he">עברית</option>
-            </select>
+      <SidebarHeader className="border-b border-slate-200 p-4">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+            <FileText className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h2 className="font-bold text-xl text-slate-900">Consenz</h2>
+            <p className="text-xs text-slate-500">Collaborative Consensus</p>
           </div>
         </div>
-      </SidebarGroupContent>
-    </SidebarGroup>
-  );
-}
+      </SidebarHeader>
+      
+      <SidebarContent className="p-2">
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
+            {t('navigation')}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {navigationItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    asChild 
+                    className={`hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 rounded-lg mb-1 ${
+                      location.pathname === item.url ? 'bg-blue-50 text-blue-700' : ''
+                    }`}
+                  >
+                    <Link to={item.url} onClick={closeSidebarOnMobile} className="flex items-center gap-3 px-3 py-3 relative min-h-[44px]">
+                      <item.icon className="w-4 h-4" />
+                      <span className="font-medium">{item.title}</span>
+                      {item.badge && (
+                        <span className="absolute top-1 left-1 bg-orange-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                          {item.badge > 9 ? '9+' : item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+              <SidebarMenuItem>
+                <div onClick={closeSidebarOnMobile}>
+                  <TutorialRestartButton />
+                </div>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-function ProfileLinkWithSidebarClose({ isMobileViewport, user }) {
-  const { setOpen } = useSidebar();
-  const handleCloseSidebarOnMobile = React.useCallback(() => {
-    if (isMobileViewport) {
-      setOpen(false);
-    }
-  }, [isMobileViewport, setOpen]);
-  
-  return (
-    <Link to={createPageUrl("Profile")} onClick={handleCloseSidebarOnMobile} className="flex-1">
-      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer min-h-[44px]">
-        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
-          <span className="text-white font-medium text-sm">
-            {user.full_name?.charAt(0) || 'U'}
-          </span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-slate-900 text-sm truncate">{user.full_name}</p>
-          <p className="text-xs text-slate-500 truncate">{user.email}</p>
-        </div>
-      </div>
-    </Link>
+        {user?.role === 'admin' && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
+              {language === 'he' ? 'ניהול' : 'Admin'}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu></SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
+            {t('language')}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="px-3 py-2">
+              <div className="relative">
+                <Languages className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" aria-hidden="true" />
+                <select
+                  value={language}
+                  onChange={(e) => {
+                    setLanguage(e.target.value);
+                    closeSidebarOnMobile();
+                  }}
+                  className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm font-medium bg-white cursor-pointer"
+                  aria-label={isRTL ? 'בחירת שפה' : 'Select language'}
+                  id="language-selector"
+                >
+                  <option value="en">English</option>
+                  <option value="ar">العربية</option>
+                  <option value="he">עברית</option>
+                </select>
+              </div>
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
+            {language === 'he' ? 'נגישות' : language === 'ar' ? 'إمكانية الوصول' : 'Accessibility'}
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="px-3 py-2">
+              <AccessibilityToolbarContent />
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter className="border-t border-slate-200 p-4">
+        {user ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Link to={createPageUrl("Profile")} onClick={closeSidebarOnMobile} className="flex-1">
+                <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer min-h-[44px]">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-medium text-sm">
+                      {user.full_name?.charAt(0) || 'U'}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-slate-900 text-sm truncate">{user.full_name}</p>
+                    <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                  </div>
+                </div>
+              </Link>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="w-full"
+              aria-label={isRTL ? 'התנתקות מהמערכת' : 'Logout from system'}
+            >
+              <LogOut className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} aria-hidden="true" />
+              {t('logout')}
+            </Button>
+          </div>
+        ) : (
+          <Button
+            onClick={() => base44.auth.redirectToLogin()}
+            className="w-full"
+            aria-label={isRTL ? 'כניסה למערכת' : 'Sign in to system'}
+          >
+            {t('signIn')}
+          </Button>
+        )}
+      </SidebarFooter>
+    </>
   );
 }
 
@@ -196,11 +246,6 @@ function LayoutContent({ children, currentPageName }) {
   });
 
   const totalUnvotedSuggestions = unvotedData?.data?.count ?? 0;
-
-
-
-
-
 
 
 
@@ -304,7 +349,6 @@ function LayoutContent({ children, currentPageName }) {
 
 
 
-
   const navigationItems = [
     {
       title: t('home'),
@@ -338,96 +382,17 @@ function LayoutContent({ children, currentPageName }) {
       
       <div className={`min-h-screen flex w-full max-w-full bg-gradient-to-br from-slate-50 to-blue-50 overflow-x-hidden ${isRTL ? 'flex-row-reverse' : ''}`} style={{ maxWidth: '100vw' }}>
         <Sidebar id="sidebar" className={isRTL ? "border-l border-slate-200" : "border-r border-slate-200"} role="navigation" aria-label={isRTL ? 'תפריט ניווט ראשי' : 'Main navigation'}>
-          <SidebarHeader className="border-b border-slate-200 p-4">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="font-bold text-xl text-slate-900">Consenz</h2>
-                <p className="text-xs text-slate-500">Collaborative Consensus</p>
-              </div>
-            </div>
-          </SidebarHeader>
-          
-          <SidebarContent className="p-2">
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
-                {t('navigation')}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <NavigationWithSidebarClose 
-                    isMobileViewport={isMobileViewport}
-                    navigationItems={navigationItems}
-                    location={location}
-                    t={t}
-                    user={user}
-                    language={language}
-                  />
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            {user?.role === 'admin' && (
-              <SidebarGroup>
-                <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
-                  {language === 'he' ? 'ניהול' : 'Admin'}
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-  
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            )}
-
-            <LanguageSelectorWithSidebarClose isMobileViewport={isMobileViewport} language={language} setLanguage={setLanguage} t={t} isRTL={isRTL} />
-
-
-
-
-
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
-                {language === 'he' ? 'נגישות' : language === 'ar' ? 'إمكانية الوصول' : 'Accessibility'}
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <div className="px-3 py-2">
-                  <AccessibilityToolbarContent />
-                </div>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            </SidebarContent>
-
-          <SidebarFooter className="border-t border-slate-200 p-4">
-            {user ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <ProfileLinkWithSidebarClose isMobileViewport={isMobileViewport} user={user} />
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="w-full"
-                  aria-label={isRTL ? 'התנתקות מהמערכת' : 'Logout from system'}
-                >
-                  <LogOut className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} aria-hidden="true" />
-                  {t('logout')}
-                </Button>
-              </div>
-            ) : (
-              <Button
-                onClick={() => base44.auth.redirectToLogin()}
-                className="w-full"
-                aria-label={isRTL ? 'כניסה למערכת' : 'Sign in to system'}
-              >
-                {t('signIn')}
-              </Button>
-            )}
-          </SidebarFooter>
+          <SidebarInner
+            isMobileViewport={isMobileViewport}
+            navigationItems={navigationItems}
+            language={language}
+            location={location}
+            user={user}
+            t={t}
+            isRTL={isRTL}
+            setLanguage={setLanguage}
+            handleLogout={handleLogout}
+          />
         </Sidebar>
 
         <main 
@@ -500,7 +465,7 @@ function LayoutContent({ children, currentPageName }) {
              )}
 
              <AccessibilityAnnouncer />
-      <TutorialController />
+       <TutorialController />
 
               </div>
               </SidebarProvider>
