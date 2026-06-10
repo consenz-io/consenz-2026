@@ -60,6 +60,32 @@ function LayoutContent({ children, currentPageName }) {
     return sessionStorage.getItem('hideUnvotedNudge') !== 'true';
   });
   
+  // Track mobile viewport for sidebar close behavior
+  const [isMobileViewport, setIsMobileViewport] = React.useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 768;
+  });
+  
+  React.useEffect(() => {
+    const handleResize = () => {
+      setIsMobileViewport(window.innerWidth < 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  const { state: sidebarState } = useSidebar();
+  const handleSidebarItemClick = React.useCallback(() => {
+    // Close sidebar only on mobile viewport when it's open
+    if (isMobileViewport && sidebarState?.open) {
+      // Trigger close via a click on the sidebar overlay/trigger
+      const sidebarOverlay = document.querySelector('[data-sidebar="overlay"]');
+      if (sidebarOverlay) {
+        sidebarOverlay.click();
+      }
+    }
+  }, [isMobileViewport, sidebarState?.open]);
+  
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
@@ -249,7 +275,7 @@ function LayoutContent({ children, currentPageName }) {
                           location.pathname === item.url ? 'bg-blue-50 text-blue-700' : ''
                         }`}
                       >
-                        <Link to={item.url} className="flex items-center gap-3 px-3 py-3 relative min-h-[44px]">
+                        <Link to={item.url} onClick={handleSidebarItemClick} className="flex items-center gap-3 px-3 py-3 relative min-h-[44px]">
                           <item.icon className="w-4 h-4" />
                           <span className="font-medium">{item.title}</span>
                           {item.badge && (
@@ -262,7 +288,9 @@ function LayoutContent({ children, currentPageName }) {
                     </SidebarMenuItem>
                   ))}
                   <SidebarMenuItem>
-                    <TutorialRestartButton />
+                    <div onClick={handleSidebarItemClick}>
+                      <TutorialRestartButton />
+                    </div>
                   </SidebarMenuItem>
 
                 </SidebarMenu>
@@ -292,7 +320,10 @@ function LayoutContent({ children, currentPageName }) {
                     <Languages className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" aria-hidden="true" />
                     <select
                       value={language}
-                      onChange={(e) => setLanguage(e.target.value)}
+                      onChange={(e) => {
+                        setLanguage(e.target.value);
+                        handleSidebarItemClick();
+                      }}
                       className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm font-medium bg-white cursor-pointer"
                       aria-label={isRTL ? 'בחירת שפה' : 'Select language'}
                       id="language-selector"
@@ -327,7 +358,7 @@ function LayoutContent({ children, currentPageName }) {
             {user ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Link to={createPageUrl("Profile")} className="flex-1">
+                  <Link to={createPageUrl("Profile")} onClick={handleSidebarItemClick} className="flex-1">
                     <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer min-h-[44px]">
                       <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
                         <span className="text-white font-medium text-sm">
