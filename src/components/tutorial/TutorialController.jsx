@@ -166,6 +166,35 @@ export default function TutorialController() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
+  // ── Mobile: auto-scroll to target element on every step change ──────────────────
+  useEffect(() => {
+    if (!isMobile || phase !== 'running' || !TUTORIAL_STEPS.length) return;
+    const step = TUTORIAL_STEPS[currentStep];
+    if (!step || !step.targetSelector) return;
+
+    // Poll for element up to 2s
+    let attempts = 0;
+    const interval = setInterval(() => {
+      const el = document.querySelector(step.targetSelector);
+      if (el) {
+        clearInterval(interval);
+        // Scroll with offset to keep above the bottom sheet (~180px)
+        const rect = el.getBoundingClientRect();
+        const sheetHeight = 180;
+        const visibleHeight = window.innerHeight - sheetHeight;
+        if (rect.top < 0 || rect.bottom > visibleHeight) {
+          const targetY = window.scrollY + rect.top - visibleHeight / 2 + rect.height / 2;
+          window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+        }
+        return;
+      }
+      attempts++;
+      if (attempts >= 10) clearInterval(interval);
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, [isMobile, phase, currentStep]);
+
   // Reset manualNavRef after each step change
   useEffect(() => {
     manualNavRef.current = false;
