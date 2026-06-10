@@ -101,6 +101,7 @@ export default function TutorialTooltip({
   isRTL,
   isSummary,
   onOpenPointsModal,
+  onRequestSkip,
 }) {
   const { language } = useLanguage();
   const heading = tTutorial(step.heading, language);
@@ -110,7 +111,16 @@ export default function TutorialTooltip({
 
   const [pos, setPos] = useState(null);
   const [resolvedPosition, setResolvedPosition] = useState('bottom');
+  // If parent provides onRequestSkip, delegate confirm to parent; otherwise handle locally
+  const hasExternalConfirm = typeof onRequestSkip === 'function';
   const [showConfirm, setShowConfirm] = useState(false);
+  const handleSkipRequest = () => {
+    if (hasExternalConfirm) {
+      onRequestSkip();
+    } else {
+      setShowConfirm(true);
+    }
+  };
   const tooltipRef = useRef(null);
 
   useEffect(() => {
@@ -183,7 +193,7 @@ export default function TutorialTooltip({
   if (isSummary) {
     return (
       <>
-      {showConfirm && (
+      {!hasExternalConfirm && showConfirm && (
         <div className="fixed inset-0 z-[10010] flex items-center justify-center bg-black/40 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-6 flex flex-col gap-4" dir={isRTL ? 'rtl' : 'ltr'}>
             <p className="text-slate-800 font-semibold text-center text-base">
@@ -217,7 +227,7 @@ export default function TutorialTooltip({
         aria-label={heading}
       >
         <button
-          onClick={() => setShowConfirm(true)}
+          onClick={handleSkipRequest}
           className="absolute top-3 end-3 text-slate-400 hover:text-slate-600 transition-colors"
           aria-label={isRTL ? 'סגור' : 'Close'}
         >
@@ -272,8 +282,8 @@ export default function TutorialTooltip({
 
   return (
     <>
-    {/* Confirm skip dialog */}
-    {showConfirm && (
+    {/* Confirm skip dialog — only rendered when not delegated to parent */}
+    {!hasExternalConfirm && showConfirm && (
       <div className="fixed inset-0 z-[10010] flex items-center justify-center bg-black/40 p-4">
         <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-6 flex flex-col gap-4" dir={isRTL ? 'rtl' : 'ltr'}>
           <p className="text-slate-800 font-semibold text-center text-base">
@@ -305,7 +315,7 @@ export default function TutorialTooltip({
     >
       {/* Close button */}
       <button
-        onClick={() => setShowConfirm(true)}
+        onClick={handleSkipRequest}
         className="absolute top-2 end-2 text-slate-400 hover:text-slate-600 transition-colors"
         aria-label={isRTL ? 'סגור' : 'Close'}
       >

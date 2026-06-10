@@ -26,6 +26,7 @@ export default function TutorialController() {
   const location = useLocation();
   const navigate = useNavigate();
   const [showPointsModal, setShowPointsModal] = useState(false);
+  const [showSkipConfirm, setShowSkipConfirm] = useState(false);
 
   const {
     phase,
@@ -231,6 +232,34 @@ export default function TutorialController() {
     }
   }, [phase, currentStep]);
 
+  // ── Skip confirm dialog ────────────────────────────────────────────────────
+  const SkipConfirmDialog = showSkipConfirm ? (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-6 flex flex-col gap-4" dir={isRTL ? 'rtl' : 'ltr'}>
+        <p className="text-slate-800 font-semibold text-center text-base">
+          {isRTL ? 'לסיים את הסיור?' : 'Exit the tour?'}
+        </p>
+        <p className="text-slate-500 text-sm text-center">
+          {isRTL ? 'תמיד אפשר להתחיל אותו מחדש מתפריט הניווט.' : 'You can always restart it from the navigation menu.'}
+        </p>
+        <div className="flex gap-2">
+          <button
+            className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium text-sm"
+            onClick={() => setShowSkipConfirm(false)}
+          >
+            {isRTL ? 'המשך סיור' : 'Continue'}
+          </button>
+          <button
+            className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium text-sm"
+            onClick={() => { setShowSkipConfirm(false); skipTutorial(); }}
+          >
+            {isRTL ? 'סיים' : 'Exit'}
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   // ── Render ────────────────────────────────────────────────────────────────
   if (phase === 'idle' || phase === 'done') return null;
 
@@ -305,6 +334,7 @@ export default function TutorialController() {
     if (step.id === 'tour-summary') {
       return (
         <>
+          {SkipConfirmDialog}
           <div className="fixed inset-0 z-[10001] bg-black/70 pointer-events-none" aria-hidden="true" />
           <TutorialTooltip
             step={step}
@@ -319,6 +349,7 @@ export default function TutorialController() {
             isAuthenticated={isAuthenticated}
             isRTL={isRTL}
             isSummary
+            onRequestSkip={() => setShowSkipConfirm(true)}
           />
         </>
       );
@@ -326,6 +357,7 @@ export default function TutorialController() {
 
     return (
       <>
+        {SkipConfirmDialog}
         <TutorialOverlay targetSelector={overlaySelector}>
           <TutorialTooltip
             step={step}
@@ -340,6 +372,7 @@ export default function TutorialController() {
             isAuthenticated={isAuthenticated}
             isRTL={isRTL}
             onOpenPointsModal={() => setShowPointsModal(true)}
+            onRequestSkip={() => setShowSkipConfirm(true)}
           />
         </TutorialOverlay>
         <PointsInfoModal open={showPointsModal} onClose={() => setShowPointsModal(false)} />
