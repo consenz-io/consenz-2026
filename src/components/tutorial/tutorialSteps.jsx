@@ -116,6 +116,8 @@ export const tutorialStrings = {
     'closing.heading': 'מוכנים לתרום',
     'closing.body': 'עכשיו אתם יודעים איך Consenz עובדת. כל הצעה שתגישו, כל הצבעה שתתנו — מעצבת את המסמך הזה יחד עם שאר הקהילה.',
     'closing.cta': 'בואו נתחיל',
+    'welcome.intro.heading': 'ברוכים הבאים לסיור',
+    'welcome.intro.body': 'בסיור קצר זה תלמדו איך הפלטפורמה עובדת: תקראו מסמך, תדפדפו בין הצעות עריכה, תצביעו על הצעה, ותראו כיצד כל קול מעצב את המסמך המשותף. בסוף — תהיו מוכנים להשפיע.',
     'nav.restart': 'סיור בפלטפורמה',
     'signup.prompt.heading': 'כדי להמשיך צריך להירשם',
     'signup.prompt.body': 'ההרשמה חינמית ולוקחת שניות. אחרי ההרשמה תחזרו בדיוק לכאן.',
@@ -212,6 +214,8 @@ export const tutorialStrings = {
     'closing.heading': 'أنتم مستعدون للمساهمة',
     'closing.body': 'الآن تعرفون كيف تعمل Consenz. كل مقترح تقدمونه، وكل تصويت تمنحونه — يُشكّل هذه الوثيقة مع بقية المجتمع.',
     'closing.cta': 'لنبدأ',
+    'welcome.intro.heading': 'مرحباً بكم في الجولة',
+    'welcome.intro.body': 'في هذه الجولة القصيرة ستتعلمون كيفية عمل المنصة: ستقرأون وثيقة، وتتنقلون بين اقتراحات التحرير، وتصوتون على اقتراح، وترون كيف يشكّل كل صوت الوثيقة المشتركة. في النهاية — ستكونون مستعدين للمشاركة.',
     'nav.restart': 'جولة في المنصة',
     'signup.prompt.heading': 'للمتابعة يجب التسجيل',
     'signup.prompt.body': 'التسجيل مجاني ويستغرق ثوانٍ. بعد التسجيل ستعودون إلى هنا مباشرة.',
@@ -306,6 +310,8 @@ export const tutorialStrings = {
     'closing.heading': 'You\'re ready to contribute',
     'closing.body': 'Now you know how Consenz works. Every proposal you submit, every vote you cast — shapes this document together with the rest of the community.',
     'closing.cta': 'Let\'s go',
+    'welcome.intro.heading': 'Welcome to the Tour',
+    'welcome.intro.body': "In this short tour you'll learn how the platform works: read a document, browse edit proposals, vote on one, and see how every voice shapes the shared document. By the end — you'll be ready to make an impact.",
     'nav.restart': 'Platform tour',
     'signup.prompt.heading': "You'll need an account to continue",
     'signup.prompt.body': "Signing up is free and takes seconds. After registering you'll be brought right back here.",
@@ -365,6 +371,16 @@ export const HOME_INTRO_STEP = {
 
 /** @type {Array} */
 export const TUTORIAL_STEPS = [
+  // 0. Welcome intro — shown before everything else
+  {
+    id: 'welcome-intro',
+    type: 'explain',
+    targetSelector: '.document-title-section',
+    tooltipPosition: 'bottom',
+    heading: 'welcome.intro.heading',
+    body: 'welcome.intro.body',
+  },
+
   // 1. Foundation: Document title & description
   {
     id: 'doc-title-explain',
