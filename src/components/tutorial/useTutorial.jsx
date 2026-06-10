@@ -197,13 +197,13 @@ export function useTutorial(steps = []) {
     setPracticeCompleted(false);
     setShowSuccess(false);
     setShowSignupPrompt(false);
-    setPhase('welcome');
+    setPhase('welcome-intro');
     startTutorial._entryPoint = entryPoint;
   }, []);
 
   const beginFromWelcome = useCallback(() => {
     const entryPoint = startTutorial._entryPoint || 'document';
-    if (entryPoint === 'home') {
+    if (entryPoint === 'home' || entryPoint === 'group') {
       setPhase('home-intro');
     } else {
       setState(prev => {
@@ -310,7 +310,7 @@ export function useTutorial(steps = []) {
     setPracticeCompleted(false);
     setShowSuccess(false);
     setShowSignupPrompt(false);
-    // Always skip the welcome bubble when restarting manually — go straight to the tour
+    // Skip the welcome-intro screen when restarting manually — go straight to the tour
     setPhase((entryPoint === 'home' || entryPoint === 'group') ? 'home-intro' : 'running');
   }, []);
 

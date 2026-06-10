@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTutorial } from './useTutorial';
 import { TUTORIAL_STEPS, HOME_INTRO_STEP, GROUP_INTRO_STEP, GROUP_EXPLAIN_STEP } from './tutorialSteps';
 import TutorialWelcomeBubble from './TutorialWelcomeBubble';
+import TutorialWelcome from './TutorialWelcome';
 import TutorialOverlay from './TutorialOverlay';
 import TutorialTooltip from './TutorialTooltip';
 import TutorialHomeIntro from './TutorialHomeIntro';
@@ -264,6 +265,19 @@ export default function TutorialController() {
   // ── Render ────────────────────────────────────────────────────────────────
   if (phase === 'idle' || phase === 'done') return null;
 
+  // welcome-intro: full-screen modal shown immediately when tour starts, regardless of page
+  if (phase === 'welcome-intro') {
+    return (
+      <TutorialWelcome
+        onStart={beginFromWelcome}
+        onSkip={skipTutorial}
+        isRTL={isRTL}
+        language={language}
+      />
+    );
+  }
+
+  // welcome: small bubble pointing to sidebar tour button (shown after delay for new users)
   if (phase === 'welcome') {
     return (
       <TutorialWelcomeBubble

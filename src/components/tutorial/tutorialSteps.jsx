@@ -371,17 +371,7 @@ export const HOME_INTRO_STEP = {
 
 /** @type {Array} */
 export const TUTORIAL_STEPS = [
-  // 0. Welcome intro — shown before everything else
-  {
-    id: 'welcome-intro',
-    type: 'explain',
-    targetSelector: '.document-title-section',
-    tooltipPosition: 'bottom',
-    heading: 'welcome.intro.heading',
-    body: 'welcome.intro.body',
-  },
-
-  // 1. Foundation: Document title & description
+  // 0. Foundation: Document title & description
   {
     id: 'doc-title-explain',
     type: 'explain',
