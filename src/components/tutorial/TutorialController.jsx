@@ -37,6 +37,23 @@ export default function TutorialController() {
   const [navPending, setNavPending] = useState(false);
   const navTimerRef = useRef(null);
 
+  // Suppress tutorial overlay/tooltip when any app modal is open
+  const [modalOpen, setModalOpen] = useState(false);
+  useEffect(() => {
+    function checkModal() {
+      const hasModal = !!(
+        document.querySelector('[role="dialog"][data-state="open"]') ||
+        document.querySelector('[data-radix-dialog-overlay]') ||
+        document.querySelector('[data-radix-alert-dialog-overlay]')
+      );
+      setModalOpen(hasModal);
+    }
+    checkModal();
+    const observer = new MutationObserver(checkModal);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-state'] });
+    return () => observer.disconnect();
+  }, []);
+
   const {
     phase,
     currentStep,
@@ -398,6 +415,9 @@ export default function TutorialController() {
 
     // Suppress rendering while waiting for a navigated page to settle
     if (navPending) return null;
+
+    // Suppress overlay/tooltip while any modal dialog is open
+    if (modalOpen) return null;
 
     const overlaySelector = step.targetSelector;
     const additionalSpotlights = step.additionalSpotlights || [];
