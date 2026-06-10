@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, X, UserPlus, PartyPopper } from 'lucide-react';
+import { CheckCircle, X, UserPlus, PartyPopper, Compass } from 'lucide-react';
 import { tTutorial } from './tutorialSteps';
 import { useLanguage } from '@/components/LanguageContext';
 import { base44 } from '@/api/base44Client';
@@ -316,20 +316,26 @@ export default function TutorialTooltip({
 
     <div
       ref={tooltipRef}
-      className="fixed bg-white shadow-2xl border border-slate-200"
+      className="fixed shadow-2xl border-l-4 border-blue-500 tutorial-highlight-bubble"
       style={mobile
-        ? { left: 0, right: 0, bottom: 0, top: 'auto', width: '100%', borderRadius: '16px 16px 0 0', padding: '16px 16px 24px', zIndex: 99999 }
-        : { width: TOOLTIP_WIDTH, borderRadius: '12px', padding: '16px', zIndex: 10002, ...pos }
+        ? { left: 0, right: 0, bottom: 0, top: 'auto', width: '100%', borderRadius: '16px 16px 0 0', padding: '20px 16px 24px', zIndex: 99999, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', borderLeft: '4px solid #3b82f6' }
+        : { width: TOOLTIP_WIDTH, borderRadius: '12px', padding: '18px', zIndex: 10002, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', ...pos }
       }
       dir={isRTL ? 'rtl' : 'ltr'}
       role="dialog"
       aria-modal="false"
       aria-label={step.heading}
     >
+      {/* Tour identifier badge */}
+      <div className="flex items-center gap-1 mb-2 text-blue-600">
+        <Compass className="w-3.5 h-3.5" />
+        <span className="text-xs font-bold uppercase tracking-wide">{isRTL ? 'סיור מודרך' : 'Guided Tour'}</span>
+      </div>
+
       {/* Close button */}
       <button
         onClick={handleSkipRequest}
-        className="absolute top-2 end-2 text-slate-400 hover:text-slate-600 transition-colors"
+        className="absolute top-3 end-3 text-slate-400 hover:text-slate-600 transition-colors"
         aria-label={isRTL ? 'סגור' : 'Close'}
       >
         <X className="w-4 h-4" />
@@ -356,8 +362,8 @@ export default function TutorialTooltip({
         </div>
       ) : (
         <>
-          {/* Heading */}
-          <h3 className="font-bold text-slate-900 text-base mb-1">{heading}</h3>
+           {/* Heading */}
+           <h3 className="font-bold text-slate-900 text-lg mb-2">{heading}</h3>
 
           {/* Body */}
           {body && (

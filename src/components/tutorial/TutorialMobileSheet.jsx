@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, X, UserPlus, PartyPopper, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle, X, UserPlus, PartyPopper, ChevronDown, ChevronUp, Compass } from 'lucide-react';
 import { tTutorial } from './tutorialSteps';
 import { useLanguage } from '@/components/LanguageContext';
 import { base44 } from '@/api/base44Client';
@@ -123,25 +123,31 @@ export default function TutorialMobileSheet({
 
   return (
     <div
-      className="fixed bottom-0 inset-x-0 z-[10002] rounded-t-2xl shadow-2xl border-t-2 border-blue-300"
-      style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%)' }}
+      className="fixed bottom-0 inset-x-0 z-[10002] rounded-t-2xl shadow-2xl border-t-4 border-blue-500 tutorial-highlight-bubble"
+      style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)' }}
       dir={isRTL ? 'rtl' : 'ltr'}>
       
       {/* Drag handle + close */}
       <div className="flex items-center justify-between px-4 pt-3 pb-1 text-[hsl(var(--sidebar-background))]">
-        {/* Tap to expand/collapse body */}
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="flex items-center gap-2 text-slate-700 font-bold text-sm flex-1 min-w-0"
-          aria-expanded={expanded}>
-          
-          <span className="truncate">{heading}</span>
-          {expanded ? <ChevronDown className="w-4 h-4 flex-shrink-0" /> : <ChevronUp className="w-4 h-4 flex-shrink-0" />}
-        </button>
-        <button onClick={handleSkipRequest} className="ms-2 text-slate-400 hover:text-slate-600 flex-shrink-0">
-          <X className="w-4 h-4" />
-        </button>
+         {/* Tour badge */}
+         <div className="flex items-center gap-1 text-blue-600 flex-1">
+           <Compass className="w-3.5 h-3.5 flex-shrink-0" />
+           <span className="text-xs font-bold uppercase tracking-wide">{isRTL ? 'סיור' : 'Tour'}</span>
+         </div>
+         <button onClick={handleSkipRequest} className="ms-2 text-slate-400 hover:text-slate-600 flex-shrink-0">
+           <X className="w-4 h-4" />
+         </button>
       </div>
+
+      {/* Tap to expand/collapse body */}
+      <button
+         onClick={() => setExpanded((v) => !v)}
+         className="flex items-center gap-2 text-slate-700 font-bold text-lg flex-1 min-w-0 px-4 py-1 w-full justify-between"
+         aria-expanded={expanded}>
+
+         <span className="truncate">{heading}</span>
+          {expanded ? <ChevronDown className="w-4 h-4 flex-shrink-0" /> : <ChevronUp className="w-4 h-4 flex-shrink-0" />}
+          </button>
 
       {/* Expandable body */}
       {expanded && body &&
