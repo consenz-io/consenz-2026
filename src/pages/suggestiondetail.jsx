@@ -54,8 +54,8 @@ export default function SuggestionDetail() {
       return results[0];
     },
     enabled: !!suggestionId,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 3000),
+    retry: 1,
+    retryDelay: 1000,
     throwOnError: false,
     staleTime: 30 * 1000, // 30s — allows real-time updates to show after invalidation
   });
