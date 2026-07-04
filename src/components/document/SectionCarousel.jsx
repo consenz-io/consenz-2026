@@ -96,6 +96,18 @@ const SectionCarousel = React.memo(function SectionCarousel({
     // fallback: סעיף שנוצר ישירות ללא הצעה
     return { entityType: 'section', entityId: section.id };
   }, [allDocumentSuggestions, section.id]);
+
+  // ההצעה שהתקבלה שיצרה/ערכה את תוכן הסעיף הנוכחי (או null אם נוצר ישירות ע"י מנהל/ת)
+  const sourceSuggestion = React.useMemo(() => {
+    const acceptedEdits = allDocumentSuggestions
+      .filter(s => s.sectionId === section.id && s.status === 'accepted' && s.type === 'edit_section')
+      .sort((a, b) => new Date(b.updated_date || b.created_date) - new Date(a.updated_date || a.created_date));
+    if (acceptedEdits.length > 0) return acceptedEdits[0];
+    const creationSuggestion = allDocumentSuggestions.find(
+      s => s.sectionId === section.id && s.status === 'accepted' && s.type === 'new_section'
+    );
+    return creationSuggestion || null;
+  }, [allDocumentSuggestions, section.id]);
   
   // שומר את ה-ID של ההצעה הנוכחית במקום index
   const [currentSuggestionId, setCurrentSuggestionId] = useState(null);
@@ -542,6 +554,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
                     }}
                     isRTL={isRTL}
                     readOnly={true}
+                    sourceSuggestion={sourceSuggestion}
                   />
                 ) : (
                   <VotingProgressSection
@@ -554,6 +567,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
                     }}}
                     isRTL={isRTL}
                     readOnly={!user}
+                    sourceSuggestion={sourceSuggestion}
                   />
                 )}
               </div>

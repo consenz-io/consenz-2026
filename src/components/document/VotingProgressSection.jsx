@@ -38,7 +38,7 @@ function formatRemaining(ms, language) {
  * VotingProgressSection
  * Shows a progress bar toward the acceptance threshold + full-width vote buttons.
  */
-export default function VotingProgressSection({ suggestion, document, userVote, voteMutation, isRTL, readOnly = false, onLoginRequired, acceptedDate, rejectedDate, rejectedByAdmin }) {
+export default function VotingProgressSection({ suggestion, document, userVote, voteMutation, isRTL, readOnly = false, onLoginRequired, acceptedDate, rejectedDate, rejectedByAdmin, sourceSuggestion }) {
   const { t, language } = useLanguage();
   const msRemaining = useTimeRemaining(suggestion?.timerEndsAt);
   const timeLabel = formatRemaining(msRemaining, language);
@@ -49,16 +49,23 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   // Treat as effectively read-only if expired
   const effectiveReadOnly = readOnly || isTimerExpired;
 
-  const proVotes = suggestion.proVotes || 0;
-  const conVotes = suggestion.conVotes || 0;
-  const delta = proVotes - conVotes;
-
   // For accepted suggestions, freeze the threshold at what it was at acceptance time.
   // At the moment of acceptance, delta >= threshold exactly, so delta itself is the frozen threshold.
   const isAccepted = suggestion?.status === 'accepted';
   // Existing section (passed as a plain section without a suggestion status) —
   // already part of the document, so display it as accepted rather than "did not reach threshold".
   const isExistingSection = !suggestion?.status;
+
+  // For an existing section whose content came from an accepted suggestion,
+  // use that suggestion's vote counts for the display.
+  const proVotes = isExistingSection
+    ? (sourceSuggestion?.proVotes || 0)
+    : (suggestion.proVotes || 0);
+  const conVotes = isExistingSection
+    ? (sourceSuggestion?.conVotes || 0)
+    : (suggestion.conVotes || 0);
+  const delta = proVotes - conVotes;
+
   const threshold = isAccepted
     ? Math.max(2, delta)
     : Math.max(2, document?.threshold || 2);
@@ -107,7 +114,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
 
   const statusText = effectiveReadOnly
     ? isExistingSection
-      ? createdByText
+      ? (sourceSuggestion ? acceptedVotesText : createdByText)
       : passed
       ? (isAccepted ? acceptedVotesText : passedText)
       : isTimerExpired && !readOnly
