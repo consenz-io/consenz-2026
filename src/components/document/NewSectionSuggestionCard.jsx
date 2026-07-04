@@ -28,7 +28,8 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   isAdmin,
   onEditSuggestion,
   allDocumentSuggestions,
-  targetSuggestionId
+  targetSuggestionId,
+  ghostChain
 }) {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
@@ -61,6 +62,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
 
   // Build version chain for this suggestion (new_section + edit_suggestion types)
   const suggestionChain = React.useMemo(() => {
+    if (ghostChain && ghostChain.length > 0) return ghostChain;
     if (!allDocumentSuggestions || allDocumentSuggestions.length === 0) return [suggestion];
 
     let chain = [];
@@ -105,7 +107,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
     const filtered = fullChain.filter(s => s.type === 'new_section' || s.type === 'edit_suggestion' || s.type === 'edit_section');
     console.log('[SUGGESTION CHAIN] Built chain:', filtered.map(s => ({ id: s.id, type: s.type, status: s.status })));
     return filtered;
-  }, [suggestion, allDocumentSuggestions]);
+  }, [suggestion, allDocumentSuggestions, ghostChain]);
 
   // Build all views: original + versions (circular navigation)
   const allViews = React.useMemo(() => {

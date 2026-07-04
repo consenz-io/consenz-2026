@@ -689,33 +689,32 @@ Return ONLY the translated text:`;
                      />
                      ))}
                      {/* Ghost slots for deleted sections that still have open proposals */}
-                     {topicGhostSlots.map(ghost => (
-                       <div key={`ghost-${ghost.sectionId}`}>
-                         <SectionCarousel
-                           section={{ id: ghost.sectionId, content: '', documentId: document.id, topicId: topic.id, order: ghost.originalSectionOrder, updated_date: ghost.suggestions[0]?.created_date }}
-                           pendingSuggestions={ghost.suggestions}
-                           document={document}
-                           user={user}
-                           canParticipate={canParticipate}
-                           toggleComments={toggleComments}
-                           showComments={showComments}
-                           getCommentsCount={getCommentsCount}
-                           getUserVote={getUserVote}
-                           voteMutation={voteMutation}
-                           getUserName={getUserName}
-                           acceptedSuggestions={acceptedSuggestions}
-                           sectionIndex={-1}
-                           isAdmin={isAdmin}
-                           users={users}
-                           onOpenSuggestionSidebar={onOpenSuggestionSidebar}
-                           targetSuggestionId={targetSuggestionId}
-                           publicProfiles={publicProfiles}
-                           allDocumentSuggestions={suggestions}
-                           onEditSuggestion={onEditSuggestion}
-                           isGhost
-                         />
-                       </div>
-                     ))}
+                     {topicGhostSlots.map(ghost => {
+                       const sortedGhostSuggestions = [...ghost.suggestions].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+                       const rootSuggestion = sortedGhostSuggestions[0];
+                       return (
+                         <div key={`ghost-${ghost.sectionId}`}>
+                           <NewSectionSuggestionCard
+                             suggestion={rootSuggestion}
+                             document={document}
+                             getUserName={getUserName}
+                             acceptedSuggestions={acceptedSuggestions}
+                             user={user}
+                             getUserVote={getUserVote}
+                             voteMutation={voteMutation}
+                             onOpenSidebar={onOpenSuggestionSidebar}
+                             getCommentsCount={getCommentsCount}
+                             toggleComments={toggleComments}
+                             showComments={showComments}
+                             isAdmin={isAdmin}
+                             onEditSuggestion={onEditSuggestion}
+                             allDocumentSuggestions={suggestions}
+                             targetSuggestionId={targetSuggestionId}
+                             ghostChain={sortedGhostSuggestions}
+                           />
+                         </div>
+                       );
+                     })}
                      </>
                      ) : (
                      <DragDropContext onDragEnd={(result) => handleSectionDragEnd(result, topic.id)}>
@@ -737,32 +736,32 @@ Return ONLY the translated text:`;
                   
                   return (
                     <React.Fragment key={section.id}>
-                    {ghostsBefore.map(ghost => (
-                      <div key={`ghost-${ghost.sectionId}`}>
-                        <SectionCarousel
-                          section={{ id: ghost.sectionId, content: '', documentId: document.id, topicId: topic.id, order: ghost.originalSectionOrder, updated_date: ghost.suggestions[0]?.created_date }}
-                          pendingSuggestions={ghost.suggestions}
-                          document={document}
-                          user={user}
-                          canParticipate={canParticipate}
-                          toggleComments={toggleComments}
-                          showComments={showComments}
-                          getCommentsCount={getCommentsCount}
-                          getUserVote={getUserVote}
-                          voteMutation={voteMutation}
-                          getUserName={getUserName}
-                          acceptedSuggestions={acceptedSuggestions}
-                          sectionIndex={-1}
-                          isAdmin={isAdmin}
-                          users={users}
-                          onOpenSuggestionSidebar={onOpenSuggestionSidebar}
-                          targetSuggestionId={targetSuggestionId}
-                          publicProfiles={publicProfiles}
-                          allDocumentSuggestions={suggestions}
-                          isGhost
-                        />
-                      </div>
-                    ))}
+                    {ghostsBefore.map(ghost => {
+                      const sortedGhostSuggestions = [...ghost.suggestions].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+                      const rootSuggestion = sortedGhostSuggestions[0];
+                      return (
+                        <div key={`ghost-${ghost.sectionId}`}>
+                          <NewSectionSuggestionCard
+                            suggestion={rootSuggestion}
+                            document={document}
+                            getUserName={getUserName}
+                            acceptedSuggestions={acceptedSuggestions}
+                            user={user}
+                            getUserVote={getUserVote}
+                            voteMutation={voteMutation}
+                            onOpenSidebar={onOpenSuggestionSidebar}
+                            getCommentsCount={getCommentsCount}
+                            toggleComments={toggleComments}
+                            showComments={showComments}
+                            isAdmin={isAdmin}
+                            onEditSuggestion={onEditSuggestion}
+                            allDocumentSuggestions={suggestions}
+                            targetSuggestionId={targetSuggestionId}
+                            ghostChain={sortedGhostSuggestions}
+                          />
+                        </div>
+                      );
+                    })}
                     <Draggable key={section.id} draggableId={section.id} index={index} isDragDisabled={!isAdmin}>
                       {(provided, snapshot) => (
                         <div
@@ -969,32 +968,32 @@ Return ONLY the translated text:`;
                         </div>
                       )}
                     </Draggable>
-                    {ghostsAfter.map(ghost => (
-                      <div key={`ghost-${ghost.sectionId}`}>
-                        <SectionCarousel
-                          section={{ id: ghost.sectionId, content: '', documentId: document.id, topicId: topic.id, order: ghost.originalSectionOrder, updated_date: ghost.suggestions[0]?.created_date }}
-                          pendingSuggestions={ghost.suggestions}
-                          document={document}
-                          user={user}
-                          canParticipate={canParticipate}
-                          toggleComments={toggleComments}
-                          showComments={showComments}
-                          getCommentsCount={getCommentsCount}
-                          getUserVote={getUserVote}
-                          voteMutation={voteMutation}
-                          getUserName={getUserName}
-                          acceptedSuggestions={acceptedSuggestions}
-                          sectionIndex={-1}
-                          isAdmin={isAdmin}
-                          users={users}
-                          onOpenSuggestionSidebar={onOpenSuggestionSidebar}
-                          targetSuggestionId={targetSuggestionId}
-                          publicProfiles={publicProfiles}
-                          allDocumentSuggestions={suggestions}
-                          isGhost
-                        />
-                      </div>
-                    ))}
+                    {ghostsAfter.map(ghost => {
+                      const sortedGhostSuggestions = [...ghost.suggestions].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+                      const rootSuggestion = sortedGhostSuggestions[0];
+                      return (
+                        <div key={`ghost-${ghost.sectionId}`}>
+                          <NewSectionSuggestionCard
+                            suggestion={rootSuggestion}
+                            document={document}
+                            getUserName={getUserName}
+                            acceptedSuggestions={acceptedSuggestions}
+                            user={user}
+                            getUserVote={getUserVote}
+                            voteMutation={voteMutation}
+                            onOpenSidebar={onOpenSuggestionSidebar}
+                            getCommentsCount={getCommentsCount}
+                            toggleComments={toggleComments}
+                            showComments={showComments}
+                            isAdmin={isAdmin}
+                            onEditSuggestion={onEditSuggestion}
+                            allDocumentSuggestions={suggestions}
+                            targetSuggestionId={targetSuggestionId}
+                            ghostChain={sortedGhostSuggestions}
+                          />
+                        </div>
+                      );
+                    })}
                     </React.Fragment>
                     );
                     })}
