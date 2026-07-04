@@ -46,7 +46,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
   publicProfiles = [],
   allDocumentSuggestions = [],
   sectionVotes = [],
-  isGhost = false
+  isGhost = false,
+  onEditSuggestion
 }) {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
@@ -737,6 +738,17 @@ const SectionCarousel = React.memo(function SectionCarousel({
                         >
                           {t('viewDetails')}
                         </Button>
+                        {user && isGhost && onEditSuggestion && currentView.data.status === 'pending' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onEditSuggestion(currentView.data)}
+                            className={`h-8 text-xs px-2 flex-shrink-0 ${isRTL ? 'mr-0 ml-auto' : 'ml-0 mr-auto'}`}
+                          >
+                            <Edit className="w-4 h-4" />
+                            <span className="hidden sm:inline">{t('suggestEditSection')}</span>
+                          </Button>
+                        )}
                         <Button
                           variant={hasComments ? "outline" : "ghost"}
                           size="sm"

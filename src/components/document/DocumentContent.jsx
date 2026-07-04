@@ -711,6 +711,7 @@ Return ONLY the translated text:`;
                            targetSuggestionId={targetSuggestionId}
                            publicProfiles={publicProfiles}
                            allDocumentSuggestions={suggestions}
+                           onEditSuggestion={onEditSuggestion}
                            isGhost
                          />
                        </div>
