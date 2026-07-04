@@ -58,17 +58,17 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
 
   // For an existing section whose content came from an accepted suggestion,
   // use that suggestion's vote counts for the display.
-  const proVotes = isExistingSection
-    ? (sourceSuggestion?.proVotes || 0)
-    : (suggestion.proVotes || 0);
-  const conVotes = isExistingSection
-    ? (sourceSuggestion?.conVotes || 0)
-    : (suggestion.conVotes || 0);
+  const proVotes = isExistingSection ?
+  sourceSuggestion?.proVotes || 0 :
+  suggestion.proVotes || 0;
+  const conVotes = isExistingSection ?
+  sourceSuggestion?.conVotes || 0 :
+  suggestion.conVotes || 0;
   const delta = proVotes - conVotes;
 
-  const threshold = isAccepted
-    ? Math.max(2, delta)
-    : Math.max(2, document?.threshold || 2);
+  const threshold = isAccepted ?
+  Math.max(2, delta) :
+  Math.max(2, document?.threshold || 2);
 
   // How many more pro votes needed
   const votesNeeded = isExistingSection ? 0 : Math.max(0, threshold - delta);
@@ -76,65 +76,65 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
 
   // Progress: 0% = delta of 0 (or negative), 100% = delta >= threshold
   // Map [0, threshold] to [0%, 100%], clamped
-  const progressPercent = isExistingSection
-    ? 100
-    : Math.min(100, Math.max(0, (delta / threshold) * 100));
+  const progressPercent = isExistingSection ?
+  100 :
+  Math.min(100, Math.max(0, delta / threshold * 100));
 
   // Simulate what a pro/con vote would do
   const afterProDelta = delta + (userVote?.vote === 'pro' ? 0 : userVote?.vote === 'con' ? 2 : 1);
   const afterConDelta = delta + (userVote?.vote === 'con' ? 0 : userVote?.vote === 'pro' ? -2 : -1);
-  const afterProProgress = Math.min(100, Math.max(0, (afterProDelta / threshold) * 100));
-  const afterConProgress = Math.min(100, Math.max(0, (afterConDelta / threshold) * 100));
+  const afterProProgress = Math.min(100, Math.max(0, afterProDelta / threshold * 100));
+  const afterConProgress = Math.min(100, Math.max(0, afterConDelta / threshold * 100));
 
   const [hoverVote, setHoverVote] = React.useState(null); // 'pro' | 'con' | null
 
-  const displayProgress = hoverVote === 'pro'
-    ? afterProProgress
-    : hoverVote === 'con'
-    ? afterConProgress
-    : progressPercent;
+  const displayProgress = hoverVote === 'pro' ?
+  afterProProgress :
+  hoverVote === 'con' ?
+  afterConProgress :
+  progressPercent;
 
-  const barColor = passed
-    ? 'bg-green-500'
-    : effectiveReadOnly
-    ? 'bg-red-400'
-    : hoverVote === 'pro'
-    ? 'bg-blue-500'
-    : hoverVote === 'con'
-    ? 'bg-red-400'
-    : 'bg-blue-400';
+  const barColor = passed ?
+  'bg-green-500' :
+  effectiveReadOnly ?
+  'bg-red-400' :
+  hoverVote === 'pro' ?
+  'bg-blue-500' :
+  hoverVote === 'con' ?
+  'bg-red-400' :
+  'bg-blue-400';
 
   const createdByText = language === 'he' ? 'נוצר על ידי מנהל/ת' : language === 'ar' ? 'أنشئ بواسطة المشرف' : 'Created by admin';
   const acceptedLabel = language === 'he' ? 'התקבלה' : language === 'ar' ? 'تم القبول' : 'Accepted';
   const datePrefix = language === 'he' ? 'ב-' : language === 'ar' ? 'في ' : 'on ';
-  const acceptedVotesText = language === 'he'
-    ? `✓ התקבלה — ${proVotes} בעד, ${conVotes} נגד`
-    : language === 'ar'
-    ? `✓ تم القبول — ${proVotes} مع, ${conVotes} ضد`
-    : `✓ Accepted — ${proVotes} pro, ${conVotes} con`;
+  const acceptedVotesText = language === 'he' ?
+  `✓ התקבלה — ${proVotes} בעד, ${conVotes} נגד` :
+  language === 'ar' ?
+  `✓ تم القبول — ${proVotes} مع, ${conVotes} ضد` :
+  `✓ Accepted — ${proVotes} pro, ${conVotes} con`;
   const passedText = language === 'he' ? '✓ עבר את סף הקונצנזוס!' : language === 'ar' ? '✓ تجاوز عتبة الإجماع!' : '✓ Passed consensus threshold!';
 
   // For passed/existing sections the full label + date is shown below the bar,
   // so the status text only carries the checkmark here.
   const passedStatusText = '✓';
 
-  const statusText = effectiveReadOnly
-    ? isExistingSection
-      ? passedStatusText
-      : passed
-      ? passedStatusText
-      : isTimerExpired && !readOnly
-      ? (language === 'he' ? `פג תוקף ההצבעה — חסרו ${votesNeeded} תומכים` : language === 'ar' ? `انتهت مدة التصويت — نقص ${votesNeeded} مؤيدين` : `Voting period ended — ${votesNeeded} supporters short`)
-      : (language === 'he' ? `לא הגיע לסף — חסרו ${votesNeeded} תומכים` : language === 'ar' ? `لم يصل للعتبة — نقص ${votesNeeded} مؤيدين` : `Did not reach threshold — ${votesNeeded} supporters short`)
-    : passed
-    ? passedStatusText
-    : hoverVote === 'pro'
-    ? (language === 'he' ? `הצבעתך תקרב את ההצעה לאישור` : language === 'ar' ? 'سيقرب صوتك الاقتراح من القبول' : 'Your vote will help pass this proposal')
-    : hoverVote === 'con'
-    ? (language === 'he' ? `הצבעתך תרחיק את ההצעה מאישור` : language === 'ar' ? 'سيبعد صوتك الاقتراح عن القبول' : 'Your vote will push back the proposal')
-    : votesNeeded === 1
-    ? (language === 'he' ? `עוד הצבעת בעד אחת חסרה לאישור` : language === 'ar' ? 'مطلوب مؤيد واحد فقط للموافقة' : '1 more supporter needed')
-    : (language === 'he' ? `עוד ${votesNeeded} תומכים דרושים לאישור` : language === 'ar' ? `${votesNeeded} مؤيدين إضافيين مطلوبين للموافقة` : `${votesNeeded} more supporters needed`);
+  const statusText = effectiveReadOnly ?
+  isExistingSection ?
+  passedStatusText :
+  passed ?
+  passedStatusText :
+  isTimerExpired && !readOnly ?
+  language === 'he' ? `פג תוקף ההצבעה — חסרו ${votesNeeded} תומכים` : language === 'ar' ? `انتهت مدة التصويت — نقص ${votesNeeded} مؤيدين` : `Voting period ended — ${votesNeeded} supporters short` :
+  language === 'he' ? `לא הגיע לסף — חסרו ${votesNeeded} תומכים` : language === 'ar' ? `لم يصل للعتبة — نقص ${votesNeeded} مؤيدين` : `Did not reach threshold — ${votesNeeded} supporters short` :
+  passed ?
+  passedStatusText :
+  hoverVote === 'pro' ?
+  language === 'he' ? `הצבעתך תקרב את ההצעה לאישור` : language === 'ar' ? 'سيقرب صوتك الاقتراح من القبول' : 'Your vote will help pass this proposal' :
+  hoverVote === 'con' ?
+  language === 'he' ? `הצבעתך תרחיק את ההצעה מאישור` : language === 'ar' ? 'سيبعد صوتك الاقتراح عن القبول' : 'Your vote will push back the proposal' :
+  votesNeeded === 1 ?
+  language === 'he' ? `עוד הצבעת בעד אחת חסרה לאישור` : language === 'ar' ? 'مطلوب مؤيد واحد فقط للموافقة' : '1 more supporter needed' :
+  language === 'he' ? `עוד ${votesNeeded} תומכים דרושים לאישור` : language === 'ar' ? `${votesNeeded} مؤيدين إضافيين مطلوبين للموافقة` : `${votesNeeded} more supporters needed`;
 
   // Below-bar date line: "Created by admin on <date>" or "Accepted on <date>"
   const belowBarInfo = (() => {
@@ -144,9 +144,9 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
       return { label: createdByText, date };
     }
     if (passed) {
-      const date = isExistingSection
-        ? (sourceSuggestion?.updated_date || acceptedDate)
-        : (acceptedDate || suggestion?.updated_date);
+      const date = isExistingSection ?
+      sourceSuggestion?.updated_date || acceptedDate :
+      acceptedDate || suggestion?.updated_date;
       if (!date) return null;
       return { label: acceptedLabel, date };
     }
@@ -162,13 +162,13 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
         <span className="text-sm font-medium text-indigo-700 flex-1">
           {language === 'he' ? 'אושרה על ידי מנהל' : language === 'ar' ? 'تمت الموافقة من المشرف' : 'Approved by admin'}
         </span>
-        {acceptedDate && (
-          <span className="text-xs text-indigo-400">
+        {acceptedDate &&
+        <span className="text-xs text-indigo-400">
             {new Date(acceptedDate).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
           </span>
-        )}
-      </div>
-    );
+        }
+      </div>);
+
   }
 
   return (
@@ -177,8 +177,8 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
       <Link
         to={`${createPageUrl("UnderstandingConsensus")}?id=${document?.id}`}
         className="block group"
-        title={language === 'he' ? 'למדו על מנגנון הקונצנזוס' : 'Learn about consensus'}
-      >
+        title={language === 'he' ? 'למדו על מנגנון הקונצנזוס' : 'Learn about consensus'}>
+        
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-blue-200 transition-colors" data-tutorial="support-threshold">
           {/* Labels row */}
           <div className="flex items-center justify-between mb-2">
@@ -186,12 +186,12 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
               {language === 'he' ? 'התקדמות לאישור' : language === 'ar' ? 'تقدم نحو القبول' : 'Progress to acceptance'}
             </span>
             <div className="flex items-center gap-2">
-              {timeLabel && !effectiveReadOnly && (
-                <span className={`flex items-center gap-0.5 text-xs font-medium ${isUrgent ? 'text-orange-500' : 'text-slate-400'}`}>
+              {timeLabel && !effectiveReadOnly &&
+              <span className={`flex items-center gap-0.5 text-xs font-medium ${isUrgent ? 'text-orange-500' : 'text-slate-400'}`}>
                   <Clock className="w-3 h-3 shrink-0" />
                   {timeLabel}
                 </span>
-              )}
+              }
               <span className={`text-xs font-bold ${passed ? 'text-green-600' : 'text-slate-500'}`}>
                 {passed ? '✓' : `${Math.max(0, delta)}/${threshold}`}
               </span>
@@ -206,8 +206,8 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
               className={`h-full rounded-full ${barColor} transition-colors duration-300`}
               initial={{ width: `${displayProgress}%` }}
               animate={{ width: `${displayProgress}%` }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            />
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }} />
+            
           </div>
 
           {/* Status text */}
@@ -215,60 +215,60 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             key={statusText}
             initial={{ opacity: 0, y: 2 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`text-xs mt-2 text-center font-medium ${
-              passed ? 'text-green-600' :
-              hoverVote === 'pro' ? 'text-blue-600' :
-              hoverVote === 'con' ? 'text-red-500' :
-              'text-slate-500'
-            }`}
-          >
+            className={`text-xs mt-2 text-center font-medium hidden ${
+            passed ? 'text-green-600' :
+            hoverVote === 'pro' ? 'text-blue-600' :
+            hoverVote === 'con' ? 'text-red-500' :
+            'text-slate-500'}`
+            }>
+            
             {statusText}
           </motion.p>
-          {belowBarInfo && (
-            <p className="text-xs text-center text-slate-500 mt-1.5 font-medium">
+          {belowBarInfo &&
+          <p className="text-xs text-center text-slate-500 mt-1.5 font-medium">
               {belowBarInfo.label} {datePrefix}
               {new Date(belowBarInfo.date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </p>
-          )}
-          {rejectedDate && (
-            <p className="text-xs text-center text-slate-400 mt-1 flex items-center justify-center gap-1">
-              {suggestion?.rejectedByAdmin
-                ? <ShieldX className="w-3 h-3 text-red-400 shrink-0" />
-                : <Timer className="w-3 h-3 text-orange-400 shrink-0" />
-              }
+          }
+          {rejectedDate &&
+          <p className="text-xs text-center text-slate-400 mt-1 flex items-center justify-center gap-1">
+              {suggestion?.rejectedByAdmin ?
+            <ShieldX className="w-3 h-3 text-red-400 shrink-0" /> :
+            <Timer className="w-3 h-3 text-orange-400 shrink-0" />
+            }
               <span className={suggestion?.rejectedByAdmin ? 'text-red-400' : 'text-orange-400'}>
-                {suggestion?.rejectedByAdmin
-                  ? (language === 'he' ? 'נדחתה ע"י מנהל' : language === 'ar' ? 'رُفضت بواسطة المشرف' : 'Rejected by admin')
-                  : (language === 'he' ? 'פג תוקף ההצבעה' : language === 'ar' ? 'انتهت مدة التصويت' : 'Voting expired')
-                }
+                {suggestion?.rejectedByAdmin ?
+              language === 'he' ? 'נדחתה ע"י מנהל' : language === 'ar' ? 'رُفضت بواسطة المشرف' : 'Rejected by admin' :
+              language === 'he' ? 'פג תוקף ההצבעה' : language === 'ar' ? 'انتهت مدة التصويت' : 'Voting expired'
+              }
               </span>
               <span>·</span>
               {new Date(rejectedDate).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </p>
-          )}
+          }
         </div>
       </Link>
 
       {/* Vote buttons - disabled in read-only mode or when timer expired */}
-      {effectiveReadOnly ? (
-        <div className="space-y-2">
-        {isTimerExpired && !readOnly && (
-          <div className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-slate-100 border border-slate-200 rounded-lg">
+      {effectiveReadOnly ?
+      <div className="space-y-2">
+        {isTimerExpired && !readOnly &&
+        <div className="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-slate-100 border border-slate-200 rounded-lg">
             <Clock className="w-3.5 h-3.5 text-slate-500" />
             <span className="text-xs font-medium text-slate-500">
               {language === 'he' ? 'תקופת ההצבעה הסתיימה' : language === 'ar' ? 'انتهت فترة التصويت' : 'Voting period ended'}
             </span>
           </div>
-        )}
+        }
         <div className="flex gap-2 w-full min-w-0">
           <button
             disabled
             className={`flex-1 min-w-0 h-10 md:h-12 text-sm md:text-base font-semibold rounded-xl px-2 md:px-4 flex items-center justify-center gap-2 border-2 transition-none cursor-not-allowed
-              ${userVote?.vote === 'pro'
-                ? 'bg-green-50 border-green-400 text-green-700 opacity-90'
-                : 'bg-slate-50 border-slate-200 text-slate-400 opacity-60'
-              }`}
-          >
+              ${userVote?.vote === 'pro' ?
+            'bg-green-50 border-green-400 text-green-700 opacity-90' :
+            'bg-slate-50 border-slate-200 text-slate-400 opacity-60'}`
+            }>
+            
             <ThumbsUp className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
             <span className="truncate">{t('votePro')}</span>
             {proVotes > 0 && <span className="text-xs md:text-sm shrink-0">({proVotes})</span>}
@@ -277,25 +277,25 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
           <button
             disabled
             className={`flex-1 min-w-0 h-10 md:h-12 text-sm md:text-base font-semibold rounded-xl px-2 md:px-4 flex items-center justify-center gap-2 border-2 transition-none cursor-not-allowed
-              ${userVote?.vote === 'con'
-                ? 'bg-red-50 border-red-400 text-red-700 opacity-90'
-                : 'bg-slate-50 border-slate-200 text-slate-400 opacity-60'
-              }`}
-          >
+              ${userVote?.vote === 'con' ?
+            'bg-red-50 border-red-400 text-red-700 opacity-90' :
+            'bg-slate-50 border-slate-200 text-slate-400 opacity-60'}`
+            }>
+            
             <ThumbsDown className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
             <span className="truncate">{t('voteCon')}</span>
             {conVotes > 0 && <span className="text-xs md:text-sm shrink-0">({conVotes})</span>}
 
           </button>
         </div>
-        </div>
-      ) : (
+        </div> :
+
       <div className="relative">
-        {voteMutation.isPending && (
-          <div className="absolute inset-0 bg-white/60 rounded-xl flex items-center justify-center z-10">
+        {voteMutation.isPending &&
+        <div className="absolute inset-0 bg-white/60 rounded-xl flex items-center justify-center z-10">
             <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
           </div>
-        )}
+        }
         <div className="flex gap-2 w-full min-w-0">
           <Button
             variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
@@ -304,16 +304,16 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             onMouseEnter={() => setHoverVote('pro')}
             onMouseLeave={() => setHoverVote(null)}
             className={`flex-1 min-w-0 h-10 md:h-12 text-sm md:text-base font-semibold rounded-xl transition-all duration-200 px-2 md:px-4 ${
-              userVote?.vote === 'pro'
-                ? 'bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-200'
-                : 'border-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-400'
-            }`}
-          >
+            userVote?.vote === 'pro' ?
+            'bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-200' :
+            'border-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-400'}`
+            }>
+            
             <ThumbsUp className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
             <span className="truncate">{t('votePro')}</span>
-            {proVotes > 0 && (
-              <span className="text-xs md:text-sm opacity-80 shrink-0">({proVotes})</span>
-            )}
+            {proVotes > 0 &&
+            <span className="text-xs md:text-sm opacity-80 shrink-0">({proVotes})</span>
+            }
           </Button>
           <Button
             variant={userVote?.vote === 'con' ? 'default' : 'outline'}
@@ -322,27 +322,27 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             onMouseEnter={() => setHoverVote('con')}
             onMouseLeave={() => setHoverVote(null)}
             className={`flex-1 min-w-0 h-10 md:h-12 text-sm md:text-base font-semibold rounded-xl transition-all duration-200 px-2 md:px-4 ${
-              userVote?.vote === 'con'
-                ? 'bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-200'
-                : 'border-2 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-400'
-            }`}
-          >
+            userVote?.vote === 'con' ?
+            'bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-200' :
+            'border-2 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-400'}`
+            }>
+            
             <ThumbsDown className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
             <span className="truncate">{t('voteCon')}</span>
-            {conVotes > 0 && (
-              <span className="text-xs md:text-sm opacity-80 shrink-0">({conVotes})</span>
-            )}
+            {conVotes > 0 &&
+            <span className="text-xs md:text-sm opacity-80 shrink-0">({conVotes})</span>
+            }
           </Button>
         </div>
-        {userVote && (
-          <p className="text-center text-xs text-slate-400 mt-1.5">
-            {userVote.vote === 'pro'
-              ? (language === 'he' ? 'הצבעת בעד • לחץ/י שוב לביטול' : language === 'ar' ? 'صوتك مع • اضغط مجدداً للإلغاء' : 'You voted pro • click again to remove')
-              : (language === 'he' ? 'הצבעת נגד • לחץ/י שוב לביטול' : language === 'ar' ? 'صوتك ضد • اضغط مجدداً للإلغاء' : 'You voted con • click again to remove')}
+        {userVote &&
+        <p className="text-center text-xs text-slate-400 mt-1.5">
+            {userVote.vote === 'pro' ?
+          language === 'he' ? 'הצבעת בעד • לחץ/י שוב לביטול' : language === 'ar' ? 'صوتك مع • اضغط مجدداً للإلغاء' : 'You voted pro • click again to remove' :
+          language === 'he' ? 'הצבעת נגד • לחץ/י שוב לביטול' : language === 'ar' ? 'صوتك ضد • اضغط مجدداً للإلغاء' : 'You voted con • click again to remove'}
           </p>
-        )}
+        }
       </div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }
