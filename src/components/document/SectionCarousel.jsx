@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import JoinGroupDialog from "@/components/group/JoinGroupDialog";
 import SectionVoteButtons from "./SectionVoteButtons";
 import VotingProgressSection from "./VotingProgressSection";
+import SectionDeletionVoteBar from "./SectionDeletionVoteBar";
 
 const SectionCarousel = React.memo(function SectionCarousel({
   section,
@@ -692,7 +693,18 @@ const SectionCarousel = React.memo(function SectionCarousel({
               <div className="mt-4 space-y-2">
                 {document?.votingButtonsEnabled && (
                   <div className="proposal-vote-buttons" onClick={(e) => e.stopPropagation()}>
-                    {user && canParticipate ? (
+                    {currentView.type === 'current' ? (
+                      <SectionDeletionVoteBar
+                        section={section}
+                        document={document}
+                        user={user}
+                        isRTL={isRTL}
+                        initialVotes={sectionVotes}
+                        canParticipate={canParticipate}
+                        onCannotParticipate={() => setShowJoinGroupDialog(true)}
+                        readOnly={!user}
+                      />
+                    ) : user && canParticipate ? (
                       <VotingProgressSection
                         suggestion={currentView.data}
                         document={document}

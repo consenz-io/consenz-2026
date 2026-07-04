@@ -35,7 +35,8 @@
       "enum": [
         "suggestion_accepted",
         "direct_edit",
-        "section_created"
+        "section_created",
+        "section_deleted"
       ],
       "description": "Type of change that created this version"
     },

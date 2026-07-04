@@ -65,7 +65,49 @@ Deno.serve(async (req) => {
       const proCount = freshVotes.filter(v => v.vote === 'pro').length;
       const conCount = freshVotes.filter(v => v.vote === 'con').length;
 
-      return Response.json({ success: true, action, proCount, conCount, votes: freshVotes });
+      // ── Deletion check ──────────────────────────────────────────────
+      // For existing/accepted sections, voting is for deletion:
+      // if opponents (con) minus supporters (pro) reaches the document's
+      // support threshold, the section is automatically deleted.
+      let sectionDeleted = false;
+      const section = await base44.asServiceRole.entities.Section.get(sectionId).catch(() => null);
+      if (section) {
+        const document = await base44.asServiceRole.entities.Document.get(section.documentId).catch(() => null);
+        const threshold = Math.max(2, document?.threshold || 2);
+
+        if (conCount - proCount >= threshold) {
+          // Log a version history entry before deleting (for reconstruction)
+          try {
+            const lastVersion = await base44.asServiceRole.entities.DocumentVersion.filter({ sectionId }, '-version', 1);
+            const version = (lastVersion && lastVersion.length > 0 ? lastVersion[0].version : 0) + 1;
+            await base44.asServiceRole.entities.DocumentVersion.create({
+              documentId: section.documentId,
+              sectionId,
+              topicId: section.topicId,
+              sectionOrder: section.order,
+              content: section.content,
+              changeDescription: 'הסעיף נמחק בהצבעת קהילה',
+              version,
+              changeType: 'section_deleted',
+              originalLanguage: section.originalLanguage || 'he',
+              translations: section.translations || {},
+            });
+          } catch (e) {
+            console.error('[VOTE ON SECTION version log error]', e);
+          }
+
+          await base44.asServiceRole.entities.Section.delete(sectionId);
+          // Clean up the section's votes too
+          try {
+            await base44.asServiceRole.entities.SectionVote.deleteMany({ sectionId });
+          } catch (e) {
+            console.error('[VOTE ON SECTION vote cleanup error]', e);
+          }
+          sectionDeleted = true;
+        }
+      }
+
+      return Response.json({ success: true, action, proCount, conCount, votes: freshVotes, sectionDeleted });
 
     } finally {
       processingVotes.delete(lockKey);
