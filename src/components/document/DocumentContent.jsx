@@ -356,6 +356,33 @@ Return ONLY the translated text:`;
     [suggestionsBySectionId]
   );
 
+  // ── Orphaned suggestions (section was deleted) ──────────────────────
+  // Pending edit/delete suggestions whose target section no longer exists.
+  // Grouped by deleted sectionId → one ghost slot per deleted section,
+  // anchored to topicId + originalSectionOrder (stamped at deletion time).
+  const existingSectionIds = React.useMemo(() => new Set(sections.map(s => s.id)), [sections]);
+  const ghostSlotsByTopicId = React.useMemo(() => {
+    const perTopic = new Map();
+    for (const s of suggestions) {
+      if (s.status !== 'pending') continue;
+      if (s.type !== 'edit_section' && s.type !== 'delete_section') continue;
+      if (!s.sectionId || existingSectionIds.has(s.sectionId)) continue;
+      if (!s.topicId) continue; // not anchored — can't place
+      if (!perTopic.has(s.topicId)) perTopic.set(s.topicId, new Map());
+      const slots = perTopic.get(s.topicId);
+      if (!slots.has(s.sectionId)) {
+        slots.set(s.sectionId, { sectionId: s.sectionId, originalSectionOrder: s.originalSectionOrder ?? 999, suggestions: [] });
+      }
+      slots.get(s.sectionId).suggestions.push(s);
+    }
+    const result = new Map();
+    for (const [topicId, slots] of perTopic.entries()) {
+      result.set(topicId, Array.from(slots.values()).sort((a, b) => a.originalSectionOrder - b.originalSectionOrder));
+    }
+    return result;
+  }, [suggestions, existingSectionIds]);
+  const getGhostSlotsForTopic = React.useCallback((topicId) => ghostSlotsByTopicId.get(topicId) || [], [ghostSlotsByTopicId]);
+
   const getNewSectionSuggestionsForTopic = React.useCallback((topicId) => {
     return suggestions.filter(s => {
       // רק הצעות לסעיפים חדשים שהן ROOT (אין להן parent)
@@ -528,6 +555,7 @@ Return ONLY the translated text:`;
             <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4 md:space-y-6 w-full overflow-x-hidden">
             {topics.map((topic, topicIndex) => {
               const topicSections = getSectionsForTopic(topic.id);
+              const topicGhostSlots = getGhostSlotsForTopic(topic.id);
               
               return (
                 <Draggable key={topic.id} draggableId={`topic-${topic.id}`} index={topicIndex} isDragDisabled={!isAdmin}>
@@ -660,6 +688,33 @@ Return ONLY the translated text:`;
                      allDocumentSuggestions={suggestions}
                      />
                      ))}
+                     {/* Ghost slots for deleted sections that still have open proposals */}
+                     {topicGhostSlots.map(ghost => (
+                       <div key={`ghost-${ghost.sectionId}`} className="border-2 border-dashed border-slate-300 rounded-lg bg-slate-50/60">
+                         <SectionCarousel
+                           section={{ id: ghost.sectionId, content: '', documentId: document.id, topicId: topic.id, order: ghost.originalSectionOrder, updated_date: ghost.suggestions[0]?.created_date }}
+                           pendingSuggestions={ghost.suggestions}
+                           document={document}
+                           user={user}
+                           canParticipate={canParticipate}
+                           toggleComments={toggleComments}
+                           showComments={showComments}
+                           getCommentsCount={getCommentsCount}
+                           getUserVote={getUserVote}
+                           voteMutation={voteMutation}
+                           getUserName={getUserName}
+                           acceptedSuggestions={acceptedSuggestions}
+                           sectionIndex={-1}
+                           isAdmin={isAdmin}
+                           users={users}
+                           onOpenSuggestionSidebar={onOpenSuggestionSidebar}
+                           targetSuggestionId={targetSuggestionId}
+                           publicProfiles={publicProfiles}
+                           allDocumentSuggestions={suggestions}
+                           isGhost
+                         />
+                       </div>
+                     ))}
                      </>
                      ) : (
                      <DragDropContext onDragEnd={(result) => handleSectionDragEnd(result, topic.id)}>
@@ -669,8 +724,44 @@ Return ONLY the translated text:`;
                         {topicSections.map((section, index) => {
                         const newSectionSuggestions = getNewSectionSuggestionsForTopic(topic.id);
                         const allSectionSuggestions = getSuggestionsForSection(section.id);
+                        // Ghost slots (deleted section) whose order falls before the first section
+                        const ghostsBefore = index === 0
+                          ? topicGhostSlots.filter(g => g.originalSectionOrder < section.order)
+                          : [];
+                        // Ghost slots whose order falls after this section and before the next (or at the end)
+                        const ghostsAfter = topicGhostSlots.filter(g =>
+                          g.originalSectionOrder > section.order &&
+                          (index === topicSections.length - 1 || g.originalSectionOrder < topicSections[index + 1].order)
+                        );
                   
                   return (
+                    <React.Fragment key={section.id}>
+                    {ghostsBefore.map(ghost => (
+                      <div key={`ghost-${ghost.sectionId}`} className="border-2 border-dashed border-slate-300 rounded-lg bg-slate-50/60">
+                        <SectionCarousel
+                          section={{ id: ghost.sectionId, content: '', documentId: document.id, topicId: topic.id, order: ghost.originalSectionOrder, updated_date: ghost.suggestions[0]?.created_date }}
+                          pendingSuggestions={ghost.suggestions}
+                          document={document}
+                          user={user}
+                          canParticipate={canParticipate}
+                          toggleComments={toggleComments}
+                          showComments={showComments}
+                          getCommentsCount={getCommentsCount}
+                          getUserVote={getUserVote}
+                          voteMutation={voteMutation}
+                          getUserName={getUserName}
+                          acceptedSuggestions={acceptedSuggestions}
+                          sectionIndex={-1}
+                          isAdmin={isAdmin}
+                          users={users}
+                          onOpenSuggestionSidebar={onOpenSuggestionSidebar}
+                          targetSuggestionId={targetSuggestionId}
+                          publicProfiles={publicProfiles}
+                          allDocumentSuggestions={suggestions}
+                          isGhost
+                        />
+                      </div>
+                    ))}
                     <Draggable key={section.id} draggableId={section.id} index={index} isDragDisabled={!isAdmin}>
                       {(provided, snapshot) => (
                         <div
@@ -877,6 +968,33 @@ Return ONLY the translated text:`;
                         </div>
                       )}
                     </Draggable>
+                    {ghostsAfter.map(ghost => (
+                      <div key={`ghost-${ghost.sectionId}`} className="border-2 border-dashed border-slate-300 rounded-lg bg-slate-50/60">
+                        <SectionCarousel
+                          section={{ id: ghost.sectionId, content: '', documentId: document.id, topicId: topic.id, order: ghost.originalSectionOrder, updated_date: ghost.suggestions[0]?.created_date }}
+                          pendingSuggestions={ghost.suggestions}
+                          document={document}
+                          user={user}
+                          canParticipate={canParticipate}
+                          toggleComments={toggleComments}
+                          showComments={showComments}
+                          getCommentsCount={getCommentsCount}
+                          getUserVote={getUserVote}
+                          voteMutation={voteMutation}
+                          getUserName={getUserName}
+                          acceptedSuggestions={acceptedSuggestions}
+                          sectionIndex={-1}
+                          isAdmin={isAdmin}
+                          users={users}
+                          onOpenSuggestionSidebar={onOpenSuggestionSidebar}
+                          targetSuggestionId={targetSuggestionId}
+                          publicProfiles={publicProfiles}
+                          allDocumentSuggestions={suggestions}
+                          isGhost
+                        />
+                      </div>
+                    ))}
+                    </React.Fragment>
                     );
                     })}
                     {provided.placeholder}

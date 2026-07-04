@@ -45,7 +45,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
   targetSuggestionId,
   publicProfiles = [],
   allDocumentSuggestions = [],
-  sectionVotes = []
+  sectionVotes = [],
+  isGhost = false
 }) {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
@@ -163,11 +164,13 @@ const SectionCarousel = React.memo(function SectionCarousel({
 
   // רשימת כל ה"עמודים": תוכן נוכחי + הצעות ממויינות
   const allViews = React.useMemo(() => {
+    const suggestionViews = sortedSuggestions.map(s => ({ type: 'suggestion', data: s, id: s.id }));
+    if (isGhost) return suggestionViews;
     return [
       { type: 'current', data: section, id: 'current' },
-      ...sortedSuggestions.map(s => ({ type: 'suggestion', data: s, id: s.id }))
+      ...suggestionViews
     ];
-  }, [section, sortedSuggestions]);
+  }, [section, sortedSuggestions, isGhost]);
   
   // מחשב את ה-index הנוכחי לפי ה-ID
   const currentIndex = React.useMemo(() => {
@@ -403,12 +406,18 @@ const SectionCarousel = React.memo(function SectionCarousel({
       {/* כותרת סעיף עם אינדיקטור */}
       <div className="flex items-center justify-between mb-3 md:mb-4">
         <div className="flex items-center gap-2 md:gap-3">
-          <div className={`text-xs md:text-sm font-medium ${historyMode ? 'text-teal-700' : 'text-slate-500'}`}>
-            {historyMode
-              ? <span className="flex items-center gap-1"><History className="w-3.5 h-3.5" />{t('history')}</span>
-              : `${t('section')} ${sectionIndex + 1}`
-            }
-          </div>
+          {isGhost ? (
+            <Badge className="bg-slate-200 text-slate-700 text-[10px] md:text-xs border border-slate-300">
+              {language === 'he' ? 'סעיף שנמחק — הצעות פתוחות' : language === 'ar' ? 'قسم محذوف — اقتراحات مفتوحة' : 'Deleted section — open proposals'}
+            </Badge>
+          ) : (
+            <div className={`text-xs md:text-sm font-medium ${historyMode ? 'text-teal-700' : 'text-slate-500'}`}>
+              {historyMode
+                ? <span className="flex items-center gap-1"><History className="w-3.5 h-3.5" />{t('history')}</span>
+                : `${t('section')} ${sectionIndex + 1}`
+              }
+            </div>
+          )}
           {!historyMode && allViews.length > 1 && (
             <Badge variant="outline" className="text-[10px] md:text-xs">
               {currentIndex + 1} / {allViews.length}
@@ -416,33 +425,35 @@ const SectionCarousel = React.memo(function SectionCarousel({
           )}
         </div>
         <div className="flex items-center gap-1 md:gap-2">
-          {/* כפתור היסטוריה / חזרה */}
-          {historyMode ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => { e.stopPropagation(); setHistoryMode(false); }}
-              className="text-teal-700 hover:text-teal-900 hover:bg-teal-100 h-7 md:h-8 px-2 md:px-3 border border-teal-300 bg-teal-50"
-            >
-              <X className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-              <span className="hidden md:inline text-xs">{t('currentVersion')}</span>
-            </Button>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => { e.stopPropagation(); setHistoryMode(true); }}
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-teal-700 hover:bg-teal-50 h-7 md:h-8 px-2 md:px-3"
-            >
-              <History className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-              <span className="hidden md:inline">{t('history')}</span>
-            </Button>
+          {/* כפתור היסטוריה / חזרה — מוסתר במצב רפאים (אין סעיף חי) */}
+          {!isGhost && (
+            historyMode ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => { e.stopPropagation(); setHistoryMode(false); }}
+                className="text-teal-700 hover:text-teal-900 hover:bg-teal-100 h-7 md:h-8 px-2 md:px-3 border border-teal-300 bg-teal-50"
+              >
+                <X className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                <span className="hidden md:inline text-xs">{t('currentVersion')}</span>
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => { e.stopPropagation(); setHistoryMode(true); }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-teal-700 hover:bg-teal-50 h-7 md:h-8 px-2 md:px-3"
+              >
+                <History className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                <span className="hidden md:inline">{t('history')}</span>
+              </Button>
+            )
           )}
         </div>
       </div>
 
       {/* ── מצב היסטוריה ─────────────────────────────────────────────── */}
-      {historyMode && (
+      {historyMode && !isGhost && (
         <SectionVersionCarousel
           sectionId={section.id}
           documentId={document?.id}
@@ -763,8 +774,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
         )}
       </div>
 
-      {/* כפתורים מרכזיים - ערוך/תגובה בתצוגה נוכחית */}
-      {isFirstView && !historyMode && (
+      {/* כפתורים מרכזיים - ערוך/תגובה בתצוגה נוכחית — מוסתרים במצב רפאים */}
+      {isFirstView && !historyMode && !isGhost && (
         <div className={`section-action-buttons flex flex-wrap gap-1 mt-4 pt-4 border-t border-slate-200 ${isRTL ? 'justify-end' : 'justify-start'}`}>
           <Button
             variant="ghost"
