@@ -105,6 +105,8 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
     : 'bg-blue-400';
 
   const createdByText = language === 'he' ? 'נוצר על ידי מנהל/ת' : language === 'ar' ? 'أنشئ بواسطة المشرف' : 'Created by admin';
+  const acceptedLabel = language === 'he' ? 'התקבלה' : language === 'ar' ? 'تم القبول' : 'Accepted';
+  const datePrefix = language === 'he' ? 'ב-' : language === 'ar' ? 'في ' : 'on ';
   const acceptedVotesText = language === 'he'
     ? `✓ התקבלה — ${proVotes} בעד, ${conVotes} נגד`
     : language === 'ar'
@@ -112,16 +114,20 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
     : `✓ Accepted — ${proVotes} pro, ${conVotes} con`;
   const passedText = language === 'he' ? '✓ עבר את סף הקונצנזוס!' : language === 'ar' ? '✓ تجاوز عتبة الإجماع!' : '✓ Passed consensus threshold!';
 
+  // For passed/existing sections the full label + date is shown below the bar,
+  // so the status text only carries the checkmark here.
+  const passedStatusText = '✓';
+
   const statusText = effectiveReadOnly
     ? isExistingSection
-      ? (sourceSuggestion ? acceptedVotesText : createdByText)
+      ? passedStatusText
       : passed
-      ? (isAccepted ? acceptedVotesText : passedText)
+      ? passedStatusText
       : isTimerExpired && !readOnly
       ? (language === 'he' ? `פג תוקף ההצבעה — חסרו ${votesNeeded} תומכים` : language === 'ar' ? `انتهت مدة التصويت — نقص ${votesNeeded} مؤيدين` : `Voting period ended — ${votesNeeded} supporters short`)
       : (language === 'he' ? `לא הגיע לסף — חסרו ${votesNeeded} תומכים` : language === 'ar' ? `لم يصل للعتبة — نقص ${votesNeeded} مؤيدين` : `Did not reach threshold — ${votesNeeded} supporters short`)
     : passed
-    ? (isAccepted ? acceptedVotesText : passedText)
+    ? passedStatusText
     : hoverVote === 'pro'
     ? (language === 'he' ? `הצבעתך תקרב את ההצעה לאישור` : language === 'ar' ? 'سيقرب صوتك الاقتراح من القبول' : 'Your vote will help pass this proposal')
     : hoverVote === 'con'
@@ -129,6 +135,23 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
     : votesNeeded === 1
     ? (language === 'he' ? `עוד הצבעת בעד אחת חסרה לאישור` : language === 'ar' ? 'مطلوب مؤيد واحد فقط للموافقة' : '1 more supporter needed')
     : (language === 'he' ? `עוד ${votesNeeded} תומכים דרושים לאישור` : language === 'ar' ? `${votesNeeded} مؤيدين إضافيين مطلوبين للموافقة` : `${votesNeeded} more supporters needed`);
+
+  // Below-bar date line: "Created by admin on <date>" or "Accepted on <date>"
+  const belowBarInfo = (() => {
+    if (isExistingSection && !sourceSuggestion) {
+      const date = suggestion?.created_date;
+      if (!date) return null;
+      return { label: createdByText, date };
+    }
+    if (passed) {
+      const date = isExistingSection
+        ? (sourceSuggestion?.updated_date || acceptedDate)
+        : (acceptedDate || suggestion?.updated_date);
+      if (!date) return null;
+      return { label: acceptedLabel, date };
+    }
+    return null;
+  })();
 
   // Admin-accepted: show a clean status badge instead of the progress bar
   const isAdminAccepted = suggestion?.approvedByAdmin && suggestion?.status === 'accepted';
@@ -201,10 +224,10 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
           >
             {statusText}
           </motion.p>
-          {acceptedDate && (
-            <p className="text-xs text-center text-slate-400 mt-1">
-              {suggestion?.language === 'he' || (typeof document === 'object' && document?.originalLanguage === 'he') ? 'התקבלה ב-' : 'Accepted on '}
-              {new Date(acceptedDate).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          {belowBarInfo && (
+            <p className="text-xs text-center text-slate-500 mt-1.5 font-medium">
+              {belowBarInfo.label} {datePrefix}
+              {new Date(belowBarInfo.date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
             </p>
           )}
           {rejectedDate && (
