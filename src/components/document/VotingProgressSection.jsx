@@ -212,7 +212,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
 
           {/* Status text */}
           {!passed && !isExistingSection &&
-            <p className="text-xs text-slate-600 mt-1.5 font-medium text-right" dir={isRTL ? 'rtl' : 'ltr'}>
+            <p className="text-xs text-slate-600 mt-1.5 font-medium text-center" dir={isRTL ? 'rtl' : 'ltr'}>
               {statusText}
             </p>
           }
