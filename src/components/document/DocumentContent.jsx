@@ -690,7 +690,7 @@ Return ONLY the translated text:`;
                      ))}
                      {/* Ghost slots for deleted sections that still have open proposals */}
                      {topicGhostSlots.map(ghost => (
-                       <div key={`ghost-${ghost.sectionId}`} className="border-2 border-dashed border-slate-300 rounded-lg bg-slate-50/60">
+                       <div key={`ghost-${ghost.sectionId}`}>
                          <SectionCarousel
                            section={{ id: ghost.sectionId, content: '', documentId: document.id, topicId: topic.id, order: ghost.originalSectionOrder, updated_date: ghost.suggestions[0]?.created_date }}
                            pendingSuggestions={ghost.suggestions}
@@ -737,7 +737,7 @@ Return ONLY the translated text:`;
                   return (
                     <React.Fragment key={section.id}>
                     {ghostsBefore.map(ghost => (
-                      <div key={`ghost-${ghost.sectionId}`} className="border-2 border-dashed border-slate-300 rounded-lg bg-slate-50/60">
+                      <div key={`ghost-${ghost.sectionId}`}>
                         <SectionCarousel
                           section={{ id: ghost.sectionId, content: '', documentId: document.id, topicId: topic.id, order: ghost.originalSectionOrder, updated_date: ghost.suggestions[0]?.created_date }}
                           pendingSuggestions={ghost.suggestions}
@@ -969,7 +969,7 @@ Return ONLY the translated text:`;
                       )}
                     </Draggable>
                     {ghostsAfter.map(ghost => (
-                      <div key={`ghost-${ghost.sectionId}`} className="border-2 border-dashed border-slate-300 rounded-lg bg-slate-50/60">
+                      <div key={`ghost-${ghost.sectionId}`}>
                         <SectionCarousel
                           section={{ id: ghost.sectionId, content: '', documentId: document.id, topicId: topic.id, order: ghost.originalSectionOrder, updated_date: ghost.suggestions[0]?.created_date }}
                           pendingSuggestions={ghost.suggestions}

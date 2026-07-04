@@ -406,11 +406,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
       {/* כותרת סעיף עם אינדיקטור */}
       <div className="flex items-center justify-between mb-3 md:mb-4">
         <div className="flex items-center gap-2 md:gap-3">
-          {isGhost ? (
-            <Badge className="bg-slate-200 text-slate-700 text-[10px] md:text-xs border border-slate-300">
-              {language === 'he' ? 'סעיף שנמחק — הצעות פתוחות' : language === 'ar' ? 'قسم محذوف — اقتراحات مفتوحة' : 'Deleted section — open proposals'}
-            </Badge>
-          ) : (
+          {isGhost ? null : (
             <div className={`text-xs md:text-sm font-medium ${historyMode ? 'text-teal-700' : 'text-slate-500'}`}>
               {historyMode
                 ? <span className="flex items-center gap-1"><History className="w-3.5 h-3.5" />{t('history')}</span>
