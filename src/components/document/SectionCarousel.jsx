@@ -797,24 +797,6 @@ const SectionCarousel = React.memo(function SectionCarousel({
               <span className="truncate">עריכה ישירה</span>
             </Button>
           )}
-          {!pendingSuggestions.some(s => s.type === 'delete_section') && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                if (!user) {
-                  base44.auth.redirectToLogin(window.location.href);
-                  return;
-                }
-                onEditSection({ ...section, isDeletingSuggestion: true });
-              }}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity text-xs min-w-0"
-              title={(language || 'he') === 'he' ? 'הצע מחיקת סעיף' : 'Suggest Section Deletion'}
-            >
-              <Trash2 className={`w-3.5 h-3.5 shrink-0 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-              <span className="hidden sm:inline">{(language || 'he') === 'he' ? 'הצעת מחיקה' : 'Suggest Delete'}</span>
-            </Button>
-          )}
           {isAdmin && (
             <Button
               variant="ghost"
