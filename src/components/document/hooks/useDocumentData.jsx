@@ -36,7 +36,7 @@ export function useDocumentData(documentId) {
 
   const { data: sections = [], isLoading: sectionsLoading } = useQuery({
     queryKey: ['sections', documentId],
-    queryFn: () => base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
+    queryFn: () => base44.entities.Section.filter({ documentId }, 'order', 1000).catch(() => []),
     enabled: !!documentId,
     staleTime: 30 * 1000, // 30s — subscriptions handle real-time updates
     gcTime: 10 * 60 * 1000,
@@ -51,7 +51,7 @@ export function useDocumentData(documentId) {
     queryKey: ['suggestions', documentId],
     queryFn: async () => {
       if (!documentId) return [];
-      const results = await base44.entities.Suggestion.filter({ documentId }, '-created_date');
+      const results = await base44.entities.Suggestion.filter({ documentId }, '-created_date', 1000);
       return results || [];
     },
     enabled: !!documentId,
@@ -74,7 +74,7 @@ export function useDocumentData(documentId) {
       const [allSuggestions, allSections] = await Promise.all([
         cachedSuggestions
           ? Promise.resolve(cachedSuggestions)
-          : base44.entities.Suggestion.filter({ documentId }, '-created_date').catch(() => []),
+          : base44.entities.Suggestion.filter({ documentId }, '-created_date', 1000).catch(() => []),
         cachedSections
           ? Promise.resolve(cachedSections)
           : base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
@@ -86,7 +86,7 @@ export function useDocumentData(documentId) {
         suggestionIds.length > 0
           ? base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } }).catch(() => [])
           : Promise.resolve([]),
-        base44.entities.UserPublicProfile.list().catch(() => []),
+        base44.entities.UserPublicProfile.list('-created_date', 1000).catch(() => []),
         suggestionIds.length > 0
           ? base44.entities.Argument.filter({ suggestionId: { $in: suggestionIds } }).catch(() => [])
           : Promise.resolve([]),
