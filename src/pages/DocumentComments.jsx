@@ -375,9 +375,7 @@ export default function DocumentComments() {
       const topicIdx = topicOrderMap[s.topicId] ?? -1;
       const topic = sortedTopics[topicIdx];
       const topicTitle = topic
-        ? ((typeof topic.translations?.[language]?.title === 'string'
-            ? topic.translations[language].title
-            : topic.title) || '')
+        ? (topic.title || '')
         : '';
       const secArr = byTopic[s.topicId] || [];
       const secIdx = secArr.findIndex(x => x.id === s.id);
