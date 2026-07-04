@@ -162,7 +162,13 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             <span className="text-xs font-semibold text-slate-600">
               {language === 'he' ? 'התקדמות לאישור' : language === 'ar' ? 'تقدم نحو القبول' : 'Progress to acceptance'}
             </span>
-            <div className="flex items-center justify-end gap-2">
+            <div className="flex items-center gap-2">
+              {timeLabel && !effectiveReadOnly && (
+                <span className={`flex items-center gap-0.5 text-xs font-medium ${isUrgent ? 'text-orange-500' : 'text-slate-400'}`}>
+                  <Clock className="w-3 h-3 shrink-0" />
+                  {timeLabel}
+                </span>
+              )}
               <span className={`text-xs font-bold ${passed ? 'text-green-600' : 'text-slate-500'}`}>
                 {passed ? '✓' : `${Math.max(0, delta)}/${threshold}`}
               </span>
@@ -180,14 +186,6 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             />
           </div>
-
-          {/* Deadline / time remaining */}
-          {timeLabel && !effectiveReadOnly && (
-            <div className={`flex items-center justify-center gap-1 mt-2 text-xs font-medium ${isUrgent ? 'text-orange-500' : 'text-slate-400'}`}>
-              <Clock className="w-3 h-3 shrink-0" />
-              {timeLabel}
-            </div>
-          )}
 
           {/* Status text */}
           <motion.p
