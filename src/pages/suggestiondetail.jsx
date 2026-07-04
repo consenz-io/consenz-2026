@@ -195,14 +195,14 @@ export default function SuggestionDetail() {
     queryKey: ['topics', suggestion?.documentId],
     queryFn: () => base44.entities.Topic.filter({ documentId: suggestion.documentId }, 'order'),
     enabled: !!suggestion?.documentId,
-    initialData: []
+    placeholderData: []
   });
 
   const { data: sections } = useQuery({
     queryKey: ['sections', suggestion?.documentId],
     queryFn: () => base44.entities.Section.filter({ documentId: suggestion.documentId }),
     enabled: !!suggestion?.documentId,
-    initialData: []
+    placeholderData: []
   });
 
   // ── Mutations ─────────────────────────────────────────────────────────────
