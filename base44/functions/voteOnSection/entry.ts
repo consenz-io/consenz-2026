@@ -28,40 +28,40 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Vote already in progress' }, { status: 429 });
     }
     processingVotes.add(lockKey);
-    // Safety net: always release lock
     setTimeout(() => processingVotes.delete(lockKey), 10000);
 
     try {
-      // Fetch existing votes for this section
-      const existingVotes = await base44.entities.SectionVote.filter({ sectionId });
-      const existingVote = existingVotes.find(v => v.userId === user.id) || null;
+      // Use asServiceRole for all SectionVote operations — bypasses RLS so we can
+      // count ALL votes (not just the current user's), matching voteOnSuggestion.
+      const allVotes = await base44.asServiceRole.entities.SectionVote.filter({ sectionId });
+      const userVotes = allVotes.filter(v => v.userId === user.id);
+
+      // Clean up duplicate votes for this user (safety check — keep one)
+      if (userVotes.length > 1) {
+        await Promise.all(
+          userVotes.slice(1).map(v => base44.asServiceRole.entities.SectionVote.delete(v.id))
+        );
+      }
+      const existingVote = userVotes[0] || null;
 
       let action;
       if (existingVote) {
         if (existingVote.vote === vote) {
           // Toggle off — same vote clicked again
-          await base44.entities.SectionVote.delete(existingVote.id);
+          await base44.asServiceRole.entities.SectionVote.delete(existingVote.id);
           action = 'deleted';
         } else {
           // Change vote direction
-          await base44.entities.SectionVote.update(existingVote.id, { vote });
+          await base44.asServiceRole.entities.SectionVote.update(existingVote.id, { vote });
           action = 'updated';
         }
       } else {
-        // New vote — check again for race condition (double-check before create)
-        const doubleCheck = await base44.entities.SectionVote.filter({ sectionId, userId: user.id });
-        if (doubleCheck.length > 0) {
-          // Another request already created the vote — update it instead
-          await base44.entities.SectionVote.update(doubleCheck[0].id, { vote });
-          action = 'updated';
-        } else {
-          await base44.entities.SectionVote.create({ sectionId, userId: user.id, vote });
-          action = 'created';
-        }
+        await base44.asServiceRole.entities.SectionVote.create({ sectionId, userId: user.id, vote });
+        action = 'created';
       }
 
-      // Return fresh vote counts from DB (source of truth)
-      const freshVotes = await base44.entities.SectionVote.filter({ sectionId });
+      // Return fresh vote counts from DB (source of truth — all votes via service role)
+      const freshVotes = await base44.asServiceRole.entities.SectionVote.filter({ sectionId });
       const proCount = freshVotes.filter(v => v.vote === 'pro').length;
       const conCount = freshVotes.filter(v => v.vote === 'con').length;
 

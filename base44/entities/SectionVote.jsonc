@@ -1,6 +1,12 @@
 {
   "name": "SectionVote",
   "type": "object",
+  "permissions": {
+    "create": "authenticated",
+    "read": "public",
+    "update": "authenticated",
+    "delete": "authenticated"
+  },
   "properties": {
     "sectionId": {
       "type": "string",
