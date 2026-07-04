@@ -56,17 +56,22 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   // For accepted suggestions, freeze the threshold at what it was at acceptance time.
   // At the moment of acceptance, delta >= threshold exactly, so delta itself is the frozen threshold.
   const isAccepted = suggestion?.status === 'accepted';
+  // Existing section (passed as a plain section without a suggestion status) —
+  // already part of the document, so display it as accepted rather than "did not reach threshold".
+  const isExistingSection = !suggestion?.status;
   const threshold = isAccepted
     ? Math.max(2, delta)
     : Math.max(2, document?.threshold || 2);
 
   // How many more pro votes needed
-  const votesNeeded = Math.max(0, threshold - delta);
-  const passed = delta >= threshold;
+  const votesNeeded = isExistingSection ? 0 : Math.max(0, threshold - delta);
+  const passed = isExistingSection || delta >= threshold;
 
   // Progress: 0% = delta of 0 (or negative), 100% = delta >= threshold
   // Map [0, threshold] to [0%, 100%], clamped
-  const progressPercent = Math.min(100, Math.max(0, (delta / threshold) * 100));
+  const progressPercent = isExistingSection
+    ? 100
+    : Math.min(100, Math.max(0, (delta / threshold) * 100));
 
   // Simulate what a pro/con vote would do
   const afterProDelta = delta + (userVote?.vote === 'pro' ? 0 : userVote?.vote === 'con' ? 2 : 1);
