@@ -211,19 +211,19 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
           </div>
 
           {/* Status text */}
-          <motion.p
-            key={statusText}
-            initial={{ opacity: 0, y: 2 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`text-xs mt-2 text-center font-medium hidden ${
-            passed ? 'text-green-600' :
-            hoverVote === 'pro' ? 'text-blue-600' :
-            hoverVote === 'con' ? 'text-red-500' :
-            'text-slate-500'}`
-            }>
-            
-            {statusText}
-          </motion.p>
+          
+
+
+
+
+
+
+
+
+
+
+
+          
           {belowBarInfo &&
           <p className="text-xs text-center text-slate-500 mt-1.5 font-medium">
               {belowBarInfo.label} {datePrefix}
