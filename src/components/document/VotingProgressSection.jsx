@@ -97,14 +97,24 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
     ? 'bg-red-400'
     : 'bg-blue-400';
 
+  const createdByText = language === 'he' ? 'נוצר על ידי מנהל/ת' : language === 'ar' ? 'أنشئ بواسطة المشرف' : 'Created by admin';
+  const acceptedVotesText = language === 'he'
+    ? `✓ התקבלה — ${proVotes} בעד, ${conVotes} נגד`
+    : language === 'ar'
+    ? `✓ تم القبول — ${proVotes} مع, ${conVotes} ضد`
+    : `✓ Accepted — ${proVotes} pro, ${conVotes} con`;
+  const passedText = language === 'he' ? '✓ עבר את סף הקונצנזוס!' : language === 'ar' ? '✓ تجاوز عتبة الإجماع!' : '✓ Passed consensus threshold!';
+
   const statusText = effectiveReadOnly
-    ? passed
-      ? (language === 'he' ? '✓ עבר את סף הקונצנזוס!' : language === 'ar' ? '✓ تجاوز عتبة الإجماع!' : '✓ Passed consensus threshold!')
+    ? isExistingSection
+      ? createdByText
+      : passed
+      ? (isAccepted ? acceptedVotesText : passedText)
       : isTimerExpired && !readOnly
       ? (language === 'he' ? `פג תוקף ההצבעה — חסרו ${votesNeeded} תומכים` : language === 'ar' ? `انتهت مدة التصويت — نقص ${votesNeeded} مؤيدين` : `Voting period ended — ${votesNeeded} supporters short`)
       : (language === 'he' ? `לא הגיע לסף — חסרו ${votesNeeded} תומכים` : language === 'ar' ? `لم يصل للعتبة — نقص ${votesNeeded} مؤيدين` : `Did not reach threshold — ${votesNeeded} supporters short`)
     : passed
-    ? (language === 'he' ? '✓ עבר את סף הקונצנזוס!' : language === 'ar' ? '✓ تجاوز عتبة الإجماع!' : '✓ Passed consensus threshold!')
+    ? (isAccepted ? acceptedVotesText : passedText)
     : hoverVote === 'pro'
     ? (language === 'he' ? `הצבעתך תקרב את ההצעה לאישור` : language === 'ar' ? 'سيقرب صوتك الاقتراح من القبول' : 'Your vote will help pass this proposal')
     : hoverVote === 'con'
