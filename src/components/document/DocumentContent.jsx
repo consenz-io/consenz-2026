@@ -257,11 +257,13 @@ export default function DocumentContent({
   }, [users]);
 
   const getUserName = React.useCallback((email) => {
+    if (!email) return 'User';
     const profile = profileByEmail.get(email);
     if (profile?.fullName) return profile.fullName;
     const user = userByEmail.get(email);
     if (user?.full_name) return user.full_name;
-    return 'User';
+    // Last resort: show part before @ so we never display a generic "User"
+    return email.split('@')[0] || email;
   }, [profileByEmail, userByEmail]);
 
   const toggleComments = React.useCallback((id) => {
