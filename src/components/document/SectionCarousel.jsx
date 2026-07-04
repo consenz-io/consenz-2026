@@ -541,36 +541,19 @@ const SectionCarousel = React.memo(function SectionCarousel({
               {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString('en-GB')}
             </div>
             
-            {/* כפתורי הצבעה עם VotingProgressSection כמו בכרטיס הצעה */}
+            {/* כפתורי הצבעה למחיקת סעיף קיים/מאושר */}
             {document?.votingButtonsEnabled && (
               <div className="proposal-vote-buttons mb-4" onClick={(e) => e.stopPropagation()}>
-                {user && canParticipate ? (
-                  <VotingProgressSection
-                    suggestion={{ ...section, proVotes: 0, conVotes: 0 }}
-                    document={document}
-                    userVote={null}
-                    voteMutation={{
-                      isPending: false,
-                      mutate: () => onEditSection(section)
-                    }}
-                    isRTL={isRTL}
-                    readOnly={true}
-                    sourceSuggestion={sourceSuggestion}
-                  />
-                ) : (
-                  <VotingProgressSection
-                    suggestion={{ ...section, proVotes: 0, conVotes: 0 }}
-                    document={document}
-                    userVote={null}
-                    voteMutation={{ isPending: false, mutate: () => {
-                      if (!user) base44.auth.redirectToLogin(window.location.href);
-                      else if (!canParticipate) setShowJoinGroupDialog(true);
-                    }}}
-                    isRTL={isRTL}
-                    readOnly={!user}
-                    sourceSuggestion={sourceSuggestion}
-                  />
-                )}
+                <SectionDeletionVoteBar
+                  section={section}
+                  document={document}
+                  user={user}
+                  isRTL={isRTL}
+                  initialVotes={sectionVotes}
+                  canParticipate={canParticipate}
+                  onCannotParticipate={() => setShowJoinGroupDialog(true)}
+                  readOnly={!user}
+                />
               </div>
             )}
             
@@ -693,18 +676,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
               <div className="mt-4 space-y-2">
                 {document?.votingButtonsEnabled && (
                   <div className="proposal-vote-buttons" onClick={(e) => e.stopPropagation()}>
-                    {currentView.type === 'current' ? (
-                      <SectionDeletionVoteBar
-                        section={section}
-                        document={document}
-                        user={user}
-                        isRTL={isRTL}
-                        initialVotes={sectionVotes}
-                        canParticipate={canParticipate}
-                        onCannotParticipate={() => setShowJoinGroupDialog(true)}
-                        readOnly={!user}
-                      />
-                    ) : user && canParticipate ? (
+                    {user && canParticipate ? (
                       <VotingProgressSection
                         suggestion={currentView.data}
                         document={document}
