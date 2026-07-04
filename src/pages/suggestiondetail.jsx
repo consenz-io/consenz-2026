@@ -22,6 +22,7 @@ import SectionDiff from "../components/document/SectionDiff";
 import TranslatableContent from "../components/document/TranslatableContent";
 import DocumentTextContent from "../components/document/DocumentTextContent";
 import { votingQueue } from "../components/document/VotingQueue";
+import { useOptimizedUserProfiles } from "@/components/hooks/useOptimizedUserProfiles";
 import { useLanguage } from "@/components/LanguageContext";
 import { notifySuggestionStatusChange } from "../components/notifications/createNotification";
 import PageHeader from "../components/PageHeader";
@@ -175,16 +176,19 @@ export default function SuggestionDetail() {
     enabled: !!suggestion?.sectionId && suggestion?.type === 'edit_section'
   });
 
-  const { data: users } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => base44.entities.User.list(),
-    initialData: []
-  });
+  // Bulk public profiles (up to 1000, cached) — admins aren't required to read these
+  const { data: publicProfiles = [] } = useOptimizedUserProfiles();
 
-  const { data: publicProfiles } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-    initialData: []
+  // Fetch the author's profile specifically in case it falls outside the bulk list
+  const { data: authorProfile } = useQuery({
+    queryKey: ['authorProfile', suggestion?.created_by],
+    queryFn: async () => {
+      if (!suggestion?.created_by) return null;
+      const profiles = await base44.entities.UserPublicProfile.filter({ email: suggestion.created_by });
+      return profiles?.[0] ?? null;
+    },
+    enabled: !!suggestion?.created_by,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: topics } = useQuery({
@@ -490,13 +494,12 @@ export default function SuggestionDetail() {
   // ── Helper fns ─────────────────────────────────────────────────────────────
 
   const getUserName = (email) => {
-    if (!email) return '?';
-    const profile = (publicProfiles || []).find((p) => p.email === email);
+    const fallbackName = isRTL ? 'משתמש' : language === 'ar' ? 'مستخدم' : 'User';
+    if (!email) return fallbackName;
+    const profile = (publicProfiles || []).find((p) => p.email === email)
+      || (authorProfile?.email === email ? authorProfile : null);
     if (profile?.fullName) return profile.fullName;
-    const u = (users || []).find((u) => u.email === email);
-    if (u?.full_name) return u.full_name;
-    // Fallback: show the part before @ from email
-    return email.split('@')[0] || email;
+    return fallbackName;
   };
 
   const getStatusColor = (status) => {
@@ -609,7 +612,7 @@ export default function SuggestionDetail() {
                 }
 
                 <span className="text-xs text-slate-500">
-                  {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${(publicProfiles.find((p) => p.email === suggestion.created_by)?.userId) || (users.find((u) => u.email === suggestion.created_by)?.id)}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
+                  {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${(publicProfiles.find((p) => p.email === suggestion.created_by)?.userId) || authorProfile?.userId || ''}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
                 </span>
                 {suggestion.created_date &&
                   <span className="text-xs text-slate-400">
