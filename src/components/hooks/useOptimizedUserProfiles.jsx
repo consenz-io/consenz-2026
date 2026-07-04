@@ -8,7 +8,7 @@ export function useOptimizedUserProfiles() {
   return useQuery({
     queryKey: queryKeys.publicProfiles,
     queryFn: async () => {
-      const profiles = await base44.entities.UserPublicProfile.list();
+      const profiles = await base44.entities.UserPublicProfile.list('-created_date', 1000);
       
       // Cache each profile individually
       profiles.forEach(profile => {

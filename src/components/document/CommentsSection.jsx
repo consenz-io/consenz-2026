@@ -396,7 +396,7 @@ export default function CommentsSection({ entityType, entityId, user, scrollToCo
 
   const { data: publicProfiles } = useQuery({
     queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
+    queryFn: () => base44.entities.UserPublicProfile.list('-created_date', 1000),
     initialData: [],
     staleTime: 2 * 60 * 1000, // 2 minutes — seeded by DocumentView, avoid redundant fetch
   });

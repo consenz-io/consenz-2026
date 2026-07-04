@@ -65,7 +65,7 @@ export default function DocumentContent({
 
   const { data: publicProfiles } = useQuery({
     queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
+    queryFn: () => base44.entities.UserPublicProfile.list('-created_date', 1000),
     initialData: [],
   });
 
@@ -257,13 +257,11 @@ export default function DocumentContent({
   }, [users]);
 
   const getUserName = React.useCallback((email) => {
-    if (!email) return 'User';
     const profile = profileByEmail.get(email);
     if (profile?.fullName) return profile.fullName;
     const user = userByEmail.get(email);
     if (user?.full_name) return user.full_name;
-    // Last resort: show part before @ so we never display a generic "User"
-    return email.split('@')[0] || email;
+    return 'User';
   }, [profileByEmail, userByEmail]);
 
   const toggleComments = React.useCallback((id) => {
