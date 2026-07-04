@@ -96,6 +96,30 @@ Deno.serve(async (req) => {
             console.error('[VOTE ON SECTION version log error]', e);
           }
 
+          // Anchor pending suggestions targeting this section to their original position
+          // (topicId + originalSectionOrder) so they remain visible & votable after deletion.
+          // We do NOT reject them — the community can still accept them, which recreates the section.
+          try {
+            const orphaned = await base44.asServiceRole.entities.Suggestion.filter({
+              documentId: section.documentId,
+              status: 'pending',
+              sectionId
+            });
+            if (orphaned.length > 0) {
+              await Promise.all(
+                orphaned.map(s =>
+                  base44.asServiceRole.entities.Suggestion.update(s.id, {
+                    topicId: s.topicId || section.topicId,
+                    originalSectionOrder: section.order
+                  })
+                )
+              );
+              console.log('[VOTE ON SECTION] Anchored', orphaned.length, 'orphaned suggestions to original position');
+            }
+          } catch (e) {
+            console.error('[VOTE ON SECTION orphan anchor error]', e);
+          }
+
           await base44.asServiceRole.entities.Section.delete(sectionId);
           // Clean up the section's votes too
           try {

@@ -8,11 +8,15 @@
     },
     "sectionId": {
       "type": "string",
-      "description": "Target section ID (for edit_section or delete_section type)"
+      "description": "Target section ID (for edit_section or delete_section type). May reference a section that was since deleted \u2014 the suggestion remains open and is displayed at its original position (originalTopicId + originalSectionOrder)."
     },
     "topicId": {
       "type": "string",
-      "description": "Target topic ID (for existing topic) or null if creating new topic"
+      "description": "Target topic ID (for existing topic) or null if creating new topic. For edit_section/delete_section suggestions whose section was deleted, this is stamped with the section's original topic at deletion time so the suggestion stays anchored to its original topic."
+    },
+    "originalSectionOrder": {
+      "type": "number",
+      "description": "Order position of the section at the time it was deleted. Used to display orphaned suggestions (whose section was deleted) at their original position within the topic."
     },
     "newTopicTitle": {
       "type": "string",

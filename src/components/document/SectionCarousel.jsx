@@ -273,12 +273,24 @@ const SectionCarousel = React.memo(function SectionCarousel({
       // Delete the section
       await base44.entities.Section.delete(section.id);
 
-      // Reject any orphaned suggestions targeting this deleted section
-      base44.functions.invoke('rejectOrphanedSuggestions', {
-        sectionIds: [section.id],
+      // Anchor pending suggestions targeting this deleted section to their original position
+      // (topicId + originalSectionOrder) so they remain visible & votable after deletion.
+      // We do NOT reject them — the community can still accept them, which recreates the section.
+      const orphaned = await base44.entities.Suggestion.filter({
         documentId: section.documentId,
-        gamificationEnabled: !!document.gamificationEnabled
-      }).catch(err => console.error('[DELETE SECTION] Failed to reject orphaned suggestions:', err));
+        status: 'pending',
+        sectionId: section.id
+      });
+      if (orphaned.length > 0) {
+        await Promise.all(
+          orphaned.map(s =>
+            base44.entities.Suggestion.update(s.id, {
+              topicId: s.topicId || section.topicId,
+              originalSectionOrder: section.order
+            })
+          )
+        );
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sections', document.id] });

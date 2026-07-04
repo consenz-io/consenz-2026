@@ -179,43 +179,84 @@ Deno.serve(async (req) => {
 
     // Process based on suggestion type
     if (suggestion.type === 'edit_section' && suggestion.sectionId) {
-      const section = await base44.asServiceRole.entities.Section.filter({ id: suggestion.sectionId }).then(r => r[0]);
+      let section = await base44.asServiceRole.entities.Section.filter({ id: suggestion.sectionId }).then(r => r[0]);
+
+      // ── Resurrect a deleted section ──────────────────────────────────
+      // If the target section was deleted (community vote / admin delete),
+      // accepting this edit recreates it at its original position
+      // (topicId + originalSectionOrder preserved on the suggestion at deletion time).
       if (!section) {
-        return Response.json({ error: 'Section not found' }, { status: 404 });
-      }
+        const resurrectTopicId = suggestion.topicId;
+        if (!resurrectTopicId) {
+          console.error('[PROCESS ACCEPTANCE] Cannot resurrect — no topicId on suggestion');
+          return Response.json({ error: 'Section not found and no topicId to resurrect' }, { status: 400 });
+        }
 
-      const versions = await base44.asServiceRole.entities.DocumentVersion.filter({ sectionId: section.id });
-      const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
-      const newContentLanguage = detectLanguage(suggestion.newContent || '');
+        const newContentLanguage = detectLanguage(suggestion.newContent || '');
+        const resurrectOrder = suggestion.originalSectionOrder != null
+          ? suggestion.originalSectionOrder
+          : (await base44.asServiceRole.entities.Section.filter({ documentId: suggestion.documentId, topicId: resurrectTopicId }))
+              .reduce((max, s) => Math.max(max, s.order || 0), -1) + 1;
 
-      // Create versions and update section
-      await Promise.all([
-        base44.asServiceRole.entities.DocumentVersion.create({
+        section = await base44.asServiceRole.entities.Section.create({
           documentId: suggestion.documentId,
-          sectionId: section.id,
-          content: section.content,
-          changeDescription: `לפני: ${suggestion.title || 'הצעת עריכה'}`,
-          version: nextVersion,
-          changeType: 'suggestion_accepted',
-          suggestionId: suggestion.id
-        }),
-        base44.asServiceRole.entities.Section.update(section.id, {
+          topicId: resurrectTopicId,
           content: suggestion.newContent,
+          order: resurrectOrder,
           lastEditedBy: voterId,
           originalLanguage: newContentLanguage,
           translations: {}
-        })
-      ]);
+        });
 
-      await base44.asServiceRole.entities.DocumentVersion.create({
-        documentId: suggestion.documentId,
-        sectionId: section.id,
-        content: suggestion.newContent,
-        changeDescription: suggestion.title || 'הצעת עריכה',
-        version: nextVersion + 1,
-        changeType: 'suggestion_accepted',
-        suggestionId: suggestion.id
-      });
+        await base44.asServiceRole.entities.DocumentVersion.create({
+          documentId: suggestion.documentId,
+          sectionId: section.id,
+          content: suggestion.newContent,
+          changeDescription: suggestion.title || 'שחזור סעיף שנמחק',
+          version: 1,
+          changeType: 'section_created',
+          suggestionId: suggestion.id,
+          originalLanguage: newContentLanguage,
+          translations: {}
+        });
+
+        console.log('[PROCESS ACCEPTANCE] Resurrected deleted section', section.id, 'at order', resurrectOrder);
+
+        // Skip the normal edit-version flow below — the section was just created.
+      } else {
+        const versions = await base44.asServiceRole.entities.DocumentVersion.filter({ sectionId: section.id });
+        const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
+        const newContentLanguage = detectLanguage(suggestion.newContent || '');
+
+        // Create versions and update section
+        await Promise.all([
+          base44.asServiceRole.entities.DocumentVersion.create({
+            documentId: suggestion.documentId,
+            sectionId: section.id,
+            content: section.content,
+            changeDescription: `לפני: ${suggestion.title || 'הצעת עריכה'}`,
+            version: nextVersion,
+            changeType: 'suggestion_accepted',
+            suggestionId: suggestion.id
+          }),
+          base44.asServiceRole.entities.Section.update(section.id, {
+            content: suggestion.newContent,
+            lastEditedBy: voterId,
+            originalLanguage: newContentLanguage,
+            translations: {}
+          })
+        ]);
+
+        await base44.asServiceRole.entities.DocumentVersion.create({
+          documentId: suggestion.documentId,
+          sectionId: section.id,
+          content: suggestion.newContent,
+          changeDescription: suggestion.title || 'הצעת עריכה',
+          version: nextVersion + 1,
+          changeType: 'suggestion_accepted',
+          suggestionId: suggestion.id
+        });
+      }
 
     } else if (suggestion.type === 'new_section') {
       let targetTopicId = suggestion.topicId;
@@ -388,15 +429,28 @@ Deno.serve(async (req) => {
 
         await base44.asServiceRole.entities.Section.delete(section.id);
 
-        // Reject any orphaned suggestions targeting this deleted section
+        // Anchor pending suggestions targeting this deleted section to their original position
+        // (topicId + originalSectionOrder) so they remain visible & votable after deletion.
+        // We do NOT reject them — the community can still accept them, which recreates the section.
         try {
-          await base44.asServiceRole.functions.invoke('rejectOrphanedSuggestions', {
-            sectionIds: [section.id],
+          const orphaned = await base44.asServiceRole.entities.Suggestion.filter({
             documentId: suggestion.documentId,
-            gamificationEnabled: !!document.gamificationEnabled
+            status: 'pending',
+            sectionId: section.id
           });
+          if (orphaned.length > 0) {
+            await Promise.all(
+              orphaned.map(s =>
+                base44.asServiceRole.entities.Suggestion.update(s.id, {
+                  topicId: s.topicId || section.topicId,
+                  originalSectionOrder: section.order
+                })
+              )
+            );
+            console.log('[PROCESS ACCEPTANCE] Anchored', orphaned.length, 'orphaned suggestions to original position');
+          }
         } catch (orphanErr) {
-          console.error('[PROCESS ACCEPTANCE] Failed to reject orphaned suggestions:', orphanErr);
+          console.error('[PROCESS ACCEPTANCE] Failed to anchor orphaned suggestions:', orphanErr);
         }
 
         // Create a second version record marking the deletion (content='')
