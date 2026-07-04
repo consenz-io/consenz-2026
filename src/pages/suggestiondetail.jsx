@@ -181,13 +181,13 @@ export default function SuggestionDetail() {
 
   // Fetch the author's profile specifically in case it falls outside the bulk list
   const { data: authorProfile } = useQuery({
-    queryKey: ['authorProfile', suggestion?.created_by],
+    queryKey: ['authorProfile', suggestion?.created_by_id],
     queryFn: async () => {
-      if (!suggestion?.created_by) return null;
-      const profiles = await base44.entities.UserPublicProfile.filter({ email: suggestion.created_by });
+      if (!suggestion?.created_by_id) return null;
+      const profiles = await base44.entities.UserPublicProfile.filter({ userId: suggestion.created_by_id });
       return profiles?.[0] ?? null;
     },
-    enabled: !!suggestion?.created_by,
+    enabled: !!suggestion?.created_by_id,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -407,7 +407,7 @@ export default function SuggestionDetail() {
 
   const deleteSuggestionMutation = useMutation({
     mutationFn: async () => {
-      if (!user || user.email !== suggestion.created_by) throw new Error(t('onlyCreatorCanDelete'));
+      if (!user || user.id !== suggestion.created_by_id) throw new Error(t('onlyCreatorCanDelete'));
       await base44.entities.Suggestion.delete(suggestionId);
     },
     onSuccess: () => navigate(`${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${suggestion.documentId}`),
@@ -493,13 +493,11 @@ export default function SuggestionDetail() {
 
   // ── Helper fns ─────────────────────────────────────────────────────────────
 
-  const getUserName = (email) => {
-    const fallbackName = isRTL ? 'משתמש' : language === 'ar' ? 'مستخدم' : 'User';
-    if (!email) return fallbackName;
-    const profile = (publicProfiles || []).find((p) => p.email === email)
-      || (authorProfile?.email === email ? authorProfile : null);
-    if (profile?.fullName) return profile.fullName;
-    return fallbackName;
+  const getUserName = (userId) => {
+    if (!userId) return '';
+    const profile = (publicProfiles || []).find((p) => p.userId === userId)
+      || (authorProfile?.userId === userId ? authorProfile : null);
+    return profile?.fullName || '';
   };
 
   const getStatusColor = (status) => {
@@ -553,7 +551,7 @@ export default function SuggestionDetail() {
               backUrl={`${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${suggestion.documentId}`}
             />
           </div>
-          {user && user.email === suggestion.created_by && suggestion.status !== 'accepted' &&
+          {user && user.id === suggestion.created_by_id && suggestion.status !== 'accepted' &&
             <button
               onClick={() => { if (confirm(t('confirmDeleteSuggestion'))) deleteSuggestionMutation.mutate(); }}
               disabled={deleteSuggestionMutation.isPending}
@@ -612,7 +610,7 @@ export default function SuggestionDetail() {
                 }
 
                 <span className="text-xs text-slate-500">
-                  {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${(publicProfiles.find((p) => p.email === suggestion.created_by)?.userId) || authorProfile?.userId || ''}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link>
+                  {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${suggestion.created_by_id || ''}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by_id)}</Link>
                 </span>
                 {suggestion.created_date &&
                   <span className="text-xs text-slate-400">
@@ -666,11 +664,11 @@ export default function SuggestionDetail() {
                     {isAutoAccepting && <div className="absolute inset-0 bg-white/50 rounded-lg flex flex-col items-center justify-center z-10 gap-3"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /><p className="text-sm font-medium text-slate-700">{isRTL ? 'מעבד הצעה...' : 'Processing suggestion...'}</p></div>}
                     <SectionDiff originalContent={suggestion.originalContent} newContent={suggestion.newContent} suggestion={suggestion} documentId={suggestion.documentId} sectionId={suggestion.sectionId} section={section} />
                   </div>
-                  {(suggestion.explanation || (user && user.email === suggestion.created_by)) && (
+                  {(suggestion.explanation || (user && user.id === suggestion.created_by_id)) && (
                     <div className="mt-3">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="text-sm font-semibold text-slate-700">{t('explanation')}</h3>
-                        {user && user.email === suggestion.created_by && !isEditingExplanation &&
+                        {user && user.id === suggestion.created_by_id && !isEditingExplanation &&
                           <Button variant="ghost" size="sm" onClick={() => { setEditedExplanation(suggestion.explanation || ""); setIsEditingExplanation(true); }} className="h-7 px-2">
                             <Edit2 className="w-3 h-3" />
                           </Button>
@@ -706,11 +704,11 @@ export default function SuggestionDetail() {
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                     <TranslatableContent content={suggestion.newContent} entity={suggestion} entityType="Suggestion" onUpdate={(updated) => queryClient.setQueryData(['suggestion', suggestionId], updated)} className="prose prose-sm max-w-none" renderContent={(content) => <DocumentTextContent content={content} />} />
                   </div>
-                  {(suggestion.explanation || (user && user.email === suggestion.created_by)) && (
+                  {(suggestion.explanation || (user && user.id === suggestion.created_by_id)) && (
                     <div className="mt-3">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="text-sm font-semibold text-slate-700">{t('explanation')}</h3>
-                        {user && user.email === suggestion.created_by && !isEditingExplanation &&
+                        {user && user.id === suggestion.created_by_id && !isEditingExplanation &&
                           <Button variant="ghost" size="sm" onClick={() => { setEditedExplanation(suggestion.explanation || ""); setIsEditingExplanation(true); }} className="h-7 px-2">
                             <Edit2 className="w-3 h-3" />
                           </Button>
