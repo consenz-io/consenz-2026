@@ -162,7 +162,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
             }`}
           >
             <ThumbsUp className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-            <span className="truncate">{isHe ? 'השאר סעיף' : isAr ? 'إبقاء' : 'Keep'}</span>
+            <span className="truncate">{isHe ? 'בעד' : isAr ? 'مع' : 'Pro'}</span>
             {proCount > 0 && <span className="text-xs md:text-sm opacity-80 shrink-0">({proCount})</span>}
           </Button>
           <Button
@@ -178,7 +178,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
             }`}
           >
             <ThumbsDown className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-            <span className="truncate">{isHe ? 'מחק סעיף' : isAr ? 'حذف' : 'Delete'}</span>
+            <span className="truncate">{isHe ? 'נגד' : isAr ? 'ضد' : 'Con'}</span>
             {conCount > 0 && <span className="text-xs md:text-sm opacity-80 shrink-0">({conCount})</span>}
           </Button>
         </div>
