@@ -638,7 +638,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
                         </div>
                       )}
                     </div>
-                  ) : currentView.data.originalContent ? (
+                  ) : currentView.data.originalContent && !isGhost ? (
                     <div>
                       <SectionDiff
                         originalContent={currentView.data.originalContent}
