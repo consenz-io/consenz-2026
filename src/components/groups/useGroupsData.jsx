@@ -7,7 +7,6 @@ export function useGroupsData() {
   const { data: currentUser, isLoading: userLoading } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    retry: false,
   });
 
   // Step 1: Fetch ALL groups — public/private are visible to everyone; hidden only to members.

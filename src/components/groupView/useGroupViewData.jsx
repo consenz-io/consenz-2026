@@ -15,7 +15,6 @@ export function useGroupViewData(groupId) {
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    retry: false,
   });
 
   const { data: group, isLoading: groupLoading, isFetching: groupFetching } = useQuery({

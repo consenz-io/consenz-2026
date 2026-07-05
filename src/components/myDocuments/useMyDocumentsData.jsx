@@ -6,7 +6,6 @@ export function useMyDocumentsData() {
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    retry: false,
   });
 
   const { data: userInteractions = [], isLoading: interactionsLoading } = useQuery({

@@ -23,7 +23,7 @@ export function useDocumentData(documentId) {
 
   const { data: topics = [], isLoading: topicsLoading } = useQuery({
     queryKey: ['topics', documentId],
-    queryFn: () => base44.entities.Topic.filter({ documentId }, 'order').catch(() => []),
+    queryFn: () => base44.entities.Topic.filter({ documentId }, 'order'),
     enabled: !!documentId,
     staleTime: 30 * 1000, // 30s — topics rarely change mid-session; real-time updates come via subscriptions
     gcTime: 10 * 60 * 1000,
@@ -36,7 +36,7 @@ export function useDocumentData(documentId) {
 
   const { data: sections = [], isLoading: sectionsLoading } = useQuery({
     queryKey: ['sections', documentId],
-    queryFn: () => base44.entities.Section.filter({ documentId }, 'order', 1000).catch(() => []),
+    queryFn: () => base44.entities.Section.filter({ documentId }, 'order', 1000),
     enabled: !!documentId,
     staleTime: 30 * 1000, // 30s — subscriptions handle real-time updates
     gcTime: 10 * 60 * 1000,
@@ -169,7 +169,6 @@ export function useDocumentData(documentId) {
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    retry: false,
     staleTime: 60 * 1000, // 1 minute — auth state doesn't change every render
   });
 

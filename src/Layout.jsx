@@ -232,7 +232,6 @@ function LayoutContent({ children, currentPageName }) {
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    retry: false,
     staleTime: 60 * 1000, // 1 minute — prevents cascading refetch on every render while still staying fresh
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });

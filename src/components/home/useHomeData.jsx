@@ -13,7 +13,6 @@ export function useHomeData() {
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    retry: false,
   });
 
   const { data: groups = [], isLoading: groupsLoading } = useQuery({
