@@ -21,6 +21,7 @@ import SectionDiff from "./SectionDiff";
 import TranslatableContent from "./TranslatableContent";
 import DocumentTextContent from "./DocumentTextContent";
 import { useLanguage } from "@/components/LanguageContext";
+import { cleanDisplayName } from "@/lib/displayName";
 import { notifySuggestionStatusChange } from "../notifications/createNotification";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -136,15 +137,15 @@ export default function SuggestionSidebar({
     return suggestionComments.length;
   }, [suggestionComments]);
 
-  const getUserName = (email) => {
+  // Accepts a userId (created_by_id) or, as legacy fallback, an email.
+  const getUserName = (identifier) => {
+    if (!identifier) return 'User';
     // Try public profile first (accessible to everyone)
-    const profile = publicProfiles?.find(p => p.email === email);
-    if (profile?.fullName) return profile.fullName;
-    
+    const profile = publicProfiles?.find(p => p.userId === identifier || p.email === identifier);
+    if (profile?.fullName) return cleanDisplayName(profile.fullName, profile.email);
     // Fallback to User entity (admins only)
-    const u = users?.find(usr => usr.email === email);
-    if (u?.full_name) return u.full_name;
-    
+    const u = users?.find(usr => usr.id === identifier || usr.email === identifier);
+    if (u?.full_name) return cleanDisplayName(u.full_name, u.email);
     // User hasn't completed profile yet
     return 'User';
   };
@@ -507,10 +508,11 @@ export default function SuggestionSidebar({
           <div className="text-xs text-slate-500 flex flex-wrap gap-x-2 gap-y-0.5">
             <span>
               {t('by')} {(() => {
-                const profile = publicProfiles?.find(p => p.email === suggestion.created_by);
-                const userObj = users?.find(u => u.email === suggestion.created_by);
+                const creatorId = suggestion.created_by_id;
+                const profile = publicProfiles?.find(p => p.userId === creatorId);
+                const userObj = users?.find(u => u.id === creatorId);
                 const userId = profile?.userId || userObj?.id;
-                const userName = getUserName(suggestion.created_by);
+                const userName = getUserName(creatorId);
                 return userId ? (
                   <Link to={`${createPageUrl("Profile")}?userId=${userId}`} className="hover:underline text-blue-600">{userName}</Link>
                 ) : (

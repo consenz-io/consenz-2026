@@ -21,6 +21,7 @@ import EditTopicModal from "./EditTopicModal";
 import TopicTitleCarousel from "./TopicTitleCarousel";
 
 import { useLanguage } from "@/components/LanguageContext";
+import { cleanDisplayName } from "@/lib/displayName";
 import { autoAcceptTopicEditSuggestion, checkTopicEditConsensus } from "./suggestionAutoAccept";
 import { votingQueue } from "./VotingQueue";
 import { useVoteMutation } from "./hooks/useVoteMutation";
@@ -274,9 +275,9 @@ export default function DocumentContent({
   const getUserName = React.useCallback((identifier) => {
     if (!identifier) return 'User';
     const profile = profileByUserId.get(identifier) || profileByEmail.get(identifier);
-    if (profile?.fullName) return profile.fullName;
+    if (profile?.fullName) return cleanDisplayName(profile.fullName, profile.email);
     const u = userById.get(identifier) || userByEmail.get(identifier);
-    if (u?.full_name) return u.full_name;
+    if (u?.full_name) return cleanDisplayName(u.full_name, u.email);
     return 'User';
   }, [profileByUserId, profileByEmail, userById, userByEmail]);
 
