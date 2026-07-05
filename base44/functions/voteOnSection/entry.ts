@@ -79,18 +79,35 @@ Deno.serve(async (req) => {
           // Log a version history entry before deleting (for reconstruction)
           try {
             const lastVersion = await base44.asServiceRole.entities.DocumentVersion.filter({ sectionId }, '-version', 1);
-            const version = (lastVersion && lastVersion.length > 0 ? lastVersion[0].version : 0) + 1;
+            const baseVersion = (lastVersion && lastVersion.length > 0 ? lastVersion[0].version : 0) + 1;
+            // Mirror the processAcceptance deletion pattern: two version records —
+            // 1. "before" record preserving the section content (for diff/reconstruction)
+            // 2. "deletion" record with empty content (triggers isDeleted in useDocumentVersions,
+            //    so the section renders in red in DocumentCleanView)
+            // Both carry topicId + sectionOrder so the deleted section is sorted correctly.
             await base44.asServiceRole.entities.DocumentVersion.create({
               documentId: section.documentId,
               sectionId,
               topicId: section.topicId,
               sectionOrder: section.order,
               content: section.content,
-              changeDescription: 'הסעיף נמחק בהצבעת קהילה',
-              version,
+              changeDescription: `לפני: הסעיף נמחק בהצבעת קהילה`,
+              version: baseVersion,
               changeType: 'section_deleted',
               originalLanguage: section.originalLanguage || 'he',
               translations: section.translations || {},
+            });
+            await base44.asServiceRole.entities.DocumentVersion.create({
+              documentId: section.documentId,
+              sectionId,
+              topicId: section.topicId,
+              sectionOrder: section.order,
+              content: '',
+              changeDescription: 'הסעיף נמחק בהצבעת קהילה',
+              version: baseVersion + 1,
+              changeType: 'section_deleted',
+              originalLanguage: section.originalLanguage || 'he',
+              translations: {},
             });
           } catch (e) {
             console.error('[VOTE ON SECTION version log error]', e);
