@@ -797,7 +797,7 @@ ${text}`;
                                      {language === 'he' ? 'סעיף נמחק - לחץ לצפייה בדיון' : language === 'ar' ? 'تم حذف القسم - انقر لعرض النقاش' : 'Section Deleted - Click to view discussion'}
                                    </Badge>
                                    <div 
-                                     className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
+                                     className="prose prose-sm max-w-none text-red-700 font-bold line-through"
                                      style={{ 
                                        fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
                                        fontSize: "1.125rem",
