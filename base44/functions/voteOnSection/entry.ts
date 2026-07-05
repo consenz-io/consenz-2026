@@ -76,40 +76,21 @@ Deno.serve(async (req) => {
         const threshold = Math.max(2, document?.threshold || 2);
 
         if (conCount - proCount >= threshold) {
-          // Create TWO version records: "before" (section content) + "after" (empty = deleted).
-          // This mirrors the delete_section flow in processAcceptance and ensures
-          // useDocumentVersions correctly identifies the deletion (content === '') and
-          // shows the deleted section in red in DocumentCleanView with proper sorting.
-          // topicId + sectionOrder are stamped so the deleted section stays at its
-          // original position in allSectionsMap reconstruction.
+          // Log a version history entry before deleting (for reconstruction)
           try {
             const lastVersion = await base44.asServiceRole.entities.DocumentVersion.filter({ sectionId }, '-version', 1);
-            const baseVersion = (lastVersion && lastVersion.length > 0 ? lastVersion[0].version : 0) + 1;
-            const voteMeta = `[pro:${proCount}|con:${conCount}]`;
-
-            // "before" version — preserves the section content for reconstruction/diff
+            const version = (lastVersion && lastVersion.length > 0 ? lastVersion[0].version : 0) + 1;
             await base44.asServiceRole.entities.DocumentVersion.create({
               documentId: section.documentId,
               sectionId,
               topicId: section.topicId,
               sectionOrder: section.order,
               content: section.content,
-              changeDescription: `לפני: הסעיף נמחק בהצבעת קהילה ${voteMeta}`,
-              version: baseVersion,
+              changeDescription: 'הסעיף נמחק בהצבעת קהילה',
+              version,
               changeType: 'section_deleted',
               originalLanguage: section.originalLanguage || 'he',
               translations: section.translations || {},
-            });
-            // "after" version — empty content signals deletion to useDocumentVersions
-            await base44.asServiceRole.entities.DocumentVersion.create({
-              documentId: section.documentId,
-              sectionId,
-              topicId: section.topicId,
-              sectionOrder: section.order,
-              content: '',
-              changeDescription: `הסעיף נמחק בהצבעת קהילה ${voteMeta}`,
-              version: baseVersion + 1,
-              changeType: 'section_deleted',
             });
           } catch (e) {
             console.error('[VOTE ON SECTION version log error]', e);
