@@ -365,7 +365,9 @@ Return ONLY the translated text:`;
     const perTopic = new Map();
     for (const s of suggestions) {
       if (s.status !== 'pending') continue;
-      if (s.type !== 'edit_section' && s.type !== 'delete_section') continue;
+      // Orphaned edit/delete suggestions + edit_suggestion children published after the section was deleted
+      // (edit_suggestion inherits the deleted sectionId + topicId from its orphaned parent)
+      if (s.type !== 'edit_section' && s.type !== 'delete_section' && s.type !== 'edit_suggestion') continue;
       if (!s.sectionId || existingSectionIds.has(s.sectionId)) continue;
       if (!s.topicId) continue; // not anchored — can't place
       if (!perTopic.has(s.topicId)) perTopic.set(s.topicId, new Map());
@@ -373,7 +375,12 @@ Return ONLY the translated text:`;
       if (!slots.has(s.sectionId)) {
         slots.set(s.sectionId, { sectionId: s.sectionId, originalSectionOrder: s.originalSectionOrder ?? 999, suggestions: [] });
       }
-      slots.get(s.sectionId).suggestions.push(s);
+      const slot = slots.get(s.sectionId);
+      slot.suggestions.push(s);
+      // edit_suggestion children don't carry originalSectionOrder — keep the stamped value from the orphaned parent
+      if (s.originalSectionOrder != null && (slot.originalSectionOrder == null || slot.originalSectionOrder === 999)) {
+        slot.originalSectionOrder = s.originalSectionOrder;
+      }
     }
     const result = new Map();
     for (const [topicId, slots] of perTopic.entries()) {
