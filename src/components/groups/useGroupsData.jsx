@@ -10,8 +10,18 @@ export function useGroupsData() {
     retry: false,
   });
 
-  // Step 1: Fetch only this user's memberships
-  const { data: myMemberships = [], isLoading: membersLoading, isFetching: membersFetching } = useQuery({
+  // Step 1: Fetch ALL groups — public/private are visible to everyone; hidden only to members.
+  // (Previously this fetched only member groups, which hid every group from non-members.)
+  const { data: allGroups = [], isLoading: groupsLoading } = useQuery({
+    queryKey: ['allGroups'],
+    queryFn: () => base44.entities.Group.list('-created_date'),
+    placeholderData: [],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+
+  // Step 2: Fetch this user's memberships (for hidden-group visibility + admin detection)
+  const { data: myMemberships = [], isLoading: membersLoading } = useQuery({
     queryKey: ['myGroupMemberships', currentUser?.id],
     queryFn: () => base44.entities.GroupMember.filter({ userId: currentUser.id }),
     enabled: !!currentUser?.id,
@@ -20,35 +30,38 @@ export function useGroupsData() {
     gcTime: 5 * 60 * 1000,
   });
 
-  const groupIds = useMemo(() => myMemberships.map(m => m.groupId).sort(), [myMemberships]);
-  // Stable string key — prevents new array ref from triggering cache miss on every render
-  const groupIdsKey = useMemo(() => groupIds.join(','), [groupIds]);
+  // Visible groups: public + private visible to all; hidden only to members/admins/creator
+  const visibleGroups = useMemo(() => {
+    if (!currentUser) return [];
+    return allGroups.filter((group) => {
+      if (group.status === 'public' || group.status === 'private') return true;
+      // hidden: require confirmed membership/admin/creator
+      const isSystemAdmin = currentUser.role === 'admin';
+      const isCreator = group.created_by === currentUser.email;
+      const isMember = myMemberships.some(m => m.groupId === group.id);
+      return isMember || isSystemAdmin || isCreator;
+    });
+  }, [allGroups, myMemberships, currentUser]);
 
-  // Step 2: Fetch only the groups the user belongs to
-  const { data: groups = [], isLoading: groupsLoading } = useQuery({
-    queryKey: ['myGroups', groupIdsKey],
-    queryFn: () => base44.entities.Group.filter({ id: { $in: groupIds } }, '-created_date'),
-    enabled: groupIds.length > 0,
-    placeholderData: [],
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-  });
+  // Fetch data for ALL visible groups (not just member groups) so doc/member counts are correct
+  const visibleGroupIds = useMemo(() => visibleGroups.map(g => g.id).sort(), [visibleGroups]);
+  const visibleGroupIdsKey = useMemo(() => visibleGroupIds.join(','), [visibleGroupIds]);
 
-  // Step 3: Fetch member counts for those groups
-  const { data: groupMembers = [] } = useQuery({
-    queryKey: ['groupMembersForGroups', groupIdsKey],
-    queryFn: () => base44.entities.GroupMember.filter({ groupId: { $in: groupIds } }),
-    enabled: groupIds.length > 0,
+  // Step 3: Fetch documents in those groups
+  const { data: documents = [] } = useQuery({
+    queryKey: ['groupDocuments', visibleGroupIdsKey],
+    queryFn: () => base44.entities.Document.filter({ groupId: { $in: visibleGroupIds } }),
+    enabled: visibleGroupIds.length > 0,
     placeholderData: [],
     staleTime: 5 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
   });
 
-  // Step 4: Fetch documents in those groups
-  const { data: documents = [] } = useQuery({
-    queryKey: ['groupDocuments', groupIdsKey],
-    queryFn: () => base44.entities.Document.filter({ groupId: { $in: groupIds } }),
-    enabled: groupIds.length > 0,
+  // Step 4: Fetch member counts for those groups
+  const { data: groupMembers = [] } = useQuery({
+    queryKey: ['groupMembersForGroups', visibleGroupIdsKey],
+    queryFn: () => base44.entities.GroupMember.filter({ groupId: { $in: visibleGroupIds } }),
+    enabled: visibleGroupIds.length > 0,
     placeholderData: [],
     staleTime: 5 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
@@ -61,7 +74,7 @@ export function useGroupsData() {
   const { data: publicProfiles = [] } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
-    enabled: groupIds.length > 0,
+    enabled: visibleGroupIds.length > 0,
     placeholderData: [],
     staleTime: 30 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
@@ -132,25 +145,6 @@ export function useGroupsData() {
   const getParticipantCount = (groupId) =>
     calcGroupParticipants(groupId, groupMembers, documents, groupAllSuggestions, groupAllVotes, groupAllComments, publicProfiles, groupAllAgreements, groupAllSections).size;
 
-  // Visible groups: apply privacy rules based on fresh membership data
-  // - public: always visible
-  // - private: only visible to members, admins, or creators
-  // - hidden: only visible to members, admins, or creators
-  const visibleGroups = useMemo(() => {
-    if (!currentUser) return [];
-    // Only block render if we've never loaded memberships yet (first fetch, not background refetch)
-    if (membersLoading && myMemberships.length === 0) return [];
-    return groups.filter((group) => {
-      const isSystemAdmin = currentUser.role === 'admin';
-      const isCreator = group.created_by === currentUser.email;
-      const isMember = myMemberships.some(m => m.groupId === group.id);
-      const hasAccess = isMember || isSystemAdmin || isCreator;
-      if (group.status === 'public') return true;
-      // private and hidden: require confirmed membership/admin/creator
-      return hasAccess;
-    });
-  }, [groups, myMemberships, currentUser, membersLoading]);
-
   // Pre-build O(1) count maps — avoids O(n) filter per group on every render
   const docCountByGroup = useMemo(() => {
     const map = new Map();
@@ -177,19 +171,16 @@ export function useGroupsData() {
   const getMemberCount = useCallback((groupId) => memberCountByGroup.get(groupId) ?? 0, [memberCountByGroup]);
   const isGroupAdmin = useCallback((groupId) => adminGroupIds.has(groupId), [adminGroupIds]);
 
-  // isLoading must stay true until we have a definitive answer about which groups the user belongs to.
-  // The critical edge case: currentUser arrives from cache (userLoading=false) but the memberships
-  // query hasn't fired yet (enabled just became true). We guard this by checking fetchStatus.
-  const isLoadingFinal =
-    userLoading ||
-    !currentUser ||               // user not resolved yet
-    membersLoading ||             // memberships first fetch (not background refetch)
-    (groupIds.length > 0 && groupsLoading); // groups themselves loading
+  // isLoading: show skeletons only while we're still resolving the user or the initial
+  // groups list. We do NOT block on memberships — otherwise non-members (fresh users) would
+  // stare at skeletons forever instead of seeing public/private groups immediately.
+  // Hidden groups will simply appear once memberships finish loading.
+  const isLoading = userLoading || groupsLoading;
 
   return {
     currentUser,
     visibleGroups,
-    isLoading: isLoadingFinal,
+    isLoading,
     getDocCount,
     getMemberCount,
     getParticipantCount,
