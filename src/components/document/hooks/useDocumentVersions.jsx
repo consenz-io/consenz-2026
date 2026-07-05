@@ -271,6 +271,16 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
           documentThresholdAtTime: null
         };
 
+        // Community deletion via voting — flag it and extract vote counts from changeDescription
+        if (afterVersion.changeType === 'section_deleted') {
+          snapshotAfterChange.isCommunityDeletion = true;
+          const metaMatch = afterVersion.changeDescription?.match(/\[pro:(\d+)\|con:(\d+)\]/);
+          if (metaMatch) {
+            snapshotAfterChange.proVotes = parseInt(metaMatch[1], 10);
+            snapshotAfterChange.conVotes = parseInt(metaMatch[2], 10);
+          }
+        }
+
         if (afterVersion.changeType === 'section_created' || (!beforeVersion && afterVersion.content !== '')) {
           snapshotAfterChange.isNewSection = true;
           snapshotAfterChange.newSectionId = afterVersion.sectionId;
