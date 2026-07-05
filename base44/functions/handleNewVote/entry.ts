@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
     // Fetch document and creator in parallel by specific IDs
     const [documents, creatorUsers] = await Promise.all([
       base44.asServiceRole.entities.Document.filter({ id: suggestion.documentId }),
-      base44.asServiceRole.entities.User.filter({ email: suggestion.created_by }),
+      base44.asServiceRole.entities.User.filter({ id: suggestion.created_by_id }),
     ]);
 
     const document = documents[0];

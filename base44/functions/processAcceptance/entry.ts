@@ -531,26 +531,29 @@ Deno.serve(async (req) => {
       })
     ]);
 
-    // Collect unique contributor emails
-    const contributorEmails = new Set();
+    // Collect unique contributor user IDs (created_by is not populated; use created_by_id / userId)
+    const contributorIds = new Set();
+
+    // Always include the suggestion creator
+    if (suggestion.created_by_id) contributorIds.add(suggestion.created_by_id);
 
     // From agreements
-    agreements.forEach(a => { if (a.userEmail) contributorEmails.add(a.userEmail); });
+    agreements.forEach(a => { if (a.userId) contributorIds.add(a.userId); });
 
     // From votes
-    docVotes.forEach(v => { if (v.created_by) contributorEmails.add(v.created_by); });
+    docVotes.forEach(v => { if (v.userId) contributorIds.add(v.userId); });
 
     // From comments
-    docComments.forEach(c => { if (c.created_by) contributorEmails.add(c.created_by); });
+    docComments.forEach(c => { if (c.created_by_id) contributorIds.add(c.created_by_id); });
 
     // From suggestion creators
-    docSuggestions.forEach(s => { if (s.created_by) contributorEmails.add(s.created_by); });
-    
-    // Fetch all users by email
+    docSuggestions.forEach(s => { if (s.created_by_id) contributorIds.add(s.created_by_id); });
+
+    // Fetch all users by id
     let allUsers = [];
-    if (contributorEmails.size > 0) {
-      const emailArray = Array.from(contributorEmails);
-      allUsers = await base44.asServiceRole.entities.User.filter({ email: { $in: emailArray } });
+    if (contributorIds.size > 0) {
+      const idArray = Array.from(contributorIds);
+      allUsers = await base44.asServiceRole.entities.User.filter({ id: { $in: idArray } });
     }
     
     const suggTitle = suggestion.title || 'הצעה';
@@ -562,7 +565,7 @@ Deno.serve(async (req) => {
     // Build notifications
     for (const user of allUsers) {
       const userLang = user.preferredLanguage || 'he';
-      if (user.email === suggestion.created_by) {
+      if (user.id === suggestion.created_by_id) {
         notifications.push({
           userId: user.id,
           type: 'suggestion_accepted',

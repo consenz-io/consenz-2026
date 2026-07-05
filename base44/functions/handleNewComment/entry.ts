@@ -57,9 +57,9 @@ Deno.serve(async (req) => {
 
     console.log('[AUTOMATION] New comment created:', comment.id);
 
-    const commenterProfile = await base44.asServiceRole.entities.UserPublicProfile.filter({ email: comment.created_by }).then(p => p[0]);
+    const commenterProfile = await base44.asServiceRole.entities.UserPublicProfile.filter({ userId: comment.created_by_id }).then(p => p[0]);
     const commenterName = commenterProfile?.fullName || 'User';
-    const commenterUser = await base44.asServiceRole.entities.User.filter({ email: comment.created_by }).then(u => u[0]);
+    const commenterUser = await base44.asServiceRole.entities.User.filter({ id: comment.created_by_id }).then(u => u[0]);
 
     const notifications = [];
 
@@ -76,8 +76,8 @@ Deno.serve(async (req) => {
       // Reply notification
       if (comment.parentCommentId) {
         const parentComment = await base44.asServiceRole.entities.Comment.filter({ id: comment.parentCommentId }).then(c => c[0]);
-        if (parentComment && parentComment.created_by !== comment.created_by) {
-          const parentUser = await base44.asServiceRole.entities.User.filter({ email: parentComment.created_by }).then(u => u[0]);
+        if (parentComment && parentComment.created_by_id !== comment.created_by_id) {
+          const parentUser = await base44.asServiceRole.entities.User.filter({ id: parentComment.created_by_id }).then(u => u[0]);
           if (parentUser) {
             const userLang = parentUser.preferredLanguage || 'he';
             notifications.push({
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
       }
 
       // Suggestion creator notification (if not the commenter and not already notified)
-      const creatorUser = await base44.asServiceRole.entities.User.filter({ email: suggestion.created_by }).then(u => u[0]);
+      const creatorUser = await base44.asServiceRole.entities.User.filter({ id: suggestion.created_by_id }).then(u => u[0]);
       const alreadyNotified = notifications.some(n => n.userId === creatorUser?.id);
       if (creatorUser && creatorUser.id !== commenterUser?.id && !alreadyNotified) {
         const userLang = creatorUser.preferredLanguage || 'he';
@@ -137,8 +137,8 @@ Deno.serve(async (req) => {
       // Reply notification
       if (comment.parentCommentId) {
         const parentComment = await base44.asServiceRole.entities.Comment.filter({ id: comment.parentCommentId }).then(c => c[0]);
-        if (parentComment && parentComment.created_by !== comment.created_by) {
-          const parentUser = await base44.asServiceRole.entities.User.filter({ email: parentComment.created_by }).then(u => u[0]);
+        if (parentComment && parentComment.created_by_id !== comment.created_by_id) {
+          const parentUser = await base44.asServiceRole.entities.User.filter({ id: parentComment.created_by_id }).then(u => u[0]);
           if (parentUser) {
             const userLang = parentUser.preferredLanguage || 'he';
             notifications.push({

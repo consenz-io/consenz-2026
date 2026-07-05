@@ -84,7 +84,7 @@ export async function notifySuggestionStatusChange({
   rejectedByAdmin = true,
   refundAmount = 0
 }) {
-  if (!suggestion?.id || !suggestion?.created_by) {
+  if (!suggestion?.id || !suggestion?.created_by_id) {
     console.warn('[NOTIFY STATUS] Missing required fields, skipping');
     return;
   }
@@ -106,10 +106,10 @@ export async function notifySuggestionStatusChange({
       : replacements;
 
     // Fetch creator
-    const creators = await base44.entities.User.filter({ email: suggestion.created_by });
+    const creators = await base44.entities.User.filter({ id: suggestion.created_by_id });
     const creator = creators[0];
     if (!creator?.id) {
-      console.warn('[NOTIFY STATUS] Creator not found:', suggestion.created_by);
+      console.warn('[NOTIFY STATUS] Creator not found:', suggestion.created_by_id);
       return;
     }
 

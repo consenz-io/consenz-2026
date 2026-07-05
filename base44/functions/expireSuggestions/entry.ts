@@ -16,9 +16,6 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, expired: 0 });
     }
 
-    // Fetch all profiles ONCE outside the loop
-    const allProfiles = await base44.asServiceRole.entities.UserPublicProfile.list();
-
     // Process expired suggestions sequentially to avoid quota burst
     let processedCount = 0;
     for (const suggestion of expired) {
@@ -33,17 +30,15 @@ Deno.serve(async (req) => {
       // Collect recipient userIds
       const recipientUserIds = new Set();
 
-      if (suggestion.created_by) {
-        const creatorProfile = allProfiles.find(p => p.email === suggestion.created_by);
-        if (creatorProfile?.userId) recipientUserIds.add(creatorProfile.userId);
+      if (suggestion.created_by_id) {
+        recipientUserIds.add(suggestion.created_by_id);
       }
 
       votes.forEach(v => { if (v.userId) recipientUserIds.add(v.userId); });
 
       // Send notifications sequentially
       for (const userId of recipientUserIds) {
-        const profile = allProfiles.find(p => p.userId === userId);
-        const isCreator = profile?.email === suggestion.created_by;
+        const isCreator = userId === suggestion.created_by_id;
         await base44.asServiceRole.entities.Notification.create({
           userId,
           type: 'suggestion_expiring',

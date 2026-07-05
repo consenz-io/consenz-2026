@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
     const [documents, interactions, creatorProfiles] = await Promise.all([
       base44.asServiceRole.entities.Document.filter({ id: suggestion.documentId }),
       base44.asServiceRole.entities.UserInteraction.filter({ documentId: suggestion.documentId }),
-      base44.asServiceRole.entities.UserPublicProfile.filter({ email: suggestion.created_by })
+      base44.asServiceRole.entities.UserPublicProfile.filter({ userId: suggestion.created_by_id })
     ]);
 
     const document = documents[0];
@@ -88,10 +88,7 @@ Deno.serve(async (req) => {
     }
 
     // Exclude the suggestion creator from notifications
-    const uniqueUserIds = [...interactionUserIds].filter(uid => uid !== suggestion.created_by);
-
-    // Also exclude by email — creator might be stored as email in some interactions
-    const creatorEmail = suggestion.created_by;
+    const uniqueUserIds = [...interactionUserIds].filter(uid => uid !== suggestion.created_by_id);
 
     if (uniqueUserIds.length === 0) {
       console.log('[SUGGESTION AUTOMATION] No users to notify');
@@ -100,8 +97,8 @@ Deno.serve(async (req) => {
 
     // Fetch users to get their preferredLanguage
     const allUsers = await base44.asServiceRole.entities.User.filter({ id: { $in: uniqueUserIds } });
-    // Filter out the creator by email as well
-    const users = allUsers.filter(u => u.email !== creatorEmail);
+    // Filter out the creator by id as well
+    const users = allUsers.filter(u => u.id !== suggestion.created_by_id);
 
     const isEditSuggestion = suggestion.type === 'edit_suggestion';
     const titleKey = isEditSuggestion ? 'editSuggestionTitle' : 'newSuggestionTitle';
