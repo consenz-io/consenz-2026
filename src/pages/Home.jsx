@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useHomeData } from "@/components/home/useHomeData";
 import HeroSection from "@/components/home/HeroSection";
 import GroupsSection from "@/components/home/GroupsSection";
+import RecentDocumentsSection from "@/components/home/RecentDocumentsSection";
 import AllContributorsModal from "@/components/home/AllContributorsModal";
 
 export default function Home() {
@@ -23,6 +24,11 @@ export default function Home() {
         averageConsensus={averageConsensus}
         onContributorsClick={() => setShowContributorsModal(true)}
         contributorsCount={totalUniqueContributors}
+      />
+
+      <RecentDocumentsSection
+        documents={documents}
+        documentsLoading={groupsLoading || membersLoading}
       />
 
       <GroupsSection
