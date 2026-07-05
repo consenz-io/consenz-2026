@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, Users, TrendingUp, Globe, Lock } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
-export default function RecentDocumentsSection({ documents, documentsLoading }) {
+export default function RecentDocumentsSection({ documents, documentsLoading, groups, groupMembers, user }) {
   const { t, language } = useLanguage();
 
   const headingText = { he: 'מסמכים פעילים', ar: 'وثائق نشطة', en: 'Active Documents' };
@@ -15,13 +15,29 @@ export default function RecentDocumentsSection({ documents, documentsLoading }) 
   const publicLabel = { he: 'ציבורי', ar: 'عام', en: 'Public' };
   const privateLabel = { he: 'פרטי', ar: 'خاص', en: 'Private' };
 
-  // Only show publicly-viewable documents, most recent first, capped at 9
+  // Only show publicly-viewable documents the current user can actually open.
+  // Documents in hidden/private groups are excluded for non-members to avoid
+  // leading the user to a "Document not found" / "Document Restricted" dead-end.
+  const accessibleGroupIds = useMemo(() => {
+    const ids = new Set();
+    const isSystemAdmin = user?.role === 'admin';
+    (groups || []).forEach(g => {
+      const isMember = user?.id && (groupMembers || []).some(m => m.userId === user.id && m.groupId === g.id);
+      const isCreator = user?.email && g.created_by === user.email;
+      if (g.status === 'public' || isSystemAdmin || isMember || isCreator) {
+        ids.add(g.id);
+      }
+    });
+    return ids;
+  }, [groups, groupMembers, user]);
+
   const publicDocs = useMemo(() => {
     return (documents || [])
       .filter(d => d.privacy === 'public_view_open_participation' || d.privacy === 'public_view_closed_participation')
+      .filter(d => !d.groupId || accessibleGroupIds.has(d.groupId))
       .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
       .slice(0, 9);
-  }, [documents]);
+  }, [documents, accessibleGroupIds]);
 
   const consensusDisplay = (doc) => {
     const consensuses = doc.consensuses || [];

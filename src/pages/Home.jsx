@@ -29,6 +29,9 @@ export default function Home() {
       <RecentDocumentsSection
         documents={documents}
         documentsLoading={groupsLoading || membersLoading}
+        groups={groups}
+        groupMembers={groupMembers}
+        user={user}
       />
 
       <GroupsSection
