@@ -12,6 +12,7 @@ import CommentsSection from "./CommentsSection";
 import DocumentTextContent from "./DocumentTextContent";
 import { motion, AnimatePresence } from "framer-motion";
 import AcceptedAnimation from "./AcceptedAnimation";
+import SectionDiff from "./SectionDiff";
 
 const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({ 
   suggestion, 
@@ -272,17 +273,30 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
 
       {/* תוכן ההצעה */}
       <div className="min-h-[100px]">
-        <div className="p-3 md:p-4 bg-white/80 rounded border border-amber-200 mb-3">
-          <TranslatableContent
-            content={currentVersion.newContent}
-            entity={currentVersion}
-            entityType="Suggestion"
-            className="prose prose-sm max-w-none"
-            renderContent={(content) => (
-              <DocumentTextContent content={content} />
-            )}
-          />
-        </div>
+        {ghostChain && ghostChain.length > 1 && currentView.type === 'version' ? (
+          <div className="mb-3">
+            <SectionDiff
+              originalContent={suggestionChain[0]?.newContent || currentVersion.newContent}
+              newContent={currentVersion.newContent}
+              documentId={doc?.id}
+              sectionId={ghostChain[0]?.sectionId}
+              suggestion={currentVersion}
+              originalVersion={suggestionChain[0]}
+            />
+          </div>
+        ) : (
+          <div className="p-3 md:p-4 bg-white/80 rounded border border-amber-200 mb-3">
+            <TranslatableContent
+              content={currentVersion.newContent}
+              entity={currentVersion}
+              entityType="Suggestion"
+              className="prose prose-sm max-w-none"
+              renderContent={(content) => (
+                <DocumentTextContent content={content} />
+              )}
+            />
+          </div>
+        )}
 
         {currentVersion.explanation && typeof currentVersion.explanation === 'string' && (
           <div className="text-sm">
