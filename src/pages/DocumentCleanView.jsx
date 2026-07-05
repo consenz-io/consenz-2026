@@ -133,9 +133,11 @@ export default function DocumentCleanView() {
   // Use custom hook for version management — must be declared before getTopicTitleAtVersion
   const versionGroups = useDocumentVersions(document, sections, allVersions ?? [], suggestions);
 
-  // Total version count is simply the number of snapshots (current + history)
-  // Use 0 while versions are loading so navigation shows a loading state
-  const totalVersionCount = versionsLoading ? 0 : (versionGroups.length || 1);
+  // Total version count is the number of snapshots (current + history).
+  // versionGroups always includes the current snapshot, so we never force 0
+  // while versions are loading — that would trap the panel on "Loading versions…".
+  // The "Older" button stays disabled (count <= 1) until history arrives.
+  const totalVersionCount = versionGroups.length || 1;
 
   // Listen for tutorial navigate-older-version action
   const totalVersionCountRef = React.useRef(totalVersionCount);
