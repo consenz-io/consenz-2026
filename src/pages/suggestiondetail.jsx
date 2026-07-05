@@ -50,13 +50,13 @@ export default function SuggestionDetail() {
     queryKey: ['suggestion', suggestionId],
     queryFn: async () => {
       if (!suggestionId) return null;
-      const results = await base44.entities.Suggestion.filter({ id: suggestionId });
-      if (!results || results.length === 0) throw new Error('Suggestion not found');
-      return results[0];
+      // Canonical fetch-by-id — more reliable than filter({ id }) which can intermittently
+      // surface empty results under rate-limiting / transient errors and falsely report "not found".
+      return await base44.entities.Suggestion.get(suggestionId);
     },
     enabled: !!suggestionId,
-    retry: 1,
-    retryDelay: 1000,
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 4000),
     throwOnError: false,
     staleTime: 30 * 1000, // 30s — allows real-time updates to show after invalidation
   });
@@ -531,7 +531,12 @@ export default function SuggestionDetail() {
           <p className="text-slate-600 mb-6">
             {isRTL ? 'ההצעה אולי נמחקה או שאין לך הרשאה לצפות בה' : "The suggestion may have been deleted or you don't have permission to view it"}
           </p>
-          <Button className="mt-4" onClick={() => navigate(createPageUrl("Home"))}>{t('goHome')}</Button>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <Button variant="outline" onClick={() => navigate(createPageUrl("MyDocuments"))}>
+              {t('myDocuments')}
+            </Button>
+            <Button onClick={() => navigate(createPageUrl("Home"))}>{t('goHome')}</Button>
+          </div>
         </div>
       </div>
     );
