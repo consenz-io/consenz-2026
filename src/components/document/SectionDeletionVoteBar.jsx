@@ -100,8 +100,8 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
     : hoverVote === 'pro'
     ? (isHe ? 'הצבעתך תרחיק את מחיקת הסעיף' : isAr ? 'سيبعد صوتك حذف القسم' : 'Your vote will keep this section')
     : votesNeeded === 1
-    ? (isHe ? 'עוד מתנגד אחד דרוש למחיקה' : isAr ? 'مطلوب معارض واحد فقط للحذف' : '1 more opponent needed to delete')
-    : (isHe ? `עוד ${votesNeeded} מתנגדים דרושים למחיקה` : isAr ? `${votesNeeded} معارضين إضافيين مطلوبين للحذف` : `${votesNeeded} more opponents needed to delete`);
+    ? (isHe ? 'אם עוד אחד יצביע נגד, הסעיף יבוטל' : isAr ? 'إذا صوت واحد آخر ضد، سيُلغى القسم' : 'If 1 more votes against, the section will be cancelled')
+    : (isHe ? `אם עוד ${votesNeeded} יצביעו נגד, הסעיף יבוטל` : isAr ? `إذا صوت ${votesNeeded} آخرون ضد، سيُلغى القسم` : `If ${votesNeeded} more vote against, the section will be cancelled`);
 
   return (
     <div className="space-y-3">
