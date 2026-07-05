@@ -114,7 +114,7 @@ const TopicTitleCarousel = React.memo(function TopicTitleCarousel({
                     </div>
                   )}
                   <div className="text-xs text-slate-500">
-                    {t('by')} {getUserName(currentView.data.created_by)}
+                    {t('by')} {getUserName(currentView.data.created_by_id)}
                   </div>
                 </div>
               </div>

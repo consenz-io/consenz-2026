@@ -499,7 +499,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
                 >
                   {currentView?.data?.type === 'delete_section' 
                    ? ((language || 'he') === 'he' ? 'הצעה למחיקת הסעיף' : (language || 'he') === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion')
-                   : `${(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح תعديל בواסطة' : 'Edit suggestion by'} ${getUserName(currentView?.data?.created_by)}`
+                   : `${(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح תعديל בواסطة' : 'Edit suggestion by'} ${getUserName(currentView?.data?.created_by_id)}`
                   }
                 </button>
                 {currentView?.data?.created_date && (

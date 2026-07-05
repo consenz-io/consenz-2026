@@ -234,7 +234,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
                 onClick={() => setCurrentVersionId('original')}
                 className="text-sm font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer transition-colors"
               >
-                {`${language === 'he' ? 'עריכה מאת' : language === 'ar' ? 'تعديل بواسطة' : 'Edit by'} ${getUserName(currentVersion.created_by)}`}
+                {`${language === 'he' ? 'עריכה מאת' : language === 'ar' ? 'تعديل بواسطة' : 'Edit by'} ${getUserName(currentVersion.created_by_id)}`}
               </button>
             )}
           </div>
@@ -259,10 +259,10 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
           <div>
             <div className="text-sm md:text-base font-semibold text-slate-900 break-words">
               {language === 'he'
-                ? `הצעה לסעיף חדש מאת ${getUserName(currentVersion.created_by)}`
+                ? `הצעה לסעיף חדש מאת ${getUserName(currentVersion.created_by_id)}`
                 : language === 'ar'
-                ? `اقتراح قسم جديد بواسطة ${getUserName(currentVersion.created_by)}`
-                : `New section suggestion by ${getUserName(currentVersion.created_by)}`}
+                ? `اقتراح قسم جديد بواسطة ${getUserName(currentVersion.created_by_id)}`
+                : `New section suggestion by ${getUserName(currentVersion.created_by_id)}`}
             </div>
             <div className="text-xs text-slate-400 mt-0.5">
               {currentVersion.created_date && new Date(currentVersion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}

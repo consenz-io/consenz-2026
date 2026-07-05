@@ -244,11 +244,25 @@ export default function DocumentContent({
 
 
   // O(1) lookup maps instead of O(n) find on every call
+  // Lookup maps by userId (primary — created_by_id is the populated built-in field)
+  // and by email (fallback for legacy callers).
+  const profileByUserId = React.useMemo(() => {
+    const map = new Map();
+    publicProfiles?.forEach(p => { if (p.userId) map.set(p.userId, p); });
+    return map;
+  }, [publicProfiles]);
+
   const profileByEmail = React.useMemo(() => {
     const map = new Map();
     publicProfiles?.forEach(p => { if (p.email) map.set(p.email, p); });
     return map;
   }, [publicProfiles]);
+
+  const userById = React.useMemo(() => {
+    const map = new Map();
+    users?.forEach(u => { if (u.id) map.set(u.id, u); });
+    return map;
+  }, [users]);
 
   const userByEmail = React.useMemo(() => {
     const map = new Map();
@@ -256,13 +270,15 @@ export default function DocumentContent({
     return map;
   }, [users]);
 
-  const getUserName = React.useCallback((email) => {
-    const profile = profileByEmail.get(email);
+  // Accepts a userId (created_by_id / lastEditedBy) or, as fallback, an email.
+  const getUserName = React.useCallback((identifier) => {
+    if (!identifier) return 'User';
+    const profile = profileByUserId.get(identifier) || profileByEmail.get(identifier);
     if (profile?.fullName) return profile.fullName;
-    const user = userByEmail.get(email);
-    if (user?.full_name) return user.full_name;
+    const u = userById.get(identifier) || userByEmail.get(identifier);
+    if (u?.full_name) return u.full_name;
     return 'User';
-  }, [profileByEmail, userByEmail]);
+  }, [profileByUserId, profileByEmail, userById, userByEmail]);
 
   const toggleComments = React.useCallback((id) => {
     setShowComments(prev => ({

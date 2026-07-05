@@ -250,10 +250,10 @@ export default function SectionVersionCarousel({
   });
 
   // ── Helpers ────────────────────────────────────────────────────────────────
-  const localGetUserName = (email) => {
-    if (getUserName) return getUserName(email);
-    const profile = publicProfiles.find((p) => p.email === email);
-    return profile?.fullName || email || "User";
+  const localGetUserName = (identifier) => {
+    if (getUserName) return getUserName(identifier);
+    const profile = publicProfiles.find((p) => p.userId === identifier || p.email === identifier);
+    return profile?.fullName || "User";
   };
 
   // Must be before early returns (hooks rule)
@@ -314,9 +314,9 @@ export default function SectionVersionCarousel({
         <div className="text-center flex-1 px-2">
           <div className="flex flex-col items-center gap-0.5">
             {(() => {
-              const creatorEmail = currentSuggestion?.created_by || currentVer?.created_by;
+              const creatorId = currentSuggestion?.created_by_id || currentVer?.created_by_id;
               const changeType = currentVer?.changeType;
-              const userName = creatorEmail ? localGetUserName(creatorEmail) : null;
+              const userName = creatorId ? localGetUserName(creatorId) : null;
               let label = null;
               if (changeType === "section_created") {
                 label = language === "he" ? `סעיף נוצר על ידי ${userName}` : language === "ar" ? `تم إنشاء القسم بواسطة ${userName}` : `Section created by ${userName}`;
