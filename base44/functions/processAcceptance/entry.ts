@@ -220,6 +220,45 @@ Deno.serve(async (req) => {
           translations: {}
         });
 
+        // Link the accepted suggestion to the resurrected section so it appears in the carousel
+        await base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
+          sectionId: section.id,
+          originalSectionOrder: null
+        });
+
+        // Re-link pending child edit_suggestions to the resurrected section
+        const resurrectChildren = await base44.asServiceRole.entities.Suggestion.filter({
+          parentSuggestionId: suggestion.id
+        });
+        const pendingResurrectChildren = resurrectChildren.filter(c => c.status === 'pending');
+        if (pendingResurrectChildren.length > 0) {
+          console.log('[PROCESS ACCEPTANCE] Re-linking', pendingResurrectChildren.length, 'child suggestions to resurrected section', section.id);
+          for (const child of pendingResurrectChildren) {
+            await base44.asServiceRole.entities.Suggestion.update(child.id, {
+              sectionId: section.id,
+              type: 'edit_section',
+              parentSuggestionId: null
+            });
+          }
+        }
+
+        // Re-link other pending suggestions anchored to the same deleted section
+        const sameSlotOrphans = await base44.asServiceRole.entities.Suggestion.filter({
+          documentId: suggestion.documentId,
+          status: 'pending',
+          sectionId: suggestion.sectionId
+        });
+        const otherSlotOrphans = sameSlotOrphans.filter(s => s.id !== suggestion.id && !s.parentSuggestionId);
+        if (otherSlotOrphans.length > 0) {
+          console.log('[PROCESS ACCEPTANCE] Re-linking', otherSlotOrphans.length, 'orphaned suggestions to resurrected section', section.id);
+          for (const s of otherSlotOrphans) {
+            await base44.asServiceRole.entities.Suggestion.update(s.id, {
+              sectionId: section.id,
+              originalSectionOrder: null
+            });
+          }
+        }
+
         console.log('[PROCESS ACCEPTANCE] Resurrected deleted section', section.id, 'at order', resurrectOrder);
 
         // Skip the normal edit-version flow below — the section was just created.
