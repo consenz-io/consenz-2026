@@ -91,7 +91,6 @@ export default function TutorialController() {
     showSuccess,
     showSignupPrompt,
     isAuthenticated,
-    startTutorial,
     beginFromWelcome,
     resumeOnDocumentPage,
     skipTutorial,
@@ -100,28 +99,10 @@ export default function TutorialController() {
     restartTutorial,
   } = useTutorial(TUTORIAL_STEPS);
 
-  // ── Session-start detection ──────────────────────────────────────────────
-  useEffect(() => {
-    // Only trigger on first session load (idle phase)
-    if (phase !== 'idle') return;
-
-    // Check if tutorial has already been completed/skipped
-    try {
-      const raw = localStorage.getItem('consenz_tutorial');
-      if (raw) {
-        const saved = JSON.parse(raw);
-        // If explicitly marked inactive (skipped or done), don't auto-start
-        if (saved.active === false && saved.currentStep > 0) return;
-        // Resume mid-tutorial if active
-        if (saved.active === true) return; // useTutorial mount effect handles this
-      }
-    } catch {}
-
-    // First ever visit — auto-start
-    const entry = isDocumentPage(location.pathname) ? 'document' : 'home';
-    startTutorial(entry);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // intentionally run once on mount
+  // ── No auto-start ─────────────────────────────────────────────────────────
+  // The tutorial must ONLY begin when the user explicitly clicks the
+  // "Tour the platform" button (TutorialRestartButton → restartTutorial).
+  // Bubbles never pop up automatically. (isDocumentPage intentionally unused here now.)
 
   // ── Transition: home-intro → group page ─────────────────────────────────
   useEffect(() => {

@@ -78,60 +78,32 @@ export function useTutorial(steps = []) {
     pushTimerRef.current = setTimeout(() => pushServerTutorialState(localState), 3000);
   }, [isAuthenticated]);
 
-  // On mount: hydrate from server if authenticated and localStorage is empty
+  // On mount: sync tutorial state to server for authenticated users.
+  // The tutorial is NEVER auto-activated here — it must be started explicitly
+  // via the "Tour the platform" button (startTutorial / restartTutorial).
   useEffect(() => {
     async function hydrate() {
-      const local = loadState();
       const hasLocalData = !!localStorage.getItem(STORAGE_KEY);
 
       const authed = await base44.auth.isAuthenticated().catch(() => false);
       setIsAuthenticated(authed);
 
-      if (!hasLocalData && authed) {
-        const server = await fetchServerTutorialState();
-        if (server && !server.tutorialSkipped && !server.tutorialCompleted) {
-          const hydrated = {
-            ...defaultState(),
-            active: true,
-            currentStep: server.tutorialLastStep ?? 0,
-            // homeStepSeen must be true only when we're resuming mid-document steps (step > 0).
-            // If lastStep === 0 the user may never have passed home-intro — keep it false.
-            homeStepSeen: (server.tutorialLastStep ?? 0) > 0,
-          };
-          saveState(hydrated);
-          setState(hydrated);
-          if (steps.length > 0 && hydrated.currentStep < steps.length) {
-            // Only jump straight to 'running' if homeStepSeen is confirmed.
-            // Otherwise let the home-intro phase handle the entry.
-            setPhase(hydrated.homeStepSeen ? 'running' : 'home-intro');
-          }
-          return;
-        }
-        if (server?.tutorialCompleted || server?.tutorialSkipped) {
-          const done = { ...defaultState(), active: false, currentStep: 1 };
-          saveState(done);
-          setState(done);
-          return;
-        }
-      }
-
-      // On successful registration: merge localStorage state to server
+      // Push local state → server (authenticated only)
       if (authed && hasLocalData) {
         const localRaw = loadState();
-        // If localStorage has active tutorial data, push it to server
         if (localRaw.active || localRaw.currentStep > 0) {
           pushServerTutorialState(localRaw);
         }
       }
 
-      if (local.active) {
-        setState(local);
-        if (local.homeStepSeen && local.currentStep < steps.length) {
-          setPhase('running');
-        } else if (!local.homeStepSeen) {
-          // Tutorial is active but user hasn't passed home-intro yet (e.g. navigated
-          // to the group page). Stay in home-intro so the correct bubble is shown.
-          setPhase('home-intro');
+      // If the server records the tutorial as completed/skipped (e.g. new device),
+      // mark it done locally. This does NOT activate anything.
+      if (authed && !hasLocalData) {
+        const server = await fetchServerTutorialState();
+        if (server?.tutorialCompleted || server?.tutorialSkipped) {
+          const done = { ...defaultState(), active: false, currentStep: 1 };
+          saveState(done);
+          setState(done);
         }
       }
     }
