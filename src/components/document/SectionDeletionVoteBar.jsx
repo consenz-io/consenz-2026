@@ -7,6 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/LanguageContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 /**
  * SectionDeletionVoteBar
@@ -14,9 +21,10 @@ import { useLanguage } from "@/components/LanguageContext";
  * "pro" = keep the section, "con" = delete it.
  * When (con - pro) >= document threshold, the section is deleted (handled in voteOnSection).
  */
-export default function SectionDeletionVoteBar({ section, document, user, isRTL, initialVotes = [], canParticipate = true, onCannotParticipate, readOnly = false }) {
+export default function SectionDeletionVoteBar({ section, document, user, isRTL, initialVotes = [], canParticipate = true, onCannotParticipate, onSuggestEdit, readOnly = false }) {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
+  const [showConDialog, setShowConDialog] = useState(false);
 
   const { data: sectionVotes = [] } = useQuery({
     queryKey: ["sectionVotes", section.id],
@@ -87,7 +95,27 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
       if (onCannotParticipate) onCannotParticipate();
       return;
     }
+    // "con" on an existing/accepted section: if already voted con, toggle off directly;
+    // otherwise show a dialog inviting the user to suggest an improvement (legacy behavior).
+    if (voteType === 'con' && userVote?.vote !== 'con') {
+      setShowConDialog(true);
+      return;
+    }
     voteMutation.mutate(voteType);
+  };
+
+  const handleConVoteOnly = () => {
+    setShowConDialog(false);
+    voteMutation.mutate('con');
+  };
+
+  const handleConVoteAndSuggest = () => {
+    setShowConDialog(false);
+    voteMutation.mutate('con', {
+      onSuccess: () => {
+        if (onSuggestEdit) onSuggestEdit(section);
+      },
+    });
   };
 
   const isHe = language === 'he';
@@ -190,6 +218,27 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
           </p>
         }
       </div>
+
+      <Dialog open={showConDialog} onOpenChange={(open) => { if (!open) setShowConDialog(false); }}>
+        <DialogContent className="max-w-sm" onClick={(e) => e.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle>
+              {isHe ? 'האם ברצונך להציע שיפור לנוסח הסעיף?' : isAr ? 'هل تريد اقتراح تحسين لنص القسم؟' : 'Would you like to suggest an improvement?'}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-slate-600">
+            {isHe ? 'הצבעתך נגד תירשם. תוכל גם להציע שינוי לנוסח הסעיף.' : isAr ? 'سيتم تسجيل تصويتك ضد. يمكنك أيضاً اقتراح تعديل على نص القسم.' : 'Your vote against will be recorded. You can also suggest a change to the section text.'}
+          </p>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={handleConVoteOnly} className="flex-1">
+              {isHe ? 'הצבע נגד בלבד' : isAr ? 'صوّت ضد فقط' : 'Vote against only'}
+            </Button>
+            <Button onClick={handleConVoteAndSuggest} className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600">
+              {isHe ? 'הצע שיפור' : isAr ? 'اقترح تحسيناً' : 'Suggest improvement'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>);
 
 }

@@ -572,6 +572,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
                   initialVotes={sectionVotes}
                   canParticipate={canParticipate}
                   onCannotParticipate={() => setShowJoinGroupDialog(true)}
+                  onSuggestEdit={onEditSection}
                   readOnly={!user}
                 />
               </div>
