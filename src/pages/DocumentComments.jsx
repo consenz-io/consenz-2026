@@ -117,7 +117,7 @@ function SectionContextBlock({ section, topicTitle, sectionNumber, isRTL, langua
 }
 
 // Memoized card — only re-renders if group data or display-related props change
-const GroupCard = React.memo(function GroupCard({ group, profileMap, language, isRTL, documentId, sectionMeta }) {
+const GroupCard = React.memo(function GroupCard({ group, profileMaps, language, isRTL, documentId, sectionMeta }) {
   const [collapsed, setCollapsed] = React.useState(false);
 
   const topLevelComments = React.useMemo(() => group.comments.filter(c => !c.parentCommentId), [group.comments]);
@@ -227,7 +227,7 @@ const GroupCard = React.memo(function GroupCard({ group, profileMap, language, i
           {/* Divider between context and comments */}
           <div className="space-y-4">
             {topLevelComments.map(comment => {
-              const profile = profileMap[comment.created_by] || {};
+              const profile = profileMaps.byUserId[comment.created_by_id] || profileMaps.byEmail[comment.created_by] || {};
               const replies = replyComments.filter(r => r.parentCommentId === comment.id);
               return (
                 <div key={comment.id}>
@@ -238,7 +238,7 @@ const GroupCard = React.memo(function GroupCard({ group, profileMap, language, i
                     isRTL={isRTL}
                   />
                   {replies.map(reply => {
-                    const rProfile = profileMap[reply.created_by] || {};
+                    const rProfile = profileMaps.byUserId[reply.created_by_id] || profileMaps.byEmail[reply.created_by] || {};
                     return (
                       <CommentRow
                         key={reply.id}
@@ -336,13 +336,15 @@ export default function DocumentComments() {
     staleTime: 10 * 60 * 1000,
   });
 
-  // O(1) lookup map: email → {name, userId}
-  const profileMap = React.useMemo(() => {
-    const map = {};
+  // O(1) lookup maps: by userId (primary) and by email (fallback) → {name, userId}
+  const profileMaps = React.useMemo(() => {
+    const byUserId = {};
+    const byEmail = {};
     for (const p of publicProfiles) {
-      map[p.email] = { name: p.fullName, userId: p.userId };
+      if (p.userId) byUserId[p.userId] = { name: p.fullName, userId: p.userId };
+      if (p.email) byEmail[p.email] = { name: p.fullName, userId: p.userId };
     }
-    return map;
+    return { byUserId, byEmail };
   }, [publicProfiles]);
 
   // Pre-sort topics once; reuse in sectionMetas below
@@ -632,7 +634,7 @@ export default function DocumentComments() {
               <GroupCard
                 key={`${group.type}-${group.entityId}`}
                 group={group}
-                profileMap={profileMap}
+                profileMaps={profileMaps}
                 language={language}
                 isRTL={isRTL}
                 documentId={documentId}

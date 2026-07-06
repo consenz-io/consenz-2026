@@ -43,30 +43,41 @@ const CommentItem = memo(({
     setLocalEditContent(comment.content);
   }, [comment.content, editingComment?.id]);
 
-  const getUserId = (email) => {
-    // Try public profile first (accessible to everyone)
-    const profile = publicProfiles?.find(p => p.email === email);
-    if (profile?.userId) return profile.userId;
-    
-    // Fallback to User entity (admins only)
-    const user = users?.find(u => u.email === email);
-    if (user?.id) return user.id;
-    
+  const getUserId = (comment) => {
+    const id = comment?.created_by_id;
+    if (id) {
+      const profile = publicProfiles?.find(p => p.userId === id);
+      if (profile?.userId) return profile.userId;
+      const u = users?.find(u => u.id === id);
+      if (u?.id) return u.id;
+    }
+    const email = comment?.created_by;
+    if (email) {
+      const profile = publicProfiles?.find(p => p.email === email);
+      if (profile?.userId) return profile.userId;
+      const u = users?.find(u => u.email === email);
+      if (u?.id) return u.id;
+    }
     return '';
   };
 
-  const getUserName = (email) => {
-    if (!email) return '?';
-    // Try public profile first (accessible to everyone)
-    const profile = publicProfiles?.find(p => p.email === email);
-    if (profile?.fullName) return profile.fullName;
-    
-    // Fallback to User entity (admins only)
-    const userObj = users?.find(u => u.email === email);
-    if (userObj?.full_name) return userObj.full_name;
-    
-    // Last resort: show part before @
-    return email.split('@')[0] || email;
+  const getUserName = (comment) => {
+    const id = comment?.created_by_id;
+    if (id) {
+      const profile = publicProfiles?.find(p => p.userId === id);
+      if (profile?.fullName) return profile.fullName;
+      const userObj = users?.find(u => u.id === id);
+      if (userObj?.full_name) return userObj.full_name;
+    }
+    const email = comment?.created_by;
+    if (email) {
+      const profile = publicProfiles?.find(p => p.email === email);
+      if (profile?.fullName) return profile.fullName;
+      const userObj = users?.find(u => u.email === email);
+      if (userObj?.full_name) return userObj.full_name;
+      return email.split('@')[0] || email;
+    }
+    return '?';
   };
 
   const isEditing = editingComment?.id === comment.id;
@@ -77,20 +88,20 @@ const CommentItem = memo(({
       <Card className={`p-3 ${isReply ? 'bg-slate-50' : 'bg-white'}`}>
         <div className="flex gap-3">
           <Link 
-            to={`${createPageUrl("Profile")}?userId=${getUserId(comment.created_by)}`}
+            to={`${createPageUrl("Profile")}?userId=${getUserId(comment)}`}
             className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center flex-shrink-0 hover:opacity-80 transition-opacity"
           >
             <span className="text-white font-medium text-sm">
-              {(getUserName(comment.created_by) || 'U').charAt(0)?.toUpperCase()}
+              {(getUserName(comment) || 'U').charAt(0)?.toUpperCase()}
             </span>
           </Link>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <Link 
-                to={`${createPageUrl("Profile")}?userId=${getUserId(comment.created_by)}`}
+                to={`${createPageUrl("Profile")}?userId=${getUserId(comment)}`}
                 className="font-medium text-sm text-slate-900 hover:underline"
               >
-                {getUserName(comment.created_by)}
+                {getUserName(comment)}
               </Link>
               <span className="text-xs text-slate-500">
                 {formatLocalDateTime(comment.created_date, 'DD/MM HH:mm')}
@@ -192,7 +203,7 @@ const CommentItem = memo(({
                     <Reply className="w-3 h-3 mr-1" />
                     {t('reply')}
                   </Button>
-                  {user && user.email === comment.created_by && (
+                  {user && (user.id === comment.created_by_id || user.email === comment.created_by) && (
                     <>
                       <Button
                         variant="ghost"
@@ -230,12 +241,20 @@ const CommentItem = memo(({
          <div className="flex items-center gap-2 text-sm text-slate-600">
            <Reply className="w-4 h-4" />
            <span>{t('replyingTo')} {(() => {
-             if (!comment.created_by) return '?';
-             const profile = publicProfiles?.find(p => p.email === comment.created_by);
-             if (profile?.fullName) return profile.fullName;
-             const userObj = users?.find(u => u.email === comment.created_by);
-             if (userObj?.full_name) return userObj.full_name;
-             return comment.created_by.split('@')[0] || comment.created_by;
+             if (comment.created_by_id) {
+               const profile = publicProfiles?.find(p => p.userId === comment.created_by_id);
+               if (profile?.fullName) return profile.fullName;
+               const userObj = users?.find(u => u.id === comment.created_by_id);
+               if (userObj?.full_name) return userObj.full_name;
+             }
+             if (comment.created_by) {
+               const profile = publicProfiles?.find(p => p.email === comment.created_by);
+               if (profile?.fullName) return profile.fullName;
+               const userObj = users?.find(u => u.email === comment.created_by);
+               if (userObj?.full_name) return userObj.full_name;
+               return comment.created_by.split('@')[0] || comment.created_by;
+             }
+             return '?';
            })()}</span>
          </div>
          <Textarea
@@ -456,6 +475,7 @@ export default function CommentsSection({ entityType, entityId, user, scrollToCo
         content: data.content,
         created_date: new Date().toISOString(),
         created_by: user.email,
+        created_by_id: user.id,
         _isOptimistic: true
       };
       
