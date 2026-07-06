@@ -24,6 +24,7 @@ import TranslateAllButton from "../components/document/TranslateAllButton";
 import CommentsSection from "../components/document/CommentsSection";
 import { useDocumentData } from "../components/document/hooks/useDocumentData";
 import { useDocumentSubscriptions } from "../components/document/hooks/useDocumentSubscriptions";
+import CounterTooltip from "../components/document/CounterTooltip";
 
 // Lazy load heavy components
 const CreateSuggestionModal = React.lazy(() => import("../components/document/CreateSuggestionModal"));
@@ -1001,43 +1002,75 @@ export default function DocumentView() {
 
           {/* Other counters — 4 columns */}
           <div className="grid grid-cols-4 gap-1.5 md:gap-2 w-full">
-            <button
-              type="button"
-              className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-2.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-blue-400 hover:shadow-md transition-all"
-              onClick={() => setShowContributorsModal(true)}
-              aria-label={`${contributorsCount} ${t('contributors')}`}
+            <CounterTooltip
+              text={language === 'he'
+                ? 'מספר המשתתפים שתרמו למסמך — יצרו הצעות, הצביעו, הגיבו או חתמו על המסמך. לחץ לפרטים.'
+                : language === 'ar'
+                ? 'عدد المشاركين الذين ساهموا في الوثيقة — اقترحوا، صوّتوا، علّقوا أو وقّعوا. انقر للتفاصيل.'
+                : 'Number of participants who contributed — created suggestions, voted, commented, or signed. Click for details.'}
             >
-              <Users className="w-3.5 h-3.5 md:w-5 md:h-5 text-blue-600" aria-hidden="true" />
-              <div className="text-sm md:text-lg font-bold text-slate-900">{contributorsCount}</div>
-              <div className="text-[8px] md:text-[10px] text-slate-500 text-center leading-tight">{t('contributors')}</div>
-            </button>
-            <Link
-              to={`${createPageUrl("DocumentComments")}?id=${documentId}`}
-              className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-2.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-green-400 hover:shadow-md transition-all"
-              aria-label={`${allComments.length} ${language === 'he' ? 'תגובות' : language === 'ar' ? 'تعليقات' : 'comments'}`}
+              <button
+                type="button"
+                className="w-full bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-2.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-blue-400 hover:shadow-md transition-all"
+                onClick={() => setShowContributorsModal(true)}
+                aria-label={`${contributorsCount} ${t('contributors')}`}
+              >
+                <Users className="w-3.5 h-3.5 md:w-5 md:h-5 text-blue-600" aria-hidden="true" />
+                <div className="text-sm md:text-lg font-bold text-slate-900">{contributorsCount}</div>
+                <div className="text-[8px] md:text-[10px] text-slate-500 text-center leading-tight">{t('contributors')}</div>
+              </button>
+            </CounterTooltip>
+            <CounterTooltip
+              text={language === 'he'
+                ? 'סה״כ תגובות שנכתבו במסמך — על הסעיפים, ההצעות והדיון הכללי. לחץ לצפייה בכל התגובות.'
+                : language === 'ar'
+                ? 'إجمالي التعليقات في الوثيقة — على الأقسام والاقتراحات والنقاش العام. انقر لعرض جميع التعليقات.'
+                : 'Total comments across the document — on sections, suggestions, and general discussion. Click to view all.'}
             >
-              <MessageSquare className="w-3.5 h-3.5 md:w-5 md:h-5 text-green-600" aria-hidden="true" />
-              <div className="text-sm md:text-lg font-bold text-slate-900">{allComments.length}</div>
-              <div className="text-[8px] md:text-[10px] text-slate-500 text-center leading-tight">{language === 'he' ? 'תגובות' : language === 'ar' ? 'تعليقات' : 'Comments'}</div>
-            </Link>
-            <Link 
-              to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
-              className="consensus-meter bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-2.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-purple-400 hover:shadow-md transition-all"
-              aria-label={`${t('consensus')}`}
+              <Link
+                to={`${createPageUrl("DocumentComments")}?id=${documentId}`}
+                className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-2.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-green-400 hover:shadow-md transition-all"
+                aria-label={`${allComments.length} ${language === 'he' ? 'תגובות' : language === 'ar' ? 'تعليقات' : 'comments'}`}
+              >
+                <MessageSquare className="w-3.5 h-3.5 md:w-5 md:h-5 text-green-600" aria-hidden="true" />
+                <div className="text-sm md:text-lg font-bold text-slate-900">{allComments.length}</div>
+                <div className="text-[8px] md:text-[10px] text-slate-500 text-center leading-tight">{language === 'he' ? 'תגובות' : language === 'ar' ? 'تعليقات' : 'Comments'}</div>
+              </Link>
+            </CounterTooltip>
+            <CounterTooltip
+              text={language === 'he'
+                ? 'מד הקונצנזוס משקף את רמת ההסכמה על גרסת המסמך הנוכחית. מחושב מהממוצע של כל ההצעות שאושרו. לחץ להסבר מפורט.'
+                : language === 'ar'
+                ? 'مقياس الإجماع يعكس مستوى الاتفاق على النسخة الحالية. يُحسب من متوسط جميع الاقتراحات المقبولة. انقر لشرح مفصل.'
+                : 'The consensus meter reflects the level of agreement on the current document version. Calculated from the average of all accepted suggestions. Click for details.'}
             >
-              <TrendingUp className="w-3.5 h-3.5 md:w-5 md:h-5 text-purple-600" aria-hidden="true" />
-              <div className="text-sm md:text-lg font-bold text-slate-900">{consensusPct}%</div>
-              <div className="text-[8px] md:text-[10px] text-slate-500 text-center leading-tight">{t('consensus')}</div>
-            </Link>
-            <Link 
-              to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`}
-              className="versions-tab-button bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-2.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-teal-400 hover:shadow-md transition-all"
-              aria-label={`${versionCount} ${language === 'he' ? 'גרסאות' : 'versions'}`}
+              <Link
+                to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
+                className="consensus-meter bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-2.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-purple-400 hover:shadow-md transition-all"
+                aria-label={`${t('consensus')}`}
+              >
+                <TrendingUp className="w-3.5 h-3.5 md:w-5 md:h-5 text-purple-600" aria-hidden="true" />
+                <div className="text-sm md:text-lg font-bold text-slate-900">{consensusPct}%</div>
+                <div className="text-[8px] md:text-[10px] text-slate-500 text-center leading-tight">{t('consensus')}</div>
+              </Link>
+            </CounterTooltip>
+            <CounterTooltip
+              text={language === 'he'
+                ? 'מספר גרסאות שנשמרו בהיסטוריית המסמך — כל אישור הצעה או עריכה יוצרים גרסה חדשה. לחץ לצפייה בגרסאות קודמות.'
+                : language === 'ar'
+                ? 'عدد الإصدارات المحفوظة في سجل الوثيقة — كل قبول اقتراح أو تعديل ينشئ إصدارًا جديدًا. انقر لعرض الإصدارات السابقة.'
+                : 'Number of versions saved in the document history — each accepted suggestion or edit creates a new version. Click to view previous versions.'}
             >
-              <Clock className="w-3.5 h-3.5 md:w-5 md:h-5 text-teal-600" aria-hidden="true" />
-              <div className="text-sm md:text-lg font-bold text-slate-900">{versionCount}</div>
-              <div className="text-[8px] md:text-[10px] text-slate-500 text-center leading-tight">{language === 'he' ? 'גרסאות' : language === 'ar' ? 'الإصدارات' : 'Versions'}</div>
-            </Link>
+              <Link
+                to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`}
+                className="versions-tab-button bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-1.5 md:p-2.5 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-teal-400 hover:shadow-md transition-all"
+                aria-label={`${versionCount} ${language === 'he' ? 'גרסאות' : 'versions'}`}
+              >
+                <Clock className="w-3.5 h-3.5 md:w-5 md:h-5 text-teal-600" aria-hidden="true" />
+                <div className="text-sm md:text-lg font-bold text-slate-900">{versionCount}</div>
+                <div className="text-[8px] md:text-[10px] text-slate-500 text-center leading-tight">{language === 'he' ? 'גרסאות' : language === 'ar' ? 'الإصدارات' : 'Versions'}</div>
+              </Link>
+            </CounterTooltip>
           </div>
         </div>
 
