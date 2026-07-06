@@ -31,14 +31,14 @@ export default function Profile() {
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    retry: false,
+    retry: false
   });
 
   // For viewing other users' profiles, use UserPublicProfile (public access)
   const { data: viewUserProfile, isLoading: viewUserProfileLoading } = useQuery({
     queryKey: ['viewUserProfile', viewUserId],
-    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: viewUserId }).then(profiles => profiles[0]),
-    enabled: !!viewUserId,
+    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: viewUserId }).then((profiles) => profiles[0]),
+    enabled: !!viewUserId
   });
 
   // Try to get full User data only if viewing your own profile
@@ -54,32 +54,32 @@ export default function Profile() {
       }
     },
     enabled: !!viewUserId && !!currentUser && viewUserId === currentUser.id,
-    retry: false,
+    retry: false
   });
 
   // Use viewUser if available (own profile or admin), otherwise use viewUserProfile
-  const user = viewUserId 
-    ? (viewUser || (viewUserProfile ? {
-        id: viewUserProfile.userId,
-        email: viewUserProfile.email,
-        full_name: viewUserProfile.fullName,
-        created_date: viewUserProfile.created_date,
-        bio: viewUserProfile.bio,
-        linkedin: viewUserProfile.linkedin,
-        twitter: viewUserProfile.twitter,
-        facebook: viewUserProfile.facebook,
-        instagram: viewUserProfile.instagram,
-        website: viewUserProfile.website,
-      } : null))
-    : currentUser;
-  const isOwnProfile = !viewUserId || (currentUser && viewUserId === currentUser.id);
-  const isLoading = viewUserId ? (viewUserLoading || viewUserProfileLoading) : false;
+  const user = viewUserId ?
+  viewUser || (viewUserProfile ? {
+    id: viewUserProfile.userId,
+    email: viewUserProfile.email,
+    full_name: viewUserProfile.fullName,
+    created_date: viewUserProfile.created_date,
+    bio: viewUserProfile.bio,
+    linkedin: viewUserProfile.linkedin,
+    twitter: viewUserProfile.twitter,
+    facebook: viewUserProfile.facebook,
+    instagram: viewUserProfile.instagram,
+    website: viewUserProfile.website
+  } : null) :
+  currentUser;
+  const isOwnProfile = !viewUserId || currentUser && viewUserId === currentUser.id;
+  const isLoading = viewUserId ? viewUserLoading || viewUserProfileLoading : false;
 
   const { data: pointsTransactions } = useQuery({
     queryKey: ['pointsTransactions', user?.id],
     queryFn: () => base44.entities.PointsTransaction.filter({ userId: user.id }, '-created_date'),
     enabled: !!user?.id,
-    initialData: [],
+    initialData: []
   });
 
   // DISABLED FOR TESTING - Using placeholder data
@@ -88,7 +88,7 @@ export default function Profile() {
   const userVotes = [];
 
   const acceptedSuggestions = React.useMemo(() => {
-    return userSuggestions.filter(s => s.status === 'accepted');
+    return userSuggestions.filter((s) => s.status === 'accepted');
   }, [userSuggestions]);
 
   const [formData, setFormData] = useState({
@@ -98,7 +98,7 @@ export default function Profile() {
     twitter: user?.twitter || "",
     facebook: user?.facebook || "",
     instagram: user?.instagram || "",
-    website: user?.website || "",
+    website: user?.website || ""
   });
 
   // Initialize form only once when user data first loads
@@ -106,14 +106,14 @@ export default function Profile() {
   React.useEffect(() => {
     if (user && !formInitialized.current) {
       formInitialized.current = true;
-      setFormData({ 
+      setFormData({
         full_name: user.full_name || "",
         bio: user.bio || "",
         linkedin: user.linkedin || "",
         twitter: user.twitter || "",
         facebook: user.facebook || "",
         instagram: user.instagram || "",
-        website: user.website || "",
+        website: user.website || ""
       });
     }
   }, [user]);
@@ -123,16 +123,16 @@ export default function Profile() {
       if (!data.full_name || data.full_name.trim().length < 2) {
         throw new Error("Display name must be at least 2 characters");
       }
-      
+
       // Update main user profile
-      await base44.auth.updateMe({ 
+      await base44.auth.updateMe({
         full_name: data.full_name.trim(),
         bio: data.bio?.trim() || "",
         linkedin: data.linkedin?.trim() || "",
         twitter: data.twitter?.trim() || "",
         facebook: data.facebook?.trim() || "",
         instagram: data.instagram?.trim() || "",
-        website: data.website?.trim() || "",
+        website: data.website?.trim() || ""
       });
 
       // Update or create public profile
@@ -146,7 +146,7 @@ export default function Profile() {
           twitter: data.twitter?.trim() || "",
           facebook: data.facebook?.trim() || "",
           instagram: data.instagram?.trim() || "",
-          website: data.website?.trim() || "",
+          website: data.website?.trim() || ""
         });
       } else {
         await base44.entities.UserPublicProfile.create({
@@ -158,10 +158,10 @@ export default function Profile() {
           twitter: data.twitter?.trim() || "",
           facebook: data.facebook?.trim() || "",
           instagram: data.instagram?.trim() || "",
-          website: data.website?.trim() || "",
+          website: data.website?.trim() || ""
         });
       }
-      
+
       return data;
     },
     onSuccess: async (data) => {
@@ -170,7 +170,7 @@ export default function Profile() {
       await queryClient.invalidateQueries({ queryKey: ['viewUser'] });
       await queryClient.invalidateQueries({ queryKey: ['viewUserProfile'] });
       await queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
-      
+
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
       setTimeout(() => setSuccess(null), 3000);
@@ -178,7 +178,7 @@ export default function Profile() {
     onError: (err) => {
       setError(err.message || "Failed to update profile");
       setTimeout(() => setError(null), 5000);
-    },
+    }
   });
 
   const handleSave = (e) => {
@@ -188,14 +188,14 @@ export default function Profile() {
   };
 
   const handleCancel = () => {
-    setFormData({ 
+    setFormData({
       full_name: user?.full_name || "",
       bio: user?.bio || "",
       linkedin: user?.linkedin || "",
       twitter: user?.twitter || "",
       facebook: user?.facebook || "",
       instagram: user?.instagram || "",
-      website: user?.website || "",
+      website: user?.website || ""
     });
     setIsEditing(false);
     setError(null);
@@ -208,8 +208,8 @@ export default function Profile() {
           <Skeleton className="h-10 md:h-12 w-32 md:w-48" />
           <Skeleton className="h-48 md:h-64 w-full" />
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!user) {
@@ -222,24 +222,24 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-2 md:p-6 w-full max-w-full overflow-x-hidden">
       <div className="max-w-4xl mx-auto space-y-3 md:space-y-6 px-2 md:px-0 w-full max-w-full">
-        <PageHeader 
+        <PageHeader
           title={t('profile')}
-          backUrl={createPageUrl("Home")}
-        />
+          backUrl={createPageUrl("Home")} />
+        
 
-        {error && (
-          <Alert variant="destructive">
+        {error &&
+        <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
-        )}
+        }
 
-        {success && (
-          <Alert className="bg-green-50 border-green-200">
+        {success &&
+        <Alert className="bg-green-50 border-green-200">
             <CheckCircle className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800">{success}</AlertDescription>
           </Alert>
-        )}
+        }
 
 
 
@@ -250,28 +250,28 @@ export default function Profile() {
                 <CardTitle className="break-words">{t('personalInformation')}</CardTitle>
                 <CardDescription className="break-words">{isOwnProfile ? 'Your account details' : `${user.full_name}'s profile`}</CardDescription>
               </div>
-              {!isEditing && isOwnProfile ? (
-                <Button onClick={() => setIsEditing(true)} variant="outline" size="sm" className="shrink-0">
+              {!isEditing && isOwnProfile ?
+              <Button onClick={() => setIsEditing(true)} variant="outline" size="sm" className="shrink-0">
                   <Edit2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {t('editProfile')}
-                </Button>
-              ) : isOwnProfile ? (
-                <div className="flex gap-2 shrink-0">
+                </Button> :
+              isOwnProfile ?
+              <div className="flex gap-2 shrink-0">
                   <Button onClick={handleCancel} variant="outline" size="sm">
                     <X className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                     {t('cancel')}
                   </Button>
-                  <Button 
-                    onClick={handleSave}
-                    disabled={updateProfileMutation.isPending}
-                    size="sm"
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600"
-                  >
+                  <Button
+                  onClick={handleSave}
+                  disabled={updateProfileMutation.isPending}
+                  size="sm"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600">
+                  
                     <Save className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                     {updateProfileMutation.isPending ? t('saving') : t('saveChanges')}
                   </Button>
-                </div>
-              ) : null}
+                </div> :
+              null}
             </div>
           </CardHeader>
           <CardContent className="space-y-3 md:space-y-6 p-3 md:p-6 w-full max-w-full">
@@ -286,21 +286,21 @@ export default function Profile() {
                       <User className="w-4 h-4" />
                       {t('displayName')}
                     </Label>
-                    {isEditing ? (
-                      <Input
-                        id="full_name"
-                        value={formData.full_name}
-                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                        placeholder="Enter your display name"
-                        className="mt-1"
-                      />
-                    ) : (
-                      <p className="text-base md:text-lg font-medium text-slate-900 mt-1 break-words">{user.full_name}</p>
-                    )}
+                    {isEditing ?
+                    <Input
+                      id="full_name"
+                      value={formData.full_name}
+                      onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                      placeholder="Enter your display name"
+                      className="mt-1" /> :
+
+
+                    <p className="text-base md:text-lg font-medium text-slate-900 mt-1 break-words">{user.full_name}</p>
+                    }
                   </div>
 
-                  {isOwnProfile && (
-                    <div>
+                  {isOwnProfile &&
+                  <div>
                       <Label className="flex items-center gap-2">
                         <Mail className="w-4 h-4" />
                         {t('email')}
@@ -308,7 +308,7 @@ export default function Profile() {
                       <p className="text-slate-700 mt-1 break-all text-sm md:text-base">{user.email}</p>
                       <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
                     </div>
-                  )}
+                  }
 
                   <div>
                     <Label className="flex items-center gap-2">
@@ -317,203 +317,203 @@ export default function Profile() {
                     </Label>
                     <div className="mt-1">
                       <Badge variant="outline" className={
-                        user.role === 'admin' 
-                          ? 'bg-purple-100 text-purple-800 border-purple-200'
-                          : 'bg-blue-100 text-blue-800 border-blue-200'
+                      user.role === 'admin' ?
+                      'bg-purple-100 text-purple-800 border-purple-200' :
+                      'bg-blue-100 text-blue-800 border-blue-200'
                       }>
                         {user.role || 'user'}
                       </Badge>
                     </div>
                   </div>
 
-                  {isOwnProfile && (
-                    <div className="space-y-3">
+                  {isOwnProfile &&
+                  <div className="space-y-3">
                       <div>
                         <Label className="flex items-center gap-2">
                           <Bell className="w-4 h-4" />
                           {language === 'he' ? 'שפת התראות' : language === 'ar' ? 'لغة الإشعارات' : 'Notification Language'}
                         </Label>
                         <p className="text-xs text-slate-500 mt-1">
-                          {language === 'he'
-                            ? `ההתראות יישלחו ב: ${user?.preferredLanguage === 'en' ? 'English' : user?.preferredLanguage === 'ar' ? 'العربية' : 'עברית'} (לפי הגדרת השפה שלך במערכת)`
-                            : language === 'ar'
-                            ? `سيتم إرسال الإشعارات بـ: ${user?.preferredLanguage === 'en' ? 'English' : user?.preferredLanguage === 'ar' ? 'العربية' : 'עברית'} (حسب إعداد اللغة في النظام)`
-                            : `Notifications will be sent in: ${user?.preferredLanguage === 'en' ? 'English' : user?.preferredLanguage === 'ar' ? 'العربية' : 'עברית'} (based on your app language setting)`}
+                          {language === 'he' ?
+                        `ההתראות יישלחו ב: ${user?.preferredLanguage === 'en' ? 'English' : user?.preferredLanguage === 'ar' ? 'العربية' : 'עברית'} (לפי הגדרת השפה שלך במערכת)` :
+                        language === 'ar' ?
+                        `سيتم إرسال الإشعارات بـ: ${user?.preferredLanguage === 'en' ? 'English' : user?.preferredLanguage === 'ar' ? 'العربية' : 'עברית'} (حسب إعداد اللغة في النظام)` :
+                        `Notifications will be sent in: ${user?.preferredLanguage === 'en' ? 'English' : user?.preferredLanguage === 'ar' ? 'العربية' : 'עברית'} (based on your app language setting)`}
                         </p>
                       </div>
                       <div>
-                        <Label className="flex items-center gap-2">
+                        <Label className="flex items-center gap-2 hidden">
                           <Bell className="w-4 h-4" />
                           {language === 'he' ? 'הגדרות התראות' : language === 'ar' ? 'إعدادات الإشعارات' : 'Notification Settings'}
                         </Label>
                         <Link to={createPageUrl("EmailSettings")}>
-                          <Button variant="outline" size="sm" className="mt-2 w-full">
+                          <Button variant="outline" size="sm" className="mt-2 w-full hidden">
                             <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                             {language === 'he' ? 'נהל עדכונים במייל' : language === 'ar' ? 'إدارة ملخص البريد' : 'Manage Email Digest'}
                           </Button>
                         </Link>
                       </div>
                     </div>
-                  )}
+                  }
                 </div>
               </div>
 
               <div className="border-t pt-4 space-y-4">
-                  {(user.bio || (isOwnProfile && currentUser)) && (
-                  <div>
+                  {(user.bio || isOwnProfile && currentUser) &&
+                <div>
                     <Label htmlFor="bio" className="text-sm font-medium text-slate-700">
                       {language === 'he' ? 'ביו' : language === 'ar' ? 'نبذة' : 'Bio'}
                     </Label>
-                    {isEditing ? (
-                    <textarea
-                      id="bio"
-                      value={formData.bio}
-                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                      placeholder={language === 'he' ? 'ספר/י קצת על עצמך...' : language === 'ar' ? 'أخبرنا قليلاً عن نفسك...' : 'Tell us a little about yourself...'}
-                      className="w-full mt-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px] resize-y"
-                      dir={isRTL ? 'rtl' : 'ltr'}
-                    />
-                  ) : (
-                    <p className="text-slate-700 mt-1 whitespace-pre-wrap" dir={isRTL ? 'rtl' : 'ltr'}>
+                    {isEditing ?
+                  <textarea
+                    id="bio"
+                    value={formData.bio}
+                    onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                    placeholder={language === 'he' ? 'ספר/י קצת על עצמך...' : language === 'ar' ? 'أخبرنا قليلاً عن نفسك...' : 'Tell us a little about yourself...'}
+                    className="w-full mt-1 p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px] resize-y"
+                    dir={isRTL ? 'rtl' : 'ltr'} /> :
+
+
+                  <p className="text-slate-700 mt-1 whitespace-pre-wrap" dir={isRTL ? 'rtl' : 'ltr'}>
                       {user.bio || <span className="text-slate-400 italic">{language === 'he' ? 'לא הוזן ביו' : language === 'ar' ? 'لم تتم إضافة نبذة' : 'No bio added'}</span>}
                     </p>
-                    )}
+                  }
                     </div>
-                    )}
+                }
 
-                {(user.linkedin || user.twitter || user.facebook || user.instagram || user.website || (isOwnProfile && currentUser)) && (
-                  <div>
+                {(user.linkedin || user.twitter || user.facebook || user.instagram || user.website || isOwnProfile && currentUser) &&
+                <div>
                     <Label className="text-sm font-medium text-slate-700 mb-2 block">
                       {language === 'he' ? 'רשתות חברתיות וקישורים' : language === 'ar' ? 'الشبكات الاجتماعية والروابط' : 'Social Networks & Links'}
                     </Label>
                     <div className="space-y-2 md:space-y-3">
-                      {(user.linkedin || isEditing) && (
-                        <div className="flex items-center gap-2 min-w-0">
+                      {(user.linkedin || isEditing) &&
+                    <div className="flex items-center gap-2 min-w-0">
                           <Linkedin className="w-4 h-4 md:w-5 md:h-5 text-blue-600 shrink-0" />
-                          {isEditing ? (
-                            <Input
-                              value={formData.linkedin}
-                              onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                              placeholder="https://linkedin.com/in/username"
-                              className="flex-1 min-w-0 text-sm"
-                            />
-                          ) : user.linkedin ? (
-                            <a 
-                              href={user.linkedin.startsWith('http') ? user.linkedin : `https://${user.linkedin}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline text-xs md:text-sm flex-1 truncate min-w-0"
-                            >
+                          {isEditing ?
+                      <Input
+                        value={formData.linkedin}
+                        onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+                        placeholder="https://linkedin.com/in/username"
+                        className="flex-1 min-w-0 text-sm" /> :
+
+                      user.linkedin ?
+                      <a
+                        href={user.linkedin.startsWith('http') ? user.linkedin : `https://${user.linkedin}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline text-xs md:text-sm flex-1 truncate min-w-0">
+                        
                               {user.linkedin}
-                            </a>
-                          ) : (
-                            <span className="text-slate-400 text-xs md:text-sm italic">{language === 'he' ? 'לא הוזן' : language === 'ar' ? 'لم يُضف' : 'Not added'}</span>
-                          )}
-                        </div>
-                      )}
+                            </a> :
 
-                      {(user.twitter || isEditing) && (
-                        <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-slate-400 text-xs md:text-sm italic">{language === 'he' ? 'לא הוזן' : language === 'ar' ? 'لم يُضف' : 'Not added'}</span>
+                      }
+                        </div>
+                    }
+
+                      {(user.twitter || isEditing) &&
+                    <div className="flex items-center gap-2 min-w-0">
                           <Twitter className="w-4 h-4 md:w-5 md:h-5 text-sky-500 shrink-0" />
-                          {isEditing ? (
-                            <Input
-                              value={formData.twitter}
-                              onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
-                              placeholder="https://twitter.com/username"
-                              className="flex-1 min-w-0 text-sm"
-                            />
-                          ) : user.twitter ? (
-                            <a 
-                              href={user.twitter.startsWith('http') ? user.twitter : `https://${user.twitter}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline text-xs md:text-sm flex-1 truncate min-w-0"
-                            >
+                          {isEditing ?
+                      <Input
+                        value={formData.twitter}
+                        onChange={(e) => setFormData({ ...formData, twitter: e.target.value })}
+                        placeholder="https://twitter.com/username"
+                        className="flex-1 min-w-0 text-sm" /> :
+
+                      user.twitter ?
+                      <a
+                        href={user.twitter.startsWith('http') ? user.twitter : `https://${user.twitter}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline text-xs md:text-sm flex-1 truncate min-w-0">
+                        
                               {user.twitter}
-                            </a>
-                          ) : (
-                            <span className="text-slate-400 text-xs md:text-sm italic">{language === 'he' ? 'לא הוזן' : language === 'ar' ? 'لم يُضف' : 'Not added'}</span>
-                          )}
-                        </div>
-                      )}
+                            </a> :
 
-                      {(user.facebook || isEditing) && (
-                        <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-slate-400 text-xs md:text-sm italic">{language === 'he' ? 'לא הוזן' : language === 'ar' ? 'لم يُضف' : 'Not added'}</span>
+                      }
+                        </div>
+                    }
+
+                      {(user.facebook || isEditing) &&
+                    <div className="flex items-center gap-2 min-w-0">
                           <Facebook className="w-4 h-4 md:w-5 md:h-5 text-blue-700 shrink-0" />
-                          {isEditing ? (
-                            <Input
-                              value={formData.facebook}
-                              onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
-                              placeholder="https://facebook.com/username"
-                              className="flex-1 min-w-0 text-sm"
-                            />
-                          ) : user.facebook ? (
-                            <a 
-                              href={user.facebook.startsWith('http') ? user.facebook : `https://${user.facebook}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline text-xs md:text-sm flex-1 truncate min-w-0"
-                            >
+                          {isEditing ?
+                      <Input
+                        value={formData.facebook}
+                        onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
+                        placeholder="https://facebook.com/username"
+                        className="flex-1 min-w-0 text-sm" /> :
+
+                      user.facebook ?
+                      <a
+                        href={user.facebook.startsWith('http') ? user.facebook : `https://${user.facebook}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline text-xs md:text-sm flex-1 truncate min-w-0">
+                        
                               {user.facebook}
-                            </a>
-                          ) : (
-                            <span className="text-slate-400 text-xs md:text-sm italic">{language === 'he' ? 'לא הוזן' : language === 'ar' ? 'لم يُضف' : 'Not added'}</span>
-                          )}
-                        </div>
-                      )}
+                            </a> :
 
-                      {(user.instagram || isEditing) && (
-                        <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-slate-400 text-xs md:text-sm italic">{language === 'he' ? 'לא הוזן' : language === 'ar' ? 'لم يُضف' : 'Not added'}</span>
+                      }
+                        </div>
+                    }
+
+                      {(user.instagram || isEditing) &&
+                    <div className="flex items-center gap-2 min-w-0">
                           <Instagram className="w-4 h-4 md:w-5 md:h-5 text-pink-600 shrink-0" />
-                          {isEditing ? (
-                            <Input
-                              value={formData.instagram}
-                              onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
-                              placeholder="https://instagram.com/username"
-                              className="flex-1 min-w-0 text-sm"
-                            />
-                          ) : user.instagram ? (
-                            <a 
-                              href={user.instagram.startsWith('http') ? user.instagram : `https://${user.instagram}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline text-xs md:text-sm flex-1 truncate min-w-0"
-                            >
-                              {user.instagram}
-                            </a>
-                          ) : (
-                            <span className="text-slate-400 text-xs md:text-sm italic">{language === 'he' ? 'לא הוזן' : language === 'ar' ? 'لم يُضف' : 'Not added'}</span>
-                          )}
-                        </div>
-                      )}
+                          {isEditing ?
+                      <Input
+                        value={formData.instagram}
+                        onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
+                        placeholder="https://instagram.com/username"
+                        className="flex-1 min-w-0 text-sm" /> :
 
-                      {(user.website || isEditing) && (
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Globe className="w-4 h-4 md:w-5 md:h-5 text-slate-600 shrink-0" />
-                          {isEditing ? (
-                            <Input
-                              value={formData.website}
-                              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                              placeholder="https://yourwebsite.com"
-                              className="flex-1 min-w-0 text-sm"
-                            />
-                          ) : user.website ? (
-                            <a 
-                              href={user.website.startsWith('http') ? user.website : `https://${user.website}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline text-xs md:text-sm flex-1 truncate min-w-0"
-                            >
-                              {user.website}
-                            </a>
-                          ) : (
-                            <span className="text-slate-400 text-xs md:text-sm italic">{language === 'he' ? 'לא הוזן' : language === 'ar' ? 'لم يُضف' : 'Not added'}</span>
-                          )}
+                      user.instagram ?
+                      <a
+                        href={user.instagram.startsWith('http') ? user.instagram : `https://${user.instagram}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline text-xs md:text-sm flex-1 truncate min-w-0">
+                        
+                              {user.instagram}
+                            </a> :
+
+                      <span className="text-slate-400 text-xs md:text-sm italic">{language === 'he' ? 'לא הוזן' : language === 'ar' ? 'لم يُضف' : 'Not added'}</span>
+                      }
                         </div>
-                      )}
+                    }
+
+                      {(user.website || isEditing) &&
+                    <div className="flex items-center gap-2 min-w-0">
+                          <Globe className="w-4 h-4 md:w-5 md:h-5 text-slate-600 shrink-0" />
+                          {isEditing ?
+                      <Input
+                        value={formData.website}
+                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                        placeholder="https://yourwebsite.com"
+                        className="flex-1 min-w-0 text-sm" /> :
+
+                      user.website ?
+                      <a
+                        href={user.website.startsWith('http') ? user.website : `https://${user.website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline text-xs md:text-sm flex-1 truncate min-w-0">
+                        
+                              {user.website}
+                            </a> :
+
+                      <span className="text-slate-400 text-xs md:text-sm italic">{language === 'he' ? 'לא הוזן' : language === 'ar' ? 'لم يُضف' : 'Not added'}</span>
+                      }
+                        </div>
+                    }
                     </div>
                   </div>
-                )}
+                }
               </div>
             </div>
 
@@ -534,26 +534,26 @@ export default function Profile() {
           </CardHeader>
           <CardContent className="space-y-4 p-3 md:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div 
+              <div
                 className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
-                onClick={() => setShowPointsHistory(!showPointsHistory)}
-              >
+                onClick={() => setShowPointsHistory(!showPointsHistory)}>
+                
                 <Sparkles className="w-6 h-6 text-blue-600" />
                 <div>
                   <p className="text-sm text-slate-500">{t('points')}</p>
                   <p className="text-xl font-bold text-slate-900">{user.points || 1000}</p>
                 </div>
               </div>
-              <div 
+              <div
                 className="flex items-center gap-3 p-4 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
-                onClick={() => setShowAcceptedSuggestions(!showAcceptedSuggestions)}
-              >
+                onClick={() => setShowAcceptedSuggestions(!showAcceptedSuggestions)}>
+                
                 <CheckCircle className="w-6 h-6 text-green-600" />
                 <div>
                   <p className="text-sm text-slate-500">
-                    {isOwnProfile 
-                      ? (language === 'he' ? 'הצעות שהתקבלו' : language === 'ar' ? 'مقترحات مقبولة' : 'Accepted suggestions')
-                      : (language === 'he' ? `הצעות שהתקבלו של ${user.full_name}` : `${user.full_name}'s accepted suggestions`)
+                    {isOwnProfile ?
+                    language === 'he' ? 'הצעות שהתקבלו' : language === 'ar' ? 'مقترحات مقبولة' : 'Accepted suggestions' :
+                    language === 'he' ? `הצעות שהתקבלו של ${user.full_name}` : `${user.full_name}'s accepted suggestions`
                     }
                   </p>
                   <p className="text-xl font-bold text-slate-900">{acceptedSuggestions.length}</p>
@@ -561,8 +561,8 @@ export default function Profile() {
               </div>
             </div>
 
-            {showPointsHistory && (
-              <div className="border-t pt-4">
+            {showPointsHistory &&
+            <div className="border-t pt-4">
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <p className="text-sm text-yellow-800">
                     {language === 'he' ? 'בפיתוח' : language === 'ar' ? 'قيد التطوير' : 'Under development'}
@@ -575,10 +575,10 @@ export default function Profile() {
                   {language === 'he' ? '...' : language === 'ar' ? '...' : '...'}
                 </p>
               </div>
-            )}
+            }
 
-            {showAcceptedSuggestions && (
-              <div className="border-t pt-4">
+            {showAcceptedSuggestions &&
+            <div className="border-t pt-4">
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                   <p className="text-sm text-yellow-800">
                     {language === 'he' ? 'בפיתוח' : language === 'ar' ? 'قيد التطوير' : 'Under development'}
@@ -591,7 +591,7 @@ export default function Profile() {
                   {language === 'he' ? '...' : language === 'ar' ? '...' : '...'}
                 </p>
               </div>
-            )}
+            }
 
             <Tabs defaultValue="comments" className="w-full" dir={isRTL ? 'rtl' : 'ltr'} aria-label={language === 'he' ? 'פעילות משתמש' : 'User activity'}>
               <TabsList className="grid w-full grid-cols-3">
@@ -615,25 +615,25 @@ export default function Profile() {
                     {language === 'he' ? 'בפיתוח' : language === 'ar' ? 'قيد التطوير' : 'Under development'}
                   </p>
                 </div>
-                {userComments.length === 0 ? (
-                  <p className="text-slate-500 text-sm text-center py-8">
+                {userComments.length === 0 ?
+                <p className="text-slate-500 text-sm text-center py-8">
                     {language === 'he' ? 'אין תגובות עדיין' : language === 'ar' ? 'لا توجد تعليقات بعد' : 'No comments yet'}
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {userComments.map((comment) => {
-                      let commentUrl = null;
-                      if (comment.rootEntityType === 'suggestion') {
-                        commentUrl = `${createPageUrl("SuggestionDetail")}?id=${comment.rootEntityId}&commentId=${comment.id}`;
-                      } else if (comment.rootEntityType === 'section') {
-                        commentUrl = `${createPageUrl("SectionHistory")}?id=${comment.rootEntityId}&commentId=${comment.id}`;
-                      }
+                  </p> :
 
-                      return (
-                        <div 
-                          key={comment.id}
-                          className="p-4 rounded-lg border-2 bg-blue-50 border-blue-200 hover:border-blue-300 transition-all hover:shadow-md"
-                        >
+                <div className="space-y-3">
+                    {userComments.map((comment) => {
+                    let commentUrl = null;
+                    if (comment.rootEntityType === 'suggestion') {
+                      commentUrl = `${createPageUrl("SuggestionDetail")}?id=${comment.rootEntityId}&commentId=${comment.id}`;
+                    } else if (comment.rootEntityType === 'section') {
+                      commentUrl = `${createPageUrl("SectionHistory")}?id=${comment.rootEntityId}&commentId=${comment.id}`;
+                    }
+
+                    return (
+                      <div
+                        key={comment.id}
+                        className="p-4 rounded-lg border-2 bg-blue-50 border-blue-200 hover:border-blue-300 transition-all hover:shadow-md">
+                        
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
@@ -645,19 +645,19 @@ export default function Profile() {
                                 </span>
                               </div>
                               <p className="text-sm text-slate-700 line-clamp-2 mb-2">{comment.content}</p>
-                              {commentUrl && (
-                                <Link to={commentUrl} className="text-blue-600 hover:underline inline-flex items-center gap-1 text-xs">
+                              {commentUrl &&
+                            <Link to={commentUrl} className="text-blue-600 hover:underline inline-flex items-center gap-1 text-xs">
                                   {t('viewFullComment')}
                                   <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
                                 </Link>
-                              )}
+                            }
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        </div>);
+
+                  })}
                   </div>
-                )}
+                }
               </TabsContent>
 
               <TabsContent value="suggestions" className="mt-4">
@@ -666,34 +666,34 @@ export default function Profile() {
                     {language === 'he' ? 'רכיב הפעילות מנוטרל לצורך בדיקה - מוצגים נתוני פלייסהולדר' : language === 'ar' ? 'مكوّن النشاط معطّل للاختبار - عرض بيانات بديلة' : 'Activity component disabled for testing - showing placeholder data'}
                   </p>
                 </div>
-                {userSuggestions.length === 0 ? (
-                  <p className="text-slate-500 text-sm text-center py-8">
+                {userSuggestions.length === 0 ?
+                <p className="text-slate-500 text-sm text-center py-8">
                     {language === 'he' ? 'אין הצעות עדיין' : language === 'ar' ? 'لا توجد مقترحات بعد' : 'No suggestions yet'}
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {userSuggestions.map((suggestion) => (
-                      <Link 
-                        key={suggestion.id}
-                        to={`${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`}
-                        className="block p-4 rounded-lg border-2 bg-green-50 border-green-200 hover:border-green-300 transition-all hover:shadow-md"
-                      >
+                  </p> :
+
+                <div className="space-y-3">
+                    {userSuggestions.map((suggestion) =>
+                  <Link
+                    key={suggestion.id}
+                    to={`${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`}
+                    className="block p-4 rounded-lg border-2 bg-green-50 border-green-200 hover:border-green-300 transition-all hover:shadow-md">
+                    
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <Badge variant="outline" className={`text-xs font-semibold ${
-                                suggestion.status === 'accepted' ? 'bg-green-100 text-green-800 border-green-300' :
-                                suggestion.status === 'rejected' ? 'bg-red-100 text-red-800 border-red-300' :
-                                'bg-yellow-100 text-yellow-800 border-yellow-300'
-                              }`}>
-                                {suggestion.status === 'accepted' ? t('accepted') : 
-                                 suggestion.status === 'rejected' ? t('rejected') : t('pending')}
+                          suggestion.status === 'accepted' ? 'bg-green-100 text-green-800 border-green-300' :
+                          suggestion.status === 'rejected' ? 'bg-red-100 text-red-800 border-red-300' :
+                          'bg-yellow-100 text-yellow-800 border-yellow-300'}`
+                          }>
+                                {suggestion.status === 'accepted' ? t('accepted') :
+                            suggestion.status === 'rejected' ? t('rejected') : t('pending')}
                               </Badge>
                               <span className="text-xs text-slate-500">
                                 {new Date(suggestion.created_date).toLocaleDateString(
-                                  language === 'en' ? 'en-US' : language === 'ar' ? 'ar-EG' : 'he-IL', 
-                                  { year: 'numeric', month: 'short', day: 'numeric' }
-                                )}
+                              language === 'en' ? 'en-US' : language === 'ar' ? 'ar-EG' : 'he-IL',
+                              { year: 'numeric', month: 'short', day: 'numeric' }
+                            )}
                               </span>
                             </div>
                             <p className="text-sm font-medium text-slate-900 mb-1">{suggestion.title}</p>
@@ -705,9 +705,9 @@ export default function Profile() {
                           <ArrowRight className={`w-4 h-4 text-slate-400 shrink-0 ${isRTL ? 'rotate-180' : ''}`} />
                         </div>
                       </Link>
-                    ))}
+                  )}
                   </div>
-                )}
+                }
               </TabsContent>
 
               <TabsContent value="votes" className="mt-4">
@@ -716,26 +716,26 @@ export default function Profile() {
                     {language === 'he' ? 'רכיב הפעילות מנוטרל לצורך בדיקה - מוצגים נתוני פלייסהולדר' : language === 'ar' ? 'مكوّن النشاط معطّل للاختبار - عرض بيانات بديلة' : 'Activity component disabled for testing - showing placeholder data'}
                   </p>
                 </div>
-                {userVotes.length === 0 ? (
-                  <p className="text-slate-500 text-sm text-center py-8">
+                {userVotes.length === 0 ?
+                <p className="text-slate-500 text-sm text-center py-8">
                     {language === 'he' ? 'אין הצבעות עדיין' : language === 'ar' ? 'لا توجد تصويتات بعد' : 'No votes yet'}
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {userVotes.map((vote) => (
-                      <Link 
-                        key={vote.id}
-                        to={`${createPageUrl("SuggestionDetail")}?id=${vote.suggestionId}`}
-                        className="block p-4 rounded-lg border-2 bg-purple-50 border-purple-200 hover:border-purple-300 transition-all hover:shadow-md"
-                      >
+                  </p> :
+
+                <div className="space-y-3">
+                    {userVotes.map((vote) =>
+                  <Link
+                    key={vote.id}
+                    to={`${createPageUrl("SuggestionDetail")}?id=${vote.suggestionId}`}
+                    className="block p-4 rounded-lg border-2 bg-purple-50 border-purple-200 hover:border-purple-300 transition-all hover:shadow-md">
+                    
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <Badge variant="outline" className={`text-xs font-semibold ${
-                                vote.vote === 'pro' 
-                                  ? 'bg-green-100 text-green-800 border-green-300' 
-                                  : 'bg-red-100 text-red-800 border-red-300'
-                              }`}>
+                          vote.vote === 'pro' ?
+                          'bg-green-100 text-green-800 border-green-300' :
+                          'bg-red-100 text-red-800 border-red-300'}`
+                          }>
                                 {vote.vote === 'pro' ? t('pro') : t('con')}
                               </Badge>
                               <span className="text-xs text-slate-500">
@@ -749,15 +749,15 @@ export default function Profile() {
                           <ArrowRight className={`w-4 h-4 text-slate-400 shrink-0 ${isRTL ? 'rotate-180' : ''}`} />
                         </div>
                       </Link>
-                    ))}
+                  )}
                   </div>
-                )}
+                }
               </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
 
       </div>
-    </div>
-  );
+    </div>);
+
 }
