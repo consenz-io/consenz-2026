@@ -113,12 +113,12 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-red-200 transition-colors">
           {/* Labels row */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-slate-600 hidden">
-              {isHe ? 'התקדמות למחיקת הסעיף' : isAr ? 'تقدم نحو الحذف' : 'Progress to deletion'}
-            </span>
-            <span className={`text-xs font-bold hidden ${passed ? 'text-red-600' : 'text-slate-500'}`}>
-              {passed ? '✓' : `${Math.max(0, delta)}/${threshold}`}
-            </span>
+            
+
+            
+            
+
+            
           </div>
 
           {/* Progress bar */}
