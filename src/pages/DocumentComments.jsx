@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   ArrowRight, ArrowLeft, MessageSquare, FileText,
   ExternalLink, ChevronDown, ChevronUp,
-  ThumbsUp, BookOpen, Filter, ChevronRight } from
+  ThumbsUp, BookOpen, ChevronRight } from
 "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
@@ -275,8 +275,8 @@ export default function DocumentComments() {
   const { t, isRTL, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
-  const [sortBy, setSortBy] = React.useState(SORT_OPTIONS.recent);
-  const [filterType, setFilterType] = React.useState('all');
+  const [sortBy] = React.useState(SORT_OPTIONS.recent);
+  const [filterType] = React.useState('all');
 
   const { data: doc, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
@@ -495,19 +495,6 @@ export default function DocumentComments() {
 
   const isLoading = docLoading || loadingSC || loadingSSC;
 
-  const sortLabel = React.useMemo(() => ({
-    [SORT_OPTIONS.recent]: language === 'he' ? 'עדכני ראשון' : language === 'ar' ? 'الأحدث أولاً' : 'Most recent',
-    [SORT_OPTIONS.oldest]: language === 'he' ? 'ישן ראשון' : language === 'ar' ? 'الأقدم أولاً' : 'Oldest first',
-    [SORT_OPTIONS.most_comments]: language === 'he' ? 'הכי הרבה תגובות' : language === 'ar' ? 'الأكثر تعليقاً' : 'Most comments',
-    [SORT_OPTIONS.topic]: language === 'he' ? 'לפי נושא' : language === 'ar' ? 'حسب الموضوع' : 'By topic'
-  }), [language]);
-
-  const filterOptions = React.useMemo(() => [
-  { value: 'all', label: language === 'he' ? 'הכל' : language === 'ar' ? 'الكل' : 'All' },
-  { value: 'section', label: language === 'he' ? 'סעיפים' : language === 'ar' ? 'المقاطع' : 'Sections' },
-  { value: 'suggestion', label: language === 'he' ? 'הצעות' : language === 'ar' ? 'الاقتراحات' : 'Suggestions' }],
-  [language]);
-
   if (docLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
@@ -559,46 +546,6 @@ export default function DocumentComments() {
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-5 md:py-8 space-y-5">
-        {/* Toolbar */}
-        {groupedComments.length > 0 &&
-        <div className={`flex items-center gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`}>
-            {/* Sort — single compact dropdown */}
-            <div className={`flex items-center gap-1.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              <Filter className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-              <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="text-xs text-slate-600 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-300 cursor-pointer"
-              style={{ direction: isRTL ? 'rtl' : 'ltr' }}>
-              
-                {Object.entries(sortLabel).map(([key, label]) =>
-              <option key={key} value={key}>{label}</option>
-              )}
-              </select>
-            </div>
-
-            {/* Filter pills */}
-            <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
-              {filterOptions.map((opt) =>
-            <button
-              key={opt.value}
-              onClick={() => setFilterType(opt.value)}
-              className={`text-xs px-3 py-1.5 rounded-full transition-colors font-medium border ${
-              filterType === opt.value ?
-              'bg-slate-800 text-white border-slate-800' :
-              'text-slate-500 border-slate-200 bg-white hover:bg-slate-50'}`
-              }>
-              
-                  {opt.label}
-                </button>
-            )}
-            </div>
-
-            <span className={`text-xs text-slate-300 ${isRTL ? 'me-auto' : 'ms-auto'}`}>
-              {groupedComments.length} {language === 'he' ? 'שרשורים' : language === 'ar' ? 'مقطع' : 'threads'}
-            </span>
-          </div>
-        }
 
         {/* Empty state */}
         {!isLoading && groupedComments.length === 0 &&
