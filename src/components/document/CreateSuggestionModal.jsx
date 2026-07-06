@@ -108,7 +108,8 @@ export default function CreateSuggestionModal({
         setFormData(prev => ({ 
             ...prev, 
             newContent: editingSuggestion.newContent,
-            explanation: editingSuggestion.explanation,
+            // אל להעתיק את ההסבר מההצעה המקורית — הסבר הוא של הצעת העריכה החדשה בלבד.
+            explanation: "",
             topicId: editingSuggestion.topicId
         }));
         return;
