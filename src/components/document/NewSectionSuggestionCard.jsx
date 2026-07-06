@@ -350,17 +350,17 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
           return (
             <>
               <div className="flex items-center gap-2 flex-wrap mt-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-xs h-8 px-3 flex-shrink-0 hidden"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpenSidebar && onOpenSidebar(currentVersion.id);
-                  }}>
-                  
-                  {t('viewDetails')}
-                </Button>
+                
+
+
+
+
+
+
+
+
+
+                
                 {user && currentVersion.status === 'pending' &&
                 <Button
                   variant="outline"
