@@ -342,15 +342,15 @@ export default function Profile() {
                         </p>
                       </div>
                       <div>
-                        <Label className="flex items-center gap-2 hidden">
-                          <Bell className="w-4 h-4" />
-                          {language === 'he' ? 'הגדרות התראות' : language === 'ar' ? 'إعدادات الإشعارات' : 'Notification Settings'}
-                        </Label>
+                        
+
+
+                      
                         <Link to={createPageUrl("EmailSettings")}>
-                          <Button variant="outline" size="sm" className="mt-2 w-full hidden">
-                            <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                            {language === 'he' ? 'נהל עדכונים במייל' : language === 'ar' ? 'إدارة ملخص البريد' : 'Manage Email Digest'}
-                          </Button>
+                          
+
+
+                        
                         </Link>
                       </div>
                     </div>
