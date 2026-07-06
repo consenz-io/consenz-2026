@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "@/components/LanguageContext";
-import { calcGroupParticipants } from "@/lib/groupParticipants";
+import { calcAllGroupParticipants } from "@/lib/groupParticipants";
 
 const LANGUAGE_PROMPTS = { en: "English", he: "Hebrew", ar: "Arabic" };
 
@@ -149,14 +149,13 @@ export function useHomeData() {
     return map;
   }, [publicProfiles, allUsers]);
 
-  // ── Derived: per-group participant counts ──────────────────────────────────
+  // ── Derived: per-group participant counts (single pass over all arrays) ────
   const groupParticipantCounts = useMemo(() => {
+    const countsMap = calcAllGroupParticipants(
+      groups, groupMembers, documents, allSuggestions, allVotes, allComments, publicProfiles, allAgreements, allSections
+    );
     const counts = {};
-    groups.forEach(group => {
-      counts[group.id] = calcGroupParticipants(
-        group.id, groupMembers, documents, allSuggestions, allVotes, allComments, publicProfiles, allAgreements, allSections
-      ).size;
-    });
+    countsMap.forEach((count, gid) => { counts[gid] = count; });
     return counts;
   }, [groups, groupMembers, documents, allSuggestions, allVotes, allComments, publicProfiles, allAgreements, allSections]);
 

@@ -407,64 +407,66 @@ Return ONLY the translated text:`;
   }, [suggestions, existingSectionIds]);
   const getGhostSlotsForTopic = React.useCallback((topicId) => ghostSlotsByTopicId.get(topicId) || [], [ghostSlotsByTopicId]);
 
-  const getNewSectionSuggestionsForTopic = React.useCallback((topicId) => {
-    return suggestions.filter(s => {
-      // רק הצעות לסעיפים חדשים שהן ROOT (אין להן parent)
-      if (s.type !== 'new_section') return false;
-      if (s.parentSuggestionId) return false; // דלג על הצעות עריכה - נציג אותן בקרוסלה
-      
-      // הצג רק הצעות pending
-      if (s.status !== 'pending') return false;
-      
-      // דלג גם על pending שכבר יש להן sectionId (הסעיף נוצר אבל הן עדיין pending)
-      if (s.type === 'new_section' && s.sectionId) return false;
-      
-      // אם ההצעה מיועדת לנושא קיים - בדוק לפי topicId
-      if (s.topicId) {
-        return s.topicId === topicId;
-      }
-      
-      // אם ההצעה מיועדת לנושא חדש שעדיין לא נוצר - לא מציגים אותה בשום נושא
-      return false;
-    }).sort((a, b) => (a.insertPosition || 999) - (b.insertPosition || 999));
+  // Pre-group new-section suggestions by topicId — single pass, O(1) lookup per topic
+  const newSectionSuggestionsByTopicId = React.useMemo(() => {
+    const map = new Map();
+    for (const s of suggestions) {
+      if (s.type !== 'new_section') continue;
+      if (s.parentSuggestionId) continue;
+      if (s.status !== 'pending') continue;
+      if (s.sectionId) continue;
+      if (!s.topicId) continue; // new-topic suggestions handled separately
+      if (!map.has(s.topicId)) map.set(s.topicId, []);
+      map.get(s.topicId).push(s);
+    }
+    map.forEach(arr => arr.sort((a, b) => (a.insertPosition || 999) - (b.insertPosition || 999)));
+    return map;
   }, [suggestions]);
 
-  // פונקציה נפרדת להצעות לנושאים חדשים שעדיין לא נוצרו
-  const getNewTopicSuggestions = React.useCallback(() => {
-    return suggestions.filter(s => {
-      // רק הצעות new_section (לא edit_section)
-      if (s.type !== 'new_section') return false;
-      // רק pending
-      if (s.status !== 'pending') return false;
-      // לא topicId - כלומר נושא חדש
-      if (s.topicId) return false;
-      // חייב newTopicTitle
-      if (!s.newTopicTitle) return false;
-      // רק ROOT suggestions
-      if (s.parentSuggestionId) return false;
-      if (s.sectionId) return false;
-      
-      return true;
-    }).sort((a, b) => (a.newTopicOrder || 999) - (b.newTopicOrder || 999));
+  const getNewSectionSuggestionsForTopic = React.useCallback(
+    (topicId) => newSectionSuggestionsByTopicId.get(topicId) || [],
+    [newSectionSuggestionsByTopicId]
+  );
+
+  // Pre-compute new-topic suggestions (no topicId yet) in a single pass
+  const newTopicSuggestions = React.useMemo(() => {
+    const arr = [];
+    for (const s of suggestions) {
+      if (s.type !== 'new_section') continue;
+      if (s.status !== 'pending') continue;
+      if (s.topicId) continue;
+      if (!s.newTopicTitle) continue;
+      if (s.parentSuggestionId) continue;
+      if (s.sectionId) continue;
+      arr.push(s);
+    }
+    arr.sort((a, b) => (a.newTopicOrder || 999) - (b.newTopicOrder || 999));
+    return arr;
   }, [suggestions]);
 
-  // פונקציה להצעות נושאים חדשים שצריכות להופיע אחרי נושא מסוים
-  const getNewTopicSuggestionsAfterTopic = React.useCallback((topicOrder) => {
-    const newTopicSuggestions = getNewTopicSuggestions();
-    return newTopicSuggestions.filter(s => 
-      s.newTopicOrder !== undefined && 
-      s.newTopicOrder !== null && 
-      s.newTopicOrder === topicOrder + 1
-    );
-  }, [getNewTopicSuggestions]);
+  const getNewTopicSuggestions = React.useCallback(() => newTopicSuggestions, [newTopicSuggestions]);
+
+  // Pre-index new-topic suggestions by newTopicOrder for O(1) lookup
+  const newTopicSuggestionsByOrder = React.useMemo(() => {
+    const map = new Map();
+    for (const s of newTopicSuggestions) {
+      if (s.newTopicOrder != null) map.set(s.newTopicOrder, s);
+    }
+    return map;
+  }, [newTopicSuggestions]);
+
+  const getNewTopicSuggestionsAfterTopic = React.useCallback(
+    (topicOrder) => {
+      const s = newTopicSuggestionsByOrder.get(topicOrder + 1);
+      return s ? [s] : [];
+    },
+    [newTopicSuggestionsByOrder]
+  );
 
   const reorderSectionsMutation = useMutation({
     mutationFn: async ({ topicId, reorderedSections }) => {
-      // Update the order of all sections in this topic
-      await Promise.all(
-        reorderedSections.map((section, index) => 
-          base44.entities.Section.update(section.id, { order: index })
-        )
+      await base44.entities.Section.bulkUpdate(
+        reorderedSections.map((section, index) => ({ id: section.id, order: index }))
       );
     },
     onSuccess: () => {
@@ -488,10 +490,8 @@ Return ONLY the translated text:`;
 
   const reorderTopicsMutation = useMutation({
     mutationFn: async ({ reorderedTopics }) => {
-      await Promise.all(
-        reorderedTopics.map((topic, index) => 
-          base44.entities.Topic.update(topic.id, { order: index })
-        )
+      await base44.entities.Topic.bulkUpdate(
+        reorderedTopics.map((topic, index) => ({ id: topic.id, order: index }))
       );
     },
     onSuccess: () => {
@@ -516,10 +516,10 @@ Return ONLY the translated text:`;
       // Delete all sections in this topic
       const topicSections = sections.filter(s => s.topicId === topicId);
       const sectionIds = topicSections.map(s => s.id);
-      await Promise.all(
-        topicSections.map(section => base44.entities.Section.delete(section.id))
-      );
-      
+      if (sectionIds.length > 0) {
+        await base44.entities.Section.deleteMany({ id: { $in: sectionIds } });
+      }
+
       // Delete the topic
       await base44.entities.Topic.delete(topicId);
 
@@ -544,9 +544,22 @@ Return ONLY the translated text:`;
     }
   };
 
-  const getTopicEditSuggestions = React.useCallback((topicId) => {
-    return topicEditSuggestions.filter(s => s.topicId === topicId && s.status === 'pending');
+  // Pre-group pending topic-edit suggestions by topicId for O(1) lookup
+  const topicEditSuggestionsByTopicId = React.useMemo(() => {
+    const map = new Map();
+    for (const s of topicEditSuggestions) {
+      if (s.status !== 'pending') continue;
+      if (!s.topicId) continue;
+      if (!map.has(s.topicId)) map.set(s.topicId, []);
+      map.get(s.topicId).push(s);
+    }
+    return map;
   }, [topicEditSuggestions]);
+
+  const getTopicEditSuggestions = React.useCallback(
+    (topicId) => topicEditSuggestionsByTopicId.get(topicId) || [],
+    [topicEditSuggestionsByTopicId]
+  );
 
   // O(1) lookup map for topic edit votes
   const topicEditVotesMap = React.useMemo(() => {

@@ -99,3 +99,107 @@ export function calcGroupParticipants(
 
   return ids;
 }
+
+/**
+ * Computes participant counts for ALL groups in a single pass.
+ *
+ * Calling calcGroupParticipants per group is O(groups × N) because it rebuilds
+ * the email→userId map and re-iterates every suggestions/votes/comments/sections
+ * array once per group. This version builds shared lookup maps once and does a
+ * single pass over each array, giving O(N) total regardless of group count.
+ *
+ * @returns {Map<string, number>} groupId → participant count
+ */
+export function calcAllGroupParticipants(
+  groups,
+  groupMembers,
+  documents,
+  suggestions,
+  votes,
+  comments,
+  publicProfiles,
+  agreements = [],
+  sections = []
+) {
+  if (!groups || groups.length === 0) return new Map();
+
+  // email → userId (built once)
+  const emailToUserId = new Map();
+  for (const p of publicProfiles) {
+    if (p.email && p.userId) emailToUserId.set(p.email, p.userId);
+  }
+
+  // docId → groupId
+  const docIdToGroupId = new Map();
+  for (const d of documents) {
+    if (d.groupId) docIdToGroupId.set(d.id, d.groupId);
+  }
+
+  // suggestionId → groupId (for vote matching)
+  const suggestionIdToGroupId = new Map();
+  // sectionId → groupId (for section-comment matching)
+  const sectionIdToGroupId = new Map();
+
+  // groupId → Set of participant userIds
+  const groupParticipantSets = new Map();
+  for (const g of groups) groupParticipantSets.set(g.id, new Set());
+
+  // 1. Formal group members
+  for (const m of groupMembers) {
+    if (m.groupId && groupParticipantSets.has(m.groupId) && m.userId) {
+      groupParticipantSets.get(m.groupId).add(m.userId);
+    }
+  }
+
+  // 2. Suggestion creators + build suggestionId→groupId map
+  for (const s of suggestions) {
+    const gid = docIdToGroupId.get(s.documentId);
+    if (!gid || !groupParticipantSets.has(gid)) continue;
+    suggestionIdToGroupId.set(s.id, gid);
+    if (s.created_by) {
+      const uid = emailToUserId.get(s.created_by);
+      if (uid) groupParticipantSets.get(gid).add(uid);
+    }
+  }
+
+  // 3. Voters on group suggestions (O(1) lookup via suggestionId→groupId)
+  for (const v of votes) {
+    if (!v.userId) continue;
+    const gid = suggestionIdToGroupId.get(v.suggestionId);
+    if (gid && groupParticipantSets.has(gid)) {
+      groupParticipantSets.get(gid).add(v.userId);
+    }
+  }
+
+  // Build sectionId→groupId map
+  for (const s of sections) {
+    const gid = docIdToGroupId.get(s.documentId);
+    if (gid) sectionIdToGroupId.set(s.id, gid);
+  }
+
+  // 4. Commenters (O(1) per comment via the three lookup maps)
+  for (const c of comments) {
+    if (!c.created_by) continue;
+    let gid = null;
+    if (c.rootEntityType === 'document') gid = docIdToGroupId.get(c.rootEntityId);
+    else if (c.rootEntityType === 'suggestion') gid = suggestionIdToGroupId.get(c.rootEntityId);
+    else if (c.rootEntityType === 'section') gid = sectionIdToGroupId.get(c.rootEntityId);
+    if (gid && groupParticipantSets.has(gid)) {
+      const uid = emailToUserId.get(c.created_by);
+      if (uid) groupParticipantSets.get(gid).add(uid);
+    }
+  }
+
+  // 5. DocumentAgreement signers
+  for (const a of agreements) {
+    if (!a.userId) continue;
+    const gid = docIdToGroupId.get(a.documentId);
+    if (gid && groupParticipantSets.has(gid)) {
+      groupParticipantSets.get(gid).add(a.userId);
+    }
+  }
+
+  const result = new Map();
+  groupParticipantSets.forEach((idSet, gid) => result.set(gid, idSet.size));
+  return result;
+}
