@@ -140,54 +140,54 @@ const GroupCard = React.memo(function GroupCard({ group, profileMaps, language, 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
       {/* Card Header */}
-      <div
-        className={`flex items-center gap-3 px-5 py-4 cursor-pointer select-none hidden ${isRTL ? 'flex-row-reverse' : ''} ${collapsed ? '' : 'border-b border-slate-100'}`}
-        onClick={() => setCollapsed((v) => !v)}
-        role="button"
-        aria-expanded={!collapsed}
-        dir={isRTL ? 'rtl' : 'ltr'}>
-        
-        <div className={`flex-shrink-0 rounded-lg p-1.5 ${group.type === 'section' ? 'bg-blue-50' : 'bg-amber-50'}`}>
-          {group.type === 'section' ?
-          <FileText className="w-4 h-4 text-blue-500" /> :
-          <MessageSquare className="w-4 h-4 text-amber-500" />
-          }
-        </div>
-        <div className="flex-1 min-w-0" dir={isRTL ? 'rtl' : 'ltr'}>
-          <div className={`flex items-center gap-2 flex-wrap ${isRTL ? 'flex-row-reverse' : ''}`} style={{ textAlign: 'start' }}>
-            {group.type === 'section' ?
-            <>
-                {topicTitle &&
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{topicTitle}</span>
-              }
-                {sectionNum && <span className="text-xs text-slate-300 font-mono">§{sectionNum}</span>}
-                <Badge className="bg-green-50 text-green-600 border-0 text-xs px-1.5 py-0 h-5 font-medium">
-                  {totalCount}
-                </Badge>
-              </> :
+      
 
-            <>
-                <span className="text-xs font-semibold text-amber-500 uppercase tracking-wider">
-                  {language === 'he' ? 'הצעה' : language === 'ar' ? 'اقتراح' : 'Suggestion'}
-                </span>
-                <span className="text-sm font-medium text-slate-700 truncate">{group.suggestion?.title}</span>
-                <Badge className="bg-amber-50 text-amber-600 border-0 text-xs px-1.5 py-0 h-5">
-                  {totalCount}
-                </Badge>
-              </>
-            }
-          </div>
-          {previewText &&
-          <p className="text-xs text-slate-400 mt-0.5 truncate" style={{ textAlign: 'start' }}>{previewText}</p>
-          }
-        </div>
-        <div className="flex-shrink-0 text-slate-300">
-          {collapsed ?
-          <ChevronDown className="w-4 h-4" /> :
-          <ChevronUp className="w-4 h-4" />
-          }
-        </div>
-      </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
 
       {/* Card Body */}
       {!collapsed &&
