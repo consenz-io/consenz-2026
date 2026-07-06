@@ -22,12 +22,12 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
     queryKey: ["sectionVotes", section.id],
     queryFn: () => base44.entities.SectionVote.filter({ sectionId: section.id }),
     staleTime: 60 * 1000,
-    placeholderData: initialVotes,
+    placeholderData: initialVotes
   });
 
-  const proCount = sectionVotes.filter(v => v.vote === "pro").length;
-  const conCount = sectionVotes.filter(v => v.vote === "con").length;
-  const userVote = user?.id ? sectionVotes.find(v => v.userId === user.id) : null;
+  const proCount = sectionVotes.filter((v) => v.vote === "pro").length;
+  const conCount = sectionVotes.filter((v) => v.vote === "con").length;
+  const userVote = user?.id ? sectionVotes.find((v) => v.userId === user.id) : null;
 
   const threshold = Math.max(2, document?.threshold || 2);
   // delta = opponents (con) minus supporters (pro) — drives the deletion progress
@@ -44,19 +44,19 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
   const afterProProgress = Math.min(100, Math.max(0, afterProDelta / threshold * 100));
   const afterConProgress = Math.min(100, Math.max(0, afterConDelta / threshold * 100));
 
-  const displayProgress = hoverVote === 'pro'
-    ? afterProProgress
-    : hoverVote === 'con'
-    ? afterConProgress
-    : progressPercent;
+  const displayProgress = hoverVote === 'pro' ?
+  afterProProgress :
+  hoverVote === 'con' ?
+  afterConProgress :
+  progressPercent;
 
-  const barColor = passed
-    ? 'bg-red-500'
-    : hoverVote === 'pro'
-    ? 'bg-blue-400'
-    : hoverVote === 'con'
-    ? 'bg-red-500'
-    : 'bg-red-400';
+  const barColor = passed ?
+  'bg-red-500' :
+  hoverVote === 'pro' ?
+  'bg-blue-400' :
+  hoverVote === 'con' ?
+  'bg-red-500' :
+  'bg-red-400';
 
   const voteMutation = useMutation({
     mutationFn: async (voteType) => {
@@ -75,7 +75,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
         queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
         queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', document.id] });
       }
-    },
+    }
   });
 
   const handleVote = (voteType) => {
@@ -93,30 +93,30 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
   const isHe = language === 'he';
   const isAr = language === 'ar';
 
-  const statusText = passed
-    ? (isHe ? '✓ הסעיף יימחק' : isAr ? '✓ سيُحذف القسم' : '✓ Section will be deleted')
-    : hoverVote === 'con'
-    ? (isHe ? 'הצבעתך תקרב את מחיקת הסעיף' : isAr ? 'سيقرب صوتك حذف القسم' : 'Your vote will help delete this section')
-    : hoverVote === 'pro'
-    ? (isHe ? 'הצבעתך תרחיק את מחיקת הסעיף' : isAr ? 'سيبعد صوتك حذف القسم' : 'Your vote will keep this section')
-    : votesNeeded === 1
-    ? (isHe ? 'אם עוד אחד יצביע נגד, הסעיף יבוטל' : isAr ? 'إذا صوت واحد آخر ضد، سيُلغى القسم' : 'If 1 more votes against, the section will be cancelled')
-    : (isHe ? `אם עוד ${votesNeeded} יצביעו נגד, הסעיף יבוטל` : isAr ? `إذا صوت ${votesNeeded} آخرون ضد، سيُلغى القسم` : `If ${votesNeeded} more vote against, the section will be cancelled`);
+  const statusText = passed ?
+  isHe ? '✓ הסעיף יימחק' : isAr ? '✓ سيُحذف القسم' : '✓ Section will be deleted' :
+  hoverVote === 'con' ?
+  isHe ? 'הצבעתך תקרב את מחיקת הסעיף' : isAr ? 'سيقرب صوتك حذف القسم' : 'Your vote will help delete this section' :
+  hoverVote === 'pro' ?
+  isHe ? 'הצבעתך תרחיק את מחיקת הסעיף' : isAr ? 'سيبعد صوتك حذف القسم' : 'Your vote will keep this section' :
+  votesNeeded === 1 ?
+  isHe ? 'אם עוד אחד יצביע נגד, הסעיף יבוטל' : isAr ? 'إذا صوت واحد آخر ضد، سيُلغى القسم' : 'If 1 more votes against, the section will be cancelled' :
+  isHe ? `אם עוד ${votesNeeded} יצביעו נגד, הסעיף יבוטל` : isAr ? `إذا صوت ${votesNeeded} آخرون ضد، سيُلغى القسم` : `If ${votesNeeded} more vote against, the section will be cancelled`;
 
   return (
     <div className="space-y-3">
       <Link
         to={`${createPageUrl("UnderstandingConsensus")}?id=${document?.id}`}
         className="block group"
-        title={isHe ? 'למדו על מנגנון הקונצנזוס' : 'Learn about consensus'}
-      >
+        title={isHe ? 'למדו על מנגנון הקונצנזוס' : 'Learn about consensus'}>
+        
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-red-200 transition-colors">
           {/* Labels row */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-slate-600">
+            <span className="text-xs font-semibold text-slate-600 hidden">
               {isHe ? 'התקדמות למחיקת הסעיף' : isAr ? 'تقدم نحو الحذف' : 'Progress to deletion'}
             </span>
-            <span className={`text-xs font-bold ${passed ? 'text-red-600' : 'text-slate-500'}`}>
+            <span className={`text-xs font-bold hidden ${passed ? 'text-red-600' : 'text-slate-500'}`}>
               {passed ? '✓' : `${Math.max(0, delta)}/${threshold}`}
             </span>
           </div>
@@ -128,13 +128,13 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
               className={`h-full rounded-full ${barColor} transition-colors duration-300`}
               initial={{ width: `${displayProgress}%` }}
               animate={{ width: `${displayProgress}%` }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            />
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }} />
+            
           </div>
 
           {/* Status text */}
           {!passed &&
-            <p className="text-xs text-slate-600 mt-1.5 font-medium text-center" dir={isRTL ? 'rtl' : 'ltr'}>
+          <p className="text-xs text-slate-600 mt-1.5 font-medium text-center" dir={isRTL ? 'rtl' : 'ltr'}>
               {statusText}
             </p>
           }
@@ -144,7 +144,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
       {/* Vote buttons */}
       <div className="relative">
         {voteMutation.isPending &&
-          <div className="absolute inset-0 bg-white/60 rounded-xl flex items-center justify-center z-10">
+        <div className="absolute inset-0 bg-white/60 rounded-xl flex items-center justify-center z-10">
             <Loader2 className="w-6 h-6 animate-spin text-red-600" />
           </div>
         }
@@ -156,11 +156,11 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
             onMouseEnter={() => setHoverVote('pro')}
             onMouseLeave={() => setHoverVote(null)}
             className={`flex-1 min-w-0 h-10 md:h-12 text-sm md:text-base font-semibold rounded-xl transition-all duration-200 px-2 md:px-4 ${
-              userVote?.vote === 'pro'
-                ? 'bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-200'
-                : 'border-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-400'
-            }`}
-          >
+            userVote?.vote === 'pro' ?
+            'bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-200' :
+            'border-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-400'}`
+            }>
+            
             <ThumbsUp className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
             <span className="truncate">{isHe ? 'בעד' : isAr ? 'مع' : 'Pro'}</span>
             {proCount > 0 && <span className="text-xs md:text-sm opacity-80 shrink-0">({proCount})</span>}
@@ -172,24 +172,24 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
             onMouseEnter={() => setHoverVote('con')}
             onMouseLeave={() => setHoverVote(null)}
             className={`flex-1 min-w-0 h-10 md:h-12 text-sm md:text-base font-semibold rounded-xl transition-all duration-200 px-2 md:px-4 ${
-              userVote?.vote === 'con'
-                ? 'bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-200'
-                : 'border-2 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-400'
-            }`}
-          >
+            userVote?.vote === 'con' ?
+            'bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-200' :
+            'border-2 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-400'}`
+            }>
+            
             <ThumbsDown className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
             <span className="truncate">{isHe ? 'נגד' : isAr ? 'ضد' : 'Con'}</span>
             {conCount > 0 && <span className="text-xs md:text-sm opacity-80 shrink-0">({conCount})</span>}
           </Button>
         </div>
         {userVote &&
-          <p className="text-center text-xs text-slate-400 mt-1.5">
-            {userVote.vote === 'pro'
-              ? (isHe ? 'הצבעת להשאיר • לחץ/י שוב לביטול' : isAr ? 'صوتك للإبقاء • اضغط مجدداً للإلغاء' : 'You voted to keep • click again to remove')
-              : (isHe ? 'הצבעת למחוק • לחץ/י שוב לביטול' : isAr ? 'صوتك للحذف • اضغط مجدداً للإلغاء' : 'You voted to delete • click again to remove')}
+        <p className="text-center text-xs text-slate-400 mt-1.5">
+            {userVote.vote === 'pro' ?
+          isHe ? 'הצבעת להשאיר • לחץ/י שוב לביטול' : isAr ? 'صوتك للإبقاء • اضغط مجدداً للإلغاء' : 'You voted to keep • click again to remove' :
+          isHe ? 'הצבעת למחוק • לחץ/י שוב לביטול' : isAr ? 'صوتك للحذف • اضغط مجدداً للإلغاء' : 'You voted to delete • click again to remove'}
           </p>
         }
       </div>
-    </div>
-  );
+    </div>);
+
 }
