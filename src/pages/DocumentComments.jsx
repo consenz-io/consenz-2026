@@ -207,8 +207,8 @@ const GroupCard = React.memo(function GroupCard({ group, profileMaps, language, 
         <div className="rounded-lg border border-amber-100 bg-amber-50/40 px-3 py-2.5 mb-5">
               <Link
             to={`${createPageUrl("SuggestionDetail")}?id=${group.entityId}`}
-            className={`flex items-center gap-2 text-sm text-amber-700 font-medium hover:text-amber-900 transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}>
-            
+            className={`flex w-fit items-center gap-2 text-sm text-amber-700 font-medium hover:text-amber-900 transition-colors me-auto ${isRTL ? 'flex-row-reverse' : ''}`}>
+
                 <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" />
                 <span style={{ textAlign: 'start' }}>{group.suggestion.title}</span>
               </Link>
