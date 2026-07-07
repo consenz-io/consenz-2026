@@ -33,7 +33,8 @@ export default function DocumentContent({
   topics, 
   sections, 
   suggestions,
-  onEditSection, 
+  onEditSection,
+  onEditSectionThenVote,
   onNewSection,
   isAdmin,
   user,
@@ -897,6 +898,7 @@ Return ONLY the translated text:`;
                              user={user}
                              canParticipate={canParticipate}
                              onEditSection={onEditSection}
+                             onEditSectionThenVote={onEditSectionThenVote}
                              onDirectEdit={onDirectEdit}
                               toggleComments={toggleComments}
                               showComments={showComments}

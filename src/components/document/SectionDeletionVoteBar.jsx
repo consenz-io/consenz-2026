@@ -21,7 +21,7 @@ import {
  * "pro" = keep the section, "con" = delete it.
  * When (con - pro) >= document threshold, the section is deleted (handled in voteOnSection).
  */
-export default function SectionDeletionVoteBar({ section, document, user, isRTL, initialVotes = [], canParticipate = true, onCannotParticipate, onSuggestEdit, readOnly = false }) {
+export default function SectionDeletionVoteBar({ section, document, user, isRTL, initialVotes = [], canParticipate = true, onCannotParticipate, onSuggestEdit, onSuggestEditThenVote, readOnly = false }) {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [showConDialog, setShowConDialog] = useState(false);
@@ -111,11 +111,14 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
 
   const handleConVoteAndSuggest = () => {
     setShowConDialog(false);
-    voteMutation.mutate('con', {
-      onSuccess: () => {
-        if (onSuggestEdit) onSuggestEdit(section);
-      },
-    });
+    // New flow: open the suggestion modal FIRST. The 'con' vote is registered
+    // only after the suggestion is successfully published (handled by the parent
+    // via pendingConVoteSectionId). If the modal is cancelled, no vote is cast.
+    if (onSuggestEditThenVote) {
+      onSuggestEditThenVote(section);
+    } else if (onSuggestEdit) {
+      onSuggestEdit(section);
+    }
   };
 
   const isHe = language === 'he';

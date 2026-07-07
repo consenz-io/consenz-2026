@@ -70,6 +70,7 @@ export default function DocumentView() {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState(null);
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
+  const [pendingConVoteSectionId, setPendingConVoteSectionId] = useState(null);
 
   // Fire tutorial event when document page mounts — signals the home-intro step is complete.
   // Small delay ensures useTutorial's effect has registered its listener before the event fires.
@@ -346,6 +347,21 @@ export default function DocumentView() {
     },
   });
 
+  // Fires a 'con' vote on a section after the user's improvement suggestion was
+  // published. Mirrors the query invalidation in SectionDeletionVoteBar.
+  const conVoteAfterSuggestionMutation = useMutation({
+    mutationFn: (sectionId) => base44.functions.invoke('voteOnSection', { sectionId, vote: 'con' }),
+    onSuccess: (res, sectionId) => {
+      const data = res?.data;
+      queryClient.invalidateQueries({ queryKey: ['sectionVotes', sectionId] });
+      queryClient.invalidateQueries({ queryKey: ['allSectionVotes'] });
+      if (data?.sectionDeleted) {
+        queryClient.invalidateQueries({ queryKey: ['sections', documentId] });
+        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
+      }
+    },
+  });
+
   React.useEffect(() => {
     if (document) {
       setDescription(document.description || "");
@@ -472,6 +488,15 @@ export default function DocumentView() {
 
   const handleEditSection = React.useCallback((section, isDirectEdit = false) => {
     setEditingSection(isDirectEdit ? { ...section, isDirectEdit: true } : section);
+    setShowCreateSuggestion(true);
+  }, []);
+
+  // Opens the edit-suggestion modal AND registers a pending 'con' vote that fires
+  // only after the suggestion is successfully published. If the modal is cancelled,
+  // the pending vote is discarded — no vote is cast.
+  const handleEditSectionThenVote = React.useCallback((section) => {
+    setPendingConVoteSectionId(section.id);
+    setEditingSection(section);
     setShowCreateSuggestion(true);
   }, []);
 
@@ -1082,6 +1107,7 @@ export default function DocumentView() {
               sections={sections}
               suggestions={suggestions}
               onEditSection={handleEditSection}
+              onEditSectionThenVote={handleEditSectionThenVote}
               onNewSection={handleNewSection}
               isAdmin={isAdmin}
               user={user}
@@ -1123,9 +1149,14 @@ export default function DocumentView() {
               setShowCreateSuggestion(false);
               setEditingSection(null);
               setEditingSuggestion(null);
+              setPendingConVoteSectionId(null);
             }}
             onSuggestionCreated={(suggestionId, sectionId, topicId) => {
               setNewlyCreatedSuggestion({ suggestionId, sectionId, topicId });
+              if (pendingConVoteSectionId) {
+                conVoteAfterSuggestionMutation.mutate(pendingConVoteSectionId);
+                setPendingConVoteSectionId(null);
+              }
             }}
             isDeletingSuggestion={editingSection?.isDeletingSuggestion}
           />

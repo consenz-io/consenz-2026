@@ -47,7 +47,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
   allDocumentSuggestions = [],
   sectionVotes = [],
   isGhost = false,
-  onEditSuggestion
+  onEditSuggestion,
+  onEditSectionThenVote
 }) {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
@@ -573,6 +574,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
                   canParticipate={canParticipate}
                   onCannotParticipate={() => setShowJoinGroupDialog(true)}
                   onSuggestEdit={onEditSection}
+                  onSuggestEditThenVote={onEditSectionThenVote}
                   readOnly={!user}
                 />
               </div>
