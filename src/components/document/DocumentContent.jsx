@@ -964,7 +964,7 @@ Return ONLY the translated text:`;
                             {/* Insert button after new section suggestion cards — maintains order by
                                 using the same insertPosition; newer suggestions sort after older ones */}
                             {suggestionsAfterThisSection.length > 0 && (
-                              <div className="group relative h-4 flex items-center justify-center -my-2 z-10">
+                              <div className="group relative h-8 flex items-center justify-center my-1 z-10">
                                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                   <div className="h-full flex items-center justify-center">
                                     <Button
