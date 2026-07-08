@@ -420,7 +420,12 @@ Return ONLY the translated text:`;
       if (!map.has(s.topicId)) map.set(s.topicId, []);
       map.get(s.topicId).push(s);
     }
-    map.forEach(arr => arr.sort((a, b) => (a.insertPosition || 999) - (b.insertPosition || 999)));
+    map.forEach(arr => arr.sort((a, b) => {
+      const posDiff = (a.insertPosition || 999) - (b.insertPosition || 999);
+      if (posDiff !== 0) return posDiff;
+      // Same insertPosition: maintain creation order so newer suggestions appear after older ones
+      return new Date(a.created_date) - new Date(b.created_date);
+    }));
     return map;
   }, [suggestions]);
 
@@ -762,6 +767,18 @@ Return ONLY the translated text:`;
                         {topicSections.map((section, index) => {
                         const newSectionSuggestions = getNewSectionSuggestionsForTopic(topic.id);
                         const allSectionSuggestions = getSuggestionsForSection(section.id);
+                        // New section suggestions rendered AFTER this section (pre-computed for insert button placement)
+                        const suggestionsAfterThisSection = newSectionSuggestions.filter(s => {
+                          const pos = s.insertPosition;
+                          if (pos === -1) return false;
+                          if (pos !== undefined && pos !== null && pos === section.order + 1) return true;
+                          if (index === topicSections.length - 1) {
+                            if (pos === -1) return false;
+                            const matchesAnySectionOrder = topicSections.some(sec => pos !== undefined && pos !== null && pos === sec.order + 1);
+                            return !matchesAnySectionOrder;
+                          }
+                          return false;
+                        });
                         // Ghost slots (deleted section) whose order falls before the first section
                         const ghostsBefore = index === 0
                           ? topicGhostSlots.filter(g => g.originalSectionOrder < section.order)
@@ -923,21 +940,7 @@ Return ONLY the translated text:`;
                                 - BEFORE the first section (index=0): insertPosition === -1
                                 - AFTER section at index i: insertPosition === topicSections[i].order
                                 - AFTER the last section: insertPosition is null/undefined or doesn't match any section order */}
-                            {newSectionSuggestions
-                              .filter(s => {
-                                const pos = s.insertPosition;
-                                // pos === -1 is handled separately (rendered BEFORE section carousel)
-                                if (pos === -1) return false;
-                                // Show AFTER this section: insertPosition === section.order + 1
-                                if (pos !== undefined && pos !== null && pos === section.order + 1) return true;
-                                // Show after the last section: pos doesn't match any section.order+1 and pos !== -1
-                                if (index === topicSections.length - 1) {
-                                  if (pos === -1) return false; // already handled above
-                                  const matchesAnySectionOrder = topicSections.some(sec => pos !== undefined && pos !== null && pos === sec.order + 1);
-                                  return !matchesAnySectionOrder;
-                                }
-                                return false;
-                              })
+                            {suggestionsAfterThisSection
                               .map((suggestion) => (
                                 <NewSectionSuggestionCard
                                   key={suggestion.id}
@@ -958,6 +961,32 @@ Return ONLY the translated text:`;
                                   targetSuggestionId={targetSuggestionId}
                                 />
                               ))}
+                            {/* Insert button after new section suggestion cards — maintains order by
+                                using the same insertPosition; newer suggestions sort after older ones */}
+                            {suggestionsAfterThisSection.length > 0 && (
+                              <div className="group relative h-4 flex items-center justify-center -my-2 z-10">
+                                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <div className="h-full flex items-center justify-center">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        if (!user) {
+                                          base44.auth.redirectToLogin(window.location.href);
+                                          return;
+                                        }
+                                        if (!canParticipate) return;
+                                        onNewSection(topic.id, section.order + 1);
+                                      }}
+                                      className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
+                                    >
+                                      <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                                      {t('insertSectionHere')}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
 
                             {index === topicSections.length - 1 && (
                               <>
