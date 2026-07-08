@@ -141,14 +141,6 @@ export function useHomeData() {
     return (scores.reduce((a, s) => a + s, 0) / scores.length * 100).toFixed(0);
   }, [acceptedSuggestions]);
 
-  // ── Derived: userId → email map ────────────────────────────────────────────
-  const userIdToEmail = useMemo(() => {
-    const map = {};
-    publicProfiles.forEach(p => { map[p.userId] = p.email; });
-    allUsers.forEach(u => { map[u.id] = u.email; });
-    return map;
-  }, [publicProfiles, allUsers]);
-
   // ── Derived: per-group participant counts (single pass over all arrays) ────
   const groupParticipantCounts = useMemo(() => {
     const countsMap = calcAllGroupParticipants(

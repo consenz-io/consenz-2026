@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { calcGroupParticipants } from "@/lib/groupParticipants";
+import { calcAllGroupParticipants } from "@/lib/groupParticipants";
 
 export function useGroupsData() {
   const { data: currentUser, isLoading: userLoading } = useQuery({
@@ -141,8 +141,15 @@ export function useGroupsData() {
     gcTime: 15 * 60 * 1000,
   });
 
-  const getParticipantCount = (groupId) =>
-    calcGroupParticipants(groupId, groupMembers, documents, groupAllSuggestions, groupAllVotes, groupAllComments, publicProfiles, groupAllAgreements, groupAllSections).size;
+  // Pre-compute ALL participant counts in a single O(N) pass — avoids O(groups × N) per render
+  const allParticipantCounts = useMemo(
+    () => calcAllGroupParticipants(visibleGroups, groupMembers, documents, groupAllSuggestions, groupAllVotes, groupAllComments, publicProfiles, groupAllAgreements, groupAllSections),
+    [visibleGroups, groupMembers, documents, groupAllSuggestions, groupAllVotes, groupAllComments, publicProfiles, groupAllAgreements, groupAllSections]
+  );
+  const getParticipantCount = useCallback(
+    (groupId) => allParticipantCounts.get(groupId) ?? 0,
+    [allParticipantCounts]
+  );
 
   // Pre-build O(1) count maps — avoids O(n) filter per group on every render
   const docCountByGroup = useMemo(() => {

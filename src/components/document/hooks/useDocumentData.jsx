@@ -102,7 +102,7 @@ export function useDocumentData(documentId) {
       return { votes, users: publicProfiles, publicProfiles, args, comments };
     },
     enabled: !!documentId,
-    staleTime: 0,           // Always re-fetch — votes/comments change frequently
+    staleTime: 15 * 1000,   // 15s — balances freshness with avoiding refetch on every mount
     gcTime: 5 * 60 * 1000,
     refetchOnMount: true,
   });
