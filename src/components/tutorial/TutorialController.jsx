@@ -202,6 +202,37 @@ export default function TutorialController() {
     return () => clearTimeout(timer);
   }, [isMobile, phase, currentStep]);
 
+  // ── Mobile: add body class for extra bottom scroll space ──────────────────
+  useEffect(() => {
+    if (isMobile && phase === 'running') {
+      document.body.classList.add('tutorial-mobile-active');
+    } else {
+      document.body.classList.remove('tutorial-mobile-active');
+    }
+    return () => { document.body.classList.remove('tutorial-mobile-active'); };
+  }, [isMobile, phase]);
+
+  // ── Mobile: push fixed version nav bar above the tutorial sheet ──────────
+  useEffect(() => {
+    if (!isMobile || phase !== 'running') {
+      const vl = document.querySelector('.versions-list');
+      if (vl) vl.style.bottom = '';
+      return;
+    }
+    const timer = setTimeout(() => {
+      const vl = document.querySelector('.versions-list');
+      if (!vl) return;
+      const sheet = document.querySelector('.tutorial-highlight-bubble');
+      const sheetHeight = sheet ? sheet.getBoundingClientRect().height : 220;
+      vl.style.bottom = `${sheetHeight}px`;
+    }, 150);
+    return () => {
+      clearTimeout(timer);
+      const vl = document.querySelector('.versions-list');
+      if (vl) vl.style.bottom = '';
+    };
+  }, [isMobile, phase, currentStep]);
+
   // Reset manualNavRef after each step change
   useEffect(() => {
     manualNavRef.current = false;

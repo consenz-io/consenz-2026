@@ -268,3 +268,8 @@ button:focus-visible {
   background: #fde68a;
   opacity: 0.5;
 }
+
+/* Tutorial mobile: add scroll space at the bottom so target elements can be scrolled above the sheet */
+body.tutorial-mobile-active #main-content > div {
+  padding-bottom: 340px !important;
+}
