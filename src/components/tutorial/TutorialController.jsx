@@ -170,22 +170,36 @@ export default function TutorialController() {
     const step = TUTORIAL_STEPS[currentStep];
     if (!step || !step.targetSelector) return;
 
-    const el = document.querySelector(step.targetSelector);
-    if (!el) return;
-
-    // Use MutationObserver instead of polling for better performance
     const scrollToElement = () => {
-      const rect = el.getBoundingClientRect();
-      const sheetHeight = 180;
+      const el = document.querySelector(step.targetSelector);
+      if (!el) return;
+
+      // Measure actual mobile sheet height — falls back if not yet rendered
+      const sheet = document.querySelector('.tutorial-highlight-bubble');
+      const sheetHeight = sheet ? sheet.getBoundingClientRect().height : 220;
+      const margin = 12;
       const visibleHeight = window.innerHeight - sheetHeight;
-      if (rect.top < 0 || rect.bottom > visibleHeight) {
-        let targetY = window.scrollY + rect.top - (visibleHeight / 3);
+
+      const rect = el.getBoundingClientRect();
+      // Scroll if the element's bottom is below the visible area (hidden behind sheet)
+      // or its top is above the viewport
+      if (rect.bottom > visibleHeight - margin || rect.top < 0) {
+        let targetY;
+        if (rect.height > visibleHeight - margin) {
+          // Element taller than visible area — align top near viewport top
+          targetY = window.scrollY + rect.top - 8;
+        } else {
+          // Position element bottom just above the sheet
+          targetY = window.scrollY + rect.bottom - visibleHeight + margin;
+        }
         targetY = Math.max(0, targetY);
         window.scrollTo({ top: targetY, behavior: 'smooth' });
       }
     };
 
-    scrollToElement();
+    // Delay slightly so the mobile sheet has rendered and can be measured
+    const timer = setTimeout(scrollToElement, 120);
+    return () => clearTimeout(timer);
   }, [isMobile, phase, currentStep]);
 
   // Reset manualNavRef after each step change

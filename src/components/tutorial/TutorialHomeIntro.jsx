@@ -74,6 +74,23 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
       };
     }
 
+    function scrollTargetAboveSheet(el) {
+      const sheet = document.querySelector('.tutorial-highlight-bubble');
+      const sheetHeight = sheet ? sheet.getBoundingClientRect().height : 220;
+      const margin = 12;
+      const visibleHeight = window.innerHeight - sheetHeight;
+      const rect = el.getBoundingClientRect();
+      if (rect.bottom > visibleHeight - margin || rect.top < 0) {
+        let targetY;
+        if (rect.height > visibleHeight - margin) {
+          targetY = window.scrollY + rect.top - 8;
+        } else {
+          targetY = window.scrollY + rect.bottom - visibleHeight + margin;
+        }
+        window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+      }
+    }
+
     function updatePosition(el) {
       const rect = el.getBoundingClientRect();
       const position = activeStep.tooltipPosition;
@@ -115,14 +132,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
       updatePosition(el);
       cleanupSpotlight = applySpotlight(el);
       if (isMobile) {
-        // Scroll so the element is visible above the bottom sheet (~180px tall)
-        const rect = el.getBoundingClientRect();
-        const sheetHeight = 180;
-        const visibleHeight = window.innerHeight - sheetHeight;
-        if (rect.top < 0 || rect.bottom > visibleHeight) {
-          const targetY = window.scrollY + rect.top - visibleHeight / 2 + rect.height / 2;
-          window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
-        }
+        scrollTargetAboveSheet(el);
       } else {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
