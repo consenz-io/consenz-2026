@@ -277,14 +277,13 @@ export function useTutorial(steps = []) {
     });
   }, []);
 
+  const entryPointRef = useRef('document');
+
   const restartTutorial = useCallback((entryPoint = 'document') => {
-    // Read currentStep from localStorage — TutorialRestartButton may have pre-set it
-    // to a context-appropriate step (e.g. versions-browse-explain on DocumentCleanView).
-    const persisted = loadState();
     const fresh = {
       active: true,
-      homeStepSeen: entryPoint !== 'home',
-      currentStep: persisted.active ? persisted.currentStep : 0,
+      homeStepSeen: false,
+      currentStep: 0,
       completedSteps: [],
     };
     saveState(fresh);
@@ -292,8 +291,14 @@ export function useTutorial(steps = []) {
     setPracticeCompleted(false);
     setShowSuccess(false);
     setShowSignupPrompt(false);
-    // Skip the welcome-intro screen when restarting manually — go straight to the tour
-    setPhase((entryPoint === 'home' || entryPoint === 'group') ? 'home-intro' : 'running');
+    entryPointRef.current = entryPoint;
+    // Always show the welcome overlay first — then redirect to home and begin the tour
+    setPhase('welcome-overlay');
+  }, []);
+
+  const beginFromWelcomeOverlay = useCallback(() => {
+    // After the welcome overlay, always go to home-intro so the tour starts from home
+    setPhase('home-intro');
   }, []);
 
   return {
@@ -307,6 +312,7 @@ export function useTutorial(steps = []) {
     isAuthenticated,
     startTutorial,
     beginFromWelcome,
+    beginFromWelcomeOverlay,
     resumeOnDocumentPage,
     skipTutorial,
     goNext,

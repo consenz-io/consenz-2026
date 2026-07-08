@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTutorial } from './useTutorial';
 import { TUTORIAL_STEPS, HOME_INTRO_STEP, GROUP_INTRO_STEP, GROUP_EXPLAIN_STEP, WELCOME_INTRO_PREPARE_STEP } from './tutorialSteps';
 import TutorialWelcomeBubble from './TutorialWelcomeBubble';
+import TutorialWelcomeOverlay from './TutorialWelcomeOverlay';
 import TutorialWelcome from './TutorialWelcome';
 import TutorialOverlay from './TutorialOverlay';
 import TutorialTooltip from './TutorialTooltip';
@@ -92,6 +93,7 @@ export default function TutorialController() {
     showSignupPrompt,
     isAuthenticated,
     beginFromWelcome,
+    beginFromWelcomeOverlay,
     resumeOnDocumentPage,
     skipTutorial,
     goNext,
@@ -397,6 +399,24 @@ export default function TutorialController() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   if (phase === 'idle' || phase === 'done') return null;
+
+  // welcome-overlay: centered welcome bubble — always shown first before the tour begins
+  if (phase === 'welcome-overlay') {
+    const handleWelcomeStart = () => {
+      // Redirect to home page if not already there
+      if (!isHomePage(location.pathname)) {
+        navigate('/');
+      }
+      beginFromWelcomeOverlay();
+    };
+    return (
+      <TutorialWelcomeOverlay
+        onStart={handleWelcomeStart}
+        onSkip={skipTutorial}
+        isRTL={isRTL}
+      />
+    );
+  }
 
   // welcome-intro: small bubble shown after delay when user is authenticated
   if (phase === 'welcome-intro') {
