@@ -758,6 +758,35 @@ Return ONLY the translated text:`;
                          </div>
                        );
                      })}
+                     {/* Insert button when there are no existing sections — only suggestions */}
+                     <div className="group relative h-8 flex items-center justify-center my-1 z-10">
+                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <div className="h-full flex items-center justify-center">
+                           <Button
+                             size="sm"
+                             variant="outline"
+                             onClick={() => {
+                               if (!user) {
+                                 base44.auth.redirectToLogin(window.location.href);
+                                 return;
+                               }
+                               if (!canParticipate) return;
+                               const allSugg = getNewSectionSuggestionsForTopic(topic.id);
+                               const maxPos = allSugg.reduce((max, s) => {
+                                 const p = s.insertPosition;
+                                 if (p === undefined || p === null || p === -1) return max;
+                                 return Math.max(max, p);
+                               }, -1);
+                               onNewSection(topic.id, maxPos + 1);
+                             }}
+                             className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
+                           >
+                             <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                             {t('insertSectionHere')}
+                           </Button>
+                         </div>
+                       </div>
+                     </div>
                      </>
                      ) : (
                      <DragDropContext onDragEnd={(result) => handleSectionDragEnd(result, topic.id)}>
