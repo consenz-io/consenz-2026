@@ -138,11 +138,15 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       // Check if this suggestion or any of its versions is the target
       const isTarget = suggestionChain.some((s) => s.id === targetSuggestionId);
       if (isTarget) {
-        console.log('[NEW SECTION CARD] Navigating to target suggestion:', targetSuggestionId);
-        // Find which specific version is the target
         const targetVersion = suggestionChain.find((s) => s.id === targetSuggestionId);
         if (targetVersion) {
-          setCurrentVersionId(targetVersion.id === suggestion.id ? 'original' : targetVersion.id);
+          // Don't auto-navigate to rejected/expired versions — they have no voting buttons.
+          // Fall back to the original (root), which is typically the pending version.
+          if (targetVersion.status === 'pending') {
+            setCurrentVersionId(targetVersion.id === suggestion.id ? 'original' : targetVersion.id);
+          } else {
+            setCurrentVersionId('original');
+          }
         }
       }
     }
