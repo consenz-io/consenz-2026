@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/LanguageContext";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -80,6 +81,11 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
       }
       queryClient.invalidateQueries({ queryKey: ["allSectionVotes"] });
       if (data?.sectionDeleted) {
+        toast.success(
+          language === 'he' ? 'הצבעתך התקבלה והסעיף הוסר' :
+          language === 'ar' ? 'تم تسجيل تصويتك وتمت إزالة القسم' :
+          'Your vote was received and the section was removed'
+        );
         // Notify SectionCarousel to play the red border flash animation
         window.dispatchEvent(new CustomEvent('section-deleted-flash', { detail: { sectionId: section.id } }));
         // Delay query invalidation so the section stays visible during the flash
