@@ -66,6 +66,9 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   const conVotes = isExistingSection ?
   sourceSuggestion?.conVotes || 0 :
   suggestion.conVotes || 0;
+  // For delete_section: swap display so "pro" = section supporters, "con" = section opponents
+  const displayProVotes = isDeleteSection ? conVotes : proVotes;
+  const displayConVotes = isDeleteSection ? proVotes : conVotes;
   const delta = proVotes - conVotes;
 
   const threshold = isAccepted ?
@@ -286,8 +289,8 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             }>
             
             <ThumbsUp className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-            <span className="truncate">{isDeleteSection ? (language === 'he' ? 'בעד מחיקה' : language === 'ar' ? 'مع الحذف' : 'Pro Delete') : t('votePro')}</span>
-            <span className="text-xs md:text-sm shrink-0">({proVotes})</span>
+            <span className="truncate">{t('votePro')}</span>
+            <span className="text-xs md:text-sm shrink-0">({displayProVotes})</span>
 
           </button>
           <button
@@ -299,8 +302,8 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             }>
             
             <ThumbsDown className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-            <span className="truncate">{isDeleteSection ? (language === 'he' ? 'נגד מחיקה' : language === 'ar' ? 'ضد الحذف' : 'Con Delete') : t('voteCon')}</span>
-            <span className="text-xs md:text-sm shrink-0">({conVotes})</span>
+            <span className="truncate">{t('voteCon')}</span>
+            <span className="text-xs md:text-sm shrink-0">({displayConVotes})</span>
 
           </button>
         </div>
