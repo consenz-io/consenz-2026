@@ -46,9 +46,12 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
 
   const [hoverVote, setHoverVote] = useState(null);
 
-  // Simulate the effect of a pro/con vote on the deletion progress
-  const afterProDelta = delta - (userVote?.vote === 'con' ? 2 : 1);
-  const afterConDelta = delta + (userVote?.vote === 'pro' ? 2 : 1);
+  // Simulate the effect of a pro/con vote on the deletion progress.
+  // If the user already voted this option, hovering shows no change —
+  // clicking again would toggle the vote off, but we avoid simulating that
+  // to stay consistent with the "click again to cancel" status text.
+  const afterProDelta = userVote?.vote === 'pro' ? delta : delta - (userVote?.vote === 'con' ? 2 : 1);
+  const afterConDelta = userVote?.vote === 'con' ? delta : delta + (userVote?.vote === 'pro' ? 2 : 1);
   const afterProProgress = Math.min(100, Math.max(0, afterProDelta / threshold * 100));
   const afterConProgress = Math.min(100, Math.max(0, afterConDelta / threshold * 100));
 
