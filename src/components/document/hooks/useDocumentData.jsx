@@ -82,11 +82,11 @@ export function useDocumentData(documentId) {
       const suggestionIds = allSuggestions.map(s => s.id);
       const sectionIds = allSections.map(s => s.id);
 
-      const [votes, publicProfiles, args, docComments, sectionComments, suggestionComments] = await Promise.all([
+      // Stage 1: fetch votes, arguments, and comments (need suggestionIds/sectionIds)
+      const [votes, args, docComments, sectionComments, suggestionComments] = await Promise.all([
         suggestionIds.length > 0
           ? base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } }).catch(() => [])
           : Promise.resolve([]),
-        base44.entities.UserPublicProfile.list('-created_date', 1000).catch(() => []),
         suggestionIds.length > 0
           ? base44.entities.Argument.filter({ suggestionId: { $in: suggestionIds } }).catch(() => [])
           : Promise.resolve([]),
@@ -99,6 +99,22 @@ export function useDocumentData(documentId) {
           : Promise.resolve([]),
       ]);
       const comments = [...docComments, ...sectionComments, ...suggestionComments];
+
+      // Stage 2: fetch only the user profiles that actually appear in this document's data
+      // (typically 10-30 instead of 1000 globally)
+      const userIds = new Set();
+      const emails = new Set();
+      allSuggestions.forEach(s => { if (s.created_by_id) userIds.add(s.created_by_id); });
+      allSections.forEach(s => { if (s.lastEditedBy) userIds.add(s.lastEditedBy); });
+      votes.forEach(v => { if (v.userId) userIds.add(v.userId); });
+      comments.forEach(c => { if (c.created_by) emails.add(c.created_by); });
+      const profileQuery = [];
+      if (userIds.size > 0) profileQuery.push({ userId: { $in: Array.from(userIds) } });
+      if (emails.size > 0) profileQuery.push({ email: { $in: Array.from(emails) } });
+      const publicProfiles = profileQuery.length > 0
+        ? await base44.entities.UserPublicProfile.filter({ $or: profileQuery }).catch(() => [])
+        : [];
+
       return { votes, users: publicProfiles, publicProfiles, args, comments };
     },
     enabled: !!documentId,

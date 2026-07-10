@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "@/components/LanguageContext";
-import { calcAllGroupParticipants } from "@/lib/groupParticipants";
 
 const LANGUAGE_PROMPTS = { en: "English", he: "Hebrew", ar: "Arabic" };
 
@@ -15,6 +14,7 @@ export function useHomeData() {
     queryFn: () => base44.auth.me(),
   });
 
+  // Display data — needed directly by UI components (not just for stats)
   const { data: groups = [], isLoading: groupsLoading } = useQuery({
     queryKey: ['groups'],
     queryFn: () => base44.entities.Group.list('-created_date', 20),
@@ -33,123 +33,28 @@ export function useHomeData() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: acceptedSuggestions = [] } = useQuery({
-    queryKey: ['acceptedSuggestions'],
-    queryFn: () => base44.entities.Suggestion.filter({ status: 'accepted' }),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: allSuggestions = [] } = useQuery({
-    queryKey: ['allSuggestions_home'],
-    queryFn: () => base44.entities.Suggestion.list('-created_date', 2000),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: allVotes = [] } = useQuery({
-    queryKey: ['allVotes_home'],
-    queryFn: () => base44.entities.Vote.list('-created_date', 2000),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list('-created_date'),
-    initialData: [],
-    retry: false,
-    throwOnError: false,
-    staleTime: 5 * 60 * 1000,
-    enabled: !!user && user?.role === 'admin',
-  });
-
   const { data: publicProfiles = [], isLoading: publicProfilesLoading } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list(),
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: allComments = [] } = useQuery({
-    queryKey: ['allComments_home'],
-    queryFn: () => base44.entities.Comment.list('-created_date', 2000),
+  // ── Aggregate stats from backend (replaces 6 queries fetching up to 12,000 records) ──
+  const { data: homeStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['homeStats'],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getHomeStats', {});
+      return res.data;
+    },
     staleTime: 5 * 60 * 1000,
+    retry: 2,
   });
 
-  const { data: allSections = [] } = useQuery({
-    queryKey: ['allSections_home'],
-    queryFn: () => base44.entities.Section.list(null, 2000),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const { data: allAgreements = [] } = useQuery({
-    queryKey: ['allAgreements'],
-    queryFn: () => base44.entities.DocumentAgreement.list(),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // ── Derived: displayed users list ──────────────────────────────────────────
-  const displayedUsers = useMemo(() => {
-    if (user?.role === 'admin' && allUsers.length > 0) return allUsers;
-    const seen = new Set();
-    return publicProfiles.filter(p => {
-      if (!p?.userId || seen.has(p.userId)) return false;
-      seen.add(p.userId);
-      return true;
-    });
-  }, [user, allUsers, publicProfiles]);
-
-  // ── Derived: contributors list for modal ───────────────────────────────────
-  const { totalUniqueContributors, contributorsList } = useMemo(() => {
-    const uniqueEmails = new Set();
-    const userIdToEmail = {};
-    publicProfiles.forEach(p => { userIdToEmail[p.userId] = p.email; });
-    allUsers.forEach(u => { userIdToEmail[u.id] = u.email; });
-
-    allVotes.forEach(v => {
-      if (userIdToEmail[v.userId]) uniqueEmails.add(userIdToEmail[v.userId]);
-      if (v.created_by) uniqueEmails.add(v.created_by);
-    });
-    allComments.forEach(c => { if (c.created_by) uniqueEmails.add(c.created_by); });
-    allAgreements.forEach(a => { if (a.userEmail) uniqueEmails.add(a.userEmail); });
-
-    const emailToProfile = {};
-    publicProfiles.forEach(p => { emailToProfile[p.email] = p; });
-    const emailToUser = {};
-    allUsers.forEach(u => { emailToUser[u.email] = u; });
-
-    const list = Array.from(uniqueEmails)
-      .map(email => {
-        const profile = emailToProfile[email];
-        const u = emailToUser[email];
-        return {
-          email,
-          name: profile?.fullName || u?.full_name || email.split('@')[0] || 'User',
-          id: profile?.userId || u?.id
-        };
-      })
-      .filter(c => c.name && c.name !== 'User')
-      .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-
-    return { totalUniqueContributors: Math.max(1, uniqueEmails.size), contributorsList: list };
-  }, [allVotes, allUsers, publicProfiles, allComments, allAgreements]);
-
-  // ── Derived: average consensus ─────────────────────────────────────────────
-  const averageConsensus = useMemo(() => {
-    if (!acceptedSuggestions.length) return 0;
-    const scores = acceptedSuggestions
-      .filter(s => typeof s.proVotes === 'number' && typeof s.conVotes === 'number')
-      .map(s => { const t = s.proVotes + s.conVotes; return t > 0 ? s.proVotes / t : 0; });
-    if (!scores.length) return 0;
-    return (scores.reduce((a, s) => a + s, 0) / scores.length * 100).toFixed(0);
-  }, [acceptedSuggestions]);
-
-  // ── Derived: per-group participant counts (single pass over all arrays) ────
-  const groupParticipantCounts = useMemo(() => {
-    const countsMap = calcAllGroupParticipants(
-      groups, groupMembers, documents, allSuggestions, allVotes, allComments, publicProfiles, allAgreements, allSections
-    );
-    const counts = {};
-    countsMap.forEach((count, gid) => { counts[gid] = count; });
-    return counts;
-  }, [groups, groupMembers, documents, allSuggestions, allVotes, allComments, publicProfiles, allAgreements, allSections]);
+  const displayedUsers = useMemo(() => homeStats?.displayedUsers || [], [homeStats]);
+  const totalUniqueContributors = homeStats?.totalUniqueContributors || 1;
+  const contributorsList = homeStats?.contributorsList || [];
+  const averageConsensus = homeStats?.averageConsensus || 0;
+  const groupParticipantCounts = homeStats?.groupParticipantCounts || {};
 
   // ── Mutation: translate document title ────────────────────────────────────
   const translateDocumentMutation = useMutation({
@@ -176,5 +81,6 @@ export function useHomeData() {
     totalUniqueContributors, contributorsList,
     averageConsensus, groupParticipantCounts,
     translateDocumentMutation,
+    statsLoading,
   };
 }

@@ -59,12 +59,6 @@ export default function DocumentContent({
     [suggestions]
   );
 
-  const { data: users } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => base44.entities.User.list(),
-    initialData: [],
-  });
-
   const { data: publicProfiles } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list('-created_date', 1000),
@@ -260,27 +254,14 @@ export default function DocumentContent({
     return map;
   }, [publicProfiles]);
 
-  const userById = React.useMemo(() => {
-    const map = new Map();
-    users?.forEach(u => { if (u.id) map.set(u.id, u); });
-    return map;
-  }, [users]);
-
-  const userByEmail = React.useMemo(() => {
-    const map = new Map();
-    users?.forEach(u => { if (u.email) map.set(u.email, u); });
-    return map;
-  }, [users]);
-
   // Accepts a userId (created_by_id / lastEditedBy) or, as fallback, an email.
+  // Uses only UserPublicProfile — every user gets one created in Layout on login.
   const getUserName = React.useCallback((identifier) => {
     if (!identifier) return 'User';
     const profile = profileByUserId.get(identifier) || profileByEmail.get(identifier);
     if (profile?.fullName) return cleanDisplayName(profile.fullName, profile.email);
-    const u = userById.get(identifier) || userByEmail.get(identifier);
-    if (u?.full_name) return cleanDisplayName(u.full_name, u.email);
     return 'User';
-  }, [profileByUserId, profileByEmail, userById, userByEmail]);
+  }, [profileByUserId, profileByEmail]);
 
   const toggleComments = React.useCallback((id) => {
     setShowComments(prev => ({
@@ -632,7 +613,7 @@ Return ONLY the translated text:`;
                                 voteTopicEditMutation={voteTopicEditMutation}
                                 getUserName={getUserName}
                                 isAdmin={isAdmin}
-                                users={users}
+                                
                                 publicProfiles={publicProfiles}
                                 showTranslatedTopics={showTranslatedTopics}
                                 setShowTranslatedTopics={setShowTranslatedTopics}
@@ -955,7 +936,7 @@ Return ONLY the translated text:`;
                               acceptedSuggestions={acceptedSuggestions}
                               sectionIndex={index}
                               isAdmin={isAdmin}
-                              users={users}
+                              
                               onOpenSuggestionSidebar={onOpenSuggestionSidebar}
                               newlyCreatedSuggestionId={newlyCreatedSuggestion?.sectionId === section.id ? newlyCreatedSuggestion?.suggestionId : null}
                               onClearNewlyCreated={onClearNewlyCreated}
