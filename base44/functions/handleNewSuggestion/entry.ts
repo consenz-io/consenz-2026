@@ -52,6 +52,14 @@ Deno.serve(async (req) => {
       return Response.json({ message: 'Not a create event' }, { status: 200 });
     }
 
+    // Skip system-generated delete_section suggestions — they are created by voteOnSection
+    // using the service role (no real user), and voteOnSection already sends its own
+    // section_deleted notifications. Without this guard, handleNewSuggestion fires for
+    // these system suggestions, fails to resolve a creator name, and falls back to 'User'.
+    if (suggestion.type === 'delete_section') {
+      return Response.json({ message: 'Skipping system-generated delete_section suggestion' }, { status: 200 });
+    }
+
     console.log('[SUGGESTION AUTOMATION] Processing new suggestion:', suggestion.id);
 
     const [documents, interactions, creatorProfiles, creatorUsers] = await Promise.all([
