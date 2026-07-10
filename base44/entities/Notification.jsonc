@@ -14,6 +14,7 @@
         "suggestion_rejected",
         "suggestion_comment",
         "section_comment",
+        "section_deleted",
         "suggestion_expiring",
         "comment_reply",
         "new_suggestion_in_followed_document",

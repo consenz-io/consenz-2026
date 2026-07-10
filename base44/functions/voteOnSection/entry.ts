@@ -3,6 +3,41 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 // In-memory lock to prevent the same user voting on the same section concurrently
 const processingVotes = new Set();
 
+// ─── i18n for section-deleted notifications ─────────────────────────────────
+const TRANSLATIONS = {
+  en: {
+    sectionDeletedTitle: "A section was removed from the document",
+    sectionDeletedMessage: "A section in the document \"{title}\" was removed by community vote",
+  },
+  he: {
+    sectionDeletedTitle: "סעיף הוסר מהמסמך",
+    sectionDeletedMessage: "סעיף במסמך \"{title}\" הוסר בהצבעת קהילה",
+  },
+  ar: {
+    sectionDeletedTitle: "تمت إزالة بند من الوثيقة",
+    sectionDeletedMessage: "تمت إزالة بند في الوثيقة \"{title}\" بتصويت المجتمع",
+  }
+};
+
+function t(lang, key, replacements = {}) {
+  let text = TRANSLATIONS[lang]?.[key] || TRANSLATIONS['he'][key] || key;
+  for (const [k, v] of Object.entries(replacements)) {
+    text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+  }
+  return text;
+}
+
+function buildTranslations(titleKey, messageKey, replacements = {}) {
+  const result = {};
+  for (const lang of ['en', 'he', 'ar']) {
+    result[lang] = {
+      title: t(lang, titleKey, replacements),
+      message: t(lang, messageKey, replacements),
+    };
+  }
+  return result;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -144,6 +179,52 @@ Deno.serve(async (req) => {
           } catch (e) {
             console.error('[VOTE ON SECTION vote cleanup error]', e);
           }
+
+          // ── Notify all document participants about the deletion ────────
+          try {
+            const [interactions, groupMembers] = await Promise.all([
+              base44.asServiceRole.entities.UserInteraction.filter({ documentId: section.documentId }),
+              document?.groupId
+                ? base44.asServiceRole.entities.GroupMember.filter({ groupId: document.groupId })
+                : Promise.resolve([])
+            ]);
+
+            const participantIds = new Set(interactions.map(i => i.userId));
+            groupMembers.forEach(m => { if (m.userId) participantIds.add(m.userId); });
+            // Exclude the voter who triggered the deletion
+            participantIds.delete(user.id);
+
+            const uniqueIds = [...participantIds];
+            if (uniqueIds.length > 0) {
+              const participants = await base44.asServiceRole.entities.User.filter({ id: { $in: uniqueIds } });
+              const replacements = { title: document?.title || '' };
+              const titleKey = 'sectionDeletedTitle';
+              const messageKey = 'sectionDeletedMessage';
+              const translationsObj = buildTranslations(titleKey, messageKey, replacements);
+              const actionUrl = `/DocumentView?id=${section.documentId}`;
+
+              const notifications = participants.map(p => {
+                const userLang = p.preferredLanguage || 'he';
+                return {
+                  userId: p.id,
+                  type: 'section_deleted',
+                  title: t(userLang, titleKey, replacements),
+                  message: t(userLang, messageKey, replacements),
+                  translations: translationsObj,
+                  relatedEntityId: section.documentId,
+                  relatedEntityType: 'document',
+                  actionUrl,
+                  read: false,
+                };
+              });
+
+              await base44.asServiceRole.entities.Notification.bulkCreate(notifications);
+              console.log('[VOTE ON SECTION] Created', notifications.length, 'section-deleted notifications');
+            }
+          } catch (e) {
+            console.error('[VOTE ON SECTION notification error]', e);
+          }
+
           sectionDeleted = true;
         }
       }
