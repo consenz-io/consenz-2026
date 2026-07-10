@@ -128,10 +128,6 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   language === 'he' ? `לא הגיע לסף — חסרו ${votesNeeded} תומכים` : language === 'ar' ? `لم يصل للعتبة — نقص ${votesNeeded} مؤيدين` : `Did not reach threshold — ${votesNeeded} supporters short` :
   passed ?
   passedStatusText :
-  userVote ?
-  (userVote.vote === 'pro' ?
-  (language === 'he' ? 'הצבעת בעד • לחץ/י שוב לביטול' : language === 'ar' ? 'صوتك مع • اضغط مجدداً للإلغاء' : 'You voted pro • click again to remove') :
-  (language === 'he' ? 'הצבעת נגד • לחץ/י שוב לביטול' : language === 'ar' ? 'صوتك ضد • اضغط مجدداً للإلغاء' : 'You voted con • click again to remove')) :
   hoverVote === 'pro' ?
   language === 'he' ? `הצבעתך תקרב את ההצעה לאישור` : language === 'ar' ? 'سيقرب صوتك الاقتراح من القبول' : 'Your vote will help pass this proposal' :
   hoverVote === 'con' ?
@@ -343,6 +339,13 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             }
           </Button>
         </div>
+        {userVote &&
+        <p className="text-center text-xs text-slate-400 mt-1.5">
+            {userVote.vote === 'pro' ?
+          language === 'he' ? 'הצבעת בעד • לחץ/י שוב לביטול' : language === 'ar' ? 'صوتك مع • اضغط مجدداً للإلغاء' : 'You voted pro • click again to remove' :
+          language === 'he' ? 'הצבעת נגד • לחץ/י שוב לביטול' : language === 'ar' ? 'صوتك ضد • اضغط مجدداً للإلغاء' : 'You voted con • click again to remove'}
+          </p>
+        }
       </div>
       }
     </div>);
