@@ -148,15 +148,19 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
     }
   }, [targetSuggestionId, suggestionChain, suggestion.id]);
 
-  // Auto-navigate to newly added edit_suggestion in the chain
+  // Auto-navigate to a newly added edit_suggestion in the chain.
+  // Only trigger for versions created within the last 5 minutes — this prevents
+  // jumping to pre-existing (possibly rejected) versions when async data loads
+  // and grows the chain from [suggestion] to the full list.
   const prevChainLengthRef = React.useRef(suggestionChain.length);
   React.useEffect(() => {
     const prevLen = prevChainLengthRef.current;
     const newLen = suggestionChain.length;
     if (newLen > prevLen) {
-      // A new version was added — navigate to the latest one
       const latest = suggestionChain[newLen - 1];
-      if (latest) {
+      const isJustCreated = latest?.created_date &&
+        (Date.now() - new Date(latest.created_date).getTime()) < 5 * 60 * 1000;
+      if (latest && isJustCreated) {
         setCurrentVersionId(latest.id === suggestion.id ? 'original' : latest.id);
       }
     }
