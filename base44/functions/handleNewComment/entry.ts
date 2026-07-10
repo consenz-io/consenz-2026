@@ -57,9 +57,14 @@ Deno.serve(async (req) => {
 
     console.log('[AUTOMATION] New comment created:', comment.id);
 
-    const commenterProfile = await base44.asServiceRole.entities.UserPublicProfile.filter({ userId: comment.created_by_id }).then(p => p[0]);
-    const commenterName = commenterProfile?.fullName || 'User';
-    const commenterUser = await base44.asServiceRole.entities.User.filter({ id: comment.created_by_id }).then(u => u[0]);
+    const [commenterProfileArr, commenterUserArr] = await Promise.all([
+      base44.asServiceRole.entities.UserPublicProfile.filter({ userId: comment.created_by_id }),
+      base44.asServiceRole.entities.User.filter({ id: comment.created_by_id })
+    ]);
+    const commenterProfile = commenterProfileArr[0];
+    const commenterUser = commenterUserArr[0];
+    // Fall back to User.full_name (always populated by auth) before the literal 'User'
+    const commenterName = commenterProfile?.fullName || commenterUser?.full_name || 'User';
 
     const notifications = [];
 

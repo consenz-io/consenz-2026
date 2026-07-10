@@ -54,10 +54,11 @@ Deno.serve(async (req) => {
 
     console.log('[SUGGESTION AUTOMATION] Processing new suggestion:', suggestion.id);
 
-    const [documents, interactions, creatorProfiles] = await Promise.all([
+    const [documents, interactions, creatorProfiles, creatorUsers] = await Promise.all([
       base44.asServiceRole.entities.Document.filter({ id: suggestion.documentId }),
       base44.asServiceRole.entities.UserInteraction.filter({ documentId: suggestion.documentId }),
-      base44.asServiceRole.entities.UserPublicProfile.filter({ userId: suggestion.created_by_id })
+      base44.asServiceRole.entities.UserPublicProfile.filter({ userId: suggestion.created_by_id }),
+      base44.asServiceRole.entities.User.filter({ id: suggestion.created_by_id })
     ]);
 
     const document = documents[0];
@@ -66,7 +67,8 @@ Deno.serve(async (req) => {
     }
 
     const creatorProfile = creatorProfiles[0];
-    const creatorName = creatorProfile?.fullName || 'User';
+    // Fall back to User.full_name (always populated by auth) before the literal 'User'
+    const creatorName = creatorProfile?.fullName || creatorUsers[0]?.full_name || 'User';
 
     // Collect user IDs from interactions + group members (if document belongs to a group)
     const interactionUserIds = new Set(interactions.map(i => i.userId));
