@@ -126,6 +126,10 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
 
   const statusText = passed ?
   isHe ? '✓ הסעיף יימחק' : isAr ? '✓ سيُحذف القسم' : '✓ Section will be deleted' :
+  hoverVote === 'con' && userVote?.vote === 'con' ?
+  isHe ? 'הצבעת למחוק • לחץ/י שוב לביטול' : isAr ? 'صوتت للحذف • اضغط مجدداً للإلغاء' : 'You voted to delete • click again to cancel' :
+  hoverVote === 'pro' && userVote?.vote === 'pro' ?
+  isHe ? 'הצבעת בעד • לחץ/י שוב לביטול' : isAr ? 'صوتت مع • اضغط مجدداً للإلغاء' : 'You voted in favor • click again to cancel' :
   hoverVote === 'con' ?
   isHe ? 'הצבעתך תקרב את מחיקת הסעיף' : isAr ? 'سيقرب صوتك حذف القسم' : 'Your vote will help delete this section' :
   hoverVote === 'pro' ?
