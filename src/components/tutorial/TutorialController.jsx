@@ -164,41 +164,45 @@ export default function TutorialController() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
-  // ── Mobile: auto-scroll to target element on every step change ──────────────────
+  // ── Auto-scroll to target element on every step change (desktop + mobile) ──────
   useEffect(() => {
-    if (!isMobile || phase !== 'running' || !TUTORIAL_STEPS.length) return;
+    if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
     const step = TUTORIAL_STEPS[currentStep];
-    if (!step || !step.targetSelector) return;
+    if (!step || !step.targetSelector || step.type === 'closing') return;
 
     const scrollToElement = () => {
       const el = document.querySelector(step.targetSelector);
       if (!el) return;
 
-      // Measure actual mobile sheet height — falls back if not yet rendered
-      const sheet = document.querySelector('.tutorial-highlight-bubble');
-      const sheetHeight = sheet ? sheet.getBoundingClientRect().height : 220;
-      const margin = 12;
-      const visibleHeight = window.innerHeight - sheetHeight;
-
       const rect = el.getBoundingClientRect();
-      // Scroll if the element's bottom is below the visible area (hidden behind sheet)
-      // or its top is above the viewport
-      if (rect.bottom > visibleHeight - margin || rect.top < 0) {
-        let targetY;
-        if (rect.height > visibleHeight - margin) {
-          // Element taller than visible area — align top near viewport top
-          targetY = window.scrollY + rect.top - 8;
-        } else {
-          // Position element bottom just above the sheet
-          targetY = window.scrollY + rect.bottom - visibleHeight + margin;
+
+      if (isMobile) {
+        // Mobile: account for the bottom sheet so the element isn't hidden behind it
+        const sheet = document.querySelector('.tutorial-highlight-bubble');
+        const sheetHeight = sheet ? sheet.getBoundingClientRect().height : 220;
+        const margin = 12;
+        const visibleHeight = window.innerHeight - sheetHeight;
+
+        if (rect.bottom > visibleHeight - margin || rect.top < 0) {
+          let targetY;
+          if (rect.height > visibleHeight - margin) {
+            targetY = window.scrollY + rect.top - 8;
+          } else {
+            targetY = window.scrollY + rect.bottom - visibleHeight + margin;
+          }
+          targetY = Math.max(0, targetY);
+          window.scrollTo({ top: targetY, behavior: 'smooth' });
         }
-        targetY = Math.max(0, targetY);
-        window.scrollTo({ top: targetY, behavior: 'smooth' });
+      } else {
+        // Desktop: scroll element into view if not fully visible (with margin for tooltip)
+        const margin = 100;
+        if (rect.top < margin || rect.bottom > window.innerHeight - margin) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       }
     };
 
-    // Delay slightly so the mobile sheet has rendered and can be measured
-    const timer = setTimeout(scrollToElement, 120);
+    const timer = setTimeout(scrollToElement, isMobile ? 120 : 100);
     return () => clearTimeout(timer);
   }, [isMobile, phase, currentStep]);
 
