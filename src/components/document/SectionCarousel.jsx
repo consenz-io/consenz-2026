@@ -145,7 +145,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
       if (e.detail?.sectionId === section.id) {
         setDeletingFlash(true);
         clearTimeout(deleteFlashTimerRef.current);
-        deleteFlashTimerRef.current = setTimeout(() => setDeletingFlash(false), 2100);
+        deleteFlashTimerRef.current = setTimeout(() => setDeletingFlash(false), 4100);
       }
     };
     window.addEventListener('section-deleted-flash', handleDeleteFlash);

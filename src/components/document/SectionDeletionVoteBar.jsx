@@ -86,7 +86,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
         setTimeout(() => {
           queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
           queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', document.id] });
-        }, 1200);
+        }, 4000);
       }
     }
   });
