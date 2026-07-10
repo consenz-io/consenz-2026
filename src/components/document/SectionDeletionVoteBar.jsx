@@ -80,8 +80,13 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
       }
       queryClient.invalidateQueries({ queryKey: ["allSectionVotes"] });
       if (data?.sectionDeleted) {
-        queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
-        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', document.id] });
+        // Notify SectionCarousel to play the red border flash animation
+        window.dispatchEvent(new CustomEvent('section-deleted-flash', { detail: { sectionId: section.id } }));
+        // Delay query invalidation so the section stays visible during the flash
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
+          queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', document.id] });
+        }, 1200);
       }
     }
   });

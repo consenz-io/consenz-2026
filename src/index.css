@@ -167,6 +167,16 @@ button:focus-visible {
   animation: suggestion-accepted-flash 0.9s ease-in-out 3;
 }
 
+/* Section deleted by community vote — red border flash */
+@keyframes section-deleted-flash {
+  0%, 100% { box-shadow: 0 0 0 0px rgba(239, 68, 68, 0.6); border-color: #ef4444; }
+  30%, 70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.25); border-color: #dc2626; }
+}
+
+.section-deleted-flash {
+  animation: section-deleted-flash 0.7s ease-in-out 3;
+}
+
 /* Tutorial: force-show action buttons inside .section-action-buttons during tutorial step */
 .section-action-buttons.tutorial-force-hover .opacity-0,
 .tutorial-force-hover .section-action-buttons .opacity-0 {

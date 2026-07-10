@@ -118,6 +118,9 @@ const SectionCarousel = React.memo(function SectionCarousel({
   
   // מסגרת ירוקה מהבהבת לאחר קבלת הצעה
   const [flashingSection, setFlashingSection] = useState(false);
+  // מסגרת אדומה מהבהבת לאחר מחיקת סעיף בהצבעת קהילה
+  const [deletingFlash, setDeletingFlash] = useState(false);
+  const deleteFlashTimerRef = React.useRef(null);
   const prevSuggestionsStatusRef = React.useRef({});
   const hasAnimatedRef = React.useRef(new Set());
   
@@ -135,6 +138,22 @@ const SectionCarousel = React.memo(function SectionCarousel({
   });
   
   const flashTimerRef = React.useRef(null);
+
+  // האזנה לאירוע מחיקת סעיף — מפעיל אנימציית מסגרת אדומה
+  React.useEffect(() => {
+    const handleDeleteFlash = (e) => {
+      if (e.detail?.sectionId === section.id) {
+        setDeletingFlash(true);
+        clearTimeout(deleteFlashTimerRef.current);
+        deleteFlashTimerRef.current = setTimeout(() => setDeletingFlash(false), 2100);
+      }
+    };
+    window.addEventListener('section-deleted-flash', handleDeleteFlash);
+    return () => {
+      window.removeEventListener('section-deleted-flash', handleDeleteFlash);
+      clearTimeout(deleteFlashTimerRef.current);
+    };
+  }, [section.id]);
 
   // מעקב אחרי שינוי סטטוס - כשהצעה מתקבלת, עוברים לתצוגת הסעיף עם מסגרת מהבהבת
   React.useEffect(() => {
@@ -393,9 +412,11 @@ const SectionCarousel = React.memo(function SectionCarousel({
       className={`section-card group relative p-3 md:p-6 border-2 rounded-lg hover:shadow-md transition-all duration-300 ${
         historyMode
           ? 'border-teal-400 bg-gradient-to-br from-teal-50 to-cyan-50/40 shadow-md'
-          : flashingSection
-            ? 'suggestion-accepted-flash border-green-400 bg-gradient-to-br from-white to-slate-50/30'
-            : 'border-slate-300 hover:border-blue-400 bg-gradient-to-br from-white to-slate-50/30'
+          : deletingFlash
+            ? 'section-deleted-flash border-red-500 bg-gradient-to-br from-red-50 to-red-100/30'
+            : flashingSection
+              ? 'suggestion-accepted-flash border-green-400 bg-gradient-to-br from-white to-slate-50/30'
+              : 'border-slate-300 hover:border-blue-400 bg-gradient-to-br from-white to-slate-50/30'
       }`}
     >
       {/* רמז ערעור קבוע (אייקון עריכה) - גלוי תמיד ולא רק בריחוף */}
