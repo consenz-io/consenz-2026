@@ -84,8 +84,10 @@ export default function SuggestionDetail() {
   const { data: document } = useQuery({
     queryKey: ['document', suggestion?.documentId],
     queryFn: async () => {
-      const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
-      return docs?.[0] ?? null;
+      // Canonical fetch-by-id — filter({ id }) can intermittently return empty
+      // under rate-limiting, which would hide the voting buttons permanently
+      // (staleTime: Infinity caches the null result).
+      return await base44.entities.Document.get(suggestion.documentId);
     },
     enabled: !!suggestion?.documentId,
     staleTime: Infinity
