@@ -38,6 +38,10 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   const [currentVersionId, setCurrentVersionId] = React.useState('original');
   const [animationPhase, setAnimationPhase] = React.useState('none');
   const prevStatusRef = React.useRef(suggestion.status);
+  // Tracks whether the user manually navigated via chevron buttons.
+  // Automatic navigation (targetSuggestionId, chain growth) must not land on a
+  // rejected/expired version — the safeguard effect falls back to 'original'.
+  const userNavigatedRef = React.useRef(false);
 
   // Watch for pending -> accepted transition to trigger animation
   React.useEffect(() => {
@@ -132,10 +136,21 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   const currentView = allViews[currentViewIndex] || allViews[0];
   const currentVersion = currentView?.data || suggestion;
 
+  // Safeguard: if the current version is NOT pending (rejected/expired) and the
+  // user didn't manually navigate to it, fall back to 'original' (the root).
+  // This prevents the card from getting stuck on a rejected child version with
+  // no voting buttons, while still letting users manually view rejected versions.
+  React.useEffect(() => {
+    if (userNavigatedRef.current) return;
+    if (currentVersion && currentVersion.status !== 'pending' && currentVersionId !== 'original') {
+      setCurrentVersionId('original');
+    }
+  }, [currentVersion, currentVersionId]);
+
   // Navigate when targetSuggestionId changes (from floating nav buttons or other sources)
   React.useEffect(() => {
     if (targetSuggestionId) {
-      // Check if this suggestion or any of its versions is the target
+      userNavigatedRef.current = false; // automatic navigation — safeguard may apply
       const isTarget = suggestionChain.some((s) => s.id === targetSuggestionId);
       if (isTarget) {
         const targetVersion = suggestionChain.find((s) => s.id === targetSuggestionId);
@@ -161,6 +176,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
     const prevLen = prevChainLengthRef.current;
     const newLen = suggestionChain.length;
     if (newLen > prevLen) {
+      userNavigatedRef.current = false; // automatic navigation — safeguard may apply
       const latest = suggestionChain[newLen - 1];
       const isJustCreated = latest?.created_date &&
         (Date.now() - new Date(latest.created_date).getTime()) < 5 * 60 * 1000;
@@ -203,6 +219,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
 
   const handlePrev = () => {
     if (!allViews || allViews.length === 0) return;
+    userNavigatedRef.current = true;
     const prevIndex = (currentViewIndex - 1 + allViews.length) % allViews.length;
     const prevView = allViews[prevIndex];
     setCurrentVersionId(prevView.type === 'original' ? 'original' : prevView.id);
@@ -210,6 +227,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
 
   const handleNext = () => {
     if (!allViews || allViews.length === 0) return;
+    userNavigatedRef.current = true;
     const nextIndex = (currentViewIndex + 1) % allViews.length;
     const nextView = allViews[nextIndex];
     setCurrentVersionId(nextView.type === 'original' ? 'original' : nextView.id);
@@ -239,8 +257,8 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
               </p> :
 
           <button
-            onClick={() => setCurrentVersionId('original')}
-            className="text-sm font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer transition-colors">
+             onClick={() => { userNavigatedRef.current = false; setCurrentVersionId('original'); }}
+             className="text-sm font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer transition-colors">
             
                 {`${language === 'he' ? 'עריכה מאת' : language === 'ar' ? 'تعديل بواسطة' : 'Edit by'} ${getUserName(currentVersion.created_by_id)}`}
               </button>
