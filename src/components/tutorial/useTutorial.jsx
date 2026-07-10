@@ -79,8 +79,8 @@ export function useTutorial(steps = []) {
   }, [isAuthenticated]);
 
   // On mount: sync tutorial state to server for authenticated users.
-  // The tutorial is NEVER auto-activated here — it must be started explicitly
-  // via the "Tour the platform" button (startTutorial / restartTutorial).
+  // New users (no local data AND no server tutorial state) auto-receive the
+  // tutorial invitation. Returning users must use the "Tour the platform" button.
   useEffect(() => {
     async function hydrate() {
       const hasLocalData = !!localStorage.getItem(STORAGE_KEY);
@@ -96,15 +96,22 @@ export function useTutorial(steps = []) {
         }
       }
 
-      // If the server records the tutorial as completed/skipped (e.g. new device),
-      // mark it done locally. This does NOT activate anything.
       if (authed && !hasLocalData) {
         const server = await fetchServerTutorialState();
         if (server?.tutorialCompleted || server?.tutorialSkipped) {
+          // Returning user who already completed/skipped — mark done locally
           const done = { ...defaultState(), active: false, currentStep: 1 };
           saveState(done);
           setState(done);
+        } else if (server === null) {
+          // Truly new user — no tutorial state on server → auto-show invitation
+          const fresh = { active: true, homeStepSeen: false, currentStep: 0, completedSteps: [] };
+          saveState(fresh);
+          setState(fresh);
+          setPhase('welcome-overlay');
         }
+        // else: server has tutorialLastStep but not completed/skipped — user started
+        // but didn't finish. Don't auto-start; let them restart manually if desired.
       }
     }
     hydrate();

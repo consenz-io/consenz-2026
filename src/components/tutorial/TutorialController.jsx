@@ -101,10 +101,10 @@ export default function TutorialController() {
     restartTutorial,
   } = useTutorial(TUTORIAL_STEPS);
 
-  // ── No auto-start ─────────────────────────────────────────────────────────
-  // The tutorial must ONLY begin when the user explicitly clicks the
-  // "Tour the platform" button (TutorialRestartButton → restartTutorial).
-  // Bubbles never pop up automatically. (isDocumentPage intentionally unused here now.)
+  // ── Auto-start for new users ──────────────────────────────────────────────
+  // New users (no local + no server tutorial state) auto-receive the welcome
+  // overlay via useTutorial's hydrate(). Returning users start the tour only
+  // via the "Tour the platform" button (TutorialRestartButton → restartTutorial).
 
   // ── Transition: home-intro → group page ─────────────────────────────────
   useEffect(() => {
