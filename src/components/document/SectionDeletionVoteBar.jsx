@@ -141,7 +141,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
         className="block group"
         title={isHe ? 'למדו על מנגנון הקונצנזוס' : 'Learn about consensus'}>
         
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-red-200 transition-colors">
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-red-200 transition-colors" data-tutorial="support-threshold">
           {/* Labels row */}
           <div className="flex items-center justify-between mb-2">
             
