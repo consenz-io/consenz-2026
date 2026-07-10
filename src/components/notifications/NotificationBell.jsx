@@ -104,6 +104,8 @@ export default function NotificationBell({ user }) {
         return '⏰';
       case 'new_suggestion_in_followed_document':
         return '📝';
+      case 'section_deleted':
+        return '🗑️';
       default:
         return '🔔';
     }
@@ -123,8 +125,10 @@ export default function NotificationBell({ user }) {
         markAsReadMutation.mutate(notification.id);
       }
       
-      // For suggestion_accepted notifications, always navigate to suggestion detail
-      if (notification.type === 'suggestion_accepted' && notification.relatedEntityId) {
+      // For suggestion_accepted and section_deleted notifications, navigate to suggestion detail
+      if ((notification.type === 'suggestion_accepted' ||
+           (notification.type === 'section_deleted' && notification.relatedEntityType === 'suggestion'))
+          && notification.relatedEntityId) {
         setTimeout(() => {
           navigate(`/suggestiondetail?id=${notification.relatedEntityId}`);
         }, 100);

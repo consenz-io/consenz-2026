@@ -172,6 +172,38 @@ Deno.serve(async (req) => {
             console.error('[VOTE ON SECTION orphan anchor error]', e);
           }
 
+          // ── Create a delete_section suggestion record ──────────────────
+          // This makes the deletion visible on the suggestion detail page with
+          // full voting results (date + vote counts), exactly like an accepted
+          // suggestion. The notification will link to this suggestion.
+          let deleteSuggestionId = null;
+          try {
+            const deleteSuggestion = await base44.asServiceRole.entities.Suggestion.create({
+              documentId: section.documentId,
+              sectionId,
+              topicId: section.topicId,
+              originalSectionOrder: section.order,
+              type: 'delete_section',
+              title: 'מחיקת סעיף בהצבעת קהילה',
+              originalContent: section.content,
+              newContent: '',
+              explanation: '',
+              status: 'accepted',
+              // For a delete_section suggestion: "pro" = support deletion (SectionVote "con"),
+              // "con" = oppose deletion / keep section (SectionVote "pro").
+              // This mapping makes VotingProgressSection display correctly (delta >= threshold → passed).
+              proVotes: conCount,
+              conVotes: proCount,
+              timerEndsAt: null,
+              originalLanguage: section.originalLanguage || 'he',
+              translations: {},
+              participantsAtAcceptance: (conCount + proCount),
+            });
+            deleteSuggestionId = deleteSuggestion?.id || null;
+          } catch (e) {
+            console.error('[VOTE ON SECTION suggestion creation error]', e);
+          }
+
           await base44.asServiceRole.entities.Section.delete(sectionId);
           // Clean up the section's votes too
           try {
@@ -201,7 +233,11 @@ Deno.serve(async (req) => {
               const titleKey = 'sectionDeletedTitle';
               const messageKey = 'sectionDeletedMessage';
               const translationsObj = buildTranslations(titleKey, messageKey, replacements);
-              const actionUrl = `/DocumentView?id=${section.documentId}`;
+              // Link to the suggestion detail page so users see the full voting result.
+              // Fall back to document view if suggestion creation failed.
+              const actionUrl = deleteSuggestionId
+                ? `/suggestiondetail?id=${deleteSuggestionId}`
+                : `/DocumentView?id=${section.documentId}`;
 
               const notifications = participants.map(p => {
                 const userLang = p.preferredLanguage || 'he';
@@ -211,8 +247,8 @@ Deno.serve(async (req) => {
                   title: t(userLang, titleKey, replacements),
                   message: t(userLang, messageKey, replacements),
                   translations: translationsObj,
-                  relatedEntityId: section.documentId,
-                  relatedEntityType: 'document',
+                  relatedEntityId: deleteSuggestionId || section.documentId,
+                  relatedEntityType: deleteSuggestionId ? 'suggestion' : 'document',
                   actionUrl,
                   read: false,
                 };

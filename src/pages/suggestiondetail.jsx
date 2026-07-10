@@ -617,8 +617,15 @@ export default function SuggestionDetail() {
                 }
 
                 <span className="text-xs text-slate-500">
-                  {t('by')} <Link to={`${createPageUrl("Profile")}?userId=${suggestion.created_by_id || ''}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by_id)}</Link>
-                </span>
+                   {(() => {
+                     const authorName = getUserName(suggestion.created_by_id);
+                     if (authorName) {
+                       return <>{t('by')} <Link to={`${createPageUrl("Profile")}?userId=${suggestion.created_by_id || ''}`} className="hover:underline text-blue-600">{authorName}</Link></>;
+                     }
+                     // System-generated suggestion (e.g. delete_section by community vote)
+                     return <span className="text-slate-400">{language === 'he' ? 'הצבעת קהילה' : language === 'ar' ? 'تصويت المجتمع' : 'Community vote'}</span>;
+                   })()}
+                 </span>
                 {suggestion.created_date &&
                   <span className="text-xs text-slate-400">
                     • {new Date(suggestion.created_date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
