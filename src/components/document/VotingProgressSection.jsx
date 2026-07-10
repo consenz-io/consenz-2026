@@ -52,6 +52,8 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   // For accepted suggestions, freeze the threshold at what it was at acceptance time.
   // At the moment of acceptance, delta >= threshold exactly, so delta itself is the frozen threshold.
   const isAccepted = suggestion?.status === 'accepted';
+  // delete_section type — the suggestion represents a community vote to remove a section
+  const isDeleteSection = suggestion?.type === 'delete_section';
   // Existing section (passed as a plain section without a suggestion status) —
   // already part of the document, so display it as accepted rather than "did not reach threshold".
   const isExistingSection = !suggestion?.status;
@@ -72,11 +74,11 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
 
   // How many more pro votes needed
   const votesNeeded = isExistingSection ? 0 : Math.max(0, threshold - delta);
-  const passed = isExistingSection || delta >= threshold;
+  const passed = isExistingSection || (isDeleteSection && isAccepted) || delta >= threshold;
 
   // Progress: 0% = delta of 0 (or negative), 100% = delta >= threshold
   // Map [0, threshold] to [0%, 100%], clamped
-  const progressPercent = isExistingSection ?
+  const progressPercent = isExistingSection || (isDeleteSection && isAccepted) ?
   100 :
   Math.min(100, Math.max(0, delta / threshold * 100));
 
@@ -95,7 +97,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   progressPercent;
 
   const barColor = passed ?
-  'bg-green-500' :
+  (isDeleteSection ? 'bg-red-500' : 'bg-green-500') :
   effectiveReadOnly ?
   'bg-red-400' :
   hoverVote === 'pro' ?
@@ -106,6 +108,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
 
   const createdByText = language === 'he' ? 'נוצר על ידי מנהל/ת' : language === 'ar' ? 'أنشئ بواسطة المشرف' : 'Created by admin';
   const acceptedLabel = language === 'he' ? 'התקבלה' : language === 'ar' ? 'تم القبول' : 'Accepted';
+  const deletedLabel = language === 'he' ? 'נמחק בהצבעת קהילה' : language === 'ar' ? 'حذف بتصويت المجتمع' : 'Deleted by community vote';
   const datePrefix = language === 'he' ? 'ב-' : language === 'ar' ? 'في ' : 'on ';
   const acceptedVotesText = language === 'he' ?
   `✓ התקבלה — ${proVotes} בעד, ${conVotes} נגד` :
@@ -148,11 +151,13 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
       return { label: createdByText, date };
     }
     if (passed) {
-      const date = isExistingSection ?
+      const date = isDeleteSection ?
+      (suggestion?.timerEndsAt || acceptedDate || suggestion?.updated_date) :
+      isExistingSection ?
       sourceSuggestion?.updated_date || acceptedDate :
       acceptedDate || suggestion?.updated_date;
       if (!date) return null;
-      return { label: acceptedLabel, date };
+      return { label: isDeleteSection ? deletedLabel : acceptedLabel, date };
     }
     return null;
   })();
@@ -187,7 +192,9 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
           {/* Labels row */}
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-slate-600">
-              {language === 'he' ? 'התקדמות לאישור' : language === 'ar' ? 'تقدم نحو القبول' : 'Progress to acceptance'}
+              {isDeleteSection ?
+                (language === 'he' ? 'התקדמות למחיקה' : language === 'ar' ? 'تقدم نحو الحذف' : 'Progress to deletion') :
+                (language === 'he' ? 'התקדמות לאישור' : language === 'ar' ? 'تقدم نحو القبول' : 'Progress to acceptance')}
             </span>
             <div className="flex items-center gap-2">
               {timeLabel && !effectiveReadOnly &&
@@ -196,7 +203,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
                   {timeLabel}
                 </span>
               }
-              <span className={`text-xs font-bold ${passed ? 'text-green-600' : 'text-slate-500'}`}>
+              <span className={`text-xs font-bold ${passed ? (isDeleteSection ? 'text-red-600' : 'text-green-600') : 'text-slate-500'}`}>
                 {passed ? '✓' : `${Math.max(0, delta)}/${threshold}`}
               </span>
             </div>
@@ -279,8 +286,8 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             }>
             
             <ThumbsUp className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-            <span className="truncate">{t('votePro')}</span>
-            {proVotes > 0 && <span className="text-xs md:text-sm shrink-0">({proVotes})</span>}
+            <span className="truncate">{isDeleteSection ? (language === 'he' ? 'בעד מחיקה' : language === 'ar' ? 'مع الحذف' : 'Pro Delete') : t('votePro')}</span>
+            <span className="text-xs md:text-sm shrink-0">({proVotes})</span>
 
           </button>
           <button
@@ -292,8 +299,8 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             }>
             
             <ThumbsDown className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
-            <span className="truncate">{t('voteCon')}</span>
-            {conVotes > 0 && <span className="text-xs md:text-sm shrink-0">({conVotes})</span>}
+            <span className="truncate">{isDeleteSection ? (language === 'he' ? 'נגד מחיקה' : language === 'ar' ? 'ضد الحذف' : 'Con Delete') : t('voteCon')}</span>
+            <span className="text-xs md:text-sm shrink-0">({conVotes})</span>
 
           </button>
         </div>
