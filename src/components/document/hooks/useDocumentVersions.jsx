@@ -85,13 +85,41 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
     directEditsBySectionId.forEach((versions, sectionId) => {
       // sort ascending by version number to pair them
       const sorted = [...versions].sort((a, b) => (a.version || 0) - (b.version || 0));
-      // pair: even index = before (לפני:), odd = after
-      for (let i = 1; i < sorted.length; i += 2) {
-        directEditPairs.push({ afterVersion: sorted[i], beforeVersion: sorted[i - 1] });
+
+      // Separate deletion-marker versions (section_deleted + empty content) from regular edits.
+      // A deletion marker must pair with the version immediately before it (the "לפני:" record
+      // that holds the actual section content). The old even/odd pairing broke when a section
+      // had prior version-less records (e.g. section_created), causing the deletion marker to
+      // become unpaired with beforeVersion=null → empty deletedSectionContent in DocumentCleanView.
+      const deletionMarkerIndices = new Set();
+      sorted.forEach((v, i) => {
+        if (v.changeType === 'section_deleted' && v.content === '') {
+          deletionMarkerIndices.add(i);
+        }
+      });
+
+      // Pair each deletion marker with the version right before it (has content)
+      const pairedIndices = new Set();
+      deletionMarkerIndices.forEach(i => {
+        const beforeIdx = i - 1;
+        if (beforeIdx >= 0) {
+          directEditPairs.push({ afterVersion: sorted[i], beforeVersion: sorted[beforeIdx] });
+          pairedIndices.add(i);
+          pairedIndices.add(beforeIdx);
+        } else {
+          // No prior version — unpaired (beforeVersion resolved from currentSectionContents at processing time)
+          directEditPairs.push({ afterVersion: sorted[i], beforeVersion: null });
+          pairedIndices.add(i);
+        }
+      });
+
+      // Remaining versions use even/odd pairing (regular direct edits)
+      const remaining = sorted.filter((_, i) => !pairedIndices.has(i));
+      for (let i = 1; i < remaining.length; i += 2) {
+        directEditPairs.push({ afterVersion: remaining[i], beforeVersion: remaining[i - 1] });
       }
-      // if odd count, last one is unpaired after
-      if (sorted.length % 2 === 1) {
-        directEditPairs.push({ afterVersion: sorted[sorted.length - 1], beforeVersion: null });
+      if (remaining.length % 2 === 1) {
+        directEditPairs.push({ afterVersion: remaining[remaining.length - 1], beforeVersion: null });
       }
     });
     // Sort pairs by afterVersion.created_date descending
