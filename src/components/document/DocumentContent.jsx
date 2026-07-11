@@ -232,7 +232,7 @@ export default function DocumentContent({
   // Batch fetch ALL section votes for this document in one query (instead of N per-section queries)
   const { data: allSectionVotes = [] } = useQuery({
     queryKey: ['allSectionVotes', document?.id],
-    queryFn: () => base44.entities.SectionVote.filter({ sectionId: sections.map(s => s.id) }),
+    queryFn: () => base44.entities.SectionVote.filter({ sectionId: { $in: sections.map(s => s.id) } }),
     enabled: !!document?.id && sections.length > 0,
     staleTime: 60 * 1000,
   });

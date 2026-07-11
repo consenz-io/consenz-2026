@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, memo } from "react";
+import React, { useState, useCallback, useEffect, useMemo, memo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -15,73 +15,145 @@ import { rateLimitedAction, RATE_LIMITS } from "@/components/utils/rateLimiter";
 import { toast } from "sonner";
 import { formatLocalDateTime } from "@/components/utils/dateFormatter";
 
-// CommentItem Component - memoized to prevent unnecessary re-renders
+// ── ReplyForm — extracted to its own component with LOCAL state ──────────────
+// Typing in the reply textarea only re-renders THIS component, not all CommentItems.
+// Previously, `newComment` lived in CommentsSection and was passed to every CommentItem,
+// defeating memo() — every keystroke re-rendered all comments.
+const ReplyForm = memo(function ReplyForm({
+  parentComment,
+  profileByUserId,
+  profileByEmail,
+  t,
+  onSubmit,
+  onCancel,
+  isSubmitting,
+}) {
+  const [content, setContent] = useState("");
+
+  // O(1) Map lookup for the "replying to" name
+  const replyToName = useMemo(() => {
+    const id = parentComment?.created_by_id;
+    if (id) {
+      const profile = profileByUserId.get(id);
+      if (profile?.fullName) return profile.fullName;
+    }
+    const email = parentComment?.created_by;
+    if (email) {
+      const profile = profileByEmail.get(email);
+      if (profile?.fullName) return profile.fullName;
+      return email.split('@')[0] || email;
+    }
+    return '?';
+  }, [parentComment, profileByUserId, profileByEmail]);
+
+  return (
+    <div className="mt-2 p-3 bg-blue-50 rounded-lg space-y-2 border border-blue-200">
+      <div className="flex items-center gap-2 text-sm text-slate-600">
+        <Reply className="w-4 h-4" />
+        <span>{t('replyingTo')} {replyToName}</span>
+      </div>
+      <Textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder={t('writeReply')}
+        className="min-h-[60px]"
+        dir="auto"
+        aria-label={t('writeReply')}
+        autoFocus
+      />
+      <div className="flex gap-2 justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => { onCancel(); setContent(""); }}
+          className="h-7 text-xs"
+        >
+          {t('cancel')}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          disabled={!content.trim() || isSubmitting}
+          onClick={() => {
+            if (content.trim()) {
+              onSubmit(content.trim());
+              setContent("");
+            }
+          }}
+          className="h-7 text-xs"
+        >
+          <Send className="w-3 h-3 mr-1" />
+          {t('postComment')}
+        </Button>
+      </div>
+    </div>
+  );
+});
+
+// ── CommentItem — memoized, uses O(1) Map lookups ────────────────────────────
+// Key optimizations:
+// 1. profileByUserId / profileByEmail Maps replace O(n) Array.find (12 scans → 12 Map.get)
+// 2. `replies` array is pre-grouped by parentCommentId in parent (O(n²) → O(1))
+// 3. `isReplying` (boolean) replaces `replyTo` (object) — only the replying comment
+//    re-renders when reply state changes, not all comments
+// 4. `newComment`/`setNewComment` removed from props — reply text lives in ReplyForm
 const CommentItem = memo(({ 
   comment, 
   isReply = false, 
-  users,
-  publicProfiles,
+  profileByUserId,
+  profileByEmail,
   user,
   editingComment,
   setEditingComment,
   updateCommentMutation,
-  setReplyTo,
+  onStartReply,
+  isReplying,
+  onCancelReply,
+  onSubmitReply,
   deleteCommentMutation,
-  allComments,
+  replies,
   t,
-  replyTo,
-  newComment,
-  setNewComment,
   createCommentMutation,
   queryClient
 }) => {
-  // Always call hooks in the same order, regardless of conditions
   const [localEditContent, setLocalEditContent] = useState(comment.content);
   
-  // Always run useEffect
   useEffect(() => {
     setLocalEditContent(comment.content);
   }, [comment.content, editingComment?.id]);
 
-  const getUserId = (comment) => {
+  // O(1) Map lookups — was O(n) Array.find × 4 per call
+  const getUserId = useCallback((comment) => {
     const id = comment?.created_by_id;
     if (id) {
-      const profile = publicProfiles?.find(p => p.userId === id);
+      const profile = profileByUserId.get(id);
       if (profile?.userId) return profile.userId;
-      const u = users?.find(u => u.id === id);
-      if (u?.id) return u.id;
     }
     const email = comment?.created_by;
     if (email) {
-      const profile = publicProfiles?.find(p => p.email === email);
+      const profile = profileByEmail.get(email);
       if (profile?.userId) return profile.userId;
-      const u = users?.find(u => u.email === email);
-      if (u?.id) return u.id;
     }
     return '';
-  };
+  }, [profileByUserId, profileByEmail]);
 
-  const getUserName = (comment) => {
+  const getUserName = useCallback((comment) => {
     const id = comment?.created_by_id;
     if (id) {
-      const profile = publicProfiles?.find(p => p.userId === id);
+      const profile = profileByUserId.get(id);
       if (profile?.fullName) return profile.fullName;
-      const userObj = users?.find(u => u.id === id);
-      if (userObj?.full_name) return userObj.full_name;
     }
     const email = comment?.created_by;
     if (email) {
-      const profile = publicProfiles?.find(p => p.email === email);
+      const profile = profileByEmail.get(email);
       if (profile?.fullName) return profile.fullName;
-      const userObj = users?.find(u => u.email === email);
-      if (userObj?.full_name) return userObj.full_name;
       return email.split('@')[0] || email;
     }
     return '?';
-  };
+  }, [profileByUserId, profileByEmail]);
 
   const isEditing = editingComment?.id === comment.id;
-  const replies = allComments.filter(c => c.parentCommentId === comment.id);
 
   return (
     <div id={`comment-${comment.id}`} className={`${isReply ? 'ml-8 mt-2' : ''}`}>
@@ -199,7 +271,7 @@ const CommentItem = memo(({
                         base44.auth.redirectToLogin(window.location.href);
                         return;
                       }
-                      setReplyTo(comment);
+                      onStartReply(comment);
                     }}
                     className="h-7 text-xs"
                   >
@@ -238,71 +310,25 @@ const CommentItem = memo(({
         </div>
       </Card>
 
-      {/* Reply input form - shown below this comment when replyTo is set to this comment */}
-      {replyTo?.id === comment.id && (
-       <div className="mt-2 p-3 bg-blue-50 rounded-lg space-y-2 border border-blue-200">
-         <div className="flex items-center gap-2 text-sm text-slate-600">
-           <Reply className="w-4 h-4" />
-           <span>{t('replyingTo')} {(() => {
-             if (comment.created_by_id) {
-               const profile = publicProfiles?.find(p => p.userId === comment.created_by_id);
-               if (profile?.fullName) return profile.fullName;
-               const userObj = users?.find(u => u.id === comment.created_by_id);
-               if (userObj?.full_name) return userObj.full_name;
-             }
-             if (comment.created_by) {
-               const profile = publicProfiles?.find(p => p.email === comment.created_by);
-               if (profile?.fullName) return profile.fullName;
-               const userObj = users?.find(u => u.email === comment.created_by);
-               if (userObj?.full_name) return userObj.full_name;
-               return comment.created_by.split('@')[0] || comment.created_by;
-             }
-             return '?';
-           })()}</span>
-         </div>
-         <Textarea
-           value={newComment}
-           onChange={(e) => setNewComment(e.target.value)}
-           placeholder={t('writeReply')}
-           className="min-h-[60px]"
-           dir="auto"
-           aria-label={t('writeReply')}
-           autoFocus
-         />
-         <div className="flex gap-2 justify-end">
-           <Button
-             type="button"
-             variant="outline"
-             size="sm"
-             onClick={() => {
-               setReplyTo(null);
-               setNewComment("");
-             }}
-             className="h-7 text-xs"
-           >
-             {t('cancel')}
-           </Button>
-           <Button
-             type="button"
-             size="sm"
-             disabled={!newComment.trim() || createCommentMutation.isPending}
-             onClick={() => {
-               if (newComment.trim()) {
-                 createCommentMutation.mutate({
-                   rootEntityType: comment.rootEntityType,
-                   rootEntityId: comment.rootEntityId,
-                   parentCommentId: isReply ? comment.parentCommentId : comment.id,
-                   content: newComment.trim(),
-                 });
-               }
-             }}
-             className="h-7 text-xs"
-           >
-             <Send className="w-3 h-3 mr-1" />
-             {t('postComment')}
-           </Button>
-         </div>
-       </div>
+      {/* Reply form — extracted component with local state.
+          Typing here only re-renders ReplyForm, not sibling CommentItems. */}
+      {isReplying && (
+        <ReplyForm
+          parentComment={comment}
+          profileByUserId={profileByUserId}
+          profileByEmail={profileByEmail}
+          t={t}
+          isSubmitting={createCommentMutation.isPending}
+          onSubmit={(content) => {
+            onSubmitReply({
+              rootEntityType: comment.rootEntityType,
+              rootEntityId: comment.rootEntityId,
+              parentCommentId: isReply ? comment.parentCommentId : comment.id,
+              content,
+            });
+          }}
+          onCancel={onCancelReply}
+        />
       )}
 
       {replies.length > 0 && (
@@ -312,19 +338,19 @@ const CommentItem = memo(({
               key={reply.id} 
               comment={reply} 
               isReply={true}
-              users={users}
-              publicProfiles={publicProfiles}
+              profileByUserId={profileByUserId}
+              profileByEmail={profileByEmail}
               user={user}
               editingComment={editingComment}
               setEditingComment={setEditingComment}
               updateCommentMutation={updateCommentMutation}
-              setReplyTo={setReplyTo}
+              onStartReply={onStartReply}
+              isReplying={false}
+              onCancelReply={onCancelReply}
+              onSubmitReply={onSubmitReply}
               deleteCommentMutation={deleteCommentMutation}
-              allComments={allComments}
+              replies={[]}
               t={t}
-              replyTo={replyTo}
-              newComment={newComment}
-              setNewComment={setNewComment}
               createCommentMutation={createCommentMutation}
               queryClient={queryClient}
             />
@@ -364,7 +390,10 @@ const runBackgroundTasks = async (comment, entityType, entityId) => {
 export default function CommentsSection({ entityType, entityId, user, scrollToCommentId }) {
   const { t, isRTL, language } = useLanguage();
   const [newComment, setNewComment] = useState("");
-  const [replyTo, setReplyTo] = useState(null);
+  // Store only the ID (string) instead of the comment object.
+  // A string prop change only re-renders the one CommentItem where isReplying flips,
+  // not all comments (which received the full `replyTo` object before).
+  const [replyToCommentId, setReplyToCommentId] = useState(null);
   
   // FIX: Removed editContent from parent state to prevent re-renders on every keystroke
   const [editingComment, setEditingComment] = useState(null); 
@@ -400,28 +429,51 @@ export default function CommentsSection({ entityType, entityId, user, scrollToCo
     refetchOnMount: true,
   });
 
-  const { data: users } = useQuery({
-    queryKey: ['users'],
-    queryFn: async () => {
-      // Try to get all users, but if permission denied, return empty array
-      // Public profiles will be used as fallback
-      try {
-        return await base44.entities.User.list();
-      } catch (err) {
-        console.warn('[CommentsSection] Cannot list users (permission denied), using public profiles only');
-        return [];
-      }
-    },
-    initialData: [],
-    retry: false,
-  });
+  // REMOVED: `users` query — was fetching ALL system users (User.list()) on every mount.
+  // This data was only used as a fallback for name resolution, which UserPublicProfile
+  // already covers (every user gets one created in Layout on login).
+  // Impact: eliminates 1 full API call per CommentsSection mount (one per section/suggestion).
 
-  const { data: publicProfiles } = useQuery({
+  const { data: publicProfiles = [] } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list('-created_date', 1000),
     initialData: [],
     staleTime: 2 * 60 * 1000, // 2 minutes — seeded by DocumentView, avoid redundant fetch
   });
+
+  // ── O(1) lookup maps — built once per data change, reused by all CommentItems ──
+  // Previously, each CommentItem did Array.find (O(n)) on the full profiles array.
+  // With 50 comments × 1000 profiles × 12 lookups = 600,000 comparisons per render.
+  // Now: 50 × 12 Map.get = 600 operations — 1000× reduction.
+  const profileByUserId = useMemo(() => {
+    const map = new Map();
+    publicProfiles.forEach(p => { if (p.userId) map.set(p.userId, p); });
+    return map;
+  }, [publicProfiles]);
+
+  const profileByEmail = useMemo(() => {
+    const map = new Map();
+    publicProfiles.forEach(p => { if (p.email) map.set(p.email, p); });
+    return map;
+  }, [publicProfiles]);
+
+  // ── Pre-group replies by parentCommentId — O(n) once, O(1) per comment ──
+  // Previously: each CommentItem did allComments.filter() → O(n²) total.
+  const repliesByParentId = useMemo(() => {
+    const map = new Map();
+    for (const c of comments) {
+      if (c.parentCommentId) {
+        if (!map.has(c.parentCommentId)) map.set(c.parentCommentId, []);
+        map.get(c.parentCommentId).push(c);
+      }
+    }
+    return map;
+  }, [comments]);
+
+  const topLevelComments = useMemo(
+    () => comments.filter(c => !c.parentCommentId),
+    [comments]
+  );
 
   const createCommentMutation = useMutation({
     mutationFn: async (data) => {
@@ -487,7 +539,7 @@ export default function CommentsSection({ entityType, entityId, user, scrollToCo
       });
       
       setNewComment("");
-      setReplyTo(null);
+      setReplyToCommentId(null);
       
       return { previousComments };
     },
@@ -544,10 +596,18 @@ export default function CommentsSection({ entityType, entityId, user, scrollToCo
     createCommentMutation.mutate({
       rootEntityType: entityType,
       rootEntityId: entityId,
-      parentCommentId: replyTo?.id || null,
+      parentCommentId: replyToCommentId || null,
       content: newComment.trim(),
     });
   };
+
+  // ── Stable callback handlers — prevent CommentItem re-renders from new function refs ──
+  const handleStartReply = useCallback((comment) => setReplyToCommentId(comment.id), []);
+  const handleCancelReply = useCallback(() => setReplyToCommentId(null), []);
+  const handleSubmitReply = useCallback((data) => {
+    createCommentMutation.mutate(data);
+    setReplyToCommentId(null);
+  }, [createCommentMutation]);
 
   // Scroll to specific comment from notification link
   React.useEffect(() => {
@@ -569,7 +629,6 @@ export default function CommentsSection({ entityType, entityId, user, scrollToCo
     return () => { clearTimeout(timer); clearTimeout(highlightTimer); };
   }, [scrollToCommentId, isLoading, comments.length]);
 
-  const topLevelComments = comments.filter(c => !c.parentCommentId);
   const totalCommentsCount = comments.length;
 
   return (
@@ -588,19 +647,19 @@ export default function CommentsSection({ entityType, entityId, user, scrollToCo
             <CommentItem 
               key={comment.id} 
               comment={comment}
-              users={users}
-              publicProfiles={publicProfiles}
+              profileByUserId={profileByUserId}
+              profileByEmail={profileByEmail}
               user={user}
               editingComment={editingComment}
               setEditingComment={setEditingComment}
               updateCommentMutation={updateCommentMutation}
-              setReplyTo={setReplyTo}
+              onStartReply={handleStartReply}
+              isReplying={replyToCommentId === comment.id}
+              onCancelReply={handleCancelReply}
+              onSubmitReply={handleSubmitReply}
               deleteCommentMutation={deleteCommentMutation}
-              allComments={comments}
+              replies={repliesByParentId.get(comment.id) || []}
               t={t}
-              replyTo={replyTo}
-              newComment={newComment}
-              setNewComment={setNewComment}
               createCommentMutation={createCommentMutation}
               queryClient={queryClient}
             />
@@ -609,7 +668,7 @@ export default function CommentsSection({ entityType, entityId, user, scrollToCo
       </div>
 
       {/* Form for new top-level comments only */}
-      {!replyTo && (
+      {!replyToCommentId && (
         <form onSubmit={(e) => {
           e.preventDefault();
           if (!user) {
