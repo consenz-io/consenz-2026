@@ -47,7 +47,6 @@ export default function DocumentContent({
   targetSuggestionId,
   onEditSuggestion
 }) {
-  const [showComments, setShowComments] = useState({});
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
   const [editingTopic, setEditingTopic] = useState(null);
 
@@ -267,13 +266,6 @@ export default function DocumentContent({
     if (profile?.fullName) return cleanDisplayName(profile.fullName, profile.email);
     return 'User';
   }, [profileByUserId, profileByEmail]);
-
-  const toggleComments = React.useCallback((id) => {
-    setShowComments(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  }, []);
 
   const translateTopicMutation = useMutation({
     mutationFn: async (topic) => {
@@ -723,8 +715,8 @@ Return ONLY the translated text:`;
                      voteMutation={voteMutation}
                      onOpenSidebar={onOpenSuggestionSidebar}
                      getCommentsCount={getCommentsCount}
-                     toggleComments={toggleComments}
-                     showComments={showComments}
+                     
+                     
                      isAdmin={isAdmin}
                      onEditSuggestion={onEditSuggestion}
                      allDocumentSuggestions={suggestions}
@@ -746,8 +738,8 @@ Return ONLY the translated text:`;
                              voteMutation={voteMutation}
                              onOpenSidebar={onOpenSuggestionSidebar}
                              getCommentsCount={getCommentsCount}
-                             toggleComments={toggleComments}
-                             showComments={showComments}
+                             
+                             
                              isAdmin={isAdmin}
                              onEditSuggestion={onEditSuggestion}
                              allDocumentSuggestions={suggestions}
@@ -834,8 +826,8 @@ Return ONLY the translated text:`;
                             voteMutation={voteMutation}
                             onOpenSidebar={onOpenSuggestionSidebar}
                             getCommentsCount={getCommentsCount}
-                            toggleComments={toggleComments}
-                            showComments={showComments}
+                            
+                            
                             isAdmin={isAdmin}
                             onEditSuggestion={onEditSuggestion}
                             allDocumentSuggestions={suggestions}
@@ -928,8 +920,8 @@ Return ONLY the translated text:`;
                                       voteMutation={voteMutation}
                                       onOpenSidebar={onOpenSuggestionSidebar}
                                       getCommentsCount={getCommentsCount}
-                                      toggleComments={toggleComments}
-                                      showComments={showComments}
+                                      
+                                      
                                       isAdmin={isAdmin}
                                       onEditSuggestion={onEditSuggestion}
                                       allDocumentSuggestions={suggestions}
@@ -949,8 +941,8 @@ Return ONLY the translated text:`;
                              onEditSection={onEditSection}
                              onEditSectionThenVote={onEditSectionThenVote}
                              onDirectEdit={onDirectEdit}
-                              toggleComments={toggleComments}
-                              showComments={showComments}
+                              
+                              
                               getCommentsCount={getCommentsCount}
                               getUserVote={getUserVote}
                               voteMutation={voteMutation}
@@ -986,8 +978,8 @@ Return ONLY the translated text:`;
                                   voteMutation={voteMutation}
                                   onOpenSidebar={onOpenSuggestionSidebar}
                                   getCommentsCount={getCommentsCount}
-                                  toggleComments={toggleComments}
-                                  showComments={showComments}
+                                  
+                                  
                                   isAdmin={isAdmin}
                                   onEditSuggestion={onEditSuggestion}
                                   allDocumentSuggestions={suggestions}
@@ -1084,8 +1076,8 @@ Return ONLY the translated text:`;
                             voteMutation={voteMutation}
                             onOpenSidebar={onOpenSuggestionSidebar}
                             getCommentsCount={getCommentsCount}
-                            toggleComments={toggleComments}
-                            showComments={showComments}
+                            
+                            
                             isAdmin={isAdmin}
                             onEditSuggestion={onEditSuggestion}
                             allDocumentSuggestions={suggestions}
@@ -1128,8 +1120,8 @@ Return ONLY the translated text:`;
                               voteMutation={voteMutation}
                               onOpenSidebar={onOpenSuggestionSidebar}
                               getCommentsCount={getCommentsCount}
-                              toggleComments={toggleComments}
-                              showComments={showComments}
+                              
+                              
                               isAdmin={isAdmin}
                               onEditSuggestion={onEditSuggestion}
                               allDocumentSuggestions={suggestions}
@@ -1180,8 +1172,8 @@ Return ONLY the translated text:`;
                                 voteMutation={voteMutation}
                                 onOpenSidebar={onOpenSuggestionSidebar}
                                 getCommentsCount={getCommentsCount}
-                                toggleComments={toggleComments}
-                                showComments={showComments}
+                                
+                                
                                 isAdmin={isAdmin}
                                 onEditSuggestion={onEditSuggestion}
                                 allDocumentSuggestions={suggestions}

@@ -24,8 +24,6 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   voteMutation,
   onOpenSidebar,
   getCommentsCount,
-  toggleComments,
-  showComments,
   isAdmin,
   onEditSuggestion,
   allDocumentSuggestions,
@@ -37,6 +35,11 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   const queryClient = useQueryClient();
   const [currentVersionId, setCurrentVersionId] = React.useState('original');
   const [animationPhase, setAnimationPhase] = React.useState('none');
+  // Local comments visibility — avoids re-rendering all cards when one toggles
+  const [showComments, setShowComments] = React.useState({});
+  const toggleComments = React.useCallback((key) => {
+    setShowComments(prev => ({ ...prev, [key]: !prev[key] }));
+  }, []);
   const prevStatusRef = React.useRef(suggestion.status);
   // Tracks whether the user manually navigated via chevron buttons.
   // Automatic navigation (targetSuggestionId, chain growth) must not land on a
@@ -110,7 +113,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
 
     // Filter to only show new_section, edit_suggestion, and edit_section types (after conversion), keep all statuses
     const filtered = fullChain.filter((s) => s.type === 'new_section' || s.type === 'edit_suggestion' || s.type === 'edit_section');
-    console.log('[SUGGESTION CHAIN] Built chain:', filtered.map((s) => ({ id: s.id, type: s.type, status: s.status })));
+    // debug log removed — was running on every render of every card
     return filtered;
   }, [suggestion, allDocumentSuggestions, ghostChain]);
 
@@ -421,7 +424,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleComments && toggleComments(commentsKey);
+                    toggleComments(commentsKey);
                   }}
                   className={`h-8 text-sm px-3 gap-1.5 flex-shrink-0 transition-all ${
                   hasComments ?
@@ -438,7 +441,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (toggleComments && !showComments?.[commentsKey]) toggleComments(commentsKey);
+                    if (!showComments[commentsKey]) toggleComments(commentsKey);
                   }}
                   className="h-8 text-sm px-3 gap-1.5 text-slate-600 hover:text-blue-600 flex-shrink-0 hidden">
                   
@@ -452,7 +455,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
         })()}
       </div>
 
-      {showComments && showComments[`suggestion-${currentVersion.id}`] &&
+      {showComments[`suggestion-${currentVersion.id}`] &&
       <div className="mt-4 pt-4 border-t border-amber-200">
           <CommentsSection
           entityType="suggestion"

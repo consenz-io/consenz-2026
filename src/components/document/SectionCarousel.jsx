@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { History, X, Edit } from "lucide-react";
@@ -23,8 +23,6 @@ const SectionCarousel = React.memo(function SectionCarousel({
   canParticipate = true,
   onEditSection,
   onDirectEdit,
-  toggleComments,
-  showComments,
   getCommentsCount,
   getUserVote,
   voteMutation,
@@ -83,6 +81,12 @@ const SectionCarousel = React.memo(function SectionCarousel({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showJoinGroupDialog, setShowJoinGroupDialog] = useState(false);
   const [historyMode, setHistoryMode] = useState(false);
+
+  // Local comments visibility — avoids re-rendering all sections when one toggles
+  const [showComments, setShowComments] = useState({});
+  const toggleComments = useCallback((key) => {
+    setShowComments(prev => ({ ...prev, [key]: !prev[key] }));
+  }, []);
 
   const deleteFlashTimerRef = useRef(null);
   const flashTimerRef = useRef(null);
