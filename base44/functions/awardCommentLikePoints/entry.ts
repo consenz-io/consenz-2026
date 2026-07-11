@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
 
     const amount = isLiking ? 5 : -5;
     const action = isLiking ? 'comment_like_received' : 'comment_like_removed';
-    const description = isLiking ? 'קיבלת לייק על תגובה' : 'בוטל לייק על תגובה';
+    const description = isLiking ? 'Comment like received' : 'Comment like removed';
 
     const usersList = await base44.asServiceRole.entities.User.filter({ id: creatorId });
     if (usersList.length === 0) return Response.json({ error: 'Creator not found' }, { status: 404 });

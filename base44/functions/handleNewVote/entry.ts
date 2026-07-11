@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
             userId: creator.id,
             amount: 10,
             action: 'vote_received',
-            description: `קיבל הצבעה בעד על ההצעה: ${suggestion.title}`,
+            description: `Received a pro vote on suggestion: ${suggestion.title}`,
             relatedEntityId: suggestion.id,
             relatedEntityType: 'suggestion'
           })

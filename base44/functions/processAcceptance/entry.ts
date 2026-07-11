@@ -666,7 +666,7 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       accepted: true,
-      message: 'ההצעה התקבלה בהצלחה'
+      message: 'Suggestion accepted successfully'
     });
 
   } catch (error) {

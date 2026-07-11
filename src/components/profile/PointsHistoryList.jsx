@@ -5,6 +5,7 @@ import { TrendingUp, TrendingDown, Loader2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { formatLocalDate } from "@/components/utils/dateFormatter";
 import { resolveCommentUrl } from "@/components/profile/resolveCommentUrl";
+import { translateTransactionDescription } from "@/components/points/translateTransaction";
 
 const actionLabels = {
   suggestion_created: { he: 'הצעה נוצרה', ar: 'تم إنشاء مقترح', en: 'Suggestion created' },
@@ -83,7 +84,7 @@ export default function PointsHistoryList({ transactions = [] }) {
                   </span>
                 </div>
                 {tx.description && (
-                  <p className="text-sm text-slate-700 truncate">{tx.description}</p>
+                  <p className="text-sm text-slate-700 truncate">{translateTransactionDescription(tx, language)}</p>
                 )}
               </div>
             </div>

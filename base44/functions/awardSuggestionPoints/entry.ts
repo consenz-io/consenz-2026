@@ -34,10 +34,10 @@ Deno.serve(async (req) => {
 
     if (action === 'suggestion_accepted') {
       pointsAmount = 500;
-      description = `ההצעה שלך התקבלה: ${suggestion.title || 'הצעה'}`;
+      description = `Your suggestion was accepted: ${suggestion.title || 'Suggestion'}`;
     } else if (action === 'topic_edit_accepted') {
       pointsAmount = 100;
-      description = `הצעתך לעריכת כותרת נושא התקבלה`;
+      description = `Your topic title edit was accepted`;
     } else {
       return Response.json({ error: 'Invalid action' }, { status: 400 });
     }
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
               userId: voter.id,
               amount: 50,
               action: 'vote_influenced_acceptance',
-              description: `הצבעתך בעד השפיעה על קבלת ההצעה: ${suggestion.title || 'הצעה'}`,
+              description: `Your pro vote influenced acceptance: ${suggestion.title || 'Suggestion'}`,
               relatedEntityId: suggestionId,
               relatedEntityType: 'suggestion'
             })
