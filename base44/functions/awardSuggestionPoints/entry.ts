@@ -23,9 +23,9 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'Gamification not enabled' });
     }
 
-    const creatorEmail = suggestion.created_by;
-    if (!creatorEmail) {
-      return Response.json({ error: 'No creator email found' }, { status: 404 });
+    const creatorId = suggestion.created_by_id;
+    if (!creatorId) {
+      return Response.json({ error: 'No creator ID found' }, { status: 404 });
     }
 
     // Award points based on action
@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
     }
 
     // 1. Award points to the suggestion CREATOR
-    const usersList = await base44.asServiceRole.entities.User.filter({ email: creatorEmail });
+    const usersList = await base44.asServiceRole.entities.User.filter({ id: creatorId });
     if (usersList.length === 0) {
       return Response.json({ error: 'Creator user not found' }, { status: 404 });
     }
@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
       })
     ]);
 
-    console.log('[AWARD POINTS] ✓ Creator awarded', pointsAmount, 'points:', creatorEmail);
+    console.log('[AWARD POINTS] ✓ Creator awarded', pointsAmount, 'points to user:', creator.id);
 
     // 2. Award 50 points to each PRO voter who influenced the acceptance
     //    (only for suggestion_accepted, not topic_edit_accepted)
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
       if (proVoterIds.length > 0) {
         // Fetch all users and filter client-side (platform doesn't reliably support $in on User)
         const allUsers = await base44.asServiceRole.entities.User.list();
-        const proVoters = allUsers.filter(u => proVoterIds.includes(u.id) && u.email !== creatorEmail);
+        const proVoters = allUsers.filter(u => proVoterIds.includes(u.id) && u.id !== creator.id);
 
         for (const voter of proVoters) {
           await Promise.all([
