@@ -98,7 +98,7 @@ export default function GroupView() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
         <div className="max-w-6xl mx-auto space-y-4">
           <Alert><Lock className="h-4 w-4" /><AlertDescription>{language === 'he' ? 'קבוצה פרטית - נדרשת חברות' : language === 'ar' ? 'مجموعة خاصة - العضوية مطلوبة' : 'Private group - membership required'}</AlertDescription></Alert>
-          {currentUser && (
+          {currentUser ? (
             <Card className="bg-white">
               <CardHeader><CardTitle className="text-lg">{language === 'he' ? 'מעוניין להצטרף?' : language === 'ar' ? 'هل تريد الانضمام؟' : 'Want to join?'}</CardTitle></CardHeader>
               <CardContent className="space-y-3">
@@ -112,6 +112,16 @@ export default function GroupView() {
                     <AlertDescription className="text-green-800">{language === 'he' ? 'הבקשה נשלחה בהצלחה' : language === 'ar' ? 'تم إرسال الطلب بنجاح' : 'Request sent successfully'}</AlertDescription>
                   </Alert>
                 )}
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="bg-white">
+              <CardHeader><CardTitle className="text-lg">{language === 'he' ? 'מעוניין להצטרף?' : language === 'ar' ? 'هل تريد الانضمام؟' : 'Want to join?'}</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-slate-600 text-sm">{language === 'he' ? 'יש להתחבר כדי לשלוח בקשת הצטרפות לקבוצה' : language === 'ar' ? 'يجب تسجيل الدخول لإرسال طلب انضمام إلى المجموعة' : 'Sign in to send a join request to the group'}</p>
+                <Button onClick={() => base44.auth.redirectToLogin()} className="bg-gradient-to-r from-blue-600 to-indigo-600">
+                  {language === 'he' ? 'התחבר כדי לבקש הצטרפות' : language === 'ar' ? 'تسجيل الدخول لطلب الانضمام' : 'Sign in to request access'}
+                </Button>
               </CardContent>
             </Card>
           )}
