@@ -26,15 +26,6 @@ export default function Home() {
         contributorsCount={totalUniqueContributors}
       />
 
-      <RecentDocumentsSection
-        documents={documents}
-        documentsLoading={groupsLoading || membersLoading}
-        groups={groups}
-        groupMembers={groupMembers}
-        user={user}
-        documentContributorCounts={documentContributorCounts}
-      />
-
       <GroupsSection
         groups={groups}
         groupsLoading={groupsLoading || membersLoading}
@@ -42,6 +33,15 @@ export default function Home() {
         documents={documents}
         user={user}
         groupParticipantCounts={groupParticipantCounts}
+      />
+
+      <RecentDocumentsSection
+        documents={documents}
+        documentsLoading={groupsLoading || membersLoading}
+        groups={groups}
+        groupMembers={groupMembers}
+        user={user}
+        documentContributorCounts={documentContributorCounts}
       />
 
       <AllContributorsModal
