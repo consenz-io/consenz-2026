@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { History, X, Edit } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import SectionVersionCarousel from "./SectionVersionCarousel";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
@@ -325,15 +326,22 @@ const SectionCarousel = React.memo(function SectionCarousel({
                 <span className="hidden md:inline text-xs">{t('currentVersion')}</span>
               </Button>
             ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => { e.stopPropagation(); setHistoryMode(true); }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-teal-700 hover:bg-teal-50 h-7 md:h-8 px-2 md:px-3"
-              >
-                <History className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-                <span className="hidden md:inline">{t('history')}</span>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => { e.stopPropagation(); setHistoryMode(true); }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-600 hover:text-teal-700 hover:bg-teal-50 h-7 md:h-8 px-2 md:px-3"
+                  >
+                    <History className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                    <span className="hidden md:inline">{t('history')}</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {t('viewSectionHistory')}
+                </TooltipContent>
+              </Tooltip>
             )
           )}
         </div>
