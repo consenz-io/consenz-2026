@@ -18,21 +18,42 @@ Deno.serve(async (req) => {
     // Don't award points for self-likes
     if (creatorId === user.id) return Response.json({ success: true, message: 'Self-like' });
 
-    // Resolve documentId from the comment's root entity
+    // Resolve documentId + build a deep-link URL to the comment.
+    // Mirror handleNewComment: for section comments prefer the latest accepted suggestion
+    // (so suggestiondetail renders the comments), else fall back to documentview.
     let documentId = null;
+    let actionUrl = null;
+
     if (comment.rootEntityType === 'suggestion') {
       const s = await base44.asServiceRole.entities.Suggestion.filter({ id: comment.rootEntityId });
-      if (s.length > 0) documentId = s[0].documentId;
-    } else if (comment.rootEntityType === 'section') {
-      const s = await base44.asServiceRole.entities.Section.filter({ id: comment.rootEntityId });
-      if (s.length > 0) documentId = s[0].documentId;
+      if (s.length > 0) {
+        documentId = s[0].documentId;
+        actionUrl = `/suggestiondetail?id=${s[0].id}&commentId=${comment.id}`;
+      }
     } else if (comment.rootEntityType === 'argument') {
       const a = await base44.asServiceRole.entities.Argument.filter({ id: comment.rootEntityId });
       if (a.length > 0) {
         const s = await base44.asServiceRole.entities.Suggestion.filter({ id: a[0].suggestionId });
-        if (s.length > 0) documentId = s[0].documentId;
+        if (s.length > 0) {
+          documentId = s[0].documentId;
+          actionUrl = `/suggestiondetail?id=${s[0].id}&commentId=${comment.id}`;
+        }
+      }
+    } else if (comment.rootEntityType === 'section') {
+      const s = await base44.asServiceRole.entities.Section.filter({ id: comment.rootEntityId });
+      if (s.length > 0) {
+        documentId = s[0].documentId;
+        const accepted = await base44.asServiceRole.entities.Suggestion.filter({
+          sectionId: comment.rootEntityId,
+          status: 'accepted'
+        });
+        const latestAccepted = accepted.sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
+        actionUrl = latestAccepted
+          ? `/suggestiondetail?id=${latestAccepted.id}&commentId=${comment.id}`
+          : `/documentview?id=${documentId}&commentId=${comment.id}`;
       }
     }
+
     if (!documentId) return Response.json({ success: true, message: 'No document' });
 
     const docs = await base44.asServiceRole.entities.Document.filter({ id: documentId });
@@ -57,7 +78,8 @@ Deno.serve(async (req) => {
         action,
         description,
         relatedEntityId: commentId,
-        relatedEntityType: 'comment'
+        relatedEntityType: 'comment',
+        actionUrl
       })
     ]);
 
