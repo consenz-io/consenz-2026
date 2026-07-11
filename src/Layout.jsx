@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/sidebar";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import FloatingNotificationBell from "@/components/notifications/FloatingNotificationBell";
 import FloatingPointsBadge from "@/components/points/FloatingPointsBadge";
@@ -80,8 +81,8 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {navigationItems.map((item) => {
+                const navButton = (
                   <SidebarMenuButton 
                     asChild 
                     className={`hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 rounded-lg mb-1 ${
@@ -98,8 +99,28 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
                       )}
                     </Link>
                   </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                );
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    {item.badge ? (
+                      <TooltipProvider delayDuration={300}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            {navButton}
+                          </TooltipTrigger>
+                          <TooltipContent side={isRTL ? "left" : "right"} className="max-w-[240px] text-center font-medium">
+                            {language === 'he'
+                              ? `${item.badge} הצעות פתוחות ממתינות להצבעתך`
+                              : language === 'ar'
+                              ? `${item.badge} اقتراحات مفتوحة تنتظر تصويتك`
+                              : `${item.badge} open suggestions awaiting your vote`}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : navButton}
+                  </SidebarMenuItem>
+                );
+              })}
               <SidebarMenuItem>
                <ErrorBoundary inline>
                  <div onClick={closeSidebarOnMobile}>
