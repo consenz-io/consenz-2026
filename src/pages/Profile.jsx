@@ -15,6 +15,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
 import { formatLocalDate } from "@/components/utils/dateFormatter";
+import { useProfileActivity } from "@/components/profile/useProfileActivity";
+import ProfileActivityTabs from "@/components/profile/ProfileActivityTabs";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -26,7 +28,7 @@ export default function Profile() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [showPointsHistory, setShowPointsHistory] = useState(false);
-  const [showAcceptedSuggestions, setShowAcceptedSuggestions] = useState(false);
+  const [activeTab, setActiveTab] = useState('accepted');
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -82,14 +84,7 @@ export default function Profile() {
     initialData: []
   });
 
-  // DISABLED FOR TESTING - Using placeholder data
-  const userComments = [];
-  const userSuggestions = [];
-  const userVotes = [];
-
-  const acceptedSuggestions = React.useMemo(() => {
-    return userSuggestions.filter((s) => s.status === 'accepted');
-  }, [userSuggestions]);
+  const { userSuggestions, userComments, acceptedSuggestions, isLoadingActivity } = useProfileActivity(user?.id);
 
   const [formData, setFormData] = useState({
     full_name: user?.full_name || "",
@@ -546,7 +541,7 @@ export default function Profile() {
               </div>
               <div
                 className="flex items-center gap-3 p-4 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100 transition-colors"
-                onClick={() => setShowAcceptedSuggestions(!showAcceptedSuggestions)}>
+                onClick={() => setActiveTab('accepted')}>
                 
                 <CheckCircle className="w-6 h-6 text-green-600" />
                 <div>
@@ -577,183 +572,14 @@ export default function Profile() {
               </div>
             }
 
-            {showAcceptedSuggestions &&
-            <div className="border-t pt-4">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-yellow-800">
-                    {language === 'he' ? 'בפיתוח' : language === 'ar' ? 'قيد التطوير' : 'Under development'}
-                  </p>
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">
-                  {language === 'he' ? 'הצעות עריכה שהתקבלו' : language === 'ar' ? 'مقترحات مقبولة' : 'Accepted Suggestions'}
-                </h3>
-                <p className="text-slate-500 text-sm text-center py-8">
-                  {language === 'he' ? '...' : language === 'ar' ? '...' : '...'}
-                </p>
-              </div>
-            }
-
-            <Tabs defaultValue="comments" className="w-full" dir={isRTL ? 'rtl' : 'ltr'} aria-label={language === 'he' ? 'פעילות משתמש' : 'User activity'}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="comments" aria-label={`${t('comments')} (${userComments.length})`}>
-                  <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {t('comments')} ({userComments.length})
-                </TabsTrigger>
-                <TabsTrigger value="suggestions" aria-label={`${t('suggestions')} (${userSuggestions.length})`}>
-                  <FileText className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {t('suggestions')} ({userSuggestions.length})
-                </TabsTrigger>
-                <TabsTrigger value="votes" aria-label={`${language === 'he' ? 'הצבעות' : 'Votes'} (${userVotes.length})`}>
-                  <ThumbsUp className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {language === 'he' ? 'הצבעות' : language === 'ar' ? 'تصويتات' : 'Votes'} ({userVotes.length})
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="comments" className="mt-4">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-yellow-800">
-                    {language === 'he' ? 'בפיתוח' : language === 'ar' ? 'قيد التطوير' : 'Under development'}
-                  </p>
-                </div>
-                {userComments.length === 0 ?
-                <p className="text-slate-500 text-sm text-center py-8">
-                    {language === 'he' ? 'אין תגובות עדיין' : language === 'ar' ? 'لا توجد تعليقات بعد' : 'No comments yet'}
-                  </p> :
-
-                <div className="space-y-3">
-                    {userComments.map((comment) => {
-                    let commentUrl = null;
-                    if (comment.rootEntityType === 'suggestion') {
-                      commentUrl = `${createPageUrl("SuggestionDetail")}?id=${comment.rootEntityId}&commentId=${comment.id}`;
-                    } else if (comment.rootEntityType === 'section') {
-                      commentUrl = `${createPageUrl("SectionHistory")}?id=${comment.rootEntityId}&commentId=${comment.id}`;
-                    }
-
-                    return (
-                      <div
-                        key={comment.id}
-                        className="p-4 rounded-lg border-2 bg-blue-50 border-blue-200 hover:border-blue-300 transition-all hover:shadow-md">
-                        
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Badge variant="outline" className="text-xs font-semibold bg-blue-100 text-blue-800 border-blue-300">
-                                  {t('commentOn')} {comment.rootEntityType === 'suggestion' ? t('suggestion') : t('section')}
-                                </Badge>
-                                <span className="text-xs text-slate-500">
-                                  {formatLocalDate(comment.created_date, 'DD/MM/YYYY')}
-                                </span>
-                              </div>
-                              <p className="text-sm text-slate-700 line-clamp-2 mb-2">{comment.content}</p>
-                              {commentUrl &&
-                            <Link to={commentUrl} className="text-blue-600 hover:underline inline-flex items-center gap-1 text-xs">
-                                  {t('viewFullComment')}
-                                  <ArrowRight className={`w-3 h-3 ${isRTL ? 'rotate-180' : ''}`} />
-                                </Link>
-                            }
-                            </div>
-                          </div>
-                        </div>);
-
-                  })}
-                  </div>
-                }
-              </TabsContent>
-
-              <TabsContent value="suggestions" className="mt-4">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-yellow-800">
-                    {language === 'he' ? 'רכיב הפעילות מנוטרל לצורך בדיקה - מוצגים נתוני פלייסהולדר' : language === 'ar' ? 'مكوّن النشاط معطّل للاختبار - عرض بيانات بديلة' : 'Activity component disabled for testing - showing placeholder data'}
-                  </p>
-                </div>
-                {userSuggestions.length === 0 ?
-                <p className="text-slate-500 text-sm text-center py-8">
-                    {language === 'he' ? 'אין הצעות עדיין' : language === 'ar' ? 'لا توجد مقترحات بعد' : 'No suggestions yet'}
-                  </p> :
-
-                <div className="space-y-3">
-                    {userSuggestions.map((suggestion) =>
-                  <Link
-                    key={suggestion.id}
-                    to={`${createPageUrl("SuggestionDetail")}?id=${suggestion.id}`}
-                    className="block p-4 rounded-lg border-2 bg-green-50 border-green-200 hover:border-green-300 transition-all hover:shadow-md">
-                    
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="outline" className={`text-xs font-semibold ${
-                          suggestion.status === 'accepted' ? 'bg-green-100 text-green-800 border-green-300' :
-                          suggestion.status === 'rejected' ? 'bg-red-100 text-red-800 border-red-300' :
-                          'bg-yellow-100 text-yellow-800 border-yellow-300'}`
-                          }>
-                                {suggestion.status === 'accepted' ? t('accepted') :
-                            suggestion.status === 'rejected' ? t('rejected') : t('pending')}
-                              </Badge>
-                              <span className="text-xs text-slate-500">
-                                {new Date(suggestion.created_date).toLocaleDateString(
-                              language === 'en' ? 'en-US' : language === 'ar' ? 'ar-EG' : 'he-IL',
-                              { year: 'numeric', month: 'short', day: 'numeric' }
-                            )}
-                              </span>
-                            </div>
-                            <p className="text-sm font-medium text-slate-900 mb-1">{suggestion.title}</p>
-                            <div className="flex items-center gap-3 text-xs text-slate-600">
-                              <span>{suggestion.proVotes || 0} {t('pro')}</span>
-                              <span>{suggestion.conVotes || 0} {t('con')}</span>
-                            </div>
-                          </div>
-                          <ArrowRight className={`w-4 h-4 text-slate-400 shrink-0 ${isRTL ? 'rotate-180' : ''}`} />
-                        </div>
-                      </Link>
-                  )}
-                  </div>
-                }
-              </TabsContent>
-
-              <TabsContent value="votes" className="mt-4">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-yellow-800">
-                    {language === 'he' ? 'רכיב הפעילות מנוטרל לצורך בדיקה - מוצגים נתוני פלייסהולדר' : language === 'ar' ? 'مكوّن النشاط معطّل للاختبار - عرض بيانات بديلة' : 'Activity component disabled for testing - showing placeholder data'}
-                  </p>
-                </div>
-                {userVotes.length === 0 ?
-                <p className="text-slate-500 text-sm text-center py-8">
-                    {language === 'he' ? 'אין הצבעות עדיין' : language === 'ar' ? 'لا توجد تصويتات بعد' : 'No votes yet'}
-                  </p> :
-
-                <div className="space-y-3">
-                    {userVotes.map((vote) =>
-                  <Link
-                    key={vote.id}
-                    to={`${createPageUrl("SuggestionDetail")}?id=${vote.suggestionId}`}
-                    className="block p-4 rounded-lg border-2 bg-purple-50 border-purple-200 hover:border-purple-300 transition-all hover:shadow-md">
-                    
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="outline" className={`text-xs font-semibold ${
-                          vote.vote === 'pro' ?
-                          'bg-green-100 text-green-800 border-green-300' :
-                          'bg-red-100 text-red-800 border-red-300'}`
-                          }>
-                                {vote.vote === 'pro' ? t('pro') : t('con')}
-                              </Badge>
-                              <span className="text-xs text-slate-500">
-                                {formatLocalDate(vote.created_date, 'DD/MM/YYYY')}
-                              </span>
-                            </div>
-                            <p className="text-sm text-slate-700">
-                              {language === 'he' ? 'הצבעה על הצעה' : language === 'ar' ? 'تصويت على مقترح' : 'Voted on a suggestion'}
-                            </p>
-                          </div>
-                          <ArrowRight className={`w-4 h-4 text-slate-400 shrink-0 ${isRTL ? 'rotate-180' : ''}`} />
-                        </div>
-                      </Link>
-                  )}
-                  </div>
-                }
-              </TabsContent>
-            </Tabs>
+            <ProfileActivityTabs
+              userSuggestions={userSuggestions}
+              userComments={userComments}
+              acceptedSuggestions={acceptedSuggestions}
+              isLoading={isLoadingActivity}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
           </CardContent>
         </Card>
 
