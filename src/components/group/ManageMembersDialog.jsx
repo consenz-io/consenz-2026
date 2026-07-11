@@ -284,7 +284,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
           message: joinApprovedTranslations.he.message,
           translations: joinApprovedTranslations,
           relatedEntityId: groupId,
-          relatedEntityType: 'document',
+          relatedEntityType: 'group',
           actionUrl: `/GroupView?id=${groupId}`,
           read: false,
         });

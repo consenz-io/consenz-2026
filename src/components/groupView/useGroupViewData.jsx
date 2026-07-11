@@ -262,7 +262,7 @@ export function useGroupViewData(groupId) {
           type: 'group_join_request',
           title: language === 'he' ? 'בקשת הצטרפות לקבוצה' : 'New join request',
           message: language === 'he' ? `${userName} מבקש/ת להצטרף לקבוצה "${group?.name}"` : `${userName} wants to join "${group?.name}"`,
-          relatedEntityId: group.id, relatedEntityType: 'document',
+          relatedEntityId: group.id, relatedEntityType: 'group',
           actionUrl: createPageUrl("GroupView") + `?id=${group.id}`, read: false,
         }))
       ]);
