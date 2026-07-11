@@ -17,6 +17,7 @@ import PageHeader from "../components/PageHeader";
 import { formatLocalDate } from "@/components/utils/dateFormatter";
 import { useProfileActivity } from "@/components/profile/useProfileActivity";
 import ProfileActivityTabs from "@/components/profile/ProfileActivityTabs";
+import PointsHistoryList from "@/components/profile/PointsHistoryList";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -558,17 +559,10 @@ export default function Profile() {
 
             {showPointsHistory &&
             <div className="border-t pt-4">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-yellow-800">
-                    {language === 'he' ? 'בפיתוח' : language === 'ar' ? 'قيد التطوير' : 'Under development'}
-                  </p>
-                </div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-3">
                   {language === 'he' ? 'היסטוריית נקודות' : language === 'ar' ? 'تاريخ النقاط' : 'Points History'}
                 </h3>
-                <p className="text-slate-500 text-sm text-center py-8">
-                  {language === 'he' ? '...' : language === 'ar' ? '...' : '...'}
-                </p>
+                <PointsHistoryList transactions={pointsTransactions} />
               </div>
             }
 
