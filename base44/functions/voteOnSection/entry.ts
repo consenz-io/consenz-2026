@@ -139,7 +139,43 @@ Deno.serve(async (req) => {
         const threshold = Math.max(2, document?.threshold || 2);
 
         if (totalCon - totalPro >= threshold) {
-          // Log a version history entry before deleting (for reconstruction)
+          // ── Create a delete_section suggestion record FIRST ──────────────
+          // This makes the deletion visible on the suggestion detail page with
+          // full voting results (date + vote counts), exactly like an accepted
+          // suggestion. The notification will link to this suggestion.
+          // Created BEFORE version records so we can stamp its ID on them —
+          // this ensures useDocumentVersions groups them as a suggestion event
+          // (correct before/after pairing) instead of direct_edit (which mispairs
+          // when the section has prior version-less records).
+          let deleteSuggestionId = null;
+          try {
+            const deleteSuggestion = await base44.asServiceRole.entities.Suggestion.create({
+              documentId: section.documentId,
+              sectionId,
+              topicId: section.topicId,
+              originalSectionOrder: section.order,
+              type: 'delete_section',
+              title: 'מחיקת סעיף בהצבעת קהילה',
+              originalContent: section.content,
+              newContent: '',
+              explanation: '',
+              status: 'accepted',
+              // For a delete_section suggestion: "pro" = support deletion (SectionVote "con"),
+              // "con" = oppose deletion / keep section (SectionVote "pro").
+              // This mapping makes VotingProgressSection display correctly (delta >= threshold → passed).
+              proVotes: totalCon,
+              conVotes: totalPro,
+              timerEndsAt: null,
+              originalLanguage: section.originalLanguage || 'he',
+              translations: {},
+              participantsAtAcceptance: (totalCon + totalPro),
+            });
+            deleteSuggestionId = deleteSuggestion?.id || null;
+          } catch (e) {
+            console.error('[VOTE ON SECTION suggestion creation error]', e);
+          }
+
+          // Log version history entries before deleting (for reconstruction)
           try {
             const lastVersion = await base44.asServiceRole.entities.DocumentVersion.filter({ sectionId }, '-version', 1);
             const baseVersion = (lastVersion && lastVersion.length > 0 ? lastVersion[0].version : 0) + 1;
@@ -147,7 +183,8 @@ Deno.serve(async (req) => {
             // 1. "before" record preserving the section content (for diff/reconstruction)
             // 2. "deletion" record with empty content (triggers isDeleted in useDocumentVersions,
             //    so the section renders in red in DocumentCleanView)
-            // Both carry topicId + sectionOrder so the deleted section is sorted correctly.
+            // Both carry topicId + sectionOrder + suggestionId so they group correctly
+            // and the deleted section content is displayed in DocumentCleanView.
             await base44.asServiceRole.entities.DocumentVersion.create({
               documentId: section.documentId,
               sectionId,
@@ -157,6 +194,7 @@ Deno.serve(async (req) => {
               changeDescription: `לפני: הסעיף נמחק בהצבעת קהילה`,
               version: baseVersion,
               changeType: 'section_deleted',
+              suggestionId: deleteSuggestionId || undefined,
               originalLanguage: section.originalLanguage || 'he',
               translations: section.translations || {},
             });
@@ -169,6 +207,7 @@ Deno.serve(async (req) => {
               changeDescription: 'הסעיף נמחק בהצבעת קהילה',
               version: baseVersion + 1,
               changeType: 'section_deleted',
+              suggestionId: deleteSuggestionId || undefined,
               originalLanguage: section.originalLanguage || 'he',
               translations: {},
             });
@@ -198,38 +237,6 @@ Deno.serve(async (req) => {
             }
           } catch (e) {
             console.error('[VOTE ON SECTION orphan anchor error]', e);
-          }
-
-          // ── Create a delete_section suggestion record ──────────────────
-          // This makes the deletion visible on the suggestion detail page with
-          // full voting results (date + vote counts), exactly like an accepted
-          // suggestion. The notification will link to this suggestion.
-          let deleteSuggestionId = null;
-          try {
-            const deleteSuggestion = await base44.asServiceRole.entities.Suggestion.create({
-              documentId: section.documentId,
-              sectionId,
-              topicId: section.topicId,
-              originalSectionOrder: section.order,
-              type: 'delete_section',
-              title: 'מחיקת סעיף בהצבעת קהילה',
-              originalContent: section.content,
-              newContent: '',
-              explanation: '',
-              status: 'accepted',
-              // For a delete_section suggestion: "pro" = support deletion (SectionVote "con"),
-              // "con" = oppose deletion / keep section (SectionVote "pro").
-              // This mapping makes VotingProgressSection display correctly (delta >= threshold → passed).
-              proVotes: totalCon,
-              conVotes: totalPro,
-              timerEndsAt: null,
-              originalLanguage: section.originalLanguage || 'he',
-              translations: {},
-              participantsAtAcceptance: (totalCon + totalPro),
-            });
-            deleteSuggestionId = deleteSuggestion?.id || null;
-          } catch (e) {
-            console.error('[VOTE ON SECTION suggestion creation error]', e);
           }
 
           await base44.asServiceRole.entities.Section.delete(sectionId);
