@@ -287,11 +287,20 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
           </div>
           <div>
             <div className="text-sm md:text-base font-semibold text-slate-900 break-words">
-              {language === 'he' ?
-              `הצעה לסעיף חדש מאת ${getUserName(currentVersion.created_by_id)}` :
-              language === 'ar' ?
-              `اقتراح قسم جديد بواسطة ${getUserName(currentVersion.created_by_id)}` :
-              `New section suggestion by ${getUserName(currentVersion.created_by_id)}`}
+              {(() => {
+                const author = getUserName(currentVersion.created_by_id);
+                const isEdit = currentView.type === 'version' ||
+                  currentVersion.type === 'edit_section' ||
+                  currentVersion.type === 'edit_suggestion';
+                if (isEdit) {
+                  return language === 'he' ? `הצעת עריכה מאת ${author}` :
+                    language === 'ar' ? `اقتراح تعديل بواسطة ${author}` :
+                    `Edit suggestion by ${author}`;
+                }
+                return language === 'he' ? `הצעה לסעיף חדש מאת ${author}` :
+                  language === 'ar' ? `اقتراح قسم جديد بواسطة ${author}` :
+                  `New section suggestion by ${author}`;
+              })()}
             </div>
             <div className="text-xs text-slate-400 mt-0.5">
               {currentVersion.created_date && new Date(currentVersion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
