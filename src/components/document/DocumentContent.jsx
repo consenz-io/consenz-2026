@@ -411,12 +411,19 @@ Return ONLY the translated text:`;
       if (!map.has(s.topicId)) map.set(s.topicId, []);
       map.get(s.topicId).push(s);
     }
-    map.forEach(arr => arr.sort((a, b) => {
-      const posDiff = (a.insertPosition || 999) - (b.insertPosition || 999);
-      if (posDiff !== 0) return posDiff;
-      // Same insertPosition: maintain creation order so newer suggestions appear after older ones
-      return new Date(a.created_date) - new Date(b.created_date);
-    }));
+    map.forEach(arr => {
+      // Server returns suggestions sorted by -created_date (newest first).
+      // Reverse to oldest-first so Array.sort (stable) preserves oldest-first
+      // for suggestions with identical created_date at the same insertPosition,
+      // ensuring newer suggestions appear below older ones.
+      arr.reverse();
+      arr.sort((a, b) => {
+        const posDiff = (a.insertPosition ?? 999) - (b.insertPosition ?? 999);
+        if (posDiff !== 0) return posDiff;
+        // Same insertPosition: maintain creation order so newer suggestions appear after older ones
+        return new Date(a.created_date) - new Date(b.created_date);
+      });
+    });
     return map;
   }, [suggestions]);
 
