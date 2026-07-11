@@ -353,13 +353,13 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             }
           </Button>
         </div>
-        {userVote &&
-        <p className="text-center text-xs text-slate-400 mt-1.5 hidden">
-            {userVote.vote === 'pro' ?
-          language === 'he' ? 'הצבעת בעד • לחץ/י שוב לביטול' : language === 'ar' ? 'صوتك مع • اضغط مجدداً للإلغاء' : 'You voted pro • click again to remove' :
-          language === 'he' ? 'הצבעת נגד • לחץ/י שוב לביטול' : language === 'ar' ? 'صوتك ضد • اضغط مجدداً للإلغاء' : 'You voted con • click again to remove'}
-          </p>
-        }
+        
+
+
+
+
+
+        
       </div>
       }
     </div>);
