@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Settings, ArrowLeft, ArrowRight } from "lucide-react";
@@ -32,11 +32,13 @@ export default function DocumentView() {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
   const scrollToSectionId = searchParams.get('scrollTo');
   const commentIdFromUrl = searchParams.get('commentId');
   const openSuggestionFromUrl = searchParams.get('openSuggestion');
+  const targetSuggestionFromUrl = searchParams.get('targetSuggestion');
 
   // ── UI State ──────────────────────────────────────────────────────────────────
   const [showCreateSuggestion, setShowCreateSuggestion] = useState(false);
@@ -284,6 +286,45 @@ export default function DocumentView() {
       setOpenSuggestionId(openSuggestionFromUrl);
     }
   }, [openSuggestionFromUrl, openSuggestionId]);
+
+  // ── Target suggestion from notification ─────────────────────────────────────
+  // Set targetSuggestionId from URL param so SectionCarousel auto-navigates to it
+  useEffect(() => {
+    if (targetSuggestionFromUrl) {
+      setTargetSuggestionId(targetSuggestionFromUrl);
+    }
+  }, [targetSuggestionFromUrl]);
+
+  // Fallback: if data is loaded and the target suggestion is not pending (accepted/rejected/expired/not found),
+  // redirect to suggestiondetail so the user sees the suggestion's full details instead of a blank document
+  useEffect(() => {
+    if (!targetSuggestionFromUrl || isInitialLoading || !suggestions) return;
+    const targetSuggestion = suggestions.find(s => s.id === targetSuggestionFromUrl);
+    if (!targetSuggestion || targetSuggestion.status !== 'pending') {
+      navigate(`/suggestiondetail?id=${targetSuggestionFromUrl}`, { replace: true });
+    }
+  }, [targetSuggestionFromUrl, suggestions, isInitialLoading, navigate]);
+
+  // Scroll to target suggestion element with retries (handles LazySection deferred mounting)
+  useEffect(() => {
+    if (!targetSuggestionFromUrl || typeof window === 'undefined') return;
+    let attempts = 0;
+    const maxAttempts = 8;
+    let scrollTimer;
+    const attemptScroll = () => {
+      const element = window.document.getElementById(`suggestion-${targetSuggestionFromUrl}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
+        setTimeout(() => element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4'), 2000);
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        scrollTimer = setTimeout(attemptScroll, 400 * attempts);
+      }
+    };
+    scrollTimer = setTimeout(attemptScroll, 500);
+    return () => clearTimeout(scrollTimer);
+  }, [targetSuggestionFromUrl, suggestions]);
 
   useEffect(() => {
     if (!commentIdFromUrl || typeof window === 'undefined') return;

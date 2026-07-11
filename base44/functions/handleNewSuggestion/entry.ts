@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
         translations: translationsObj,
         relatedEntityId: suggestion.id,
         relatedEntityType: 'suggestion',
-        actionUrl: `/suggestiondetail?id=${suggestion.id}`,
+        actionUrl: `/documentview?id=${suggestion.documentId}&targetSuggestion=${suggestion.id}`,
         read: false
       };
     });

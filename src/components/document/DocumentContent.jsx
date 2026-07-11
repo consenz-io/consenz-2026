@@ -356,6 +356,13 @@ Return ONLY the translated text:`;
     [suggestionsBySectionId]
   );
 
+  // Find the sectionId of the target suggestion (for LazySection force-mount)
+  const targetSuggestionSectionId = React.useMemo(() => {
+    if (!targetSuggestionId || !suggestions) return null;
+    const sug = suggestions.find(s => s.id === targetSuggestionId);
+    return sug?.sectionId || null;
+  }, [targetSuggestionId, suggestions]);
+
   // ── Orphaned suggestions (section was deleted) ──────────────────────
   // Pending edit/delete suggestions whose target section no longer exists.
   // Grouped by deleted sectionId → one ghost slot per deleted section,
@@ -920,7 +927,7 @@ Return ONLY the translated text:`;
                                       />
                                       ))}
                                       <LazySection
-                                        forceMount={targetSuggestionId === section.id || newlyCreatedSuggestion?.sectionId === section.id}
+                                        forceMount={section.id === targetSuggestionSectionId || newlyCreatedSuggestion?.sectionId === section.id}
                                         estimatedHeight={250}
                                       >
                                       <SectionCarousel
