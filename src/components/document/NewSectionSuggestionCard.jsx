@@ -141,18 +141,6 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   const currentView = allViews[currentViewIndex] || allViews[0];
   const currentVersion = currentView?.data || suggestion;
 
-  const isEdit = currentView?.type === 'version' ||
-    currentVersion.type === 'edit_section' ||
-    currentVersion.type === 'edit_suggestion';
-
-  const cardBorderClass = isEdit
-    ? 'border-blue-300 hover:border-blue-400 bg-gradient-to-br from-blue-50 to-indigo-50'
-    : 'border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50';
-  const headerBgClass = isEdit
-    ? 'border-blue-400 bg-gradient-to-r from-blue-100 to-indigo-100'
-    : 'border-amber-400 bg-gradient-to-r from-amber-100 to-orange-100';
-  const contentBorderClass = isEdit ? 'border-blue-200' : 'border-amber-200';
-
   // Safeguard: if the current version is NOT pending (rejected/expired) and the
   // user didn't manually navigate to it, fall back to 'original' (the root).
   // This prevents the card from getting stuck on a rejected child version with
@@ -253,10 +241,10 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   return (
     <div
       id={`suggestion-${suggestion.id}`}
-      className={`group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 ${cardBorderClass}`}>
+      className="group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50">
       
       {/* כותרת אחידה: סוג הצעה + יוצר + דפדוף גרסאות */}
-      <div className={`flex items-center justify-between mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm ${headerBgClass}`}>
+      <div className="flex items-center justify-between mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm border-amber-400 bg-gradient-to-r from-amber-100 to-orange-100">
           {allViews.length > 1 &&
           <Button
             variant="outline"
@@ -272,6 +260,9 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
               <p className="text-sm font-bold text-slate-800 break-words">
                 {(() => {
                   const author = getUserName(currentVersion.created_by_id);
+                  const isEdit = currentView.type === 'version' ||
+                    currentVersion.type === 'edit_section' ||
+                    currentVersion.type === 'edit_suggestion';
                   const label = isEdit
                     ? (language === 'he' ? 'הצעת עריכה מאת' : language === 'ar' ? 'اقتراح تعديل بواسطة' : 'Edit suggestion by')
                     : (language === 'he' ? 'הצעה לסעיף חדש מאת' : language === 'ar' ? 'اقتراح قسم جديد بواسطة' : 'New section suggestion by');
@@ -331,7 +322,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
           
           </div> :
 
-        <div className={`p-3 md:p-4 bg-white/80 rounded border ${contentBorderClass} mb-3`}>
+        <div className="p-3 md:p-4 bg-white/80 rounded border border-amber-200 mb-3">
             <TranslatableContent
             content={currentVersion.newContent}
             entity={currentVersion}
@@ -473,7 +464,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       </div>
 
       {showComments[`suggestion-${currentVersion.id}`] &&
-      <div className={`mt-4 pt-4 border-t ${contentBorderClass}`}>
+      <div className="mt-4 pt-4 border-t border-amber-200">
           <CommentsSection
           entityType="suggestion"
           entityId={currentVersion.id}
