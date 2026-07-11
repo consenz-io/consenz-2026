@@ -129,13 +129,13 @@ export default function GroupView() {
       <div className="max-w-6xl mx-auto space-y-6">
 
         {/* Header */}
-        <div className="group-header flex justify-between items-start">
-          <div className="space-y-2">
+        <div className="group-header flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+          <div className="space-y-2 flex-1 min-w-0">
             <PageHeader title={group.name} backUrl={createPageUrl("Groups")} />
             {group.description && (
-              <p className="text-slate-600">{group.description}</p>
+              <p className="text-slate-600 break-words">{group.description}</p>
             )}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline" className={statusBadgeCls}>
                 <StatusIcon className="w-3 h-3 mr-1" />{statusLabel}
               </Badge>
@@ -143,7 +143,7 @@ export default function GroupView() {
               {isAdmin && <Badge className="bg-purple-100 text-purple-800 border-purple-200">{language === 'he' ? 'מנהל' : language === 'ar' ? 'مدير' : 'Admin'}</Badge>}
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
 
             {isAdmin && (
               <Button variant="outline" onClick={() => setShowManageMembers(true)}>
