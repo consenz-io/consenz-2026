@@ -1,6 +1,12 @@
 {
   "name": "GroupJoinRequest",
   "type": "object",
+  "permissions": {
+    "create": "authenticated",
+    "read": "authenticated",
+    "update": "authenticated",
+    "delete": "authenticated"
+  },
   "properties": {
     "groupId": {
       "type": "string",
