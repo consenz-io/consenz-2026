@@ -17,6 +17,10 @@ import DocumentTextContent from "./DocumentTextContent";
 import SectionCarousel from "./SectionCarousel";
 import LazySection from "./LazySection";
 import NewSectionSuggestionCard from "./NewSectionSuggestionCard";
+import DraggableSuggestionCard from "./DraggableSuggestionCard";
+import SuggestionDropZone from "./SuggestionDropZone";
+import { useSuggestionReorder } from "./hooks/useSuggestionReorder";
+import { computeDropPosition } from "./utils/dropPosition";
 import DeleteSectionSuggestionCard from "./DeleteSectionSuggestionCard";
 import EditTopicModal from "./EditTopicModal";
 import TopicTitleCarousel from "./TopicTitleCarousel";
@@ -53,6 +57,7 @@ export default function DocumentContent({
   const queryClient = useQueryClient();
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
+  const { reorderMutation } = useSuggestionReorder(document?.id);
 
   const acceptedSuggestions = React.useMemo(
     () => suggestions.filter(s => s.status === 'accepted'),
@@ -579,6 +584,30 @@ Return ONLY the translated text:`;
 
   const voteTopicEditMutation = useTopicVoteMutation({ document, user, topicEditSuggestions, queryClient });
 
+  // Helper: render a draggable new-section suggestion card with DnD reorder support (admin only)
+  const renderDraggableSuggestion = React.useCallback((suggestion, abovePos, belowPos, extraProps = {}) => (
+    <DraggableSuggestionCard
+      key={suggestion.id}
+      suggestion={suggestion}
+      document={document}
+      getUserName={getUserName}
+      acceptedSuggestions={acceptedSuggestions}
+      user={user}
+      getUserVote={getUserVote}
+      voteMutation={voteMutation}
+      onOpenSidebar={onOpenSuggestionSidebar}
+      getCommentsCount={getCommentsCount}
+      isAdmin={isAdmin}
+      onEditSuggestion={onEditSuggestion}
+      allDocumentSuggestions={suggestions}
+      targetSuggestionId={targetSuggestionId}
+      onReorder={(id, pos) => reorderMutation.mutate({ suggestionId: id, newInsertPosition: pos })}
+      abovePos={abovePos}
+      belowPos={belowPos}
+      {...extraProps}
+    />
+  ), [document, getUserName, acceptedSuggestions, user, getUserVote, voteMutation, onOpenSuggestionSidebar, getCommentsCount, isAdmin, onEditSuggestion, suggestions, targetSuggestionId, reorderMutation]);
+
   return (
     <>
       <EditTopicModal
@@ -710,25 +739,27 @@ Return ONLY the translated text:`;
                     {t('noSectionsYet')}
                   </div>
                   {/* Show new section suggestions when there are no sections */}
-                  {getNewSectionSuggestionsForTopic(topic.id).map((suggestion) => (
-                    <NewSectionSuggestionCard
-                     key={suggestion.id}
-                     suggestion={suggestion}
-                     document={document}
-                     getUserName={getUserName}
-                     acceptedSuggestions={acceptedSuggestions}
-                     user={user}
-                     getUserVote={getUserVote}
-                     voteMutation={voteMutation}
-                     onOpenSidebar={onOpenSuggestionSidebar}
-                     getCommentsCount={getCommentsCount}
-                     
-                     
-                     isAdmin={isAdmin}
-                     onEditSuggestion={onEditSuggestion}
-                     allDocumentSuggestions={suggestions}
-                     />
-                     ))}
+                  {(() => {
+                    const noSectionSuggs = getNewSectionSuggestionsForTopic(topic.id);
+                    return (
+                      <>
+                        {isAdmin && noSectionSuggs.length === 0 && (
+                          <SuggestionDropZone
+                            getPosition={() => computeDropPosition(null, null)}
+                            onDrop={(id, pos) => reorderMutation.mutate({ suggestionId: id, newInsertPosition: pos })}
+                            isAdmin={isAdmin}
+                          />
+                        )}
+                        {noSectionSuggs.map((suggestion, suggIdx) =>
+                          renderDraggableSuggestion(
+                            suggestion,
+                            suggIdx === 0 ? null : noSectionSuggs[suggIdx - 1].insertPosition,
+                            suggIdx === noSectionSuggs.length - 1 ? null : noSectionSuggs[suggIdx + 1].insertPosition
+                          )
+                        )}
+                      </>
+                    );
+                  })()}
                      {/* Ghost slots for deleted sections that still have open proposals */}
                      {topicGhostSlots.map(ghost => {
                        const sortedGhostSuggestions = [...ghost.suggestions].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
@@ -797,13 +828,14 @@ Return ONLY the translated text:`;
                         // New section suggestions rendered AFTER this section (pre-computed for insert button placement)
                         const suggestionsAfterThisSection = newSectionSuggestions.filter(s => {
                           const pos = s.insertPosition;
-                          if (pos === -1) return false;
-                          if (pos !== undefined && pos !== null && pos === section.order + 1) return true;
-                          if (index === topicSections.length - 1) {
-                            if (pos === -1) return false;
-                            const matchesAnySectionOrder = topicSections.some(sec => pos !== undefined && pos !== null && pos === sec.order + 1);
-                            return !matchesAnySectionOrder;
-                          }
+                          // Exclude "before first section" slot (pos < 0, including -1 and fractional negatives)
+                          if (pos !== undefined && pos !== null && pos < 0) return false;
+                          const lowerBound = section.order + 1;
+                          const upperBound = index < topicSections.length - 1 ? topicSections[index + 1].order + 1 : Infinity;
+                          // In this section's slot (supports fractional insertPosition from admin reordering)
+                          if (pos !== undefined && pos !== null && pos >= lowerBound && pos < upperBound) return true;
+                          // After last section: undefined/null positions
+                          if (index === topicSections.length - 1 && (pos === undefined || pos === null)) return true;
                           return false;
                         });
                         // Ghost slots (deleted section) whose order falls before the first section
@@ -913,28 +945,31 @@ Return ONLY the translated text:`;
                                       </div>
                                       )}
                                       {/* הצעות להוספת סעיף לפני הסעיף הראשון */}
-                                      {index === 0 && newSectionSuggestions
-                                      .filter(s => s.insertPosition === -1)
-                                      .map((suggestion) => (
-                                      <NewSectionSuggestionCard
-                                      key={suggestion.id}
-                                      suggestion={suggestion}
-                                      document={document}
-                                      getUserName={getUserName}
-                                      acceptedSuggestions={acceptedSuggestions}
-                                      user={user}
-                                      getUserVote={getUserVote}
-                                      voteMutation={voteMutation}
-                                      onOpenSidebar={onOpenSuggestionSidebar}
-                                      getCommentsCount={getCommentsCount}
-                                      
-                                      
-                                      isAdmin={isAdmin}
-                                      onEditSuggestion={onEditSuggestion}
-                                      allDocumentSuggestions={suggestions}
-                                      targetSuggestionId={targetSuggestionId}
-                                      />
-                                      ))}
+                                      {index === 0 && (() => {
+                                        const beforeFirst = newSectionSuggestions.filter(s => {
+                                          const pos = s.insertPosition;
+                                          if (pos === undefined || pos === null) return false;
+                                          return pos < (topicSections[0]?.order + 1 ?? Infinity);
+                                        });
+                                        return (
+                                          <>
+                                            {isAdmin && beforeFirst.length === 0 && (
+                                              <SuggestionDropZone
+                                                getPosition={() => computeDropPosition(null, section.order)}
+                                                onDrop={(id, pos) => reorderMutation.mutate({ suggestionId: id, newInsertPosition: pos })}
+                                                isAdmin={isAdmin}
+                                              />
+                                            )}
+                                            {beforeFirst.map((suggestion, suggIdx) =>
+                                              renderDraggableSuggestion(
+                                                suggestion,
+                                                suggIdx === 0 ? null : beforeFirst[suggIdx - 1].insertPosition,
+                                                suggIdx === beforeFirst.length - 1 ? section.order : beforeFirst[suggIdx + 1].insertPosition
+                                              )
+                                            )}
+                                          </>
+                                        );
+                                      })()}
                                       <LazySection
                                         forceMount={section.id === targetSuggestionSectionId || newlyCreatedSuggestion?.sectionId === section.id}
                                         estimatedHeight={250}
@@ -973,26 +1008,25 @@ Return ONLY the translated text:`;
                                 - AFTER section at index i: insertPosition === topicSections[i].order
                                 - AFTER the last section: insertPosition is null/undefined or doesn't match any section order */}
                             {suggestionsAfterThisSection
-                              .map((suggestion) => (
-                                <NewSectionSuggestionCard
-                                  key={suggestion.id}
-                                  suggestion={suggestion}
-                                  document={document}
-                                  getUserName={getUserName}
-                                  acceptedSuggestions={acceptedSuggestions}
-                                  user={user}
-                                  getUserVote={getUserVote}
-                                  voteMutation={voteMutation}
-                                  onOpenSidebar={onOpenSuggestionSidebar}
-                                  getCommentsCount={getCommentsCount}
-                                  
-                                  
-                                  isAdmin={isAdmin}
-                                  onEditSuggestion={onEditSuggestion}
-                                  allDocumentSuggestions={suggestions}
-                                  targetSuggestionId={targetSuggestionId}
-                                />
-                              ))}
+                              .map((suggestion, suggIdx) =>
+                                renderDraggableSuggestion(
+                                  suggestion,
+                                  suggIdx === 0 ? section.order + 1 : suggestionsAfterThisSection[suggIdx - 1].insertPosition,
+                                  suggIdx === suggestionsAfterThisSection.length - 1
+                                    ? (index < topicSections.length - 1 ? topicSections[index + 1].order : null)
+                                    : suggestionsAfterThisSection[suggIdx + 1].insertPosition
+                                )
+                              )}
+                            {isAdmin && suggestionsAfterThisSection.length === 0 && (
+                              <SuggestionDropZone
+                                getPosition={() => computeDropPosition(
+                                  section.order + 1,
+                                  index < topicSections.length - 1 ? topicSections[index + 1].order : null
+                                )}
+                                onDrop={(id, pos) => reorderMutation.mutate({ suggestionId: id, newInsertPosition: pos })}
+                                isAdmin={isAdmin}
+                              />
+                            )}
                             {/* Insert button after new section suggestion cards — maintains order by
                                 using the same insertPosition; newer suggestions sort after older ones */}
                             {suggestionsAfterThisSection.length > 0 && (

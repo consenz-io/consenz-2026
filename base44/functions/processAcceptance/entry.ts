@@ -325,7 +325,8 @@ Deno.serve(async (req) => {
       // Determine insertion order and shift existing sections if needed to avoid duplicates
       let newOrder;
       if (suggestion.insertPosition !== undefined && suggestion.insertPosition !== null) {
-        newOrder = suggestion.insertPosition;
+        // Math.floor normalizes fractional insertPosition (from admin drag reordering) to an integer section order
+        newOrder = Math.floor(suggestion.insertPosition);
         // Shift all sections with order >= newOrder up by 1 to make room
         const sectionsToShift = allSections.filter(s => s.order >= newOrder);
         if (sectionsToShift.length > 0) {
@@ -346,7 +347,6 @@ Deno.serve(async (req) => {
             s.id !== suggestionId &&
             s.insertPosition !== undefined &&
             s.insertPosition !== null &&
-            s.insertPosition !== -1 &&
             s.insertPosition >= newOrder
           );
           if (suggsToShift.length > 0) {
