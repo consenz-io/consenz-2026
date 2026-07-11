@@ -186,13 +186,29 @@ const SectionCarousel = React.memo(function SectionCarousel({
     }
   }, [targetSuggestionId, sortedSuggestions]);
 
-  // Scroll target into view
+  // Scroll target into view — waits for the carousel to navigate to the suggestion view first,
+  // then retries to handle deferred LazySection mounting
   useEffect(() => {
-    if (targetSuggestionId && typeof window !== 'undefined' && window.document) {
+    if (!targetSuggestionId || currentSuggestionId !== targetSuggestionId) return;
+    if (typeof window === 'undefined' || !window.document) return;
+
+    let attempts = 0;
+    const maxAttempts = 6;
+    let timer;
+
+    const attemptScroll = () => {
       const targetElement = window.document.getElementById(`suggestion-${targetSuggestionId}`);
-      if (targetElement) targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [targetSuggestionId]);
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        timer = setTimeout(attemptScroll, 200 * attempts);
+      }
+    };
+
+    timer = setTimeout(attemptScroll, 100);
+    return () => clearTimeout(timer);
+  }, [targetSuggestionId, currentSuggestionId]);
 
   // ── Carousel navigation handlers ─────────────────────────────────────────────
   const handleNext = () => {
