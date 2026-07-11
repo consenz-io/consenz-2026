@@ -64,14 +64,18 @@ export default function DocumentContent({
     [suggestions]
   );
 
-  // Map each section to the accepted new_section suggestion that created it.
-  // The suggestion's proVotes/conVotes are inherited as baselines for the section's
-  // vote counters and deletion-progress calculation.
+  // Map each section to the aggregated inherited votes from ALL accepted suggestions
+  // linked to it — both the creation (new_section) suggestion and any accepted
+  // edit_section suggestions. Their proVotes/conVotes are summed as baselines for
+  // the section's vote counters and deletion-progress calculation.
   const sourceSuggestionBySectionId = React.useMemo(() => {
     const map = new Map();
     for (const s of suggestions) {
-      if (s.status === 'accepted' && s.type === 'new_section' && s.sectionId) {
-        map.set(s.sectionId, s);
+      if (s.status === 'accepted' && (s.type === 'new_section' || s.type === 'edit_section') && s.sectionId) {
+        const existing = map.get(s.sectionId) || { proVotes: 0, conVotes: 0 };
+        existing.proVotes += s.proVotes || 0;
+        existing.conVotes += s.conVotes || 0;
+        map.set(s.sectionId, existing);
       }
     }
     return map;

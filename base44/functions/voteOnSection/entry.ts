@@ -100,19 +100,25 @@ Deno.serve(async (req) => {
       const proCount = freshVotes.filter(v => v.vote === 'pro').length;
       const conCount = freshVotes.filter(v => v.vote === 'con').length;
 
-      // ── Inherited votes from the accepted new_section suggestion ──────
-      // The suggestion that created this section carried pro/con votes at acceptance time.
-      // Those are added as baselines so the deletion threshold reflects the full community
-      // sentiment (not just votes cast after the section became live).
+      // ── Inherited votes from ALL accepted suggestions linked to this section ──────
+      // Both the creation (new_section) suggestion and any accepted edit_section
+      // suggestions carried pro/con votes at acceptance time. These are summed as
+      // baselines so the deletion threshold reflects the full community sentiment
+      // (not just votes cast after the section became live).
       let inheritedPro = 0;
       let inheritedCon = 0;
       try {
-        const sourceSuggestions = await base44.asServiceRole.entities.Suggestion.filter({
-          sectionId, status: 'accepted', type: 'new_section'
-        });
-        if (sourceSuggestions.length > 0) {
-          inheritedPro = sourceSuggestions[0].proVotes || 0;
-          inheritedCon = sourceSuggestions[0].conVotes || 0;
+        const [creationSuggs, editSuggs] = await Promise.all([
+          base44.asServiceRole.entities.Suggestion.filter({
+            sectionId, status: 'accepted', type: 'new_section'
+          }),
+          base44.asServiceRole.entities.Suggestion.filter({
+            sectionId, status: 'accepted', type: 'edit_section'
+          })
+        ]);
+        for (const s of [...creationSuggs, ...editSuggs]) {
+          inheritedPro += s.proVotes || 0;
+          inheritedCon += s.conVotes || 0;
         }
       } catch (e) {
         console.error('[VOTE ON SECTION source suggestion lookup error]', e);
