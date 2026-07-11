@@ -1,16 +1,17 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Coins, HelpCircle } from "lucide-react";
+import { Coins, HelpCircle, Loader2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
 import { formatLocalDateTime } from "@/components/utils/dateFormatter";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
 import PointsInfoModal from "./PointsInfoModal";
+import { resolveCommentUrl } from "@/components/profile/resolveCommentUrl";
 
 // Extract title suffix after the first colon
 const extractTitle = (description) => description.split(':').slice(1).join(':').trim() || '';
@@ -43,6 +44,12 @@ const translateTransactionDescription = (transaction, language) => {
     return isRejection
       ? (language === 'he' ? 'הצבעתך השפיעה על דחיית הצעה' : language === 'ar' ? 'أثّر تصويتك على رفض اقتراح' : 'Your vote influenced suggestion rejection')
       : (language === 'he' ? 'הצבעתך השפיעה על קבלת הצעה' : language === 'ar' ? 'أثّر تصويتك على قبول اقتراح' : 'Your vote influenced suggestion acceptance');
+  }
+  if (action === 'comment_like_received') {
+    return language === 'he' ? 'קיבלת לייק על תגובה' : language === 'ar' ? 'حصلت على إعجاب على تعليق' : 'Comment like received';
+  }
+  if (action === 'comment_like_removed') {
+    return language === 'he' ? 'בוטל לייק על תגובה' : language === 'ar' ? 'تم إلغاء إعجاب على تعليق' : 'Comment like removed';
   }
 
   // Fallback: pattern matching on stored description text (any language)
@@ -101,7 +108,28 @@ function AnimatedCounter({ value }) {
 export default function FloatingPointsBadge() {
   const { language, isRTL } = useLanguage();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [showInfoModal, setShowInfoModal] = React.useState(false);
+  const [resolvingTxId, setResolvingTxId] = React.useState(null);
+
+  const handleCommentClick = async (transaction) => {
+    if (resolvingTxId) return;
+    // Fast path — pre-computed URL from the backend
+    if (transaction.actionUrl) {
+      navigate(transaction.actionUrl);
+      return;
+    }
+    // Fallback — legacy transaction without actionUrl
+    if (transaction.relatedEntityType === 'comment' && transaction.relatedEntityId) {
+      setResolvingTxId(transaction.id);
+      try {
+        const url = await resolveCommentUrl(transaction.relatedEntityId);
+        if (url) navigate(url);
+      } finally {
+        setResolvingTxId(null);
+      }
+    }
+  };
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -234,49 +262,67 @@ export default function FloatingPointsBadge() {
                 const pointsAfter = transactionsAfter.reduce((sum, t) => sum + (t.amount || 0), 0);
                 const balanceAtTime = currentPoints - pointsAfter;
                 
-                const getTransactionUrl = () => {
-                  if (transaction.relatedEntityType === 'suggestion') {
-                    return createPageUrl('suggestiondetail') + `?id=${transaction.relatedEntityId}`;
-                  }
-                  return null;
-                };
+                const isCommentLike = transaction.action === 'comment_like_received' || transaction.action === 'comment_like_removed';
+                const suggestionUrl = transaction.relatedEntityType === 'suggestion'
+                  ? createPageUrl('suggestiondetail') + `?id=${transaction.relatedEntityId}`
+                  : null;
+                const commentClickable = isCommentLike && (transaction.actionUrl || (transaction.relatedEntityType === 'comment' && transaction.relatedEntityId));
+                const isResolving = resolvingTxId === transaction.id;
 
-                const url = getTransactionUrl();
-                const Component = url ? Link : 'div';
+                const itemClasses = `block p-3 rounded-lg border transition-all ${
+                  (suggestionUrl || commentClickable) ? 'cursor-pointer hover:shadow-md' : ''
+                } ${
+                  transaction.amount > 0 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-red-50 border-red-200'
+                }`;
 
-                return (
-                  <Component
-                    key={transaction.id}
-                    to={url}
-                    className={`block p-3 rounded-lg border transition-all ${
-                      url ? 'cursor-pointer hover:shadow-md' : ''
-                    } ${
-                      transaction.amount > 0 
-                        ? 'bg-green-50 border-green-200' 
-                        : 'bg-red-50 border-red-200'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="outline" className={`text-xs font-semibold ${
-                            transaction.amount > 0 
-                              ? 'bg-green-100 text-green-800 border-green-300' 
-                              : 'bg-red-100 text-red-800 border-red-300'
-                          }`}>
-                            {transaction.amount > 0 ? '+' : ''}{transaction.amount}
-                          </Badge>
-                          <span className="text-xs text-slate-400">
-                            ({balanceAtTime})
-                          </span>
-                          <span className="text-xs text-slate-500">
-                            {formatLocalDateTime(transaction.created_date, 'DD/MM HH:mm')}
-                          </span>
-                        </div>
-                        <p className="text-sm text-slate-700 font-medium">{translateTransactionDescription(transaction, language)}</p>
+                const innerContent = (
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className={`text-xs font-semibold ${
+                          transaction.amount > 0 
+                            ? 'bg-green-100 text-green-800 border-green-300' 
+                            : 'bg-red-100 text-red-800 border-red-300'
+                        }`}>
+                          {transaction.amount > 0 ? '+' : ''}{transaction.amount}
+                        </Badge>
+                        <span className="text-xs text-slate-400">
+                          ({balanceAtTime})
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          {formatLocalDateTime(transaction.created_date, 'DD/MM HH:mm')}
+                        </span>
+                        {isResolving && <Loader2 className="w-3 h-3 text-blue-600 animate-spin" />}
                       </div>
+                      <p className="text-sm text-slate-700 font-medium">{translateTransactionDescription(transaction, language)}</p>
                     </div>
-                  </Component>
+                  </div>
+                );
+
+                if (suggestionUrl) {
+                  return (
+                    <Link key={transaction.id} to={suggestionUrl} className={itemClasses}>
+                      {innerContent}
+                    </Link>
+                  );
+                }
+                if (commentClickable) {
+                  return (
+                    <div
+                      key={transaction.id}
+                      onClick={() => !isResolving && handleCommentClick(transaction)}
+                      className={itemClasses}
+                    >
+                      {innerContent}
+                    </div>
+                  );
+                }
+                return (
+                  <div key={transaction.id} className={itemClasses}>
+                    {innerContent}
+                  </div>
                 );
               })}
             </div>
