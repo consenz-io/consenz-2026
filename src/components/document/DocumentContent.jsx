@@ -15,6 +15,7 @@ import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
 import DocumentTextContent from "./DocumentTextContent";
 import SectionCarousel from "./SectionCarousel";
+import LazySection from "./LazySection";
 import NewSectionSuggestionCard from "./NewSectionSuggestionCard";
 import DeleteSectionSuggestionCard from "./DeleteSectionSuggestionCard";
 import EditTopicModal from "./EditTopicModal";
@@ -918,8 +919,12 @@ Return ONLY the translated text:`;
                                       targetSuggestionId={targetSuggestionId}
                                       />
                                       ))}
+                                      <LazySection
+                                        forceMount={targetSuggestionId === section.id || newlyCreatedSuggestion?.sectionId === section.id}
+                                        estimatedHeight={250}
+                                      >
                                       <SectionCarousel
-                             section={section}
+                                      section={section}
                              pendingSuggestions={allSectionSuggestions}
                              document={document}
                              user={user}
@@ -944,8 +949,9 @@ Return ONLY the translated text:`;
                               publicProfiles={publicProfiles}
                               allDocumentSuggestions={suggestions}
                               sectionVotes={sectionVotesBySectionId.get(section.id) || []}
-                            />
-                          </div>
+                              />
+                                     </LazySection>
+                              </div>
                             {/* Show new section suggestions in their correct position:
                                 - BEFORE the first section (index=0): insertPosition === -1
                                 - AFTER section at index i: insertPosition === topicSections[i].order
