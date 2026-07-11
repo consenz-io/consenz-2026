@@ -2,7 +2,9 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MessageSquare, Trash2, Edit2, ChevronLeft, ChevronRight } from "lucide-react";
+import { MessageSquare, Trash2, Edit2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/LanguageContext";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -241,72 +243,69 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       id={`suggestion-${suggestion.id}`}
       className="group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50">
       
-      {/* כפתורי דפדוף בין גרסאות - מעגלי כמו SectionCarousel */}
-      {allViews.length > 1 &&
+      {/* כותרת אחידה: סוג הצעה + יוצר + דפדוף גרסאות */}
       <div className="flex items-center justify-between mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm border-amber-400 bg-gradient-to-r from-amber-100 to-orange-100">
+          {allViews.length > 1 &&
           <Button
-          variant="outline"
-          size="sm"
-          onClick={handlePrev}
-          className="flex items-center bg-white">
-          
+            variant="outline"
+            size="sm"
+            onClick={handlePrev}
+            className="flex items-center bg-white flex-shrink-0">
             {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </Button>
-
-          <div className="text-center">
-            {currentView.type === 'original' ?
-          <p className="text-sm">
-                <span className="font-bold text-amber-700 text-lg">{allViews.length - 1}</span> <span className="font-bold text-slate-800">{language === 'he' ? 'הצעות עריכה' : language === 'ar' ? 'اقتراحات تعديل' : 'Edit Suggestions'}</span>
-              </p> :
-
-          <button
-             onClick={() => { userNavigatedRef.current = false; setCurrentVersionId('original'); }}
-             className="text-sm font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer transition-colors">
-            
-                {`${language === 'he' ? 'עריכה מאת' : language === 'ar' ? 'تعديل بواسطة' : 'Edit by'} ${getUserName(currentVersion.created_by_id)}`}
-              </button>
           }
+
+          <div className="text-center flex-1 px-2 min-w-0">
+            <div className="flex flex-col items-center gap-0.5">
+              <p className="text-sm font-bold text-slate-800 break-words">
+                {(() => {
+                  const author = getUserName(currentVersion.created_by_id);
+                  const isEdit = currentView.type === 'version' ||
+                    currentVersion.type === 'edit_section' ||
+                    currentVersion.type === 'edit_suggestion';
+                  const label = isEdit
+                    ? (language === 'he' ? 'הצעת עריכה מאת' : language === 'ar' ? 'اقتراح تعديل بواسطة' : 'Edit suggestion by')
+                    : (language === 'he' ? 'הצעה לסעיף חדש מאת' : language === 'ar' ? 'اقتراح قسم جديد بواسطة' : 'New section suggestion by');
+                  return (
+                    <>
+                      {label}{' '}
+                      {currentVersion.created_by_id ? (
+                        <Link
+                          to={`${createPageUrl("Profile")}?userId=${currentVersion.created_by_id}`}
+                          className="text-blue-700 hover:text-blue-900 hover:underline transition-colors"
+                        >
+                          {author}
+                        </Link>
+                      ) : (
+                        <span>{author}</span>
+                      )}
+                    </>
+                  );
+                })()}
+              </p>
+              {allViews.length > 1 && currentView.type === 'original' &&
+                <p className="text-xs text-amber-700 font-semibold">
+                  <span className="text-lg">{allViews.length - 1}</span>{' '}
+                  {language === 'he' ? 'הצעות עריכה' : language === 'ar' ? 'اقتراحات تعديل' : 'Edit Suggestions'}
+                </p>
+              }
+              {currentVersion.created_date &&
+                <span className="text-[10px] text-slate-400">
+                  {new Date(currentVersion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </span>
+              }
+            </div>
           </div>
 
+          {allViews.length > 1 &&
           <Button
-          variant="outline"
-          size="sm"
-          onClick={handleNext}
-          className="flex items-center bg-white">
-          
+            variant="outline"
+            size="sm"
+            onClick={handleNext}
+            className="flex items-center bg-white flex-shrink-0">
             {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </Button>
-        </div>
-      }
-
-      {/* כותרת עם אינדיקטור של הצעה חדשה */}
-      <div className="flex items-center justify-between mb-3 md:mb-4">
-        <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-          <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
-            <Plus className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <div className="text-sm md:text-base font-semibold text-slate-900 break-words">
-              {(() => {
-                const author = getUserName(currentVersion.created_by_id);
-                const isEdit = currentView.type === 'version' ||
-                  currentVersion.type === 'edit_section' ||
-                  currentVersion.type === 'edit_suggestion';
-                if (isEdit) {
-                  return language === 'he' ? `הצעת עריכה מאת ${author}` :
-                    language === 'ar' ? `اقتراح تعديل بواسطة ${author}` :
-                    `Edit suggestion by ${author}`;
-                }
-                return language === 'he' ? `הצעה לסעיף חדש מאת ${author}` :
-                  language === 'ar' ? `اقتراح قسم جديد بواسطة ${author}` :
-                  `New section suggestion by ${author}`;
-              })()}
-            </div>
-            <div className="text-xs text-slate-400 mt-0.5">
-              {currentVersion.created_date && new Date(currentVersion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-            </div>
-          </div>
-        </div>
+          }
       </div>
 
       {/* תוכן ההצעה */}
