@@ -14,9 +14,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { 
-  UserPlus, Shield, ShieldOff, Trash2, Mail, 
-  AlertCircle, CheckCircle, Lock, Globe 
+import {
+  UserPlus, Shield, ShieldOff, Trash2, Mail,
+  AlertCircle, CheckCircle, Lock, Globe, Pencil, Check
 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { calcGroupParticipants } from "@/lib/groupParticipants";
@@ -29,6 +29,8 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
   const [success, setSuccess] = useState(null);
   const [confirmRemoveMemberId, setConfirmRemoveMemberId] = useState(null);
   const [confirmDeleteGroup, setConfirmDeleteGroup] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [groupNameValue, setGroupNameValue] = useState("");
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -306,6 +308,23 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
     },
   });
 
+  const updateGroupNameMutation = useMutation({
+    mutationFn: async (newName) => {
+      await base44.entities.Group.update(groupId, { name: newName.trim() });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['group', groupId] });
+      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      setEditingName(false);
+      setSuccess(language === 'he' ? 'שם הקבוצה עודכן בהצלחה' : language === 'ar' ? 'تم تحديث اسم المجموعة بنجاح' : 'Group name updated successfully');
+      setTimeout(() => setSuccess(null), 3000);
+    },
+    onError: () => {
+      setError(language === 'he' ? 'שגיאה בעדכון שם הקבוצה' : language === 'ar' ? 'خطأ في تحديث اسم المجموعة' : 'Error updating group name');
+      setTimeout(() => setError(null), 5000);
+    },
+  });
+
   const updateGroupStatusMutation = useMutation({
     mutationFn: async (newStatus) => {
       await base44.entities.Group.update(groupId, { status: newStatus });
@@ -375,6 +394,45 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
           <h3 className="font-semibold text-sm text-slate-700">
             {language === 'he' ? 'הגדרות קבוצה' : language === 'ar' ? 'إعدادات المجموعة' : 'Group Settings'}
           </h3>
+          <div className="space-y-2">
+            <Label>{language === 'he' ? 'שם הקבוצה' : language === 'ar' ? 'اسم المجموعة' : 'Group Name'}</Label>
+            {editingName ? (
+              <div className="flex gap-2">
+                <Input
+                  value={groupNameValue}
+                  onChange={(e) => setGroupNameValue(e.target.value)}
+                  placeholder={language === 'he' ? 'הזן שם קבוצה...' : language === 'ar' ? 'أدخل اسم المجموعة...' : 'Enter group name...'}
+                />
+                <Button
+                  size="sm"
+                  disabled={updateGroupNameMutation.isPending || !groupNameValue.trim()}
+                  onClick={() => updateGroupNameMutation.mutate(groupNameValue)}
+                >
+                  <Check className="w-4 h-4 mr-1" />
+                  {language === 'he' ? 'שמור' : language === 'ar' ? 'حفظ' : 'Save'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setEditingName(false)}
+                >
+                  {language === 'he' ? 'בטל' : language === 'ar' ? 'إلغاء' : 'Cancel'}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-slate-900">{group?.name}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setGroupNameValue(group?.name || ''); setEditingName(true); }}
+                  title={language === 'he' ? 'ערוך שם' : language === 'ar' ? 'تعديل الاسم' : 'Edit name'}
+                >
+                  <Pencil className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </div>
           <div className="space-y-2">
             <Label>{language === 'he' ? 'פרטיות הקבוצה' : language === 'ar' ? 'خصوصية المجموعة' : 'Group Privacy'}</Label>
             <RadioGroup
