@@ -48,6 +48,26 @@ function isGroupPage(pathname) {
   return /\/GroupView/i.test(pathname) || /\/group/i.test(pathname);
 }
 
+function isVersionsPage(pathname) {
+  return /\/DocumentCleanView/i.test(pathname);
+}
+
+function getStepPage(step) {
+  if (!step) return null;
+  if (step.page) return step.page;
+  if (step.id === 'welcome-intro-prepare') return null;
+  if (step.id === 'versions-browse-explain' || step.id === 'versions-change-explain') return 'versions';
+  return 'document';
+}
+
+function getPageFromPathname(pathname) {
+  if (isHomePage(pathname)) return 'home';
+  if (isGroupPage(pathname)) return 'group';
+  if (isVersionsPage(pathname)) return 'versions';
+  if (isDocumentPage(pathname)) return 'document';
+  return null;
+}
+
 export default function TutorialController() {
   const { isRTL, language } = useLanguage();
   const isMobile = useIsMobile();
@@ -204,7 +224,7 @@ export default function TutorialController() {
 
     const timer = setTimeout(scrollToElement, isMobile ? 120 : 100);
     return () => clearTimeout(timer);
-  }, [isMobile, phase, currentStep]);
+  }, [isMobile, phase, currentStep, navPending]);
 
   // ── Mobile: add body class for extra bottom scroll space ──────────────────
   useEffect(() => {
@@ -235,7 +255,7 @@ export default function TutorialController() {
       const vl = document.querySelector('.versions-list');
       if (vl) vl.style.bottom = '';
     };
-  }, [isMobile, phase, currentStep]);
+  }, [isMobile, phase, currentStep, navPending]);
 
   // Reset manualNavRef after each step change
   useEffect(() => {
@@ -251,6 +271,12 @@ export default function TutorialController() {
     // the user must click Next/Back to move through them.
     if (step.type === 'explain' || step.type === 'encourage') return;
 
+    // Don't auto-skip when the user is on a different page than the step expects
+    // — the bubble is hidden and will reappear when they return to the relevant page
+    const stepPage = getStepPage(step);
+    const currentPage = getPageFromPathname(location.pathname);
+    if (stepPage && currentPage !== stepPage) return;
+
     // For practice steps only: auto-skip if the target element is genuinely
     // missing from the DOM (e.g. user navigated away from the document page).
     const timer = setTimeout(() => {
@@ -262,7 +288,7 @@ export default function TutorialController() {
     }, 800);
 
     return () => clearTimeout(timer);
-  }, [phase, currentStep, goNext]);
+  }, [phase, currentStep, goNext, location.pathname]);
 
   // ── Practice pulse on target ─────────────────────────────────────────────
   useEffect(() => {
@@ -276,7 +302,7 @@ export default function TutorialController() {
 
     el.classList.add('tutorial-pulse-ring'); // Use CSS animation instead of inline style
     return () => { el.classList.remove('tutorial-pulse-ring'); };
-  }, [phase, currentStep]);
+  }, [phase, currentStep, navPending]);
 
   // ── Highlight target with blue outline for all explain/practice steps ──────
   useEffect(() => {
@@ -289,7 +315,7 @@ export default function TutorialController() {
 
     el.classList.add('tutorial-highlight-target');
     return () => { el.classList.remove('tutorial-highlight-target'); };
-  }, [phase, currentStep]);
+  }, [phase, currentStep, navPending]);
 
   // ── Handle editclause-buttons: force-show edit/delete buttons on section card ──
   useEffect(() => {
@@ -318,7 +344,7 @@ export default function TutorialController() {
         el.style.transition = transition;
       });
     };
-  }, [phase, currentStep]);
+  }, [phase, currentStep, navPending]);
 
   // ── Handle newclause-explain: force-show the insert-section button ──────────
   useEffect(() => {
@@ -336,7 +362,7 @@ export default function TutorialController() {
     return () => {
       insertSpace.classList.remove('tutorial-force-insert-visible');
     };
-  }, [phase, currentStep]);
+  }, [phase, currentStep, navPending]);
 
   // ── Derive ghost voting state ─────────────────────────────────────────────
   const showGhostVoting = phase === 'running' && TUTORIAL_STEPS.length > 0 && (() => {
@@ -381,7 +407,7 @@ export default function TutorialController() {
       const g = sectionCard.querySelector('[data-tutorial-ghost="true"]');
       if (g) g.remove();
     };
-  }, [phase, currentStep]);
+  }, [phase, currentStep, navPending]);
 
   // ── Handle editclause-hover: reset carousel and show edit buttons ──────────
   useEffect(() => {
@@ -416,7 +442,7 @@ export default function TutorialController() {
         }
       };
     }
-  }, [phase, currentStep]);
+  }, [phase, currentStep, navPending]);
 
   // Memoized skip confirm dialog
   const SkipConfirmDialog = React.useMemo(() => showSkipConfirm ? (
@@ -509,18 +535,22 @@ export default function TutorialController() {
         </>
       );
     }
-    return (
-      <>
-        {SkipConfirmDialog}
-        <TutorialHomeIntro
-          step={HOME_INTRO_STEP}
-          onSkip={skipTutorial}
-          onRequestSkip={() => setShowSkipConfirm(true)}
-          isRTL={isRTL}
-          ctaText={language === 'he' ? 'בחרו קבוצה ונמשיך' : language === 'ar' ? 'اختر مجموعة للمتابعة' : 'Click on a group to continue'}
-        />
-      </>
-    );
+    if (isHomePage(location.pathname)) {
+      return (
+        <>
+          {SkipConfirmDialog}
+          <TutorialHomeIntro
+            step={HOME_INTRO_STEP}
+            onSkip={skipTutorial}
+            onRequestSkip={() => setShowSkipConfirm(true)}
+            isRTL={isRTL}
+            ctaText={language === 'he' ? 'בחרו קבוצה ונמשיך' : language === 'ar' ? 'اختر مجموعة للمتابعة' : 'Click on a group to continue'}
+          />
+        </>
+      );
+    }
+    // On any other page — hide bubble until user returns to home or group
+    return <>{SkipConfirmDialog}</>;
   }
 
   if (phase === 'running') {
@@ -532,6 +562,14 @@ export default function TutorialController() {
     if (step.id === 'welcome-intro-prepare' && !isHomePage(location.pathname)) {
       handleNext();
       return null;
+    }
+
+    // If the step is associated with a specific page and the user is on a
+    // different page, hide the bubble — it will reappear when they return.
+    const stepPage = getStepPage(step);
+    const currentPage = getPageFromPathname(location.pathname);
+    if (stepPage && currentPage !== stepPage) {
+      return <>{SkipConfirmDialog}</>;
     }
 
     // Suppress rendering while waiting for a navigated page to settle
