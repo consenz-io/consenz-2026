@@ -77,11 +77,11 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
 
   // How many more pro votes needed
   const votesNeeded = isExistingSection ? 0 : Math.max(0, threshold - delta);
-  const passed = isExistingSection || (isDeleteSection && isAccepted) || delta >= threshold;
+  const passed = isExistingSection || isDeleteSection && isAccepted || delta >= threshold;
 
   // Progress: 0% = delta of 0 (or negative), 100% = delta >= threshold
   // Map [0, threshold] to [0%, 100%], clamped
-  const progressPercent = isExistingSection || (isDeleteSection && isAccepted) ?
+  const progressPercent = isExistingSection || isDeleteSection && isAccepted ?
   100 :
   Math.min(100, Math.max(0, delta / threshold * 100));
 
@@ -100,7 +100,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   progressPercent;
 
   const barColor = passed ?
-  (isDeleteSection ? 'bg-red-500' : 'bg-green-500') :
+  isDeleteSection ? 'bg-red-500' : 'bg-green-500' :
   effectiveReadOnly ?
   'bg-red-400' :
   hoverVote === 'pro' ?
@@ -155,7 +155,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
     }
     if (passed) {
       const date = isDeleteSection ?
-      (suggestion?.timerEndsAt || acceptedDate || suggestion?.updated_date) :
+      suggestion?.timerEndsAt || acceptedDate || suggestion?.updated_date :
       isExistingSection ?
       sourceSuggestion?.updated_date || acceptedDate :
       acceptedDate || suggestion?.updated_date;
@@ -196,8 +196,8 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-slate-600">
               {isDeleteSection ?
-                (language === 'he' ? 'התקדמות למחיקה' : language === 'ar' ? 'تقدم نحو الحذف' : 'Progress to deletion') :
-                (language === 'he' ? 'התקדמות לאישור' : language === 'ar' ? 'تقدم نحو القبول' : 'Progress to acceptance')}
+              language === 'he' ? 'התקדמות למחיקה' : language === 'ar' ? 'تقدم نحو الحذف' : 'Progress to deletion' :
+              language === 'he' ? 'התקדמות לאישור' : language === 'ar' ? 'تقدم نحو القبول' : 'Progress to acceptance'}
             </span>
             <div className="flex items-center gap-2">
               {timeLabel && !effectiveReadOnly &&
@@ -206,7 +206,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
                   {timeLabel}
                 </span>
               }
-              <span className={`text-xs font-bold ${passed ? (isDeleteSection ? 'text-red-600' : 'text-green-600') : 'text-slate-500'}`}>
+              <span className={`text-xs font-bold ${passed ? isDeleteSection ? 'text-red-600' : 'text-green-600' : 'text-slate-500'}`}>
                 {passed ? '✓' : `${Math.max(0, delta)}/${threshold}`}
               </span>
             </div>
@@ -226,7 +226,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
 
           {/* Status text */}
           {!passed && !isExistingSection &&
-            <p className="text-xs text-slate-600 mt-1.5 font-medium text-center" dir={isRTL ? 'rtl' : 'ltr'}>
+          <p className="text-xs text-slate-600 mt-1.5 font-medium text-center" dir={isRTL ? 'rtl' : 'ltr'}>
               {statusText}
             </p>
           }
@@ -354,7 +354,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
           </Button>
         </div>
         {userVote &&
-        <p className="text-center text-xs text-slate-400 mt-1.5">
+        <p className="text-center text-xs text-slate-400 mt-1.5 hidden">
             {userVote.vote === 'pro' ?
           language === 'he' ? 'הצבעת בעד • לחץ/י שוב לביטול' : language === 'ar' ? 'صوتك مع • اضغط مجدداً للإلغاء' : 'You voted pro • click again to remove' :
           language === 'he' ? 'הצבעת נגד • לחץ/י שוב לביטול' : language === 'ar' ? 'صوتك ضد • اضغط مجدداً للإلغاء' : 'You voted con • click again to remove'}
