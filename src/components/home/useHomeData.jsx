@@ -55,6 +55,7 @@ export function useHomeData() {
   const contributorsList = homeStats?.contributorsList || [];
   const averageConsensus = homeStats?.averageConsensus || 0;
   const groupParticipantCounts = homeStats?.groupParticipantCounts || {};
+  const documentContributorCounts = homeStats?.documentContributorCounts || {};
 
   // ── Mutation: translate document title ────────────────────────────────────
   const translateDocumentMutation = useMutation({
@@ -79,7 +80,7 @@ export function useHomeData() {
     user, groups, groupsLoading, groupMembers, membersLoading, documents,
     displayedUsers, publicProfilesLoading,
     totalUniqueContributors, contributorsList,
-    averageConsensus, groupParticipantCounts,
+    averageConsensus, groupParticipantCounts, documentContributorCounts,
     translateDocumentMutation,
     statsLoading,
   };

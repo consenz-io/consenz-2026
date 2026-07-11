@@ -11,7 +11,7 @@ export default function Home() {
   const {
     user, groups, groupsLoading, groupMembers, membersLoading, documents,
     displayedUsers, publicProfilesLoading,
-    averageConsensus, groupParticipantCounts,
+    averageConsensus, groupParticipantCounts, documentContributorCounts,
     contributorsList, totalUniqueContributors,
   } = useHomeData();
 
@@ -32,6 +32,7 @@ export default function Home() {
         groups={groups}
         groupMembers={groupMembers}
         user={user}
+        documentContributorCounts={documentContributorCounts}
       />
 
       <GroupsSection

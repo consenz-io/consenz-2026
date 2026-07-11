@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, Users, TrendingUp, Globe, Lock } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
-export default function RecentDocumentsSection({ documents, documentsLoading, groups, groupMembers, user }) {
+export default function RecentDocumentsSection({ documents, documentsLoading, groups, groupMembers, user, documentContributorCounts = {} }) {
   const { t, language } = useLanguage();
 
   const headingText = { he: 'מסמכים פעילים', ar: 'وثائق نشطة', en: 'Active Documents' };
@@ -106,7 +106,7 @@ export default function RecentDocumentsSection({ documents, documentsLoading, gr
                       <div className="flex items-center gap-2">
                         <Users className="w-4 h-4 text-slate-400" />
                         <div className="text-sm">
-                          <div className="font-semibold text-slate-700">{doc.totalUsersInteracted || 0}</div>
+                          <div className="font-semibold text-slate-700">{documentContributorCounts[doc.id] ?? 0}</div>
                           <div className="text-xs text-slate-500">{t('contributors')}</div>
                         </div>
                       </div>

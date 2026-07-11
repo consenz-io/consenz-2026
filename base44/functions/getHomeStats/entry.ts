@@ -155,12 +155,57 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── Per-document contributor counts (same logic as DocumentView's contributorsCount) ──
+    const docContributorSets = new Map();
+    for (const d of documents) docContributorSets.set(d.id, new Set());
+
+    const suggestionIdToDocId = new Map();
+    for (const s of suggestions) {
+      suggestionIdToDocId.set(s.id, s.documentId);
+      const set = docContributorSets.get(s.documentId);
+      if (set && s.created_by) set.add(s.created_by);
+    }
+
+    for (const v of votes) {
+      const docId = suggestionIdToDocId.get(v.suggestionId);
+      if (!docId) continue;
+      const set = docContributorSets.get(docId);
+      if (!set) continue;
+      if (v.created_by) set.add(v.created_by);
+      const p = userIdToProfile.get(v.userId);
+      if (p?.email) set.add(p.email);
+    }
+
+    const sectionIdToDocId = new Map();
+    for (const s of sections) { sectionIdToDocId.set(s.id, s.documentId); }
+
+    for (const c of comments) {
+      let docId = null;
+      if (c.rootEntityType === 'document') docId = c.rootEntityId;
+      else if (c.rootEntityType === 'suggestion') docId = suggestionIdToDocId.get(c.rootEntityId);
+      else if (c.rootEntityType === 'section') docId = sectionIdToDocId.get(c.rootEntityId);
+      if (!docId) continue;
+      const set = docContributorSets.get(docId);
+      if (set && c.created_by) set.add(c.created_by);
+    }
+
+    for (const a of agreements) {
+      const set = docContributorSets.get(a.documentId);
+      if (set && a.userEmail) set.add(a.userEmail);
+    }
+
+    const documentContributorCounts = {};
+    docContributorSets.forEach((set, docId) => {
+      documentContributorCounts[docId] = set.size;
+    });
+
     return Response.json({
       documentsCount: documents.length,
       totalUniqueContributors: Math.max(1, uniqueEmails.size),
       contributorsList,
       averageConsensus,
       groupParticipantCounts,
+      documentContributorCounts,
       displayedUsers,
     });
   } catch (error) {
