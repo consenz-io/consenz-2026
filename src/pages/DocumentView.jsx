@@ -233,37 +233,43 @@ export default function DocumentView() {
   });
 
   // ── Scroll effects ────────────────────────────────────────────────────────────
+  // Refs ensure each scroll-to-element effect runs only ONCE per URL parameter value,
+  // preventing unwanted re-scrolling when `suggestions` changes after a vote.
+  const scrollToSectionDoneRef = useRef(null);
   useEffect(() => {
-    if (scrollToSectionId && typeof window !== 'undefined' && window.document) {
-      setTimeout(() => {
-        let element = window.document.getElementById(
-          scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-')
-            ? scrollToSectionId
-            : `section-${scrollToSectionId}`
-        );
-        if (!element && scrollToSectionId.startsWith('new-suggestion-')) {
-          element = window.document.getElementById(scrollToSectionId);
-        }
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-          setTimeout(() => element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2'), 2000);
-        } else {
-          setTimeout(() => {
-            const retryElement = window.document.getElementById(
-              scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-')
-                ? scrollToSectionId
-                : `section-${scrollToSectionId}`
-            );
-            if (retryElement) {
-              retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              retryElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-              setTimeout(() => retryElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2'), 2000);
-            }
-          }, 1000);
-        }
-      }, 300);
-    }
+    if (!scrollToSectionId || scrollToSectionDoneRef.current === scrollToSectionId) return;
+    if (typeof window === 'undefined' || !window.document) return;
+    const findEl = () => {
+      let element = window.document.getElementById(
+        scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-')
+          ? scrollToSectionId
+          : `section-${scrollToSectionId}`
+      );
+      if (!element && scrollToSectionId.startsWith('new-suggestion-')) {
+        element = window.document.getElementById(scrollToSectionId);
+      }
+      return element;
+    };
+    const performScroll = (el) => {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2'), 2000);
+    };
+    setTimeout(() => {
+      const element = findEl();
+      if (element) {
+        scrollToSectionDoneRef.current = scrollToSectionId;
+        performScroll(element);
+      } else {
+        setTimeout(() => {
+          const retryElement = findEl();
+          if (retryElement) {
+            scrollToSectionDoneRef.current = scrollToSectionId;
+            performScroll(retryElement);
+          }
+        }, 1000);
+      }
+    }, 300);
   }, [scrollToSectionId, sections, suggestions]);
 
   useEffect(() => {
@@ -306,9 +312,13 @@ export default function DocumentView() {
   }, [targetSuggestionFromUrl, suggestions, isInitialLoading, navigate]);
 
   // Scroll to target suggestion element with retries (handles LazySection deferred mounting)
-  // For edit_suggestion types whose parent is new_section, the element ID is the parent's ID
+  // For edit_suggestion types whose parent is new_section, the element ID is the parent's ID.
+  // Guarded by ref so it only scrolls once per target — re-runs from `suggestions` changes
+  // (e.g. after voting) are skipped to prevent unwanted page scrolling.
+  const targetSuggestionScrolledRef = useRef(null);
   useEffect(() => {
     if (!targetSuggestionFromUrl || typeof window === 'undefined') return;
+    if (targetSuggestionScrolledRef.current === targetSuggestionFromUrl) return;
     let attempts = 0;
     const maxAttempts = 8;
     let scrollTimer;
@@ -322,6 +332,7 @@ export default function DocumentView() {
         }
       }
       if (element) {
+        targetSuggestionScrolledRef.current = targetSuggestionFromUrl;
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
         setTimeout(() => element.classList.remove('ring-4', 'ring-blue-500', 'ring-offset-4'), 2000);
