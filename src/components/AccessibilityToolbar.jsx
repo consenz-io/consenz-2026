@@ -4,7 +4,7 @@ import { Type, Contrast, Link as LinkIcon, Volume2, RotateCcw } from 'lucide-rea
 import { useLanguage } from './LanguageContext';
 
 export function AccessibilityToolbarContent() {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const [fontSize, setFontSize] = useState(100);
   const [highContrast, setHighContrast] = useState(false);
   const [highlightLinks, setHighlightLinks] = useState(false);
@@ -90,7 +90,7 @@ export function AccessibilityToolbarContent() {
       <div className="space-y-4">
             <div className="flex items-center justify-between border-b pb-2">
               <h3 className="font-semibold text-lg">
-                {isRTL ? 'נגישות' : 'Accessibility'}
+                {language === 'he' ? 'נגישות' : language === 'ar' ? 'إمكانية الوصول' : 'Accessibility'}
               </h3>
               <Button
                 variant="ghost"
@@ -99,7 +99,7 @@ export function AccessibilityToolbarContent() {
                 aria-label={isRTL ? 'איפוס הכל' : 'Reset all'}
               >
                 <RotateCcw className="h-4 w-4 mr-1" aria-hidden="true" />
-                {isRTL ? 'איפוס' : 'Reset'}
+                {language === 'he' ? 'איפוס' : language === 'ar' ? 'إعادة تعيين' : 'Reset'}
               </Button>
             </div>
 
@@ -108,7 +108,7 @@ export function AccessibilityToolbarContent() {
               <div className="flex items-center gap-2">
                 <Type className="h-4 w-4" aria-hidden="true" />
                 <label className="text-sm font-medium">
-                  {isRTL ? 'גודל טקסט' : 'Text Size'}
+                  {language === 'he' ? 'גודל טקסט' : language === 'ar' ? 'حجم النص' : 'Text Size'}
                 </label>
               </div>
               <div className="flex items-center gap-2">
@@ -146,7 +146,7 @@ export function AccessibilityToolbarContent() {
                 aria-label={isRTL ? 'ניגודיות גבוהה' : 'High contrast mode'}
               >
                 <Contrast className="h-4 w-4 mr-2" aria-hidden="true" />
-                {isRTL ? 'ניגודיות גבוהה' : 'High Contrast'}
+                {language === 'he' ? 'ניגודיות גבוהה' : language === 'ar' ? 'تباين عالي' : 'High Contrast'}
               </Button>
             </div>
 
@@ -160,7 +160,7 @@ export function AccessibilityToolbarContent() {
                 aria-label={isRTL ? 'הדגש קישורים' : 'Highlight links'}
               >
                 <LinkIcon className="h-4 w-4 mr-2" aria-hidden="true" />
-                {isRTL ? 'הדגש קישורים' : 'Highlight Links'}
+                {language === 'he' ? 'הדגש קישורים' : language === 'ar' ? 'إبراز الروابط' : 'Highlight Links'}
               </Button>
             </div>
 
@@ -176,8 +176,8 @@ export function AccessibilityToolbarContent() {
                 >
                   <Volume2 className="h-4 w-4 mr-2" aria-hidden="true" />
                   {isReading 
-                    ? (isRTL ? 'עצור קריאה' : 'Stop Reading')
-                    : (isRTL ? 'קריאה קולית' : 'Read Aloud')
+                    ? (language === 'he' ? 'עצור קריאה' : language === 'ar' ? 'إيقاف القراءة' : 'Stop Reading')
+                    : (language === 'he' ? 'קריאה קולית' : language === 'ar' ? 'قراءة صوتية' : 'Read Aloud')
                   }
                 </Button>
               </div>

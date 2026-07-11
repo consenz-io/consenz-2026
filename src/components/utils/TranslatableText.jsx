@@ -66,7 +66,7 @@ export default function TranslatableText({ text, isHtml = false, className = "",
       {mutation.isPending ? (
         <span className="flex items-center gap-1 text-slate-500 text-sm">
           <Loader2 className="w-3 h-3 animate-spin" />
-          {isRTL ? 'מתרגם...' : 'Translating...'}
+          {language === 'he' ? 'מתרגם...' : language === 'ar' ? 'جارٍ الترجمة...' : 'Translating...'}
         </span>
       ) : isHtml ? (
         <span className={className} dangerouslySetInnerHTML={{ __html: displayText }} />

@@ -139,7 +139,7 @@ const detectLanguage = (text) => {
 
 // Component to display suggestion details
 function SuggestionDetails({ suggestionId, user, getUserName, showComments, toggleComments, users }) {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const queryClient = useQueryClient();
   
   const [suggestion, setSuggestion] = React.useState(null);
@@ -190,7 +190,7 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
           {suggestion.approvedByAdmin && suggestion.status === 'accepted' && (
             <Badge variant="outline" className="flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
               <ShieldCheck className="w-3 h-3" />
-              {isRTL ? 'אושר ע״י מנהל' : 'Admin Approved'}
+              {language === 'he' ? 'אושר ע״י מנהל' : language === 'ar' ? 'موافق عليه من المشرف' : 'Admin Approved'}
             </Badge>
           )}
         </div>

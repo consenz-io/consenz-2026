@@ -32,7 +32,7 @@ export default function VersionNavigation({
     if (currentSnapshot.isNewSection) return language === 'he' ? '➕ סעיף נוסף' : language === 'ar' ? '➕ قسم جديد' : '➕ Section Added';
     if (currentSnapshot.isDeleted) return language === 'he' ? '🗑 סעיף נמחק' : language === 'ar' ? '🗑 قسم حُذف' : '🗑 Section Deleted';
     if (currentSnapshot.isDirectEdit) return language === 'he' ? '✏️ עריכת מנהל' : language === 'ar' ? '✏️ تعديل المسؤول' : '✏️ Admin Edit';
-    if (currentSnapshot.isTopicTitleChange) return language === 'he' ? '📝 שינוי כותרת נושא' : '📝 Topic Renamed';
+    if (currentSnapshot.isTopicTitleChange) return language === 'he' ? '📝 שינוי כותרת נושא' : language === 'ar' ? '📝 تغيير عنوان الموضوع' : '📝 Topic Renamed';
     if (currentSnapshot.changedSectionId) return language === 'he' ? '✏️ סעיף עודכן' : language === 'ar' ? '✏️ قسم عُدِّل' : '✏️ Section Edited';
     return null;
   })() : null;
@@ -59,9 +59,7 @@ export default function VersionNavigation({
             className="versions-older-btn h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
           >
             {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            {isRTL
-              ? (language === 'he' ? 'גרסה קודמת' : 'إصدار أقدم')
-              : 'Older'}
+            {language === 'he' ? 'גרסה קודמת' : language === 'ar' ? 'إصدار أقدم' : 'Older'}
           </Button>
 
           {/* Center info */}
@@ -89,9 +87,7 @@ export default function VersionNavigation({
             disabled={isLoading || !hasMultipleVersions || isCurrentVersion}
             className="h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
           >
-            {isRTL
-              ? (language === 'he' ? 'גרסה חדשה יותר' : 'إصدار أحدث')
-              : 'Newer'}
+            {language === 'he' ? 'גרסה חדשה יותר' : language === 'ar' ? 'إصدار أحدث' : 'Newer'}
             {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </Button>
         </div>

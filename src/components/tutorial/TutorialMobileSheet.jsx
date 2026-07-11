@@ -110,10 +110,10 @@ export default function TutorialMobileSheet({
           <ProgressDots />
           <div className="flex gap-2 w-full">
             <Button variant="ghost" size="sm" onClick={onBack} className="flex-1 text-slate-500">
-              {isRTL ? 'הקודם' : 'Back'}
+              {tTutorial('ui.back', language)}
             </Button>
             <Button size="sm" onClick={onNext} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold">
-              {isRTL ? 'סיום' : 'Finish'}
+              {tTutorial('ui.finish', language)}
             </Button>
           </div>
         </div>
@@ -132,7 +132,7 @@ export default function TutorialMobileSheet({
          {/* Tour badge */}
          <div className="flex items-center gap-1 text-blue-600 flex-1">
            <Compass className="w-3.5 h-3.5 flex-shrink-0" />
-           <span className="text-xs font-bold uppercase tracking-wide">{isRTL ? 'סיור' : 'Tour'}</span>
+           <span className="text-xs font-bold uppercase tracking-wide">{tTutorial('ui.tour', language)}</span>
          </div>
          <button onClick={handleSkipRequest} className="ms-2 text-slate-400 hover:text-slate-600 flex-shrink-0">
            <X className="w-4 h-4" />
@@ -184,15 +184,15 @@ export default function TutorialMobileSheet({
 
         <div className="flex gap-2">
             <Button variant="ghost" size="sm" onClick={onBack} disabled={stepIndex === 0} className="flex-1 text-slate-500">
-              {isRTL ? 'הקודם' : 'Back'}
+              {tTutorial('ui.back', language)}
             </Button>
             {isPractice && nextDisabled ?
           <Button variant="outline" size="sm" disabled className="flex-1 text-slate-400 opacity-60">
-                {isRTL ? 'הבא' : 'Next'}
+                {tTutorial('ui.next', language)}
               </Button> :
 
           <Button size="sm" onClick={onNext} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white min-h-[44px]">
-                {stepIndex === totalSteps - 1 ? isRTL ? 'סיום' : 'Finish' : isRTL ? 'הבא' : 'Next'}
+                {stepIndex === totalSteps - 1 ? tTutorial('ui.finish', language) : tTutorial('ui.next', language)}
               </Button>
           }
           </div>

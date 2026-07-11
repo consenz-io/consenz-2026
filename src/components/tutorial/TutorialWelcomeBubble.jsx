@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, Compass } from 'lucide-react';
+import { tTutorial } from './tutorialSteps';
 
 const strings = {
   he: {
@@ -85,7 +86,7 @@ export default function TutorialWelcomeBubble({ onStart, onSkip, isRTL, language
       {/* Tour badge */}
       <div className="flex items-center gap-1 text-blue-600 mb-2">
         <Compass className="w-3.5 h-3.5" />
-        <span className="text-xs font-bold uppercase tracking-wide">{isRTL ? 'סיור מודרך' : 'Guided Tour'}</span>
+        <span className="text-xs font-bold uppercase tracking-wide">{tTutorial('ui.guidedTour', language)}</span>
       </div>
 
       {/* Arrow pointing toward sidebar */}
@@ -122,7 +123,7 @@ export default function TutorialWelcomeBubble({ onStart, onSkip, isRTL, language
           onClick={handleSkip}
           className="flex-1 text-slate-500"
         >
-          {isRTL ? 'דלגו' : 'Skip'}
+          {tTutorial('ui.skip', language)}
         </Button>
         <Button
           size="sm"

@@ -273,7 +273,7 @@ export default function CreateSuggestionModal({
 
       // Generate automatic title
       const autoTitle = isDeleteSection
-        ? (language === 'he' ? `הצעה למחיקת סעיף ב-${topicTitle}` : `Delete section in ${topicTitle}`)
+        ? (language === 'he' ? `הצעה למחיקת סעיף ב-${topicTitle}` : language === 'ar' ? `اقتراح حذف قسم في ${topicTitle}` : `Delete section in ${topicTitle}`)
         : isNewSection 
         ? t('newSectionIn', { topic: topicTitle })
         : t('editSectionIn', { topic: topicTitle });
@@ -500,7 +500,7 @@ export default function CreateSuggestionModal({
         <DialogHeader className={isRTL ? "text-start" : "text-start"}>
           <DialogTitle id="suggestion-modal-title" className="text-start">
             {isDeleteSection 
-              ? (language === 'he' ? 'הצעה למחיקת סעיף' : 'Delete Section Suggestion')
+              ? (language === 'he' ? 'הצעה למחיקת סעיף' : language === 'ar' ? 'اقتراح حذف قسم' : 'Delete Section Suggestion')
               : isDirectEdit ? 'Direct Edit' : (isNewSection ? t('suggestNewSection') : t('suggestEditSection'))}
           </DialogTitle>
         </DialogHeader>
@@ -549,7 +549,7 @@ export default function CreateSuggestionModal({
           {isDeleteSection && existingSection && (
             <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
               <div className="text-sm font-medium text-red-800 mb-2">
-                {language === 'he' ? 'סעיף שיימחק:' : 'Section to be deleted:'}
+                {language === 'he' ? 'סעיף שיימחק:' : language === 'ar' ? 'القسم المراد حذفه:' : 'Section to be deleted:'}
               </div>
               <div 
                 className="prose prose-sm max-w-none text-slate-700"

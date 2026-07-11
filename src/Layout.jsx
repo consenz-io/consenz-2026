@@ -114,7 +114,7 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
         {user?.role === 'admin' && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
-              {language === 'he' ? 'ניהול' : 'Admin'}
+              {language === 'he' ? 'ניהול' : language === 'ar' ? 'إدارة' : 'Admin'}
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu></SidebarMenu>
@@ -379,7 +379,7 @@ function LayoutContent({ children, currentPageName }) {
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-blue-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg"
         style={{ position: 'absolute' }}
       >
-        {isRTL ? 'דלג לתוכן המרכזי' : 'Skip to main content'}
+        {language === 'he' ? 'דלג לתוכן המרכזי' : language === 'ar' ? 'تخطي إلى المحتوى الرئيسي' : 'Skip to main content'}
       </a>
       
       <div className={`min-h-screen flex w-full max-w-full bg-gradient-to-br from-slate-50 to-blue-50 overflow-x-hidden ${isRTL ? 'flex-row-reverse' : ''}`} style={{ maxWidth: '100vw' }}>
@@ -459,10 +459,10 @@ function LayoutContent({ children, currentPageName }) {
              onClick={scrollToTop}
              type="button"
              className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50 focus:ring-4 focus:ring-blue-300"
-             aria-label={isRTL ? 'גלילה לראש העמוד' : 'Scroll to top'}
+             aria-label={language === 'he' ? 'גלילה לראש העמוד' : language === 'ar' ? 'التمرير إلى الأعلى' : 'Scroll to top'}
            >
              <ArrowUp className="w-5 h-5" aria-hidden="true" />
-             <span className="sr-only">{isRTL ? 'גלילה לראש העמוד' : 'Scroll to top'}</span>
+             <span className="sr-only">{language === 'he' ? 'גלילה לראש העמוד' : language === 'ar' ? 'التمرير إلى الأعلى' : 'Scroll to top'}</span>
              </button>
              )}
 

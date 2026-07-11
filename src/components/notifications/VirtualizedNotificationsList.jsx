@@ -102,7 +102,7 @@ const NotificationItem = React.memo(({
                 onMarkAsRead(notification.id);
               }}
               className="h-6 w-6 p-0"
-              title={language === 'he' ? 'סמן כנקרא' : 'Mark as read'}
+              title={language === 'he' ? 'סמן כנקרא' : language === 'ar' ? 'وضع علامة كمقروء' : 'Mark as read'}
             >
               <Eye className="w-3 h-3" />
             </Button>
@@ -115,7 +115,7 @@ const NotificationItem = React.memo(({
               onDelete(notification.id);
             }}
             className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
-            title={language === 'he' ? 'מחק' : 'Delete'}
+            title={language === 'he' ? 'מחק' : language === 'ar' ? 'حذف' : 'Delete'}
           >
             <X className="w-3 h-3" />
           </Button>

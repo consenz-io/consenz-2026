@@ -83,7 +83,7 @@ export default function DocumentSnapshot({
                         onClick={() => currentSnapshot?.suggestionId && onOpenSuggestion(currentSnapshot.suggestionId)}
                       >
                         <Badge className="mb-2 bg-red-100 text-red-800 text-xs">
-                          {language === 'he' ? 'סעיף נמחק - לחץ לצפייה בדיון' : 'Section Deleted'}
+                          {language === 'he' ? 'סעיף נמחק - לחץ לצפייה בדיון' : language === 'ar' ? 'قسم محذوف - انقر للعرض' : 'Section Deleted'}
                         </Badge>
                         <div 
                           className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
@@ -102,7 +102,7 @@ export default function DocumentSnapshot({
                         onClick={() => currentSnapshot?.suggestionId && onOpenSuggestion(currentSnapshot.suggestionId)}
                       >
                         <Badge className="mb-2 bg-green-100 text-green-800 text-xs">
-                          {language === 'he' ? 'סעיף חדש - לחץ לצפייה בדיון' : 'New Section'}
+                          {language === 'he' ? 'סעיף חדש - לחץ לצפייה בדיון' : language === 'ar' ? 'قسم جديد - انقر للعرض' : 'New Section'}
                         </Badge>
                         <div 
                           className="prose prose-sm max-w-none text-green-800"
@@ -121,7 +121,7 @@ export default function DocumentSnapshot({
                         onClick={() => currentSnapshot?.suggestionId && onOpenSuggestion(currentSnapshot.suggestionId)}
                       >
                         <Badge className="mb-2 bg-amber-100 text-amber-800 text-xs">
-                          {language === 'he' ? 'שינוי - לחץ לצפייה בדיון' : 'Change'}
+                          {language === 'he' ? 'שינוי - לחץ לצפייה בדיון' : language === 'ar' ? 'تغيير - انقر للعرض' : 'Change'}
                         </Badge>
                         <InlineDiff
                           originalContent={displayedContent}
@@ -138,7 +138,7 @@ export default function DocumentSnapshot({
                           >
                             <div className="flex items-center justify-between mb-2">
                               <Badge className="bg-blue-100 text-blue-800 text-xs">
-                                {language === 'he' ? 'השוואה - לחץ לצפייה בדיון' : 'Comparison'}
+                                {language === 'he' ? 'השוואה - לחץ לצפייה בדיון' : language === 'ar' ? 'مقارنة - انقر للعرض' : 'Comparison'}
                               </Badge>
                               <div className="flex items-center gap-2">
                                 <Button
@@ -171,7 +171,7 @@ export default function DocumentSnapshot({
                                   }}
                                   className="h-7 px-2 text-xs"
                                 >
-                                  {language === 'he' ? 'היסטוריית סעיף' : 'Section History'}
+                                  {language === 'he' ? 'היסטוריית סעיף' : language === 'ar' ? 'تاريخ القسم' : 'Section History'}
                                 </Button>
                               </div>
                             </div>

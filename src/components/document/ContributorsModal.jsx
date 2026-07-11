@@ -15,7 +15,7 @@ import { Users, Loader2, Search } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 
 export default function ContributorsModal({ isOpen, onClose, documentId }) {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const [searchQuery, setSearchQuery] = React.useState("");
 
   // Fetch all data in parallel with caching
@@ -153,7 +153,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
           <div className="flex items-center gap-2 mb-2">
             <Search className="w-4 h-4 text-slate-400" />
             <Input
-              placeholder={isRTL ? "חיפוש לפי שם..." : "Search by name..."}
+              placeholder={language === 'he' ? "חיפוש לפי שם..." : language === 'ar' ? "ابحث بالاسم..." : "Search by name..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1"
@@ -168,7 +168,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
             </div>
           ) : filteredContributors.length === 0 ? (
             <div className="text-center py-8 text-slate-500">
-              {searchQuery ? (isRTL ? 'לא נמצאו תוצאות' : 'No results found') : t('noContributors')}
+              {searchQuery ? (language === 'he' ? 'לא נמצאו תוצאות' : language === 'ar' ? 'لا توجد نتائج' : 'No results found') : t('noContributors')}
             </div>
           ) : (
             <div className="space-y-2">
@@ -196,7 +196,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
 
         {filteredContributors.length > 0 && searchQuery && (
           <div className="text-sm text-slate-600 text-center pt-2 border-t">
-            {filteredContributors.length} {isRTL ? 'מתוך' : 'of'} {contributors?.length || 0}
+            {filteredContributors.length} {language === 'he' ? 'מתוך' : language === 'ar' ? 'من' : 'of'} {contributors?.length || 0}
           </div>
         )}
       </DialogContent>

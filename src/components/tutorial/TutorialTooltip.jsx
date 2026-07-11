@@ -211,17 +211,17 @@ export default function TutorialTooltip({
         <div className="fixed inset-0 z-[10010] flex items-center justify-center bg-black/40 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-6 flex flex-col gap-4" dir={isRTL ? 'rtl' : 'ltr'}>
             <p className="text-slate-800 font-semibold text-center text-base">
-              {isRTL ? 'לסיים את הסיור?' : 'Exit the tour?'}
+              {tTutorial('ui.exitPrompt', language)}
             </p>
             <p className="text-slate-500 text-sm text-center">
-              {isRTL ? 'תמיד אפשר להתחיל אותו מחדש מתפריט הניווט.' : 'You can always restart it from the navigation menu.'}
+              {tTutorial('ui.exitHint', language)}
             </p>
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => setShowConfirm(false)}>
-                {isRTL ? 'המשך סיור' : 'Continue'}
+                {tTutorial('ui.continue', language)}
               </Button>
               <Button className="flex-1 bg-red-500 hover:bg-red-600 text-white" onClick={() => { setShowConfirm(false); onSkip(); }}>
-                {isRTL ? 'סיים' : 'Exit'}
+                {tTutorial('ui.exit', language)}
               </Button>
             </div>
           </div>
@@ -273,14 +273,14 @@ export default function TutorialTooltip({
               onClick={onBack}
               className="flex-1 text-slate-500"
             >
-              {isRTL ? 'הקודם' : 'Back'}
+              {tTutorial('ui.back', language)}
             </Button>
             <Button
               size="sm"
               onClick={onNext}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
             >
-              {isRTL ? 'סיום' : 'Finish'}
+              {tTutorial('ui.finish', language)}
             </Button>
           </div>
         </div>
@@ -297,17 +297,17 @@ export default function TutorialTooltip({
       <div className="fixed inset-0 z-[10010] flex items-center justify-center bg-black/40 p-4">
         <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-6 flex flex-col gap-4" dir={isRTL ? 'rtl' : 'ltr'}>
           <p className="text-slate-800 font-semibold text-center text-base">
-            {isRTL ? 'לסיים את הסיור?' : 'Exit the tour?'}
+            {tTutorial('ui.exitPrompt', language)}
           </p>
           <p className="text-slate-500 text-sm text-center">
-            {isRTL ? 'תמיד אפשר להתחיל אותו מחדש מתפריט הניווט.' : 'You can always restart it from the navigation menu.'}
+            {tTutorial('ui.exitHint', language)}
           </p>
           <div className="flex gap-2">
             <Button variant="outline" className="flex-1" onClick={() => setShowConfirm(false)}>
-              {isRTL ? 'המשך סיור' : 'Continue'}
+              {tTutorial('ui.continue', language)}
             </Button>
             <Button className="flex-1 bg-red-500 hover:bg-red-600 text-white" onClick={() => { setShowConfirm(false); onSkip(); }}>
-              {isRTL ? 'סיים' : 'Exit'}
+              {tTutorial('ui.exit', language)}
             </Button>
           </div>
         </div>
@@ -329,7 +329,7 @@ export default function TutorialTooltip({
       {/* Tour identifier badge */}
       <div className="flex items-center gap-1 mb-2 text-blue-600">
         <Compass className="w-3.5 h-3.5" />
-        <span className="text-xs font-bold uppercase tracking-wide">{isRTL ? 'סיור מודרך' : 'Guided Tour'}</span>
+        <span className="text-xs font-bold uppercase tracking-wide">{tTutorial('ui.guidedTour', language)}</span>
       </div>
 
       {/* Close button */}
@@ -375,7 +375,7 @@ export default function TutorialTooltip({
           {/* Extra hint for points step */}
           {step.id === 'points-ranking-explain' && (
             <p className="text-xs text-slate-500 italic mb-3">
-              {isRTL ? 'לחצו על סך הנקודות שלכם כדי לראות איך צוברים נקודות' : 'Click on your total points to see how you earn points'}
+              {tTutorial('ui.clickPointsInfo', language)}
             </p>
           )}
 
@@ -430,7 +430,7 @@ export default function TutorialTooltip({
                 disabled={stepIndex === 0}
                 className="flex-1 text-slate-500"
               >
-                {isRTL ? 'הקודם' : 'Back'}
+                {tTutorial('ui.back', language)}
               </Button>
 
               {isPractice && nextDisabled ? (
@@ -440,7 +440,7 @@ export default function TutorialTooltip({
                   disabled
                   className="flex-1 text-slate-400 cursor-not-allowed opacity-60"
                 >
-                  {isRTL ? 'הבא' : 'Next'}
+                  {tTutorial('ui.next', language)}
                 </Button>
               ) : (
                 <Button
@@ -449,8 +449,8 @@ export default function TutorialTooltip({
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   {stepIndex === totalSteps - 1
-                    ? (isRTL ? 'סיום' : 'Finish')
-                    : (isRTL ? 'הבא' : 'Next')}
+                    ? tTutorial('ui.finish', language)
+                    : tTutorial('ui.next', language)}
                 </Button>
               )}
             </div>

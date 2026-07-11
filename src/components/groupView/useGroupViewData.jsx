@@ -250,9 +250,11 @@ export function useGroupViewData(groupId) {
       });
 
       const manageUrl = `${window.location.origin}${createPageUrl("GroupView")}?id=${group.id}`;
-      const subject = language === 'he' ? `בקשת הצטרפות לקבוצה: ${group?.name}` : `Request to join group: ${group?.name}`;
+      const subject = language === 'he' ? `בקשת הצטרפות לקבוצה: ${group?.name}` : language === 'ar' ? `طلب الانضمام إلى المجموعة: ${group?.name}` : `Request to join group: ${group?.name}`;
       const body = language === 'he'
         ? `שלום,\n\n${userName} מבקש/ת להצטרף לקבוצה "${group?.name}".\n\nאימייל המשתמש: ${currentUser.email}\n\nכדי לאשר או לדחות: ${manageUrl}\n\nתודה!`
+        : language === 'ar'
+        ? `مرحبًا,\n\n${userName} يطلب الانضمام إلى المجموعة "${group?.name}".\n\nبريد المستخدم: ${currentUser.email}\n\nللموافقة أو الرفض: ${manageUrl}\n\nشكرًا!`
         : `Hello,\n\n${userName} would like to join "${group?.name}".\n\nUser email: ${currentUser.email}\n\nManage: ${manageUrl}\n\nThank you!`;
 
       await Promise.all([
@@ -260,8 +262,8 @@ export function useGroupViewData(groupId) {
         ...admins.map(admin => base44.entities.Notification.create({
           userId: admin.userId,
           type: 'group_join_request',
-          title: language === 'he' ? 'בקשת הצטרפות לקבוצה' : 'New join request',
-          message: language === 'he' ? `${userName} מבקש/ת להצטרף לקבוצה "${group?.name}"` : `${userName} wants to join "${group?.name}"`,
+          title: language === 'he' ? 'בקשת הצטרפות לקבוצה' : language === 'ar' ? 'طلب انضمام إلى المجموعة' : 'New join request',
+          message: language === 'he' ? `${userName} מבקש/ת להצטרף לקבוצה "${group?.name}"` : language === 'ar' ? `${userName} يطلب الانضمام إلى "${group?.name}"` : `${userName} wants to join "${group?.name}"`,
           relatedEntityId: group.id, relatedEntityType: 'group',
           actionUrl: createPageUrl("GroupView") + `?id=${group.id}`, read: false,
         }))

@@ -746,7 +746,7 @@ Return ONLY the translated text:`;
                                    return;
                                  }
                                  if (!canParticipate) {
-                                   toast.error(language === 'he' ? 'אינך חבר בקבוצה זו' : 'You are not a member of this group');
+                                   toast.error(language === 'he' ? 'אינך חבר בקבוצה זו' : language === 'ar' ? 'لست عضوًا في هذه المجموعة' : 'You are not a member of this group');
                                    return;
                                  }
                                  setEditingTopic(topic);

@@ -34,7 +34,7 @@ export default function CreateGroup() {
   const createGroupMutation = useMutation({
     mutationFn: async (data) => {
       if (!data.name || data.name.trim().length < 2) {
-        throw new Error(language === 'he' ? 'שם הקבוצה חייב להכיל לפחות 2 תווים' : 'Group name must be at least 2 characters');
+        throw new Error(language === 'he' ? 'שם הקבוצה חייב להכיל לפחות 2 תווים' : language === 'ar' ? 'يجب أن يحتوي اسم المجموعة على حرفين على الأقل' : 'Group name must be at least 2 characters');
       }
 
       // Create the group
@@ -59,7 +59,7 @@ export default function CreateGroup() {
       navigate(`${createPageUrl("GroupView")}?id=${group.id}`);
     },
     onError: (err) => {
-      setError(err.message || (language === 'he' ? 'שגיאה ביצירת הקבוצה' : 'Failed to create group'));
+      setError(err.message || (language === 'he' ? 'שגיאה ביצירת הקבוצה' : language === 'ar' ? 'فشل في إنشاء المجموعة' : 'Failed to create group'));
     },
   });
 
@@ -76,7 +76,7 @@ export default function CreateGroup() {
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              {language === 'he' ? 'יש להתחבר כדי ליצור קבוצה' : 'Please sign in to create a group'}
+              {language === 'he' ? 'יש להתחבר כדי ליצור קבוצה' : language === 'ar' ? 'سجل الدخول لإنشاء مجموعة' : 'Please sign in to create a group'}
             </AlertDescription>
           </Alert>
         </div>
@@ -103,7 +103,7 @@ export default function CreateGroup() {
           <CardHeader>
             <CardTitle>{language === 'he' ? 'פרטי הקבוצה' : language === 'ar' ? 'تفاصيل المجموعة' : 'Group Details'}</CardTitle>
             <CardDescription>
-              {language === 'he' ? 'מלא את הפרטים ליצירת קבוצה חדשה' : 'Fill in the details to create a new group'}
+              {language === 'he' ? 'מלא את הפרטים ליצירת קבוצה חדשה' : language === 'ar' ? 'املأ التفاصيل لإنشاء مجموعة جديدة' : 'Fill in the details to create a new group'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -114,7 +114,7 @@ export default function CreateGroup() {
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder={language === 'he' ? 'הזן שם לקבוצה...' : 'Enter group name...'}
+                  placeholder={language === 'he' ? 'הזן שם לקבוצה...' : language === 'ar' ? 'أدخل اسم المجموعة...' : 'Enter group name...'}
                   required
                 />
               </div>
@@ -125,7 +125,7 @@ export default function CreateGroup() {
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder={language === 'he' ? 'תאר את מטרת הקבוצה...' : 'Describe the purpose of the group...'}
+                  placeholder={language === 'he' ? 'תאר את מטרת הקבוצה...' : language === 'ar' ? 'صف الغرض من المجموعة...' : 'Describe the purpose of the group...'}
                   rows={4}
                 />
               </div>
@@ -191,7 +191,7 @@ export default function CreateGroup() {
                   className="bg-gradient-to-r from-blue-600 to-indigo-600"
                 >
                   {createGroupMutation.isPending 
-                    ? (language === 'he' ? 'יוצר...' : 'Creating...') 
+                    ? (language === 'he' ? 'יוצר...' : language === 'ar' ? 'جارٍ الإنشاء...' : 'Creating...') 
                     : (language === 'he' ? 'צור קבוצה' : language === 'ar' ? 'إنشاء مجموعة' : 'Create Group')}
                 </Button>
               </div>

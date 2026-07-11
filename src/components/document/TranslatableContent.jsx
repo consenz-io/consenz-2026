@@ -218,7 +218,7 @@ ${content}`,
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
           <span className={`text-sm text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>
-            {isRTL ? 'מתרגם...' : 'Translating...'}
+            {rawLanguage === 'he' ? 'מתרגם...' : rawLanguage === 'ar' ? 'جارٍ الترجمة...' : 'Translating...'}
           </span>
         </div>
       ) : (

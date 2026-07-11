@@ -17,7 +17,7 @@ export default function AllContributorsModal({
   onClose,
   contributors // Array of user objects (from User entity or UserPublicProfile)
 }) {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const [searchQuery, setSearchQuery] = React.useState("");
 
   const filteredContributors = React.useMemo(() => {
@@ -43,7 +43,7 @@ export default function AllContributorsModal({
           <div className="flex items-center gap-2 mb-2">
             <Search className="w-4 h-4 text-slate-400" />
             <Input
-              placeholder={isRTL ? "חיפוש לפי שם..." : "Search by name..."}
+              placeholder={language === 'he' ? "חיפוש לפי שם..." : language === 'ar' ? "ابحث بالاسم..." : "Search by name..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1"

@@ -40,7 +40,7 @@ export default function TutorialWelcomeOverlay({ onStart, onSkip, isRTL }) {
         {/* Tour badge */}
         <div className="flex items-center gap-1 text-blue-600 mb-3">
           <Compass className="w-4 h-4" />
-          <span className="text-xs font-bold uppercase tracking-wide">{isRTL ? 'סיור מודרך' : 'Guided Tour'}</span>
+          <span className="text-xs font-bold uppercase tracking-wide">{tTutorial('ui.guidedTour', language)}</span>
         </div>
 
         <h3 className="font-bold text-slate-900 text-xl mb-3 break-words">{heading}</h3>
@@ -53,7 +53,7 @@ export default function TutorialWelcomeOverlay({ onStart, onSkip, isRTL }) {
             onClick={onSkip}
             className="flex-1 text-slate-500"
           >
-            {isRTL ? 'דלגו' : 'Skip'}
+            {tTutorial('ui.skip', language)}
           </Button>
           <Button
             size="sm"

@@ -201,7 +201,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
         {/* Tour badge */}
         <div className="flex items-center gap-1 text-blue-600 mb-2">
           <Compass className="w-3.5 h-3.5" />
-          <span className="text-xs font-bold uppercase tracking-wide">{isRTL ? 'סיור' : 'Tour'}</span>
+          <span className="text-xs font-bold uppercase tracking-wide">{tTutorial('ui.tour', language)}</span>
         </div>
 
         {showSuccess ? (
@@ -215,7 +215,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
             {body && <p className="text-sm text-slate-600 leading-relaxed mb-3">{body}</p>}
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
               <p className="text-sm font-bold text-blue-800">
-                {ctaText || (isRTL ? 'בחרו קבוצה ונמשיך' : 'Click on a group to continue')}
+                {ctaText || tTutorial('ui.clickGroupContinue', language)}
               </p>
             </div>
           </>
@@ -248,7 +248,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
         {/* Tour badge */}
         <div className="flex items-center gap-1 text-blue-600 mb-2">
           <Compass className="w-3.5 h-3.5" />
-          <span className="text-xs font-bold uppercase tracking-wide">{isRTL ? 'סיור' : 'Tour'}</span>
+          <span className="text-xs font-bold uppercase tracking-wide">{tTutorial('ui.tour', language)}</span>
         </div>
 
         {arrowDirection !== 'none' && <div
@@ -297,7 +297,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
             {body && <p className="text-sm text-slate-600 leading-relaxed mb-3">{body}</p>}
             <div className="text-center mb-2">
               <p className="text-xs text-slate-500 italic">
-                {ctaText || (isRTL ? 'בחרו קבוצה ונמשיך' : 'Click on a group to continue')}
+                {ctaText || tTutorial('ui.clickGroupContinue', language)}
               </p>
             </div>
             {activeStep.type === 'explain' && nextStep && (
@@ -305,7 +305,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
                 onClick={handleNext}
                 className="w-full mt-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
               >
-                {isRTL ? 'הבא' : 'Next'}
+                {tTutorial('ui.next', language)}
               </button>
             )}
           </>

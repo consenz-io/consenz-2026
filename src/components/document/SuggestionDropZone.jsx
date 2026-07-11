@@ -11,7 +11,7 @@ import { useLanguage } from "@/components/LanguageContext";
  * - isAdmin: boolean
  */
 export default function SuggestionDropZone({ onDrop, getPosition, isAdmin }) {
-  const { isRTL } = useLanguage();
+  const { isRTL, language } = useLanguage();
   const [isOver, setIsOver] = useState(false);
 
   if (!isAdmin) return null;
@@ -38,7 +38,7 @@ export default function SuggestionDropZone({ onDrop, getPosition, isAdmin }) {
     >
       {isOver && (
         <span className="text-xs text-blue-500 font-medium">
-          {isRTL ? "שחרר כאן לשינוי מיקום" : "Drop here to reposition"}
+          {language === 'he' ? "שחרר כאן לשינוי מיקום" : language === 'ar' ? "أفلت هنا لإعادة التموضع" : "Drop here to reposition"}
         </span>
       )}
     </div>

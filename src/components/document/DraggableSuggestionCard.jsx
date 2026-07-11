@@ -23,7 +23,7 @@ export default function DraggableSuggestionCard({
   belowPos,
   ...cardProps
 }) {
-  const { isRTL } = useLanguage();
+  const { isRTL, language } = useLanguage();
   const [isDragOver, setIsDragOver] = useState(false);
   const [dragOverTop, setDragOverTop] = useState(false);
 
@@ -79,7 +79,7 @@ export default function DraggableSuggestionCard({
       {isAdmin && (
         <div
           className={`absolute top-1 ${isRTL ? "right-1" : "left-1"} z-20 p-1 bg-white/90 rounded border border-slate-300 cursor-move opacity-50 hover:opacity-100 transition-opacity`}
-          title={isRTL ? "גרור לשינוי מיקום" : "Drag to reposition"}
+          title={language === 'he' ? "גרור לשינוי מיקום" : language === 'ar' ? "اسحب لإعادة التموضع" : "Drag to reposition"}
         >
           <GripVertical className="w-3 h-3 text-slate-500" />
         </div>
