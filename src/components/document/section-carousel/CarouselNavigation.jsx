@@ -1,4 +1,6 @@
 import React from "react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 /**
@@ -48,16 +50,24 @@ const CarouselNavigation = React.memo(function CarouselNavigation({
             </p>
           ) : (
             <div className="flex flex-col items-center gap-0.5">
-              <button
-                onClick={() => onSelectView('current')}
-                className={`text-sm font-bold hover:underline cursor-pointer transition-colors ${
-                  isDeleteType ? 'text-red-700 hover:text-red-900' : 'text-blue-700 hover:text-blue-900'
-                }`}
-              >
+              <p className="text-sm font-bold text-slate-800">
                 {isDeleteType
                   ? ((language || 'he') === 'he' ? 'הצעה למחיקת הסעיף' : (language || 'he') === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion')
-                  : `${(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح תعديل بواסطة' : 'Edit suggestion by'} ${getUserName(currentView?.data?.created_by_id)}`}
-              </button>
+                  : <>
+                      {(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح תعديل بواסطة' : 'Edit suggestion by'}{' '}
+                      {currentView?.data?.created_by_id ? (
+                        <Link
+                          to={`${createPageUrl("Profile")}?userId=${currentView.data.created_by_id}`}
+                          className="text-blue-700 hover:text-blue-900 hover:underline transition-colors"
+                        >
+                          {getUserName(currentView.data.created_by_id)}
+                        </Link>
+                      ) : (
+                        <span>{getUserName(currentView?.data?.created_by_id)}</span>
+                      )}
+                    </>
+                }
+              </p>
               {currentView?.data?.created_date && (
                 <span className="text-[10px] text-slate-400">
                   {new Date(currentView.data.created_date).toLocaleDateString(
