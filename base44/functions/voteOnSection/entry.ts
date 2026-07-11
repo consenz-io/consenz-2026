@@ -101,10 +101,10 @@ Deno.serve(async (req) => {
       const conCount = freshVotes.filter(v => v.vote === 'con').length;
 
       // ── Inherited votes from ALL accepted suggestions linked to this section ──────
-      // Both the creation (new_section) suggestion and any accepted edit_section
-      // suggestions carried pro/con votes at acceptance time. These are summed as
-      // baselines so the deletion threshold reflects the full community sentiment
-      // (not just votes cast after the section became live).
+      // Inherit votes from the MOST RECENT accepted suggestion linked to this section.
+      // Each version of a section has its own vote count — votes from older versions
+      // (previous edits) do NOT accumulate. Only the suggestion that produced the
+      // current content contributes its pro/con baseline to the deletion threshold.
       let inheritedPro = 0;
       let inheritedCon = 0;
       try {
@@ -116,9 +116,15 @@ Deno.serve(async (req) => {
             sectionId, status: 'accepted', type: 'edit_section'
           })
         ]);
+        let latest = null;
         for (const s of [...creationSuggs, ...editSuggs]) {
-          inheritedPro += s.proVotes || 0;
-          inheritedCon += s.conVotes || 0;
+          if (!latest || new Date(s.updated_date) > new Date(latest.updated_date)) {
+            latest = s;
+          }
+        }
+        if (latest) {
+          inheritedPro = latest.proVotes || 0;
+          inheritedCon = latest.conVotes || 0;
         }
       } catch (e) {
         console.error('[VOTE ON SECTION source suggestion lookup error]', e);
