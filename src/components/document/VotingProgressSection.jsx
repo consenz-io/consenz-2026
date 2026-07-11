@@ -59,11 +59,14 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   // already part of the document, so display it as accepted rather than "did not reach threshold".
   const isExistingSection = !suggestion?.status;
 
-  // For existing sections, vote counts come from direct SectionVote records only
-  // (queried and passed by the parent). No inherited suggestion votes — inheriting
-  // caused double-counting when users voted both on the suggestion and the section.
-  const proVotes = isExistingSection ? 0 : suggestion.proVotes || 0;
-  const conVotes = isExistingSection ? 0 : suggestion.conVotes || 0;
+  // For an existing section whose content came from an accepted suggestion,
+  // use that suggestion's vote counts for the display.
+  const proVotes = isExistingSection ?
+  sourceSuggestion?.proVotes || 0 :
+  suggestion.proVotes || 0;
+  const conVotes = isExistingSection ?
+  sourceSuggestion?.conVotes || 0 :
+  suggestion.conVotes || 0;
   // For delete_section: swap display so "pro" = section supporters, "con" = section opponents
   const displayProVotes = isDeleteSection ? conVotes : proVotes;
   const displayConVotes = isDeleteSection ? proVotes : conVotes;
