@@ -101,12 +101,15 @@ Deno.serve(async (req) => {
       const conCount = freshVotes.filter(v => v.vote === 'con').length;
 
       // ── Inherited votes from ALL accepted suggestions linked to this section ──────
-      // Inherit votes from the MOST RECENT accepted suggestion linked to this section.
-      // Each version of a section has its own vote count — votes from older versions
-      // (previous edits) do NOT accumulate. Only the suggestion that produced the
-      // current content contributes its pro/con baseline to the deletion threshold.
-      let inheritedPro = 0;
-      let inheritedCon = 0;
+      // Deduplicated vote count: each user counted once.
+      // Users who voted on the suggestion that created this section have their vote
+      // inherited as a baseline. If that same user then votes directly on the section,
+      // their direct vote overrides the inherited one (not added to it). This prevents
+      // double-counting — e.g., 2 participants cannot produce 3 counted votes.
+      // Only the MOST RECENT accepted suggestion's votes are inherited (older versions
+      // don't accumulate).
+      let totalPro = proCount;
+      let totalCon = conCount;
       try {
         const [creationSuggs, editSuggs] = await Promise.all([
           base44.asServiceRole.entities.Suggestion.filter({
@@ -123,15 +126,26 @@ Deno.serve(async (req) => {
           }
         }
         if (latest) {
-          inheritedPro = latest.proVotes || 0;
-          inheritedCon = latest.conVotes || 0;
+          // Fetch individual Vote records for the latest suggestion — we need per-user
+          // data to deduplicate with direct SectionVotes.
+          const suggestionVotes = await base44.asServiceRole.entities.Vote.filter({
+            suggestionId: latest.id
+          });
+          // Build dedup map: userId → vote. Start with inherited suggestion votes,
+          // then override with direct SectionVotes (user's most recent stance wins).
+          const dedupMap = new Map();
+          for (const v of suggestionVotes) {
+            if (v.userId) dedupMap.set(v.userId, v.vote);
+          }
+          for (const v of freshVotes) {
+            if (v.userId) dedupMap.set(v.userId, v.vote);
+          }
+          totalPro = Array.from(dedupMap.values()).filter(v => v === 'pro').length;
+          totalCon = Array.from(dedupMap.values()).filter(v => v === 'con').length;
         }
       } catch (e) {
         console.error('[VOTE ON SECTION source suggestion lookup error]', e);
       }
-
-      const totalPro = proCount + inheritedPro;
-      const totalCon = conCount + inheritedCon;
 
       // ── Deletion check ──────────────────────────────────────────────
       // For existing/accepted sections, voting is for deletion:

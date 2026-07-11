@@ -64,22 +64,46 @@ export default function DocumentContent({
     [suggestions]
   );
 
+  // All suggestion votes for this document — used to build per-suggestion voter lists
+  // so SectionDeletionVoteBar can deduplicate users who voted on BOTH the suggestion
+  // (inherited) AND directly on the section (preventing double-counting).
+  const aggregatedForVotes = queryClient.getQueryData(['documentAggregatedData', document?.id]);
+  const allDocumentVotes = aggregatedForVotes?.votes || [];
+
   // Map each section to the inherited votes from the MOST RECENT accepted suggestion
   // linked to it. Each version of a section has its own vote count — votes from older
   // versions (previous edits) do NOT accumulate. The section's counters reflect only
   // the suggestion that produced the currently displayed content.
+  // Includes individual voter user IDs so SectionDeletionVoteBar can deduplicate:
+  // a user who voted on the suggestion AND then votes directly on the section should
+  // be counted once (their direct vote overrides the inherited one).
   const sourceSuggestionBySectionId = React.useMemo(() => {
+    // Group suggestion votes by suggestionId for O(1) lookup
+    const votesBySuggestionId = new Map();
+    for (const v of allDocumentVotes) {
+      if (!v.suggestionId) continue;
+      if (!votesBySuggestionId.has(v.suggestionId)) {
+        votesBySuggestionId.set(v.suggestionId, []);
+      }
+      votesBySuggestionId.get(v.suggestionId).push({ userId: v.userId, vote: v.vote });
+    }
+
     const map = new Map();
     for (const s of suggestions) {
       if (s.status === 'accepted' && (s.type === 'new_section' || s.type === 'edit_section') && s.sectionId) {
         const existing = map.get(s.sectionId);
         if (!existing || new Date(s.updated_date) > new Date(existing._updated_date)) {
-          map.set(s.sectionId, { proVotes: s.proVotes || 0, conVotes: s.conVotes || 0, _updated_date: s.updated_date });
+          map.set(s.sectionId, {
+            proVotes: s.proVotes || 0,
+            conVotes: s.conVotes || 0,
+            voters: votesBySuggestionId.get(s.id) || [],
+            _updated_date: s.updated_date,
+          });
         }
       }
     }
     return map;
-  }, [suggestions]);
+  }, [suggestions, allDocumentVotes]);
 
   // Read from cache — populated by useDocumentData's aggregated fetch (targeted, not global).
   // Avoids fetching 1000 profiles when only ~10-30 are relevant to this document.

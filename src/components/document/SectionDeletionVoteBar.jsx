@@ -34,14 +34,28 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
     placeholderData: initialVotes
   });
 
-  // Inherited vote baselines from the accepted new_section suggestion that created this section.
-  // These are "frozen" counts from the suggestion's acceptance — added to live SectionVote counts
-  // so the section's vote display and deletion progress reflect the full community sentiment.
-  const inheritedPro = sourceSuggestion?.proVotes || 0;
-  const inheritedCon = sourceSuggestion?.conVotes || 0;
+  // Deduplicated vote count: each user is counted exactly once.
+  // Users who voted on the suggestion that created this section have their vote inherited
+  // as a baseline. If that same user then votes directly on the section, their direct vote
+  // overrides the inherited one (not added to it). This prevents double-counting — e.g.,
+  // 2 participants cannot produce 3 displayed votes.
+  const dedupedVotes = React.useMemo(() => {
+    const voteMap = new Map();
+    // Start with inherited votes from the source suggestion (frozen at acceptance time)
+    if (sourceSuggestion?.voters) {
+      for (const v of sourceSuggestion.voters) {
+        if (v.userId) voteMap.set(v.userId, v.vote);
+      }
+    }
+    // Override with direct SectionVotes — user's most recent stance takes priority
+    for (const v of sectionVotes) {
+      if (v.userId) voteMap.set(v.userId, v.vote);
+    }
+    return voteMap;
+  }, [sourceSuggestion, sectionVotes]);
 
-  const proCount = sectionVotes.filter((v) => v.vote === "pro").length + inheritedPro;
-  const conCount = sectionVotes.filter((v) => v.vote === "con").length + inheritedCon;
+  const proCount = Array.from(dedupedVotes.values()).filter((v) => v === "pro").length;
+  const conCount = Array.from(dedupedVotes.values()).filter((v) => v === "con").length;
   const userVote = user?.id ? sectionVotes.find((v) => v.userId === user.id) : null;
 
   const threshold = Math.max(2, document?.threshold || 2);
@@ -53,9 +67,21 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
 
   const [hoverVote, setHoverVote] = useState(null);
 
-  // Simulate the effect of a pro/con vote on the deletion progress
-  const afterProDelta = delta - (userVote?.vote === 'con' ? 2 : 1);
-  const afterConDelta = delta + (userVote?.vote === 'pro' ? 2 : 1);
+  // User's effective vote in the dedup map: direct SectionVote overrides inherited suggestion vote.
+  // Needed for accurate hover-simulation of the progress bar.
+  const userInheritedVote = sourceSuggestion?.voters?.find((v) => v.userId === user?.id)?.vote || null;
+  const userEffectiveVote = userVote?.vote || userInheritedVote;
+
+  // Simulate the effect of a pro/con vote on the deletion progress.
+  // Clicking the same as your direct vote toggles it off (reverts to inherited or removed).
+  // The delta change depends on the user's effective vote (not just their direct vote),
+  // because inherited suggestion votes are part of the dedup count.
+  const afterProDelta = userVote?.vote === 'pro'
+    ? delta + (userInheritedVote === 'pro' ? 0 : userInheritedVote === 'con' ? 2 : 1)  // toggle off direct 'pro'
+    : delta - (userEffectiveVote === 'con' ? 2 : userEffectiveVote === 'pro' ? 0 : 1); // switch/create 'pro'
+  const afterConDelta = userVote?.vote === 'con'
+    ? delta - (userInheritedVote === 'con' ? 0 : userInheritedVote === 'pro' ? 2 : 1)  // toggle off direct 'con'
+    : delta + (userEffectiveVote === 'pro' ? 2 : userEffectiveVote === 'con' ? 0 : 1); // switch/create 'con'
   const afterProProgress = Math.min(100, Math.max(0, afterProDelta / threshold * 100));
   const afterConProgress = Math.min(100, Math.max(0, afterConDelta / threshold * 100));
 
