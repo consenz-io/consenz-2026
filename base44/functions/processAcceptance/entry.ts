@@ -404,9 +404,11 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Atomically mark accepted + set sectionId now that the section exists
+      // Atomically mark accepted + set sectionId now that the section exists.
+      // Keep type as 'new_section' — this identifies the suggestion as the section's
+      // creator, allowing the frontend and voteOnSection to inherit its pro/con votes
+      // as baselines for the section's vote display and deletion-progress calculation.
       await base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
-        type: 'edit_section',
         sectionId: newSection.id,
         status: 'accepted',
         originalContent: suggestion.newContent,
