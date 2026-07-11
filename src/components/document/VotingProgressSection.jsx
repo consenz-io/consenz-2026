@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ThumbsUp, ThumbsDown, Loader2, Clock, ShieldX, Timer, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { useLanguage } from "@/components/LanguageContext";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -201,10 +202,23 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             </span>
             <div className="flex items-center gap-2">
               {timeLabel && !effectiveReadOnly &&
-              <span className={`flex items-center gap-0.5 text-xs font-medium ${isUrgent ? 'text-orange-500' : 'text-slate-400'}`}>
-                  <Clock className="w-3 h-3 shrink-0" />
-                  {timeLabel}
-                </span>
+              <TooltipProvider delayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className={`flex items-center gap-0.5 text-xs font-medium cursor-help ${isUrgent ? 'text-orange-500' : 'text-slate-400'}`}>
+                      <Clock className="w-3 h-3 shrink-0" />
+                      {timeLabel}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[240px] text-xs text-center">
+                    {language === 'he' ?
+                      'טיימר הצבעה — הזמן שנותר לקהילה להצביע על ההצעה לפני סגירתה' :
+                      language === 'ar' ?
+                      'مؤقت التصويت — الوقت المتبقي للمجتمع للتصويت على الاقتراح قبل إغلاقه' :
+                      'Voting timer — time remaining for the community to vote before the proposal closes'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               }
               <span className={`text-xs font-bold ${passed ? isDeleteSection ? 'text-red-600' : 'text-green-600' : 'text-slate-500'}`}>
                 {passed ? '✓' : `${Math.max(0, delta)}/${threshold}`}
