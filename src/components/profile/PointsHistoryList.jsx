@@ -1,5 +1,4 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
@@ -11,13 +10,10 @@ const actionLabels = {
   vote_canceled: { he: 'הצבעה בוטלה', ar: 'تم إلغاء تصويت', en: 'Vote canceled' },
   suggestion_accepted: { he: 'הצעה התקבלה', ar: 'تم قبول مقترح', en: 'Suggestion accepted' },
   vote_influenced_acceptance: { he: 'הצבעה השפיעה על קבלה', ar: 'أثر التصويت على القبول', en: 'Vote influenced acceptance' },
-  comment_like_received: { he: 'קיבלת לייק על תגובה', ar: 'حصلت على إعجاب على تعليق', en: 'Comment like received' },
-  comment_like_removed: { he: 'בוטל לייק על תגובה', ar: 'تم إلغاء إعجاب على تعليق', en: 'Comment like removed' },
 };
 
 export default function PointsHistoryList({ transactions = [] }) {
   const { language } = useLanguage();
-  const navigate = useNavigate();
 
   if (transactions.length === 0) {
     return (
@@ -32,12 +28,10 @@ export default function PointsHistoryList({ transactions = [] }) {
       {transactions.map((tx) => {
         const isPositive = (tx.amount || 0) > 0;
         const label = actionLabels[tx.action]?.[language] || actionLabels[tx.action]?.en || tx.action;
-        const clickable = !!tx.actionUrl;
         return (
           <div
             key={tx.id}
-            onClick={clickable ? () => navigate(tx.actionUrl) : undefined}
-            className={`flex items-center justify-between gap-3 p-3 rounded-lg border bg-white hover:shadow-sm transition-all ${clickable ? 'cursor-pointer hover:border-blue-300' : ''}`}
+            className="flex items-center justify-between gap-3 p-3 rounded-lg border bg-white hover:shadow-sm transition-all"
           >
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className={`flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 ${
