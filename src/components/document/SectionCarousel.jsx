@@ -36,7 +36,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
   onClearNewlyCreated,
   targetSuggestionId,
   publicProfiles = [],
-  allDocumentSuggestions = [],
+  sectionSuggestions = [],
   sectionVotes = [],
   isGhost = false,
   onEditSuggestion,
@@ -48,33 +48,34 @@ const SectionCarousel = React.memo(function SectionCarousel({
   const queryClient = useQueryClient();
 
   // ── Memos: section suggestions derived from allDocumentSuggestions ──────────
+  // Filter from the pre-grouped subset (typically 0-5 items) instead of the full
+  // document suggestions array (potentially 100+). O(k) where k << n.
   const allSectionSuggestions = useMemo(() => {
-    if (!allDocumentSuggestions || allDocumentSuggestions.length === 0) return [];
-    const directSuggestions = allDocumentSuggestions.filter(s =>
-      s.sectionId === section.id &&
-      (s.type === 'edit_section' || s.type === 'delete_section')
+    if (!sectionSuggestions || sectionSuggestions.length === 0) return [];
+    const directSuggestions = sectionSuggestions.filter(s =>
+      s.type === 'edit_section' || s.type === 'delete_section'
     );
     const sectionSuggestionIds = new Set(directSuggestions.map(s => s.id));
-    const editSuggestions = allDocumentSuggestions.filter(s =>
+    const editSuggestions = sectionSuggestions.filter(s =>
       s.type === 'edit_suggestion' &&
       s.parentSuggestionId &&
       sectionSuggestionIds.has(s.parentSuggestionId)
     );
     return [...directSuggestions, ...editSuggestions];
-  }, [allDocumentSuggestions, section.id]);
+  }, [sectionSuggestions]);
 
   // Determines which entity the comments belong to (accepted suggestion vs section)
   const activeCommentEntity = useMemo(() => {
-    const acceptedEdits = allDocumentSuggestions
-      .filter(s => s.sectionId === section.id && s.status === 'accepted' && s.type === 'edit_section')
+    const acceptedEdits = sectionSuggestions
+      .filter(s => s.status === 'accepted' && s.type === 'edit_section')
       .sort((a, b) => new Date(b.updated_date || b.created_date) - new Date(a.updated_date || a.created_date));
     if (acceptedEdits.length > 0) return { entityType: 'suggestion', entityId: acceptedEdits[0].id };
-    const creationSuggestion = allDocumentSuggestions.find(
-      s => s.sectionId === section.id && s.status === 'accepted' && s.type === 'new_section'
+    const creationSuggestion = sectionSuggestions.find(
+      s => s.status === 'accepted' && s.type === 'new_section'
     );
     if (creationSuggestion) return { entityType: 'suggestion', entityId: creationSuggestion.id };
     return { entityType: 'section', entityId: section.id };
-  }, [allDocumentSuggestions, section.id]);
+  }, [sectionSuggestions]);
 
   // ── State ────────────────────────────────────────────────────────────────────
   const [currentSuggestionId, setCurrentSuggestionId] = useState(null);

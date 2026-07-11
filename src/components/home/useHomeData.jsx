@@ -23,13 +23,13 @@ export function useHomeData() {
 
   const { data: groupMembers = [], isLoading: membersLoading } = useQuery({
     queryKey: ['groupMembers'],
-    queryFn: () => base44.entities.GroupMember.list(),
+    queryFn: () => base44.entities.GroupMember.list('-created_date', 500),
     staleTime: 5 * 60 * 1000,
   });
 
   const { data: documents = [] } = useQuery({
     queryKey: ['publicDocuments'],
-    queryFn: () => base44.entities.Document.list('-created_date', 200),
+    queryFn: () => base44.entities.Document.list('-created_date', 50),
     staleTime: 5 * 60 * 1000,
   });
 

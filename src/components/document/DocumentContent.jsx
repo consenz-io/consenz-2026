@@ -67,8 +67,15 @@ export default function DocumentContent({
   // All suggestion votes for this document — used to build per-suggestion voter lists
   // so SectionDeletionVoteBar can deduplicate users who voted on BOTH the suggestion
   // (inherited) AND directly on the section (preventing double-counting).
-  const aggregatedForVotes = queryClient.getQueryData(['documentAggregatedData', document?.id]);
-  const allDocumentVotes = aggregatedForVotes?.votes || [];
+  // Reactive cache read — useQuery with enabled:false subscribes to cache updates,
+  // so this re-renders when aggregatedData is invalidated/updated. getQueryData was
+  // non-reactive and could return stale data until an unrelated re-render occurred.
+  const { data: aggregatedData } = useQuery({
+    queryKey: ['documentAggregatedData', document?.id],
+    enabled: false,
+    staleTime: Infinity,
+  });
+  const allDocumentVotes = aggregatedData?.votes || [];
 
   // Map each section to the inherited votes from the MOST RECENT accepted suggestion
   // linked to it. Each version of a section has its own vote count — votes from older
@@ -210,10 +217,8 @@ export default function DocumentContent({
     checkTopicSuggestions();
   }, [topicEditSuggestions, document, user, queryClient]);
 
-  // Comment counts — re-use the aggregated data already fetched by useDocumentData.
-  // Read directly from the query cache (no queryFn needed, no re-fetch triggered).
-  const aggregatedForComments = queryClient.getQueryData(['documentAggregatedData', document?.id]);
-  const allDocumentComments = aggregatedForComments?.comments || [];
+  // Comment counts — reuse the same reactive aggregatedData query (defined above).
+  const allDocumentComments = aggregatedData?.comments || [];
 
   // Pre-group comments by "type:id" key for O(1) count lookup
   const commentsCountMap = React.useMemo(() => {
@@ -391,6 +396,30 @@ Return ONLY the translated text:`;
       }
     }
     return map;
+  }, [suggestions]);
+
+  // Pre-group ALL suggestions by sectionId (including edit_suggestion children)
+  // — passed to SectionCarousel so it doesn't re-filter the full document array per section.
+  // Was O(sections × suggestions) per render; now O(suggestions) once + O(1) per section.
+  const allSuggestionsBySectionId = React.useMemo(() => {
+    const suggestionById = new Map(suggestions.map(s => [s.id, s]));
+    const bySection = new Map();
+    for (const s of suggestions) {
+      if (s.sectionId) {
+        if (!bySection.has(s.sectionId)) bySection.set(s.sectionId, []);
+        bySection.get(s.sectionId).push(s);
+      }
+    }
+    // Add edit_suggestion children that don't have their own sectionId but whose parent does
+    for (const s of suggestions) {
+      if (s.type === 'edit_suggestion' && !s.sectionId && s.parentSuggestionId) {
+        const parent = suggestionById.get(s.parentSuggestionId);
+        if (parent?.sectionId && bySection.has(parent.sectionId)) {
+          bySection.get(parent.sectionId).push(s);
+        }
+      }
+    }
+    return bySection;
   }, [suggestions]);
 
   const getSuggestionsForSection = React.useCallback(
@@ -1039,7 +1068,7 @@ Return ONLY the translated text:`;
                               onClearNewlyCreated={onClearNewlyCreated}
                               targetSuggestionId={targetSuggestionId}
                               publicProfiles={publicProfiles}
-                              allDocumentSuggestions={suggestions}
+                              sectionSuggestions={allSuggestionsBySectionId.get(section.id) || []}
                               sectionVotes={sectionVotesBySectionId.get(section.id) || []}
                               sourceSuggestion={sourceSuggestionBySectionId.get(section.id)}
                               />

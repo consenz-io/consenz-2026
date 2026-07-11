@@ -78,7 +78,7 @@ export default function SuggestionDetail() {
     queryFn: () => base44.entities.Suggestion.filter({ documentId: suggestion.documentId }),
     enabled: !!suggestion?.documentId,
     initialData: [],
-    staleTime: Infinity
+    staleTime: 5 * 60 * 1000
   });
 
   const { data: document } = useQuery({
@@ -90,7 +90,7 @@ export default function SuggestionDetail() {
       return await base44.entities.Document.get(suggestion.documentId);
     },
     enabled: !!suggestion?.documentId,
-    staleTime: Infinity
+    staleTime: 5 * 60 * 1000
   });
 
   const { data: section } = useQuery({
@@ -100,7 +100,7 @@ export default function SuggestionDetail() {
       return sections?.[0] ?? null;
     },
     enabled: !!suggestion?.sectionId,
-    staleTime: Infinity
+    staleTime: 5 * 60 * 1000
   });
 
   const { data: topic } = useQuery({

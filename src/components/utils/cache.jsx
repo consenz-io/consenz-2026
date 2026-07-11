@@ -55,7 +55,11 @@ class CacheManager {
 
 const globalCache = new CacheManager();
 
-setInterval(() => globalCache.cleanup(), 2 * 60 * 1000);
+// Self-cleaning interval — cleared on page hide to prevent memory leaks in long sessions
+const cleanupInterval = setInterval(() => globalCache.cleanup(), 2 * 60 * 1000);
+if (typeof window !== 'undefined') {
+  window.addEventListener('pagehide', () => clearInterval(cleanupInterval));
+}
 
 export const userProfileCache = {
   get(userId) {
