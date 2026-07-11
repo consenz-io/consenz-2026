@@ -64,6 +64,19 @@ export default function DocumentContent({
     [suggestions]
   );
 
+  // Map each section to the accepted new_section suggestion that created it.
+  // The suggestion's proVotes/conVotes are inherited as baselines for the section's
+  // vote counters and deletion-progress calculation.
+  const sourceSuggestionBySectionId = React.useMemo(() => {
+    const map = new Map();
+    for (const s of suggestions) {
+      if (s.status === 'accepted' && s.type === 'new_section' && s.sectionId) {
+        map.set(s.sectionId, s);
+      }
+    }
+    return map;
+  }, [suggestions]);
+
   // Read from cache — populated by useDocumentData's aggregated fetch (targeted, not global).
   // Avoids fetching 1000 profiles when only ~10-30 are relevant to this document.
   const { data: publicProfiles = [] } = useQuery({
@@ -1000,6 +1013,7 @@ Return ONLY the translated text:`;
                               publicProfiles={publicProfiles}
                               allDocumentSuggestions={suggestions}
                               sectionVotes={sectionVotesBySectionId.get(section.id) || []}
+                              sourceSuggestion={sourceSuggestionBySectionId.get(section.id)}
                               />
                                      </LazySection>
                               </div>

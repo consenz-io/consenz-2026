@@ -26,6 +26,7 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
   getCommentsCount,
   toggleComments,
   showComments,
+  sourceSuggestion,
 }) {
   const commentsKey = `section-${section.id}`;
   const commentCount = typeof getCommentsCount === 'function' ? getCommentsCount(activeCommentEntity.entityType, activeCommentEntity.entityId) : 0;
@@ -60,6 +61,7 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
             onSuggestEdit={onEditSection}
             onSuggestEditThenVote={onEditSectionThenVote}
             readOnly={!user}
+            sourceSuggestion={sourceSuggestion}
           />
         </div>
       )}

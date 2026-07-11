@@ -22,7 +22,7 @@ import {
  * "pro" = keep the section, "con" = delete it.
  * When (con - pro) >= document threshold, the section is deleted (handled in voteOnSection).
  */
-export default function SectionDeletionVoteBar({ section, document, user, isRTL, initialVotes = [], canParticipate = true, onCannotParticipate, onSuggestEdit, onSuggestEditThenVote, readOnly = false }) {
+export default function SectionDeletionVoteBar({ section, document, user, isRTL, initialVotes = [], canParticipate = true, onCannotParticipate, onSuggestEdit, onSuggestEditThenVote, readOnly = false, sourceSuggestion }) {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [showConDialog, setShowConDialog] = useState(false);
@@ -34,8 +34,14 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
     placeholderData: initialVotes
   });
 
-  const proCount = sectionVotes.filter((v) => v.vote === "pro").length;
-  const conCount = sectionVotes.filter((v) => v.vote === "con").length;
+  // Inherited vote baselines from the accepted new_section suggestion that created this section.
+  // These are "frozen" counts from the suggestion's acceptance — added to live SectionVote counts
+  // so the section's vote display and deletion progress reflect the full community sentiment.
+  const inheritedPro = sourceSuggestion?.proVotes || 0;
+  const inheritedCon = sourceSuggestion?.conVotes || 0;
+
+  const proCount = sectionVotes.filter((v) => v.vote === "pro").length + inheritedPro;
+  const conCount = sectionVotes.filter((v) => v.vote === "con").length + inheritedCon;
   const userVote = user?.id ? sectionVotes.find((v) => v.userId === user.id) : null;
 
   const threshold = Math.max(2, document?.threshold || 2);

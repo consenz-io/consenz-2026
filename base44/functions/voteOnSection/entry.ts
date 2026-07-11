@@ -100,17 +100,39 @@ Deno.serve(async (req) => {
       const proCount = freshVotes.filter(v => v.vote === 'pro').length;
       const conCount = freshVotes.filter(v => v.vote === 'con').length;
 
+      // ── Inherited votes from the accepted new_section suggestion ──────
+      // The suggestion that created this section carried pro/con votes at acceptance time.
+      // Those are added as baselines so the deletion threshold reflects the full community
+      // sentiment (not just votes cast after the section became live).
+      let inheritedPro = 0;
+      let inheritedCon = 0;
+      try {
+        const sourceSuggestions = await base44.asServiceRole.entities.Suggestion.filter({
+          sectionId, status: 'accepted', type: 'new_section'
+        });
+        if (sourceSuggestions.length > 0) {
+          inheritedPro = sourceSuggestions[0].proVotes || 0;
+          inheritedCon = sourceSuggestions[0].conVotes || 0;
+        }
+      } catch (e) {
+        console.error('[VOTE ON SECTION source suggestion lookup error]', e);
+      }
+
+      const totalPro = proCount + inheritedPro;
+      const totalCon = conCount + inheritedCon;
+
       // ── Deletion check ──────────────────────────────────────────────
       // For existing/accepted sections, voting is for deletion:
       // if opponents (con) minus supporters (pro) reaches the document's
       // support threshold, the section is automatically deleted.
+      // Uses combined counts (inherited suggestion votes + live section votes).
       let sectionDeleted = false;
       const section = await base44.asServiceRole.entities.Section.get(sectionId).catch(() => null);
       if (section) {
         const document = await base44.asServiceRole.entities.Document.get(section.documentId).catch(() => null);
         const threshold = Math.max(2, document?.threshold || 2);
 
-        if (conCount - proCount >= threshold) {
+        if (totalCon - totalPro >= threshold) {
           // Log a version history entry before deleting (for reconstruction)
           try {
             const lastVersion = await base44.asServiceRole.entities.DocumentVersion.filter({ sectionId }, '-version', 1);
@@ -192,12 +214,12 @@ Deno.serve(async (req) => {
               // For a delete_section suggestion: "pro" = support deletion (SectionVote "con"),
               // "con" = oppose deletion / keep section (SectionVote "pro").
               // This mapping makes VotingProgressSection display correctly (delta >= threshold → passed).
-              proVotes: conCount,
-              conVotes: proCount,
+              proVotes: totalCon,
+              conVotes: totalPro,
               timerEndsAt: null,
               originalLanguage: section.originalLanguage || 'he',
               translations: {},
-              participantsAtAcceptance: (conCount + proCount),
+              participantsAtAcceptance: (totalCon + totalPro),
             });
             deleteSuggestionId = deleteSuggestion?.id || null;
           } catch (e) {

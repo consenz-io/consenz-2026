@@ -40,6 +40,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
   isGhost = false,
   onEditSuggestion,
   onEditSectionThenVote,
+  sourceSuggestion,
 }) {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
@@ -387,6 +388,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
             getCommentsCount={getCommentsCount}
             toggleComments={toggleComments}
             showComments={showComments}
+            sourceSuggestion={sourceSuggestion}
           />
         ) : (
           <SuggestionView
