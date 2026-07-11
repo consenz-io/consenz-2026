@@ -260,9 +260,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
               <p className="text-sm font-bold text-slate-800 break-words">
                 {(() => {
                   const author = getUserName(currentVersion.created_by_id);
-                  const isEdit = currentView.type === 'version' ||
-                    currentVersion.type === 'edit_section' ||
-                    currentVersion.type === 'edit_suggestion';
+                  const isEdit = suggestion.type === 'edit_section';
                   const label = isEdit
                     ? (language === 'he' ? 'הצעת עריכה מאת' : language === 'ar' ? 'اقتراح تعديل بواسطة' : 'Edit suggestion by')
                     : (language === 'he' ? 'הצעה לסעיף חדש מאת' : language === 'ar' ? 'اقتراح قسم جديد بواسطة' : 'New section suggestion by');
