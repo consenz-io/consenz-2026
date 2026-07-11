@@ -138,9 +138,10 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
       if (onCannotParticipate) onCannotParticipate();
       return;
     }
-    // "con" on an existing/accepted section: if already voted con, toggle off directly;
-    // otherwise show a dialog inviting the user to suggest an improvement (legacy behavior).
-    if (voteType === 'con' && userVote?.vote !== 'con') {
+    // "con" on an existing/accepted section: if already effectively voted con
+    // (direct SectionVote OR inherited suggestion vote), toggle/confirm directly;
+    // otherwise show a dialog inviting the user to suggest an improvement.
+    if (voteType === 'con' && userEffectiveVote !== 'con') {
       setShowConDialog(true);
       return;
     }
@@ -169,10 +170,10 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
 
   const statusText = passed ?
   isHe ? '✓ הסעיף יימחק' : isAr ? '✓ سيُحذف القسم' : '✓ Section will be deleted' :
-  hoverVote === 'con' && userVote?.vote === 'con' ?
-  isHe ? 'הצבעת למחוק • לחץ/י שוב לביטול' : isAr ? 'صوتت للحذف • اضغط مجدداً للإلغاء' : 'You voted to delete • click again to cancel' :
-  hoverVote === 'pro' && userVote?.vote === 'pro' ?
-  isHe ? 'הצבעת בעד • לחץ/י שוב לביטול' : isAr ? 'صوتت مع • اضغط مجدداً للإلغاء' : 'You voted in favor • click again to cancel' :
+  hoverVote === 'con' && userEffectiveVote === 'con' ?
+  isHe ? `הצבעת נגד${userVote?.vote === 'con' ? ' • לחץ/י שוב לביטול' : ''}` : isAr ? `صوتت ضد${userVote?.vote === 'con' ? ' • اضغط مجدداً للإلغاء' : ''}` : `You voted against${userVote?.vote === 'con' ? ' • click again to cancel' : ''}` :
+  hoverVote === 'pro' && userEffectiveVote === 'pro' ?
+  isHe ? `הצבעת בעד${userVote?.vote === 'pro' ? ' • לחץ/י שוב לביטול' : ''}` : isAr ? `صوتت مع${userVote?.vote === 'pro' ? ' • اضغط مجدداً للإلغاء' : ''}` : `You voted in favor${userVote?.vote === 'pro' ? ' • click again to cancel' : ''}` :
   hoverVote === 'con' ?
   isHe ? 'הצבעתך תקרב את מחיקת הסעיף' : isAr ? 'سيقرب صوتك حذف القسم' : 'Your vote will help delete this section' :
   hoverVote === 'pro' ?
@@ -228,13 +229,13 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
         }
         <div className="flex gap-2 w-full min-w-0">
           <Button
-            variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
+            variant={userEffectiveVote === 'pro' ? 'default' : 'outline'}
             onClick={() => handleVote('pro')}
             disabled={voteMutation.isPending || readOnly}
             onMouseEnter={() => setHoverVote('pro')}
             onMouseLeave={() => setHoverVote(null)}
             className={`flex-1 min-w-0 h-10 md:h-12 text-sm md:text-base font-semibold rounded-xl transition-all duration-200 px-2 md:px-4 ${
-            userVote?.vote === 'pro' ?
+            userEffectiveVote === 'pro' ?
             'bg-green-600 hover:bg-green-700 text-white shadow-md shadow-green-200' :
             'border-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-400'}`
             }>
@@ -244,13 +245,13 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
             {proCount > 0 && <span className="text-xs md:text-sm opacity-80 shrink-0">({proCount})</span>}
           </Button>
           <Button
-            variant={userVote?.vote === 'con' ? 'default' : 'outline'}
+            variant={userEffectiveVote === 'con' ? 'default' : 'outline'}
             onClick={() => handleVote('con')}
             disabled={voteMutation.isPending || readOnly}
             onMouseEnter={() => setHoverVote('con')}
             onMouseLeave={() => setHoverVote(null)}
             className={`flex-1 min-w-0 h-10 md:h-12 text-sm md:text-base font-semibold rounded-xl transition-all duration-200 px-2 md:px-4 ${
-            userVote?.vote === 'con' ?
+            userEffectiveVote === 'con' ?
             'bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-200' :
             'border-2 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-400'}`
             }>
