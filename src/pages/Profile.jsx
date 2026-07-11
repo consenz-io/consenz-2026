@@ -117,7 +117,7 @@ export default function Profile() {
   const updateProfileMutation = useMutation({
     mutationFn: async (data) => {
       if (!data.full_name || data.full_name.trim().length < 2) {
-        throw new Error("Display name must be at least 2 characters");
+        throw new Error(t('displayNameMinLength'));
       }
 
       // Update main user profile
@@ -167,12 +167,12 @@ export default function Profile() {
       await queryClient.invalidateQueries({ queryKey: ['viewUserProfile'] });
       await queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
 
-      setSuccess("Profile updated successfully!");
+      setSuccess(t('profileUpdatedSuccess'));
       setIsEditing(false);
       setTimeout(() => setSuccess(null), 3000);
     },
     onError: (err) => {
-      setError(err.message || "Failed to update profile");
+      setError(err.message || t('profileUpdateFailed'));
       setTimeout(() => setError(null), 5000);
     }
   });
@@ -244,7 +244,7 @@ export default function Profile() {
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-2 md:gap-3">
               <div className="min-w-0">
                 <CardTitle className="break-words">{t('personalInformation')}</CardTitle>
-                <CardDescription className="break-words">{isOwnProfile ? 'Your account details' : `${user.full_name}'s profile`}</CardDescription>
+                <CardDescription className="break-words">{isOwnProfile ? t('yourAccountDetails') : t('userProfile', { name: user.full_name })}</CardDescription>
               </div>
               {!isEditing && isOwnProfile ?
               <Button onClick={() => setIsEditing(true)} variant="outline" size="sm" className="shrink-0">
@@ -287,7 +287,7 @@ export default function Profile() {
                       id="full_name"
                       value={formData.full_name}
                       onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                      placeholder="Enter your display name"
+                      placeholder={t('enterDisplayName')}
                       className="mt-1" /> :
 
 
@@ -302,7 +302,7 @@ export default function Profile() {
                         {t('email')}
                       </Label>
                       <p className="text-slate-700 mt-1 break-all text-sm md:text-base">{user.email}</p>
-                      <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
+                      <p className="text-xs text-slate-500 mt-1">{t('emailCannotBeChanged')}</p>
                     </div>
                   }
 
@@ -547,10 +547,7 @@ export default function Profile() {
                 <CheckCircle className="w-6 h-6 text-green-600" />
                 <div>
                   <p className="text-sm text-slate-500">
-                    {isOwnProfile ?
-                    language === 'he' ? 'הצעות שהתקבלו' : language === 'ar' ? 'مقترحات مقبولة' : 'Accepted suggestions' :
-                    language === 'he' ? `הצעות שהתקבלו של ${user.full_name}` : `${user.full_name}'s accepted suggestions`
-                    }
+                    {isOwnProfile ? t('acceptedSuggestions') : t('acceptedSuggestionsOf', { name: user.full_name })}
                   </p>
                   <p className="text-xl font-bold text-slate-900">{acceptedSuggestions.length}</p>
                 </div>

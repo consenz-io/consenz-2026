@@ -284,7 +284,7 @@ export default function SuggestionDetail() {
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
       queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
       if (data?.accepted === true) {
-        toast.success(isRTL ? 'ההצעה התקבלה! ✓' : 'Suggestion accepted! ✓', { duration: 4000 });
+        toast.success(t('suggestionAcceptedToast'), { duration: 4000 });
         setTimeout(() => {
           queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
           queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
@@ -531,7 +531,7 @@ export default function SuggestionDetail() {
           <AlertCircle className="w-16 h-16 mx-auto mb-4 text-slate-400" />
           <h1 className="text-2xl font-bold text-slate-900 mb-2">{t('suggestionNotFound')}</h1>
           <p className="text-slate-600 mb-6">
-            {isRTL ? 'ההצעה אולי נמחקה או שאין לך הרשאה לצפות בה' : "The suggestion may have been deleted or you don't have permission to view it"}
+            {t('suggestionDeletedOrNoPermission')}
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <Button variant="outline" onClick={() => navigate(createPageUrl("MyDocuments"))}>
@@ -584,7 +584,7 @@ export default function SuggestionDetail() {
                 <Badge variant="outline" className={`text-xs ${suggestion.type === 'delete_section' ? 'bg-red-100 text-red-800 border-red-200' : ''}`}>
                   {suggestion.type === 'new_section' ? t('newSection')
                     : suggestion.type === 'delete_section' ? (language === 'he' ? 'מחיקת סעיף' : language === 'ar' ? 'حذف قسم' : 'Delete Section')
-                    : suggestion.type === 'edit_suggestion' ? (isRTL ? 'הצעה לעריכת הצעה' : 'Edit Suggestion')
+                    : suggestion.type === 'edit_suggestion' ? t('editSuggestionType')
                     : t('suggestionToEditSection')}
                 </Badge>
 
@@ -659,7 +659,7 @@ export default function SuggestionDetail() {
                     <h3 className="text-sm font-semibold text-red-700">{language === 'he' ? 'סעיף שמוצע למחיקה' : language === 'ar' ? 'القسم المقترح حذفه' : 'Section to be deleted'}</h3>
                     
                     <Button variant="outline" size="sm" onClick={() => { navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#suggestion-${suggestionId}`); setTimeout(() => { window.document?.getElementById(`suggestion-${suggestionId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300); }} className="h-7 px-2 text-xs">
-                      <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />{isRTL ? 'חזרה למסמך' : 'Back to Document'}
+                      <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />{t('backToDocument')}
                     </Button>
                   </div>
                   <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -671,11 +671,11 @@ export default function SuggestionDetail() {
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</h3>
                     <Button variant="outline" size="sm" onClick={() => { navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`); setTimeout(() => { window.document?.getElementById(`section-${suggestion.sectionId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300); }} className="h-7 px-2 text-xs">
-                      <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />{isRTL ? 'חזרה למסמך' : 'Back to Document'}
+                      <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />{t('backToDocument')}
                     </Button>
                   </div>
                   <div className="relative">
-                    {isAutoAccepting && <div className="absolute inset-0 bg-white/50 rounded-lg flex flex-col items-center justify-center z-10 gap-3"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /><p className="text-sm font-medium text-slate-700">{isRTL ? 'מעבד הצעה...' : 'Processing suggestion...'}</p></div>}
+                    {isAutoAccepting && <div className="absolute inset-0 bg-white/50 rounded-lg flex flex-col items-center justify-center z-10 gap-3"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /><p className="text-sm font-medium text-slate-700">{t('processingSuggestion')}</p></div>}
                     <SectionDiff originalContent={suggestion.originalContent} newContent={suggestion.newContent} suggestion={suggestion} documentId={suggestion.documentId} sectionId={suggestion.sectionId} section={section} />
                   </div>
                   {(suggestion.explanation || (user && user.id === suggestion.created_by_id)) && (
@@ -712,7 +712,7 @@ export default function SuggestionDetail() {
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-sm font-semibold text-slate-700">{t('proposedContent')}</h3>
                     <Button variant="outline" size="sm" onClick={() => { navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#suggestion-${suggestionId}`); setTimeout(() => { window.document?.getElementById(`suggestion-${suggestionId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300); }} className="h-7 px-2 text-xs">
-                      <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />{isRTL ? 'חזרה למסמך' : 'Back to Document'}
+                      <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />{t('backToDocument')}
                     </Button>
                   </div>
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
@@ -824,7 +824,7 @@ export default function SuggestionDetail() {
         {suggestionChain && suggestionChain.length > 1 &&
           <Card className="bg-white border-slate-200 w-full overflow-hidden">
             <CardHeader className="p-4 md:p-6">
-              <CardTitle className="text-base md:text-lg">{isRTL ? 'היסטוריית עריכה של ההצעה' : 'Suggestion Edit History'}</CardTitle>
+              <CardTitle className="text-base md:text-lg">{t('suggestionEditHistory')}</CardTitle>
             </CardHeader>
             <CardContent className="p-3 md:p-6 flex justify-between items-center">
               <Button
@@ -835,9 +835,9 @@ export default function SuggestionDetail() {
                 }}
                 disabled={currentSuggestionIndexInChain <= 0}
               >
-                <ChevronLeft className="w-4 h-4" />{isRTL ? 'גרסה קודמת' : 'Previous Version'}
+                <ChevronLeft className="w-4 h-4" />{t('previousVersion')}
               </Button>
-              <span className="text-sm text-slate-600">{isRTL ? 'גרסה' : 'Version'} {currentSuggestionIndexInChain + 1} / {suggestionChain.length}</span>
+              <span className="text-sm text-slate-600">{t('versionLabel')} {currentSuggestionIndexInChain + 1} / {suggestionChain.length}</span>
               <Button
                 variant="outline"
                 onClick={() => {
@@ -846,7 +846,7 @@ export default function SuggestionDetail() {
                 }}
                 disabled={currentSuggestionIndexInChain >= suggestionChain.length - 1}
               >
-                {isRTL ? 'גרסה הבאה' : 'Next Version'}<ChevronRight className="w-4 h-4" />
+                {t('nextVersion')}<ChevronRight className="w-4 h-4" />
               </Button>
             </CardContent>
           </Card>
