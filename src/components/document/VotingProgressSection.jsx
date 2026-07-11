@@ -212,10 +212,10 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="max-w-[240px] text-xs text-center">
                     {language === 'he' ?
-                      'טיימר הצבעה — הזמן שנותר לקהילה להצביע על ההצעה לפני סגירתה' :
+                      'אם התמיכה בהצעה לא תגיע למספר התומכים הדרוש עד לפקיעת התוקף, ההצעה תידחה אוטומטית' :
                       language === 'ar' ?
-                      'مؤقت التصويت — الوقت المتبقي للمجتمع للتصويت على الاقتراح قبل إغلاقه' :
-                      'Voting timer — time remaining for the community to vote before the proposal closes'}
+                      'إذا لم تصل الدعومة للاقتراح إلى عدد المؤيدين المطلوب قبل انتهاء الوقت، سيُرفض تلقائياً' :
+                      'If the proposal doesn\'t reach the required supporters before the timer expires, it will be automatically rejected'}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
