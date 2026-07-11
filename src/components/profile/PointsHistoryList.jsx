@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Loader2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { formatLocalDate } from "@/components/utils/dateFormatter";
+import { resolveCommentUrl } from "@/components/profile/resolveCommentUrl";
 
 const actionLabels = {
   suggestion_created: { he: 'הצעה נוצרה', ar: 'تم إنشاء مقترح', en: 'Suggestion created' },
@@ -18,6 +19,25 @@ const actionLabels = {
 export default function PointsHistoryList({ transactions = [] }) {
   const { language } = useLanguage();
   const navigate = useNavigate();
+  const [resolvingId, setResolvingId] = useState(null);
+
+  const handleClick = async (tx) => {
+    // Fast path — pre-computed URL from the backend
+    if (tx.actionUrl) {
+      navigate(tx.actionUrl);
+      return;
+    }
+    // Fallback — legacy transaction without actionUrl; resolve the comment URL
+    if (tx.relatedEntityType === 'comment' && tx.relatedEntityId) {
+      setResolvingId(tx.id);
+      try {
+        const url = await resolveCommentUrl(tx.relatedEntityId);
+        if (url) navigate(url);
+      } finally {
+        setResolvingId(null);
+      }
+    }
+  };
 
   if (transactions.length === 0) {
     return (
@@ -32,18 +52,24 @@ export default function PointsHistoryList({ transactions = [] }) {
       {transactions.map((tx) => {
         const isPositive = (tx.amount || 0) > 0;
         const label = actionLabels[tx.action]?.[language] || actionLabels[tx.action]?.en || tx.action;
-        const isClickable = !!tx.actionUrl;
+        const isCommentLike = tx.action === 'comment_like_received' || tx.action === 'comment_like_removed';
+        const isClickable = isCommentLike && (tx.actionUrl || (tx.relatedEntityType === 'comment' && tx.relatedEntityId));
+        const isResolving = resolvingId === tx.id;
         return (
           <div
             key={tx.id}
-            onClick={() => isClickable && navigate(tx.actionUrl)}
-            className={`flex items-center justify-between gap-3 p-3 rounded-lg border bg-white hover:shadow-sm transition-all ${isClickable ? 'cursor-pointer hover:border-blue-300' : ''}`}
+            onClick={() => isClickable && !isResolving && handleClick(tx)}
+            className={`flex items-center justify-between gap-3 p-3 rounded-lg border bg-white transition-all ${
+              isClickable ? 'cursor-pointer hover:shadow-sm hover:border-blue-300' : ''
+            }`}
           >
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className={`flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 ${
                 isPositive ? 'bg-green-100' : 'bg-red-100'
               }`}>
-                {isPositive
+                {isResolving
+                  ? <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
+                  : isPositive
                   ? <TrendingUp className="w-4 h-4 text-green-600" />
                   : <TrendingDown className="w-4 h-4 text-red-600" />}
               </div>
