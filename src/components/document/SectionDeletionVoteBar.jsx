@@ -34,14 +34,12 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
     placeholderData: initialVotes
   });
 
-  // Inherited vote baselines from the accepted new_section suggestion that created this section.
-  // These are "frozen" counts from the suggestion's acceptance — added to live SectionVote counts
-  // so the section's vote display and deletion progress reflect the full community sentiment.
-  const inheritedPro = sourceSuggestion?.proVotes || 0;
-  const inheritedCon = sourceSuggestion?.conVotes || 0;
-
-  const proCount = sectionVotes.filter((v) => v.vote === "pro").length + inheritedPro;
-  const conCount = sectionVotes.filter((v) => v.vote === "con").length + inheritedCon;
+  // Only direct SectionVote records — no inherited suggestion votes.
+  // Inheriting suggestion votes caused double-counting: a user who voted on the
+  // suggestion (inherited) and then voted directly on the section was counted twice.
+  // The suggestion's own votes are displayed on the suggestion's VotingProgressSection.
+  const proCount = sectionVotes.filter((v) => v.vote === "pro").length;
+  const conCount = sectionVotes.filter((v) => v.vote === "con").length;
   const userVote = user?.id ? sectionVotes.find((v) => v.userId === user.id) : null;
 
   const threshold = Math.max(2, document?.threshold || 2);

@@ -101,37 +101,12 @@ Deno.serve(async (req) => {
       const conCount = freshVotes.filter(v => v.vote === 'con').length;
 
       // ── Inherited votes from ALL accepted suggestions linked to this section ──────
-      // Inherit votes from the MOST RECENT accepted suggestion linked to this section.
-      // Each version of a section has its own vote count — votes from older versions
-      // (previous edits) do NOT accumulate. Only the suggestion that produced the
-      // current content contributes its pro/con baseline to the deletion threshold.
-      let inheritedPro = 0;
-      let inheritedCon = 0;
-      try {
-        const [creationSuggs, editSuggs] = await Promise.all([
-          base44.asServiceRole.entities.Suggestion.filter({
-            sectionId, status: 'accepted', type: 'new_section'
-          }),
-          base44.asServiceRole.entities.Suggestion.filter({
-            sectionId, status: 'accepted', type: 'edit_section'
-          })
-        ]);
-        let latest = null;
-        for (const s of [...creationSuggs, ...editSuggs]) {
-          if (!latest || new Date(s.updated_date) > new Date(latest.updated_date)) {
-            latest = s;
-          }
-        }
-        if (latest) {
-          inheritedPro = latest.proVotes || 0;
-          inheritedCon = latest.conVotes || 0;
-        }
-      } catch (e) {
-        console.error('[VOTE ON SECTION source suggestion lookup error]', e);
-      }
-
-      const totalPro = proCount + inheritedPro;
-      const totalCon = conCount + inheritedCon;
+      // No inherited suggestion votes — only direct SectionVote records count.
+      // Inheriting suggestion votes caused double-counting (users who voted on the
+      // suggestion AND directly on the section were counted twice in the deletion
+      // threshold, making it appear there were more voters than actual participants).
+      const totalPro = proCount;
+      const totalCon = conCount;
 
       // ── Deletion check ──────────────────────────────────────────────
       // For existing/accepted sections, voting is for deletion:
