@@ -43,11 +43,11 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
     enabled: !!groupId,
   });
 
-  const { data: joinRequests = [] } = useQuery({
+  const { data: joinRequests = [], isLoading: joinRequestsLoading } = useQuery({
     queryKey: ['joinRequests', groupId],
     queryFn: () => base44.entities.GroupJoinRequest.filter({ groupId, status: 'pending' }),
     enabled: !!groupId && isOpen,
-    initialData: [],
+    staleTime: 0,
   });
 
   const { data: publicProfiles = [] } = useQuery({
@@ -481,11 +481,19 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
           </div>
         </div>
 
-        {joinRequests.length > 0 && (
-          <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <h3 className="font-semibold text-sm text-blue-900">
               {language === 'he' ? 'בקשות הצטרפות ממתינות' : language === 'ar' ? 'طلبات الانضمام المعلّقة' : 'Pending Join Requests'}
             </h3>
+            {joinRequestsLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="w-5 h-5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
+              </div>
+            ) : joinRequests.length === 0 ? (
+              <p className="text-sm text-slate-500 text-center py-2">
+                {language === 'he' ? 'אין בקשות הצטרפות ממתינות' : language === 'ar' ? 'لا توجد طلبات انضمام معلّقة' : 'No pending join requests'}
+              </p>
+            ) : (
             <div className="space-y-2">
               {joinRequests.map((request) => (
                 <div key={request.id} className="flex items-center justify-between p-3 bg-white rounded border">
@@ -529,8 +537,8 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                 </div>
               ))}
             </div>
-          </div>
-        )}
+            )}
+        </div>
 
         <form onSubmit={handleInvite} className="space-y-4 border-b pb-4">
           <div className="space-y-2">
