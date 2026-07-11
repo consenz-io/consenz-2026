@@ -17,7 +17,9 @@
         "vote_received",
         "vote_canceled",
         "suggestion_accepted",
-        "vote_influenced_acceptance"
+        "vote_influenced_acceptance",
+        "comment_like_received",
+        "comment_like_removed"
       ],
       "description": "Type of action"
     },
@@ -27,14 +29,15 @@
     },
     "relatedEntityId": {
       "type": "string",
-      "description": "Related entity ID (suggestion, vote, etc.)"
+      "description": "Related entity ID (suggestion, vote, comment, etc.)"
     },
     "relatedEntityType": {
       "type": "string",
       "enum": [
         "suggestion",
         "vote",
-        "document"
+        "document",
+        "comment"
       ],
       "description": "Type of related entity"
     }

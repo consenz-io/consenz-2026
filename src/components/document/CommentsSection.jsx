@@ -170,6 +170,9 @@ const CommentItem = memo(({
                             ? likes.filter(e => e !== user.email)
                             : [...likes, user.email];
                           base44.entities.Comment.update(comment.id, { likes: newLikes });
+                          // Award/deduct 5 points to comment creator (only if gamification enabled)
+                          base44.functions.invoke('awardCommentLikePoints', { commentId: comment.id, isLiking: !isLiked })
+                            .catch(err => console.error('[comment like points]', err));
                           // Optimistic update via queryClient passed down would need prop drilling,
                           // so just invalidate — the mutation is fast enough
                           queryClient.setQueryData(
