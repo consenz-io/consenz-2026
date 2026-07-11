@@ -357,10 +357,16 @@ Return ONLY the translated text:`;
   );
 
   // Find the sectionId of the target suggestion (for LazySection force-mount)
+  // For edit_suggestion types, look up the parent suggestion's sectionId
   const targetSuggestionSectionId = React.useMemo(() => {
     if (!targetSuggestionId || !suggestions) return null;
     const sug = suggestions.find(s => s.id === targetSuggestionId);
-    return sug?.sectionId || null;
+    if (sug?.sectionId) return sug.sectionId;
+    if (sug?.parentSuggestionId) {
+      const parent = suggestions.find(s => s.id === sug.parentSuggestionId);
+      return parent?.sectionId || null;
+    }
+    return null;
   }, [targetSuggestionId, suggestions]);
 
   // ── Orphaned suggestions (section was deleted) ──────────────────────

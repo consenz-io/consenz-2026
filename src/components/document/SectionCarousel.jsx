@@ -89,15 +89,20 @@ const SectionCarousel = React.memo(function SectionCarousel({
   const prevSuggestionsStatusRef = useRef({});
   const hasAnimatedRef = useRef(new Set());
 
+  // ── Pending suggestions (includes edit_suggestion children) ────────────────
+  const pendingSectionSuggestions = useMemo(() => {
+    return allSectionSuggestions.filter(s => s.status === 'pending');
+  }, [allSectionSuggestions]);
+
   // ── Sorted suggestions (memoized — was computed on every render) ───────────
   const sortedSuggestions = useMemo(() => {
-    return [...pendingSuggestions].sort((a, b) => {
+    return [...pendingSectionSuggestions].sort((a, b) => {
       const deltaA = Math.abs((a.proVotes || 0) - (a.conVotes || 0));
       const deltaB = Math.abs((b.proVotes || 0) - (b.conVotes || 0));
       if (deltaA !== deltaB) return deltaA - deltaB;
       return new Date(b.created_date) - new Date(a.created_date);
     });
-  }, [pendingSuggestions]);
+  }, [pendingSectionSuggestions]);
 
   // ── All views: current + sorted suggestions (or just suggestions for ghost) ─
   const allViews = useMemo(() => {

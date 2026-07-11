@@ -306,13 +306,21 @@ export default function DocumentView() {
   }, [targetSuggestionFromUrl, suggestions, isInitialLoading, navigate]);
 
   // Scroll to target suggestion element with retries (handles LazySection deferred mounting)
+  // For edit_suggestion types whose parent is new_section, the element ID is the parent's ID
   useEffect(() => {
     if (!targetSuggestionFromUrl || typeof window === 'undefined') return;
     let attempts = 0;
     const maxAttempts = 8;
     let scrollTimer;
     const attemptScroll = () => {
-      const element = window.document.getElementById(`suggestion-${targetSuggestionFromUrl}`);
+      let element = window.document.getElementById(`suggestion-${targetSuggestionFromUrl}`);
+      // Fallback: if target is an edit_suggestion, try the parent suggestion's element
+      if (!element) {
+        const targetSug = suggestions?.find(s => s.id === targetSuggestionFromUrl);
+        if (targetSug?.parentSuggestionId) {
+          element = window.document.getElementById(`suggestion-${targetSug.parentSuggestionId}`);
+        }
+      }
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         element.classList.add('ring-4', 'ring-blue-500', 'ring-offset-4');
