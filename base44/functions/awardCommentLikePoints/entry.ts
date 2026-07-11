@@ -18,17 +18,26 @@ Deno.serve(async (req) => {
     // Don't award points for self-likes
     if (creatorId === user.id) return Response.json({ success: true, message: 'Self-like' });
 
-    // Resolve documentId from the comment's root entity
+    // Resolve documentId + actionUrl from the comment's root entity
     let documentId = null;
+    let actionUrl = null;
     if (comment.rootEntityType === 'suggestion') {
       const s = await base44.asServiceRole.entities.Suggestion.filter({ id: comment.rootEntityId });
       if (s.length > 0) documentId = s[0].documentId;
+      actionUrl = `/suggestiondetail?id=${comment.rootEntityId}&commentId=${commentId}`;
     } else if (comment.rootEntityType === 'section') {
       const s = await base44.asServiceRole.entities.Section.filter({ id: comment.rootEntityId });
       if (s.length > 0) documentId = s[0].documentId;
+      // Link to suggestiondetail when an accepted suggestion exists, else documentview
+      const accepted = await base44.asServiceRole.entities.Suggestion.filter({ sectionId: comment.rootEntityId, status: 'accepted' });
+      const latest = accepted.sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
+      actionUrl = latest
+        ? `/suggestiondetail?id=${latest.id}&commentId=${commentId}`
+        : `/documentview?id=${documentId}&commentId=${commentId}`;
     } else if (comment.rootEntityType === 'argument') {
       const a = await base44.asServiceRole.entities.Argument.filter({ id: comment.rootEntityId });
       if (a.length > 0) {
+        actionUrl = `/suggestiondetail?id=${a[0].suggestionId}&commentId=${commentId}`;
         const s = await base44.asServiceRole.entities.Suggestion.filter({ id: a[0].suggestionId });
         if (s.length > 0) documentId = s[0].documentId;
       }
@@ -57,7 +66,8 @@ Deno.serve(async (req) => {
         action,
         description,
         relatedEntityId: commentId,
-        relatedEntityType: 'comment'
+        relatedEntityType: 'comment',
+        actionUrl
       })
     ]);
 

@@ -40,6 +40,10 @@
         "comment"
       ],
       "description": "Type of related entity"
+    },
+    "actionUrl": {
+      "type": "string",
+      "description": "Optional URL to navigate to when clicking the transaction (e.g. the comment that was liked)"
     }
   },
   "required": [
