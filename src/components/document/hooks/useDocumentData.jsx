@@ -83,22 +83,22 @@ export function useDocumentData(documentId) {
       const sectionIds = allSections.map(s => s.id);
 
       // Stage 1: fetch votes, arguments, and comments (need suggestionIds/sectionIds)
-      const [votes, args, docComments, sectionComments, suggestionComments] = await Promise.all([
+      // Combine 3 Comment.filter calls into 1 with $or — reduces API calls from 5 to 3
+      const commentQuery = [
+        { rootEntityType: 'document', rootEntityId: documentId },
+      ];
+      if (sectionIds.length > 0) commentQuery.push({ rootEntityType: 'section', rootEntityId: { $in: sectionIds } });
+      if (suggestionIds.length > 0) commentQuery.push({ rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } });
+
+      const [votes, args, comments] = await Promise.all([
         suggestionIds.length > 0
           ? base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } }).catch(() => [])
           : Promise.resolve([]),
         suggestionIds.length > 0
           ? base44.entities.Argument.filter({ suggestionId: { $in: suggestionIds } }).catch(() => [])
           : Promise.resolve([]),
-        base44.entities.Comment.filter({ rootEntityType: 'document', rootEntityId: documentId }).catch(() => []),
-        sectionIds.length > 0
-          ? base44.entities.Comment.filter({ rootEntityType: 'section', rootEntityId: { $in: sectionIds } }).catch(() => [])
-          : Promise.resolve([]),
-        suggestionIds.length > 0
-          ? base44.entities.Comment.filter({ rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } }).catch(() => [])
-          : Promise.resolve([]),
+        base44.entities.Comment.filter({ $or: commentQuery }).catch(() => []),
       ]);
-      const comments = [...docComments, ...sectionComments, ...suggestionComments];
 
       // Stage 2: fetch only the user profiles that actually appear in this document's data
       // (typically 10-30 instead of 1000 globally)

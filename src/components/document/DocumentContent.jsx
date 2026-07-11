@@ -60,9 +60,13 @@ export default function DocumentContent({
     [suggestions]
   );
 
-  const { data: publicProfiles } = useQuery({
+  // Read from cache — populated by useDocumentData's aggregated fetch (targeted, not global).
+  // Avoids fetching 1000 profiles when only ~10-30 are relevant to this document.
+  const { data: publicProfiles = [] } = useQuery({
     queryKey: ['publicProfiles'],
     queryFn: () => base44.entities.UserPublicProfile.list('-created_date', 1000),
+    enabled: false,
+    staleTime: Infinity,
     initialData: [],
   });
 

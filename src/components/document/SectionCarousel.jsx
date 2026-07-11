@@ -235,29 +235,32 @@ const SectionCarousel = React.memo(function SectionCarousel({
     mutationFn: async (saveToHistory) => {
       const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
       const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
-      await base44.entities.DocumentVersion.create({
-        documentId: section.documentId, sectionId: section.id, topicId: section.topicId,
-        sectionOrder: section.order, content: section.content,
-        changeDescription: `לפני: ${saveToHistory ? t('deleteSection') : 'Section deletion'}`,
-        version: nextVersion, changeType: 'direct_edit',
-      });
-      await base44.entities.DocumentVersion.create({
-        documentId: section.documentId, sectionId: section.id, topicId: section.topicId,
-        sectionOrder: section.order, content: '',
-        changeDescription: saveToHistory ? t('deleteSection') : 'Section deletion',
-        version: nextVersion + 1, changeType: 'direct_edit',
-      });
+      await Promise.all([
+        base44.entities.DocumentVersion.create({
+          documentId: section.documentId, sectionId: section.id, topicId: section.topicId,
+          sectionOrder: section.order, content: section.content,
+          changeDescription: `לפני: ${saveToHistory ? t('deleteSection') : 'Section deletion'}`,
+          version: nextVersion, changeType: 'direct_edit',
+        }),
+        base44.entities.DocumentVersion.create({
+          documentId: section.documentId, sectionId: section.id, topicId: section.topicId,
+          sectionOrder: section.order, content: '',
+          changeDescription: saveToHistory ? t('deleteSection') : 'Section deletion',
+          version: nextVersion + 1, changeType: 'direct_edit',
+        }),
+      ]);
       await base44.entities.Section.delete(section.id);
       const orphaned = await base44.entities.Suggestion.filter({
         documentId: section.documentId, status: 'pending', sectionId: section.id,
       });
       if (orphaned.length > 0) {
-        await Promise.all(orphaned.map(s =>
-          base44.entities.Suggestion.update(s.id, {
+        await base44.entities.Suggestion.bulkUpdate(
+          orphaned.map(s => ({
+            id: s.id,
             topicId: s.topicId || section.topicId,
             originalSectionOrder: section.order,
-          })
-        ));
+          }))
+        );
       }
     },
     onSuccess: () => {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Toaster } from "sonner";
 
 const translations = {
@@ -1203,13 +1203,15 @@ export const LanguageProvider = ({ children }) => {
     setShowLanguageModal(false);
   };
 
-  const t = (key, options = {}) => {
+  const t = useCallback((key, options = {}) => {
     let translation = translations[language][key] || key;
-    for (const optionKey in options) {
-      translation = translation.replace(new RegExp(`\\{\\s*${optionKey}\\s*\\}`, 'g'), options[optionKey]);
+    if (options) {
+      for (const optionKey in options) {
+        translation = translation.replace(new RegExp(`\\{\\s*${optionKey}\\s*\\}`, 'g'), options[optionKey]);
+      }
     }
     return translation;
-  };
+  }, [language]);
 
   const isRTL = language === 'he' || language === 'ar';
 
