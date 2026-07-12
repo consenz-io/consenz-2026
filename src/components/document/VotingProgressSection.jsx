@@ -190,7 +190,11 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
       <Link
         to={`${createPageUrl("UnderstandingConsensus")}?id=${document?.id}`}
         className="block group"
-        title={language === 'he' ? 'למדו על מנגנון הקונצנזוס' : language === 'ar' ? 'تعرّف على آلية الإجماع' : 'Learn about consensus'}>
+        title={language === 'he'
+          ? `${proVotes} הצבעות בעד ו-${conVotes} הצבעות נגד, ורף התמיכה הדרוש הוא ${threshold} • לחצו למידע נוסף על חישוב מד הקונסנזוס`
+          : language === 'ar'
+          ? `${proVotes} أصوات مع و-${conVotes} أصوات ضد، وعتبة الدعم المطلوبة هي ${threshold} • انقروا لمزيد من المعلومات حول حساب مقياس الإجماع`
+          : `${proVotes} pro votes and ${conVotes} con votes, support threshold is ${threshold} • Click for more info on consensus meter calculation`}>
         
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-blue-200 transition-colors" data-tutorial="support-threshold">
           {/* Labels row */}
