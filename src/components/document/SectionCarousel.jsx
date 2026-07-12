@@ -419,6 +419,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
             getCommentsCount={getCommentsCount}
             toggleComments={toggleComments}
             showComments={showComments}
+            onReturnToCurrent={() => setCurrentSuggestionId('current')}
           />
         )}
       </div>

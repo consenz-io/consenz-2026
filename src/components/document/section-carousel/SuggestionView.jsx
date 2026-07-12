@@ -1,5 +1,5 @@
 import React from "react";
-import { Edit, MessageSquare } from "lucide-react";
+import { Edit, MessageSquare, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SectionDiff from "../SectionDiff";
 import TranslatableContent from "../TranslatableContent";
@@ -32,6 +32,7 @@ const SuggestionView = React.memo(function SuggestionView({
   getCommentsCount,
   toggleComments,
   showComments,
+  onReturnToCurrent,
 }) {
   const suggestion = currentView.data;
   const isDeleteType = suggestion.type === 'delete_section';
@@ -157,6 +158,17 @@ const SuggestionView = React.memo(function SuggestionView({
 
         {/* Action buttons + comments */}
         <div className={`flex items-center gap-2 flex-wrap mt-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+          {!isGhost && onReturnToCurrent && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onReturnToCurrent}
+              className={`text-xs h-8 px-3 flex-shrink-0 ${isRTL ? 'mr-0 ml-auto' : 'ml-0 mr-auto'}`}
+            >
+              <Undo2 className={`w-3.5 h-3.5 shrink-0 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+              <span className="truncate">{t('returnToCurrentVersion')}</span>
+            </Button>
+          )}
           <Button
             size="sm"
             variant="outline"
