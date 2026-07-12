@@ -62,7 +62,7 @@ async function calculateContributors(base44, documentId) {
   const sectionIds = sections.map(s => s.id);
 
   // Fetch votes and comments scoped to this document's entities only
-  const [votes, profiles, docComments, sectionComments, suggestionComments] = await Promise.all([
+  const [votes, profiles, docComments, sectionComments, suggestionComments, sectionVotes] = await Promise.all([
     suggestionIds.length > 0
       ? base44.asServiceRole.entities.Vote.filter({ suggestionId: { $in: suggestionIds } })
       : Promise.resolve([]),
@@ -73,6 +73,9 @@ async function calculateContributors(base44, documentId) {
       : Promise.resolve([]),
     suggestionIds.length > 0
       ? base44.asServiceRole.entities.Comment.filter({ rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } })
+      : Promise.resolve([]),
+    sectionIds.length > 0
+      ? base44.asServiceRole.entities.SectionVote.filter({ sectionId: { $in: sectionIds } })
       : Promise.resolve([]),
   ]);
 
@@ -98,6 +101,13 @@ async function calculateContributors(base44, documentId) {
 
   // From suggestion creators
   suggestions.forEach(s => { if (s.created_by) uniqueEmails.add(s.created_by); });
+
+  // From section voters
+  sectionVotes.forEach(v => {
+    const profile = profileByUserId.get(v.userId);
+    if (profile?.email) uniqueEmails.add(profile.email);
+    if (v.created_by) uniqueEmails.add(v.created_by);
+  });
 
   return Math.max(1, uniqueEmails.size);
 }

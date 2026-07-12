@@ -95,6 +95,49 @@ Deno.serve(async (req) => {
         action = 'created';
       }
 
+      // ── Update document.totalUsersInteracted ────────────────────────
+      // Section votes don't trigger the frontend calculateDocumentContributors
+      // flow (unlike suggestion votes, comments, etc.), so we recalculate the
+      // document's stored participant count here to include section voters.
+      if (action === 'created') {
+        try {
+          const sec = await base44.asServiceRole.entities.Section.get(sectionId).catch(() => null);
+          if (sec) {
+            const docSections = await base44.asServiceRole.entities.Section.filter({ documentId: sec.documentId });
+            const docSectionIds = docSections.map(s => s.id);
+            const docSuggestions = await base44.asServiceRole.entities.Suggestion.filter({ documentId: sec.documentId });
+            const docSuggestionIds = docSuggestions.map(s => s.id);
+            const [docSectionVotes, docSuggestionVotes, docAgreements, profiles] = await Promise.all([
+              docSectionIds.length > 0
+                ? base44.asServiceRole.entities.SectionVote.filter({ sectionId: { $in: docSectionIds } })
+                : Promise.resolve([]),
+              docSuggestionIds.length > 0
+                ? base44.asServiceRole.entities.Vote.filter({ suggestionId: { $in: docSuggestionIds } })
+                : Promise.resolve([]),
+              base44.asServiceRole.entities.DocumentAgreement.filter({ documentId: sec.documentId }),
+              base44.asServiceRole.entities.UserPublicProfile.list()
+            ]);
+            const userIdToEmail = {};
+            profiles.forEach(p => { if (p.userId) userIdToEmail[p.userId] = p.email; });
+            const uniqueEmails = new Set();
+            docSuggestions.forEach(s => { if (s.created_by) uniqueEmails.add(s.created_by); });
+            docSuggestionVotes.forEach(v => {
+              if (v.created_by) uniqueEmails.add(v.created_by);
+              if (v.userId && userIdToEmail[v.userId]) uniqueEmails.add(userIdToEmail[v.userId]);
+            });
+            docSectionVotes.forEach(v => {
+              if (v.created_by) uniqueEmails.add(v.created_by);
+              if (v.userId && userIdToEmail[v.userId]) uniqueEmails.add(userIdToEmail[v.userId]);
+            });
+            docAgreements.forEach(a => { if (a.userEmail) uniqueEmails.add(a.userEmail); });
+            const totalUsers = Math.max(1, uniqueEmails.size);
+            await base44.asServiceRole.entities.Document.update(sec.documentId, { totalUsersInteracted: totalUsers });
+          }
+        } catch (e) {
+          console.error('[VOTE ON SECTION totalUsersInteracted update error]', e);
+        }
+      }
+
       // Return fresh vote counts from DB (source of truth — all votes via service role)
       const freshVotes = await base44.asServiceRole.entities.SectionVote.filter({ sectionId });
       const proCount = freshVotes.filter(v => v.vote === 'pro').length;
