@@ -162,6 +162,52 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
     };
   }, [activeStep.targetSelector, activeStep.tooltipPosition]);
 
+  // ── Flashing border on first card to guide user click ─────────────────────
+  useEffect(() => {
+    if (!activeStep.targetSelector) return;
+
+    let cardEl = null;
+    let interval = null;
+    let attempts = 0;
+
+    const findAndFlash = () => {
+      const target = document.querySelector(activeStep.targetSelector);
+      if (!target) return false;
+
+      // Determine which child element to flash based on the target
+      if (activeStep.targetSelector === '.groups-list') {
+        // Home page: first group card link
+        cardEl = target.querySelector('a');
+      } else if (activeStep.targetSelector === '.group-documents-card') {
+        // Group page: first document row link
+        cardEl = target.querySelector('.group-documents-list a') || target.querySelector('a');
+      } else {
+        cardEl = target;
+      }
+
+      if (!cardEl) return false;
+
+      cardEl.classList.add('tutorial-card-flash');
+      cardEl.style.position = cardEl.style.position || 'relative';
+      return true;
+    };
+
+    if (!findAndFlash()) {
+      interval = setInterval(() => {
+        attempts++;
+        if (findAndFlash() || attempts >= 15) clearInterval(interval);
+      }, 200);
+    }
+
+    return () => {
+      clearInterval(interval);
+      if (cardEl) {
+        cardEl.classList.remove('tutorial-card-flash');
+        cardEl.style.position = '';
+      }
+    };
+  }, [activeStep.targetSelector]);
+
   // Listen for completion event
   useEffect(() => {
     if (!activeStep.completionEvent) return;

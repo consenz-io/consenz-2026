@@ -279,6 +279,21 @@ button:focus-visible {
   opacity: 0.5;
 }
 
+/* Tutorial: flashing border around a card to guide the user to click it */
+@keyframes tutorial-card-flash {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 1), 0 0 16px 4px rgba(59, 130, 246, 0.3);
+  }
+}
+
+.tutorial-card-flash {
+  animation: tutorial-card-flash 1.2s ease-in-out infinite;
+  border-radius: 8px;
+}
+
 /* Tutorial mobile: add scroll space at the bottom so target elements can be scrolled above the sheet */
 body.tutorial-mobile-active #main-content > div {
   padding-bottom: 340px !important;
