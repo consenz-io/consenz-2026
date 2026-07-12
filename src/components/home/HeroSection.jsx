@@ -22,7 +22,18 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
   };
 
   const agreementsLabel = { he: 'הסכמות והסכמים', ar: 'اتفاقيات وعقود', en: 'Agreements' };
-  const joinLabel = { he: 'הצטרפו לדיונים', ar: 'انضموا للنقاشات', en: 'Join the Discussions' };
+  const tourLabel = { he: 'לסיור בפלטפורמה', ar: 'جولة في المنصة', en: 'Tour the Platform' };
+
+  const startTutorial = () => {
+    const STORAGE_KEY = 'consenz_tutorial';
+    const fresh = { active: true, homeStepSeen: false, currentStep: 0, completedSteps: [] };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)); } catch {}
+    if (window.restartTutorial) {
+      window.restartTutorial('home');
+    } else {
+      window.location.reload();
+    }
+  };
 
   return (
     <section className="relative overflow-hidden" aria-labelledby="hero-heading">
@@ -46,9 +57,9 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
             <Button
               size="lg"
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-              onClick={scrollToGroups}
+              onClick={startTutorial}
             >
-              {joinLabel[language] || joinLabel.en}
+              {tourLabel[language] || tourLabel.en}
               {isRTL ? <ArrowLeft className="w-4 h-4 mr-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
             </Button>
             <Link to={createPageUrl("LearnMore")}>
