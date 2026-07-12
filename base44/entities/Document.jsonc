@@ -14,19 +14,9 @@
       "type": "string",
       "description": "Rich text description and background for the document"
     },
-    "privacy": {
-      "type": "string",
-      "enum": [
-        "public_view_open_participation",
-        "public_view_closed_participation",
-        "private_invite_only"
-      ],
-      "default": "public_view_open_participation",
-      "description": "Privacy setting"
-    },
     "groupId": {
       "type": "string",
-      "description": "Group ID that this document belongs to"
+      "description": "Group ID that this document belongs to. Privacy is inherited from the group's status field."
     },
     "votingButtonsEnabled": {
       "type": "boolean",
@@ -88,26 +78,7 @@
   ],
   "rls": {
     "create": null,
-    "read": {
-      "$or": [
-        {
-          "data.privacy": {
-            "$in": [
-              "public_view_open_participation",
-              "public_view_closed_participation"
-            ]
-          }
-        },
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
+    "read": null,
     "update": {
       "$or": [
         {
