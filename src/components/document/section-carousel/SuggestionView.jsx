@@ -169,14 +169,14 @@ const SuggestionView = React.memo(function SuggestionView({
               <span className="truncate">{t('returnToCurrentVersion')}</span>
             </Button>
           }
-          <Button
-            size="sm"
-            variant="outline"
-            className={`text-xs h-8 px-3 flex-shrink-0 hidden ${isRTL ? 'mr-0 ml-auto' : 'ml-0 mr-auto'}`}
-            onClick={() => onOpenSuggestionSidebar && onOpenSuggestionSidebar(suggestion.id)}>
-            
-            {t('viewDetails')}
-          </Button>
+          
+
+
+
+
+
+
+          
           {user && isGhost && onEditSuggestion && suggestion.status === 'pending' &&
           <Button
             variant="outline"
