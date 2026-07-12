@@ -35,6 +35,22 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
     }
   };
 
+  // Floating button: show when the original button scrolls out of view
+  const buttonRef = React.useRef(null);
+  const [showFloating, setShowFloating] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const el = buttonRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      setShowFloating(rect.bottom < 0);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <section className="relative overflow-hidden" aria-labelledby="hero-heading">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-indigo-600/10 to-purple-600/10" />
@@ -55,6 +71,7 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
             <Button
+              ref={buttonRef}
               size="lg"
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
               onClick={startTutorial}
@@ -78,6 +95,20 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
           contributorsCount={contributorsCount}
         />
       </div>
+
+      {/* Floating tour button — appears after the original scrolls out of view */}
+      {showFloating && (
+        <div className="fixed bottom-6 inset-x-0 z-40 flex justify-center pointer-events-none px-4">
+          <Button
+            size="lg"
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-xl rounded-full pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-300"
+            onClick={startTutorial}
+          >
+            {tourLabel[language] || tourLabel.en}
+            {isRTL ? <ArrowLeft className="w-4 h-4 mr-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
+          </Button>
+        </div>
+      )}
     </section>
   );
 }
