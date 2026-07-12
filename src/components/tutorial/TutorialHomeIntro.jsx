@@ -213,8 +213,8 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
            <>
              <h3 className="font-bold text-slate-900 text-lg mb-2 pe-6">{heading}</h3>
             {body && <p className="text-sm text-slate-600 leading-relaxed mb-3">{body}</p>}
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
-              <p className="text-sm font-bold text-blue-800">
+            <div className="text-center mb-2">
+              <p className="text-xs text-slate-500 italic">
                 {ctaText || tTutorial('ui.clickGroupContinue', language)}
               </p>
             </div>
