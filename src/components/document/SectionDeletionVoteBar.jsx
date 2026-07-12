@@ -187,7 +187,11 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
       <Link
         to={`${createPageUrl("UnderstandingConsensus")}?id=${document?.id}`}
         className="block group"
-        title={isHe ? 'למדו על מנגנון הקונצנזוס' : 'Learn about consensus'}>
+        title={isHe
+          ? `${proCount} הצבעות בעד ו-${conCount} הצבעות נגד, ורף התמיכה הדרוש הוא ${threshold} • לחצו למידע נוסף על חישוב מד הקונסנזוס`
+          : isAr
+          ? `${proCount} أصوات مع و-${conCount} أصوات ضد، وعتبة الدعم المطلوبة هي ${threshold} • انقروا لمزيد من المعلومات حول حساب مقياس الإجماع`
+          : `${proCount} pro votes and ${conCount} con votes, support threshold is ${threshold} • Click for more info on consensus meter calculation`}>
         
         <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-red-200 transition-colors" data-tutorial="support-threshold">
           {/* Labels row */}
