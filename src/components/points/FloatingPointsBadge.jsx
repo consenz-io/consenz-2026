@@ -46,9 +46,11 @@ export default function FloatingPointsBadge() {
   const navigate = useNavigate();
   const [showInfoModal, setShowInfoModal] = React.useState(false);
   const [resolvingTxId, setResolvingTxId] = React.useState(null);
+  const [popoverOpen, setPopoverOpen] = React.useState(false);
 
   const handleCommentClick = async (transaction) => {
     if (resolvingTxId) return;
+    setPopoverOpen(false);
     // Fast path — pre-computed URL from the backend
     if (transaction.actionUrl) {
       navigate(transaction.actionUrl);
@@ -132,8 +134,9 @@ export default function FloatingPointsBadge() {
 
   return (
     <>
-    <Popover onOpenChange={(open) => {
-      if (open && hasNewPoints) {
+    <Popover open={popoverOpen} onOpenChange={(isOpen) => {
+      setPopoverOpen(isOpen);
+      if (isOpen && hasNewPoints) {
         markAsViewedMutation.mutate();
       }
     }}>
@@ -238,7 +241,7 @@ export default function FloatingPointsBadge() {
 
                 if (suggestionUrl) {
                   return (
-                    <Link key={transaction.id} to={suggestionUrl} className={itemClasses}>
+                    <Link key={transaction.id} to={suggestionUrl} className={itemClasses} onClick={() => setPopoverOpen(false)}>
                       {innerContent}
                     </Link>
                   );
