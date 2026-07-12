@@ -74,7 +74,6 @@ export default function DocumentAdmin() {
 
   const [formData, setFormData] = useState({
     title: document?.title || "",
-    privacy: document?.privacy || "public_view_open_participation",
     votingButtonsEnabled: document?.votingButtonsEnabled ?? true,
     gamificationEnabled: document?.gamificationEnabled ?? false,
     defaultSuggestionLifetimeHours: document?.defaultSuggestionLifetimeHours !== undefined ? document.defaultSuggestionLifetimeHours : null,
@@ -84,7 +83,6 @@ export default function DocumentAdmin() {
     if (document) {
       setFormData({
         title: document.title,
-        privacy: document.privacy,
         votingButtonsEnabled: document.votingButtonsEnabled,
         gamificationEnabled: document.gamificationEnabled ?? false,
         defaultSuggestionLifetimeHours: document.defaultSuggestionLifetimeHours !== undefined ? document.defaultSuggestionLifetimeHours : 72,
@@ -437,27 +435,15 @@ export default function DocumentAdmin() {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="privacy">{t('daPrivacySetting')}</Label>
-                <Select
-                  value={formData.privacy}
-                  onValueChange={(value) => setFormData({ ...formData, privacy: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="public_view_open_participation">
-                      🌐 {t('publicViewOpenParticipation')}
-                    </SelectItem>
-                    <SelectItem value="public_view_closed_participation">
-                      👀 {t('publicViewClosedParticipation')}
-                    </SelectItem>
-                    <SelectItem value="private_invite_only">
-                      🔒 {t('privateInviteOnly')}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                <Label className="text-base">{t('daPrivacySetting')}</Label>
+                <p className="text-sm text-slate-500 mt-1">
+                  {language === 'he'
+                    ? 'הפרטיות נקבעת אוטומטית לפי הקבוצה שאליה שייך המסמך. אין הגדרה נפרדת למסמך.'
+                    : language === 'ar'
+                    ? 'تحدد الخصوصية تلقائياً بناءً على المجموعة التي ينتمي إليها المستند. لا يوجد إعداد منفصل للمستند.'
+                    : 'Privacy is inherited from the group this document belongs to. There is no separate per-document setting.'}
+                </p>
               </div>
 
               <div>

@@ -66,14 +66,6 @@ export default function CreateDocument() {
     enabled: !!groupId,
   });
 
-  // Derive document privacy from group status
-  const privacyFromGroup = React.useMemo(() => {
-    if (!groupData) return "public_view_open_participation";
-    if (groupData.status === 'private') return "public_view_closed_participation";
-    if (groupData.status === 'hidden') return "private_invite_only";
-    return "public_view_open_participation"; // public group
-  }, [groupData]);
-
   const [formData, setFormData] = useState({
     title: "",
     urlName: "",
@@ -297,7 +289,6 @@ Return JSON with title, topics array (each with title and sections array with co
       const doc = await base44.entities.Document.create({
         title: data.title.trim(),
         urlName: data.urlName.trim(),
-        privacy: privacyFromGroup,
         votingButtonsEnabled: data.votingButtonsEnabled,
         gamificationEnabled: data.gamificationEnabled,
         defaultSuggestionLifetimeHours: data.defaultSuggestionLifetimeHours,
