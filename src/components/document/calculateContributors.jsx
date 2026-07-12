@@ -10,13 +10,14 @@ import { base44 } from "@/api/base44Client";
 export async function calculateDocumentContributors(documentId) {
   try {
     // Fetch all data in parallel — DocumentFollow entity was removed, auto-follow logic dropped
-    const [suggestions, sections, allVotes, publicProfiles, allComments, documentAgreements] = await Promise.all([
+    const [suggestions, sections, allVotes, publicProfiles, allComments, documentAgreements, allSectionVotes] = await Promise.all([
       base44.entities.Suggestion.filter({ documentId }),
       base44.entities.Section.filter({ documentId }),
       base44.entities.Vote.list(),
       base44.entities.UserPublicProfile.list(),
       base44.entities.Comment.list(),
-      base44.entities.DocumentAgreement.filter({ documentId })
+      base44.entities.DocumentAgreement.filter({ documentId }),
+      base44.entities.SectionVote.list()
     ]);
 
     const uniqueEmails = new Set();
@@ -65,6 +66,18 @@ export async function calculateDocumentContributors(documentId) {
         uniqueEmails.add(a.userEmail);
       }
     });
+
+    // 6. Voters on existing sections in this document
+    allSectionVotes.forEach(v => {
+      if (sectionIds.has(v.sectionId)) {
+        if (userIdToEmail[v.userId]) {
+          uniqueEmails.add(userIdToEmail[v.userId]);
+        }
+        if (v.created_by) {
+          uniqueEmails.add(v.created_by);
+        }
+      }
+    });
     
     return Math.max(1, uniqueEmails.size);
   } catch (error) {
@@ -88,7 +101,8 @@ export function calculateContributorsFromData({
   allUsers = [],
   allComments = [],
   sections = [],
-  documentAgreements = []
+  documentAgreements = [],
+  allSectionVotes = []
 }) {
   const uniqueEmails = new Set();
   
@@ -144,6 +158,20 @@ export function calculateContributorsFromData({
     documentAgreements.forEach(a => {
       if (a.userEmail) {
         uniqueEmails.add(a.userEmail);
+      }
+    });
+  }
+
+  // 6. Voters on existing sections
+  if (allSectionVotes.length > 0 && sectionIds.size > 0) {
+    allSectionVotes.forEach(v => {
+      if (sectionIds.has(v.sectionId)) {
+        if (userIdToEmail[v.userId]) {
+          uniqueEmails.add(userIdToEmail[v.userId]);
+        }
+        if (v.created_by) {
+          uniqueEmails.add(v.created_by);
+        }
       }
     });
   }

@@ -90,7 +90,7 @@ export function useDocumentData(documentId) {
       if (sectionIds.length > 0) commentQuery.push({ rootEntityType: 'section', rootEntityId: { $in: sectionIds } });
       if (suggestionIds.length > 0) commentQuery.push({ rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } });
 
-      const [votes, args, comments] = await Promise.all([
+      const [votes, args, comments, sectionVotes] = await Promise.all([
         suggestionIds.length > 0
           ? base44.entities.Vote.filter({ suggestionId: { $in: suggestionIds } }).catch(() => [])
           : Promise.resolve([]),
@@ -98,6 +98,9 @@ export function useDocumentData(documentId) {
           ? base44.entities.Argument.filter({ suggestionId: { $in: suggestionIds } }).catch(() => [])
           : Promise.resolve([]),
         base44.entities.Comment.filter({ $or: commentQuery }).catch(() => []),
+        sectionIds.length > 0
+          ? base44.entities.SectionVote.filter({ sectionId: { $in: sectionIds } }).catch(() => [])
+          : Promise.resolve([]),
       ]);
 
       // Stage 2: fetch only the user profiles that actually appear in this document's data
@@ -115,7 +118,7 @@ export function useDocumentData(documentId) {
         ? await base44.entities.UserPublicProfile.filter({ $or: profileQuery }).catch(() => [])
         : [];
 
-      return { votes, users: publicProfiles, publicProfiles, args, comments };
+      return { votes, users: publicProfiles, publicProfiles, args, comments, sectionVotes };
     },
     enabled: !!documentId,
     staleTime: 15 * 1000,   // 15s — balances freshness with avoiding refetch on every mount
@@ -216,6 +219,7 @@ export function useDocumentData(documentId) {
   });
 
   const allVotes = aggregatedData?.votes || [];
+  const allSectionVotes = aggregatedData?.sectionVotes || [];
   const publicProfiles = aggregatedData?.publicProfiles || [];
   const allComments = aggregatedData?.comments || [];
   const documentAgreements = React.useMemo(() => documentMetadata?.agreements || [], [documentMetadata?.agreements]);
@@ -228,7 +232,7 @@ export function useDocumentData(documentId) {
 
   return {
     document, topics, sections, suggestions,
-    aggregatedData, allVotes, publicProfiles, allComments,
+    aggregatedData, allVotes, allSectionVotes, publicProfiles, allComments,
     documentAgreements, documentVersions,
     documentMetadata,
     user, isAdmin, groupData,

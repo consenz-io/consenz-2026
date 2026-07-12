@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     const [
       groups, groupMembers, documents, suggestions, votes,
       comments, agreements, publicProfiles, acceptedSuggestions,
-      sections,
+      sections, sectionVotes,
     ] = await Promise.all([
       base44.asServiceRole.entities.Group.list('-created_date', 50),
       base44.asServiceRole.entities.GroupMember.list(),
@@ -27,6 +27,7 @@ Deno.serve(async (req) => {
       base44.asServiceRole.entities.UserPublicProfile.list(),
       base44.asServiceRole.entities.Suggestion.filter({ status: 'accepted' }),
       base44.asServiceRole.entities.Section.list(null, 2000),
+      base44.asServiceRole.entities.SectionVote.list('-created_date', 2000),
     ]);
 
     // ── email → userId map (built once) ──
@@ -61,6 +62,10 @@ Deno.serve(async (req) => {
     const uniqueUserIds = new Set();
 
     for (const v of votes) {
+      if (v.userId) { uniqueUserIds.add(v.userId); const p = userIdToProfile.get(v.userId); if (p?.email) uniqueEmails.add(p.email); }
+      if (v.created_by) uniqueEmails.add(v.created_by);
+    }
+    for (const v of sectionVotes) {
       if (v.userId) { uniqueUserIds.add(v.userId); const p = userIdToProfile.get(v.userId); if (p?.email) uniqueEmails.add(p.email); }
       if (v.created_by) uniqueEmails.add(v.created_by);
     }
@@ -120,6 +125,12 @@ Deno.serve(async (req) => {
       const gid = docIdToGroupId.get(s.documentId);
       if (gid) sectionIdToGroupId.set(s.id, gid);
     }
+    // Section voters → groupId
+    for (const v of sectionVotes) {
+      if (!v.userId) continue;
+      const gid = sectionIdToGroupId.get(v.sectionId);
+      if (gid && groupParticipantSets.has(gid)) groupParticipantSets.get(gid).add(v.userId);
+    }
     // Commenters
     for (const c of comments) {
       if (!c.created_by) continue;
@@ -178,6 +189,16 @@ Deno.serve(async (req) => {
 
     const sectionIdToDocId = new Map();
     for (const s of sections) { sectionIdToDocId.set(s.id, s.documentId); }
+
+    for (const v of sectionVotes) {
+      const docId = sectionIdToDocId.get(v.sectionId);
+      if (!docId) continue;
+      const set = docContributorSets.get(docId);
+      if (!set) continue;
+      if (v.created_by) set.add(v.created_by);
+      const p = userIdToProfile.get(v.userId);
+      if (p?.email) set.add(p.email);
+    }
 
     for (const c of comments) {
       let docId = null;

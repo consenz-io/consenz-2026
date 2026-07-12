@@ -65,7 +65,7 @@ export default function DocumentView() {
   // ── Data & Subscriptions ──────────────────────────────────────────────────────
   const {
     document, topics, sections, suggestions,
-    allVotes, publicProfiles, allComments,
+    allVotes, allSectionVotes, publicProfiles, allComments,
     documentAgreements, documentVersions,
     documentMetadata, user, isAdmin, groupData,
     isInitialLoading,
@@ -138,10 +138,15 @@ export default function DocumentView() {
       const profile = profileByUserId.get(v.userId);
       if (profile?.email) contributorEmails.add(profile.email);
     });
+    allSectionVotes.forEach(v => {
+      if (v.created_by) contributorEmails.add(v.created_by);
+      const profile = profileByUserId.get(v.userId);
+      if (profile?.email) contributorEmails.add(profile.email);
+    });
     allComments.forEach(c => { if (c.created_by) contributorEmails.add(c.created_by); });
     documentAgreements.forEach(a => { if (a.userEmail) contributorEmails.add(a.userEmail); });
     return contributorEmails.size;
-  }, [suggestions, allVotes, allComments, profileByUserId, documentAgreements]);
+  }, [suggestions, allVotes, allSectionVotes, allComments, profileByUserId, documentAgreements]);
 
   const topicOrderMap = React.useMemo(() => {
     const map = new Map();
