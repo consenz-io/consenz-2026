@@ -163,7 +163,7 @@ const SuggestionView = React.memo(function SuggestionView({
               variant="ghost"
               size="sm"
               onClick={onReturnToCurrent}
-              className={`text-xs h-8 px-3 flex-shrink-0 ${isRTL ? 'mr-0 ml-auto' : 'ml-0 mr-auto'}`}
+              className={`text-xs h-8 px-3 flex-shrink-0 ${isRTL ? 'ml-0 mr-auto' : 'mr-0 ml-auto'}`}
             >
               <Undo2 className={`w-3.5 h-3.5 shrink-0 ${isRTL ? 'ml-1' : 'mr-1'}`} />
               <span className="truncate">{t('returnToCurrentVersion')}</span>
