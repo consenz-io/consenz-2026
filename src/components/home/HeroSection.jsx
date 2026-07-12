@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Badge } from "@/components/ui/badge";
@@ -70,15 +71,24 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
             {description[language] || description.en}
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
-            <Button
-              ref={buttonRef}
-              size="lg"
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-              onClick={startTutorial}
-            >
-              {tourLabel[language] || tourLabel.en}
-              {isRTL ? <ArrowLeft className="w-4 h-4 mr-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
-            </Button>
+            <div ref={buttonRef}>
+              {!showFloating && (
+                <motion.div
+                  layoutId="tour-button"
+                  className="inline-flex"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                >
+                  <Button
+                    size="lg"
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                    onClick={startTutorial}
+                  >
+                    {tourLabel[language] || tourLabel.en}
+                    {isRTL ? <ArrowLeft className="w-4 h-4 mr-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
+                  </Button>
+                </motion.div>
+              )}
+            </div>
             <Link to={createPageUrl("LearnMore")}>
               <Button size="lg" variant="outline">{t('learnMore')}</Button>
             </Link>
@@ -96,18 +106,22 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
         />
       </div>
 
-      {/* Floating tour button — appears after the original scrolls out of view */}
+      {/* Floating tour button — morphs from the original position via shared layoutId */}
       {showFloating && (
-        <div className="fixed bottom-6 inset-x-0 z-40 flex justify-center pointer-events-none px-4">
+        <motion.div
+          layoutId="tour-button"
+          className="fixed bottom-6 inset-x-0 z-40 flex justify-center px-4 pointer-events-none"
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        >
           <Button
             size="lg"
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-xl rounded-full pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-300"
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg pointer-events-auto"
             onClick={startTutorial}
           >
             {tourLabel[language] || tourLabel.en}
             {isRTL ? <ArrowLeft className="w-4 h-4 mr-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
           </Button>
-        </div>
+        </motion.div>
       )}
     </section>
   );
