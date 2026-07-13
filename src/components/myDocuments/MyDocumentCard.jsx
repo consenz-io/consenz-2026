@@ -8,7 +8,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import { calculateContributorsFromData } from "@/components/document/calculateContributors";
 import { base44 } from "@/api/base44Client";
 
-export default function MyDocumentCard({ doc, mySuggestionsCount, myVotesCount, unvotedCount, allSuggestions, allVotes, allUsers, allComments, allSections }) {
+export default function MyDocumentCard({ doc, mySuggestionsCount, myVotesCount, unvotedCount, allSuggestions, allVotes, allUsers, allComments, allSections, allSectionVotes }) {
   const { t, language } = useLanguage();
   const [translatedTitle, setTranslatedTitle] = useState(null);
   const [translating, setTranslating] = useState(false);
@@ -32,6 +32,9 @@ export default function MyDocumentCard({ doc, mySuggestionsCount, myVotesCount, 
   const docSuggestions = useMemo(() => allSuggestions.filter(s => s.documentId === doc.id), [allSuggestions, doc.id]);
   const docSections = useMemo(() => allSections.filter(s => s.documentId === doc.id), [allSections, doc.id]);
 
+  const docSectionIds = useMemo(() => new Set(docSections.map(s => s.id)), [docSections]);
+  const docSectionVotes = useMemo(() => allSectionVotes.filter(v => docSectionIds.has(v.sectionId)), [allSectionVotes, docSectionIds]);
+
   const contributorsCount = useMemo(() => calculateContributorsFromData({
     document: doc,
     suggestions: docSuggestions,
@@ -39,7 +42,8 @@ export default function MyDocumentCard({ doc, mySuggestionsCount, myVotesCount, 
     allUsers,
     allComments,
     sections: docSections,
-  }), [doc, docSuggestions, allVotes, allUsers, allComments, docSections]);
+    allSectionVotes: docSectionVotes,
+  }), [doc, docSuggestions, allVotes, allUsers, allComments, docSections, docSectionVotes]);
 
   const consensusDisplay = useMemo(() => {
     const consensuses = doc.consensuses || [];

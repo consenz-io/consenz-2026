@@ -68,66 +68,93 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     staleTime: 30000,
   });
 
+  const sectionIdsForDoc = useMemo(() => sections.map(s => s.id), [sections]);
+
+  const { data: allSectionVotes = [] } = useQuery({
+    queryKey: ['sectionVotes', documentId],
+    queryFn: () => sectionIdsForDoc.length > 0
+      ? base44.entities.SectionVote.filter({ sectionId: { $in: sectionIdsForDoc } })
+      : Promise.resolve([]),
+    enabled: isOpen && sectionIdsForDoc.length > 0,
+    staleTime: 30000,
+  });
+
   const { contributors, loading } = useMemo(() => {
     if (!document) {
       return { contributors: [], loading: true };
     }
 
-    // Same criteria as the counter: voters, commenters, signers
-    const contributorEmails = new Set();
-    
+    // Use userId as primary dedup key (same fix as DocumentView / calculateContributorsFromData).
+    // This ensures users without a UserPublicProfile are still counted.
+    const emailToUserId = new Map();
+    publicProfiles.forEach(p => { if (p.email && p.userId) emailToUserId.set(p.email, p.userId); });
+
+    const uniqueParticipants = new Set(); // userIds (primary) + unresolved emails
+    const addByKey = (userId, email) => {
+      if (userId) uniqueParticipants.add(userId);
+      else if (email) { const uid = emailToUserId.get(email); uniqueParticipants.add(uid || email); }
+    };
+
     const suggestionIds = new Set(suggestions.map(s => s.id));
     const sectionIds = new Set(sections.map(s => s.id));
 
-    // 1. Voters
+    // 1. Voters on suggestions
     allVotes.forEach(v => {
       if (suggestionIds.has(v.suggestionId)) {
-        if (v.created_by) contributorEmails.add(v.created_by);
-        const profile = publicProfiles.find(p => p.userId === v.userId);
-        if (profile?.email) contributorEmails.add(profile.email);
+        addByKey(v.userId, v.created_by);
       }
     });
 
-    // 2. Commenters on suggestions
+    // 2-4. Commenters on suggestions, sections, and document
     allComments.forEach(c => {
-      if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId) && c.created_by) {
-        contributorEmails.add(c.created_by);
-      }
-    });
-
-    // 3. Commenters on sections
-    allComments.forEach(c => {
-      if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId) && c.created_by) {
-        contributorEmails.add(c.created_by);
-      }
-    });
-
-    // 4. Commenters on document
-    allComments.forEach(c => {
-      if (c.rootEntityType === 'document' && c.rootEntityId === documentId && c.created_by) {
-        contributorEmails.add(c.created_by);
+      if (!c.created_by) return;
+      if (
+        (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
+        (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
+        (c.rootEntityType === 'document' && c.rootEntityId === documentId)
+      ) {
+        addByKey(c.created_by_id, c.created_by);
       }
     });
 
     // 5. Signers
-    allAgreements.forEach(a => {
-      if (a.userEmail) contributorEmails.add(a.userEmail);
-    });
+    allAgreements.forEach(a => { addByKey(a.userId, a.userEmail); });
 
-    // Build contributors list
+    // 6. Voters on sections
+    allSectionVotes.forEach(v => { addByKey(v.userId, v.created_by); });
+
+    // 7. Suggestion creators
+    suggestions.forEach(s => { addByKey(s.created_by_id, s.created_by); });
+
+    // Build contributors list — resolve each key to a displayable user
+    const profileByUserId = new Map();
+    publicProfiles.forEach(p => { if (p.userId) profileByUserId.set(p.userId, p); });
+    const profileByEmail = new Map();
+    publicProfiles.forEach(p => { if (p.email) profileByEmail.set(p.email, p); });
+
     const contributorsMap = new Map();
-    publicProfiles.forEach(profile => {
-      if (contributorEmails.has(profile.email) && profile.userId) {
+    for (const key of uniqueParticipants) {
+      // key is either a userId or an unresolved email
+      const profile = profileByUserId.get(key) || profileByEmail.get(key);
+      if (profile) {
         contributorsMap.set(profile.userId, {
           id: profile.userId,
           email: profile.email,
           full_name: profile.fullName || 'User',
         });
+      } else if (key.includes('@')) {
+        // User with email but no public profile — show email-based name
+        contributorsMap.set(key, {
+          id: key,
+          email: key,
+          full_name: key.split('@')[0],
+        });
       }
-    });
-    
+      // Users with only a userId and no profile/email are counted but not displayed
+    }
+
     return { contributors: Array.from(contributorsMap.values()), loading: false };
-  }, [document, suggestions, sections, publicProfiles, allVotes, allComments, allAgreements, documentId]);
+  }, [document, suggestions, sections, publicProfiles, allVotes, allComments, allAgreements, allSectionVotes, documentId]);
 
   const filteredContributors = useMemo(() => {
     if (!searchQuery || !contributors) return contributors || [];
@@ -145,7 +172,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
         <DialogHeader>
           <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Users className="w-5 h-5 text-blue-600" />
-            {t('contributors')} ({contributors.length})
+            {t('contributors')} ({loading ? '…' : contributors.length})
           </DialogTitle>
         </DialogHeader>
 

@@ -99,6 +99,17 @@ export function useMyDocumentsData() {
   });
 
   const allSectionIds = useMemo(() => allSections.map(s => s.id).sort(), [allSections]);
+
+  // Fetch section votes for all sections in the user's documents
+  const { data: allSectionVotes = [] } = useQuery({
+    queryKey: ['allSectionVotes', allSectionIds.join(',')],
+    queryFn: () => allSectionIds.length > 0
+      ? base44.entities.SectionVote.filter({ sectionId: { $in: allSectionIds } })
+      : Promise.resolve([]),
+    enabled: !!user?.id && allSectionIds.length > 0,
+    staleTime: 2 * 60 * 1000,
+  });
+
   // Stable string key — avoids new array reference triggering a refetch on every render
   const commentsKey = useMemo(
     () => [...myDocumentIds, ...allSuggestionIds, ...allSectionIds].join(','),
@@ -166,6 +177,7 @@ export function useMyDocumentsData() {
     allUsers,
     allComments,
     allSections,
+    allSectionVotes,
     votes,
     myVotesCountByDoc,
     isLoading: interactionsLoading || documentsLoading,

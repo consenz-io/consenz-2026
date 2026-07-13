@@ -12,7 +12,7 @@ export default function MyDocuments() {
   const { t, language } = useLanguage();
   const {
     user, myDocuments, suggestions, allSuggestions, allVotes,
-    allUsers, allComments, allSections, isLoading, getUnvotedCount,
+    allUsers, allComments, allSections, allSectionVotes, isLoading, getUnvotedCount,
     myVotesCountByDoc,
   } = useMyDocumentsData();
 
@@ -74,6 +74,7 @@ export default function MyDocuments() {
                 allUsers={allUsers}
                 allComments={allComments}
                 allSections={allSections}
+                allSectionVotes={allSectionVotes}
               />
             ))}
           </div>
