@@ -177,12 +177,9 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
     setShowConDialog(false);
     await postConComment();
     setConComment("");
-    // New flow: open the suggestion modal FIRST. The 'con' vote is registered
-    // only after the suggestion is successfully published (handled by the parent
-    // via pendingConVoteSectionId). If the modal is cancelled, no vote is cast.
-    if (onSuggestEditThenVote) {
-      onSuggestEditThenVote(section);
-    } else if (onSuggestEdit) {
+    // Vote con immediately, then open the suggestion modal for an improvement.
+    voteMutation.mutate('con');
+    if (onSuggestEdit) {
       onSuggestEdit(section);
     }
   };
@@ -298,7 +295,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-slate-600">
-            {isHe ? 'הצבעתך נגד תירשם. תוכל גם להציע שינוי לנוסח הסעיף.' : isAr ? 'سيتم تسجيل تصويتك ضد. يمكنك أيضاً اقتراح تعديل على نص القسم.' : 'Your vote against will be recorded. You can also suggest a change to the section text.'}
+            {isHe ? 'הצבעת הנגד תירשם. ניתן גם להציע שינוי לנוסח הסעיף.' : isAr ? 'سيتم تسجيل تصويتك ضد. يمكنك أيضاً اقتراح تعديل على نص القسم.' : 'Your vote against will be recorded. You can also suggest a change to the section text.'}
           </p>
           <div className="space-y-1.5 my-2">
             <label className="text-sm font-medium text-slate-700">
@@ -314,10 +311,10 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={handleConVoteOnly} className="flex-1">
-              {isHe ? 'הצבע נגד בלבד' : isAr ? 'صوّت ضد فقط' : 'Vote against only'}
+              {isHe ? 'הצבעת נגד בלבד' : isAr ? 'تصويت ضد فقط' : 'Vote against only'}
             </Button>
             <Button onClick={handleConVoteAndSuggest} className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600">
-              {isHe ? 'הצע שיפור' : isAr ? 'اقترح تحسيناً' : 'Suggest improvement'}
+              {isHe ? 'הצבעת נגד והצעת שיפור' : isAr ? 'تصويت ضد واقتراح تحسين' : 'Vote against & suggest improvement'}
             </Button>
           </DialogFooter>
         </DialogContent>
