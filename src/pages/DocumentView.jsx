@@ -131,8 +131,6 @@ export default function DocumentView() {
   }, [publicProfiles]);
 
   const contributorsCount = React.useMemo(() => {
-    // Use userId as primary dedup key — falls back to email for comment/suggestion creators.
-    // This ensures users without a UserPublicProfile are still counted (they have userId on Vote/SectionVote records).
     const emailToUserId = new Map();
     publicProfiles.forEach(p => { if (p.email && p.userId) emailToUserId.set(p.email, p.userId); });
     const uniqueParticipants = new Set();
@@ -140,13 +138,26 @@ export default function DocumentView() {
       if (userId) uniqueParticipants.add(userId);
       else if (email) { const uid = emailToUserId.get(email); uniqueParticipants.add(uid || email); }
     };
+    const suggestionIds = new Set(suggestions.map(s => s.id));
+    const sectionIds = new Set(sections.map(s => s.id));
+    // Suggestion creators
     suggestions.forEach(s => { addByKey(s.created_by_id, s.created_by); });
-    allVotes.forEach(v => { addByKey(v.userId, v.created_by); });
-    allSectionVotes.forEach(v => { addByKey(v.userId, v.created_by); });
-    allComments.forEach(c => { addByKey(c.created_by_id, c.created_by); });
+    // Voters on this document's suggestions only
+    allVotes.forEach(v => { if (suggestionIds.has(v.suggestionId)) addByKey(v.userId, v.created_by); });
+    // Voters on this document's sections only
+    allSectionVotes.forEach(v => { if (sectionIds.has(v.sectionId)) addByKey(v.userId, v.created_by); });
+    // Commenters on this document's suggestions, sections, or the document itself
+    allComments.forEach(c => {
+      if (
+        (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
+        (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
+        (c.rootEntityType === 'document' && c.rootEntityId === documentId)
+      ) addByKey(c.created_by_id, c.created_by);
+    });
+    // Agreement signers
     documentAgreements.forEach(a => { addByKey(a.userId, a.userEmail); });
     return Math.max(1, uniqueParticipants.size);
-  }, [suggestions, allVotes, allSectionVotes, allComments, publicProfiles, documentAgreements]);
+  }, [suggestions, sections, allVotes, allSectionVotes, allComments, publicProfiles, documentAgreements, documentId]);
 
   const topicOrderMap = React.useMemo(() => {
     const map = new Map();
