@@ -7,15 +7,50 @@ import { base44 } from "@/api/base44Client";
  */
 export async function calculateDocumentContributors(documentId) {
   try {
-    const [suggestions, sections, allVotes, publicProfiles, allComments, documentAgreements, allSectionVotes] = await Promise.all([
+    // Stage 1: fetch document-specific suggestions, sections, and agreements
+    const [suggestions, sections, documentAgreements] = await Promise.all([
       base44.entities.Suggestion.filter({ documentId }),
       base44.entities.Section.filter({ documentId }),
-      base44.entities.Vote.list(),
-      base44.entities.UserPublicProfile.list(),
-      base44.entities.Comment.list(),
       base44.entities.DocumentAgreement.filter({ documentId }),
-      base44.entities.SectionVote.list()
     ]);
+
+    const suggestionIdArr = suggestions.map(s => s.id);
+    const sectionIdArr = sections.map(s => s.id);
+
+    // Stage 2: fetch ONLY votes/comments/sectionVotes scoped to this document
+    // (was: Vote.list() / Comment.list() / SectionVote.list() — loaded the ENTIRE platform)
+    const commentQuery = [
+      { rootEntityType: 'document', rootEntityId: documentId },
+    ];
+    if (sectionIdArr.length > 0) commentQuery.push({ rootEntityType: 'section', rootEntityId: { $in: sectionIdArr } });
+    if (suggestionIdArr.length > 0) commentQuery.push({ rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIdArr } });
+
+    const [allVotes, allComments, allSectionVotes] = await Promise.all([
+      suggestionIdArr.length > 0
+        ? base44.entities.Vote.filter({ suggestionId: { $in: suggestionIdArr } })
+        : Promise.resolve([]),
+      base44.entities.Comment.filter({ $or: commentQuery }),
+      sectionIdArr.length > 0
+        ? base44.entities.SectionVote.filter({ sectionId: { $in: sectionIdArr } })
+        : Promise.resolve([]),
+    ]);
+
+    // Stage 3: fetch only the user profiles that appear in this document's data
+    const userIds = new Set();
+    const emails = new Set();
+    suggestions.forEach(s => { if (s.created_by_id) userIds.add(s.created_by_id); if (s.created_by) emails.add(s.created_by); });
+    sections.forEach(s => { if (s.lastEditedBy) userIds.add(s.lastEditedBy); });
+    allVotes.forEach(v => { if (v.userId) userIds.add(v.userId); if (v.created_by) emails.add(v.created_by); });
+    allComments.forEach(c => { if (c.created_by) emails.add(c.created_by); });
+    allSectionVotes.forEach(v => { if (v.userId) userIds.add(v.userId); if (v.created_by) emails.add(v.created_by); });
+    documentAgreements.forEach(a => { if (a.userId) userIds.add(a.userId); if (a.userEmail) emails.add(a.userEmail); });
+
+    const profileQuery = [];
+    if (userIds.size > 0) profileQuery.push({ userId: { $in: Array.from(userIds) } });
+    if (emails.size > 0) profileQuery.push({ email: { $in: Array.from(emails) } });
+    const publicProfiles = profileQuery.length > 0
+      ? await base44.entities.UserPublicProfile.filter({ $or: profileQuery })
+      : [];
 
     // Build email → userId map (for resolving comment/suggestion creator emails)
     const emailToUserId = {};

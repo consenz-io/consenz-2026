@@ -234,13 +234,9 @@ export default function DocumentContent({
     return commentsCountMap.get(`${entityType}:${entityId}`) || 0;
   }, [commentsCountMap]);
 
-  // Batch fetch ALL section votes for this document in one query (instead of N per-section queries)
-  const { data: allSectionVotes = [] } = useQuery({
-    queryKey: ['allSectionVotes', document?.id],
-    queryFn: () => base44.entities.SectionVote.filter({ sectionId: { $in: sections.map(s => s.id) } }),
-    enabled: !!document?.id && sections.length > 0,
-    staleTime: 60 * 1000,
-  });
+  // Reuse section votes from the aggregated cache — avoids a duplicate API call.
+  // useDocumentData already fetched SectionVote scoped to this document's sections.
+  const allSectionVotes = aggregatedData?.sectionVotes || [];
 
   // Pre-group by sectionId for O(1) lookup in SectionVoteButtons
   const sectionVotesBySectionId = React.useMemo(() => {
@@ -252,25 +248,22 @@ export default function DocumentContent({
     return map;
   }, [allSectionVotes]);
 
-  const { data: userVotes = [] } = useQuery({
-    queryKey: ['userVotes', document?.id, user?.id],
-    queryFn: async () => {
-      if (!user?.id || !document?.id) return [];
-      const suggestionIds = suggestions.map(s => s.id);
-      if (suggestionIds.length === 0) return [];
-      const votes = await base44.entities.Vote.filter({ userId: user.id, suggestionId: { $in: suggestionIds } });
-      // Remove duplicates — keep last vote per suggestion
-      const seen = new Set();
-      return [...votes].reverse().filter(v => {
-        if (seen.has(v.suggestionId)) return false;
-        seen.add(v.suggestionId);
-        return true;
-      });
-    },
-    enabled: !!user?.id && !!document?.id && suggestions.length > 0,
-    staleTime: 2 * 60 * 1000,
-    retry: 1,
-  });
+  // Derive the current user's votes from the already-loaded allDocumentVotes array
+  // — eliminates a separate API call (was: Vote.filter({ userId, suggestionId: $in })).
+  const userVotes = React.useMemo(() => {
+    if (!user?.id || !allDocumentVotes) return [];
+    const filtered = allDocumentVotes.filter(v => v.userId === user.id);
+    // Deduplicate — keep last vote per suggestion (most recent wins)
+    const seen = new Set();
+    const deduped = [];
+    for (let i = filtered.length - 1; i >= 0; i--) {
+      if (!seen.has(filtered[i].suggestionId)) {
+        seen.add(filtered[i].suggestionId);
+        deduped.push(filtered[i]);
+      }
+    }
+    return deduped;
+  }, [allDocumentVotes, user?.id]);
 
   // O(1) Map lookup instead of O(n) filter on every call
   const userVotesMap = React.useMemo(() => {
@@ -696,6 +689,7 @@ Return ONLY the translated text:`;
             {topics.map((topic, topicIndex) => {
               const topicSections = getSectionsForTopic(topic.id);
               const topicGhostSlots = getGhostSlotsForTopic(topic.id);
+              const topicNewSectionSuggestions = getNewSectionSuggestionsForTopic(topic.id);
               
               return (
                 <Draggable key={topic.id} draggableId={`topic-${topic.id}`} index={topicIndex} isDragDisabled={!isAdmin}>
@@ -893,7 +887,7 @@ Return ONLY the translated text:`;
                     {(provided) => (
                       <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3 md:space-y-4">
                         {topicSections.map((section, index) => {
-                        const newSectionSuggestions = getNewSectionSuggestionsForTopic(topic.id);
+                        const newSectionSuggestions = topicNewSectionSuggestions;
                         const allSectionSuggestions = getSuggestionsForSection(section.id);
                         // New section suggestions rendered AFTER this section (pre-computed for insert button placement)
                         const suggestionsAfterThisSection = newSectionSuggestions.filter(s => {
