@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/LanguageContext";
@@ -26,6 +27,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
   const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [showConDialog, setShowConDialog] = useState(false);
+  const [conComment, setConComment] = useState("");
 
   const { data: sectionVotes = [] } = useQuery({
     queryKey: ["sectionVotes", section.id],
@@ -148,13 +150,33 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
     voteMutation.mutate(voteType);
   };
 
-  const handleConVoteOnly = () => {
+  const postConComment = async () => {
+    const text = conComment.trim();
+    if (!text) return;
+    try {
+      await base44.entities.Comment.create({
+        rootEntityType: "section",
+        rootEntityId: section.id,
+        content: text,
+      });
+      queryClient.invalidateQueries({ queryKey: ["sectionComments", section.id] });
+      queryClient.invalidateQueries({ queryKey: ["allComments"] });
+    } catch (err) {
+      console.error("Failed to post con comment:", err);
+    }
+  };
+
+  const handleConVoteOnly = async () => {
     setShowConDialog(false);
+    await postConComment();
+    setConComment("");
     voteMutation.mutate('con');
   };
 
-  const handleConVoteAndSuggest = () => {
+  const handleConVoteAndSuggest = async () => {
     setShowConDialog(false);
+    await postConComment();
+    setConComment("");
     // New flow: open the suggestion modal FIRST. The 'con' vote is registered
     // only after the suggestion is successfully published (handled by the parent
     // via pendingConVoteSectionId). If the modal is cancelled, no vote is cast.
@@ -278,6 +300,18 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
           <p className="text-sm text-slate-600">
             {isHe ? 'הצבעתך נגד תירשם. תוכל גם להציע שינוי לנוסח הסעיף.' : isAr ? 'سيتم تسجيل تصويتك ضد. يمكنك أيضاً اقتراح تعديل على نص القسم.' : 'Your vote against will be recorded. You can also suggest a change to the section text.'}
           </p>
+          <div className="space-y-1.5 my-2">
+            <label className="text-sm font-medium text-slate-700">
+              {isHe ? 'הסבר להתנגדות (אופציונלי)' : isAr ? 'شرح المعارضة (اختياري)' : 'Explain your opposition (optional)'}
+            </label>
+            <Textarea
+              value={conComment}
+              onChange={(e) => setConComment(e.target.value)}
+              placeholder={isHe ? 'מדוע את/ה מתנגד/ת לסעיף?' : isAr ? 'لماذا تعارض هذا القسم؟' : 'Why do you oppose this section?'}
+              className="min-h-[80px] resize-none"
+              dir={isRTL ? 'rtl' : 'ltr'}
+            />
+          </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={handleConVoteOnly} className="flex-1">
               {isHe ? 'הצבע נגד בלבד' : isAr ? 'صوّت ضد فقط' : 'Vote against only'}
