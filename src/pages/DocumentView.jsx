@@ -131,22 +131,22 @@ export default function DocumentView() {
   }, [publicProfiles]);
 
   const contributorsCount = React.useMemo(() => {
-    const contributorEmails = new Set();
-    suggestions.forEach(s => { if (s.created_by) contributorEmails.add(s.created_by); });
-    allVotes.forEach(v => {
-      if (v.created_by) contributorEmails.add(v.created_by);
-      const profile = profileByUserId.get(v.userId);
-      if (profile?.email) contributorEmails.add(profile.email);
-    });
-    allSectionVotes.forEach(v => {
-      if (v.created_by) contributorEmails.add(v.created_by);
-      const profile = profileByUserId.get(v.userId);
-      if (profile?.email) contributorEmails.add(profile.email);
-    });
-    allComments.forEach(c => { if (c.created_by) contributorEmails.add(c.created_by); });
-    documentAgreements.forEach(a => { if (a.userEmail) contributorEmails.add(a.userEmail); });
-    return contributorEmails.size;
-  }, [suggestions, allVotes, allSectionVotes, allComments, profileByUserId, documentAgreements]);
+    // Use userId as primary dedup key — falls back to email for comment/suggestion creators.
+    // This ensures users without a UserPublicProfile are still counted (they have userId on Vote/SectionVote records).
+    const emailToUserId = new Map();
+    publicProfiles.forEach(p => { if (p.email && p.userId) emailToUserId.set(p.email, p.userId); });
+    const uniqueParticipants = new Set();
+    const addByKey = (userId, email) => {
+      if (userId) uniqueParticipants.add(userId);
+      else if (email) { const uid = emailToUserId.get(email); uniqueParticipants.add(uid || email); }
+    };
+    suggestions.forEach(s => { addByKey(s.created_by_id, s.created_by); });
+    allVotes.forEach(v => { addByKey(v.userId, v.created_by); });
+    allSectionVotes.forEach(v => { addByKey(v.userId, v.created_by); });
+    allComments.forEach(c => { addByKey(c.created_by_id, c.created_by); });
+    documentAgreements.forEach(a => { addByKey(a.userId, a.userEmail); });
+    return Math.max(1, uniqueParticipants.size);
+  }, [suggestions, allVotes, allSectionVotes, allComments, publicProfiles, documentAgreements]);
 
   const topicOrderMap = React.useMemo(() => {
     const map = new Map();
