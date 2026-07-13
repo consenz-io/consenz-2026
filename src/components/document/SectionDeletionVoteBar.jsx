@@ -23,7 +23,7 @@ import {
  * "pro" = keep the section, "con" = delete it.
  * When (con - pro) >= document threshold, the section is deleted (handled in voteOnSection).
  */
-export default function SectionDeletionVoteBar({ section, document, user, isRTL, initialVotes = [], canParticipate = true, onCannotParticipate, onSuggestEdit, onSuggestEditThenVote, readOnly = false, sourceSuggestion }) {
+export default function SectionDeletionVoteBar({ section, document, user, isRTL, initialVotes = [], canParticipate = true, onCannotParticipate, onSuggestEdit, onSuggestEditThenVote, onConCommentPosted, readOnly = false, sourceSuggestion }) {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
   const [showConDialog, setShowConDialog] = useState(false);
@@ -152,33 +152,42 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
 
   const postConComment = async () => {
     const text = conComment.trim();
-    if (!text) return;
+    if (!text) return null;
     try {
-      await base44.entities.Comment.create({
+      const comment = await base44.entities.Comment.create({
         rootEntityType: "section",
         rootEntityId: section.id,
         content: text,
       });
       queryClient.invalidateQueries({ queryKey: ["sectionComments", section.id] });
       queryClient.invalidateQueries({ queryKey: ["allComments"] });
+      queryClient.invalidateQueries({ queryKey: ['comments', 'section', section.id] });
+      return comment;
     } catch (err) {
       console.error("Failed to post con comment:", err);
+      return null;
     }
   };
 
   const handleConVoteOnly = async () => {
     setShowConDialog(false);
-    await postConComment();
+    const comment = await postConComment();
     setConComment("");
     voteMutation.mutate('con');
+    if (comment && onConCommentPosted) {
+      onConCommentPosted(comment.id);
+    }
   };
 
   const handleConVoteAndSuggest = async () => {
     setShowConDialog(false);
-    await postConComment();
+    const comment = await postConComment();
     setConComment("");
     // Vote con immediately, then open the suggestion modal for an improvement.
     voteMutation.mutate('con');
+    if (comment && onConCommentPosted) {
+      onConCommentPosted(comment.id);
+    }
     if (onSuggestEdit) {
       onSuggestEdit(section);
     }

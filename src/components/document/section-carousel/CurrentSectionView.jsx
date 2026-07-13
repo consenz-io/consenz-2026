@@ -32,6 +32,28 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
   const commentCount = typeof getCommentsCount === 'function' ? getCommentsCount(activeCommentEntity.entityType, activeCommentEntity.entityId) : 0;
   const hasComments = commentCount > 0;
 
+  // When a con-vote explanation comment is posted, force the comments section to
+  // show SECTION-level comments (where the comment was posted) and scroll to it.
+  const [conCommentScrollId, setConCommentScrollId] = React.useState(null);
+
+  const handleConCommentPosted = React.useCallback((commentId) => {
+    setConCommentScrollId(commentId);
+    if (!showComments[commentsKey]) {
+      toggleComments(commentsKey);
+    }
+  }, [showComments, commentsKey, toggleComments]);
+
+  // Clear the scroll target after the scroll has had time to complete
+  React.useEffect(() => {
+    if (!conCommentScrollId) return;
+    const timer = setTimeout(() => setConCommentScrollId(null), 6000);
+    return () => clearTimeout(timer);
+  }, [conCommentScrollId]);
+
+  const isConCommentScrolling = conCommentScrollId !== null;
+  const commentsEntityType = isConCommentScrolling ? 'section' : activeCommentEntity.entityType;
+  const commentsEntityId = isConCommentScrolling ? section.id : activeCommentEntity.entityId;
+
   return (
     <>
       <TranslatableContent
@@ -60,6 +82,7 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
             onCannotParticipate={onNeedJoinGroup}
             onSuggestEdit={onEditSection}
             onSuggestEditThenVote={onEditSectionThenVote}
+            onConCommentPosted={handleConCommentPosted}
             readOnly={!user}
             sourceSuggestion={sourceSuggestion}
           />
@@ -83,9 +106,10 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
       {showComments[commentsKey] && (
         <div className="mt-4 pt-4 border-t border-slate-200">
           <CommentsSection
-            entityType={activeCommentEntity.entityType}
-            entityId={activeCommentEntity.entityId}
+            entityType={commentsEntityType}
+            entityId={commentsEntityId}
             user={user}
+            scrollToCommentId={conCommentScrollId}
           />
         </div>
       )}
