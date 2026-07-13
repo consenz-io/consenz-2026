@@ -20,7 +20,7 @@ export default function PointsCostTooltip({ gamificationEnabled, actionType, lan
 
   const costLabel =
     language === 'he'
-      ? `פרסום הצעה זו יעלה לך ${cost} נקודות`
+      ? `פרסום הצעה יעלה לך ${cost} נקודות`
       : language === 'ar'
       ? `نشر هذا الاقتراح سيكلفك ${cost} نقطة`
       : `Publishing this suggestion costs ${cost} points`;
