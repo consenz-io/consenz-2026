@@ -17,13 +17,37 @@ export function useProfileActivity(userId) {
     staleTime: 60 * 1000,
   });
 
-  const acceptedSuggestions = useMemo(
-    () => userSuggestions.filter((s) => s.status === 'accepted'),
+  // Fetch titles for the documents referenced by the user's suggestions
+  const documentIds = useMemo(
+    () => Array.from(new Set(userSuggestions.map((s) => s.documentId).filter(Boolean))),
     [userSuggestions]
   );
 
+  const { data: documents = [] } = useQuery({
+    queryKey: ['profileActivityDocuments', documentIds],
+    queryFn: () => base44.entities.Document.filter({ id: { $in: documentIds } }),
+    enabled: documentIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const documentTitleById = useMemo(() => {
+    const map = {};
+    documents.forEach((d) => { map[d.id] = d.title; });
+    return map;
+  }, [documents]);
+
+  const enrichedSuggestions = useMemo(
+    () => userSuggestions.map((s) => ({ ...s, documentTitle: documentTitleById[s.documentId] })),
+    [userSuggestions, documentTitleById]
+  );
+
+  const acceptedSuggestions = useMemo(
+    () => enrichedSuggestions.filter((s) => s.status === 'accepted'),
+    [enrichedSuggestions]
+  );
+
   return {
-    userSuggestions,
+    userSuggestions: enrichedSuggestions,
     userComments,
     acceptedSuggestions,
     isLoading: isLoadingSuggestions || isLoadingComments,

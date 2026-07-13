@@ -8,7 +8,14 @@ import { useLanguage } from "@/components/LanguageContext";
 import { createPageUrl } from "@/utils";
 import { formatLocalDate } from "@/components/utils/dateFormatter";
 
-function SuggestionCard({ suggestion, isRTL, t }) {
+// Strip HTML tags and return the first non-empty line of the content
+function getFirstLine(html) {
+  if (!html) return '';
+  const text = html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+  return text;
+}
+
+function SuggestionCard({ suggestion, isRTL, t, language }) {
   const statusClass =
     suggestion.status === 'accepted'
       ? 'bg-green-100 text-green-800 border-green-300'
@@ -21,6 +28,10 @@ function SuggestionCard({ suggestion, isRTL, t }) {
       : suggestion.status === 'rejected'
       ? t('rejected')
       : t('pending');
+
+  const documentTitle = suggestion.documentTitle
+    || (language === 'he' ? 'מסמך' : language === 'ar' ? 'مستند' : 'Document');
+  const previewLine = getFirstLine(suggestion.newContent || suggestion.originalContent);
 
   return (
     <Link
@@ -37,7 +48,10 @@ function SuggestionCard({ suggestion, isRTL, t }) {
               {formatLocalDate(suggestion.created_date, 'DD/MM/YYYY')}
             </span>
           </div>
-          <p className="text-sm font-medium text-slate-900 mb-1">{suggestion.title}</p>
+          <p className="text-sm font-semibold text-slate-900 mb-1 truncate">{documentTitle}</p>
+          {previewLine && (
+            <p className="text-xs text-slate-600 line-clamp-1 mb-1">{previewLine}</p>
+          )}
           <div className="flex items-center gap-3 text-xs text-slate-600">
             <span>{suggestion.proVotes || 0} {t('pro')}</span>
             <span>{suggestion.conVotes || 0} {t('con')}</span>
@@ -132,7 +146,7 @@ export default function ProfileActivityTabs({
         <TabContent
           isLoading={isLoading}
           items={acceptedSuggestions}
-          renderItem={(s) => <SuggestionCard key={s.id} suggestion={s} isRTL={isRTL} t={t} />}
+          renderItem={(s) => <SuggestionCard key={s.id} suggestion={s} isRTL={isRTL} t={t} language={language} />}
           emptyLabels={{ he: 'אין הצעות שהתקבלו עדיין', ar: 'لا توجد مقترحات مقبولة بعد', en: 'No accepted suggestions yet' }}
           language={language}
         />
@@ -152,7 +166,7 @@ export default function ProfileActivityTabs({
         <TabContent
           isLoading={isLoading}
           items={userSuggestions}
-          renderItem={(s) => <SuggestionCard key={s.id} suggestion={s} isRTL={isRTL} t={t} />}
+          renderItem={(s) => <SuggestionCard key={s.id} suggestion={s} isRTL={isRTL} t={t} language={language} />}
           emptyLabels={{ he: 'אין הצעות עדיין', ar: 'لا توجد مقترحات بعد', en: 'No suggestions yet' }}
           language={language}
         />
