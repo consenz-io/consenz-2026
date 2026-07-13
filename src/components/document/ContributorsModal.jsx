@@ -79,9 +79,9 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     staleTime: 30000,
   });
 
-  const { contributors, loading } = useMemo(() => {
+  const { contributors, totalCount, loading } = useMemo(() => {
     if (!document) {
-      return { contributors: [], loading: true };
+      return { contributors: [], totalCount: 0, loading: true };
     }
 
     // Use userId as primary dedup key (same fix as DocumentView / calculateContributorsFromData).
@@ -126,15 +126,16 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     // 7. Suggestion creators
     suggestions.forEach(s => { addByKey(s.created_by_id, s.created_by); });
 
-    // Build contributors list — resolve each key to a displayable user
+    // Build contributors list — include ALL participants so list count == counter count.
+    // Users without a profile get a fallback display name.
     const profileByUserId = new Map();
     publicProfiles.forEach(p => { if (p.userId) profileByUserId.set(p.userId, p); });
     const profileByEmail = new Map();
     publicProfiles.forEach(p => { if (p.email) profileByEmail.set(p.email, p); });
 
     const contributorsMap = new Map();
+    let idx = 0;
     for (const key of uniqueParticipants) {
-      // key is either a userId or an unresolved email
       const profile = profileByUserId.get(key) || profileByEmail.get(key);
       if (profile) {
         contributorsMap.set(profile.userId, {
@@ -142,19 +143,25 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
           email: profile.email,
           full_name: profile.fullName || 'User',
         });
-      } else if (key.includes('@')) {
-        // User with email but no public profile — show email-based name
+      } else if (typeof key === 'string' && key.includes('@')) {
         contributorsMap.set(key, {
           id: key,
           email: key,
           full_name: key.split('@')[0],
         });
+      } else {
+        // User with only a userId and no profile — show generic placeholder
+        idx += 1;
+        contributorsMap.set(key, {
+          id: key,
+          email: '',
+          full_name: language === 'he' ? `משתתף ${idx}` : language === 'ar' ? `مشارك ${idx}` : `Participant ${idx}`,
+        });
       }
-      // Users with only a userId and no profile/email are counted but not displayed
     }
 
-    return { contributors: Array.from(contributorsMap.values()), loading: false };
-  }, [document, suggestions, sections, publicProfiles, allVotes, allComments, allAgreements, allSectionVotes, documentId]);
+    return { contributors: Array.from(contributorsMap.values()), totalCount: uniqueParticipants.size, loading: false };
+  }, [document, suggestions, sections, publicProfiles, allVotes, allComments, allAgreements, allSectionVotes, documentId, language]);
 
   const filteredContributors = useMemo(() => {
     if (!searchQuery || !contributors) return contributors || [];
@@ -172,7 +179,7 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
         <DialogHeader>
           <DialogTitle className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <Users className="w-5 h-5 text-blue-600" />
-            {t('contributors')} ({loading ? '…' : contributors.length})
+            {t('contributors')} ({loading ? '…' : totalCount})
           </DialogTitle>
         </DialogHeader>
 

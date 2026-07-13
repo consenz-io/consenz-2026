@@ -66,6 +66,12 @@ export async function calculateDocumentContributors(documentId) {
       }
     });
 
+    // 7. Suggestion creators
+    suggestions.forEach(s => {
+      if (s.created_by_id) uniqueParticipants.add(s.created_by_id);
+      else if (s.created_by) addByEmail(s.created_by);
+    });
+
     return Math.max(1, uniqueParticipants.size);
   } catch (error) {
     console.error('[CALCULATE CONTRIBUTORS ERROR]', error);
@@ -142,6 +148,12 @@ export function calculateContributorsFromData({
       }
     });
   }
+
+  // 7. Suggestion creators
+  suggestions.forEach(s => {
+    if (s.created_by_id) uniqueParticipants.add(s.created_by_id);
+    else if (s.created_by) addByEmail(s.created_by);
+  });
 
   return Math.max(1, uniqueParticipants.size);
 }
