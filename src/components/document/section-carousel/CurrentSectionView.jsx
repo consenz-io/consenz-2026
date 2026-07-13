@@ -1,6 +1,7 @@
 import React from "react";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { base44 } from "@/api/base44Client";
 import TranslatableContent from "../TranslatableContent";
 import DocumentTextContent from "../DocumentTextContent";
 import SectionDeletionVoteBar from "../SectionDeletionVoteBar";
@@ -31,6 +32,15 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
   const commentsKey = `section-${section.id}`;
   const commentCount = typeof getCommentsCount === 'function' ? getCommentsCount(activeCommentEntity.entityType, activeCommentEntity.entityId) : 0;
   const hasComments = commentCount > 0;
+
+  const handleEditClick = () => {
+    if (!user) {
+      base44.auth.redirectToLogin(window.location.href);
+      return;
+    }
+    if (!canParticipate) return;
+    onEditSection(section);
+  };
 
   // When a con-vote explanation comment is posted, open the comments section and
   // scroll to the newly created comment for immediate UX feedback.
@@ -85,20 +95,31 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
         </div>
       )}
 
-      {/* Comments button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => toggleComments(commentsKey)}
-        className={`h-7 md:h-8 text-xs px-2 transition-all ${
-          hasComments
-            ? 'font-bold text-blue-700 border border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-400 shadow-sm'
-            : 'text-slate-600 hover:text-blue-600'
-        }`}
-      >
-        <MessageSquare className={`w-3 h-3 md:w-4 md:h-4 ${isRTL ? 'ml-1' : 'mr-1'} ${hasComments ? 'fill-blue-200' : ''}`} />
-        {t('comments')}{hasComments ? ` (${commentCount})` : ''}
-      </Button>
+      {/* Action buttons row — suggest edit + comments (mirrors SuggestionView layout) */}
+      <div className={`flex items-center gap-2 flex-wrap mt-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleEditClick}
+          className={`text-xs h-8 px-3 flex-shrink-0 ${isRTL ? 'ml-0 mr-auto' : 'mr-0 ml-auto'}`}
+        >
+          <Edit className={`w-3.5 h-3.5 shrink-0 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+          <span className="truncate">{t('suggestEditSection')}</span>
+        </Button>
+        <Button
+          variant={hasComments ? 'outline' : 'ghost'}
+          size="sm"
+          onClick={() => toggleComments(commentsKey)}
+          className={`h-8 text-sm px-3 gap-1.5 relative flex-shrink-0 transition-all ${
+            hasComments
+              ? 'font-semibold text-blue-700 border-blue-300 bg-blue-50 hover:bg-blue-100'
+              : 'text-slate-600 hover:text-blue-600'
+          }`}
+        >
+          <MessageSquare className={`w-4 h-4 ${hasComments ? 'fill-blue-200' : ''}`} />
+          {t('comments')}{hasComments ? ` (${commentCount})` : ''}
+        </Button>
+      </div>
       {showComments[commentsKey] && (
         <div className="mt-4 pt-4 border-t border-slate-200">
           <CommentsSection

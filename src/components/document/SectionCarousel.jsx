@@ -425,10 +425,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
           isRTL={isRTL}
           t={t}
           language={language}
-          user={user}
-          canParticipate={canParticipate}
           isAdmin={isAdmin}
-          onEditSection={onEditSection}
           onDirectEdit={onDirectEdit}
           onDeleteSection={() => setShowDeleteDialog(true)}
           section={section}

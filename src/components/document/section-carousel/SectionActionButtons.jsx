@@ -1,45 +1,26 @@
 import React from "react";
 import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { base44 } from "@/api/base44Client";
 
 /**
- * Admin/section action buttons — suggest edit, direct edit (admin), delete (admin).
- * Extracted from SectionCarousel to reduce re-render scope.
+ * Admin-only action buttons — direct edit, delete.
+ * The "suggest edit" button now lives in CurrentSectionView (same row as Comments),
+ * mirroring the SuggestionView layout.
  */
 const SectionActionButtons = React.memo(function SectionActionButtons({
   isRTL,
   t,
   language,
-  user,
-  canParticipate,
   isAdmin,
-  onEditSection,
   onDirectEdit,
   onDeleteSection,
   section,
 }) {
-  const handleEditClick = () => {
-    if (!user) {
-      base44.auth.redirectToLogin(window.location.href);
-      return;
-    }
-    if (!canParticipate) return;
-    onEditSection(section);
-  };
+  if (!isAdmin) return null;
 
   return (
-    <div className={`section-action-buttons flex flex-wrap gap-1 mt-4 pt-4 border-t border-slate-200 ${isRTL ? 'justify-end' : 'justify-start'}`}>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleEditClick}
-        className="opacity-0 group-hover:opacity-100 transition-opacity text-xs min-w-0"
-      >
-        <Edit className={`w-3.5 h-3.5 shrink-0 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-        <span className="truncate">{t('suggestEditSection')}</span>
-      </Button>
-      {isAdmin && onDirectEdit && (
+    <div className={`section-action-buttons flex flex-wrap gap-1 mt-3 ${isRTL ? 'justify-end' : 'justify-start'}`}>
+      {onDirectEdit && (
         <Button
           variant="default"
           size="sm"
@@ -50,18 +31,16 @@ const SectionActionButtons = React.memo(function SectionActionButtons({
           <span className="truncate">עריכה ישירה</span>
         </Button>
       )}
-      {isAdmin && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onDeleteSection}
-          className="text-red-700 hover:text-red-900 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity text-xs min-w-0"
-          title={t('deleteSection')}
-        >
-          <Trash2 className="w-3.5 h-3.5 shrink-0" />
-          <span className="hidden sm:inline">{(language || 'he') === 'he' ? 'מחק (מנהל)' : 'Delete (Admin)'}</span>
-        </Button>
-      )}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onDeleteSection}
+        className="text-red-700 hover:text-red-900 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity text-xs min-w-0"
+        title={t('deleteSection')}
+      >
+        <Trash2 className="w-3.5 h-3.5 shrink-0" />
+        <span className="hidden sm:inline">{(language || 'he') === 'he' ? 'מחק (מנהל)' : 'Delete (Admin)'}</span>
+      </Button>
     </div>
   );
 });
