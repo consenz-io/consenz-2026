@@ -32,8 +32,8 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
   const commentCount = typeof getCommentsCount === 'function' ? getCommentsCount(activeCommentEntity.entityType, activeCommentEntity.entityId) : 0;
   const hasComments = commentCount > 0;
 
-  // When a con-vote explanation comment is posted, force the comments section to
-  // show SECTION-level comments (where the comment was posted) and scroll to it.
+  // When a con-vote explanation comment is posted, open the comments section and
+  // scroll to the newly created comment for immediate UX feedback.
   const [conCommentScrollId, setConCommentScrollId] = React.useState(null);
 
   const handleConCommentPosted = React.useCallback((commentId) => {
@@ -49,10 +49,6 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
     const timer = setTimeout(() => setConCommentScrollId(null), 6000);
     return () => clearTimeout(timer);
   }, [conCommentScrollId]);
-
-  const isConCommentScrolling = conCommentScrollId !== null;
-  const commentsEntityType = isConCommentScrolling ? 'section' : activeCommentEntity.entityType;
-  const commentsEntityId = isConCommentScrolling ? section.id : activeCommentEntity.entityId;
 
   return (
     <>
@@ -106,8 +102,8 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
       {showComments[commentsKey] && (
         <div className="mt-4 pt-4 border-t border-slate-200">
           <CommentsSection
-            entityType={commentsEntityType}
-            entityId={commentsEntityId}
+            entityType={activeCommentEntity.entityType}
+            entityId={activeCommentEntity.entityId}
             user={user}
             scrollToCommentId={conCommentScrollId}
           />

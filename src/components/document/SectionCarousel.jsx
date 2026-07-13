@@ -64,18 +64,13 @@ const SectionCarousel = React.memo(function SectionCarousel({
     return [...directSuggestions, ...editSuggestions];
   }, [sectionSuggestions]);
 
-  // Determines which entity the comments belong to (accepted suggestion vs section)
+  // Comments on the live section always belong to the Section entity itself.
+  // Previously this pointed to an accepted creation/edit suggestion, which hid
+  // comments posted with rootEntityType:"section" — they never matched the
+  // suggestion entity the CommentsSection was querying.
   const activeCommentEntity = useMemo(() => {
-    const acceptedEdits = sectionSuggestions
-      .filter(s => s.status === 'accepted' && s.type === 'edit_section')
-      .sort((a, b) => new Date(b.updated_date || b.created_date) - new Date(a.updated_date || a.created_date));
-    if (acceptedEdits.length > 0) return { entityType: 'suggestion', entityId: acceptedEdits[0].id };
-    const creationSuggestion = sectionSuggestions.find(
-      s => s.status === 'accepted' && s.type === 'new_section'
-    );
-    if (creationSuggestion) return { entityType: 'suggestion', entityId: creationSuggestion.id };
     return { entityType: 'section', entityId: section.id };
-  }, [sectionSuggestions]);
+  }, [section.id]);
 
   // ── State ────────────────────────────────────────────────────────────────────
   const [currentSuggestionId, setCurrentSuggestionId] = useState(null);
