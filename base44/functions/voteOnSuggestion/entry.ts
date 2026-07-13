@@ -183,6 +183,48 @@ Deno.serve(async (req) => {
 
     console.log('[VOTE FUNCTION] Vote processed:', { voteAction, newProVotes, newConVotes });
 
+    // ── Update document.totalUsersInteracted on new vote ────────────────
+    // Recalculate the document's stored participant count to include the new voter.
+    // This mirrors the logic in voteOnSection and ensures suggestion voters are
+    // always counted as document participants (and, via getHomeStats / groupParticipants,
+    // as group participants too).
+    if (voteAction === 'created') {
+      try {
+        const docSuggestions = await base44.asServiceRole.entities.Suggestion.filter({ documentId: document.id });
+        const docSuggestionIds = docSuggestions.map(s => s.id);
+        const docSections = await base44.asServiceRole.entities.Section.filter({ documentId: document.id });
+        const docSectionIds = docSections.map(s => s.id);
+        const [docSuggestionVotes, docSectionVotes, docAgreements, profiles] = await Promise.all([
+          docSuggestionIds.length > 0
+            ? base44.asServiceRole.entities.Vote.filter({ suggestionId: { $in: docSuggestionIds } })
+            : Promise.resolve([]),
+          docSectionIds.length > 0
+            ? base44.asServiceRole.entities.SectionVote.filter({ sectionId: { $in: docSectionIds } })
+            : Promise.resolve([]),
+          base44.asServiceRole.entities.DocumentAgreement.filter({ documentId: document.id }),
+          base44.asServiceRole.entities.UserPublicProfile.list()
+        ]);
+        const userIdToEmail = {};
+        profiles.forEach(p => { if (p.userId) userIdToEmail[p.userId] = p.email; });
+        const uniqueEmails = new Set();
+        docSuggestions.forEach(s => { if (s.created_by) uniqueEmails.add(s.created_by); });
+        docSuggestionVotes.forEach(v => {
+          if (v.created_by) uniqueEmails.add(v.created_by);
+          if (v.userId && userIdToEmail[v.userId]) uniqueEmails.add(userIdToEmail[v.userId]);
+        });
+        docSectionVotes.forEach(v => {
+          if (v.created_by) uniqueEmails.add(v.created_by);
+          if (v.userId && userIdToEmail[v.userId]) uniqueEmails.add(userIdToEmail[v.userId]);
+        });
+        docAgreements.forEach(a => { if (a.userEmail) uniqueEmails.add(a.userEmail); });
+        const totalUsers = Math.max(1, uniqueEmails.size);
+        await base44.asServiceRole.entities.Document.update(document.id, { totalUsersInteracted: totalUsers });
+        console.log('[VOTE FUNCTION] Updated totalUsersInteracted:', totalUsers);
+      } catch (e) {
+        console.error('[VOTE FUNCTION totalUsersInteracted update error]', e);
+      }
+    }
+
     // Check if should auto-accept
     let accepted = false;
     const delta = newProVotes - newConVotes;

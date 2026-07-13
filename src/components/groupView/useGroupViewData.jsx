@@ -108,6 +108,18 @@ export function useGroupViewData(groupId) {
     [allDocSections]
   );
 
+  const { data: allDocSectionVotes = [] } = useQuery({
+    queryKey: ['groupAllSectionVotes', groupId, allDocSectionIdsSorted],
+    queryFn: async () => {
+      if (allDocSections.length === 0) return [];
+      const sectionIds = allDocSections.map(s => s.id);
+      return base44.entities.SectionVote.filter({ sectionId: { $in: sectionIds } }, null, 1000).catch(() => []);
+    },
+    enabled: allDocSections.length > 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
   const { data: allDocComments = [] } = useQuery({
     queryKey: ['groupAllComments', groupId, docIdsSorted, allDocSuggestionIdsSorted, allDocSectionIdsSorted],
     queryFn: async () => {
@@ -184,8 +196,8 @@ export function useGroupViewData(groupId) {
 
   // All unique participant userIds — via unified calcGroupParticipants (single source of truth)
   const allParticipantUserIds = useMemo(() =>
-    Array.from(calcGroupParticipants(groupId, groupMembers, documents, allDocSuggestions, allDocVotes, allDocComments, publicProfiles, allDocAgreements, allDocSections)),
-    [groupId, groupMembers, documents, allDocSuggestions, allDocVotes, allDocComments, publicProfiles, allDocAgreements, allDocSections]
+    Array.from(calcGroupParticipants(groupId, groupMembers, documents, allDocSuggestions, allDocVotes, allDocComments, publicProfiles, allDocAgreements, allDocSections, allDocSectionVotes)),
+    [groupId, groupMembers, documents, allDocSuggestions, allDocVotes, allDocComments, publicProfiles, allDocAgreements, allDocSections, allDocSectionVotes]
   );
 
   const { data: userVotes = [] } = useQuery({

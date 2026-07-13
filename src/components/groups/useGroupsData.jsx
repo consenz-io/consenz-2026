@@ -132,6 +132,15 @@ export function useGroupsData() {
     [docIds, suggestionIds, sectionIds]
   );
 
+  const { data: groupAllSectionVotes = [] } = useQuery({
+    queryKey: ['groupsPageAllSectionVotes', sectionIdsKey],
+    queryFn: () => base44.entities.SectionVote.filter({ sectionId: { $in: sectionIds } }, null, 2000),
+    enabled: sectionIds.length > 0,
+    placeholderData: [],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+  });
+
   const { data: groupAllComments = [] } = useQuery({
     queryKey: ['groupsPageAllComments', allRootEntityIdsKey],
     queryFn: () => base44.entities.Comment.filter({ rootEntityId: { $in: allRootEntityIds } }, null, 2000),
@@ -143,8 +152,8 @@ export function useGroupsData() {
 
   // Pre-compute ALL participant counts in a single O(N) pass — avoids O(groups × N) per render
   const allParticipantCounts = useMemo(
-    () => calcAllGroupParticipants(visibleGroups, groupMembers, documents, groupAllSuggestions, groupAllVotes, groupAllComments, publicProfiles, groupAllAgreements, groupAllSections),
-    [visibleGroups, groupMembers, documents, groupAllSuggestions, groupAllVotes, groupAllComments, publicProfiles, groupAllAgreements, groupAllSections]
+    () => calcAllGroupParticipants(visibleGroups, groupMembers, documents, groupAllSuggestions, groupAllVotes, groupAllComments, publicProfiles, groupAllAgreements, groupAllSections, groupAllSectionVotes),
+    [visibleGroups, groupMembers, documents, groupAllSuggestions, groupAllVotes, groupAllComments, publicProfiles, groupAllAgreements, groupAllSections, groupAllSectionVotes]
   );
   const getParticipantCount = useCallback(
     (groupId) => allParticipantCounts.get(groupId) ?? 0,

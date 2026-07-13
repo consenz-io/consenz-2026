@@ -20,6 +20,7 @@
  * @param {object[]} publicProfiles    - UserPublicProfile records
  * @param {object[]} agreements        - DocumentAgreement records (optional)
  * @param {object[]} sections          - Section records (optional, needed for section comments)
+ * @param {object[]} sectionVotes      - SectionVote records (optional, section voters count as participants)
  * @returns {Set<string>} set of unique participant userIds
  */
 export function calcGroupParticipants(
@@ -31,7 +32,8 @@ export function calcGroupParticipants(
   comments,
   publicProfiles,
   agreements = [],
-  sections = []
+  sections = [],
+  sectionVotes = []
 ) {
   // Build email → userId map from public profiles
   const emailToUserId = new Map();
@@ -97,6 +99,13 @@ export function calcGroupParticipants(
     }
   });
 
+  // 6. Section voters (users who voted on sections in group documents)
+  sectionVotes.forEach(v => {
+    if (groupSectionIds.has(v.sectionId) && v.userId) {
+      ids.add(v.userId);
+    }
+  });
+
   return ids;
 }
 
@@ -119,7 +128,8 @@ export function calcAllGroupParticipants(
   comments,
   publicProfiles,
   agreements = [],
-  sections = []
+  sections = [],
+  sectionVotes = []
 ) {
   if (!groups || groups.length === 0) return new Map();
 
@@ -196,6 +206,15 @@ export function calcAllGroupParticipants(
     const gid = docIdToGroupId.get(a.documentId);
     if (gid && groupParticipantSets.has(gid)) {
       groupParticipantSets.get(gid).add(a.userId);
+    }
+  }
+
+  // 6. Section voters (users who voted on sections in group documents)
+  for (const v of sectionVotes) {
+    if (!v.userId) continue;
+    const gid = sectionIdToGroupId.get(v.sectionId);
+    if (gid && groupParticipantSets.has(gid)) {
+      groupParticipantSets.get(gid).add(v.userId);
     }
   }
 
