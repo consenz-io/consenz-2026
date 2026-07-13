@@ -57,26 +57,45 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Total unique contributors ──
-    const uniqueEmails = new Set();
-    const uniqueUserIds = new Set();
+    // ── Total unique contributors (userId as primary key, email as fallback) ──
+    const uniqueParticipants = new Set();
 
-    for (const v of votes) {
-      if (v.userId) { uniqueUserIds.add(v.userId); const p = userIdToProfile.get(v.userId); if (p?.email) uniqueEmails.add(p.email); }
-      if (v.created_by) uniqueEmails.add(v.created_by);
-    }
-    for (const v of sectionVotes) {
-      if (v.userId) { uniqueUserIds.add(v.userId); const p = userIdToProfile.get(v.userId); if (p?.email) uniqueEmails.add(p.email); }
-      if (v.created_by) uniqueEmails.add(v.created_by);
-    }
-    for (const c of comments) { if (c.created_by) uniqueEmails.add(c.created_by); }
-    for (const a of agreements) { if (a.userId) uniqueUserIds.add(a.userId); if (a.userEmail) uniqueEmails.add(a.userEmail); }
-    for (const s of suggestions) { if (s.created_by) { const uid = emailToUserId.get(s.created_by); if (uid) uniqueUserIds.add(uid); uniqueEmails.add(s.created_by); } }
+    const addParticipant = (userId, email) => {
+      if (userId) uniqueParticipants.add(userId);
+      else if (email) { const uid = emailToUserId.get(email); uniqueParticipants.add(uid || email); }
+    };
+
+    for (const v of votes) { addParticipant(v.userId, v.created_by); }
+    for (const v of sectionVotes) { addParticipant(v.userId, v.created_by); }
+    for (const c of comments) { addParticipant(c.created_by_id, c.created_by); }
+    for (const a of agreements) { addParticipant(a.userId, a.userEmail); }
+    for (const s of suggestions) { addParticipant(s.created_by_id, s.created_by); }
 
     // Build contributors list
     const emailToUser = new Map();
     for (const u of allUsers) { if (u.email) emailToUser.set(u.email, u); }
-    const contributorsList = Array.from(uniqueEmails)
+    // Build contributors list from uniqueParticipants (mix of userIds and unresolved emails)
+    const contributorEmails = new Set();
+    const contributorIds = new Set();
+    for (const key of uniqueParticipants) {
+      // If it looks like a userId (UUID), resolve to profile; otherwise treat as email
+      const profile = userIdToProfile.get(key);
+      if (profile) {
+        contributorIds.add(profile.userId);
+        if (profile.email) contributorEmails.add(profile.email);
+      } else if (key.includes('@')) {
+        contributorEmails.add(key);
+        const uid = emailToUserId.get(key);
+        if (uid) contributorIds.add(uid);
+      } else {
+        contributorIds.add(key);
+      }
+    }
+
+    const contributorsList = Array.from(new Set([...contributorEmails, ...Array.from(contributorIds).map(id => {
+      const p = userIdToProfile.get(id);
+      return p?.email;
+    }).filter(Boolean)]))
       .map(email => {
         const profile = userIdToProfile.get(emailToUserId.get(email) || '');
         const u = emailToUser.get(email);
@@ -166,25 +185,27 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── Per-document contributor counts (same logic as DocumentView's contributorsCount) ──
+    // ── Per-document contributor counts (userId as primary key, email as fallback) ──
     const docContributorSets = new Map();
     for (const d of documents) docContributorSets.set(d.id, new Set());
+
+    const addDocParticipant = (docId, userId, email) => {
+      const set = docContributorSets.get(docId);
+      if (!set) return;
+      if (userId) set.add(userId);
+      else if (email) { const uid = emailToUserId.get(email); set.add(uid || email); }
+    };
 
     const suggestionIdToDocId = new Map();
     for (const s of suggestions) {
       suggestionIdToDocId.set(s.id, s.documentId);
-      const set = docContributorSets.get(s.documentId);
-      if (set && s.created_by) set.add(s.created_by);
+      addDocParticipant(s.documentId, s.created_by_id, s.created_by);
     }
 
     for (const v of votes) {
       const docId = suggestionIdToDocId.get(v.suggestionId);
       if (!docId) continue;
-      const set = docContributorSets.get(docId);
-      if (!set) continue;
-      if (v.created_by) set.add(v.created_by);
-      const p = userIdToProfile.get(v.userId);
-      if (p?.email) set.add(p.email);
+      addDocParticipant(docId, v.userId, v.created_by);
     }
 
     const sectionIdToDocId = new Map();
@@ -193,11 +214,7 @@ Deno.serve(async (req) => {
     for (const v of sectionVotes) {
       const docId = sectionIdToDocId.get(v.sectionId);
       if (!docId) continue;
-      const set = docContributorSets.get(docId);
-      if (!set) continue;
-      if (v.created_by) set.add(v.created_by);
-      const p = userIdToProfile.get(v.userId);
-      if (p?.email) set.add(p.email);
+      addDocParticipant(docId, v.userId, v.created_by);
     }
 
     for (const c of comments) {
@@ -206,13 +223,11 @@ Deno.serve(async (req) => {
       else if (c.rootEntityType === 'suggestion') docId = suggestionIdToDocId.get(c.rootEntityId);
       else if (c.rootEntityType === 'section') docId = sectionIdToDocId.get(c.rootEntityId);
       if (!docId) continue;
-      const set = docContributorSets.get(docId);
-      if (set && c.created_by) set.add(c.created_by);
+      addDocParticipant(docId, c.created_by_id, c.created_by);
     }
 
     for (const a of agreements) {
-      const set = docContributorSets.get(a.documentId);
-      if (set && a.userEmail) set.add(a.userEmail);
+      addDocParticipant(a.documentId, a.userId, a.userEmail);
     }
 
     const documentContributorCounts = {};
@@ -222,7 +237,7 @@ Deno.serve(async (req) => {
 
     return Response.json({
       documentsCount: documents.length,
-      totalUniqueContributors: Math.max(1, uniqueEmails.size),
+      totalUniqueContributors: Math.max(1, uniqueParticipants.size),
       contributorsList,
       averageConsensus,
       groupParticipantCounts,

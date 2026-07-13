@@ -2,14 +2,11 @@ import { base44 } from "@/api/base44Client";
 
 /**
  * Calculate unique contributors (participants) count for document (async version)
- * CRITERIA: Only users who performed one of the following actions:
- * 1. Voted on a suggestion
- * 2. Commented on a suggestion, section, or document
- * 3. Signed the document agreement
+ * Uses userId as the primary dedup key (always present on Vote/SectionVote records).
+ * Falls back to email for records that only have created_by (comments, suggestion creators).
  */
 export async function calculateDocumentContributors(documentId) {
   try {
-    // Fetch all data in parallel — DocumentFollow entity was removed, auto-follow logic dropped
     const [suggestions, sections, allVotes, publicProfiles, allComments, documentAgreements, allSectionVotes] = await Promise.all([
       base44.entities.Suggestion.filter({ documentId }),
       base44.entities.Section.filter({ documentId }),
@@ -20,66 +17,56 @@ export async function calculateDocumentContributors(documentId) {
       base44.entities.SectionVote.list()
     ]);
 
-    const uniqueEmails = new Set();
-    
-    // 1. Voters on suggestions in this document
+    // Build email → userId map (for resolving comment/suggestion creator emails)
+    const emailToUserId = {};
+    publicProfiles.forEach(p => { if (p.email && p.userId) emailToUserId[p.email] = p.userId; });
+
+    const uniqueParticipants = new Set();
     const suggestionIds = new Set(suggestions.map(s => s.id));
-    const userIdToEmail = {};
-    publicProfiles.forEach(p => { userIdToEmail[p.userId] = p.email; });
-    
+    const sectionIds = new Set(sections.map(s => s.id));
+
+    // Helper: add a participant by email — resolve to userId when possible
+    const addByEmail = (email) => {
+      if (!email) return;
+      const uid = emailToUserId[email];
+      uniqueParticipants.add(uid || email);
+    };
+
+    // 1. Voters on suggestions — userId is always present on Vote records
     allVotes.forEach(v => {
       if (suggestionIds.has(v.suggestionId)) {
-        if (userIdToEmail[v.userId]) {
-          uniqueEmails.add(userIdToEmail[v.userId]);
-        }
-        if (v.created_by) {
-          uniqueEmails.add(v.created_by);
-        }
-      }
-    });
-    
-    // 2. Commenters on suggestions
-    allComments.forEach(c => {
-      if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId) && c.created_by) {
-        uniqueEmails.add(c.created_by);
-      }
-    });
-    
-    // 3. Commenters on sections
-    const sectionIds = new Set(sections.map(s => s.id));
-    allComments.forEach(c => {
-      if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId) && c.created_by) {
-        uniqueEmails.add(c.created_by);
-      }
-    });
-    
-    // 4. Commenters on document
-    allComments.forEach(c => {
-      if (c.rootEntityType === 'document' && c.rootEntityId === documentId && c.created_by) {
-        uniqueEmails.add(c.created_by);
-      }
-    });
-    
-    // 5. Users who signed the document
-    documentAgreements.forEach(a => {
-      if (a.userEmail) {
-        uniqueEmails.add(a.userEmail);
+        if (v.userId) uniqueParticipants.add(v.userId);
+        else if (v.created_by) addByEmail(v.created_by);
       }
     });
 
-    // 6. Voters on existing sections in this document
-    allSectionVotes.forEach(v => {
-      if (sectionIds.has(v.sectionId)) {
-        if (userIdToEmail[v.userId]) {
-          uniqueEmails.add(userIdToEmail[v.userId]);
-        }
-        if (v.created_by) {
-          uniqueEmails.add(v.created_by);
-        }
+    // 2-4. Commenters on suggestions, sections, and document
+    allComments.forEach(c => {
+      if (!c.created_by) return;
+      if (
+        (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
+        (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
+        (c.rootEntityType === 'document' && c.rootEntityId === documentId)
+      ) {
+        addByEmail(c.created_by);
       }
     });
-    
-    return Math.max(1, uniqueEmails.size);
+
+    // 5. Users who signed the document
+    documentAgreements.forEach(a => {
+      if (a.userId) uniqueParticipants.add(a.userId);
+      else if (a.userEmail) addByEmail(a.userEmail);
+    });
+
+    // 6. Voters on existing sections — userId is always present on SectionVote records
+    allSectionVotes.forEach(v => {
+      if (sectionIds.has(v.sectionId)) {
+        if (v.userId) uniqueParticipants.add(v.userId);
+        else if (v.created_by) addByEmail(v.created_by);
+      }
+    });
+
+    return Math.max(1, uniqueParticipants.size);
   } catch (error) {
     console.error('[CALCULATE CONTRIBUTORS ERROR]', error);
     return 1;
@@ -87,12 +74,9 @@ export async function calculateDocumentContributors(documentId) {
 }
 
 /**
- * Synchronous calculation of participants from already loaded data
- * Used for real-time display in counters
- * CRITERIA: Only users who performed one of the following actions:
- * 1. Voted on a suggestion
- * 2. Commented on a suggestion, section, or document
- * 3. Signed the document agreement
+ * Synchronous calculation of participants from already loaded data.
+ * Used for real-time display in counters.
+ * Uses userId as the primary dedup key.
  */
 export function calculateContributorsFromData({
   document,
@@ -104,61 +88,48 @@ export function calculateContributorsFromData({
   documentAgreements = [],
   allSectionVotes = []
 }) {
-  const uniqueEmails = new Set();
-  
-  // 1. Voters on suggestions
-  const suggestionIds = new Set(suggestions.map(s => s.id));
-  const userIdToEmail = {};
-  allUsers.forEach(u => { 
-    // UserPublicProfile uses userId field; fallback to id for other user object types
-    userIdToEmail[u.userId || u.id] = u.email;
+  // Build email → userId map from public profiles
+  const emailToUserId = {};
+  allUsers.forEach(u => {
+    const uid = u.userId || u.id;
+    if (uid && u.email) emailToUserId[u.email] = uid;
   });
-  
+
+  const uniqueParticipants = new Set();
+  const suggestionIds = new Set(suggestions.map(s => s.id));
+  const sectionIds = new Set(sections.map(s => s.id));
+
+  const addByEmail = (email) => {
+    if (!email) return;
+    const uid = emailToUserId[email];
+    uniqueParticipants.add(uid || email);
+  };
+
+  // 1. Voters on suggestions
   allVotes.forEach(v => {
     if (suggestionIds.has(v.suggestionId)) {
-      if (userIdToEmail[v.userId]) {
-        uniqueEmails.add(userIdToEmail[v.userId]);
-      }
-      if (v.created_by) {
-        uniqueEmails.add(v.created_by);
-      }
+      if (v.userId) uniqueParticipants.add(v.userId);
+      else if (v.created_by) addByEmail(v.created_by);
     }
   });
-  
-  // 2. Commenters on suggestions
+
+  // 2-4. Commenters on suggestions, sections, and document
   allComments.forEach(c => {
-    if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId) && c.created_by) {
-      uniqueEmails.add(c.created_by);
+    if (!c.created_by) return;
+    if (
+      (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
+      (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
+      (c.rootEntityType === 'document' && c.rootEntityId === document?.id)
+    ) {
+      addByEmail(c.created_by);
     }
   });
-  
-  // 3. Commenters on sections (legacy: stored directly on section)
-  const sectionIds = new Set(sections.map(s => s.id));
-  allComments.forEach(c => {
-    if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId) && c.created_by) {
-      uniqueEmails.add(c.created_by);
-    }
-  });
-  
-  // 3b. Commenters on accepted suggestions linked to sections (unified threading)
-  // Comments on accepted suggestions that correspond to sections count as section commenters
-  // (already counted in step 2 since those suggestion IDs are in suggestionIds)
-  
-  // 4. Commenters on document
-  if (document?.id) {
-    allComments.forEach(c => {
-      if (c.rootEntityType === 'document' && c.rootEntityId === document.id && c.created_by) {
-        uniqueEmails.add(c.created_by);
-      }
-    });
-  }
-  
-  // 5. Users who signed the document
+
+  // 5. Agreement signers
   if (documentAgreements && documentAgreements.length > 0) {
     documentAgreements.forEach(a => {
-      if (a.userEmail) {
-        uniqueEmails.add(a.userEmail);
-      }
+      if (a.userId) uniqueParticipants.add(a.userId);
+      else if (a.userEmail) addByEmail(a.userEmail);
     });
   }
 
@@ -166,15 +137,11 @@ export function calculateContributorsFromData({
   if (allSectionVotes.length > 0 && sectionIds.size > 0) {
     allSectionVotes.forEach(v => {
       if (sectionIds.has(v.sectionId)) {
-        if (userIdToEmail[v.userId]) {
-          uniqueEmails.add(userIdToEmail[v.userId]);
-        }
-        if (v.created_by) {
-          uniqueEmails.add(v.created_by);
-        }
+        if (v.userId) uniqueParticipants.add(v.userId);
+        else if (v.created_by) addByEmail(v.created_by);
       }
     });
   }
-  
-  return Math.max(1, uniqueEmails.size);
+
+  return Math.max(1, uniqueParticipants.size);
 }

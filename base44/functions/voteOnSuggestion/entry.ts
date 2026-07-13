@@ -204,20 +204,18 @@ Deno.serve(async (req) => {
           base44.asServiceRole.entities.DocumentAgreement.filter({ documentId: document.id }),
           base44.asServiceRole.entities.UserPublicProfile.list()
         ]);
-        const userIdToEmail = {};
-        profiles.forEach(p => { if (p.userId) userIdToEmail[p.userId] = p.email; });
-        const uniqueEmails = new Set();
-        docSuggestions.forEach(s => { if (s.created_by) uniqueEmails.add(s.created_by); });
-        docSuggestionVotes.forEach(v => {
-          if (v.created_by) uniqueEmails.add(v.created_by);
-          if (v.userId && userIdToEmail[v.userId]) uniqueEmails.add(userIdToEmail[v.userId]);
-        });
-        docSectionVotes.forEach(v => {
-          if (v.created_by) uniqueEmails.add(v.created_by);
-          if (v.userId && userIdToEmail[v.userId]) uniqueEmails.add(userIdToEmail[v.userId]);
-        });
-        docAgreements.forEach(a => { if (a.userEmail) uniqueEmails.add(a.userEmail); });
-        const totalUsers = Math.max(1, uniqueEmails.size);
+        const emailToUserId = {};
+        profiles.forEach(p => { if (p.email && p.userId) emailToUserId[p.email] = p.userId; });
+        const uniqueParticipants = new Set();
+        const addByKey = (userId, email) => {
+          if (userId) uniqueParticipants.add(userId);
+          else if (email) { const uid = emailToUserId[email]; uniqueParticipants.add(uid || email); }
+        };
+        docSuggestions.forEach(s => { addByKey(s.created_by_id, s.created_by); });
+        docSuggestionVotes.forEach(v => { addByKey(v.userId, v.created_by); });
+        docSectionVotes.forEach(v => { addByKey(v.userId, v.created_by); });
+        docAgreements.forEach(a => { addByKey(a.userId, a.userEmail); });
+        const totalUsers = Math.max(1, uniqueParticipants.size);
         await base44.asServiceRole.entities.Document.update(document.id, { totalUsersInteracted: totalUsers });
         console.log('[VOTE FUNCTION] Updated totalUsersInteracted:', totalUsers);
       } catch (e) {

@@ -81,35 +81,33 @@ async function calculateContributors(base44, documentId) {
 
   const comments = [...docComments, ...sectionComments, ...suggestionComments];
 
-  // Build O(1) lookup map
-  const profileByUserId = new Map();
-  profiles.forEach(p => { if (p.userId) profileByUserId.set(p.userId, p); });
+  // Build O(1) lookup maps — email→userId for resolving comment/suggestion creator emails
+  const emailToUserId = new Map();
+  profiles.forEach(p => { if (p.email && p.userId) emailToUserId.set(p.email, p.userId); });
 
-  const uniqueEmails = new Set();
+  const uniqueParticipants = new Set(); // userIds (primary) + unresolved emails
 
-  // From votes — resolve userId → email via profile map
-  votes.forEach(v => {
-    const profile = profileByUserId.get(v.userId);
-    if (profile?.email) uniqueEmails.add(profile.email);
-  });
+  const addByKey = (userId, email) => {
+    if (userId) uniqueParticipants.add(userId);
+    else if (email) { const uid = emailToUserId.get(email); uniqueParticipants.add(uid || email); }
+  };
+
+  // From votes — userId is always present on Vote records
+  votes.forEach(v => { addByKey(v.userId, v.created_by); });
 
   // From comments
-  comments.forEach(c => { if (c.created_by) uniqueEmails.add(c.created_by); });
+  comments.forEach(c => { addByKey(c.created_by_id, c.created_by); });
 
   // From agreements
-  agreements.forEach(a => { if (a.userEmail) uniqueEmails.add(a.userEmail); });
+  agreements.forEach(a => { addByKey(a.userId, a.userEmail); });
 
   // From suggestion creators
-  suggestions.forEach(s => { if (s.created_by) uniqueEmails.add(s.created_by); });
+  suggestions.forEach(s => { addByKey(s.created_by_id, s.created_by); });
 
-  // From section voters
-  sectionVotes.forEach(v => {
-    const profile = profileByUserId.get(v.userId);
-    if (profile?.email) uniqueEmails.add(profile.email);
-    if (v.created_by) uniqueEmails.add(v.created_by);
-  });
+  // From section voters — userId is always present on SectionVote records
+  sectionVotes.forEach(v => { addByKey(v.userId, v.created_by); });
 
-  return Math.max(1, uniqueEmails.size);
+  return Math.max(1, uniqueParticipants.size);
 }
 
 Deno.serve(async (req) => {
