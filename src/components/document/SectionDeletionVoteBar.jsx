@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/LanguageContext";
 import { toast } from "sonner";
@@ -26,8 +26,15 @@ import {
 export default function SectionDeletionVoteBar({ section, document, user, isRTL, initialVotes = [], canParticipate = true, onCannotParticipate, onSuggestEdit, onSuggestEditThenVote, onConCommentPosted, readOnly = false, sourceSuggestion }) {
   const { language } = useLanguage();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [showConDialog, setShowConDialog] = useState(false);
   const [conComment, setConComment] = useState("");
+
+  // Refs to pass data from the con-vote handlers to voteMutation.onSuccess.
+  // pendingCommentRef: the comment ID posted with the con vote (if any).
+  // pendingSuggestEditRef: whether the user chose "Vote against & suggest improvement".
+  const pendingCommentRef = useRef(null);
+  const pendingSuggestEditRef = useRef(false);
 
   const { data: sectionVotes = [] } = useQuery({
     queryKey: ["sectionVotes", section.id],
@@ -114,6 +121,10 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
         queryClient.invalidateQueries({ queryKey: ["sectionVotes", section.id] });
       }
       queryClient.invalidateQueries({ queryKey: ["allSectionVotes"] });
+
+      const commentId = pendingCommentRef.current;
+      const wantSuggestEdit = pendingSuggestEditRef.current;
+
       if (data?.sectionDeleted) {
         toast.success(
           language === 'he' ? 'הצבעתך התקבלה והסעיף הוסר' :
@@ -122,12 +133,37 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
         );
         // Notify SectionCarousel to play the red border flash animation
         window.dispatchEvent(new CustomEvent('section-deleted-flash', { detail: { sectionId: section.id } }));
-        // Delay query invalidation so the section stays visible during the flash
-        setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
-          queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', document.id] });
-        }, 4000);
+
+        const delSuggId = data?.deleteSuggestionId;
+        if (delSuggId) {
+          // Comments were repointed to the suggestion on the backend — invalidate
+          // so the suggestion detail page fetches fresh data.
+          queryClient.invalidateQueries({ queryKey: ['comments', 'suggestion', delSuggId] });
+          // Redirect to the delete suggestion detail page so the user sees the
+          // voting result and their comment (with scroll). Short delay for the toast.
+          setTimeout(() => {
+            const url = `${createPageUrl("suggestiondetail")}?id=${delSuggId}${commentId ? `&commentId=${commentId}` : ''}`;
+            navigate(url);
+          }, 1000);
+        } else {
+          // Fallback: no suggestion was created — stay on page, invalidate after flash
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
+            queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', document.id] });
+          }, 4000);
+        }
+      } else {
+        // Section NOT deleted — provide local in-document feedback
+        if (commentId && onConCommentPosted) {
+          onConCommentPosted(commentId);
+        }
+        if (wantSuggestEdit && onSuggestEdit) {
+          onSuggestEdit(section);
+        }
       }
+
+      pendingCommentRef.current = null;
+      pendingSuggestEditRef.current = false;
     }
   });
 
@@ -173,24 +209,18 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
     setShowConDialog(false);
     const comment = await postConComment();
     setConComment("");
+    pendingCommentRef.current = comment?.id || null;
+    pendingSuggestEditRef.current = false;
     voteMutation.mutate('con');
-    if (comment && onConCommentPosted) {
-      onConCommentPosted(comment.id);
-    }
   };
 
   const handleConVoteAndSuggest = async () => {
     setShowConDialog(false);
     const comment = await postConComment();
     setConComment("");
-    // Vote con immediately, then open the suggestion modal for an improvement.
+    pendingCommentRef.current = comment?.id || null;
+    pendingSuggestEditRef.current = true;
     voteMutation.mutate('con');
-    if (comment && onConCommentPosted) {
-      onConCommentPosted(comment.id);
-    }
-    if (onSuggestEdit) {
-      onSuggestEdit(section);
-    }
   };
 
   const isHe = language === 'he';

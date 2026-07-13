@@ -194,6 +194,7 @@ Deno.serve(async (req) => {
       // support threshold, the section is automatically deleted.
       // Uses combined counts (inherited suggestion votes + live section votes).
       let sectionDeleted = false;
+      let deleteSuggestionId = null;
       const section = await base44.asServiceRole.entities.Section.get(sectionId).catch(() => null);
       if (section) {
         const document = await base44.asServiceRole.entities.Document.get(section.documentId).catch(() => null);
@@ -208,7 +209,6 @@ Deno.serve(async (req) => {
           // this ensures useDocumentVersions groups them as a suggestion event
           // (correct before/after pairing) instead of direct_edit (which mispairs
           // when the section has prior version-less records).
-          let deleteSuggestionId = null;
           try {
             const deleteSuggestion = await base44.asServiceRole.entities.Suggestion.create({
               documentId: section.documentId,
@@ -234,6 +234,31 @@ Deno.serve(async (req) => {
             deleteSuggestionId = deleteSuggestion?.id || null;
           } catch (e) {
             console.error('[VOTE ON SECTION suggestion creation error]', e);
+          }
+
+          // ── Repoint all section comments to the delete suggestion ──────────
+          // After the section is deleted, comments posted to rootEntityType:"section"
+          // would be orphaned. Repoint them to the new delete_section suggestion so
+          // they remain visible on the suggestion detail page.
+          if (deleteSuggestionId) {
+            try {
+              const sectionComments = await base44.asServiceRole.entities.Comment.filter({
+                rootEntityType: 'section', rootEntityId: sectionId
+              });
+              if (sectionComments.length > 0) {
+                await Promise.all(
+                  sectionComments.map(c =>
+                    base44.asServiceRole.entities.Comment.update(c.id, {
+                      rootEntityType: 'suggestion',
+                      rootEntityId: deleteSuggestionId
+                    })
+                  )
+                );
+                console.log('[VOTE ON SECTION] Repointed', sectionComments.length, 'section comments to delete suggestion');
+              }
+            } catch (e) {
+              console.error('[VOTE ON SECTION comment repoint error]', e);
+            }
           }
 
           // Log version history entries before deleting (for reconstruction)
@@ -361,7 +386,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      return Response.json({ success: true, action, proCount, conCount, votes: freshVotes, sectionDeleted });
+      return Response.json({ success: true, action, proCount, conCount, votes: freshVotes, sectionDeleted, deleteSuggestionId: deleteSuggestionId || null });
 
     } finally {
       processingVotes.delete(lockKey);
