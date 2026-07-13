@@ -32,8 +32,8 @@ export const tutorialStrings = {
     'doc.counters.body': 'המספרים האלו מראים לכם כמה משתתפים בעריכת המסמך, כמה הצעות פתוחות להצבעה, מהי רמת ההסכמה הכללית וכמה גרסאות כבר אושרו. בלחיצה על הנתון תוכלו לראות מידע נוסף.',
     'editclause.explain.heading': 'התוכן גמיש – ופתוח לשינוי שלכם',
     'editclause.explain.body': 'המסמך מחולק לנושאים וסעיפים. לא מסכימים עם נוסח קיים? כל סעיף פתוח להצעות עריכה או מחיקה. הקהילה תצביע על ההצעה שלכם, ואם תזכו לתמיכה – המסמך יתעדכן אוטומטית!',
-    'editclause.buttons.heading': 'איך מציעים שינוי?',
-    'editclause.buttons.body': 'במחשב: העבירו את העכבר מעל הסעיף. בנייד: לחצו לחיצה קלה על הסעיף. כפתור העריכה יופיע ויאפשר לכם להציע שינויים להצבעה.',
+    'editclause.buttons.heading': 'איך מציגים שינוי?',
+    'editclause.buttons.body': 'בתחתית הסעיף לחצו על כפתור ״הצעת עריכה לסעיף״, בחלון שייפתח תוכלו להזין את הנוסח החדש וכן הסבר מדוע לדעתכם נדרש שינוי.',
     'browse.explain.heading': 'דפדוף בין הצעות עריכה',
     'browse.explain.body': 'אם פורסמו הצעות לשינוי הסעיף יופיעו כאן חצי דפדוף שיאפשרו לכם להשוות בין הרעיונות שהוצעו. .',
     'vote.explain.heading': 'הקול שלכם קובע ומכריע',
@@ -93,8 +93,8 @@ export const tutorialStrings = {
     'doc.counters.body': 'تُظهر هذه الأرقام عدد المشاركين في تحرير الوثيقة، وعدد الاقتراحات المفتوحة للتصويت، ومستوى التوافق العام، وعدد الإصدارات المقبولة. بالضغط على الرقم يمكنكم رؤية مزيد من المعلومات.',
     'editclause.explain.heading': 'بنود الوثيقة — وكيفية تعديلها',
     'editclause.explain.body': 'الوثيقة مقسمة إلى مواضيع وبنود، وكل بند هو محتوى أُنشئ بشكل تعاوني. لا توافقون على صياغة موجودة؟ يمكنكم اقتراح إعادة صياغة أي بند — أو اقتراح حذفه كلياً. هذه التغييرات أيضاً تخضع للتصويت، وإذا وافق المجتمع — ستُدرج في الوثيقة.',
-    'editclause.buttons.heading': 'أزرار اقتراح التعديل والحذف',
-    'editclause.buttons.body': 'على الحاسوب: مرروا المؤشر فوق البند. على الجوال: اضغطوا على البند بخفة. سيظهر زر التحرير ويتيح لكم اقتراح تغييرات للتصويت.',
+    'editclause.buttons.heading': 'كيف تقترحون تغييراً؟',
+    'editclause.buttons.body': 'في أسفل البند اضغطوا على زر \"اقتراح تعديل على البند\"، في النافذة التي ستفتح ستتمكنون من إدخال الصياغة الجديدة وكذلك شرح لماذا برأيكم مطلوب التغيير.',
     'browse.explain.heading': 'التنقل بين اقتراحات التحرير',
     'browse.explain.body': 'إذا نُشرت اقتراحات لتعديل البند ستظهر هنا أسهم للتنقل تتيح لكم مقارنة الأفكار المقترحة.',
     'vote.explain.heading': 'تصويتكم يشكّل الوثيقة',
@@ -156,7 +156,7 @@ export const tutorialStrings = {
     'editclause.explain.heading': 'Content is flexible — and open to your changes',
     'editclause.explain.body': 'The document is divided into topics and sections. Don\'t agree with existing wording? Every section is open to edit or delete proposals. The community will vote on your proposal, and if it gains support — the document updates automatically!',
     'editclause.buttons.heading': 'How to propose a change?',
-    'editclause.buttons.body': 'On desktop: hover your mouse over the section. On mobile: tap the section lightly. The edit button will appear and let you propose changes for voting.',
+    'editclause.buttons.body': 'At the bottom of the section, click the \"Suggest edit to section\" button. In the window that opens, you can enter the new wording and an explanation of why you think the change is needed.',
     'browse.explain.heading': 'Browse between edit proposals',
     'browse.explain.body': 'If edit proposals have been submitted for this section, browsing arrows will appear here — letting you compare the proposed ideas.',
     'vote.explain.heading': 'Your voice decides and makes a difference',
@@ -301,15 +301,14 @@ export const TUTORIAL_STEPS = [
     body: 'editclause.explain.body',
   },
 
-  // 3.5. Edit buttons explanation — spotlight on the actual action buttons
+  // 3.5. Edit buttons explanation — spotlight on the "suggest edit" button
   {
     id: 'editclause-buttons',
     type: 'explain',
-    targetSelector: '.section-action-buttons',
+    targetSelector: '.tutorial-suggest-edit-btn',
     tooltipPosition: 'bottom',
     heading: 'editclause.buttons.heading',
     body: 'editclause.buttons.body',
-    forceRevealTarget: true,
   },
 
   // 5. Browsing proposals (viewing versions)

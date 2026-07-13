@@ -101,7 +101,7 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
           variant="ghost"
           size="sm"
           onClick={handleEditClick}
-          className={`text-xs h-8 px-3 flex-shrink-0 ${isRTL ? 'ml-0 mr-auto' : 'mr-0 ml-auto'}`}
+          className={`tutorial-suggest-edit-btn text-xs h-8 px-3 flex-shrink-0 ${isRTL ? 'ml-0 mr-auto' : 'mr-0 ml-auto'}`}
         >
           <Edit className={`w-3.5 h-3.5 shrink-0 ${isRTL ? 'ml-1' : 'mr-1'}`} />
           <span className="truncate">{t('suggestEditSection')}</span>

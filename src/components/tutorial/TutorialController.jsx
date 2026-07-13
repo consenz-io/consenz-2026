@@ -317,35 +317,6 @@ export default function TutorialController() {
     return () => { el.classList.remove('tutorial-highlight-target'); };
   }, [phase, currentStep, navPending]);
 
-  // ── Handle editclause-buttons: force-show edit/delete buttons on section card ──
-  useEffect(() => {
-    if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
-    const step = TUTORIAL_STEPS[currentStep];
-    if (!step || step.id !== 'editclause-buttons') return;
-
-    const actionButtons = document.querySelector('.section-action-buttons');
-    if (!actionButtons) return;
-
-    // Add class to force-show the hidden buttons via CSS
-    actionButtons.classList.add('tutorial-force-hover');
-
-    // Also inline-override opacity-0 buttons directly
-    const overrides = [];
-    actionButtons.querySelectorAll('.opacity-0').forEach(el => {
-      overrides.push({ el, opacity: el.style.opacity, transition: el.style.transition });
-      el.style.opacity = '1';
-      el.style.transition = 'none';
-    });
-
-    return () => {
-      actionButtons.classList.remove('tutorial-force-hover');
-      overrides.forEach(({ el, opacity, transition }) => {
-        el.style.opacity = opacity;
-        el.style.transition = transition;
-      });
-    };
-  }, [phase, currentStep, navPending]);
-
   // ── Handle newclause-explain: force-show the insert-section button ──────────
   useEffect(() => {
     if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
