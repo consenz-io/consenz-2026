@@ -24,6 +24,7 @@ import { computeDropPosition } from "./utils/dropPosition";
 import DeleteSectionSuggestionCard from "./DeleteSectionSuggestionCard";
 import EditTopicModal from "./EditTopicModal";
 import TopicTitleCarousel from "./TopicTitleCarousel";
+import PointsCostTooltip from "./PointsCostTooltip";
 
 import { useLanguage } from "@/components/LanguageContext";
 import { cleanDisplayName } from "@/lib/displayName";
@@ -855,6 +856,7 @@ Return ONLY the translated text:`;
                      <div className="group relative h-8 flex items-center justify-center my-1 z-10">
                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
                          <div className="h-full flex items-center justify-center">
+                           <PointsCostTooltip gamificationEnabled={document?.gamificationEnabled} actionType="new" language={language} isRTL={isRTL}>
                            <Button
                              size="sm"
                              variant="outline"
@@ -877,6 +879,7 @@ Return ONLY the translated text:`;
                              <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                              {t('insertSectionHere')}
                            </Button>
+                           </PointsCostTooltip>
                          </div>
                        </div>
                      </div>
@@ -954,6 +957,7 @@ Return ONLY the translated text:`;
                               <div className="group relative h-4 flex items-center justify-center -my-2 -mb-4 z-10">
                                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                   <div className="h-full flex items-center justify-center">
+                                    <PointsCostTooltip gamificationEnabled={document?.gamificationEnabled} actionType="new" language={language} isRTL={isRTL}>
                                     <Button
                                       size="sm"
                                       variant="outline"
@@ -971,6 +975,7 @@ Return ONLY the translated text:`;
                                       <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                       {t('insertSectionHere')}
                                       </Button>
+                                      </PointsCostTooltip>
                                       </div>
                                       </div>
                                       </div>
@@ -979,6 +984,7 @@ Return ONLY the translated text:`;
                                         <div className="group relative h-4 flex items-center justify-center -mt-2 -mb-2 z-10">
                                           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <div className="h-full flex items-center justify-center">
+                                              <PointsCostTooltip gamificationEnabled={document?.gamificationEnabled} actionType="new" language={language} isRTL={isRTL}>
                                               <Button
                                                 size="sm"
                                                 variant="outline"
@@ -995,6 +1001,7 @@ Return ONLY the translated text:`;
                                                 <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                 {t('insertSectionHere')}
                                               </Button>
+                                              </PointsCostTooltip>
                                             </div>
                                           </div>
                                         </div>
@@ -1098,6 +1105,7 @@ Return ONLY the translated text:`;
                               <div className="group relative h-8 flex items-center justify-center my-1 z-10">
                                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                   <div className="h-full flex items-center justify-center">
+                                    <PointsCostTooltip gamificationEnabled={document?.gamificationEnabled} actionType="new" language={language} isRTL={isRTL}>
                                     <Button
                                       size="sm"
                                       variant="outline"
@@ -1114,6 +1122,7 @@ Return ONLY the translated text:`;
                                       <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                       {t('insertSectionHere')}
                                     </Button>
+                                    </PointsCostTooltip>
                                   </div>
                                 </div>
                               </div>
@@ -1124,6 +1133,7 @@ Return ONLY the translated text:`;
                                 <div className="section-insert-space group relative h-4 flex items-center justify-center mt-2">
                                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 tutorial-force-insert-btn transition-opacity">
                                     <div className="h-full flex items-center justify-center">
+                                      <PointsCostTooltip gamificationEnabled={document?.gamificationEnabled} actionType="new" language={language} isRTL={isRTL}>
                                       <Button
                                         size="sm"
                                         variant="outline"
@@ -1140,10 +1150,12 @@ Return ONLY the translated text:`;
                                         <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                         {t('insertSectionHere')}
                                         </Button>
+                                        </PointsCostTooltip>
                                         </div>
                                         </div>
                                         </div>
                                         <div className="opacity-0 group-hover/section:opacity-100 transition-opacity absolute -bottom-4 left-1/2 -translate-x-1/2 z-10">
+                                        <PointsCostTooltip gamificationEnabled={document?.gamificationEnabled} actionType="new" language={language} isRTL={isRTL}>
                                         <Button
                                         size="sm"
                                         variant="outline"
@@ -1160,6 +1172,7 @@ Return ONLY the translated text:`;
                                     <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                     {t('insertSectionHere')}
                                   </Button>
+                                  </PointsCostTooltip>
                                 </div>
                               </>
                             )}

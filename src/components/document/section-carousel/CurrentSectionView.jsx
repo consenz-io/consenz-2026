@@ -2,10 +2,12 @@ import React from "react";
 import { MessageSquare, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
+import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "../TranslatableContent";
 import DocumentTextContent from "../DocumentTextContent";
 import SectionDeletionVoteBar from "../SectionDeletionVoteBar";
 import CommentsSection from "../CommentsSection";
+import PointsCostTooltip from "../PointsCostTooltip";
 
 /**
  * Renders the "current section" view — the live section content, deletion vote bar,
@@ -29,6 +31,7 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
   showComments,
   sourceSuggestion,
 }) {
+  const { language } = useLanguage();
   const commentsKey = `section-${section.id}`;
   const commentCount = typeof getCommentsCount === 'function' ? getCommentsCount(activeCommentEntity.entityType, activeCommentEntity.entityId) : 0;
   const hasComments = commentCount > 0;
@@ -97,15 +100,22 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
 
       {/* Action buttons row — suggest edit + comments (mirrors SuggestionView layout) */}
       <div className={`flex items-center gap-2 flex-wrap mt-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleEditClick}
-          className={`tutorial-suggest-edit-btn text-xs h-8 px-3 flex-shrink-0 ${isRTL ? 'ml-0 mr-auto' : 'mr-0 ml-auto'}`}
+        <PointsCostTooltip
+          gamificationEnabled={document?.gamificationEnabled}
+          actionType="edit"
+          language={language}
+          isRTL={isRTL}
         >
-          <Edit className={`w-3.5 h-3.5 shrink-0 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-          <span className="truncate">{t('suggestEditSection')}</span>
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleEditClick}
+            className={`tutorial-suggest-edit-btn text-xs h-8 px-3 flex-shrink-0 ${isRTL ? 'ml-0 mr-auto' : 'mr-0 ml-auto'}`}
+          >
+            <Edit className={`w-3.5 h-3.5 shrink-0 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+            <span className="truncate">{t('suggestEditSection')}</span>
+          </Button>
+        </PointsCostTooltip>
         <Button
           variant={hasComments ? 'outline' : 'ghost'}
           size="sm"
