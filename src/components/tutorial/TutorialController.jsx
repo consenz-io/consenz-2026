@@ -151,6 +151,32 @@ export default function TutorialController() {
 
   // ── Skip missing target elements ────────────────────────────────────────────
   const manualNavRef = useRef(false);
+  // Set true right after the user clicks "Let's start" on the welcome overlay,
+  // so we force-scroll to the first visible step once it mounts.
+  const justStartedRef = useRef(false);
+
+  // ── Force-scroll to the first step's target after starting from welcome overlay ──
+  useEffect(() => {
+    if (phase !== 'running' || !justStartedRef.current) return;
+    const step = TUTORIAL_STEPS[currentStep];
+    // Wait past the auto-skipped welcome-intro-prepare step (no targetSelector)
+    if (!step || !step.targetSelector) return;
+
+    justStartedRef.current = false;
+
+    let attempts = 0;
+    const tryScroll = () => {
+      const el = document.querySelector(step.targetSelector);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else if (attempts < 8) {
+        attempts += 1;
+        setTimeout(tryScroll, 150);
+      }
+    };
+    const timer = setTimeout(tryScroll, 200);
+    return () => clearTimeout(timer);
+  }, [phase, currentStep]);
 
   const handleNext = useCallback((...args) => {
     manualNavRef.current = true;
@@ -468,24 +494,9 @@ export default function TutorialController() {
         navigate('/');
       }
       beginFromWelcomeOverlay();
-
-      // When starting directly on a document page, scroll to the first visible
-      // tutorial step's target so the next bubble is in view immediately.
-      if (onDocument) {
-        const scrollToFirstStep = (attempt = 0) => {
-          const firstStep = TUTORIAL_STEPS.find(
-            (s) => s.targetSelector && s.id !== 'welcome-intro-prepare'
-          );
-          if (!firstStep) return;
-          const el = document.querySelector(firstStep.targetSelector);
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          } else if (attempt < 5) {
-            setTimeout(() => scrollToFirstStep(attempt + 1), 150);
-          }
-        };
-        setTimeout(() => scrollToFirstStep(), 250);
-      }
+      // Flag that we just started from the welcome overlay so the running-phase
+      // scroll effect force-scrolls to the first visible step's target.
+      justStartedRef.current = true;
     };
     return (
       <TutorialWelcomeOverlay
