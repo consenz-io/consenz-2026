@@ -330,23 +330,13 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
         <DialogContent className="max-w-sm" onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle>
-              {isHe ? 'האם ברצונך להציע שיפור לנוסח הסעיף?' : isAr ? 'هل تريد اقتراح تحسين لنص القسم؟' : 'Would you like to suggest an improvement?'}
+              {isHe ? 'הצבעת נגד הסעיף' : isAr ? 'التصويت ضد القسم' : 'Vote against this section'}
             </DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-slate-600">
-            {isHe ? 'הצבעת הנגד תירשם. ניתן גם להציע שינוי לנוסח הסעיף.' : isAr ? 'سيتم تسجيل تصويتك ضد. يمكنك أيضاً اقتراح تعديل على نص القسم.' : 'Your vote against will be recorded. You can also suggest a change to the section text.'}
-          </p>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={handleConVoteOnly} className="flex-1">
-              {isHe ? 'הצבעת נגד בלבד' : isAr ? 'تصويت ضد فقط' : 'Vote against only'}
-            </Button>
-            <Button onClick={handleConVoteAndSuggest} className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600">
-              {isHe ? 'הצבעת נגד והצעת שיפור' : isAr ? 'تصويت ضد واقتراح تحسين' : 'Vote against & suggest improvement'}
-            </Button>
-          </DialogFooter>
-          <div className="space-y-1.5 mt-2">
-            <label className="text-sm font-medium text-slate-700">
-              {isHe ? 'הסבר להתנגדות (אופציונלי)' : isAr ? 'شرح المعارضة (اختياري)' : 'Explain your opposition (optional)'}
+
+          <div className="space-y-1.5">
+            <label className="text-sm text-slate-600">
+              {isHe ? 'רוצה גם להסביר למה או להציע שיפור?' : isAr ? 'هل تريد أيضاً توضيح السبب أو اقتراح تحسين؟' : 'Want to explain why or suggest an improvement?'}
             </label>
             <Textarea
               value={conComment}
@@ -355,10 +345,16 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
               className="min-h-[80px] resize-none"
               dir={isRTL ? 'rtl' : 'ltr'}
             />
-            <Button variant="outline" onClick={handleConVoteOnly} className="w-full">
-              {isHe ? 'שלח והצבע נגד' : isAr ? 'أرسل وصوّت ضد' : 'Submit & vote against'}
-            </Button>
           </div>
+
+          <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
+            <Button onClick={handleConVoteOnly} className="w-full bg-red-600 hover:bg-red-700 text-white">
+              {isHe ? 'הצבע נגד' : isAr ? 'صوّت ضد' : 'Vote against'}
+            </Button>
+            <Button variant="outline" onClick={handleConVoteAndSuggest} className="w-full">
+              {isHe ? 'נגד + הצעת שיפור' : isAr ? 'ضد + اقتراح تحسين' : 'Against + suggest improvement'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>);
