@@ -222,9 +222,14 @@ export default function TutorialController() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
-  // ── Auto-scroll to target element on every step change (desktop + mobile) ──────
+  // ── Auto-scroll to target element on every step change ──────────────────────
+  // Mobile ONLY: the bottom sheet is fixed and never scrolls the target into view
+  // on its own, so we scroll here — accounting for the sheet height so the target
+  // is never hidden behind it. On desktop, TutorialTooltip owns the scroll (it
+  // scrolls + measures its own position together), so scrolling here too would
+  // cause a competing double-scroll and a mis-placed bubble.
   useEffect(() => {
-    if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
+    if (!isMobile || phase !== 'running' || !TUTORIAL_STEPS.length) return;
     const step = TUTORIAL_STEPS[currentStep];
     if (!step || !step.targetSelector || step.type === 'closing') return;
 
@@ -234,33 +239,30 @@ export default function TutorialController() {
 
       const rect = el.getBoundingClientRect();
 
-      if (isMobile) {
-        // Mobile: account for the bottom sheet so the element isn't hidden behind it
-        const sheet = document.querySelector('.tutorial-highlight-bubble');
-        const sheetHeight = sheet ? sheet.getBoundingClientRect().height : 220;
-        const margin = 12;
-        const visibleHeight = window.innerHeight - sheetHeight;
+      // Account for the bottom sheet so the element isn't hidden behind it.
+      const sheet = document.querySelector('.tutorial-highlight-bubble');
+      const sheetHeight = sheet ? sheet.getBoundingClientRect().height : 260;
+      const topMargin = 72; // keep clear of the fixed app header
+      const margin = 16;
+      const visibleHeight = window.innerHeight - sheetHeight;
 
-        if (rect.bottom > visibleHeight - margin || rect.top < 0) {
-          let targetY;
-          if (rect.height > visibleHeight - margin) {
-            targetY = window.scrollY + rect.top - 8;
-          } else {
-            targetY = window.scrollY + rect.bottom - visibleHeight + margin;
-          }
-          targetY = Math.max(0, targetY);
-          window.scrollTo({ top: targetY, behavior: 'smooth' });
+      if (rect.bottom > visibleHeight - margin || rect.top < topMargin) {
+        let targetY;
+        if (rect.height > visibleHeight - topMargin - margin) {
+          // Target taller than the visible band → align its top just below the header
+          targetY = window.scrollY + rect.top - topMargin;
+        } else {
+          // Center the target within the band between the header and the sheet
+          const bandCenter = topMargin + (visibleHeight - topMargin) / 2;
+          targetY = window.scrollY + (rect.top + rect.height / 2) - bandCenter;
         }
-      } else {
-        // Desktop: scroll element into view if not fully visible (with margin for tooltip)
-        const margin = 100;
-        if (rect.top < margin || rect.bottom > window.innerHeight - margin) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        targetY = Math.max(0, targetY);
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
       }
     };
 
-    const timer = setTimeout(scrollToElement, isMobile ? 120 : 100);
+    // Wait for the sheet to render so we can measure its height accurately.
+    const timer = setTimeout(scrollToElement, 180);
     return () => clearTimeout(timer);
   }, [isMobile, phase, currentStep, navPending]);
 

@@ -184,7 +184,17 @@ button:focus-visible {
   transition: none !important;
 }
 
-/* Tutorial: force-show insert-section button during newclause-explain step */
+/* Tutorial: force-show insert-section button during newclause-explain step.
+   Give the (normally 16px) insert space a real height so its bounding box
+   fully contains the button. Without this, the spotlight + tooltip measure
+   only the thin 16px gap while the button visually overflows it — causing the
+   explanation bubble to cover the "Add section" button. */
+.section-insert-space.tutorial-force-insert-visible {
+  height: 3rem !important;
+  margin-top: 0.75rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
 .section-insert-space.tutorial-force-insert-visible .tutorial-force-insert-btn {
   opacity: 1 !important;
   transition: none !important;

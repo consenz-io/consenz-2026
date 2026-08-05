@@ -11,7 +11,7 @@ const TOOLTIP_HEIGHT = 200; // estimate for positioning
 const ARROW_SIZE = 10;
 
 function isMobileViewport() {
-  return typeof window !== 'undefined' && window.innerWidth < 768;
+  return typeof window !== 'undefined' && window.innerWidth <= 768;
 }
 
 function computePosition(rect, preferred, isRTL) {
@@ -22,6 +22,7 @@ function computePosition(rect, preferred, isRTL) {
   const vh = window.innerHeight;
   const margin = 16;
 
+  // Does the tooltip fit on each side WITHOUT overlapping the target element?
   const fits = {
     top: rect.top - TOOLTIP_HEIGHT - ARROW_SIZE - margin > 0,
     bottom: rect.bottom + TOOLTIP_HEIGHT + ARROW_SIZE + margin < vh,
@@ -31,40 +32,61 @@ function computePosition(rect, preferred, isRTL) {
 
   if (preferred !== 'auto' && fits[preferred]) return preferred;
 
-  // Auto-flip priority
-  const priority = isRTL ? ['bottom', 'top', 'right', 'left'] : ['bottom', 'top', 'right', 'left'];
-  return priority.find(p => fits[p]) || 'bottom';
+  // Auto-flip priority — try every side until one fits without hiding the target.
+  // Prefer vertical placement (bottom/top) first, then horizontal.
+  const priority = ['bottom', 'top', 'right', 'left'];
+  const found = priority.find(p => fits[p]);
+  if (found) return found;
+
+  // Nothing fits cleanly (target is very large or fills the viewport).
+  // Choose the side with the MOST available space so the bubble overlaps the
+  // target as little as possible instead of blindly defaulting to 'bottom'.
+  const space = {
+    top: rect.top,
+    bottom: vh - rect.bottom,
+    left: rect.left,
+    right: vw - rect.right,
+  };
+  return Object.keys(space).reduce((a, b) => (space[b] > space[a] ? b : a), 'bottom');
 }
 
 function getTooltipStyle(rect, position) {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
   const centerX = rect.left + rect.width / 2;
   const centerY = rect.top + rect.height / 2;
+
+  // Clamp horizontal so the bubble never runs off the left/right edges.
+  const clampX = (x) => Math.max(8, Math.min(vw - TOOLTIP_WIDTH - 8, x));
+  // Clamp vertical so a side-placed bubble never runs off the top/bottom edges.
+  const clampY = (y) => Math.max(8, Math.min(vh - TOOLTIP_HEIGHT - 8, y));
 
   switch (position) {
     case 'top':
       return {
-        left: Math.max(8, Math.min(window.innerWidth - TOOLTIP_WIDTH - 8, centerX - TOOLTIP_WIDTH / 2)),
-        top: rect.top - ARROW_SIZE - 8,
-        transform: 'translateY(-100%)',
+        left: clampX(centerX - TOOLTIP_WIDTH / 2),
+        // Anchor the bubble's BOTTOM just above the target, but never let its top
+        // go off-screen — clamp the resolved top edge (target.top - gap - height).
+        top: Math.max(8, rect.top - ARROW_SIZE - 8 - TOOLTIP_HEIGHT),
       };
     case 'bottom':
       return {
-        left: Math.max(8, Math.min(window.innerWidth - TOOLTIP_WIDTH - 8, centerX - TOOLTIP_WIDTH / 2)),
-        top: rect.bottom + ARROW_SIZE + 8,
+        left: clampX(centerX - TOOLTIP_WIDTH / 2),
+        top: Math.min(vh - 8 - TOOLTIP_HEIGHT, rect.bottom + ARROW_SIZE + 8),
       };
     case 'left':
       return {
         left: rect.left - ARROW_SIZE - 8,
-        top: Math.max(8, centerY - TOOLTIP_HEIGHT / 2),
+        top: clampY(centerY - TOOLTIP_HEIGHT / 2),
         transform: 'translateX(-100%)',
       };
     case 'right':
       return {
         left: rect.right + ARROW_SIZE + 8,
-        top: Math.max(8, centerY - TOOLTIP_HEIGHT / 2),
+        top: clampY(centerY - TOOLTIP_HEIGHT / 2),
       };
     default:
-      return { left: centerX - TOOLTIP_WIDTH / 2, top: rect.bottom + ARROW_SIZE + 8 };
+      return { left: clampX(centerX - TOOLTIP_WIDTH / 2), top: rect.bottom + ARROW_SIZE + 8 };
   }
 }
 
@@ -131,6 +153,8 @@ export default function TutorialTooltip({
     let pollInterval = null;
     let pollAttempts = 0;
     const MAX_POLL_ATTEMPTS = 20; // 20 × 150ms = 3s max wait
+    let settleRaf = null;
+    let settleTimer = null;
 
     function applyPosition(el) {
       const rect = el.getBoundingClientRect();
@@ -157,6 +181,35 @@ export default function TutorialTooltip({
       applyPosition(el);
     }
 
+    // After scrolling, the target's rect keeps changing until the smooth scroll
+    // settles. Poll the rect and only measure the final tooltip position once it
+    // stops moving — this prevents the bubble from being placed over the target
+    // based on a stale (mid-scroll) measurement.
+    function measureWhenSettled(el) {
+      let lastTop = null;
+      let stableCount = 0;
+      const tick = () => {
+        const top = el.getBoundingClientRect().top;
+        if (lastTop !== null && Math.abs(top - lastTop) < 1) {
+          stableCount += 1;
+        } else {
+          stableCount = 0;
+        }
+        lastTop = top;
+        // Two consecutive stable frames → scroll finished
+        if (stableCount >= 2) {
+          applyPosition(el);
+          return;
+        }
+        settleTimer = setTimeout(() => {
+          settleRaf = requestAnimationFrame(tick);
+        }, 60);
+      };
+      // Apply an initial position immediately so the bubble appears, then refine.
+      applyPosition(el);
+      settleRaf = requestAnimationFrame(tick);
+    }
+
     function tryInit() {
       if (step.tooltipPosition === 'sidebar') {
         update();
@@ -165,8 +218,7 @@ export default function TutorialTooltip({
       const el = document.querySelector(step.targetSelector);
       if (!el) return false;
       el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-      // Wait for scroll to finish before measuring
-      requestAnimationFrame(() => applyPosition(el));
+      measureWhenSettled(el);
       return true;
     }
 
@@ -187,6 +239,8 @@ export default function TutorialTooltip({
       window.removeEventListener('scroll', update);
       window.removeEventListener('resize', update);
       if (pollInterval) clearInterval(pollInterval);
+      if (settleRaf) cancelAnimationFrame(settleRaf);
+      if (settleTimer) clearTimeout(settleTimer);
     };
   }, [step, isRTL]);
 
