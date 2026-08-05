@@ -366,7 +366,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                 className="w-full h-11 rounded-xl border-2 border-slate-200 text-slate-700 hover:bg-slate-50 font-medium gap-2"
               >
                 <Pencil className="w-4 h-4 shrink-0" />
-                {isHe ? 'נגד + הצעת שיפור' : isAr ? 'ضد + اقتراح تحسين' : 'Against + suggest improvement'}
+                {isHe ? 'נגד + הצעת נוסח חלופי לסעיף' : isAr ? 'ضد + اقتراح صياغة بديلة للقسم' : 'Against + propose alternative wording'}
               </Button>
             </div>
           </div>
