@@ -336,7 +336,15 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
           <p className="text-sm text-slate-600">
             {isHe ? 'הצבעת הנגד תירשם. ניתן גם להציע שינוי לנוסח הסעיף.' : isAr ? 'سيتم تسجيل تصويتك ضد. يمكنك أيضاً اقتراح تعديل على نص القسم.' : 'Your vote against will be recorded. You can also suggest a change to the section text.'}
           </p>
-          <div className="space-y-1.5 my-2">
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={handleConVoteOnly} className="flex-1">
+              {isHe ? 'הצבעת נגד בלבד' : isAr ? 'تصويت ضد فقط' : 'Vote against only'}
+            </Button>
+            <Button onClick={handleConVoteAndSuggest} className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600">
+              {isHe ? 'הצבעת נגד והצעת שיפור' : isAr ? 'تصويت ضد واقتراح تحسين' : 'Vote against & suggest improvement'}
+            </Button>
+          </DialogFooter>
+          <div className="space-y-1.5 mt-2">
             <label className="text-sm font-medium text-slate-700">
               {isHe ? 'הסבר להתנגדות (אופציונלי)' : isAr ? 'شرح المعارضة (اختياري)' : 'Explain your opposition (optional)'}
             </label>
@@ -348,14 +356,6 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
               dir={isRTL ? 'rtl' : 'ltr'}
             />
           </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={handleConVoteOnly} className="flex-1">
-              {isHe ? 'הצבעת נגד בלבד' : isAr ? 'تصويت ضد فقط' : 'Vote against only'}
-            </Button>
-            <Button onClick={handleConVoteAndSuggest} className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600">
-              {isHe ? 'הצבעת נגד והצעת שיפור' : isAr ? 'تصويت ضد واقتراح تحسين' : 'Vote against & suggest improvement'}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>);
