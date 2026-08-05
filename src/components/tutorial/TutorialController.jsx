@@ -143,8 +143,8 @@ export default function TutorialController() {
 
   // ── Expose restart globally ──────────────────────────────────────────────
   useEffect(() => {
-    window.restartTutorial = (entryPoint) =>
-      restartTutorial(entryPoint || (isHomePage(location.pathname) ? 'home' : 'document'));
+    window.restartTutorial = (entryPoint, startStep = 0) =>
+      restartTutorial(entryPoint || (isHomePage(location.pathname) ? 'home' : 'document'), startStep);
     return () => { delete window.restartTutorial; };
   }, [restartTutorial, location.pathname]);
 
@@ -449,8 +449,10 @@ export default function TutorialController() {
   // welcome-overlay: centered welcome bubble — always shown first before the tour begins
   if (phase === 'welcome-overlay') {
     const handleWelcomeStart = () => {
-      // Redirect to home page if not already there
-      if (!isHomePage(location.pathname)) {
+      // If the tour was started from a document page, stay on it and begin there.
+      // Otherwise, redirect to the home page to start from home-intro.
+      const onDocument = isDocumentPage(location.pathname);
+      if (!onDocument && !isHomePage(location.pathname)) {
         navigate('/');
       }
       beginFromWelcomeOverlay();

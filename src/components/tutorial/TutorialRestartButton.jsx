@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { PlayCircle } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageContext';
+import { base44 } from '@/api/base44Client';
 import { tTutorial, TUTORIAL_STEPS } from './tutorialSteps';
 
 const STORAGE_KEY = 'consenz_tutorial';
@@ -19,6 +20,10 @@ function isGroupPage(pathname) {
   return /\/GroupView/i.test(pathname);
 }
 
+function isSuggestionPage(pathname) {
+  return /\/suggestiondetail/i.test(pathname);
+}
+
 export default function TutorialRestartButton() {
   const { language } = useLanguage();
   const location = useLocation();
@@ -32,11 +37,37 @@ export default function TutorialRestartButton() {
     }
   }, [location]);
 
-  const handleRestart = () => {
+  const handleRestart = async () => {
     const pathname = location.pathname;
     const onCleanView = isCleanViewPage(pathname);
     const onDoc = isDocumentPage(pathname) && !onCleanView;
     const onGroup = isGroupPage(pathname);
+    const onSuggestion = isSuggestionPage(pathname);
+
+    // If on a suggestion page, resolve its parent document and navigate there
+    // first — the tour should open on the document the suggestion belongs to.
+    if (onSuggestion) {
+      const suggestionId = new URLSearchParams(location.search).get('id');
+      let documentId = null;
+      if (suggestionId) {
+        try {
+          const suggestion = await base44.entities.Suggestion.get(suggestionId);
+          documentId = suggestion?.documentId || null;
+        } catch {
+          // fall through — no document resolved
+        }
+      }
+      const fresh = { active: true, homeStepSeen: true, currentStep: 0, completedSteps: [] };
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)); } catch {}
+      if (documentId) {
+        navigate(`/DocumentView?id=${documentId}`);
+      }
+      // Begin the tour on the (now) document page
+      if (window.restartTutorial) {
+        window.restartTutorial('document');
+      }
+      return;
+    }
 
     // If on DocumentCleanView, start from the versions-browse-explain step
     // so the tutorial is contextually relevant to what the user sees.
@@ -59,7 +90,7 @@ export default function TutorialRestartButton() {
     // Trigger tutorial restart
     const entryPoint = (onDoc || onCleanView) ? 'document' : onGroup ? 'group' : 'home';
     if (window.restartTutorial) {
-      window.restartTutorial(entryPoint);
+      window.restartTutorial(entryPoint, startStep);
     } else {
       if (onDoc || onCleanView) {
         window.location.reload();

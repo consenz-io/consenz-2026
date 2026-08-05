@@ -286,11 +286,14 @@ export function useTutorial(steps = []) {
 
   const entryPointRef = useRef('document');
 
-  const restartTutorial = useCallback((entryPoint = 'document') => {
+  const restartTutorial = useCallback((entryPoint = 'document', startStep = 0) => {
+    // When starting from a document or suggestion page, skip the home-intro flow
+    // and begin the tour directly on the document page.
+    const fromDocument = entryPoint === 'document';
     const fresh = {
       active: true,
-      homeStepSeen: false,
-      currentStep: 0,
+      homeStepSeen: fromDocument,
+      currentStep: fromDocument ? startStep : 0,
       completedSteps: [],
     };
     saveState(fresh);
@@ -299,13 +302,23 @@ export function useTutorial(steps = []) {
     setShowSuccess(false);
     setShowSignupPrompt(false);
     entryPointRef.current = entryPoint;
-    // Always show the welcome overlay first — then redirect to home and begin the tour
+    // Always show the welcome overlay first — then continue based on entry point
     setPhase('welcome-overlay');
   }, []);
 
   const beginFromWelcomeOverlay = useCallback(() => {
-    // After the welcome overlay, always go to home-intro so the tour starts from home
-    setPhase('home-intro');
+    // If the tour was started from a document/suggestion page, begin the steps
+    // directly on the document page. Otherwise start from home-intro.
+    if (entryPointRef.current === 'document') {
+      setState(prev => {
+        const next = { ...prev, active: true, homeStepSeen: true };
+        saveState(next);
+        return next;
+      });
+      setPhase('running');
+    } else {
+      setPhase('home-intro');
+    }
   }, []);
 
   return {
