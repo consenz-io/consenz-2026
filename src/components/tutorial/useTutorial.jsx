@@ -306,6 +306,15 @@ export function useTutorial(steps = []) {
     setPhase('welcome-overlay');
   }, []);
 
+  const backToWelcomeOverlay = useCallback(() => {
+    // Return to the centered welcome bubble (used when the user clicks "Back"
+    // on the first visible step of the document-page tour).
+    setPracticeCompleted(false);
+    setShowSuccess(false);
+    setShowSignupPrompt(false);
+    setPhase('welcome-overlay');
+  }, []);
+
   const beginFromWelcomeOverlay = useCallback(() => {
     // If the tour was started from a document/suggestion page, begin the steps
     // directly on the document page. Otherwise start from home-intro.
@@ -333,6 +342,7 @@ export function useTutorial(steps = []) {
     startTutorial,
     beginFromWelcome,
     beginFromWelcomeOverlay,
+    backToWelcomeOverlay,
     resumeOnDocumentPage,
     skipTutorial,
     goNext,

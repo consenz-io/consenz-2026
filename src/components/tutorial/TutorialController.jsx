@@ -114,6 +114,7 @@ export default function TutorialController() {
     isAuthenticated,
     beginFromWelcome,
     beginFromWelcomeOverlay,
+    backToWelcomeOverlay,
     resumeOnDocumentPage,
     skipTutorial,
     goNext,
@@ -158,6 +159,17 @@ export default function TutorialController() {
 
   const handleBack = useCallback(() => {
     manualNavRef.current = true;
+    // If the previous step is the (skipped) welcome-intro-prepare and the user is
+    // NOT on the home page, that means the current step is the first visible step of
+    // the document-page tour. Going back should return to the welcome overlay bubble
+    // instead of the skipped prepare step (which would immediately advance forward).
+    if (currentStep > 0) {
+      const prevStep = TUTORIAL_STEPS[currentStep - 1];
+      if (prevStep?.id === 'welcome-intro-prepare' && !isHomePage(location.pathname)) {
+        backToWelcomeOverlay();
+        return;
+      }
+    }
     // If the previous step triggered a navigateOnNext, going back means returning to the
     // origin page. Walk backwards to find the most recent step with a navigateOnNext.
     if (currentStep > 0) {
@@ -173,7 +185,7 @@ export default function TutorialController() {
       }
     }
     goBack();
-  }, [goBack, currentStep, navigate]);
+  }, [goBack, currentStep, navigate, backToWelcomeOverlay, location.pathname]);
 
   // On every page navigation: immediately suppress tooltip, then lift suppression after DOM settles
   useEffect(() => {
