@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
-import { ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Loader2, AlertTriangle, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Link, useNavigate } from "react-router-dom";
@@ -327,34 +327,49 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
       </div>
 
       <Dialog open={showConDialog} onOpenChange={(open) => { if (!open) setShowConDialog(false); }}>
-        <DialogContent className="max-w-sm" onClick={(e) => e.stopPropagation()}>
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="max-w-sm p-0 overflow-hidden gap-0" onClick={(e) => e.stopPropagation()}>
+          {/* Header with icon */}
+          <DialogHeader className="items-center text-center px-6 pt-6 pb-4 space-y-3">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+              <AlertTriangle className="w-6 h-6 text-red-600" />
+            </div>
+            <DialogTitle className="text-lg font-bold text-slate-900">
               {isHe ? 'הצבעת נגד הסעיף' : isAr ? 'التصويت ضد القسم' : 'Vote against this section'}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-1.5">
-            <label className="text-sm text-slate-600">
-              {isHe ? 'רוצה גם להסביר למה או להציע שיפור?' : isAr ? 'هل تريد أيضاً توضيح السبب أو اقتراح تحسين؟' : 'Want to explain why or suggest an improvement?'}
-            </label>
-            <Textarea
-              value={conComment}
-              onChange={(e) => setConComment(e.target.value)}
-              placeholder={isHe ? 'מדוע את/ה מתנגד/ת לסעיף?' : isAr ? 'لماذا تعارض هذا القسم؟' : 'Why do you oppose this section?'}
-              className="min-h-[80px] resize-none"
-              dir={isRTL ? 'rtl' : 'ltr'}
-            />
-          </div>
+          <div className="px-6 pb-6 space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-sm text-slate-500">
+                {isHe ? 'רוצה גם להסביר למה או להציע שיפור? (לא חובה)' : isAr ? 'هل تريد أيضاً توضيح السبب أو اقتراح تحسين؟ (اختياري)' : 'Want to explain why or suggest an improvement? (optional)'}
+              </label>
+              <Textarea
+                value={conComment}
+                onChange={(e) => setConComment(e.target.value)}
+                placeholder={isHe ? 'מדוע את/ה מתנגד/ת לסעיף?' : isAr ? 'لماذا تعارض هذا القسم؟' : 'Why do you oppose this section?'}
+                className="min-h-[90px] resize-none rounded-xl border-slate-200 focus-visible:ring-red-200"
+                dir={isRTL ? 'rtl' : 'ltr'}
+              />
+            </div>
 
-          <DialogFooter className="flex-col gap-2 sm:flex-col sm:space-x-0">
-            <Button onClick={handleConVoteOnly} className="w-full bg-red-600 hover:bg-red-700 text-white">
-              {isHe ? 'הצבע נגד' : isAr ? 'صوّت ضد' : 'Vote against'}
-            </Button>
-            <Button variant="outline" onClick={handleConVoteAndSuggest} className="w-full">
-              {isHe ? 'נגד + הצעת שיפור' : isAr ? 'ضد + اقتراح تحسين' : 'Against + suggest improvement'}
-            </Button>
-          </DialogFooter>
+            <div className="flex flex-col gap-2.5">
+              <Button
+                onClick={handleConVoteOnly}
+                className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold shadow-sm gap-2"
+              >
+                <ThumbsDown className="w-4 h-4 shrink-0" />
+                {isHe ? 'הצבע נגד' : isAr ? 'صوّت ضد' : 'Vote against'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleConVoteAndSuggest}
+                className="w-full h-11 rounded-xl border-2 border-slate-200 text-slate-700 hover:bg-slate-50 font-medium gap-2"
+              >
+                <Pencil className="w-4 h-4 shrink-0" />
+                {isHe ? 'נגד + הצעת שיפור' : isAr ? 'ضد + اقتراح تحسين' : 'Against + suggest improvement'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>);
