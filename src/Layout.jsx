@@ -8,6 +8,7 @@ import { initBrowserNotifications } from "@/components/notifications/browserNoti
 import ErrorBoundary from "@/components/ErrorBoundary";
 import TutorialController from "@/components/tutorial/TutorialController";
 import TutorialRestartButton from "@/components/tutorial/TutorialRestartButton";
+import GlobalTourButton from "@/components/tutorial/GlobalTourButton";
 import {
   Sidebar,
   SidebarContent,
@@ -490,6 +491,9 @@ function LayoutContent({ children, currentPageName }) {
              <AccessibilityAnnouncer />
        <ErrorBoundary>
          <TutorialController currentPageName={currentPageName} language={language} isRTL={isRTL} />
+       </ErrorBoundary>
+       <ErrorBoundary inline>
+         <GlobalTourButton user={user} />
        </ErrorBoundary>
 
               </div>
