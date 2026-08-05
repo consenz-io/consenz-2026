@@ -468,6 +468,24 @@ export default function TutorialController() {
         navigate('/');
       }
       beginFromWelcomeOverlay();
+
+      // When starting directly on a document page, scroll to the first visible
+      // tutorial step's target so the next bubble is in view immediately.
+      if (onDocument) {
+        const scrollToFirstStep = (attempt = 0) => {
+          const firstStep = TUTORIAL_STEPS.find(
+            (s) => s.targetSelector && s.id !== 'welcome-intro-prepare'
+          );
+          if (!firstStep) return;
+          const el = document.querySelector(firstStep.targetSelector);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } else if (attempt < 5) {
+            setTimeout(() => scrollToFirstStep(attempt + 1), 150);
+          }
+        };
+        setTimeout(() => scrollToFirstStep(), 250);
+      }
     };
     return (
       <TutorialWelcomeOverlay

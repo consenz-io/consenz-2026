@@ -46,19 +46,11 @@ export default function TutorialWelcomeOverlay({ onStart, onSkip, isRTL }) {
         <h3 className="font-bold text-slate-900 text-xl mb-3 break-words">{heading}</h3>
         <p className="text-sm text-slate-600 leading-relaxed mb-5">{body}</p>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onSkip}
-            className="flex-1 text-slate-500"
-          >
-            {tTutorial('ui.skip', language)}
-          </Button>
+        <div className="flex items-center">
           <Button
             size="sm"
             onClick={onStart}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
           >
             {cta}
           </Button>
