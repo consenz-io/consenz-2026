@@ -271,16 +271,6 @@ export const TUTORIAL_STEPS = [
   // -1. Welcome intro prep — shown before group-explain step on group page
   WELCOME_INTRO_PREPARE_STEP,
 
-  // 0. Foundation: Document title & description
-  {
-    id: 'doc-title-explain',
-    type: 'explain',
-    targetSelector: '.document-title-section',
-    tooltipPosition: 'bottom',
-    heading: 'doc.title.heading',
-    body: 'doc.title.body',
-  },
-
   // 2. Community stats
   {
     id: 'doc-counters-explain',
