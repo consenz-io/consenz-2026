@@ -56,11 +56,13 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
       // Cancel in-flight queries to prevent race conditions
       await Promise.all([
         queryClient.cancelQueries({ queryKey: ['suggestions', document?.id] }),
-        queryClient.cancelQueries({ queryKey: ['userVotes', document?.id, user?.id] })
+        queryClient.cancelQueries({ queryKey: ['userVotes', document?.id, user?.id] }),
+        queryClient.cancelQueries({ queryKey: ['documentAggregatedData', document?.id] })
       ]);
       
       const previousSuggestions = queryClient.getQueryData(['suggestions', document?.id]);
       const previousVotes = queryClient.getQueryData(['userVotes', document?.id, user?.id]);
+      const previousAggregated = queryClient.getQueryData(['documentAggregatedData', document?.id]);
       
       // Read from live cache (not stale closure) to get accurate current vote counts
       const liveSuggestions = previousSuggestions || [];
@@ -108,8 +110,27 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
           return [...otherVotes, { id: 'temp-' + Date.now() + '-' + suggestionId, suggestionId, userId: user.id, vote }];
         }
       });
+
+      // Also optimistically update the aggregated cache — this is what actually
+      // drives the button color (getUserVote reads from aggregatedData.votes) and
+      // the displayed suggestion counts. Without this the dark green/red highlight
+      // only appeared after the server round-trip, causing the felt delay.
+      queryClient.setQueryData(['documentAggregatedData', document?.id], (old) => {
+        if (!old) return old;
+        const votes = Array.isArray(old.votes) ? old.votes : [];
+        // Remove this user's existing vote on this suggestion, then re-add if needed
+        const otherVotes = votes.filter(v => !(v.suggestionId === suggestionId && v.userId === user.id));
+        let nextVotes;
+        if (currentVote && currentVote.vote === vote) {
+          // Toggling off — no vote row remains
+          nextVotes = otherVotes;
+        } else {
+          nextVotes = [...otherVotes, { id: 'temp-' + Date.now() + '-' + suggestionId, suggestionId, userId: user.id, vote }];
+        }
+        return { ...old, votes: nextVotes };
+      });
       
-      return { previousSuggestions, previousVotes };
+      return { previousSuggestions, previousVotes, previousAggregated };
     },
     onError: (err, variables, context) => {
       console.error('[VOTE ERROR]', err);
@@ -120,6 +141,9 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
       }
       if (context?.previousVotes) {
         queryClient.setQueryData(['userVotes', document?.id, user?.id], context.previousVotes);
+      }
+      if (context?.previousAggregated) {
+        queryClient.setQueryData(['documentAggregatedData', document?.id], context.previousAggregated);
       }
       
       // Handle "not a group member" error - show join dialog instead of toast

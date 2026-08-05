@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ThumbsUp, ThumbsDown, Loader2, Clock, ShieldX, Timer, ShieldCheck } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Clock, ShieldX, Timer, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { useLanguage } from "@/components/LanguageContext";
@@ -328,16 +328,10 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
         </div> :
 
       <div className="relative">
-        {voteMutation.isPending &&
-        <div className="absolute inset-0 bg-white/60 rounded-xl flex items-center justify-center z-10">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-          </div>
-        }
         <div className="flex gap-2 w-full min-w-0">
           <Button
             variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
             onClick={() => voteMutation.mutate('pro')}
-            disabled={voteMutation.isPending}
             onMouseEnter={() => setHoverVote('pro')}
             onMouseLeave={() => setHoverVote(null)}
             className={`flex-1 min-w-0 h-10 md:h-12 text-sm md:text-base font-semibold rounded-xl transition-all duration-200 px-2 md:px-4 ${
@@ -355,7 +349,6 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
           <Button
             variant={userVote?.vote === 'con' ? 'default' : 'outline'}
             onClick={() => voteMutation.mutate('con')}
-            disabled={voteMutation.isPending}
             onMouseEnter={() => setHoverVote('con')}
             onMouseLeave={() => setHoverVote(null)}
             className={`flex-1 min-w-0 h-10 md:h-12 text-sm md:text-base font-semibold rounded-xl transition-all duration-200 px-2 md:px-4 ${
