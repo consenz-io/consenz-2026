@@ -341,7 +341,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
           <div className="px-6 pb-6 space-y-4">
             <div className="space-y-1.5">
               <label className="text-sm text-slate-500">
-                {isHe ? 'מה לא עובד בסעיף הזה? ניתן להוסיף הסבר להתנגדות ו\או להציע לו נוסח חלופי (אופציונלי)' : isAr ? 'ما الخطأ في هذا القسم؟ يمكنك أيضاً اقتراح صياغة أخرى (اختياري)' : 'What doesn\'t work in this section? You can also suggest how to word it differently (optional)'}
+                {isHe ? 'מה לא עובד בסעיף הזה? ניתן להוסיף הסבר להתנגדות או להציע לו נוסח חלופי (אופציונלי)' : isAr ? 'ما الخطأ في هذا القسم؟ يمكنك أيضاً اقتراح صياغة أخرى (اختياري)' : 'What doesn\'t work in this section? You can also suggest how to word it differently (optional)'}
               </label>
               <Textarea
                 value={conComment}
