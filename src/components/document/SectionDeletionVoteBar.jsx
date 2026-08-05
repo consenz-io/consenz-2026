@@ -355,6 +355,9 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
               className="min-h-[80px] resize-none"
               dir={isRTL ? 'rtl' : 'ltr'}
             />
+            <Button variant="outline" onClick={handleConVoteOnly} className="w-full">
+              {isHe ? 'שלח והצבע נגד' : isAr ? 'أرسل وصوّت ضد' : 'Submit & vote against'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
