@@ -271,16 +271,6 @@ export const TUTORIAL_STEPS = [
   // -1. Welcome intro prep — shown before group-explain step on group page
   WELCOME_INTRO_PREPARE_STEP,
 
-  // 2. Community stats
-  {
-    id: 'doc-counters-explain',
-    type: 'explain',
-    targetSelector: '.document-counters',
-    tooltipPosition: 'bottom',
-    heading: 'doc.counters.heading',
-    body: 'doc.counters.body',
-  },
-
   // 3. Proposal editing - explain concept
   {
     id: 'editproposal-explain',
@@ -342,6 +332,16 @@ export const TUTORIAL_STEPS = [
     heading: 'newclause.explain.heading',
     body: 'newclause.explain.body',
     forceRevealTarget: true,
+  },
+
+  // Community stats — "the pulse of the document"
+  {
+    id: 'doc-counters-explain',
+    type: 'explain',
+    targetSelector: '.document-counters',
+    tooltipPosition: 'bottom',
+    heading: 'doc.counters.heading',
+    body: 'doc.counters.body',
   },
 
   // 14. Consensus meter - learn about support threshold
