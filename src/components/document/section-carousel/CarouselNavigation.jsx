@@ -1,7 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Undo2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 /**
  * Carousel navigation — split into two parts:
@@ -84,7 +85,10 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
   onNext,
   allViews,
   currentIndex,
-  onSelectView
+  onSelectView,
+  onReturnToCurrent,
+  isOnCurrentView,
+  t
 }) {
   const { btnClass, isDeleteType } = useNavTheme(currentView);
   const stripBg = isDeleteType ?
@@ -125,6 +129,20 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
           language={language}
           onSelectView={onSelectView} />
 
+        </div>
+      }
+
+      {onReturnToCurrent && !isOnCurrentView &&
+      <div className="pt-3 flex justify-center">
+          <Button
+          variant="ghost"
+          size="sm"
+          onClick={onReturnToCurrent}
+          className="text-xs h-8 px-3 text-slate-600 hover:text-slate-900 hover:bg-white/70">
+
+            <Undo2 className={`w-3.5 h-3.5 shrink-0 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+            <span className="truncate">{t('returnToCurrentVersion')}</span>
+          </Button>
         </div>
       }
     </div>);

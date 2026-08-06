@@ -447,6 +447,9 @@ const SectionCarousel = React.memo(function SectionCarousel({
           allViews={allViews}
           currentIndex={currentIndex}
           onSelectView={(id) => setCurrentSuggestionId(id)}
+          onReturnToCurrent={() => setCurrentSuggestionId('current')}
+          isOnCurrentView={currentView?.type === 'current'}
+          t={t}
         />
       )}
 
