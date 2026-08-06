@@ -124,8 +124,8 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
           {isRTL ? <ChevronRight className="w-5 h-5 md:w-6 md:h-6" /> : <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />}
         </button>
 
-        <span className="text-xs text-slate-400 font-medium px-2">
-          {language === 'he' ? 'דפדוף בין הצעות' : language === 'ar' ? 'التنقل بين الاقتراحات' : 'Browse suggestions'}
+        <span className="text-sm font-bold text-slate-600 px-2 text-center">
+          {language === 'he' ? 'הצעה קודמת / הבאה' : language === 'ar' ? 'الاقتراح السابق / التالي' : 'Previous / Next suggestion'}
         </span>
 
         <button
