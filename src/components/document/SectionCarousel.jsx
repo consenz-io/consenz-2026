@@ -89,6 +89,19 @@ const SectionCarousel = React.memo(function SectionCarousel({
 
   const deleteFlashTimerRef = useRef(null);
   const flashTimerRef = useRef(null);
+  const cardRef = useRef(null);
+
+  // Scroll the card's top edge flush to the top of the screen (accounting for the sticky header).
+  const scrollCardToTop = useCallback(() => {
+    requestAnimationFrame(() => {
+      const el = cardRef.current;
+      if (!el) return;
+      const header = window.document.querySelector('header[role="banner"]');
+      const headerOffset = header ? header.getBoundingClientRect().height : 0;
+      const top = el.getBoundingClientRect().top + window.scrollY - headerOffset - 8;
+      window.scrollTo({ top, behavior: 'smooth' });
+    });
+  }, []);
   const prevSuggestionsStatusRef = useRef({});
   const hasAnimatedRef = useRef(new Set());
 
@@ -224,6 +237,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
     const nextIndex = (currentIndex + 1) % allViews.length;
     setCurrentSuggestionId(allViews[nextIndex]?.id);
     window.dispatchEvent(new CustomEvent('carousel:navigated'));
+    scrollCardToTop();
   };
 
   const handlePrev = () => {
@@ -231,6 +245,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
     const prevIndex = (currentIndex - 1 + allViews.length) % allViews.length;
     setCurrentSuggestionId(allViews[prevIndex]?.id);
     window.dispatchEvent(new CustomEvent('carousel:navigated'));
+    scrollCardToTop();
   };
 
   // ── Delete section mutation ──────────────────────────────────────────────────
@@ -274,8 +289,14 @@ const SectionCarousel = React.memo(function SectionCarousel({
   });
 
   // ── Render ───────────────────────────────────────────────────────────────────
+  const handleSelectView = useCallback((id) => {
+    setCurrentSuggestionId(id);
+    scrollCardToTop();
+  }, [scrollCardToTop]);
+
   return (
     <div
+      ref={cardRef}
       id={currentSuggestionDisplayId}
       className={`section-card group relative p-3 md:p-6 border-2 rounded-lg hover:shadow-md transition-all duration-300 ${
         historyMode
@@ -446,7 +467,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
           onNext={handleNext}
           allViews={allViews}
           currentIndex={currentIndex}
-          onSelectView={(id) => setCurrentSuggestionId(id)}
+          onSelectView={handleSelectView}
           onReturnToCurrent={() => setCurrentSuggestionId('current')}
           isOnCurrentView={currentView?.type === 'current'}
           t={t}
