@@ -31,6 +31,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
   const [conComment, setConComment] = useState("");
   const [showExplanation, setShowExplanation] = useState(false);
   const [suggestTransition, setSuggestTransition] = useState(false);
+  const [suggestTransitionHadComment, setSuggestTransitionHadComment] = useState(false);
   const explanationRef = useRef(null);
 
   // Refs to pass data from the con-vote handlers to voteMutation.onSuccess.
@@ -223,6 +224,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
   const handleConVoteAndSuggest = async () => {
     // Intermediate step: show confirmation that the objection was recorded,
     // then transition to the edit-suggestion screen.
+    setSuggestTransitionHadComment(!!conComment.trim());
     setSuggestTransition(true);
     const comment = await postConComment();
     setConComment("");
@@ -342,11 +344,13 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
         <DialogContent className="max-w-sm p-0 overflow-hidden gap-0" onClick={(e) => e.stopPropagation()}>
           {suggestTransition ? (
             <div className="flex flex-col items-center text-center px-6 py-10 space-y-4">
-              <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
-                <ThumbsDown className="w-7 h-7 text-green-600" />
+              <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
+                <ThumbsDown className="w-7 h-7 text-red-600" />
               </div>
               <DialogTitle className="text-lg font-bold text-slate-900">
-                {isHe ? 'ההתנגדות התקבלה' : isAr ? 'تم استلام الاعتراض' : 'Your objection was received'}
+                {suggestTransitionHadComment
+                  ? (isHe ? 'תגובתך פורסמה והתנגדותך התקבלה' : isAr ? 'تم نشر تعليقك واستلام اعتراضك' : 'Your comment was posted and objection received')
+                  : (isHe ? 'ההתנגדות התקבלה' : isAr ? 'تم استلام الاعتراض' : 'Your objection was received')}
               </DialogTitle>
               <p className="text-sm text-slate-500 leading-relaxed">
                 {isHe ? 'מעבר לחלון להזנת הצעת עריכה לסעיף…' : isAr ? 'جارٍ الانتقال إلى نافذة إدخال اقتراح تعديل للقسم…' : 'Taking you to the edit suggestion screen…'}
