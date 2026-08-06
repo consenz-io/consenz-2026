@@ -305,9 +305,20 @@ const SectionCarousel = React.memo(function SectionCarousel({
             </div>
           )}
           {!historyMode && allViews.length > 1 && (
-            <Badge variant="outline" className="text-[10px] md:text-xs flex-shrink-0">
-              {currentIndex + 1} / {allViews.length}
-            </Badge>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="outline" className="text-[10px] md:text-xs flex-shrink-0 cursor-help">
+                  {currentIndex + 1} / {allViews.length}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[220px] text-center">
+                {language === 'he'
+                  ? `מציג ${currentIndex + 1} מתוך ${allViews.length} — הסעיף הנוכחי וההצעות הפתוחות עבורו`
+                  : language === 'ar'
+                  ? `عرض ${currentIndex + 1} من ${allViews.length} — البند الحالي والاقتراحات المفتوحة له`
+                  : `Showing ${currentIndex + 1} of ${allViews.length} — the current section and its open suggestions`}
+              </TooltipContent>
+            </Tooltip>
           )}
           {/* Suggestion title + timestamp — inline, at the same height as the section number */}
           {!historyMode && allViews.length > 1 && !isFirstView && (
