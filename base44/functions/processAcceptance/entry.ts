@@ -147,14 +147,25 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ATOMIC LOCK: Set acceptanceLock=true only if it is currently false AND status is still pending.
-    // Two concurrent instances will both attempt this write; only the one whose write lands first
-    // will see acceptanceLock=false on re-fetch. The other will bail out.
-    await base44.asServiceRole.entities.Suggestion.update(suggestionId, { acceptanceLock: true });
-    const lockedSuggestion = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
+    // ATOMIC LOCK (compare-and-swap): flip acceptanceLock false→true ONLY for a suggestion
+    // that is still pending AND still unlocked, in a single conditional write. updateMany
+    // matches at the DB level, so of two concurrent instances only ONE update actually matches
+    // a row (acceptanceLock:false) — the other matches zero rows. This is a real CAS; the
+    // previous "write then re-read" pattern was NOT atomic (both writers wrote true, both read true).
+    const lockResult = await base44.asServiceRole.entities.Suggestion.updateMany(
+      { id: suggestionId, status: 'pending', acceptanceLock: false },
+      { $set: { acceptanceLock: true } }
+    );
+    // Determine how many rows we actually flipped (SDK returns count/modifiedCount depending on version)
+    const lockedCount = lockResult?.modifiedCount ?? lockResult?.modified ?? lockResult?.count ?? 0;
+    if (lockedCount < 1) {
+      console.log('[PROCESS ACCEPTANCE] Did not win the atomic lock — another instance owns it, skipping');
+      return Response.json({ success: true, message: 'Already being processed' });
+    }
 
+    const lockedSuggestion = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
     if (!lockedSuggestion || lockedSuggestion.status !== 'pending' || !lockedSuggestion.acceptanceLock) {
-      console.log('[PROCESS ACCEPTANCE] Lost the lock race — another instance is processing, skipping');
+      console.log('[PROCESS ACCEPTANCE] Lock state inconsistent after acquire — skipping');
       return Response.json({ success: true, message: 'Already being processed' });
     }
 
@@ -181,9 +192,43 @@ Deno.serve(async (req) => {
     // Update document consensus
     const updatedConsensuses = [...(document.consensuses || []), boundedConsensus];
     const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / updatedConsensuses.length;
-    const newThreshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
 
-    console.log('[PROCESS ACCEPTANCE] Calculated:', { totalUsers, boundedConsensus, newThreshold });
+    // ── Deadlock guard (C3) ─────────────────────────────────────────────
+    // Cap the threshold at the number of REAL active voters so it can never exceed the
+    // maximum achievable delta. Without this cap a high consensus average with many
+    // historical participants (totalUsers) could produce a threshold larger than the
+    // number of people who actually vote — making every future suggestion impossible to
+    // pass ("frozen document"). We count unique voters across suggestion + section votes.
+    let activeVoterCount = 0;
+    try {
+      const docSuggs = await base44.asServiceRole.entities.Suggestion.filter({ documentId: document.id });
+      const docSuggIds = docSuggs.map(s => s.id);
+      const docSecs = await base44.asServiceRole.entities.Section.filter({ documentId: document.id });
+      const docSecIds = docSecs.map(s => s.id);
+      const [suggVotes, secVotes] = await Promise.all([
+        docSuggIds.length > 0
+          ? base44.asServiceRole.entities.Vote.filter({ suggestionId: { $in: docSuggIds } })
+          : Promise.resolve([]),
+        docSecIds.length > 0
+          ? base44.asServiceRole.entities.SectionVote.filter({ sectionId: { $in: docSecIds } })
+          : Promise.resolve([]),
+      ]);
+      const voterIds = new Set();
+      suggVotes.forEach(v => { if (v.userId) voterIds.add(v.userId); });
+      secVotes.forEach(v => { if (v.userId) voterIds.add(v.userId); });
+      activeVoterCount = voterIds.size;
+    } catch (e) {
+      console.error('[PROCESS ACCEPTANCE] active voter count failed, skipping cap:', e);
+    }
+
+    // Uncapped target from the consensus formula
+    const rawThreshold = Math.max(2, Math.round(consensusMeterAverage * totalUsers));
+    // Cap at active voters (but never below the floor of 2). If we couldn't measure active
+    // voters, fall back to the uncapped value rather than blocking acceptance.
+    const cap = activeVoterCount > 0 ? Math.max(2, activeVoterCount) : rawThreshold;
+    const newThreshold = Math.min(rawThreshold, cap);
+
+    console.log('[PROCESS ACCEPTANCE] Calculated:', { totalUsers, activeVoterCount, boundedConsensus, rawThreshold, cap, newThreshold });
 
     // Process based on suggestion type
     if (suggestion.type === 'edit_section' && suggestion.sectionId) {
