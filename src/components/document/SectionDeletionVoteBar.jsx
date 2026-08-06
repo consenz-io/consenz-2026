@@ -1,8 +1,8 @@
 import React, { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { motion } from "framer-motion";
-import { ThumbsUp, ThumbsDown, Loader2, AlertTriangle, Pencil } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ThumbsUp, ThumbsDown, Loader2, AlertTriangle, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Link, useNavigate } from "react-router-dom";
@@ -29,6 +29,8 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
   const navigate = useNavigate();
   const [showConDialog, setShowConDialog] = useState(false);
   const [conComment, setConComment] = useState("");
+  const [showExplanation, setShowExplanation] = useState(false);
+  const explanationRef = useRef(null);
 
   // Refs to pass data from the con-vote handlers to voteMutation.onSuccess.
   // pendingCommentRef: the comment ID posted with the con vote (if any).
@@ -180,6 +182,8 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
     // (direct SectionVote OR inherited suggestion vote), toggle/confirm directly;
     // otherwise show a dialog inviting the user to suggest an improvement.
     if (voteType === 'con' && userEffectiveVote !== 'con') {
+      setConComment("");
+      setShowExplanation(false);
       setShowConDialog(true);
       return;
     }
@@ -339,18 +343,41 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
           </DialogHeader>
 
           <div className="px-6 pb-6 space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-sm text-slate-500">
-                {isHe ? 'מה לא עובד בסעיף הזה? ניתן להוסיף הסבר להתנגדות או להציע לו נוסח חלופי (אופציונלי)' : isAr ? 'ما الخطأ في هذا القسم؟ يمكنك أيضاً اقتراح صياغة أخرى (اختياري)' : 'What doesn\'t work in this section? You can also suggest how to word it differently (optional)'}
-              </label>
-              <Textarea
-                value={conComment}
-                onChange={(e) => setConComment(e.target.value)}
-                placeholder={isHe ? 'מדוע את/ה מתנגד/ת לסעיף?' : isAr ? 'لماذا تعارض هذا القسم؟' : 'Why do you oppose this section?'}
-                className="min-h-[90px] resize-none rounded-xl border-slate-200 focus-visible:ring-red-200"
-                dir={isRTL ? 'rtl' : 'ltr'}
-              />
-            </div>
+            {!showExplanation ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowExplanation(true);
+                  setTimeout(() => explanationRef.current?.focus(), 250);
+                }}
+                className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors mx-auto"
+              >
+                <Plus className="w-4 h-4 shrink-0" />
+                {isHe ? 'הוספת הסבר או נוסח חלופי (אופציונלי)' : isAr ? 'إضافة توضيح أو صياغة بديلة (اختياري)' : 'Add an explanation or alternative wording (optional)'}
+              </button>
+            ) : (
+              <AnimatePresence>
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                  className="space-y-1.5 overflow-hidden"
+                >
+                  <label className="text-sm text-slate-500">
+                    {isHe ? 'מה לא עובד בסעיף הזה? ניתן להוסיף הסבר להתנגדות או להציע לו נוסח חלופי (אופציונלי)' : isAr ? 'ما الخطأ في هذا القسم؟ يمكنك أيضاً اقتراح صياغة أخرى (اختياري)' : 'What doesn\'t work in this section? You can also suggest how to word it differently (optional)'}
+                  </label>
+                  <Textarea
+                    ref={explanationRef}
+                    value={conComment}
+                    onChange={(e) => setConComment(e.target.value)}
+                    placeholder={isHe ? 'מדוע את/ה מתנגד/ת לסעיף?' : isAr ? 'لماذا تعارض هذا القسم؟' : 'Why do you oppose this section?'}
+                    className="min-h-[90px] resize-none rounded-xl border-slate-200 focus-visible:ring-red-200"
+                    dir={isRTL ? 'rtl' : 'ltr'}
+                  />
+                </motion.div>
+              </AnimatePresence>
+            )}
 
             <div className="flex flex-col gap-2.5">
               <Button
