@@ -220,11 +220,6 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
 
   const handleConVoteAndSuggest = async () => {
     setShowConDialog(false);
-    toast.success(
-      language === 'he' ? 'התנגדותך התקבלה. כעת תועבר/ה לחלון להזנת הצעת עריכה לסעיף' :
-      language === 'ar' ? 'تم تسجيل اعتراضك. سيتم نقلك الآن إلى نافذة إدخال اقتراح تعديل للقسم' :
-      'Your objection was received. You will now be taken to enter an edit suggestion for the section'
-    );
     const comment = await postConComment();
     setConComment("");
     pendingCommentRef.current = comment?.id || null;
@@ -403,7 +398,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
               </Button>
               {conComment.trim() && (
                 <p className="text-xs text-slate-500 text-center leading-tight">
-                  {isHe ? 'ההסבר יפורסם כתגובה יחד עם הצבעתך נגד' : isAr ? 'سيُنشر توضيحك كتعليق مع تصويتك ضد' : 'Your explanation will be posted as a comment together with your con vote'}
+                  {isHe ? 'ההסבר יפורסם כתגובה לסעיף' : isAr ? 'سيُنشر توضيحك كتعليق مع تصويتك ضد' : 'Your explanation will be posted as a comment together with your con vote'}
                 </p>
               )}
             </div>
@@ -431,7 +426,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                       {isHe ? 'הצבעת נגד והצעת נוסח חלופי' : isAr ? 'صوّت ضد واقترح صياغة بديلة' : 'Vote against & suggest new wording'}
                     </p>
                     <p className="text-xs text-slate-500 mt-0.5 leading-tight">
-                      {isHe ? 'מעבר למסך יצירת הצעת עריכה לסעיף' : isAr ? 'سيتم نقلك إلى شاشة إنشاء اقتراح تعديل' : 'You\'ll be taken to create an edit suggestion'}
+                      {isHe ? 'תועבר/י למסך יצירת הצעת עריכה לסעיף' : isAr ? 'سيتم نقلك إلى شاشة إنشاء اقتراح تعديل' : 'You\'ll be taken to create an edit suggestion'}
                     </p>
                   </div>
                   {isRTL ? <ArrowLeft className="w-4 h-4 text-slate-400 shrink-0" /> : <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />}
