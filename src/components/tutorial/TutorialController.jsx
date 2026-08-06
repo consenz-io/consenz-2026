@@ -398,7 +398,7 @@ export default function TutorialController() {
   // ── Derive ghost points state (show when not authenticated and at points-explain step) ──
   const showGhostPoints = phase === 'running' && TUTORIAL_STEPS.length > 0 && !isAuthenticated && (() => {
     const step = TUTORIAL_STEPS[currentStep];
-    return step && step.id === 'points-explain';
+    return step && (step.id === 'points-explain' || step.id === 'points-ranking-explain');
   })();
 
   // ── Handle browse-explain: pulse carousel nav area when no suggestions exist ──

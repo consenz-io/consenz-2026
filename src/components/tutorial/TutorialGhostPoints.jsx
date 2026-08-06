@@ -54,7 +54,7 @@ export default function TutorialGhostPoints() {
       {createPortal(
         <button
           onClick={() => setShowModal(true)}
-          className={`bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all hover:scale-110 focus:ring-4 focus:ring-amber-300 cursor-pointer`}
+          className={`user-points-badge bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all hover:scale-110 focus:ring-4 focus:ring-amber-300 cursor-pointer`}
           aria-label={language === 'he' ? `${GHOST_POINTS} נקודות` : language === 'ar' ? `${GHOST_POINTS} نقاط` : `${GHOST_POINTS} points`}
           type="button"
         >
