@@ -11,7 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import JoinGroupDialog from "@/components/group/JoinGroupDialog";
 
 // Extracted memoized sub-components — each only re-renders when its own props change
-import { CarouselNavigationHeader, CarouselNavigationArrows } from "./section-carousel/CarouselNavigation";
+import { CarouselNavigationArrows } from "./section-carousel/CarouselNavigation";
 import CarouselTitleInline from "./section-carousel/CarouselTitleInline";
 import CurrentSectionView from "./section-carousel/CurrentSectionView";
 import SuggestionView from "./section-carousel/SuggestionView";
@@ -359,6 +359,13 @@ const SectionCarousel = React.memo(function SectionCarousel({
               getUserName={getUserName}
             />
           )}
+          {/* Edit-suggestions summary — inline on the first view, same row as the section number */}
+          {!historyMode && allViews.length > 1 && isFirstView && (
+            <p className="text-sm truncate">
+              <span className="font-bold text-amber-700 text-base md:text-lg">{sortedSuggestions.length}</span>{' '}
+              <span className="font-bold text-slate-800">{t('editSuggestions')}</span>
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-1 md:gap-2">
           {!isGhost && (
@@ -404,21 +411,6 @@ const SectionCarousel = React.memo(function SectionCarousel({
           getUserName={getUserName}
           isAdmin={isAdmin}
           onClose={() => setHistoryMode(false)}
-        />
-      )}
-
-      {/* Carousel navigation — header (position indicator + label + dots) at top */}
-      {!historyMode && allViews.length > 1 && (
-        <CarouselNavigationHeader
-          allViews={allViews}
-          currentIndex={currentIndex}
-          currentView={currentView}
-          isFirstView={isFirstView}
-          sortedSuggestionsLength={sortedSuggestions.length}
-          language={language}
-          t={t}
-          getUserName={getUserName}
-          onSelectView={(id) => setCurrentSuggestionId(id)}
         />
       )}
 
