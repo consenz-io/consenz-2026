@@ -30,6 +30,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
   const [showConDialog, setShowConDialog] = useState(false);
   const [conComment, setConComment] = useState("");
   const [showExplanation, setShowExplanation] = useState(false);
+  const [suggestTransition, setSuggestTransition] = useState(false);
   const explanationRef = useRef(null);
 
   // Refs to pass data from the con-vote handlers to voteMutation.onSuccess.
@@ -184,6 +185,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
     if (voteType === 'con' && userEffectiveVote !== 'con') {
       setConComment("");
       setShowExplanation(false);
+      setSuggestTransition(false);
       setShowConDialog(true);
       return;
     }
@@ -219,12 +221,18 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
   };
 
   const handleConVoteAndSuggest = async () => {
-    setShowConDialog(false);
+    // Intermediate step: show confirmation that the objection was recorded,
+    // then transition to the edit-suggestion screen.
+    setSuggestTransition(true);
     const comment = await postConComment();
     setConComment("");
     pendingCommentRef.current = comment?.id || null;
     pendingSuggestEditRef.current = true;
     voteMutation.mutate('con');
+    setTimeout(() => {
+      setSuggestTransition(false);
+      setShowConDialog(false);
+    }, 1800);
   };
 
   const isHe = language === 'he';
@@ -330,8 +338,23 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
 
       </div>
 
-      <Dialog open={showConDialog} onOpenChange={(open) => { if (!open) setShowConDialog(false); }}>
+      <Dialog open={showConDialog} onOpenChange={(open) => { if (!open && !suggestTransition) setShowConDialog(false); }}>
         <DialogContent className="max-w-sm p-0 overflow-hidden gap-0" onClick={(e) => e.stopPropagation()}>
+          {suggestTransition ? (
+            <div className="flex flex-col items-center text-center px-6 py-10 space-y-4">
+              <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+                <ThumbsDown className="w-7 h-7 text-green-600" />
+              </div>
+              <DialogTitle className="text-lg font-bold text-slate-900">
+                {isHe ? 'ההתנגדות התקבלה' : isAr ? 'تم استلام الاعتراض' : 'Your objection was received'}
+              </DialogTitle>
+              <p className="text-sm text-slate-500 leading-relaxed">
+                {isHe ? 'מעבר לחלון להזנת הצעת עריכה לסעיף…' : isAr ? 'جارٍ الانتقال إلى نافذة إدخال اقتراح تعديل للقسم…' : 'Taking you to the edit suggestion screen…'}
+              </p>
+              <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+            </div>
+          ) : (
+          <>
           {/* Header with icon */}
           <DialogHeader className="items-center text-center px-6 pt-6 pb-4 space-y-3">
             <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
@@ -434,6 +457,8 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
               </button>
             </div>
           </div>
+          </>
+          )}
         </DialogContent>
       </Dialog>
     </div>);
