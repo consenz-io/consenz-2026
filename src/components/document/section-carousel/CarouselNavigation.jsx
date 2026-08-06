@@ -34,10 +34,10 @@ export const CarouselNavigationHeader = React.memo(function CarouselNavigationHe
   getUserName,
   onSelectView
 }) {
-  const { isDeleteType, borderColorClass } = useNavTheme(currentView);
+  const { isDeleteType } = useNavTheme(currentView);
 
   return (
-    <div className={`proposal-navigation-arrows mb-4 border-b-2 p-3 rounded-lg shadow-sm ${borderColorClass}`}>
+    <div className="proposal-navigation-arrows mb-4 pb-3 border-b border-slate-200">
       <div className="text-center px-2 pb-2">
         {isFirstView ?
         <p className="text-sm">
