@@ -92,14 +92,24 @@ const SectionCarousel = React.memo(function SectionCarousel({
   const cardRef = useRef(null);
 
   // Scroll the card's top edge flush to the top of the screen (accounting for the sticky header).
+  // Waits for the new view to render and the layout (including open comment threads) to settle
+  // before measuring, so the target position is accurate even when card height changes.
   const scrollCardToTop = useCallback(() => {
-    requestAnimationFrame(() => {
+    const doScroll = () => {
       const el = cardRef.current;
       if (!el) return;
       const header = window.document.querySelector('header[role="banner"]');
       const headerOffset = header ? header.getBoundingClientRect().height : 0;
       const top = el.getBoundingClientRect().top + window.scrollY - headerOffset - 8;
       window.scrollTo({ top, behavior: 'smooth' });
+    };
+    // Two RAFs let React commit the new view; the timeout absorbs late layout
+    // shifts (e.g. an open comments thread re-measuring) before the final scroll.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        doScroll();
+        setTimeout(doScroll, 250);
+      });
     });
   }, []);
   const prevSuggestionsStatusRef = useRef({});
