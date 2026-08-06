@@ -483,20 +483,31 @@ Deno.serve(async (req) => {
         console.log('[PROCESS ACCEPTANCE] Updated parent suggestion content:', suggestion.parentSuggestionId);
 
         // If the parent suggestion is still pending (new_section or edit_section),
-        // trigger its acceptance now with the updated content
+        // trigger its acceptance now with the updated content — but ONLY if the parent
+        // itself already meets its own vote threshold. Accepting the edit to a proposal's
+        // wording must NOT auto-accept the proposal itself; the parent must still earn its
+        // own consensus. (H3) We therefore re-check the parent's delta against the document
+        // threshold here and pass forceAccept only when it genuinely qualifies. Without this,
+        // a passing edit_suggestion would silently bypass the parent's threshold check.
         if (parentSuggestion.status === 'pending') {
-          console.log('[PROCESS ACCEPTANCE] Parent is still pending, triggering its acceptance:', suggestion.parentSuggestionId);
-          try {
-            await base44.asServiceRole.functions.invoke('processAcceptance', {
-              suggestionId: suggestion.parentSuggestionId,
-              documentId: suggestion.documentId,
-              voterId,
-              wasNewVote,
-              forceAccept: true
-            });
-            console.log('[PROCESS ACCEPTANCE] Parent suggestion processed successfully');
-          } catch (parentErr) {
-            console.error('[PROCESS ACCEPTANCE] Failed to process parent suggestion:', parentErr);
+          const parentDelta = (parentSuggestion.proVotes || 0) - (parentSuggestion.conVotes || 0);
+          const parentThreshold = document.threshold > 0 ? Math.max(2, document.threshold) : 2;
+          if (parentDelta >= parentThreshold) {
+            console.log('[PROCESS ACCEPTANCE] Parent still pending AND meets threshold, triggering its acceptance:', suggestion.parentSuggestionId, { parentDelta, parentThreshold });
+            try {
+              await base44.asServiceRole.functions.invoke('processAcceptance', {
+                suggestionId: suggestion.parentSuggestionId,
+                documentId: suggestion.documentId,
+                voterId,
+                wasNewVote,
+                forceAccept: true
+              });
+              console.log('[PROCESS ACCEPTANCE] Parent suggestion processed successfully');
+            } catch (parentErr) {
+              console.error('[PROCESS ACCEPTANCE] Failed to process parent suggestion:', parentErr);
+            }
+          } else {
+            console.log('[PROCESS ACCEPTANCE] Parent still pending but below threshold — updated content only, NOT auto-accepting parent:', suggestion.parentSuggestionId, { parentDelta, parentThreshold });
           }
         }
       } else {
