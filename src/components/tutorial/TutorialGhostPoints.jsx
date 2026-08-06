@@ -9,15 +9,12 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Coins } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageContext';
-import { Badge } from '@/components/ui/badge';
-import PointsInfoModal from '@/components/points/PointsInfoModal';
 
 const GHOST_POINTS = 1000;
 
 export default function TutorialGhostPoints() {
   const { language, isRTL } = useLanguage();
   const [container, setContainer] = useState(null);
-  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     // Find the header or a suitable container for the badge
@@ -49,24 +46,22 @@ export default function TutorialGhostPoints() {
 
   if (!container) return null;
 
-  return (
-    <>
-      {createPortal(
-        <button
-          onClick={() => setShowModal(true)}
-          className={`user-points-badge bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all hover:scale-110 focus:ring-4 focus:ring-amber-300 cursor-pointer`}
-          aria-label={language === 'he' ? `${GHOST_POINTS} נקודות` : language === 'ar' ? `${GHOST_POINTS} نقاط` : `${GHOST_POINTS} points`}
-          type="button"
-        >
-          <div className="flex items-center gap-1.5">
-            <Coins className="w-5 h-5" aria-hidden="true" />
-            <span className="font-bold text-sm tabular-nums">{GHOST_POINTS}</span>
-          </div>
-        </button>,
-        container
-      )}
-
-      <PointsInfoModal open={showModal} onClose={() => setShowModal(false)} />
-    </>
+  return createPortal(
+    <button
+      // Dispatch an event instead of rendering the modal here: the tutorial layer
+      // (including this ghost badge) is unmounted whenever a dialog opens, so a modal
+      // owned by this component would be destroyed the instant it opens. The controller
+      // owns the persistent PointsInfoModal and opens it from this event.
+      onClick={() => window.dispatchEvent(new CustomEvent('tutorial:openPointsModal'))}
+      className={`user-points-badge bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all hover:scale-110 focus:ring-4 focus:ring-amber-300 cursor-pointer`}
+      aria-label={language === 'he' ? `${GHOST_POINTS} נקודות` : language === 'ar' ? `${GHOST_POINTS} نقاط` : `${GHOST_POINTS} points`}
+      type="button"
+    >
+      <div className="flex items-center gap-1.5">
+        <Coins className="w-5 h-5" aria-hidden="true" />
+        <span className="font-bold text-sm tabular-nums">{GHOST_POINTS}</span>
+      </div>
+    </button>,
+    container
   );
 }

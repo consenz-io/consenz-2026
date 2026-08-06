@@ -79,6 +79,15 @@ export default function TutorialController() {
   const [navPending, setNavPending] = useState(false);
   const navTimerRef = useRef(null);
 
+  // Open the persistent points-info modal when the ghost points badge is clicked.
+  // The ghost badge lives inside the tutorial layer (unmounted when a dialog opens),
+  // so it dispatches an event and this controller owns the actual modal.
+  useEffect(() => {
+    const openModal = () => setShowPointsModal(true);
+    window.addEventListener('tutorial:openPointsModal', openModal);
+    return () => window.removeEventListener('tutorial:openPointsModal', openModal);
+  }, []);
+
   // Suppress tutorial overlay/tooltip when any app modal is open
   const [modalOpen, setModalOpen] = useState(false);
   useEffect(() => {
@@ -500,6 +509,12 @@ export default function TutorialController() {
   // ── Render ────────────────────────────────────────────────────────────────
   if (phase === 'idle' || phase === 'done') return null;
 
+  // Persistent points-info modal — rendered at the top level (outside the running
+  // block) so it survives when the tutorial layer hides itself while a dialog is open.
+  const pointsModal = (
+    <PointsInfoModal open={showPointsModal} onClose={() => setShowPointsModal(false)} />
+  );
+
   // welcome-overlay: centered welcome bubble — always shown first before the tour begins
   if (phase === 'welcome-overlay') {
     const handleWelcomeStart = () => {
@@ -605,8 +620,9 @@ export default function TutorialController() {
     // Suppress rendering while waiting for a navigated page to settle
     if (navPending) return null;
 
-    // Suppress overlay/tooltip while any modal dialog is open
-    if (modalOpen) return null;
+    // Suppress overlay/tooltip while any modal dialog is open — but keep the
+    // points-info modal mounted so clicking the ghost badge actually shows it.
+    if (modalOpen) return pointsModal;
 
     const overlaySelector = step.targetSelector;
     const additionalSpotlights = step.additionalSpotlights || [];
@@ -697,7 +713,7 @@ export default function TutorialController() {
         ) : (
           <TutorialTooltip {...sharedTooltipProps} />
         )}
-        <PointsInfoModal open={showPointsModal} onClose={() => setShowPointsModal(false)} />
+        {pointsModal}
       </>
     );
   }
