@@ -21,11 +21,23 @@ Deno.serve(async (req) => {
     for (const suggestion of expired) {
       console.log('[EXPIRE SUGGESTIONS] Expiring:', suggestion.id, suggestion.title);
 
-      // Mark as rejected and fetch votes in parallel (within one suggestion is fine)
-      const [, votes] = await Promise.all([
-        base44.asServiceRole.entities.Suggestion.update(suggestion.id, { status: 'rejected', rejectedByAdmin: false }),
-        base44.asServiceRole.entities.Vote.filter({ suggestionId: suggestion.id })
-      ]);
+      // ── Race guard vs processAcceptance (H2) ──────────────────────────
+      // Only expire a suggestion that is STILL pending AND NOT currently locked for
+      // acceptance. This is an atomic compare-and-swap (mirrors processAcceptance's own
+      // lock): if processAcceptance already won the lock (acceptanceLock:true) or already
+      // accepted it (status != pending), updateMany matches zero rows and we skip — never
+      // clobbering an in-progress or completed acceptance with a 'rejected' status.
+      const rejectResult = await base44.asServiceRole.entities.Suggestion.updateMany(
+        { id: suggestion.id, status: 'pending', acceptanceLock: false },
+        { $set: { status: 'rejected', rejectedByAdmin: false } }
+      );
+      const rejectedCount = rejectResult?.modifiedCount ?? rejectResult?.modified ?? rejectResult?.count ?? 0;
+      if (rejectedCount < 1) {
+        console.log('[EXPIRE SUGGESTIONS] Skipping — acceptance in progress or already resolved:', suggestion.id);
+        continue;
+      }
+
+      const votes = await base44.asServiceRole.entities.Vote.filter({ suggestionId: suggestion.id });
 
       // Collect recipient userIds
       const recipientUserIds = new Set();
