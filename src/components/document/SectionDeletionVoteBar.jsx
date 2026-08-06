@@ -346,6 +346,18 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
           </DialogHeader>
 
           <div className="px-6 pb-6 space-y-4">
+            {/* Primary "Vote against" button — label changes once an explanation is being written */}
+            <Button
+              onClick={handleConVoteOnly}
+              className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold shadow-sm gap-2"
+            >
+              <ThumbsDown className="w-4 h-4 shrink-0" />
+              {showExplanation
+                ? (isHe ? 'פרסם הסבר והצבע נגד' : isAr ? 'انشر التوضيح وصوّت ضد' : 'Publish explanation & vote against')
+                : (isHe ? 'הצבע נגד' : isAr ? 'صوّت ضد' : 'Vote against')}
+            </Button>
+
+            {/* Add-explanation toggle → reveals textarea (below the vote button) */}
             {!showExplanation ? (
               <button
                 type="button"
@@ -385,14 +397,6 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
             )}
 
             <div className="flex flex-col gap-2.5">
-              <Button
-                onClick={handleConVoteOnly}
-                className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold shadow-sm gap-2"
-              >
-                <ThumbsDown className="w-4 h-4 shrink-0" />
-                {isHe ? 'הצבע נגד' : isAr ? 'صوّت ضد' : 'Vote against'}
-              </Button>
-
               <div className="relative flex items-center">
                 <div className="flex-1 border-t border-slate-200" />
                 <span className="px-3 text-xs text-slate-400">
