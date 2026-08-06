@@ -111,10 +111,13 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
   onPrev,
   onNext,
 }) {
-  const { btnClass } = useNavTheme(currentView);
+  const { btnClass, isDeleteType } = useNavTheme(currentView);
+  const stripBg = isDeleteType
+    ? 'bg-gradient-to-r from-red-50 to-pink-50 border-red-200'
+    : 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200';
 
   return (
-    <div className="proposal-navigation-arrows mt-4 pt-3 border-t border-slate-200">
+    <div className={`proposal-navigation-arrows mt-4 pt-3 px-3 pb-3 rounded-lg border ${stripBg}`}>
       <div className="flex items-center justify-between">
         <button
           onClick={onPrev}
