@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
-import { ThumbsUp, ThumbsDown, Loader2, AlertTriangle, Pencil, Plus } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Loader2, AlertTriangle, Pencil, Plus, ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Link, useNavigate } from "react-router-dom";
@@ -340,6 +340,9 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
             <DialogTitle className="text-lg font-bold text-slate-900">
               {isHe ? 'הצבעת נגד הסעיף' : isAr ? 'التصويت ضد القسم' : 'Vote against this section'}
             </DialogTitle>
+            <p className="text-sm text-slate-500 leading-relaxed">
+              {isHe ? 'הצבעתך תקרב את הסרת הסעיף מהמסמך' : isAr ? 'سيقرّب تصويتك إزالة القسم من الوثيقة' : 'Your vote will bring this section closer to removal'}
+            </p>
           </DialogHeader>
 
           <div className="px-6 pb-6 space-y-4">
@@ -387,14 +390,35 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                 <ThumbsDown className="w-4 h-4 shrink-0" />
                 {isHe ? 'הצבע נגד' : isAr ? 'صوّت ضد' : 'Vote against'}
               </Button>
-              <Button
-                variant="outline"
+
+              <div className="relative flex items-center">
+                <div className="flex-1 border-t border-slate-200" />
+                <span className="px-3 text-xs text-slate-400">
+                  {isHe ? 'או' : isAr ? 'أو' : 'or'}
+                </span>
+                <div className="flex-1 border-t border-slate-200" />
+              </div>
+
+              <button
+                type="button"
                 onClick={handleConVoteAndSuggest}
-                className="w-full h-11 rounded-xl border-2 border-slate-200 text-slate-700 hover:bg-slate-50 font-medium gap-2"
+                className="w-full rounded-xl border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors p-3 text-start"
               >
-                <Pencil className="w-4 h-4 shrink-0" />
-                {isHe ? 'נגד + הצעת נוסח חלופי לסעיף' : isAr ? 'ضد + اقتراح صياغة بديلة للقسم' : 'Against + propose alternative wording'}
-              </Button>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                    <Pencil className="w-4 h-4 text-slate-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-800 leading-tight">
+                      {isHe ? 'הצבע נגד והצע נוסח חלופי' : isAr ? 'صوّت ضد واقترح صياغة بديلة' : 'Vote against & suggest new wording'}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-tight">
+                      {isHe ? 'תועבר/י למסך יצירת הצעת עריכה לסעיף' : isAr ? 'سيتم نقلك إلى شاشة إنشاء اقتراح تعديل' : 'You\'ll be taken to create an edit suggestion'}
+                    </p>
+                  </div>
+                  {isRTL ? <ArrowLeft className="w-4 h-4 text-slate-400 shrink-0" /> : <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />}
+                </div>
+              </button>
             </div>
           </div>
         </DialogContent>
