@@ -11,7 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import JoinGroupDialog from "@/components/group/JoinGroupDialog";
 
 // Extracted memoized sub-components — each only re-renders when its own props change
-import CarouselNavigation from "./section-carousel/CarouselNavigation";
+import { CarouselNavigationHeader, CarouselNavigationArrows } from "./section-carousel/CarouselNavigation";
 import CurrentSectionView from "./section-carousel/CurrentSectionView";
 import SuggestionView from "./section-carousel/SuggestionView";
 import SectionActionButtons from "./section-carousel/SectionActionButtons";
@@ -356,20 +356,17 @@ const SectionCarousel = React.memo(function SectionCarousel({
         />
       )}
 
-      {/* Carousel navigation */}
+      {/* Carousel navigation — header (position indicator + label + dots) at top */}
       {!historyMode && allViews.length > 1 && (
-        <CarouselNavigation
+        <CarouselNavigationHeader
           allViews={allViews}
           currentIndex={currentIndex}
           currentView={currentView}
           isFirstView={isFirstView}
           sortedSuggestionsLength={sortedSuggestions.length}
-          isRTL={isRTL}
           language={language}
           t={t}
           getUserName={getUserName}
-          onPrev={handlePrev}
-          onNext={handleNext}
           onSelectView={(id) => setCurrentSuggestionId(id)}
         />
       )}
@@ -418,6 +415,17 @@ const SectionCarousel = React.memo(function SectionCarousel({
           />
         )}
       </div>
+
+      {/* Carousel navigation arrows — at the bottom of the card */}
+      {!historyMode && allViews.length > 1 && (
+        <CarouselNavigationArrows
+          currentView={currentView}
+          isRTL={isRTL}
+          language={language}
+          onPrev={handlePrev}
+          onNext={handleNext}
+        />
+      )}
 
       {/* Action buttons — only on current view, not in history/ghost mode */}
       {isFirstView && !historyMode && !isGhost && (

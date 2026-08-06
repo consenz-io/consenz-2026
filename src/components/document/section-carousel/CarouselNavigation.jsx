@@ -4,90 +4,84 @@ import { createPageUrl } from "@/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 /**
- * Carousel navigation bar — prev/next arrows, current view label, and dot indicators.
- * Extracted from SectionCarousel to reduce re-render scope when navigating between views.
+ * Carousel navigation — split into two parts:
+ *  - CarouselNavigationHeader: position indicator ("Suggestion 3 of 18") / label + dot indicators (rendered at TOP)
+ *  - CarouselNavigationArrows: prev/next arrows (rendered at BOTTOM of the card)
+ *
+ * Visual design (colors, rounded shapes, borders) preserved exactly from the original.
  */
-const CarouselNavigation = React.memo(function CarouselNavigation({
+
+function useNavTheme(currentView) {
+  const isDeleteType = currentView?.data?.type === 'delete_section';
+  const borderColorClass = isDeleteType
+    ? 'border-red-300 bg-gradient-to-r from-red-50 to-pink-50'
+    : 'border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50';
+  const btnClass = isDeleteType
+    ? 'border-red-300 bg-white text-red-600 hover:bg-red-100 hover:border-red-500 hover:shadow-md active:scale-95'
+    : 'border-amber-300 bg-white text-amber-700 hover:bg-amber-100 hover:border-amber-500 hover:shadow-md active:scale-95';
+  return { isDeleteType, borderColorClass, btnClass };
+}
+
+/** TOP: position indicator + label + dot indicators (no arrows) */
+export const CarouselNavigationHeader = React.memo(function CarouselNavigationHeader({
   allViews,
   currentIndex,
   currentView,
   isFirstView,
   sortedSuggestionsLength,
-  isRTL,
   language,
   t,
   getUserName,
-  onPrev,
-  onNext,
   onSelectView,
 }) {
-  const isDeleteType = currentView?.data?.type === 'delete_section';
-
-  const borderColorClass = isDeleteType
-    ? 'border-red-300 bg-gradient-to-r from-red-50 to-pink-50'
-    : 'border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50';
-
-  const btnClass = isDeleteType
-    ? 'border-red-300 bg-white text-red-600 hover:bg-red-100 hover:border-red-500 hover:shadow-md active:scale-95'
-    : 'border-amber-300 bg-white text-amber-700 hover:bg-amber-100 hover:border-amber-500 hover:shadow-md active:scale-95';
+  const { isDeleteType, borderColorClass } = useNavTheme(currentView);
 
   return (
     <div className={`proposal-navigation-arrows mb-4 border-b-2 p-3 rounded-lg shadow-sm ${borderColorClass}`}>
-      <div className="flex items-center justify-between pb-2">
-        <button
-          onClick={onPrev}
-          className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl border-2 font-bold transition-all shadow-sm ${btnClass}`}
-          aria-label={isRTL ? (language === 'he' ? 'הבא' : 'التالي') : 'Previous'}
-        >
-          {isRTL ? <ChevronRight className="w-5 h-5 md:w-6 md:h-6" /> : <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />}
-        </button>
-
-        <div className="text-center flex-1 px-2">
-          {isFirstView ? (
-            <p className="text-sm">
-              <span className="font-bold text-amber-700 text-lg">{sortedSuggestionsLength}</span>{' '}
-              <span className="font-bold text-slate-800">{t('editSuggestions')}</span>
+      <div className="text-center px-2 pb-2">
+        {isFirstView ? (
+          <p className="text-sm">
+            <span className="font-bold text-amber-700 text-lg">{sortedSuggestionsLength}</span>{' '}
+            <span className="font-bold text-slate-800">{t('editSuggestions')}</span>
+          </p>
+        ) : (
+          <div className="flex flex-col items-center gap-0.5">
+            {/* Position indicator */}
+            <span className={`text-xs font-semibold ${isDeleteType ? 'text-red-600' : 'text-amber-700'}`}>
+              {(language || 'he') === 'he'
+                ? `הצעה ${currentIndex} מתוך ${allViews.length - 1}`
+                : (language || 'he') === 'ar'
+                ? `اقتراح ${currentIndex} من ${allViews.length - 1}`
+                : `Suggestion ${currentIndex} of ${allViews.length - 1}`}
+            </span>
+            <p className="text-sm font-bold text-slate-800">
+              {isDeleteType
+                ? ((language || 'he') === 'he' ? 'הצעה למחיקת הסעיף' : (language || 'he') === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion')
+                : <>
+                    {(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح تعديل بواسطة' : 'Edit suggestion by'}{' '}
+                    {currentView?.data?.created_by_id ? (
+                      <Link
+                        to={`${createPageUrl("Profile")}?userId=${currentView.data.created_by_id}`}
+                        className="text-blue-700 hover:text-blue-900 hover:underline transition-colors"
+                      >
+                        {getUserName(currentView.data.created_by_id)}
+                      </Link>
+                    ) : (
+                      <span>{getUserName(currentView?.data?.created_by_id)}</span>
+                    )}
+                  </>
+              }
             </p>
-          ) : (
-            <div className="flex flex-col items-center gap-0.5">
-              <p className="text-sm font-bold text-slate-800">
-                {isDeleteType
-                  ? ((language || 'he') === 'he' ? 'הצעה למחיקת הסעיף' : (language || 'he') === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion')
-                  : <>
-                      {(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح תعديل بواסطة' : 'Edit suggestion by'}{' '}
-                      {currentView?.data?.created_by_id ? (
-                        <Link
-                          to={`${createPageUrl("Profile")}?userId=${currentView.data.created_by_id}`}
-                          className="text-blue-700 hover:text-blue-900 hover:underline transition-colors"
-                        >
-                          {getUserName(currentView.data.created_by_id)}
-                        </Link>
-                      ) : (
-                        <span>{getUserName(currentView?.data?.created_by_id)}</span>
-                      )}
-                    </>
-                }
-              </p>
-              {currentView?.data?.created_date && (
-                <span className="text-[10px] text-slate-400">
-                  {new Date(currentView.data.created_date).toLocaleDateString(
-                    language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB',
-                    { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }
-                  )}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-
-        <button
-          onClick={onNext}
-          data-expand-proposal
-          className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl border-2 font-bold transition-all shadow-sm ${btnClass}`}
-          aria-label={isRTL ? (language === 'he' ? 'הקודם' : 'السابق') : 'Next'}
-        >
-          {isRTL ? <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" /> : <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />}
-        </button>
+            {currentView?.data?.created_date && (
+              <span className="text-[10px] text-slate-400">
+                {new Date(currentView.data.created_date).toLocaleDateString(
+                  language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB',
+                  { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }
+                )}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Dot indicators */}
@@ -109,4 +103,42 @@ const CarouselNavigation = React.memo(function CarouselNavigation({
   );
 });
 
-export default CarouselNavigation;
+/** BOTTOM: prev/next arrows only */
+export const CarouselNavigationArrows = React.memo(function CarouselNavigationArrows({
+  currentView,
+  isRTL,
+  language,
+  onPrev,
+  onNext,
+}) {
+  const { btnClass } = useNavTheme(currentView);
+
+  return (
+    <div className="proposal-navigation-arrows mt-4 pt-3 border-t border-slate-200">
+      <div className="flex items-center justify-between">
+        <button
+          onClick={onPrev}
+          className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl border-2 font-bold transition-all shadow-sm ${btnClass}`}
+          aria-label={isRTL ? (language === 'he' ? 'הבא' : 'التالي') : 'Previous'}
+        >
+          {isRTL ? <ChevronRight className="w-5 h-5 md:w-6 md:h-6" /> : <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />}
+        </button>
+
+        <span className="text-xs text-slate-400 font-medium px-2">
+          {language === 'he' ? 'דפדוף בין הצעות' : language === 'ar' ? 'التنقل بين الاقتراحات' : 'Browse suggestions'}
+        </span>
+
+        <button
+          onClick={onNext}
+          data-expand-proposal
+          className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl border-2 font-bold transition-all shadow-sm ${btnClass}`}
+          aria-label={isRTL ? (language === 'he' ? 'הקודם' : 'السابق') : 'Next'}
+        >
+          {isRTL ? <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" /> : <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />}
+        </button>
+      </div>
+    </div>
+  );
+});
+
+export default CarouselNavigationHeader;
