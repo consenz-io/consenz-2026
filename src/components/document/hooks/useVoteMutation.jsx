@@ -45,7 +45,7 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
           ensureUserPublicProfile(user).catch(() => {});
         }
       
-        return { accepted, newProVotes, newConVotes };
+        return { accepted, newProVotes, newConVotes, voteAction };
       } catch (err) {
         throw err;
       } finally {
@@ -188,10 +188,36 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
             };
           });
         });
+
+        // ── H4: reconcile the aggregated cache with server truth ──────────────
+        // onMutate optimistically wrote counts + a temp vote row into
+        // documentAggregatedData (the cache that drives button colors + displayed
+        // counts). Rewrite it here from the AUTHORITATIVE server response so the UI
+        // can never diverge from the backend: use the server's verified counts, and
+        // set the user's vote row based on the actual voteAction the server performed
+        // (created/changed keep a row of `variables.vote`; canceled removes it).
+        queryClient.setQueryData(['documentAggregatedData', document?.id], (old) => {
+          if (!old) return old;
+          const suggestions = Array.isArray(old.suggestions)
+            ? old.suggestions.map(s => s.id === variables.suggestionId
+                ? { ...s, proVotes: data.newProVotes, conVotes: data.newConVotes, status: data.accepted ? 'accepted' : s.status }
+                : s)
+            : old.suggestions;
+          const votes = Array.isArray(old.votes) ? old.votes : [];
+          const otherVotes = votes.filter(v => !(v.suggestionId === variables.suggestionId && v.userId === user?.id));
+          const nextVotes = data.voteAction === 'canceled'
+            ? otherVotes
+            : [...otherVotes, { id: 'server-' + variables.suggestionId + '-' + user?.id, suggestionId: variables.suggestionId, userId: user?.id, vote: variables.vote }];
+          return { ...old, suggestions, votes: nextVotes };
+        });
       }
 
       if (data?.accepted === true) {
         toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', { duration: 5000 });
+        // Acceptance mutates section content, thresholds and multiple suggestion
+        // statuses server-side — beyond what we can safely patch locally. Invalidate
+        // the aggregated cache so the next read pulls the full reconciled state.
+        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', document?.id] });
       }
       
       // Emit event for layout to update unvoted count (optimistic decrement)
