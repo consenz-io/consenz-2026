@@ -43,8 +43,15 @@ export default function GlobalTourButton({ user }) {
       localStorage.setItem(TUTORIAL_STORAGE_KEY, JSON.stringify(fresh));
     } catch {}
     setIsFirstVisit(false);
+    // Choose the entry point based on the current page so the tour starts correctly.
+    // On a document page it must start directly there; passing "home" would route the
+    // flow through home-intro and leave nothing visible on the document page.
+    const path = location.pathname;
+    const isDocPage = /\/(DocumentView|document)/i.test(path);
+    const isGroupPage = /\/(GroupView|group)/i.test(path);
+    const entryPoint = isDocPage ? "document" : isGroupPage ? "group" : "home";
     if (window.restartTutorial) {
-      window.restartTutorial("home");
+      window.restartTutorial(entryPoint);
     } else {
       window.location.reload();
     }
