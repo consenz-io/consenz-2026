@@ -353,9 +353,11 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                   setShowExplanation(true);
                   setTimeout(() => explanationRef.current?.focus(), 250);
                 }}
-                className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors mx-auto"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 text-slate-600 hover:border-slate-400 hover:bg-slate-100 hover:text-slate-800 transition-colors text-sm font-medium"
               >
-                <Plus className="w-4 h-4 shrink-0" />
+                <span className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
+                  <Plus className="w-3.5 h-3.5" />
+                </span>
                 {isHe ? 'הוספת הסבר או נוסח חלופי (אופציונלי)' : isAr ? 'إضافة توضيح أو صياغة بديلة (اختياري)' : 'Add an explanation or alternative wording (optional)'}
               </button>
             ) : (
