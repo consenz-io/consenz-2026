@@ -398,7 +398,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
               </Button>
               {conComment.trim() && (
                 <p className="text-xs text-slate-500 text-center leading-tight">
-                  {isHe ? 'ההסבר יפורסם כתגובה לסעיף' : isAr ? 'سيُنشر توضيحك كتعليق مع تصويتك ضد' : 'Your explanation will be posted as a comment together with your con vote'}
+                  {isHe ? 'ההסבר יפורסם כתגובה יחד עם הצבעתך נגד' : isAr ? 'سيُنشر توضيحك كتعليق مع تصويتك ضد' : 'Your explanation will be posted as a comment together with your con vote'}
                 </p>
               )}
             </div>
