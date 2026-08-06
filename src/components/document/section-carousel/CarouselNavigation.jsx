@@ -34,34 +34,43 @@ export const CarouselNavigationHeader = React.memo(function CarouselNavigationHe
   getUserName,
   onSelectView
 }) {
-  const { isDeleteType } = useNavTheme(currentView);
+  if (!isFirstView) return null;
 
   return (
     <div className="proposal-navigation-arrows mb-4 pb-3 border-b border-slate-200">
-      {isFirstView &&
-      <div className="text-center px-2 pb-2">
-          <p className="text-sm">
-            <span className="font-bold text-amber-700 text-lg">{sortedSuggestionsLength}</span>{' '}
-            <span className="font-bold text-slate-800">{t('editSuggestions')}</span>
-          </p>
-        </div>
-      }
-
-      {/* Dot indicators */}
-      <div className="flex items-center justify-center gap-1.5 pt-2">
-        {allViews.map((view, idx) =>
-        <button
-          key={view.id}
-          onClick={() => onSelectView(view.id)}
-          className={`rounded-full transition-all duration-200 ${
-          idx === currentIndex ?
-          `w-5 h-2.5 ${isDeleteType ? 'bg-red-500' : 'bg-amber-500'}` :
-          `w-2 h-2 ${isDeleteType ? 'bg-red-200 hover:bg-red-400' : 'bg-amber-200 hover:bg-amber-400'}`}`
-          }
-          aria-label={`${language === 'he' ? 'עבור לעמוד' : 'Go to'} ${idx + 1}`} />
-
-        )}
+      <div className="text-center px-2">
+        <p className="text-sm">
+          <span className="font-bold text-amber-700 text-lg">{sortedSuggestionsLength}</span>{' '}
+          <span className="font-bold text-slate-800">{t('editSuggestions')}</span>
+        </p>
       </div>
+    </div>);
+
+});
+
+/** Dot indicators — moved to the bottom arrows strip */
+export const CarouselNavigationDots = React.memo(function CarouselNavigationDots({
+  allViews,
+  currentIndex,
+  currentView,
+  language,
+  onSelectView
+}) {
+  const { isDeleteType } = useNavTheme(currentView);
+  return (
+    <div className="flex items-center justify-center gap-1.5">
+      {allViews.map((view, idx) =>
+      <button
+        key={view.id}
+        onClick={() => onSelectView(view.id)}
+        className={`rounded-full transition-all duration-200 ${
+        idx === currentIndex ?
+        `w-5 h-2.5 ${isDeleteType ? 'bg-red-500' : 'bg-amber-500'}` :
+        `w-2 h-2 ${isDeleteType ? 'bg-red-200 hover:bg-red-400' : 'bg-amber-200 hover:bg-amber-400'}`}`
+        }
+        aria-label={`${language === 'he' ? 'עבור לעמוד' : 'Go to'} ${idx + 1}`} />
+
+      )}
     </div>);
 
 });
@@ -72,7 +81,10 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
   isRTL,
   language,
   onPrev,
-  onNext
+  onNext,
+  allViews,
+  currentIndex,
+  onSelectView
 }) {
   const { btnClass, isDeleteType } = useNavTheme(currentView);
   const stripBg = isDeleteType ?
@@ -103,6 +115,18 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
           {isRTL ? <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" /> : <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />}
         </button>
       </div>
+
+      {allViews && allViews.length > 1 &&
+      <div className="pt-3">
+          <CarouselNavigationDots
+          allViews={allViews}
+          currentIndex={currentIndex}
+          currentView={currentView}
+          language={language}
+          onSelectView={onSelectView} />
+
+        </div>
+      }
     </div>);
 
 });
