@@ -12,6 +12,7 @@ import JoinGroupDialog from "@/components/group/JoinGroupDialog";
 
 // Extracted memoized sub-components — each only re-renders when its own props change
 import { CarouselNavigationHeader, CarouselNavigationArrows } from "./section-carousel/CarouselNavigation";
+import CarouselTitleInline from "./section-carousel/CarouselTitleInline";
 import CurrentSectionView from "./section-carousel/CurrentSectionView";
 import SuggestionView from "./section-carousel/SuggestionView";
 import SectionActionButtons from "./section-carousel/SectionActionButtons";
@@ -293,20 +294,28 @@ const SectionCarousel = React.memo(function SectionCarousel({
         </div>
       )}
 
-      {/* Header: section index + badge + history button */}
-      <div className="flex items-center justify-between mb-3 md:mb-4">
-        <div className="flex items-center gap-2 md:gap-3">
+      {/* Header: section index + badge + suggestion title/timestamp + history button */}
+      <div className="flex items-center justify-between mb-3 md:mb-4 gap-2">
+        <div className="flex items-center gap-2 md:gap-3 min-w-0">
           {isGhost ? null : (
-            <div className={`text-xs md:text-sm font-medium ${historyMode ? 'text-teal-700' : 'text-slate-500'}`}>
+            <div className={`text-xs md:text-sm font-medium flex-shrink-0 ${historyMode ? 'text-teal-700' : 'text-slate-500'}`}>
               {historyMode
                 ? <span className="flex items-center gap-1"><History className="w-3.5 h-3.5" />{t('history')}</span>
                 : `${t('section')} ${sectionIndex + 1}`}
             </div>
           )}
           {!historyMode && allViews.length > 1 && (
-            <Badge variant="outline" className="text-[10px] md:text-xs">
+            <Badge variant="outline" className="text-[10px] md:text-xs flex-shrink-0">
               {currentIndex + 1} / {allViews.length}
             </Badge>
+          )}
+          {/* Suggestion title + timestamp — inline, at the same height as the section number */}
+          {!historyMode && allViews.length > 1 && !isFirstView && (
+            <CarouselTitleInline
+              currentView={currentView}
+              language={language}
+              getUserName={getUserName}
+            />
           )}
         </div>
         <div className="flex items-center gap-1 md:gap-2">

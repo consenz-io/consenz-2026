@@ -38,51 +38,14 @@ export const CarouselNavigationHeader = React.memo(function CarouselNavigationHe
 
   return (
     <div className="proposal-navigation-arrows mb-4 pb-3 border-b border-slate-200">
+      {isFirstView &&
       <div className="text-center px-2 pb-2">
-        {isFirstView ?
-        <p className="text-sm">
+          <p className="text-sm">
             <span className="font-bold text-amber-700 text-lg">{sortedSuggestionsLength}</span>{' '}
             <span className="font-bold text-slate-800">{t('editSuggestions')}</span>
-          </p> :
-
-        <div className="flex flex-col items-center gap-0.5">
-            {/* Position indicator */}
-            <span className={`text-xs font-semibold hidden ${isDeleteType ? 'text-red-600' : 'text-amber-700'}`}>
-              {(language || 'he') === 'he' ?
-            `הצעה ${currentIndex} מתוך ${allViews.length - 1}` :
-            (language || 'he') === 'ar' ?
-            `اقتراح ${currentIndex} من ${allViews.length - 1}` :
-            `Suggestion ${currentIndex} of ${allViews.length - 1}`}
-            </span>
-            <p className="text-sm font-bold text-slate-800">
-              {isDeleteType ?
-            (language || 'he') === 'he' ? 'הצעה למחיקת הסעיף' : (language || 'he') === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion' :
-            <>
-                    {(language || 'he') === 'he' ? 'הצעת עריכה מאת' : (language || 'he') === 'ar' ? 'اقتراح تعديل بواسطة' : 'Edit suggestion by'}{' '}
-                    {currentView?.data?.created_by_id ?
-              <Link
-                to={`${createPageUrl("Profile")}?userId=${currentView.data.created_by_id}`}
-                className="text-blue-700 hover:text-blue-900 hover:underline transition-colors">
-                
-                        {getUserName(currentView.data.created_by_id)}
-                      </Link> :
-
-              <span>{getUserName(currentView?.data?.created_by_id)}</span>
-              }
-                  </>
-            }
-            </p>
-            {currentView?.data?.created_date &&
-          <span className="text-[10px] text-slate-400">
-                {new Date(currentView.data.created_date).toLocaleDateString(
-              language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB',
-              { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }
-            )}
-              </span>
-          }
-          </div>
-        }
-      </div>
+          </p>
+        </div>
+      }
 
       {/* Dot indicators */}
       <div className="flex items-center justify-center gap-1.5 pt-2">
