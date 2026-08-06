@@ -346,18 +346,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
           </DialogHeader>
 
           <div className="px-6 pb-6 space-y-4">
-            {/* Primary "Vote against" button — label changes once an explanation is being written */}
-            <Button
-              onClick={handleConVoteOnly}
-              className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold shadow-sm gap-2"
-            >
-              <ThumbsDown className="w-4 h-4 shrink-0" />
-              {showExplanation
-                ? (isHe ? 'פרסם הסבר והצבע נגד' : isAr ? 'انشر التوضيح وصوّت ضد' : 'Publish explanation & vote against')
-                : (isHe ? 'הצבע נגד' : isAr ? 'صوّت ضد' : 'Vote against')}
-            </Button>
-
-            {/* Add-explanation toggle → reveals textarea (below the vote button) */}
+            {/* Explanation: collapsed by default, revealed on demand (input comes before its action button) */}
             {!showExplanation ? (
               <button
                 type="button"
@@ -395,6 +384,24 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                 </motion.div>
               </AnimatePresence>
             )}
+
+            {/* Primary action — sits right below its input. Label + hint make clear the explanation is published together with the con vote once text was entered */}
+            <div className="space-y-1.5">
+              <Button
+                onClick={handleConVoteOnly}
+                className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold shadow-sm gap-2"
+              >
+                <ThumbsDown className="w-4 h-4 shrink-0" />
+                {conComment.trim()
+                  ? (isHe ? 'פרסם הסבר והצבע נגד' : isAr ? 'انشر التوضيح وصوّت ضد' : 'Publish explanation & vote against')
+                  : (isHe ? 'הצבע נגד' : isAr ? 'صوّت ضد' : 'Vote against')}
+              </Button>
+              {conComment.trim() && (
+                <p className="text-xs text-slate-500 text-center leading-tight">
+                  {isHe ? 'ההסבר יפורסם כתגובה יחד עם הצבעתך נגד' : isAr ? 'سيُنشر توضيحك كتعليق مع تصويتك ضد' : 'Your explanation will be posted as a comment together with your con vote'}
+                </p>
+              )}
+            </div>
 
             <div className="flex flex-col gap-2.5">
               <div className="relative flex items-center">
