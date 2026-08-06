@@ -393,8 +393,8 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
               >
                 <ThumbsDown className="w-4 h-4 shrink-0" />
                 {conComment.trim()
-                  ? (isHe ? 'פרסם הסבר והצבע נגד' : isAr ? 'انشر التوضيح وصوّت ضد' : 'Publish explanation & vote against')
-                  : (isHe ? 'הצבע נגד' : isAr ? 'صوّت ضد' : 'Vote against')}
+                  ? (isHe ? 'פרסום ההסבר והצבעת נגד' : isAr ? 'انشر التوضيح وصوّت ضد' : 'Publish explanation & vote against')
+                  : (isHe ? 'הצבעת נגד' : isAr ? 'صوّت ضد' : 'Vote against')}
               </Button>
               {conComment.trim() && (
                 <p className="text-xs text-slate-500 text-center leading-tight">
@@ -423,7 +423,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-800 leading-tight">
-                      {isHe ? 'הצבע נגד והצע נוסח חלופי' : isAr ? 'صوّت ضد واقترح صياغة بديلة' : 'Vote against & suggest new wording'}
+                      {isHe ? 'הצבעת נגד והצעת נוסח חלופי' : isAr ? 'صوّت ضد واقترح صياغة بديلة' : 'Vote against & suggest new wording'}
                     </p>
                     <p className="text-xs text-slate-500 mt-0.5 leading-tight">
                       {isHe ? 'תועבר/י למסך יצירת הצעת עריכה לסעיף' : isAr ? 'سيتم نقلك إلى شاشة إنشاء اقتراح تعديل' : 'You\'ll be taken to create an edit suggestion'}
