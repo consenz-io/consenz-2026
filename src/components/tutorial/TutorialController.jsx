@@ -302,6 +302,20 @@ export default function TutorialController() {
     manualNavRef.current = false;
   }, [currentStep]);
 
+  // ── Auto-skip the welcome-intro-prepare step when NOT on the home page ──────
+  // This step targets the group header and only makes sense in the home→group→document
+  // flow. When the tour starts directly on a document page (e.g. an unauthenticated
+  // user clicking "Tour the platform" from a document), step 0 is this prepare step
+  // and must be advanced automatically. Doing this in an effect (not during render)
+  // ensures the state update reliably fires and the next bubble appears.
+  useEffect(() => {
+    if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
+    const step = TUTORIAL_STEPS[currentStep];
+    if (step?.id === 'welcome-intro-prepare' && !isHomePage(location.pathname)) {
+      handleNext();
+    }
+  }, [phase, currentStep, location.pathname, handleNext]);
+
   useEffect(() => {
     if (phase !== 'running' || !TUTORIAL_STEPS.length) return;
     const step = TUTORIAL_STEPS[currentStep];
@@ -574,9 +588,9 @@ export default function TutorialController() {
     const step = TUTORIAL_STEPS[currentStep];
     if (!step) return null;
 
-    // Skip welcome-intro-prepare if not on home page
+    // Skip welcome-intro-prepare if not on home page — the auto-skip effect above
+    // advances the step; render nothing until it does.
     if (step.id === 'welcome-intro-prepare' && !isHomePage(location.pathname)) {
-      handleNext();
       return null;
     }
 
