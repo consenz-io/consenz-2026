@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
-import { ArrowRight, ArrowLeft, LogIn } from "lucide-react";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
@@ -81,8 +81,17 @@ export default function GlobalTourButton({ user }) {
           className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg pointer-events-auto"
           onClick={() => base44.auth.redirectToLogin(window.location.href)}
         >
-          <LogIn className={isRTL ? "w-4 h-4 ml-2" : "w-4 h-4 mr-2"} />
-          {loginLabel[language] || loginLabel.en}
+          {isRTL ? (
+            <>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              {loginLabel[language] || loginLabel.en}
+            </>
+          ) : (
+            <>
+              {loginLabel[language] || loginLabel.en}
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </>
+          )}
         </Button>
       </motion.div>
     );
