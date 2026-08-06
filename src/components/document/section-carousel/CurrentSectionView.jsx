@@ -110,7 +110,7 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
             variant="ghost"
             size="sm"
             onClick={handleEditClick}
-            className={`tutorial-suggest-edit-btn text-xs h-8 px-3 flex-shrink-0 ${isRTL ? 'ml-0 mr-auto' : 'mr-0 ml-auto'}`}
+            className="tutorial-suggest-edit-btn text-xs h-8 px-3 flex-shrink-0"
           >
             <Edit className={`w-3.5 h-3.5 shrink-0 ${isRTL ? 'ml-1' : 'mr-1'}`} />
             <span className="truncate">{t('suggestEditSection')}</span>
@@ -120,7 +120,7 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
           variant={hasComments ? 'outline' : 'ghost'}
           size="sm"
           onClick={() => toggleComments(commentsKey)}
-          className={`h-8 text-sm px-3 gap-1.5 relative flex-shrink-0 transition-all ${
+          className={`h-8 text-sm px-3 gap-1.5 relative flex-shrink-0 transition-all ${isRTL ? 'mr-auto' : 'ml-auto'} ${
             hasComments
               ? 'font-semibold text-blue-700 border-blue-300 bg-blue-50 hover:bg-blue-100'
               : 'text-slate-600 hover:text-blue-600'

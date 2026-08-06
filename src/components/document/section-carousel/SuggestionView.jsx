@@ -170,7 +170,7 @@ const SuggestionView = React.memo(function SuggestionView({
             variant="outline"
             size="sm"
             onClick={() => onEditSuggestion(suggestion)}
-            className={`h-8 text-xs px-2 flex-shrink-0 ${isRTL ? 'mr-0 ml-auto' : 'ml-0 mr-auto'}`}>
+            className="h-8 text-xs px-2 flex-shrink-0">
             
               <Edit className="w-4 h-4" />
               <span className="hidden sm:inline">{t('suggestEditSection')}</span>
@@ -180,7 +180,7 @@ const SuggestionView = React.memo(function SuggestionView({
             variant={hasComments ? 'outline' : 'ghost'}
             size="sm"
             onClick={() => toggleComments(commentsKey)}
-            className={`h-8 text-sm px-3 gap-1.5 relative flex-shrink-0 transition-all ${
+            className={`h-8 text-sm px-3 gap-1.5 relative flex-shrink-0 transition-all ${isRTL ? 'mr-auto' : 'ml-auto'} ${
             hasComments ?
             'font-semibold text-blue-700 border-blue-300 bg-blue-50 hover:bg-blue-100' :
             'text-slate-600 hover:text-blue-600'}`
