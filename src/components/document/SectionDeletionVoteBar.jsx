@@ -377,7 +377,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                     ref={explanationRef}
                     value={conComment}
                     onChange={(e) => setConComment(e.target.value)}
-                    placeholder={isHe ? 'מדוע את/ה מתנגד/ת לסעיף?' : isAr ? 'لماذا تعارض هذا القسم؟' : 'Why do you oppose this section?'}
+                    placeholder={isHe ? 'מה הסיבה להתנגדות לסעיף?' : isAr ? 'لماذا تعارض هذا القسم؟' : 'Why do you oppose this section?'}
                     className="min-h-[90px] resize-none rounded-xl border-slate-200 focus-visible:ring-red-200"
                     dir={isRTL ? 'rtl' : 'ltr'}
                   />
