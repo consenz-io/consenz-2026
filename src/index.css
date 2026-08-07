@@ -254,7 +254,7 @@ button:focus-visible {
   gap: 2rem;
   padding-inline-end: 2rem;
   white-space: nowrap;
-  animation: marquee-scroll-ltr 14s linear infinite;
+  animation: marquee-scroll-ltr 10s linear infinite;
   will-change: transform;
 }
 
