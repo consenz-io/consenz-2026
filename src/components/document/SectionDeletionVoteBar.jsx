@@ -368,7 +368,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
               {isHe ? 'הצבעת נגד הסעיף' : isAr ? 'التصويت ضد القسم' : 'Vote against this section'}
             </DialogTitle>
             <p className="text-sm text-slate-500 leading-relaxed">
-              {isHe ? 'הצבעתך תקרב את הסרת הסעיף מהמסמך' : isAr ? 'سيقرّب تصويتك إزالة القسم من الوثيقة' : 'Your vote will bring this section closer to removal'}
+              {isHe ? 'הצבעתך תקרב את הסרת הסעיף מהמסמך. באפשרותך:' : isAr ? 'سيقرّب تصويتك إزالة القسم من الوثيقة' : 'Your vote will bring this section closer to removal'}
             </p>
           </DialogHeader>
 
@@ -386,7 +386,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                 <span className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
                   <Plus className="w-3.5 h-3.5" />
                 </span>
-                {isHe ? 'הוספת הסבר להתנגדותך (אופציונלי)' : isAr ? 'إضافة توضيح أو صياغة بديلة (اختياري)' : 'Add an explanation or alternative wording (optional)'}
+                {isHe ? 'להוסיף הסבר להתנגדותך (אופציונלי)' : isAr ? 'إضافة توضيح أو صياغة بديلة (اختياري)' : 'Add an explanation or alternative wording (optional)'}
               </button>
             ) : (
               <AnimatePresence>
@@ -421,7 +421,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                 <ThumbsDown className="w-4 h-4 shrink-0" />
                 {conComment.trim()
                   ? (isHe ? 'פרסום ההסבר והצבעת נגד' : isAr ? 'انشر التوضيح وصوّت ضد' : 'Publish explanation & vote against')
-                  : (isHe ? 'הצבעת נגד בלבד' : isAr ? 'صوّت ضد' : 'Vote against')}
+                  : (isHe ? 'להצביע נגד בלבד' : isAr ? 'صوّت ضد' : 'Vote against')}
               </Button>
               {conComment.trim() && (
                 <p className="text-xs text-slate-500 text-center leading-tight">
@@ -450,7 +450,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-800 leading-tight">
-                      {isHe ? 'הצעת נוסח חלופי לסעיף' : isAr ? 'اقتراح صياغة بديلة للقسم' : 'Suggest alternative wording'}
+                      {isHe ? 'להציע נוסח חלופי לסעיף' : isAr ? 'اقتراح صياغة بديلة للقسم' : 'Suggest alternative wording'}
                     </p>
                     <p className="text-xs text-slate-500 mt-0.5 leading-tight">
                       {isHe
