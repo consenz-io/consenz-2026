@@ -27,12 +27,12 @@ export default function BackToDocumentButton({ suggestion, suggestionId, isRTL }
 
   return (
     <Button
-      variant="ghost"
+      variant="outline"
       size="sm"
       onClick={handleClick}
-      className="h-8 px-2.5 text-xs font-medium text-slate-600 hover:text-blue-700 hover:bg-blue-50 gap-1.5"
+      className="h-9 px-3.5 text-sm font-semibold text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100 hover:text-blue-800 hover:border-blue-300 gap-1.5 shadow-sm"
     >
-      {isRTL ? <ArrowRight className="w-3.5 h-3.5" /> : <ArrowLeft className="w-3.5 h-3.5" />}
+      {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
       {t('backToDocument')}
     </Button>
   );
