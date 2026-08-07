@@ -453,7 +453,11 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                       {isHe ? 'הצעת נוסח חלופי לסעיף' : isAr ? 'اقتراح صياغة بديلة للقسم' : 'Suggest alternative wording'}
                     </p>
                     <p className="text-xs text-slate-500 mt-0.5 leading-tight">
-                      {isHe ? 'ההצבעה נגד תירשם ותועבר/י למסך כתיבת נוסח חלופי' : isAr ? 'سيُسجّل تصويتك ضد وسيتم نقلك لكتابة صياغة بديلة' : 'Your con vote is recorded and you\'ll write a new version'}
+                      {isHe
+                        ? (conComment.trim()
+                          ? 'תגובתך תפורסם, ההתנגדות תירשם ותועבר/י למסך לכתיבת הצעה לעריכת הסעיף'
+                          : 'ההצבעה נגד תירשם ותועבר/י למסך כתיבת נוסח חלופי')
+                        : isAr ? 'سيُسجّل تصويتك ضد وسيتم نقلك لكتابة صياغة بديلة' : 'Your con vote is recorded and you\'ll write a new version'}
                     </p>
                   </div>
                   {isRTL ? <ArrowLeft className="w-4 h-4 text-slate-400 shrink-0" /> : <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />}
