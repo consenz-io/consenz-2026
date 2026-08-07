@@ -110,7 +110,7 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
         </span>);
 
     }
-    const name = getUserName ? getUserName(nextView.data) : '';
+    const name = getUserName ? getUserName(nextView.data?.created_by_id) : '';
     if (language === 'he') {
       return (
         <>
