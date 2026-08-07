@@ -143,7 +143,7 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
         className={`w-full flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-xl border-2 text-start transition-all shadow-sm ${btnClass}`}
         aria-label={language === 'he' ? 'להצעה הבאה' : language === 'ar' ? 'الاقتراح التالي' : 'Next suggestion'}>
 
-        <MarqueeText className="flex-1 min-w-0 relative text-sm md:text-base text-slate-700">
+        <MarqueeText isRTL={isRTL} className="flex-1 min-w-0 relative text-sm md:text-base text-slate-700">
           {nextLabel}
         </MarqueeText>
         <span className="flex-shrink-0">

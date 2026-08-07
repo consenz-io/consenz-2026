@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
  * Renders text on a single line. If it overflows its container,
  * the text scrolls continuously so the user can read all of it.
  */
-export default function MarqueeText({ children, className = "" }) {
+export default function MarqueeText({ children, className = "", isRTL = false }) {
   const containerRef = useRef(null);
   const measureRef = useRef(null);
   const [overflow, setOverflow] = useState(false);
@@ -26,7 +26,7 @@ export default function MarqueeText({ children, className = "" }) {
   return (
     <div ref={containerRef} className={`overflow-hidden ${className}`}>
       {overflow ? (
-        <div className="marquee-track">
+        <div className={`marquee-track ${isRTL ? 'marquee-track-rtl' : ''}`}>
           <span className="whitespace-nowrap">{children}</span>
           <span className="whitespace-nowrap" aria-hidden="true">{children}</span>
         </div>

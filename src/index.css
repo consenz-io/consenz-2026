@@ -239,18 +239,27 @@ button:focus-visible {
 }
 
 /* Marquee scrolling text (carousel navigation label) */
-@keyframes marquee-scroll {
+@keyframes marquee-scroll-ltr {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
 
+@keyframes marquee-scroll-rtl {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(50%); }
+}
+
 .marquee-track {
   display: inline-flex;
-  gap: 3rem;
-  padding-inline-end: 3rem;
+  gap: 2rem;
+  padding-inline-end: 2rem;
   white-space: nowrap;
-  animation: marquee-scroll 14s linear infinite;
+  animation: marquee-scroll-ltr 14s linear infinite;
   will-change: transform;
+}
+
+.marquee-track-rtl {
+  animation-name: marquee-scroll-rtl;
 }
 
 /* Tutorial: ghost voting/nav pulse animation */
