@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   ThumbsUp, ThumbsDown, Clock,
-  CheckCircle, XCircle, AlertCircle, Loader2, Trash2, ChevronLeft, ChevronRight, Edit2, X, Save, FileText, ShieldCheck } from
+  CheckCircle, XCircle, AlertCircle, Loader2, Trash2, ChevronLeft, ChevronRight, Edit2, X, Save, FileText, ShieldCheck, ArrowLeft, ArrowRight } from
 "lucide-react";
 import SuggestionCountdown from "@/components/document/SuggestionCountdown";
 import VotingProgressSection from "../components/document/VotingProgressSection";
@@ -633,8 +633,12 @@ export default function SuggestionDetail() {
                 }
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
-                <Button variant="outline" size="sm" onClick={() => {const anchor = (suggestion.type === 'edit_section' || suggestion.type === 'edit_suggestion') ? `section-${suggestion.sectionId}` : `suggestion-${suggestionId}`;navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#${anchor}`);setTimeout(() => {window.document?.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' });}, 300);}} className="h-7 px-2 text-xs">
-                  <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />{t('backToDocument')}
+                <Button variant="default" size="sm" onClick={() => {const anchor = (suggestion.type === 'edit_section' || suggestion.type === 'edit_suggestion') ? `section-${suggestion.sectionId}` : `suggestion-${suggestionId}`;navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#${anchor}`);setTimeout(() => {window.document?.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' });}, 300);}} className="h-9 px-3 text-sm font-semibold shadow-sm gap-1.5 bg-blue-600 hover:bg-blue-700">
+                  {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+                  <span className="flex flex-col items-start leading-tight">
+                    <span>{t('backToDocument')}</span>
+                    {document?.title && <span className="text-[10px] font-normal opacity-80 truncate max-w-[160px]">{document.title}</span>}
+                  </span>
                 </Button>
                 {suggestion.timerEndsAt &&
                 <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="sm" status={suggestion.status} />
