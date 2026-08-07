@@ -669,7 +669,7 @@ export default function SuggestionDetail() {
             suggestion.type === 'edit_section' || suggestion.type === 'edit_suggestion' && suggestion.originalContent ?
             <div>
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-semibold text-slate-700 hidden">{t('proposedChanges')}</h3>
+                    
                     <Button variant="outline" size="sm" onClick={() => {navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);setTimeout(() => {window.document?.getElementById(`section-${suggestion.sectionId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });}, 300);}} className="h-7 px-2 text-xs">
                       <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />{t('backToDocument')}
                     </Button>
