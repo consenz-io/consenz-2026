@@ -424,9 +424,12 @@ export default function TutorialController() {
     const sectionCard = document.querySelector('.section-card');
     if (!sectionCard) return;
 
-    // Create a ghost nav bar that mimics the real one but is visually "empty"
+    // Create a ghost nav bar that mimics the real one but is visually "empty".
+    // Carries the `.proposal-navigation-arrows` class so the tutorial tooltip's
+    // scroll/spotlight targets it exactly like the real buttons. Appended to the
+    // bottom of the card to match the real buttons' location.
     const ghost = window.document.createElement('div');
-    ghost.className = 'tutorial-ghost-nav';
+    ghost.className = 'proposal-navigation-arrows tutorial-ghost-nav';
     ghost.setAttribute('data-tutorial-ghost', 'true');
     ghost.innerHTML = `
       <div class="tutorial-ghost-nav-inner">
@@ -435,7 +438,7 @@ export default function TutorialController() {
         <div class="tutorial-ghost-btn">›</div>
       </div>
     `;
-    sectionCard.prepend(ghost);
+    sectionCard.appendChild(ghost);
 
     return () => {
       const g = sectionCard.querySelector('[data-tutorial-ghost="true"]');

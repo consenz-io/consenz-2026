@@ -292,12 +292,14 @@ export const TUTORIAL_STEPS = [
     body: 'editclause.buttons.body',
   },
 
-  // 5. Browsing proposals (viewing versions)
+  // 5. Browsing proposals (viewing versions) — target the carousel nav buttons
+  // directly so the tutorial scrolls/spotlights to them in their location at the
+  // bottom of the section card (not the whole card, which left the buttons off-screen).
   {
    id: 'browse-explain',
    type: 'explain',
-   targetSelector: '.section-card',
-   tooltipPosition: 'bottom',
+   targetSelector: '.proposal-navigation-arrows',
+   tooltipPosition: 'top',
    heading: 'browse.explain.heading',
    body: 'browse.explain.body',
    actionOnNext: 'expandProposal',
