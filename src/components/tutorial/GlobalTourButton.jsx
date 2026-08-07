@@ -64,6 +64,7 @@ export default function GlobalTourButton({ user }) {
 
   const isLoggedOut = !user;
   const isHomePage = location.pathname === "/" || /\/Home/i.test(location.pathname);
+  const isDocumentPage = /\/(DocumentView|document)/i.test(location.pathname) && !/\/DocumentCleanView/i.test(location.pathname);
 
   // Track whether the tour has been fully completed (persisted in localStorage).
   // Poll on an interval so the button swaps to "Sign in" as soon as the tour ends.
@@ -83,9 +84,11 @@ export default function GlobalTourButton({ user }) {
     };
   }, []);
 
-  // A paused tour is always resumable — show the button (even for returning users)
-  // so they can pick up where they left off.
   if (isHomePage) return null;
+  // A paused tour is resumable, but only from the document page. On any other
+  // page, hide the button entirely so a fresh "Tour the platform" button never
+  // appears in its place.
+  if (tourPaused && !isDocumentPage) return null;
   if (!tourPaused && !isFirstVisit && !isLoggedOut) return null;
 
   // Resume a paused tour from its saved step.
@@ -98,8 +101,8 @@ export default function GlobalTourButton({ user }) {
   };
 
   // A paused tour takes priority — show a "Resume tour" button that continues
-  // from the exact step where the user paused.
-  if (tourPaused) {
+  // from the exact step where the user paused. Only shown on the document page.
+  if (tourPaused && isDocumentPage) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
