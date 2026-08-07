@@ -388,10 +388,10 @@ export default function TutorialTooltip({
 
     <div
       ref={tooltipRef}
-      className="fixed shadow-2xl border-l-4 border-blue-500 tutorial-highlight-bubble"
+      className="fixed shadow-2xl border-l-4 border-blue-500 tutorial-highlight-bubble flex flex-col"
       style={mobile
-        ? { left: 0, right: 0, bottom: 0, top: 'auto', width: '100%', borderRadius: '16px 16px 0 0', padding: '20px 16px 24px', zIndex: 99999, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', borderLeft: '4px solid #3b82f6' }
-        : { width: TOOLTIP_WIDTH, borderRadius: '12px', padding: '18px', zIndex: 10002, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', maxHeight: 'calc(100vh - 16px)', overflowY: 'auto', ...pos }
+        ? { left: 0, right: 0, bottom: 0, top: 'auto', width: '100%', borderRadius: '16px 16px 0 0', padding: '20px 16px 24px', zIndex: 99999, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', borderLeft: '4px solid #3b82f6', maxHeight: 'calc(100vh - 16px)' }
+        : { width: TOOLTIP_WIDTH, borderRadius: '12px', padding: '18px', zIndex: 10002, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', maxHeight: 'calc(100vh - 16px)', ...pos }
       }
       dir={isRTL ? 'rtl' : 'ltr'}
       role="dialog"
@@ -399,7 +399,7 @@ export default function TutorialTooltip({
       aria-label={step.heading}
     >
       {/* Tour identifier badge */}
-      <div className="flex items-center gap-1 mb-2 text-blue-600">
+      <div className="flex items-center gap-1 mb-2 text-blue-600 flex-shrink-0">
         <Compass className="w-3.5 h-3.5" />
         <span className="text-xs font-bold uppercase tracking-wide">{tTutorial('ui.guidedTour', language)}</span>
       </div>
@@ -407,7 +407,7 @@ export default function TutorialTooltip({
       {/* Close button */}
       <button
         onClick={handleSkipRequest}
-        className="absolute top-3 end-3 text-slate-400 hover:text-slate-600 transition-colors"
+        className="absolute top-3 end-3 text-slate-400 hover:text-slate-600 transition-colors z-10"
         aria-label={isRTL ? 'סגור' : 'Close'}
       >
         <X className="w-4 h-4" />
@@ -434,99 +434,106 @@ export default function TutorialTooltip({
         </div>
       ) : (
         <>
-           {/* Heading */}
-           <h3 className="font-bold text-slate-900 text-lg mb-2">{heading}</h3>
+          {/* Scrollable content area — grows as needed, scrolls when the bubble
+              hits its max height, so the pinned footer stays visible. */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
+             {/* Heading */}
+             <h3 className="font-bold text-slate-900 text-lg mb-2">{heading}</h3>
 
-          {/* Body */}
-          {body && (
-            <p className="text-sm text-slate-600 mb-3 leading-relaxed">
-              {body}
-            </p>
-          )}
+            {/* Body */}
+            {body && (
+              <p className="text-sm text-slate-600 mb-3 leading-relaxed">
+                {body}
+              </p>
+            )}
 
-          {/* Extra hint for points step */}
-          {step.id === 'points-ranking-explain' && (
-            <p className="text-xs text-slate-500 italic mb-3">
-              {tTutorial('ui.clickPointsInfo', language)}
-            </p>
-          )}
+            {/* Extra hint for points step */}
+            {step.id === 'points-ranking-explain' && (
+              <p className="text-xs text-slate-500 italic mb-3">
+                {tTutorial('ui.clickPointsInfo', language)}
+              </p>
+            )}
 
-          {/* Points table */}
-          {step.table && step.table.length > 0 && (
-            <table className="w-full text-xs mb-3 border-collapse">
-              <tbody>
-                {step.table.map((row, i) => {
-                  const isCost = row.value.startsWith('−') || row.value.startsWith('-');
-                  return (
-                    <tr key={i} className="border-b border-slate-100 last:border-0">
-                      <td className="py-1 text-slate-600 text-start">{tTutorial(row.label, language)}</td>
-                      <td className={`py-1 font-bold text-end ${isCost ? 'text-red-600' : 'text-green-600'}`}>
-                        {row.value}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-
-          {/* Progress dots */}
-          <div className="flex items-center gap-1.5 justify-center mb-3">
-            {Array.from({ length: totalSteps }).map((_, i) => (
-              <div
-                key={i}
-                className={`rounded-full transition-all duration-200 ${
-                  i === stepIndex
-                    ? 'w-4 h-2 bg-blue-600'
-                    : i < stepIndex
-                    ? 'w-2 h-2 bg-blue-300'
-                    : 'w-2 h-2 bg-slate-200'
-                }`}
-              />
-            ))}
+            {/* Points table */}
+            {step.table && step.table.length > 0 && (
+              <table className="w-full text-xs mb-3 border-collapse">
+                <tbody>
+                  {step.table.map((row, i) => {
+                    const isCost = row.value.startsWith('−') || row.value.startsWith('-');
+                    return (
+                      <tr key={i} className="border-b border-slate-100 last:border-0">
+                        <td className="py-1 text-slate-600 text-start">{tTutorial(row.label, language)}</td>
+                        <td className={`py-1 font-bold text-end ${isCost ? 'text-red-600' : 'text-green-600'}`}>
+                          {row.value}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
           </div>
 
-          {/* Footer */}
-          {ctaLabel && nextDisabled ? (
-            <div className="mt-1">
-              <div className="w-full py-2 px-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium text-center leading-snug">
-                {ctaLabel}
-              </div>
+          {/* Pinned footer — progress dots + navigation, always visible */}
+          <div className="flex-shrink-0 pt-3">
+            {/* Progress dots */}
+            <div className="flex items-center gap-1.5 justify-center mb-3">
+              {Array.from({ length: totalSteps }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`rounded-full transition-all duration-200 ${
+                    i === stepIndex
+                      ? 'w-4 h-2 bg-blue-600'
+                      : i < stepIndex
+                      ? 'w-2 h-2 bg-blue-300'
+                      : 'w-2 h-2 bg-slate-200'
+                  }`}
+                />
+              ))}
             </div>
-          ) : (
-          <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onBack}
-                disabled={stepIndex === 0}
-                className="flex-1 text-slate-500"
-              >
-                {tTutorial('ui.back', language)}
-              </Button>
 
-              {isPractice && nextDisabled ? (
+            {/* Footer */}
+            {ctaLabel && nextDisabled ? (
+              <div className="mt-1">
+                <div className="w-full py-2 px-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium text-center leading-snug">
+                  {ctaLabel}
+                </div>
+              </div>
+            ) : (
+            <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  disabled
-                  className="flex-1 text-slate-400 cursor-not-allowed opacity-60"
+                  onClick={onBack}
+                  disabled={stepIndex === 0}
+                  className="flex-1 text-slate-500"
                 >
-                  {tTutorial('ui.next', language)}
+                  {tTutorial('ui.back', language)}
                 </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  onClick={onNext}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  {stepIndex === totalSteps - 1
-                    ? tTutorial('ui.finish', language)
-                    : tTutorial('ui.next', language)}
-                </Button>
-              )}
-            </div>
-          )}
+
+                {isPractice && nextDisabled ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled
+                    className="flex-1 text-slate-400 cursor-not-allowed opacity-60"
+                  >
+                    {tTutorial('ui.next', language)}
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={onNext}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {stepIndex === totalSteps - 1
+                      ? tTutorial('ui.finish', language)
+                      : tTutorial('ui.next', language)}
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
         </>
       )}
 
