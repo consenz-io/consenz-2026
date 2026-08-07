@@ -112,6 +112,28 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
     }
     const name = getUserName ? getUserName(nextView.data?.created_by_id) : '';
     const multiple = allViews.filter((v) => v.type !== 'current').length > 1;
+    const isEditSuggestion = nextView.data?.type === 'edit_suggestion';
+    if (isEditSuggestion) {
+      if (language === 'he') {
+        return (
+          <>
+            <span>{multiple ? 'גם ' : ''}ל{name} יש הצעת עריכה להצעה זו. </span>
+            <span className="font-bold">לצפייה והצבעה</span>
+          </>);
+      }
+      if (language === 'ar') {
+        return (
+          <>
+            <span>{multiple ? 'أيضًا ' : ''}لدى {name} اقتراح تعديل على هذا الاقتراح. </span>
+            <span className="font-bold">للعرض والتصويت</span>
+          </>);
+      }
+      return (
+        <>
+          <span>{name} {multiple ? 'also ' : ''}has an edit suggestion for this proposal. </span>
+          <span className="font-bold">View and vote</span>
+        </>);
+    }
     if (language === 'he') {
       return (
         <>
