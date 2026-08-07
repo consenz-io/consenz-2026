@@ -244,6 +244,24 @@ export default function TutorialTooltip({
     };
   }, [step, isRTL]);
 
+  // After the bubble renders with real content, measure its actual height and
+  // clamp its top so the FULL bubble stays within the viewport. The fixed
+  // TOOLTIP_HEIGHT estimate under-measures long translations (e.g. English),
+  // which caused the bottom of the bubble to be cut off screen.
+  useEffect(() => {
+    if (!pos || !tooltipRef.current) return;
+    const h = tooltipRef.current.getBoundingClientRect().height;
+    if (!h) return;
+    setPos((prev) => {
+      if (!prev || typeof prev.top !== 'number') return prev;
+      const vh = window.innerHeight;
+      const maxTop = vh - h - 8;
+      const clampedTop = Math.max(8, Math.min(maxTop, prev.top));
+      if (clampedTop === prev.top) return prev;
+      return { ...prev, top: clampedTop };
+    });
+  }, [pos?.top, pos?.left, heading, body, language]);
+
   const isPractice = step.type === 'practice';
   const isEncourage = step.type === 'encourage';
   const nextDisabled = isPractice && !practiceCompleted;
@@ -373,7 +391,7 @@ export default function TutorialTooltip({
       className="fixed shadow-2xl border-l-4 border-blue-500 tutorial-highlight-bubble"
       style={mobile
         ? { left: 0, right: 0, bottom: 0, top: 'auto', width: '100%', borderRadius: '16px 16px 0 0', padding: '20px 16px 24px', zIndex: 99999, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', borderLeft: '4px solid #3b82f6' }
-        : { width: TOOLTIP_WIDTH, borderRadius: '12px', padding: '18px', zIndex: 10002, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', ...pos }
+        : { width: TOOLTIP_WIDTH, borderRadius: '12px', padding: '18px', zIndex: 10002, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', maxHeight: 'calc(100vh - 16px)', overflowY: 'auto', ...pos }
       }
       dir={isRTL ? 'rtl' : 'ltr'}
       role="dialog"
