@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { PlayCircle } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageContext';
 import { base44 } from '@/api/base44Client';
-import { tTutorial, TUTORIAL_STEPS } from './tutorialSteps';
+import { tTutorial } from './tutorialSteps';
 
 const STORAGE_KEY = 'consenz_tutorial';
 const LAST_DOC_KEY = 'consenz_last_doc_url';
@@ -69,18 +69,25 @@ export default function TutorialRestartButton() {
       return;
     }
 
-    // If on DocumentCleanView, start from the versions-browse-explain step
-    // so the tutorial is contextually relevant to what the user sees.
-    let startStep = 0;
+    // If on the versions page (DocumentCleanView), navigate back to the relevant
+    // document page and start the tour from the very first bubble.
     if (onCleanView) {
-      startStep = TUTORIAL_STEPS.findIndex(s => s.id === 'versions-browse-explain');
-      if (startStep < 0) startStep = 0;
+      const documentId = new URLSearchParams(location.search).get('id');
+      const fresh = { active: true, homeStepSeen: true, currentStep: 0, completedSteps: [] };
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh)); } catch {}
+      if (documentId) {
+        navigate(`/DocumentView?id=${documentId}`);
+      }
+      if (window.restartTutorial) {
+        window.restartTutorial('document', 0);
+      }
+      return;
     }
 
     const fresh = {
       active: true,
-      homeStepSeen: onDoc || onCleanView, // skip home-intro if on a document/cleanview
-      currentStep: startStep,
+      homeStepSeen: onDoc, // skip home-intro if on a document page
+      currentStep: 0,
       completedSteps: [],
     };
     try {
@@ -88,11 +95,11 @@ export default function TutorialRestartButton() {
     } catch {}
 
     // Trigger tutorial restart
-    const entryPoint = (onDoc || onCleanView) ? 'document' : onGroup ? 'group' : 'home';
+    const entryPoint = onDoc ? 'document' : onGroup ? 'group' : 'home';
     if (window.restartTutorial) {
-      window.restartTutorial(entryPoint, startStep);
+      window.restartTutorial(entryPoint, 0);
     } else {
-      if (onDoc || onCleanView) {
+      if (onDoc) {
         window.location.reload();
       } else {
         navigate('/');

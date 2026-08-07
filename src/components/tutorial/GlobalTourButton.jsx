@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ function readTutorialCompleted() {
 export default function GlobalTourButton({ user }) {
   const { isRTL, language } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // First-visit detection — persisted in localStorage
   const [isFirstVisit, setIsFirstVisit] = React.useState(() => {
@@ -108,8 +109,23 @@ export default function GlobalTourButton({ user }) {
     // On a document page it must start directly there; passing "home" would route the
     // flow through home-intro and leave nothing visible on the document page.
     const path = location.pathname;
-    const isDocPage = /\/(DocumentView|document)/i.test(path);
+    const isCleanView = /\/DocumentCleanView/i.test(path);
+    const isDocPage = /\/(DocumentView|document)/i.test(path) && !isCleanView;
     const isGroupPage = /\/(GroupView|group)/i.test(path);
+
+    // On the versions page — navigate back to the relevant document page and
+    // start the tour from the first bubble there.
+    if (isCleanView) {
+      const documentId = new URLSearchParams(location.search).get("id");
+      if (documentId) {
+        navigate(`/DocumentView?id=${documentId}`);
+      }
+      if (window.restartTutorial) {
+        window.restartTutorial("document", 0);
+      }
+      return;
+    }
+
     const entryPoint = isDocPage ? "document" : isGroupPage ? "group" : "home";
     if (window.restartTutorial) {
       window.restartTutorial(entryPoint);
