@@ -580,10 +580,10 @@ export default function SuggestionDetail() {
 
         <Card className="bg-white border-slate-200 w-full overflow-hidden">
           <CardHeader className="p-4 md:p-6 pb-3">
-            {/* Row 1: Back to document (left, secondary) + countdown/admin badges (right) */}
-            <div className="flex items-center justify-between gap-2 mb-3">
-              <BackToDocumentButton suggestion={suggestion} suggestionId={suggestionId} isRTL={isRTL} />
+            {/* Row 1: metadata (left) + back button & countdown/admin badges (right) */}
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
+                <BackToDocumentButton suggestion={suggestion} suggestionId={suggestionId} isRTL={isRTL} />
                 {suggestion.timerEndsAt &&
                 <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="sm" status={suggestion.status} />
                 }
@@ -594,10 +594,8 @@ export default function SuggestionDetail() {
                   </Badge>
                 }
               </div>
-            </div>
-
-            {/* Row 2: Clean metadata strip — type + status + author • date */}
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+              {/* Metadata strip — type + status + author • date */}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
               <Badge variant="outline" className={`text-xs ${suggestion.type === 'delete_section' ? 'bg-red-100 text-red-800 border-red-200' : ''}`}>
                 {suggestion.type === 'new_section' ? t('newSection') :
                 suggestion.type === 'delete_section' ? language === 'he' ? 'מחיקת סעיף' : language === 'ar' ? 'حذف قسم' : 'Delete Section' :
@@ -652,6 +650,7 @@ export default function SuggestionDetail() {
                   • {language === 'he' ? 'נדחתה ב-' : language === 'ar' ? 'تم الرفض في' : 'Rejected on'} {new Date(suggestion.updated_date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
               }
+            </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4 md:space-y-6 p-3 md:p-6 overflow-x-hidden">
