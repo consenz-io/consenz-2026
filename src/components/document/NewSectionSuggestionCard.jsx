@@ -244,17 +244,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       className="group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50">
       
       {/* כותרת אחידה: סוג הצעה + יוצר + דפדוף גרסאות */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm border-amber-400 bg-gradient-to-r from-amber-100 to-orange-100">
-          {allViews.length > 1 &&
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrev}
-            className="flex items-center bg-white flex-shrink-0">
-            {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </Button>
-          }
-
+      <div className="flex items-center justify-center mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm border-amber-400 bg-gradient-to-r from-amber-100 to-orange-100">
           <div className="text-center flex-1 px-2 min-w-0">
             <div className="flex flex-col items-center gap-0.5">
               <p className="text-sm font-bold text-slate-800 break-words">
@@ -294,16 +284,6 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
               }
             </div>
           </div>
-
-          {allViews.length > 1 &&
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNext}
-            className="flex items-center bg-white flex-shrink-0">
-            {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </Button>
-          }
       </div>
 
       {/* תוכן ההצעה */}
@@ -469,6 +449,42 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
           user={user} />
         
         </div>
+      }
+
+      {/* Paging navigation — at the bottom of the card, matching the edit_section carousel position */}
+      {allViews.length > 1 &&
+      <div className="mt-4 pt-3 px-3 pb-3 rounded-lg border bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+        <div className="flex items-center justify-between gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrev}
+            className="flex items-center bg-white flex-shrink-0 border-amber-300 text-amber-700 hover:bg-amber-100 hover:border-amber-500 hover:shadow-md active:scale-95">
+            {isRTL ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+          </Button>
+          <div className="flex items-center justify-center gap-1.5">
+            {allViews.map((view, idx) =>
+              <button
+                key={view.id}
+                onClick={() => { userNavigatedRef.current = true; setCurrentVersionId(view.type === 'original' ? 'original' : view.id); }}
+                className={`rounded-full transition-all duration-200 ${
+                  idx === currentViewIndex
+                    ? 'w-5 h-2.5 bg-amber-500'
+                    : 'w-2 h-2 bg-amber-200 hover:bg-amber-400'
+                }`}
+                aria-label={`${language === 'he' ? 'עבור לעמוד' : 'Go to'} ${idx + 1}`}
+              />
+            )}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNext}
+            className="flex items-center bg-white flex-shrink-0 border-amber-300 text-amber-700 hover:bg-amber-100 hover:border-amber-500 hover:shadow-md active:scale-95">
+            {isRTL ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+          </Button>
+        </div>
+      </div>
       }
     </div>);
 
