@@ -386,7 +386,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                 <span className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
                   <Plus className="w-3.5 h-3.5" />
                 </span>
-                {isHe ? 'הוספת הסבר או נוסח חלופי (אופציונלי)' : isAr ? 'إضافة توضيح أو صياغة بديلة (اختياري)' : 'Add an explanation or alternative wording (optional)'}
+                {isHe ? 'הוספת הסבר להתנגדותך (אופציונלי)' : isAr ? 'إضافة توضيح أو صياغة بديلة (اختياري)' : 'Add an explanation or alternative wording (optional)'}
               </button>
             ) : (
               <AnimatePresence>
