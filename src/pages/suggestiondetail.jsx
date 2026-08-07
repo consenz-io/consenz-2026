@@ -633,6 +633,9 @@ export default function SuggestionDetail() {
                 }
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
+                <Button variant="outline" size="sm" onClick={() => {const anchor = (suggestion.type === 'edit_section' || suggestion.type === 'edit_suggestion') ? `section-${suggestion.sectionId}` : `suggestion-${suggestionId}`;navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#${anchor}`);setTimeout(() => {window.document?.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' });}, 300);}} className="h-7 px-2 text-xs">
+                  <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />{t('backToDocument')}
+                </Button>
                 {suggestion.timerEndsAt &&
                 <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="sm" status={suggestion.status} />
                 }
@@ -655,27 +658,16 @@ export default function SuggestionDetail() {
 
             {suggestion.type === 'delete_section' ?
             <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-semibold text-red-700">{language === 'he' ? 'סעיף שמוצע למחיקה' : language === 'ar' ? 'القسم المقترح حذفه' : 'Section to be deleted'}</h3>
-                    
-                    <Button variant="outline" size="sm" onClick={() => {navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#suggestion-${suggestionId}`);setTimeout(() => {window.document?.getElementById(`suggestion-${suggestionId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });}, 300);}} className="h-7 px-2 text-xs">
-                      <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />{t('backToDocument')}
-                    </Button>
-                  </div>
+                  <h3 className="text-sm font-semibold text-red-700 mb-2">{language === 'he' ? 'סעיף שמוצע למחיקה' : language === 'ar' ? 'القسم المقترح حذفه' : 'Section to be deleted'}</h3>
                   <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                     <div className="prose prose-sm max-w-none text-slate-700 line-through opacity-60" dangerouslySetInnerHTML={{ __html: suggestion.originalContent }} />
                   </div>
                 </div> :
             suggestion.type === 'edit_section' || suggestion.type === 'edit_suggestion' && suggestion.originalContent ?
             <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-semibold text-slate-700">
-                      {language === 'he' ? 'השוואת נוסחים' : language === 'ar' ? 'مقارنة الصيغ' : 'Wording comparison'}
-                    </h3>
-                    <Button variant="outline" size="sm" onClick={() => {navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#section-${suggestion.sectionId}`);setTimeout(() => {window.document?.getElementById(`section-${suggestion.sectionId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });}, 300);}} className="h-7 px-2 text-xs">
-                      <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />{t('backToDocument')}
-                    </Button>
-                  </div>
+                  <h3 className="text-sm font-semibold text-slate-700 mb-2">
+                    {language === 'he' ? 'השוואת נוסחים' : language === 'ar' ? 'مقارنة الصيغ' : 'Wording comparison'}
+                  </h3>
                   <div className="relative">
                     {isAutoAccepting && <div className="absolute inset-0 bg-white/50 rounded-lg flex flex-col items-center justify-center z-10 gap-3"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /><p className="text-sm font-medium text-slate-700">{t('processingSuggestion')}</p></div>}
                     <SectionDiff originalContent={suggestion.originalContent} newContent={suggestion.newContent} suggestion={suggestion} documentId={suggestion.documentId} sectionId={suggestion.sectionId} section={section} />
@@ -711,12 +703,7 @@ export default function SuggestionDetail() {
                 </div> :
             suggestion.type === 'new_section' ?
             <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-semibold text-slate-700">{t('proposedContent')}</h3>
-                    <Button variant="outline" size="sm" onClick={() => {navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#suggestion-${suggestionId}`);setTimeout(() => {window.document?.getElementById(`suggestion-${suggestionId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });}, 300);}} className="h-7 px-2 text-xs">
-                      <FileText className={`w-3 h-3 ${isRTL ? 'ml-1.5' : 'mr-1.5'}`} />{t('backToDocument')}
-                    </Button>
-                  </div>
+                  <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedContent')}</h3>
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                     <TranslatableContent content={suggestion.newContent} entity={suggestion} entityType="Suggestion" onUpdate={(updated) => queryClient.setQueryData(['suggestion', suggestionId], updated)} className="prose prose-sm max-w-none" renderContent={(content) => <DocumentTextContent content={content} />} />
                   </div>
