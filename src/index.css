@@ -238,6 +238,21 @@ button:focus-visible {
   animation: tutorial-bubble-glow 2.5s ease-in-out infinite;
 }
 
+/* Marquee scrolling text (carousel navigation label) */
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  display: inline-flex;
+  gap: 3rem;
+  padding-inline-end: 3rem;
+  white-space: nowrap;
+  animation: marquee-scroll 14s linear infinite;
+  will-change: transform;
+}
+
 /* Tutorial: ghost voting/nav pulse animation */
 @keyframes tutorial-ghost-vote-pulse {
   0%, 100% { opacity: 0.35; }

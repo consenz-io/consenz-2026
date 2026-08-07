@@ -122,13 +122,15 @@ const SectionCarousel = React.memo(function SectionCarousel({
 
   // ── Sorted suggestions (memoized — was computed on every render) ───────────
   const sortedSuggestions = useMemo(() => {
+    const threshold = document?.threshold ?? 2;
+    // Closest to acceptance first = fewest remaining supporting votes needed
+    const remaining = (s) => threshold - ((s.proVotes || 0) - (s.conVotes || 0));
     return [...pendingSectionSuggestions].sort((a, b) => {
-      const deltaA = Math.abs((a.proVotes || 0) - (a.conVotes || 0));
-      const deltaB = Math.abs((b.proVotes || 0) - (b.conVotes || 0));
-      if (deltaA !== deltaB) return deltaA - deltaB;
+      const diff = remaining(a) - remaining(b);
+      if (diff !== 0) return diff;
       return new Date(b.created_date) - new Date(a.created_date);
     });
-  }, [pendingSectionSuggestions]);
+  }, [pendingSectionSuggestions, document?.threshold]);
 
   // ── All views: current + sorted suggestions (or just suggestions for ghost) ─
   const allViews = useMemo(() => {
@@ -472,6 +474,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
           onSelectView={handleSelectView}
           onReturnToCurrent={() => setCurrentSuggestionId('current')}
           isOnCurrentView={currentView?.type === 'current'}
+          getUserName={getUserName}
           t={t}
         />
       )}

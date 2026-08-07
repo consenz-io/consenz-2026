@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { ChevronLeft, ChevronRight, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import MarqueeText from "./MarqueeText";
 
 /**
  * Carousel navigation — split into two parts:
@@ -88,6 +89,7 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
   onSelectView,
   onReturnToCurrent,
   isOnCurrentView,
+  getUserName,
   t
 }) {
   const { btnClass, isDeleteType } = useNavTheme(currentView);
@@ -95,30 +97,59 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
   'bg-gradient-to-r from-red-50 to-pink-50 border-red-200' :
   'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200';
 
+  const nextView = allViews && allViews.length > 0 ?
+  allViews[(currentIndex + 1) % allViews.length] :
+  null;
+
+  const nextLabel = (() => {
+    if (!nextView) return null;
+    if (nextView.type === 'current') {
+      return (
+        <span className="font-bold">
+          {language === 'he' ? 'חזרה לנוסח הסעיף הנוכחי' : language === 'ar' ? 'العودة إلى صيغة البند الحالية' : 'Back to the current section wording'}
+        </span>);
+
+    }
+    const name = getUserName ? getUserName(nextView.data) : '';
+    if (language === 'he') {
+      return (
+        <>
+          <span>ל{name} יש הצעה לשיפור הסעיף. </span>
+          <span className="font-bold">לצפייה והצבעה</span>
+        </>);
+
+    }
+    if (language === 'ar') {
+      return (
+        <>
+          <span>لدى {name} اقتراح لتحسين البند. </span>
+          <span className="font-bold">للعرض والتصويت</span>
+        </>);
+
+    }
+    return (
+      <>
+        <span>{name} has a suggestion to improve this section. </span>
+        <span className="font-bold">View and vote</span>
+      </>);
+
+  })();
+
   return (
     <div className={`proposal-navigation-arrows mt-4 pt-3 px-3 pb-3 rounded-lg border ${stripBg}`}>
-      <div className="flex items-center justify-between">
-        <button
-          onClick={onPrev}
-          className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl border-2 font-bold transition-all shadow-sm ${btnClass}`}
-          aria-label={isRTL ? language === 'he' ? 'הבא' : 'التالي' : 'Previous'}>
-          
-          {isRTL ? <ChevronRight className="w-5 h-5 md:w-6 md:h-6" /> : <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />}
-        </button>
+      <button
+        onClick={onNext}
+        data-expand-proposal
+        className={`w-full flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-xl border-2 text-start transition-all shadow-sm ${btnClass}`}
+        aria-label={language === 'he' ? 'להצעה הבאה' : language === 'ar' ? 'الاقتراح التالي' : 'Next suggestion'}>
 
-        <span className="text-sm font-bold text-slate-600 px-2 text-center">
-          {language === 'he' ? 'הצעה קודמת / הבאה' : language === 'ar' ? 'الاقتراح السابق / التالي' : 'Previous / Next suggestion'}
-        </span>
-
-        <button
-          onClick={onNext}
-          data-expand-proposal
-          className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl border-2 font-bold transition-all shadow-sm ${btnClass}`}
-          aria-label={isRTL ? language === 'he' ? 'הקודם' : 'السابق' : 'Next'}>
-          
+        <MarqueeText className="flex-1 min-w-0 relative text-sm md:text-base text-slate-700">
+          {nextLabel}
+        </MarqueeText>
+        <span className="flex-shrink-0">
           {isRTL ? <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" /> : <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />}
-        </button>
-      </div>
+        </span>
+      </button>
 
       {allViews && allViews.length > 1 &&
       <div className="pt-3">
