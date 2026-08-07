@@ -8,11 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   ThumbsUp, ThumbsDown, Clock,
-  CheckCircle, XCircle, AlertCircle, Loader2, Trash2, ChevronLeft, ChevronRight, Edit2, X, Save, FileText, ShieldCheck, ArrowLeft, ArrowRight } from
+  CheckCircle, XCircle, AlertCircle, Loader2, Trash2, ChevronLeft, ChevronRight, Edit2, ShieldCheck } from
 "lucide-react";
 import SuggestionCountdown from "@/components/document/SuggestionCountdown";
 import VotingProgressSection from "../components/document/VotingProgressSection";
@@ -26,6 +25,8 @@ import { useOptimizedUserProfiles } from "@/components/hooks/useOptimizedUserPro
 import { useLanguage } from "@/components/LanguageContext";
 import { notifySuggestionStatusChange } from "../components/notifications/createNotification";
 import PageHeader from "../components/PageHeader";
+import BackToDocumentButton from "@/components/suggestion/BackToDocumentButton";
+import SuggestionExplanationBlock from "@/components/suggestion/SuggestionExplanationBlock";
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 import { toast } from "sonner";
 
@@ -578,84 +579,79 @@ export default function SuggestionDetail() {
         }
 
         <Card className="bg-white border-slate-200 w-full overflow-hidden">
-          <CardHeader className="p-4 md:p-6">
-            <div className="flex flex-col md:flex-row items-start md:justify-between gap-3">
-              <div className="flex flex-wrap gap-2 items-center">
-                <Badge variant="outline" className={`text-xs ${suggestion.type === 'delete_section' ? 'bg-red-100 text-red-800 border-red-200' : ''}`}>
-                  {suggestion.type === 'new_section' ? t('newSection') :
-                  suggestion.type === 'delete_section' ? language === 'he' ? 'מחיקת סעיף' : language === 'ar' ? 'حذف قسم' : 'Delete Section' :
-                  suggestion.type === 'edit_suggestion' ? t('editSuggestionType') :
-                  t('suggestionToEditSection')}
-                </Badge>
-
-                {suggestion.status === 'rejected' && suggestion.rejectedByAdmin ?
-                <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200 text-xs">
-                      {language === 'he' ? 'נדחתה על ידי אדמין' : language === 'ar' ? 'مرفوضة من المشرف' : 'Rejected by Admin'}
-                    </Badge> :
-                suggestion.status === 'rejected' && !suggestion.rejectedByAdmin ?
-                <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
-                      {language === 'he' ? 'פג תוקפה' : language === 'ar' ? 'انتهت صلاحيتها' : 'Expired'}
-                    </Badge> :
-                <TooltipProvider delayDuration={200}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span>
-                            <Badge variant="outline" className={`${getStatusColor(suggestion.status)} text-xs cursor-default`}>
-                              {t(suggestion.status)}
-                            </Badge>
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          {suggestion.status === 'pending' ? language === 'he' ? 'ממתינה להצבעה' : language === 'ar' ? 'في انتظار التصويت' : 'Awaiting votes' :
-                      suggestion.status === 'accepted' ? language === 'he' ? 'ההצעה התקבלה ויושמה במסמך' : language === 'ar' ? 'تمت الموافقة على الاقتراح' : 'Proposal accepted and applied' :
-                      suggestion.status === 'rejected' ? language === 'he' ? 'ההצעה נדחתה' : language === 'ar' ? 'تم رفض الاقتراح' : 'Proposal rejected' :
-                      suggestion.status === 'discussion' ? language === 'he' ? 'בדיון פתוח' : language === 'ar' ? 'قيد النقاش' : 'Open for discussion' :
-                      suggestion.status}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                }
-
-                <span className="text-xs text-slate-500">
-                   {(() => {
-                    const authorName = getUserName(suggestion.created_by_id);
-                    if (authorName) {
-                      return <>{t('by')} <Link to={`${createPageUrl("Profile")}?userId=${suggestion.created_by_id || ''}`} className="hover:underline text-blue-600">{authorName}</Link></>;
-                    }
-                    // System-generated suggestion (e.g. delete_section by community vote)
-                    return <span className="text-slate-400">{language === 'he' ? 'הצבעת קהילה' : language === 'ar' ? 'تصويت المجتمع' : 'Community vote'}</span>;
-                  })()}
-                 </span>
-                {suggestion.created_date &&
-                <span className="text-xs text-slate-400">
-                    • {new Date(suggestion.created_date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                }
-              </div>
-              <div className="flex flex-col items-end gap-1 shrink-0">
-                <Button variant="default" size="sm" onClick={() => {const anchor = (suggestion.type === 'edit_section' || suggestion.type === 'edit_suggestion') ? `section-${suggestion.sectionId}` : `suggestion-${suggestionId}`;navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#${anchor}`);setTimeout(() => {window.document?.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' });}, 300);}} className="h-9 px-3 text-sm font-semibold shadow-sm gap-1.5 bg-blue-600 hover:bg-blue-700">
-                  {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-                  <span className="flex flex-col items-start leading-tight">
-                    <span>{t('backToDocument')}</span>
-                    {document?.title && <span className="text-[10px] font-normal opacity-80 truncate max-w-[160px]">{document.title}</span>}
-                  </span>
-                </Button>
+          <CardHeader className="p-4 md:p-6 pb-3">
+            {/* Row 1: Back to document (left, secondary) + countdown/admin badges (right) */}
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <BackToDocumentButton suggestion={suggestion} suggestionId={suggestionId} isRTL={isRTL} />
+              <div className="flex items-center gap-2">
                 {suggestion.timerEndsAt &&
                 <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="sm" status={suggestion.status} />
                 }
-
                 {suggestion.approvedByAdmin && suggestion.status === 'accepted' &&
                 <Badge variant="outline" className="flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
                     <ShieldCheck className="w-3 h-3" />
                     {language === 'he' ? 'אושר ע״י מנהל' : language === 'ar' ? 'تمت الموافقة من المشرف' : 'Admin Approved'}
                   </Badge>
                 }
-                {suggestion.status === 'rejected' && suggestion.rejectedByAdmin && suggestion.updated_date &&
-                <span className="text-xs text-slate-500">
-                    {language === 'he' ? 'נדחתה ב-' : language === 'ar' ? 'تم الرفض في' : 'Rejected on'} {new Date(suggestion.updated_date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                }
               </div>
+            </div>
+
+            {/* Row 2: Clean metadata strip — type + status + author • date */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+              <Badge variant="outline" className={`text-xs ${suggestion.type === 'delete_section' ? 'bg-red-100 text-red-800 border-red-200' : ''}`}>
+                {suggestion.type === 'new_section' ? t('newSection') :
+                suggestion.type === 'delete_section' ? language === 'he' ? 'מחיקת סעיף' : language === 'ar' ? 'حذف قسم' : 'Delete Section' :
+                suggestion.type === 'edit_suggestion' ? t('editSuggestionType') :
+                t('suggestionToEditSection')}
+              </Badge>
+
+              {suggestion.status === 'rejected' && suggestion.rejectedByAdmin ?
+              <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200 text-xs">
+                    {language === 'he' ? 'נדחתה על ידי אדמין' : language === 'ar' ? 'مرفوضة من المشرف' : 'Rejected by Admin'}
+                  </Badge> :
+              suggestion.status === 'rejected' && !suggestion.rejectedByAdmin ?
+              <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
+                    {language === 'he' ? 'פג תוקפה' : language === 'ar' ? 'انتهت صلاحيتها' : 'Expired'}
+                  </Badge> :
+              <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <Badge variant="outline" className={`${getStatusColor(suggestion.status)} text-xs cursor-default`}>
+                            {t(suggestion.status)}
+                          </Badge>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        {suggestion.status === 'pending' ? language === 'he' ? 'ממתינה להצבעה' : language === 'ar' ? 'في انتظار التصويت' : 'Awaiting votes' :
+                    suggestion.status === 'accepted' ? language === 'he' ? 'ההצעה התקבלה ויושמה במסמך' : language === 'ar' ? 'تمت الموافقة على الاقتراح' : 'Proposal accepted and applied' :
+                    suggestion.status === 'rejected' ? language === 'he' ? 'ההצעה נדחתה' : language === 'ar' ? 'تم رفض الاقتراح' : 'Proposal rejected' :
+                    suggestion.status === 'discussion' ? language === 'he' ? 'בדיון פתוח' : language === 'ar' ? 'قيد النقاش' : 'Open for discussion' :
+                    suggestion.status}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+              }
+
+              <span className="text-slate-500">
+                 {(() => {
+                  const authorName = getUserName(suggestion.created_by_id);
+                  if (authorName) {
+                    return <>{t('by')} <Link to={`${createPageUrl("Profile")}?userId=${suggestion.created_by_id || ''}`} className="hover:underline text-blue-600">{authorName}</Link></>;
+                  }
+                  return <span className="text-slate-400">{language === 'he' ? 'הצבעת קהילה' : language === 'ar' ? 'تصويت المجتمع' : 'Community vote'}</span>;
+                })()}
+               </span>
+              {suggestion.created_date &&
+              <span className="text-slate-400">
+                  • {new Date(suggestion.created_date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </span>
+              }
+              {suggestion.status === 'rejected' && suggestion.rejectedByAdmin && suggestion.updated_date &&
+              <span className="text-slate-400">
+                  • {language === 'he' ? 'נדחתה ב-' : language === 'ar' ? 'تم الرفض في' : 'Rejected on'} {new Date(suggestion.updated_date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </span>
+              }
             </div>
           </CardHeader>
           <CardContent className="space-y-4 md:space-y-6 p-3 md:p-6 overflow-x-hidden">
@@ -677,32 +673,18 @@ export default function SuggestionDetail() {
                     <SectionDiff originalContent={suggestion.originalContent} newContent={suggestion.newContent} suggestion={suggestion} documentId={suggestion.documentId} sectionId={suggestion.sectionId} section={section} />
                   </div>
                   {(suggestion.explanation || user && user.id === suggestion.created_by_id) &&
-              <div className="mt-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-sm font-semibold text-slate-700">{t('explanation')}</h3>
-                        {user && user.id === suggestion.created_by_id && !isEditingExplanation &&
-                  <Button variant="ghost" size="sm" onClick={() => {setEditedExplanation(suggestion.explanation || "");setIsEditingExplanation(true);}} className="h-7 px-2">
-                            <Edit2 className="w-3 h-3" />
-                          </Button>
-                  }
-                      </div>
-                      {isEditingExplanation ?
-                <div className="space-y-2">
-                            <Textarea value={editedExplanation} onChange={(e) => setEditedExplanation(e.target.value)} placeholder={t('explainChange')} rows={3} dir={isRTL ? 'rtl' : 'ltr'} />
-                            <div className="flex gap-2">
-                              <Button size="sm" onClick={() => updateExplanationMutation.mutate(editedExplanation)} disabled={updateExplanationMutation.isPending}>
-                                <Save className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />{t('saveChanges')}
-                              </Button>
-                              <Button size="sm" variant="outline" onClick={() => setIsEditingExplanation(false)}>
-                                <X className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />{t('cancel')}
-                              </Button>
-                            </div>
-                          </div> :
-                suggestion.explanation && typeof suggestion.explanation === 'string' ?
-                <TranslatableContent content={suggestion.explanation} entity={suggestion} entityType="Suggestion" fieldName="explanation" onUpdate={(updated) => queryClient.setQueryData(['suggestion', suggestionId], updated)} className="text-slate-600" /> :
-                <p className="text-slate-400 text-sm italic">{t('noDescription')}</p>
-                }
-                    </div>
+              <SuggestionExplanationBlock
+                  suggestion={suggestion}
+                  user={user}
+                  isEditingExplanation={isEditingExplanation}
+                  setIsEditingExplanation={setIsEditingExplanation}
+                  editedExplanation={editedExplanation}
+                  setEditedExplanation={setEditedExplanation}
+                  updateExplanationMutation={updateExplanationMutation}
+                  queryClient={queryClient}
+                  suggestionId={suggestionId}
+                  isRTL={isRTL}
+                />
               }
                 </div> :
             suggestion.type === 'new_section' ?
@@ -712,32 +694,18 @@ export default function SuggestionDetail() {
                     <TranslatableContent content={suggestion.newContent} entity={suggestion} entityType="Suggestion" onUpdate={(updated) => queryClient.setQueryData(['suggestion', suggestionId], updated)} className="prose prose-sm max-w-none" renderContent={(content) => <DocumentTextContent content={content} />} />
                   </div>
                   {(suggestion.explanation || user && user.id === suggestion.created_by_id) &&
-              <div className="mt-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-sm font-semibold text-slate-700">{t('explanation')}</h3>
-                        {user && user.id === suggestion.created_by_id && !isEditingExplanation &&
-                  <Button variant="ghost" size="sm" onClick={() => {setEditedExplanation(suggestion.explanation || "");setIsEditingExplanation(true);}} className="h-7 px-2">
-                            <Edit2 className="w-3 h-3" />
-                          </Button>
-                  }
-                      </div>
-                      {isEditingExplanation ?
-                <div className="space-y-2">
-                            <Textarea value={editedExplanation} onChange={(e) => setEditedExplanation(e.target.value)} placeholder={t('explainChange')} rows={3} dir={isRTL ? 'rtl' : 'ltr'} />
-                            <div className="flex gap-2">
-                              <Button size="sm" onClick={() => updateExplanationMutation.mutate(editedExplanation)} disabled={updateExplanationMutation.isPending}>
-                                <Save className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />{t('saveChanges')}
-                              </Button>
-                              <Button size="sm" variant="outline" onClick={() => setIsEditingExplanation(false)}>
-                                <X className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />{t('cancel')}
-                              </Button>
-                            </div>
-                          </div> :
-                suggestion.explanation && typeof suggestion.explanation === 'string' ?
-                <TranslatableContent content={suggestion.explanation} entity={suggestion} entityType="Suggestion" fieldName="explanation" onUpdate={(updated) => queryClient.setQueryData(['suggestion', suggestionId], updated)} className="text-slate-600" /> :
-                <p className="text-slate-400 text-sm italic">{t('noDescription')}</p>
-                }
-                    </div>
+              <SuggestionExplanationBlock
+                  suggestion={suggestion}
+                  user={user}
+                  isEditingExplanation={isEditingExplanation}
+                  setIsEditingExplanation={setIsEditingExplanation}
+                  editedExplanation={editedExplanation}
+                  setEditedExplanation={setEditedExplanation}
+                  updateExplanationMutation={updateExplanationMutation}
+                  queryClient={queryClient}
+                  suggestionId={suggestionId}
+                  isRTL={isRTL}
+                />
               }
                 </div> :
             null
