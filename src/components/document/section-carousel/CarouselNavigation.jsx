@@ -111,10 +111,11 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
 
     }
     const name = getUserName ? getUserName(nextView.data?.created_by_id) : '';
+    const multiple = allViews.filter((v) => v.type !== 'current').length > 1;
     if (language === 'he') {
       return (
         <>
-          <span>ל{name} יש הצעה לשיפור הסעיף. </span>
+          <span>{multiple ? 'גם ' : ''}ל{name} יש הצעה לשיפור הסעיף. </span>
           <span className="font-bold">לצפייה והצבעה</span>
         </>);
 
@@ -122,14 +123,14 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
     if (language === 'ar') {
       return (
         <>
-          <span>لدى {name} اقتراح لتحسين البند. </span>
+          <span>{multiple ? 'أيضًا ' : ''}لدى {name} اقتراح لتحسين البند. </span>
           <span className="font-bold">للعرض والتصويت</span>
         </>);
 
     }
     return (
       <>
-        <span>{name} has a suggestion to improve this section. </span>
+        <span>{name} {multiple ? 'also ' : ''}has a suggestion to improve this section. </span>
         <span className="font-bold">View and vote</span>
       </>);
 
