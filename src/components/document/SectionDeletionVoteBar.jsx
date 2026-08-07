@@ -421,7 +421,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                 <ThumbsDown className="w-4 h-4 shrink-0" />
                 {conComment.trim()
                   ? (isHe ? 'פרסום ההסבר והצבעת נגד' : isAr ? 'انشر التوضيح وصوّت ضد' : 'Publish explanation & vote against')
-                  : (isHe ? 'הצבעת נגד' : isAr ? 'صوّت ضد' : 'Vote against')}
+                  : (isHe ? 'הצבעת נגד בלבד' : isAr ? 'صوّت ضد' : 'Vote against')}
               </Button>
               {conComment.trim() && (
                 <p className="text-xs text-slate-500 text-center leading-tight">
