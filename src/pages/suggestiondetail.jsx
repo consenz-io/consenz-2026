@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   ThumbsUp, ThumbsDown, Clock,
-  CheckCircle, XCircle, AlertCircle, Loader2, Trash2, ChevronLeft, ChevronRight, Edit2, ShieldCheck } from
+  CheckCircle, XCircle, AlertCircle, Loader2, Trash2, Edit2, ShieldCheck } from
 "lucide-react";
 import SuggestionCountdown from "@/components/document/SuggestionCountdown";
 import VotingProgressSection from "../components/document/VotingProgressSection";
@@ -27,6 +27,7 @@ import { notifySuggestionStatusChange } from "../components/notifications/create
 import PageHeader from "../components/PageHeader";
 import BackToDocumentButton from "@/components/suggestion/BackToDocumentButton";
 import SuggestionExplanationBlock from "@/components/suggestion/SuggestionExplanationBlock";
+import SuggestionChainNavigation from "@/components/suggestion/SuggestionChainNavigation";
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 import { toast } from "sonner";
 
@@ -786,28 +787,15 @@ export default function SuggestionDetail() {
             <CardHeader className="p-4 md:p-6">
               <CardTitle className="text-base md:text-lg">{t('suggestionEditHistory')}</CardTitle>
             </CardHeader>
-            <CardContent className="p-3 md:p-6 flex justify-between items-center">
-              <Button
-              variant="outline"
-              onClick={() => {
-                const prev = suggestionChain[currentSuggestionIndexInChain - 1];
-                if (prev) navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${prev.id}`);
-              }}
-              disabled={currentSuggestionIndexInChain <= 0}>
-              
-                <ChevronLeft className="w-4 h-4" />{t('previousVersion')}
-              </Button>
-              <span className="text-sm text-slate-600">{t('versionLabel')} {currentSuggestionIndexInChain + 1} / {suggestionChain.length}</span>
-              <Button
-              variant="outline"
-              onClick={() => {
-                const next = suggestionChain[currentSuggestionIndexInChain + 1];
-                if (next) navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${next.id}`);
-              }}
-              disabled={currentSuggestionIndexInChain >= suggestionChain.length - 1}>
-              
-                {t('nextVersion')}<ChevronRight className="w-4 h-4" />
-              </Button>
+            <CardContent className="p-3 md:p-6">
+              <SuggestionChainNavigation
+                chain={suggestionChain}
+                currentIndex={currentSuggestionIndexInChain}
+                isRTL={isRTL}
+                language={language}
+                getUserName={getUserName}
+                onNavigate={(id) => navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${id}`)}
+              />
             </CardContent>
           </Card>
         }
