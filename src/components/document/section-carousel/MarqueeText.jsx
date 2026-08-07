@@ -24,7 +24,7 @@ export default function MarqueeText({ children, className = "", isRTL = false })
   }, [children]);
 
   return (
-    <div ref={containerRef} className={`overflow-hidden ${className}`}>
+    <div ref={containerRef} className={`overflow-hidden text-center ${className}`}>
       {overflow ? (
         <div className={`marquee-track ${isRTL ? 'marquee-track-rtl' : ''}`}>
           <span className="whitespace-nowrap">{children}</span>
