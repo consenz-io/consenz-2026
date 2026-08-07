@@ -15,6 +15,16 @@ function isMobileViewport() {
   return typeof window !== 'undefined' && window.innerWidth <= 768;
 }
 
+// Available gap (in px) on each side between the target and the viewport edge.
+function sideGaps(rect, vw, vh) {
+  return {
+    top: rect.top - ARROW_SIZE - MARGIN,
+    bottom: vh - rect.bottom - ARROW_SIZE - MARGIN,
+    left: rect.left - ARROW_SIZE - MARGIN,
+    right: vw - rect.right - ARROW_SIZE - MARGIN,
+  };
+}
+
 // Pick a side for the bubble. `bubbleH` is the REAL measured height once known
 // (falls back to the estimate before first render) so that long English text
 // never makes a side falsely "fit" and end up overlapping the target.
@@ -24,13 +34,14 @@ function computePosition(rect, preferred, isRTL, bubbleH = TOOLTIP_HEIGHT) {
 
   const vw = window.innerWidth;
   const vh = window.innerHeight;
+  const gaps = sideGaps(rect, vw, vh);
 
-  // Does the tooltip fit on each side WITHOUT overlapping the target element?
+  // Does the WHOLE bubble fit in the gap on each side WITHOUT overlapping the target?
   const fits = {
-    top: rect.top - bubbleH - ARROW_SIZE - MARGIN > 0,
-    bottom: rect.bottom + bubbleH + ARROW_SIZE + MARGIN < vh,
-    left: rect.left - TOOLTIP_WIDTH - ARROW_SIZE - MARGIN > 0,
-    right: rect.right + TOOLTIP_WIDTH + ARROW_SIZE + MARGIN < vw,
+    top: gaps.top >= bubbleH,
+    bottom: gaps.bottom >= bubbleH,
+    left: gaps.left >= TOOLTIP_WIDTH,
+    right: gaps.right >= TOOLTIP_WIDTH,
   };
 
   if (preferred !== 'auto' && fits[preferred]) return preferred;
@@ -41,53 +52,62 @@ function computePosition(rect, preferred, isRTL, bubbleH = TOOLTIP_HEIGHT) {
   const found = priority.find(p => fits[p]);
   if (found) return found;
 
-  // Nothing fits cleanly (target is very large or fills the viewport).
-  // Choose the vertical side with the MOST available space. We force a
-  // vertical side (top/bottom) here — the bubble is then anchored flush
-  // against the target's edge (see getTooltipStyle) so it never covers it.
-  return rect.top > vh - rect.bottom ? 'top' : 'bottom';
+  // Nothing fits the full bubble. Never overlap the target — instead pick the
+  // side with the LARGEST gap and let getTooltipStyle cap the bubble's height
+  // (top/bottom) to that gap so the bubble stays strictly outside the target.
+  // A horizontal side (left/right) is picked when it has clearly more room,
+  // which handles tall, vertically-centered targets that leave little space
+  // above or below (as in the voting-bar step).
+  return Object.keys(gaps).reduce((a, b) => (gaps[b] > gaps[a] ? b : a), 'bottom');
 }
 
-// `bubbleH` is the measured bubble height (fallback to estimate). Vertical
-// placements anchor the bubble flush against the target edge so it can never
-// cover the target — the content scrolls internally when space is tight.
+// `bubbleH` is the measured bubble height (fallback to estimate). The bubble is
+// always placed strictly OUTSIDE the target. When a side's gap is smaller than
+// the bubble, a `maxHeight` is returned so the bubble shrinks (and scrolls
+// internally) instead of overflowing back onto the target.
 function getTooltipStyle(rect, position, bubbleH = TOOLTIP_HEIGHT) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const centerX = rect.left + rect.width / 2;
   const centerY = rect.top + rect.height / 2;
+  const gaps = sideGaps(rect, vw, vh);
 
   // Clamp horizontal so the bubble never runs off the left/right edges.
   const clampX = (x) => Math.max(8, Math.min(vw - TOOLTIP_WIDTH - 8, x));
-  // Clamp vertical so a side-placed bubble never runs off the top/bottom edges.
-  const clampY = (y) => Math.max(8, Math.min(vh - bubbleH - 8, y));
 
   switch (position) {
     case 'top': {
-      // Bubble sits ABOVE the target. Its bottom edge = target.top - gap.
-      // Never let the top go off-screen (clamp to 8).
+      // Bubble sits ABOVE the target: its bottom edge is just above target.top.
+      // Cap its height to the gap above so it never reaches into the target.
+      const gap = Math.max(80, gaps.top);
+      const h = Math.min(bubbleH, gap);
       const bottom = rect.top - ARROW_SIZE - 8;
       return {
         left: clampX(centerX - TOOLTIP_WIDTH / 2),
-        top: Math.max(8, bottom - bubbleH),
+        top: Math.max(8, bottom - h),
+        maxHeight: gap,
       };
     }
-    case 'bottom':
+    case 'bottom': {
+      // Bubble sits BELOW the target: its top edge is just below target.bottom.
+      // Cap its height to the gap below so it never reaches into the target.
+      const gap = Math.max(80, gaps.bottom);
       return {
         left: clampX(centerX - TOOLTIP_WIDTH / 2),
-        // Anchor the bubble's TOP just below the target. maxHeight keeps it on-screen.
-        top: Math.min(vh - 8 - bubbleH, rect.bottom + ARROW_SIZE + 8),
+        top: rect.bottom + ARROW_SIZE + 8,
+        maxHeight: gap,
       };
+    }
     case 'left':
       return {
         left: rect.left - ARROW_SIZE - 8,
-        top: clampY(centerY - bubbleH / 2),
+        top: Math.max(8, Math.min(vh - bubbleH - 8, centerY - bubbleH / 2)),
         transform: 'translateX(-100%)',
       };
     case 'right':
       return {
         left: rect.right + ARROW_SIZE + 8,
-        top: clampY(centerY - bubbleH / 2),
+        top: Math.max(8, Math.min(vh - bubbleH - 8, centerY - bubbleH / 2)),
       };
     default:
       return { left: clampX(centerX - TOOLTIP_WIDTH / 2), top: rect.bottom + ARROW_SIZE + 8 };
