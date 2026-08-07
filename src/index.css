@@ -289,6 +289,15 @@ button:focus-visible {
   opacity: 0.5;
 }
 
+.tutorial-ghost-nav-label {
+  flex: 1;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #b45309;
+  padding: 0 0.5rem;
+}
+
 /* Tutorial: flashing border around a card to guide the user to click it */
 @keyframes tutorial-card-flash {
   0%, 100% {

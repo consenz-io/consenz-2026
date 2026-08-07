@@ -431,10 +431,15 @@ export default function TutorialController() {
     const ghost = window.document.createElement('div');
     ghost.className = 'proposal-navigation-arrows tutorial-ghost-nav';
     ghost.setAttribute('data-tutorial-ghost', 'true');
+    const navLabel = language === 'he'
+      ? 'הצעה קודמת / הבאה'
+      : language === 'ar'
+      ? 'الاقتراح السابق / التالي'
+      : 'Previous / Next suggestion';
     ghost.innerHTML = `
       <div class="tutorial-ghost-nav-inner">
         <div class="tutorial-ghost-btn">‹</div>
-        <div class="tutorial-ghost-label"></div>
+        <span class="tutorial-ghost-nav-label">${navLabel}</span>
         <div class="tutorial-ghost-btn">›</div>
       </div>
     `;
@@ -444,7 +449,7 @@ export default function TutorialController() {
       const g = sectionCard.querySelector('[data-tutorial-ghost="true"]');
       if (g) g.remove();
     };
-  }, [phase, currentStep, navPending]);
+  }, [phase, currentStep, navPending, language]);
 
   // ── Handle editclause-hover: reset carousel and show edit buttons ──────────
   useEffect(() => {
