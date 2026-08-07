@@ -126,6 +126,8 @@ export default function TutorialController() {
     backToWelcomeOverlay,
     resumeOnDocumentPage,
     skipTutorial,
+    pauseTutorial,
+    resumeTutorial,
     goNext,
     goBack,
     restartTutorial,
@@ -151,12 +153,16 @@ export default function TutorialController() {
     }
   }, [location.pathname, phase, homeStepSeen, resumeOnDocumentPage]);
 
-  // ── Expose restart globally ──────────────────────────────────────────────
+  // ── Expose restart + resume globally ─────────────────────────────────────
   useEffect(() => {
     window.restartTutorial = (entryPoint, startStep = 0) =>
       restartTutorial(entryPoint || (isHomePage(location.pathname) ? 'home' : 'document'), startStep);
-    return () => { delete window.restartTutorial; };
-  }, [restartTutorial, location.pathname]);
+    window.resumeTutorial = () => resumeTutorial();
+    return () => {
+      delete window.restartTutorial;
+      delete window.resumeTutorial;
+    };
+  }, [restartTutorial, resumeTutorial, location.pathname]);
 
   // ── Skip missing target elements ────────────────────────────────────────────
   const manualNavRef = useRef(false);
@@ -491,28 +497,38 @@ export default function TutorialController() {
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 p-4">
     <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-6 flex flex-col gap-4" dir={isRTL ? 'rtl' : 'ltr'}>
       <p className="text-slate-800 font-semibold text-center text-base">
-        {language === 'he' ? 'לסיים את הסיור?' : language === 'ar' ? 'إغلاق الجولة؟' : 'Exit the tour?'}
+        {language === 'he' ? 'לעצור את הסיור?' : language === 'ar' ? 'إيقاف الجولة؟' : 'Stop the tour?'}
       </p>
       <p className="text-slate-500 text-sm text-center">
-        {language === 'he' ? 'תמיד אפשר להתחיל אותו מחדש מתפריט הניווט.' : language === 'ar' ? 'يمكنك دائماً إعادة تشغيله من قائمة التנקל.' : 'You can always restart it from the navigation menu.'}
+        {language === 'he'
+          ? 'אפשר להשהות ולחזור לאותו השלב בהמשך, או לסיים לגמרי.'
+          : language === 'ar'
+          ? 'يمكنك الإيقاف المؤقت والعودة إلى نفس الخطوة لاحقاً، أو الخروج نهائياً.'
+          : 'You can pause and resume from the same step later, or exit completely.'}
       </p>
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2">
         <button
-          className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium text-sm"
+          className="w-full px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm"
           onClick={() => setShowSkipConfirm(false)}
         >
-          {language === 'he' ? 'המשך סיור' : language === 'ar' ? 'متابعة' : 'Continue'}
+          {language === 'he' ? 'המשך סיור' : language === 'ar' ? 'متابعة الجولة' : 'Continue tour'}
         </button>
         <button
-          className="flex-1 px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium text-sm"
+          className="w-full px-4 py-2 rounded-lg border border-blue-300 text-blue-700 hover:bg-blue-50 font-medium text-sm"
+          onClick={() => { setShowSkipConfirm(false); pauseTutorial(); }}
+        >
+          {language === 'he' ? 'השהה וחזור בהמשך' : language === 'ar' ? 'إيقاف مؤقت والعودة لاحقاً' : 'Pause & resume later'}
+        </button>
+        <button
+          className="w-full px-4 py-2 rounded-lg text-red-600 hover:bg-red-50 font-medium text-sm"
           onClick={() => { setShowSkipConfirm(false); skipTutorial(); }}
         >
-          {language === 'he' ? 'סיים' : language === 'ar' ? 'خروج' : 'Exit'}
+          {language === 'he' ? 'סיים לגמרי' : language === 'ar' ? 'خروج نهائي' : 'Exit completely'}
         </button>
       </div>
     </div>
     </div>
-  ) : null, [showSkipConfirm, isRTL, language, skipTutorial]);
+  ) : null, [showSkipConfirm, isRTL, language, skipTutorial, pauseTutorial]);
 
   // ── Render ────────────────────────────────────────────────────────────────
   if (phase === 'idle' || phase === 'done') return null;

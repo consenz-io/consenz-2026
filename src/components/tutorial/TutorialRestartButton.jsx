@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { PlayCircle } from 'lucide-react';
 import { useLanguage } from '@/components/LanguageContext';
@@ -24,11 +24,35 @@ function isSuggestionPage(pathname) {
   return /\/suggestiondetail/i.test(pathname);
 }
 
+function readPaused() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    return s.paused === true && !s.active;
+  } catch {
+    return false;
+  }
+}
+
 export default function TutorialRestartButton() {
   const { language } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
-  const label = tTutorial('nav.restart', language);
+
+  // Poll the paused flag so the label swaps to "Resume tour" when a tour was paused.
+  const [paused, setPaused] = useState(readPaused);
+  useEffect(() => {
+    const check = () => setPaused(readPaused());
+    check();
+    const id = setInterval(check, 800);
+    window.addEventListener('storage', check);
+    return () => { clearInterval(id); window.removeEventListener('storage', check); };
+  }, []);
+
+  const label = paused
+    ? (language === 'he' ? 'המשך סיור' : language === 'ar' ? 'استئناف الجولة' : 'Resume tour')
+    : tTutorial('nav.restart', language);
 
   // Track last visited document URL
   useEffect(() => {
@@ -38,6 +62,11 @@ export default function TutorialRestartButton() {
   }, [location]);
 
   const handleRestart = async () => {
+    // Resume a paused tour from its saved step instead of restarting from scratch.
+    if (paused && window.resumeTutorial) {
+      window.resumeTutorial();
+      return;
+    }
     const pathname = location.pathname;
     const onCleanView = isCleanViewPage(pathname);
     const onDoc = isDocumentPage(pathname) && !onCleanView;

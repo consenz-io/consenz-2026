@@ -8,6 +8,7 @@ const defaultState = () => ({
   homeStepSeen: false,
   currentStep: 0,
   completedSteps: [],
+  paused: false,
 });
 
 function loadState() {
@@ -226,6 +227,35 @@ export function useTutorial(steps = []) {
     }
   }, [isAuthenticated]);
 
+  // Pause the tour mid-way: stop it but KEEP the current step so the user can
+  // resume from the same place later via "Resume tour".
+  const pauseTutorial = useCallback(() => {
+    setState(prev => {
+      const next = { ...prev, active: false, paused: true };
+      saveState(next);
+      return next;
+    });
+    setPhase('idle');
+    setPracticeCompleted(false);
+    setShowSuccess(false);
+    setShowSignupPrompt(false);
+  }, []);
+
+  // Resume a paused tour at its saved step, directly in the running phase
+  // (no welcome overlay — the user is mid-tour). Marks homeStepSeen so document
+  // steps show immediately regardless of entry point.
+  const resumeTutorial = useCallback(() => {
+    setState(prev => {
+      const next = { ...prev, active: true, paused: false, homeStepSeen: true };
+      saveState(next);
+      return next;
+    });
+    setPracticeCompleted(false);
+    setShowSuccess(false);
+    setShowSignupPrompt(false);
+    setPhase('running');
+  }, []);
+
   const goNext = useCallback(() => {
     const step = steps[state.currentStep];
     if (!step) return;
@@ -345,6 +375,8 @@ export function useTutorial(steps = []) {
     backToWelcomeOverlay,
     resumeOnDocumentPage,
     skipTutorial,
+    pauseTutorial,
+    resumeTutorial,
     goNext,
     goBack,
     restartTutorial,
