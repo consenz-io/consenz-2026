@@ -15,6 +15,7 @@ import DocumentTextContent from "./DocumentTextContent";
 import { motion, AnimatePresence } from "framer-motion";
 import AcceptedAnimation from "./AcceptedAnimation";
 import SectionDiff from "./SectionDiff";
+import MarqueeText from "./section-carousel/MarqueeText";
 
 const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   suggestion,
@@ -140,6 +141,12 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
 
   const currentView = allViews[currentViewIndex] || allViews[0];
   const currentVersion = currentView?.data || suggestion;
+
+  // Next view for the bottom marquee navigation button
+  const nextView = allViews.length > 0 ? allViews[(currentViewIndex + 1) % allViews.length] : null;
+  const nextVersion = nextView?.data;
+  const nextAuthor = nextVersion ? getUserName(nextVersion.created_by_id) : '';
+  const isNextOriginal = nextView?.type === 'original';
 
   // Safeguard: if the current version is NOT pending (rejected/expired) and the
   // user didn't manually navigate to it, fall back to 'original' (the root).
@@ -454,14 +461,48 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       {/* Paging navigation — at the bottom of the card, matching the edit_section carousel position */}
       {allViews.length > 1 &&
       <div className="mt-4 pt-3 px-3 pb-3 rounded-lg border bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
-        <div className="flex items-center justify-between gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrev}
-            className="flex items-center bg-white flex-shrink-0 border-amber-300 text-amber-700 hover:bg-amber-100 hover:border-amber-500 hover:shadow-md active:scale-95">
-            {isRTL ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
-          </Button>
+        <button
+          onClick={handleNext}
+          className="w-full flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-xl border-2 text-start transition-all shadow-sm border-amber-300 bg-white text-amber-700 hover:bg-amber-100 hover:border-amber-500 hover:shadow-md active:scale-95"
+          aria-label={language === 'he' ? 'להצעה הבאה' : language === 'ar' ? 'الاقتراح التالي' : 'Next suggestion'}>
+          <MarqueeText isRTL={isRTL} className="flex-1 min-w-0 relative text-sm md:text-base text-slate-700">
+            {(() => {
+              if (!nextView) return null;
+              if (isNextOriginal) {
+                return (
+                  <span className="font-bold">
+                    {language === 'he' ? 'חזרה להצעה המקורית' : language === 'ar' ? 'العودة إلى الاقتراح الأصلي' : 'Back to original suggestion'}
+                  </span>);
+              }
+              const name = nextAuthor;
+              const multiple = allViews.filter((v) => v.type !== 'original').length > 1;
+              if (language === 'he') {
+                return (
+                  <>
+                    <span>{multiple ? 'גם ' : ''}ל{name} יש הצעת עריכה להצעה זו. </span>
+                    <span className="font-bold">לצפייה והצבעה</span>
+                  </>);
+              }
+              if (language === 'ar') {
+                return (
+                  <>
+                    <span>{multiple ? 'أيضًا ' : ''}لدى {name} اقتراح تعديل على هذا الاقتراح. </span>
+                    <span className="font-bold">للعرض والتصويت</span>
+                  </>);
+              }
+              return (
+                <>
+                  <span>{name} {multiple ? 'also ' : ''}has an edit suggestion for this proposal. </span>
+                  <span className="font-bold">View and vote</span>
+                </>);
+            })()}
+          </MarqueeText>
+          <span className="flex-shrink-0">
+            {isRTL ? <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" /> : <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />}
+          </span>
+        </button>
+
+        <div className="pt-3">
           <div className="flex items-center justify-center gap-1.5">
             {allViews.map((view, idx) =>
               <button
@@ -476,13 +517,6 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
               />
             )}
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleNext}
-            className="flex items-center bg-white flex-shrink-0 border-amber-300 text-amber-700 hover:bg-amber-100 hover:border-amber-500 hover:shadow-md active:scale-95">
-            {isRTL ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-          </Button>
         </div>
       </div>
       }
