@@ -7,27 +7,30 @@ import { useLanguage } from '@/components/LanguageContext';
 import { base44 } from '@/api/base44Client';
 
 const TOOLTIP_WIDTH = 320;
-const TOOLTIP_HEIGHT = 200; // estimate for positioning
+const TOOLTIP_HEIGHT = 200; // fallback estimate before the bubble is measured
 const ARROW_SIZE = 10;
+const MARGIN = 16;
 
 function isMobileViewport() {
   return typeof window !== 'undefined' && window.innerWidth <= 768;
 }
 
-function computePosition(rect, preferred, isRTL) {
+// Pick a side for the bubble. `bubbleH` is the REAL measured height once known
+// (falls back to the estimate before first render) so that long English text
+// never makes a side falsely "fit" and end up overlapping the target.
+function computePosition(rect, preferred, isRTL, bubbleH = TOOLTIP_HEIGHT) {
   // 'sidebar' is a special virtual position — resolved by the caller
   if (preferred === 'sidebar') return isRTL ? 'left' : 'right';
 
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const margin = 16;
 
   // Does the tooltip fit on each side WITHOUT overlapping the target element?
   const fits = {
-    top: rect.top - TOOLTIP_HEIGHT - ARROW_SIZE - margin > 0,
-    bottom: rect.bottom + TOOLTIP_HEIGHT + ARROW_SIZE + margin < vh,
-    left: rect.left - TOOLTIP_WIDTH - ARROW_SIZE - margin > 0,
-    right: rect.right + TOOLTIP_WIDTH + ARROW_SIZE + margin < vw,
+    top: rect.top - bubbleH - ARROW_SIZE - MARGIN > 0,
+    bottom: rect.bottom + bubbleH + ARROW_SIZE + MARGIN < vh,
+    left: rect.left - TOOLTIP_WIDTH - ARROW_SIZE - MARGIN > 0,
+    right: rect.right + TOOLTIP_WIDTH + ARROW_SIZE + MARGIN < vw,
   };
 
   if (preferred !== 'auto' && fits[preferred]) return preferred;
@@ -39,18 +42,16 @@ function computePosition(rect, preferred, isRTL) {
   if (found) return found;
 
   // Nothing fits cleanly (target is very large or fills the viewport).
-  // Choose the side with the MOST available space so the bubble overlaps the
-  // target as little as possible instead of blindly defaulting to 'bottom'.
-  const space = {
-    top: rect.top,
-    bottom: vh - rect.bottom,
-    left: rect.left,
-    right: vw - rect.right,
-  };
-  return Object.keys(space).reduce((a, b) => (space[b] > space[a] ? b : a), 'bottom');
+  // Choose the vertical side with the MOST available space. We force a
+  // vertical side (top/bottom) here — the bubble is then anchored flush
+  // against the target's edge (see getTooltipStyle) so it never covers it.
+  return rect.top > vh - rect.bottom ? 'top' : 'bottom';
 }
 
-function getTooltipStyle(rect, position) {
+// `bubbleH` is the measured bubble height (fallback to estimate). Vertical
+// placements anchor the bubble flush against the target edge so it can never
+// cover the target — the content scrolls internally when space is tight.
+function getTooltipStyle(rect, position, bubbleH = TOOLTIP_HEIGHT) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const centerX = rect.left + rect.width / 2;
@@ -59,31 +60,34 @@ function getTooltipStyle(rect, position) {
   // Clamp horizontal so the bubble never runs off the left/right edges.
   const clampX = (x) => Math.max(8, Math.min(vw - TOOLTIP_WIDTH - 8, x));
   // Clamp vertical so a side-placed bubble never runs off the top/bottom edges.
-  const clampY = (y) => Math.max(8, Math.min(vh - TOOLTIP_HEIGHT - 8, y));
+  const clampY = (y) => Math.max(8, Math.min(vh - bubbleH - 8, y));
 
   switch (position) {
-    case 'top':
+    case 'top': {
+      // Bubble sits ABOVE the target. Its bottom edge = target.top - gap.
+      // Never let the top go off-screen (clamp to 8).
+      const bottom = rect.top - ARROW_SIZE - 8;
       return {
         left: clampX(centerX - TOOLTIP_WIDTH / 2),
-        // Anchor the bubble's BOTTOM just above the target, but never let its top
-        // go off-screen — clamp the resolved top edge (target.top - gap - height).
-        top: Math.max(8, rect.top - ARROW_SIZE - 8 - TOOLTIP_HEIGHT),
+        top: Math.max(8, bottom - bubbleH),
       };
+    }
     case 'bottom':
       return {
         left: clampX(centerX - TOOLTIP_WIDTH / 2),
-        top: Math.min(vh - 8 - TOOLTIP_HEIGHT, rect.bottom + ARROW_SIZE + 8),
+        // Anchor the bubble's TOP just below the target. maxHeight keeps it on-screen.
+        top: Math.min(vh - 8 - bubbleH, rect.bottom + ARROW_SIZE + 8),
       };
     case 'left':
       return {
         left: rect.left - ARROW_SIZE - 8,
-        top: clampY(centerY - TOOLTIP_HEIGHT / 2),
+        top: clampY(centerY - bubbleH / 2),
         transform: 'translateX(-100%)',
       };
     case 'right':
       return {
         left: rect.right + ARROW_SIZE + 8,
-        top: clampY(centerY - TOOLTIP_HEIGHT / 2),
+        top: clampY(centerY - bubbleH / 2),
       };
     default:
       return { left: clampX(centerX - TOOLTIP_WIDTH / 2), top: rect.bottom + ARROW_SIZE + 8 };
@@ -158,9 +162,13 @@ export default function TutorialTooltip({
 
     function applyPosition(el) {
       const rect = el.getBoundingClientRect();
-      const rp = computePosition(rect, step.tooltipPosition, isRTL);
+      // Use the real bubble height once it's been rendered/measured so the
+      // side choice + anchoring account for long (English) content and never
+      // overlap the target.
+      const bubbleH = tooltipRef.current?.getBoundingClientRect().height || TOOLTIP_HEIGHT;
+      const rp = computePosition(rect, step.tooltipPosition, isRTL, bubbleH);
       setResolvedPosition(rp);
-      setPos(getTooltipStyle(rect, rp));
+      setPos(getTooltipStyle(rect, rp, bubbleH));
     }
 
     function update() {
@@ -244,23 +252,29 @@ export default function TutorialTooltip({
     };
   }, [step, isRTL]);
 
-  // After the bubble renders with real content, measure its actual height and
-  // clamp its top so the FULL bubble stays within the viewport. The fixed
-  // TOOLTIP_HEIGHT estimate under-measures long translations (e.g. English),
-  // which caused the bottom of the bubble to be cut off screen.
+  // After the bubble renders with real content, its actual height is finally
+  // known. Re-run the FULL positioning (side choice + anchoring) with that real
+  // height so long (English) content re-flips to a side that fits and stays
+  // flush against the target instead of overlapping it. The fixed
+  // TOOLTIP_HEIGHT estimate under-measures long translations, which previously
+  // let a "top"/"bottom" side falsely "fit" and cover the target.
   useEffect(() => {
     if (!pos || !tooltipRef.current) return;
-    const h = tooltipRef.current.getBoundingClientRect().height;
-    if (!h) return;
+    if (step.tooltipPosition === 'sidebar') return;
+    const el = document.querySelector(step.targetSelector);
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const bubbleH = tooltipRef.current.getBoundingClientRect().height || TOOLTIP_HEIGHT;
+    const rp = computePosition(rect, step.tooltipPosition, isRTL, bubbleH);
+    const next = getTooltipStyle(rect, rp, bubbleH);
+    setResolvedPosition((prevRp) => (prevRp === rp ? prevRp : rp));
     setPos((prev) => {
-      if (!prev || typeof prev.top !== 'number') return prev;
-      const vh = window.innerHeight;
-      const maxTop = vh - h - 8;
-      const clampedTop = Math.max(8, Math.min(maxTop, prev.top));
-      if (clampedTop === prev.top) return prev;
-      return { ...prev, top: clampedTop };
+      if (!prev) return next;
+      if (prev.top === next.top && prev.left === next.left && prev.transform === next.transform) return prev;
+      return next;
     });
-  }, [pos?.top, pos?.left, heading, body, language]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [heading, body, language, step]);
 
   const isPractice = step.type === 'practice';
   const isEncourage = step.type === 'encourage';
