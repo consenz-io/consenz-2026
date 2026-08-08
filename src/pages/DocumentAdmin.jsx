@@ -435,16 +435,16 @@ export default function DocumentAdmin() {
                 
               </div>
 
-              <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 hidden">
-                <Label className="text-base">{t('daPrivacySetting')}</Label>
-                <p className="text-sm text-slate-500 mt-1">
-                  {language === 'he' ?
-                  'הפרטיות נקבעת אוטומטית לפי הקבוצה שאליה שייך המסמך. אין הגדרה נפרדת למסמך.' :
-                  language === 'ar' ?
-                  'تحدد الخصوصية تلقائياً بناءً على المجموعة التي ينتمي إليها المستند. لا يوجد إعداد منفصل للمستند.' :
-                  'Privacy is inherited from the group this document belongs to. There is no separate per-document setting.'}
-                </p>
-              </div>
+              
+
+
+
+
+
+
+
+
+              
 
               <div>
                 <Label htmlFor="lifetime">{t('daDefaultVotingPeriod')}</Label>
