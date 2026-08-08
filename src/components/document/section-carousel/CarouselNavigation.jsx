@@ -137,7 +137,7 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
     if (language === 'he') {
       return (
         <>
-          <span>{multiple ? 'גם ' : ''}ל{name} יש הצעה לשיפור הסעיף. </span>
+          <span>ל{name} יש הצעה לשיפור הסעיף. </span>
           <span className="font-bold">לצפייה והצבעה</span>
         </>);
 
@@ -145,14 +145,14 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
     if (language === 'ar') {
       return (
         <>
-          <span>{multiple ? 'أيضًا ' : ''}لدى {name} اقتراح لتحسين البند. </span>
+          <span>لدى {name} اقتراح لتحسين البند. </span>
           <span className="font-bold">للعرض والتصويت</span>
         </>);
 
     }
     return (
       <>
-        <span>{name} {multiple ? 'also ' : ''}has a suggestion to improve this section. </span>
+        <span>{name} has a suggestion to improve this section. </span>
         <span className="font-bold">View and vote</span>
       </>);
 
