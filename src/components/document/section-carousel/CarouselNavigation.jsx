@@ -161,17 +161,17 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
 
   return (
     <div className={`proposal-navigation-arrows mt-4 pt-3 px-3 pb-3 rounded-lg border ${stripBg}`}>
-      <div className="flex items-stretch gap-2">
+      <div className="flex flex-col md:flex-row items-stretch gap-2">
         <button
           onClick={onPrev}
-          className={`flex items-center justify-center px-3 rounded-xl border-2 transition-all shadow-sm ${btnClass}`}
+          className={`flex items-center justify-center px-3 py-2.5 rounded-xl border-2 transition-all shadow-sm ${btnClass}`}
           aria-label={language === 'he' ? 'להצעה הקודמת' : language === 'ar' ? 'الاقتراح السابق' : 'Previous suggestion'}>
           {isRTL ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
         </button>
         <button
           onClick={onNext}
           data-expand-proposal
-          className={`flex-1 min-w-0 overflow-hidden flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-xl border-2 text-start transition-all shadow-sm ${btnClass}`}
+          className={`w-full md:flex-1 min-w-0 overflow-hidden flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-xl border-2 text-start transition-all shadow-sm ${btnClass}`}
           aria-label={language === 'he' ? 'להצעה הבאה' : language === 'ar' ? 'الاقتراح التالي' : 'Next suggestion'}>
 
           <MarqueeText isRTL={isRTL} className="flex-1 min-w-0 relative text-sm md:text-base text-slate-700">
