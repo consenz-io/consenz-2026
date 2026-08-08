@@ -160,7 +160,7 @@ export default function SectionDiff({
     direction: isRTL ? 'rtl' : 'ltr',
     textAlign: isRTL ? 'right' : 'left',
     fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
-    fontSize: "1.125rem",
+    fontSize: "1.375rem",
     lineHeight: "1.8",
     letterSpacing: "0.01em",
     fontWeight: "400"
@@ -260,10 +260,10 @@ export default function SectionDiff({
       onClick={handleCardClick}
     >
       <div 
-        className="flex items-center justify-between mb-3 flex-wrap gap-2"
+        className="flex items-center justify-between mb-2 gap-2"
       >
-          <div className="text-sm font-semibold text-slate-700">{t('proposedChanges')}</div>
-        <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <div className="text-xs font-semibold text-slate-600 shrink-0">{t('proposedChanges')}</div>
+        <div className={`flex items-center gap-1.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
           {showDiff && canShowDiff && (
             <DiffModeSelector 
               mode={diffMode} 
