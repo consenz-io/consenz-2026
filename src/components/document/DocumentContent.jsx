@@ -34,10 +34,10 @@ import { useVoteMutation } from "./hooks/useVoteMutation";
 import { useTopicVoteMutation } from "./hooks/useTopicVoteMutation";
 import { toast } from "sonner";
 
-export default function DocumentContent({ 
-  document, 
-  topics, 
-  sections, 
+export default function DocumentContent({
+  document,
+  topics,
+  sections,
   suggestions,
   onEditSection,
   onEditSectionThenVote,
@@ -61,7 +61,7 @@ export default function DocumentContent({
   const { reorderMutation } = useSuggestionReorder(document?.id);
 
   const acceptedSuggestions = React.useMemo(
-    () => suggestions.filter(s => s.status === 'accepted'),
+    () => suggestions.filter((s) => s.status === 'accepted'),
     [suggestions]
   );
 
@@ -74,7 +74,7 @@ export default function DocumentContent({
   const { data: aggregatedData } = useQuery({
     queryKey: ['documentAggregatedData', document?.id],
     enabled: false,
-    staleTime: Infinity,
+    staleTime: Infinity
   });
   const allDocumentVotes = aggregatedData?.votes || [];
 
@@ -105,7 +105,7 @@ export default function DocumentContent({
             proVotes: s.proVotes || 0,
             conVotes: s.conVotes || 0,
             voters: votesBySuggestionId.get(s.id) || [],
-            _updated_date: s.updated_date,
+            _updated_date: s.updated_date
           });
         }
       }
@@ -120,18 +120,18 @@ export default function DocumentContent({
     queryFn: () => base44.entities.UserPublicProfile.list('-created_date', 1000),
     enabled: false,
     staleTime: Infinity,
-    initialData: [],
+    initialData: []
   });
 
   const { data: topicEditSuggestions } = useQuery({
     queryKey: ['topicEditSuggestions', document?.id],
     queryFn: () => base44.entities.TopicEditSuggestion.filter({ documentId: document.id }),
     enabled: !!document?.id,
-    initialData: [],
+    initialData: []
   });
 
   const topicSuggestionIds = React.useMemo(
-    () => (topicEditSuggestions || []).map(s => s.id),
+    () => (topicEditSuggestions || []).map((s) => s.id),
     [topicEditSuggestions]
   );
 
@@ -141,11 +141,11 @@ export default function DocumentContent({
       if (!user?.id || topicSuggestionIds.length === 0) return [];
       return await base44.entities.TopicEditVote.filter({
         suggestionId: { $in: topicSuggestionIds },
-        userId: user.id,
+        userId: user.id
       });
     },
     enabled: !!user?.id && !!document?.id && topicSuggestionIds.length > 0,
-    initialData: [],
+    initialData: []
   });
 
   // מעקב לשימוש ב-hook של הצבעה
@@ -155,7 +155,7 @@ export default function DocumentContent({
   React.useEffect(() => {
     if (newlyCreatedSuggestion?.suggestionId && typeof window !== 'undefined') {
       const { suggestionId } = newlyCreatedSuggestion;
-      
+
       const scrollToElement = () => {
         const element = window.document.getElementById(`suggestion-${suggestionId}`);
         if (element) {
@@ -169,7 +169,7 @@ export default function DocumentContent({
         }
         return false;
       };
-      
+
       // נסה מספר פעמים עד שנמצא את האלמנט
       let attempts = 0;
       const maxAttempts = 10;
@@ -180,7 +180,7 @@ export default function DocumentContent({
         attempts++;
         setTimeout(tryScroll, 500);
       };
-      
+
       setTimeout(tryScroll, 300);
     }
   }, [newlyCreatedSuggestion, onClearNewlyCreated, suggestions, topics]);
@@ -206,10 +206,10 @@ export default function DocumentContent({
             const accepted = await autoAcceptTopicEditSuggestion(topicSuggestion, acceptingUserId, document);
             if (accepted) {
               Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
-                queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
-                queryClient.invalidateQueries({ queryKey: ['document', document.id] })
-              ]);
+              queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
+              queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
+              queryClient.invalidateQueries({ queryKey: ['document', document.id] })]
+              );
             }
           }
         } catch (err) {
@@ -261,7 +261,7 @@ export default function DocumentContent({
   // — eliminates a separate API call (was: Vote.filter({ userId, suggestionId: $in })).
   const userVotes = React.useMemo(() => {
     if (!user?.id || !allDocumentVotes) return [];
-    const filtered = allDocumentVotes.filter(v => v.userId === user.id);
+    const filtered = allDocumentVotes.filter((v) => v.userId === user.id);
     // Deduplicate — keep last vote per suggestion (most recent wins)
     const seen = new Set();
     const deduped = [];
@@ -293,7 +293,7 @@ export default function DocumentContent({
 
   // Use optimized vote hook
   const voteMutation = useVoteMutation(document, user, suggestions, hasCheckedRef);
-      
+
 
 
   // O(1) lookup maps instead of O(n) find on every call
@@ -301,13 +301,13 @@ export default function DocumentContent({
   // and by email (fallback for legacy callers).
   const profileByUserId = React.useMemo(() => {
     const map = new Map();
-    publicProfiles?.forEach(p => { if (p.userId) map.set(p.userId, p); });
+    publicProfiles?.forEach((p) => {if (p.userId) map.set(p.userId, p);});
     return map;
   }, [publicProfiles]);
 
   const profileByEmail = React.useMemo(() => {
     const map = new Map();
-    publicProfiles?.forEach(p => { if (p.email) map.set(p.email, p); });
+    publicProfiles?.forEach((p) => {if (p.email) map.set(p.email, p);});
     return map;
   }, [publicProfiles]);
 
@@ -334,10 +334,10 @@ Text to translate:
 ${topic.title}
 
 Return ONLY the translated text:`;
-      
+
       const titleResult = await base44.integrations.Core.InvokeLLM({
         prompt: titlePrompt,
-        add_context_from_internet: false,
+        add_context_from_internet: false
       });
       const translatedTitle = (typeof titleResult === 'string' ? titleResult : titleResult.content || titleResult).trim();
 
@@ -355,15 +355,15 @@ Return ONLY the translated text:`;
       return { topicId: topic.id, translations: newTranslations };
     },
     onMutate: async (topic) => {
-      setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: true }));
+      setShowTranslatedTopics((prev) => ({ ...prev, [topic.id]: true }));
     },
     onSuccess: (data) => {
       queryClient.setQueryData(['topics', document.id], (oldData) => {
         if (!oldData) return oldData;
-        return oldData.map(t => 
-          t.id === data.topicId 
-            ? { ...t, translations: data.translations }
-            : t
+        return oldData.map((t) =>
+        t.id === data.topicId ?
+        { ...t, translations: data.translations } :
+        t
         );
       });
     }
@@ -377,7 +377,7 @@ Return ONLY the translated text:`;
       map.get(s.topicId).push(s);
     }
     // Sort each group once
-    map.forEach(arr => arr.sort((a, b) => {
+    map.forEach((arr) => arr.sort((a, b) => {
       if (a.order !== b.order) return a.order - b.order;
       return new Date(a.created_date) - new Date(b.created_date);
     }));
@@ -404,7 +404,7 @@ Return ONLY the translated text:`;
   // — passed to SectionCarousel so it doesn't re-filter the full document array per section.
   // Was O(sections × suggestions) per render; now O(suggestions) once + O(1) per section.
   const allSuggestionsBySectionId = React.useMemo(() => {
-    const suggestionById = new Map(suggestions.map(s => [s.id, s]));
+    const suggestionById = new Map(suggestions.map((s) => [s.id, s]));
     const bySection = new Map();
     for (const s of suggestions) {
       if (s.sectionId) {
@@ -433,10 +433,10 @@ Return ONLY the translated text:`;
   // For edit_suggestion types, look up the parent suggestion's sectionId
   const targetSuggestionSectionId = React.useMemo(() => {
     if (!targetSuggestionId || !suggestions) return null;
-    const sug = suggestions.find(s => s.id === targetSuggestionId);
+    const sug = suggestions.find((s) => s.id === targetSuggestionId);
     if (sug?.sectionId) return sug.sectionId;
     if (sug?.parentSuggestionId) {
-      const parent = suggestions.find(s => s.id === sug.parentSuggestionId);
+      const parent = suggestions.find((s) => s.id === sug.parentSuggestionId);
       return parent?.sectionId || null;
     }
     return null;
@@ -446,7 +446,7 @@ Return ONLY the translated text:`;
   // Pending edit/delete suggestions whose target section no longer exists.
   // Grouped by deleted sectionId → one ghost slot per deleted section,
   // anchored to topicId + originalSectionOrder (stamped at deletion time).
-  const existingSectionIds = React.useMemo(() => new Set(sections.map(s => s.id)), [sections]);
+  const existingSectionIds = React.useMemo(() => new Set(sections.map((s) => s.id)), [sections]);
   const ghostSlotsByTopicId = React.useMemo(() => {
     const perTopic = new Map();
     for (const s of suggestions) {
@@ -488,7 +488,7 @@ Return ONLY the translated text:`;
       if (!map.has(s.topicId)) map.set(s.topicId, []);
       map.get(s.topicId).push(s);
     }
-    map.forEach(arr => {
+    map.forEach((arr) => {
       // Server returns suggestions sorted by -created_date (newest first).
       // Reverse to oldest-first so Array.sort (stable) preserves oldest-first
       // for suggestions with identical created_date at the same insertPosition,
@@ -552,7 +552,7 @@ Return ONLY the translated text:`;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
-    },
+    }
   });
 
   const handleSectionDragEnd = (result, topicId) => {
@@ -577,7 +577,7 @@ Return ONLY the translated text:`;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['topics', document?.id] });
-    },
+    }
   });
 
   const handleTopicDragEnd = (result) => {
@@ -595,8 +595,8 @@ Return ONLY the translated text:`;
   const deleteTopicMutation = useMutation({
     mutationFn: async (topicId) => {
       // Delete all sections in this topic
-      const topicSections = sections.filter(s => s.topicId === topicId);
-      const sectionIds = topicSections.map(s => s.id);
+      const topicSections = sections.filter((s) => s.topicId === topicId);
+      const sectionIds = topicSections.map((s) => s.id);
       if (sectionIds.length > 0) {
         await base44.entities.Section.deleteMany({ id: { $in: sectionIds } });
       }
@@ -610,13 +610,13 @@ Return ONLY the translated text:`;
           sectionIds,
           documentId: document.id,
           gamificationEnabled: !!document.gamificationEnabled
-        }).catch(err => console.error('[DELETE TOPIC] Failed to reject orphaned suggestions:', err));
+        }).catch((err) => console.error('[DELETE TOPIC] Failed to reject orphaned suggestions:', err));
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['topics', document?.id] });
       queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
-    },
+    }
   });
 
   const handleDeleteTopic = (topicId, topicTitle) => {
@@ -645,7 +645,7 @@ Return ONLY the translated text:`;
   // O(1) lookup map for topic edit votes
   const topicEditVotesMap = React.useMemo(() => {
     const map = new Map();
-    topicEditVotes?.forEach(v => map.set(v.suggestionId, v));
+    topicEditVotes?.forEach((v) => map.set(v.suggestionId, v));
     return map;
   }, [topicEditVotes]);
 
@@ -657,28 +657,28 @@ Return ONLY the translated text:`;
   const voteTopicEditMutation = useTopicVoteMutation({ document, user, topicEditSuggestions, queryClient });
 
   // Helper: render a draggable new-section suggestion card with DnD reorder support (admin only)
-  const renderDraggableSuggestion = React.useCallback((suggestion, abovePos, belowPos, extraProps = {}) => (
-    <DraggableSuggestionCard
-      key={suggestion.id}
-      suggestion={suggestion}
-      document={document}
-      getUserName={getUserName}
-      acceptedSuggestions={acceptedSuggestions}
-      user={user}
-      getUserVote={getUserVote}
-      voteMutation={voteMutation}
-      onOpenSidebar={onOpenSuggestionSidebar}
-      getCommentsCount={getCommentsCount}
-      isAdmin={isAdmin}
-      onEditSuggestion={onEditSuggestion}
-      allDocumentSuggestions={suggestions}
-      targetSuggestionId={targetSuggestionId}
-      onReorder={(id, pos) => reorderMutation.mutate({ suggestionId: id, newInsertPosition: pos })}
-      abovePos={abovePos}
-      belowPos={belowPos}
-      {...extraProps}
-    />
-  ), [document, getUserName, acceptedSuggestions, user, getUserVote, voteMutation, onOpenSuggestionSidebar, getCommentsCount, isAdmin, onEditSuggestion, suggestions, targetSuggestionId, reorderMutation]);
+  const renderDraggableSuggestion = React.useCallback((suggestion, abovePos, belowPos, extraProps = {}) =>
+  <DraggableSuggestionCard
+    key={suggestion.id}
+    suggestion={suggestion}
+    document={document}
+    getUserName={getUserName}
+    acceptedSuggestions={acceptedSuggestions}
+    user={user}
+    getUserVote={getUserVote}
+    voteMutation={voteMutation}
+    onOpenSidebar={onOpenSuggestionSidebar}
+    getCommentsCount={getCommentsCount}
+    isAdmin={isAdmin}
+    onEditSuggestion={onEditSuggestion}
+    allDocumentSuggestions={suggestions}
+    targetSuggestionId={targetSuggestionId}
+    onReorder={(id, pos) => reorderMutation.mutate({ suggestionId: id, newInsertPosition: pos })}
+    abovePos={abovePos}
+    belowPos={belowPos}
+    {...extraProps} />,
+
+  [document, getUserName, acceptedSuggestions, user, getUserVote, voteMutation, onOpenSuggestionSidebar, getCommentsCount, isAdmin, onEditSuggestion, suggestions, targetSuggestionId, reorderMutation]);
 
   return (
     <>
@@ -688,202 +688,202 @@ Return ONLY the translated text:`;
         topic={editingTopic}
         document={document}
         user={user}
-        isAdmin={isAdmin}
-      />
+        isAdmin={isAdmin} />
+      
       
       <DragDropContext onDragEnd={handleTopicDragEnd}>
         <Droppable droppableId="topics" isDropDisabled={!isAdmin}>
-          {(provided) => (
-            <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4 md:space-y-6 w-full overflow-x-hidden">
+          {(provided) =>
+          <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-4 md:space-y-6 w-full overflow-x-hidden">
             {topics.map((topic, topicIndex) => {
               const topicSections = getSectionsForTopic(topic.id);
               const topicGhostSlots = getGhostSlotsForTopic(topic.id);
               const topicNewSectionSuggestions = getNewSectionSuggestionsForTopic(topic.id);
-              
+
               return (
                 <Draggable key={topic.id} draggableId={`topic-${topic.id}`} index={topicIndex} isDragDisabled={!isAdmin}>
-                  {(topicProvided, topicSnapshot) => (
-                    <div
-                      ref={topicProvided.innerRef}
-                      {...topicProvided.draggableProps}
-                      className={topicSnapshot.isDragging ? 'opacity-70' : ''}
-                    >
+                  {(topicProvided, topicSnapshot) =>
+                  <div
+                    ref={topicProvided.innerRef}
+                    {...topicProvided.draggableProps}
+                    className={topicSnapshot.isDragging ? 'opacity-70' : ''}>
+                    
                       <Card className="bg-white border-slate-200 w-full overflow-hidden">
-                        <CardHeader className="border-b border-slate-100 p-4 md:p-6">
+                        <CardHeader className="border-b border-slate-100 md:p-6 px-4">
                           <div className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             {/* Drag handle - only for admin */}
-                            {isAdmin && (
-                              <div 
-                                {...topicProvided.dragHandleProps}
-                                className="p-1 bg-white rounded border border-slate-300 cursor-move hover:bg-slate-50 transition-colors flex-shrink-0 mt-1"
-                              >
+                            {isAdmin &&
+                          <div
+                            {...topicProvided.dragHandleProps}
+                            className="p-1 bg-white rounded border border-slate-300 cursor-move hover:bg-slate-50 transition-colors flex-shrink-0 mt-1">
+                            
                                 <GripVertical className="w-5 h-5 text-slate-400" />
                               </div>
-                            )}
+                          }
                             
                             {/* Title with carousel for suggestions */}
                             <div className="flex-1 min-w-0">
                               <TopicTitleCarousel
-                                topic={topic}
-                                topicEditSuggestions={getTopicEditSuggestions(topic.id)}
-                                document={document}
-                                user={user}
-                                getUserTopicVote={getUserTopicVote}
-                                voteTopicEditMutation={voteTopicEditMutation}
-                                getUserName={getUserName}
-                                isAdmin={isAdmin}
-                                
-                                publicProfiles={publicProfiles}
-                                showTranslatedTopics={showTranslatedTopics}
-                                setShowTranslatedTopics={setShowTranslatedTopics}
-                                translateTopicMutation={translateTopicMutation}
-                                setEditingTopic={setEditingTopic}
-                                language={language}
-                                isRTL={isRTL}
-                              />
+                              topic={topic}
+                              topicEditSuggestions={getTopicEditSuggestions(topic.id)}
+                              document={document}
+                              user={user}
+                              getUserTopicVote={getUserTopicVote}
+                              voteTopicEditMutation={voteTopicEditMutation}
+                              getUserName={getUserName}
+                              isAdmin={isAdmin}
+
+                              publicProfiles={publicProfiles}
+                              showTranslatedTopics={showTranslatedTopics}
+                              setShowTranslatedTopics={setShowTranslatedTopics}
+                              translateTopicMutation={translateTopicMutation}
+                              setEditingTopic={setEditingTopic}
+                              language={language}
+                              isRTL={isRTL} />
+                            
                             </div>
                             
                             {/* Action buttons - fixed on the side */}
                             <div className={`flex items-center gap-1 flex-shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}>
                               {/* Translate button - always visible */}
-                              {translateTopicMutation.isPending && translateTopicMutation.variables?.id === topic.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />
-                              ) : (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    if (showTranslatedTopics[topic.id] && topic.translations?.[language]?.title) {
-                                      setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: false }));
-                                    } else if (topic.translations?.[language]?.title) {
-                                      setShowTranslatedTopics(prev => ({ ...prev, [topic.id]: true }));
-                                    } else {
-                                      translateTopicMutation.mutate(topic);
-                                    }
-                                  }}
-                                  className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                  title={showTranslatedTopics[topic.id] ? t('showOriginal') : t('translate')}
-                                >
+                              {translateTopicMutation.isPending && translateTopicMutation.variables?.id === topic.id ?
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" /> :
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                if (showTranslatedTopics[topic.id] && topic.translations?.[language]?.title) {
+                                  setShowTranslatedTopics((prev) => ({ ...prev, [topic.id]: false }));
+                                } else if (topic.translations?.[language]?.title) {
+                                  setShowTranslatedTopics((prev) => ({ ...prev, [topic.id]: true }));
+                                } else {
+                                  translateTopicMutation.mutate(topic);
+                                }
+                              }}
+                              className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              title={showTranslatedTopics[topic.id] ? t('showOriginal') : t('translate')}>
+                              
                                   <Languages className="w-4 h-4" />
                                 </Button>
-                              )}
+                            }
                               
                               {/* Edit button */}
                               <Button
-                               variant="ghost"
-                               size="sm"
-                               onClick={() => {
-                                 if (!user) {
-                                   base44.auth.redirectToLogin(window.location.href);
-                                   return;
-                                 }
-                                 if (!canParticipate) {
-                                   toast.error(language === 'he' ? 'אינך חבר בקבוצה זו' : language === 'ar' ? 'لست عضوًا في هذه المجموعة' : 'You are not a member of this group');
-                                   return;
-                                 }
-                                 setEditingTopic(topic);
-                               }}
-                               className="h-8 w-8 p-0 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
-                               title="הצע עריכה לכותרת"
-                              >
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                if (!user) {
+                                  base44.auth.redirectToLogin(window.location.href);
+                                  return;
+                                }
+                                if (!canParticipate) {
+                                  toast.error(language === 'he' ? 'אינך חבר בקבוצה זו' : language === 'ar' ? 'لست عضوًا في هذه المجموعة' : 'You are not a member of this group');
+                                  return;
+                                }
+                                setEditingTopic(topic);
+                              }}
+                              className="h-8 w-8 p-0 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
+                              title="הצע עריכה לכותרת">
+                              
                                 <Edit className="w-4 h-4" />
                               </Button>
                               
                               {/* Delete button - only for admin */}
-                              {isAdmin && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDeleteTopic(topic.id, topic.title)}
-                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  title="מחק נושא"
-                                >
+                              {isAdmin &&
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteTopic(topic.id, topic.title)}
+                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title="מחק נושא">
+                              
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
-                              )}
+                            }
                             </div>
                           </div>
                         </CardHeader>
             <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
 
-              {topicSections.length === 0 ? (
-                <>
+              {topicSections.length === 0 ?
+                        <>
                   <div className="text-center py-6 md:py-8 text-slate-500 text-sm md:text-base">
                     {t('noSectionsYet')}
                   </div>
                   {/* Show new section suggestions when there are no sections */}
                   {(() => {
-                    const noSectionSuggs = getNewSectionSuggestionsForTopic(topic.id);
-                    return (
-                      <>
-                        {isAdmin && noSectionSuggs.length === 0 && (
-                          <SuggestionDropZone
-                            getPosition={() => computeDropPosition(null, null)}
-                            onDrop={(id, pos) => reorderMutation.mutate({ suggestionId: id, newInsertPosition: pos })}
-                            isAdmin={isAdmin}
-                          />
-                        )}
+                            const noSectionSuggs = getNewSectionSuggestionsForTopic(topic.id);
+                            return (
+                              <>
+                        {isAdmin && noSectionSuggs.length === 0 &&
+                                <SuggestionDropZone
+                                  getPosition={() => computeDropPosition(null, null)}
+                                  onDrop={(id, pos) => reorderMutation.mutate({ suggestionId: id, newInsertPosition: pos })}
+                                  isAdmin={isAdmin} />
+
+                                }
                         {noSectionSuggs.map((suggestion, suggIdx) =>
-                          renderDraggableSuggestion(
-                            suggestion,
-                            suggIdx === 0 ? null : noSectionSuggs[suggIdx - 1].insertPosition,
-                            suggIdx === noSectionSuggs.length - 1 ? null : noSectionSuggs[suggIdx + 1].insertPosition
-                          )
-                        )}
-                      </>
-                    );
-                  })()}
+                                renderDraggableSuggestion(
+                                  suggestion,
+                                  suggIdx === 0 ? null : noSectionSuggs[suggIdx - 1].insertPosition,
+                                  suggIdx === noSectionSuggs.length - 1 ? null : noSectionSuggs[suggIdx + 1].insertPosition
+                                )
+                                )}
+                      </>);
+
+                          })()}
                      {/* Ghost slots for deleted sections that still have open proposals */}
-                     {topicGhostSlots.map(ghost => {
-                       const sortedGhostSuggestions = [...ghost.suggestions].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-                       const rootSuggestion = sortedGhostSuggestions[0];
-                       return (
-                         <div key={`ghost-${ghost.sectionId}`}>
+                     {topicGhostSlots.map((ghost) => {
+                            const sortedGhostSuggestions = [...ghost.suggestions].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+                            const rootSuggestion = sortedGhostSuggestions[0];
+                            return (
+                              <div key={`ghost-${ghost.sectionId}`}>
                            <NewSectionSuggestionCard
-                             suggestion={rootSuggestion}
-                             document={document}
-                             getUserName={getUserName}
-                             acceptedSuggestions={acceptedSuggestions}
-                             user={user}
-                             getUserVote={getUserVote}
-                             voteMutation={voteMutation}
-                             onOpenSidebar={onOpenSuggestionSidebar}
-                             getCommentsCount={getCommentsCount}
-                             
-                             
-                             isAdmin={isAdmin}
-                             onEditSuggestion={onEditSuggestion}
-                             allDocumentSuggestions={suggestions}
-                             targetSuggestionId={targetSuggestionId}
-                             ghostChain={sortedGhostSuggestions}
-                           />
-                         </div>
-                       );
-                     })}
+                                  suggestion={rootSuggestion}
+                                  document={document}
+                                  getUserName={getUserName}
+                                  acceptedSuggestions={acceptedSuggestions}
+                                  user={user}
+                                  getUserVote={getUserVote}
+                                  voteMutation={voteMutation}
+                                  onOpenSidebar={onOpenSuggestionSidebar}
+                                  getCommentsCount={getCommentsCount}
+
+
+                                  isAdmin={isAdmin}
+                                  onEditSuggestion={onEditSuggestion}
+                                  allDocumentSuggestions={suggestions}
+                                  targetSuggestionId={targetSuggestionId}
+                                  ghostChain={sortedGhostSuggestions} />
+                                
+                         </div>);
+
+                          })}
                      {/* Insert button when there are no existing sections — only suggestions */}
                      <div className="group relative h-8 flex items-center justify-center my-1 z-10">
                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
                          <div className="h-full flex items-center justify-center">
                            <PointsCostTooltip gamificationEnabled={document?.gamificationEnabled} actionType="new" language={language} isRTL={isRTL}>
                            <Button
-                             size="sm"
-                             variant="outline"
-                             onClick={() => {
-                               if (!user) {
-                                 base44.auth.redirectToLogin(window.location.href);
-                                 return;
-                               }
-                               if (!canParticipate) return;
-                               const allSugg = getNewSectionSuggestionsForTopic(topic.id);
-                               const maxPos = allSugg.reduce((max, s) => {
-                                 const p = s.insertPosition;
-                                 if (p === undefined || p === null || p === -1) return max;
-                                 return Math.max(max, p);
-                               }, -1);
-                               onNewSection(topic.id, maxPos + 1);
-                             }}
-                             className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
-                           >
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      if (!user) {
+                                        base44.auth.redirectToLogin(window.location.href);
+                                        return;
+                                      }
+                                      if (!canParticipate) return;
+                                      const allSugg = getNewSectionSuggestionsForTopic(topic.id);
+                                      const maxPos = allSugg.reduce((max, s) => {
+                                        const p = s.insertPosition;
+                                        if (p === undefined || p === null || p === -1) return max;
+                                        return Math.max(max, p);
+                                      }, -1);
+                                      onNewSection(topic.id, maxPos + 1);
+                                    }}
+                                    className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50">
+                                    
                              <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                              {t('insertSectionHere')}
                            </Button>
@@ -891,95 +891,95 @@ Return ONLY the translated text:`;
                          </div>
                        </div>
                      </div>
-                     </>
-                     ) : (
-                     <DragDropContext onDragEnd={(result) => handleSectionDragEnd(result, topic.id)}>
+                     </> :
+
+                        <DragDropContext onDragEnd={(result) => handleSectionDragEnd(result, topic.id)}>
                   <Droppable droppableId={`sections-${topic.id}`} isDropDisabled={!isAdmin}>
-                    {(provided) => (
-                      <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3 md:space-y-4">
+                    {(provided) =>
+                            <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3 md:space-y-4">
                         {topicSections.map((section, index) => {
-                        const newSectionSuggestions = topicNewSectionSuggestions;
-                        const allSectionSuggestions = getSuggestionsForSection(section.id);
-                        // New section suggestions rendered AFTER this section (pre-computed for insert button placement)
-                        const suggestionsAfterThisSection = newSectionSuggestions.filter(s => {
-                          const pos = s.insertPosition;
-                          // Exclude "before first section" slot (pos < 0, including -1 and fractional negatives)
-                          if (pos !== undefined && pos !== null && pos < 0) return false;
-                          const lowerBound = section.order + 1;
-                          const upperBound = index < topicSections.length - 1 ? topicSections[index + 1].order + 1 : Infinity;
-                          // In this section's slot (supports fractional insertPosition from admin reordering)
-                          if (pos !== undefined && pos !== null && pos >= lowerBound && pos < upperBound) return true;
-                          // After last section: undefined/null positions
-                          if (index === topicSections.length - 1 && (pos === undefined || pos === null)) return true;
-                          return false;
-                        });
-                        // Ghost slots (deleted section) whose order falls before the first section
-                        const ghostsBefore = index === 0
-                          ? topicGhostSlots.filter(g => g.originalSectionOrder < section.order)
-                          : [];
-                        // Ghost slots whose order falls after this section and before the next (or at the end)
-                        const ghostsAfter = topicGhostSlots.filter(g =>
-                          g.originalSectionOrder > section.order &&
-                          (index === topicSections.length - 1 || g.originalSectionOrder < topicSections[index + 1].order)
-                        );
-                  
-                  return (
-                    <React.Fragment key={section.id}>
-                    {ghostsBefore.map(ghost => {
-                      const sortedGhostSuggestions = [...ghost.suggestions].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-                      const rootSuggestion = sortedGhostSuggestions[0];
-                      return (
-                        <div key={`ghost-${ghost.sectionId}`}>
+                                const newSectionSuggestions = topicNewSectionSuggestions;
+                                const allSectionSuggestions = getSuggestionsForSection(section.id);
+                                // New section suggestions rendered AFTER this section (pre-computed for insert button placement)
+                                const suggestionsAfterThisSection = newSectionSuggestions.filter((s) => {
+                                  const pos = s.insertPosition;
+                                  // Exclude "before first section" slot (pos < 0, including -1 and fractional negatives)
+                                  if (pos !== undefined && pos !== null && pos < 0) return false;
+                                  const lowerBound = section.order + 1;
+                                  const upperBound = index < topicSections.length - 1 ? topicSections[index + 1].order + 1 : Infinity;
+                                  // In this section's slot (supports fractional insertPosition from admin reordering)
+                                  if (pos !== undefined && pos !== null && pos >= lowerBound && pos < upperBound) return true;
+                                  // After last section: undefined/null positions
+                                  if (index === topicSections.length - 1 && (pos === undefined || pos === null)) return true;
+                                  return false;
+                                });
+                                // Ghost slots (deleted section) whose order falls before the first section
+                                const ghostsBefore = index === 0 ?
+                                topicGhostSlots.filter((g) => g.originalSectionOrder < section.order) :
+                                [];
+                                // Ghost slots whose order falls after this section and before the next (or at the end)
+                                const ghostsAfter = topicGhostSlots.filter((g) =>
+                                g.originalSectionOrder > section.order && (
+                                index === topicSections.length - 1 || g.originalSectionOrder < topicSections[index + 1].order)
+                                );
+
+                                return (
+                                  <React.Fragment key={section.id}>
+                    {ghostsBefore.map((ghost) => {
+                                      const sortedGhostSuggestions = [...ghost.suggestions].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+                                      const rootSuggestion = sortedGhostSuggestions[0];
+                                      return (
+                                        <div key={`ghost-${ghost.sectionId}`}>
                           <NewSectionSuggestionCard
-                            suggestion={rootSuggestion}
-                            document={document}
-                            getUserName={getUserName}
-                            acceptedSuggestions={acceptedSuggestions}
-                            user={user}
-                            getUserVote={getUserVote}
-                            voteMutation={voteMutation}
-                            onOpenSidebar={onOpenSuggestionSidebar}
-                            getCommentsCount={getCommentsCount}
-                            
-                            
-                            isAdmin={isAdmin}
-                            onEditSuggestion={onEditSuggestion}
-                            allDocumentSuggestions={suggestions}
-                            targetSuggestionId={targetSuggestionId}
-                            ghostChain={sortedGhostSuggestions}
-                          />
-                        </div>
-                      );
-                    })}
+                                            suggestion={rootSuggestion}
+                                            document={document}
+                                            getUserName={getUserName}
+                                            acceptedSuggestions={acceptedSuggestions}
+                                            user={user}
+                                            getUserVote={getUserVote}
+                                            voteMutation={voteMutation}
+                                            onOpenSidebar={onOpenSuggestionSidebar}
+                                            getCommentsCount={getCommentsCount}
+
+
+                                            isAdmin={isAdmin}
+                                            onEditSuggestion={onEditSuggestion}
+                                            allDocumentSuggestions={suggestions}
+                                            targetSuggestionId={targetSuggestionId}
+                                            ghostChain={sortedGhostSuggestions} />
+                                          
+                        </div>);
+
+                                    })}
                     <Draggable key={section.id} draggableId={section.id} index={index} isDragDisabled={!isAdmin}>
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          className={snapshot.isDragging ? 'opacity-70' : ''}
-                        >
+                      {(provided, snapshot) =>
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        className={snapshot.isDragging ? 'opacity-70' : ''}>
+                                        
                           <>
                             {/* intentionally empty - new section suggestions are rendered AFTER each section below */}
 
-                            {index > 0 && (
-                              <div className="group relative h-4 flex items-center justify-center -my-2 -mb-4 z-10">
+                            {index > 0 &&
+                                          <div className="group relative h-4 flex items-center justify-center -my-2 -mb-4 z-10">
                                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                   <div className="h-full flex items-center justify-center">
                                     <PointsCostTooltip gamificationEnabled={document?.gamificationEnabled} actionType="new" language={language} isRTL={isRTL}>
                                     <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => {
-                                       if (!user) {
-                                         base44.auth.redirectToLogin(window.location.href);
-                                         return;
-                                       }
-                                       if (!canParticipate) return;
-                                       // Insert AFTER the previous section (index-1): pass order+1 so backend places it at the correct position
-                                       onNewSection(topic.id, topicSections[index - 1].order + 1);
-                                      }}
-                                      className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
-                                      >
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                      if (!user) {
+                                                        base44.auth.redirectToLogin(window.location.href);
+                                                        return;
+                                                      }
+                                                      if (!canParticipate) return;
+                                                      // Insert AFTER the previous section (index-1): pass order+1 so backend places it at the correct position
+                                                      onNewSection(topic.id, topicSections[index - 1].order + 1);
+                                                    }}
+                                                    className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50">
+                                                    
                                       <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                       {t('insertSectionHere')}
                                       </Button>
@@ -987,25 +987,25 @@ Return ONLY the translated text:`;
                                       </div>
                                       </div>
                                       </div>
-                                      )}
-                                      {index === 0 && (
-                                        <div className="group relative h-4 flex items-center justify-center -mt-2 -mb-2 z-10">
+                                          }
+                                      {index === 0 &&
+                                          <div className="group relative h-4 flex items-center justify-center -mt-2 -mb-2 z-10">
                                           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <div className="h-full flex items-center justify-center">
                                               <PointsCostTooltip gamificationEnabled={document?.gamificationEnabled} actionType="new" language={language} isRTL={isRTL}>
                                               <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => {
-                                                  if (!user) {
-                                                    base44.auth.redirectToLogin(window.location.href);
-                                                    return;
-                                                  }
-                                                  if (!canParticipate) return;
-                                                  onNewSection(topic.id, -1);
-                                                }}
-                                                className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
-                                              >
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                      if (!user) {
+                                                        base44.auth.redirectToLogin(window.location.href);
+                                                        return;
+                                                      }
+                                                      if (!canParticipate) return;
+                                                      onNewSection(topic.id, -1);
+                                                    }}
+                                                    className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50">
+                                                    
                                                 <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                                 {t('insertSectionHere')}
                                               </Button>
@@ -1013,120 +1013,120 @@ Return ONLY the translated text:`;
                                             </div>
                                           </div>
                                         </div>
-                                      )}
+                                          }
                                       <div className="space-y-3 relative group/section">
-                                      {isAdmin && (
-                                      <div 
-                                      {...provided.dragHandleProps}
-                                      className="absolute top-2 left-2 z-10 p-1 bg-white rounded border border-slate-300 cursor-move hover:bg-slate-50 transition-colors"
-                                      >
+                                      {isAdmin &&
+                                            <div
+                                              {...provided.dragHandleProps}
+                                              className="absolute top-2 left-2 z-10 p-1 bg-white rounded border border-slate-300 cursor-move hover:bg-slate-50 transition-colors">
+                                              
                                       <GripVertical className="w-4 h-4 text-slate-400" />
                                       </div>
-                                      )}
+                                            }
                                       {/* הצעות להוספת סעיף לפני הסעיף הראשון */}
                                       {index === 0 && (() => {
-                                        const beforeFirst = newSectionSuggestions.filter(s => {
-                                          const pos = s.insertPosition;
-                                          if (pos === undefined || pos === null) return false;
-                                          return pos < (topicSections[0]?.order + 1 ?? Infinity);
-                                        });
-                                        return (
-                                          <>
-                                            {isAdmin && beforeFirst.length === 0 && (
-                                              <SuggestionDropZone
-                                                getPosition={() => computeDropPosition(null, section.order)}
-                                                onDrop={(id, pos) => reorderMutation.mutate({ suggestionId: id, newInsertPosition: pos })}
-                                                isAdmin={isAdmin}
-                                              />
-                                            )}
+                                              const beforeFirst = newSectionSuggestions.filter((s) => {
+                                                const pos = s.insertPosition;
+                                                if (pos === undefined || pos === null) return false;
+                                                return pos < (topicSections[0]?.order + 1 ?? Infinity);
+                                              });
+                                              return (
+                                                <>
+                                            {isAdmin && beforeFirst.length === 0 &&
+                                                  <SuggestionDropZone
+                                                    getPosition={() => computeDropPosition(null, section.order)}
+                                                    onDrop={(id, pos) => reorderMutation.mutate({ suggestionId: id, newInsertPosition: pos })}
+                                                    isAdmin={isAdmin} />
+
+                                                  }
                                             {beforeFirst.map((suggestion, suggIdx) =>
-                                              renderDraggableSuggestion(
-                                                suggestion,
-                                                suggIdx === 0 ? null : beforeFirst[suggIdx - 1].insertPosition,
-                                                suggIdx === beforeFirst.length - 1 ? section.order : beforeFirst[suggIdx + 1].insertPosition
-                                              )
-                                            )}
-                                          </>
-                                        );
-                                      })()}
+                                                  renderDraggableSuggestion(
+                                                    suggestion,
+                                                    suggIdx === 0 ? null : beforeFirst[suggIdx - 1].insertPosition,
+                                                    suggIdx === beforeFirst.length - 1 ? section.order : beforeFirst[suggIdx + 1].insertPosition
+                                                  )
+                                                  )}
+                                          </>);
+
+                                            })()}
                                       <LazySection
-                                        forceMount={section.id === targetSuggestionSectionId || newlyCreatedSuggestion?.sectionId === section.id}
-                                        estimatedHeight={250}
-                                      >
+                                              forceMount={section.id === targetSuggestionSectionId || newlyCreatedSuggestion?.sectionId === section.id}
+                                              estimatedHeight={250}>
+                                              
                                       <SectionCarousel
-                                      section={section}
-                             pendingSuggestions={allSectionSuggestions}
-                             document={document}
-                             user={user}
-                             canParticipate={canParticipate}
-                             onEditSection={onEditSection}
-                             onEditSectionThenVote={onEditSectionThenVote}
-                             onDirectEdit={onDirectEdit}
-                              
-                              
-                              getCommentsCount={getCommentsCount}
-                              getUserVote={getUserVote}
-                              voteMutation={voteMutation}
-                              getUserName={getUserName}
-                              acceptedSuggestions={acceptedSuggestions}
-                              sectionIndex={index}
-                              isAdmin={isAdmin}
-                              
-                              onOpenSuggestionSidebar={onOpenSuggestionSidebar}
-                              newlyCreatedSuggestionId={newlyCreatedSuggestion?.sectionId === section.id ? newlyCreatedSuggestion?.suggestionId : null}
-                              onClearNewlyCreated={onClearNewlyCreated}
-                              targetSuggestionId={targetSuggestionId}
-                              publicProfiles={publicProfiles}
-                              sectionSuggestions={allSuggestionsBySectionId.get(section.id) || []}
-                              sectionVotes={sectionVotesBySectionId.get(section.id) || []}
-                              sourceSuggestion={sourceSuggestionBySectionId.get(section.id)}
-                              />
+                                                section={section}
+                                                pendingSuggestions={allSectionSuggestions}
+                                                document={document}
+                                                user={user}
+                                                canParticipate={canParticipate}
+                                                onEditSection={onEditSection}
+                                                onEditSectionThenVote={onEditSectionThenVote}
+                                                onDirectEdit={onDirectEdit}
+
+
+                                                getCommentsCount={getCommentsCount}
+                                                getUserVote={getUserVote}
+                                                voteMutation={voteMutation}
+                                                getUserName={getUserName}
+                                                acceptedSuggestions={acceptedSuggestions}
+                                                sectionIndex={index}
+                                                isAdmin={isAdmin}
+
+                                                onOpenSuggestionSidebar={onOpenSuggestionSidebar}
+                                                newlyCreatedSuggestionId={newlyCreatedSuggestion?.sectionId === section.id ? newlyCreatedSuggestion?.suggestionId : null}
+                                                onClearNewlyCreated={onClearNewlyCreated}
+                                                targetSuggestionId={targetSuggestionId}
+                                                publicProfiles={publicProfiles}
+                                                sectionSuggestions={allSuggestionsBySectionId.get(section.id) || []}
+                                                sectionVotes={sectionVotesBySectionId.get(section.id) || []}
+                                                sourceSuggestion={sourceSuggestionBySectionId.get(section.id)} />
+                                              
                                      </LazySection>
                               </div>
                             {/* Show new section suggestions in their correct position:
-                                - BEFORE the first section (index=0): insertPosition === -1
-                                - AFTER section at index i: insertPosition === topicSections[i].order
-                                - AFTER the last section: insertPosition is null/undefined or doesn't match any section order */}
-                            {suggestionsAfterThisSection
-                              .map((suggestion, suggIdx) =>
-                                renderDraggableSuggestion(
-                                  suggestion,
-                                  suggIdx === 0 ? section.order + 1 : suggestionsAfterThisSection[suggIdx - 1].insertPosition,
-                                  suggIdx === suggestionsAfterThisSection.length - 1
-                                    ? (index < topicSections.length - 1 ? topicSections[index + 1].order : null)
-                                    : suggestionsAfterThisSection[suggIdx + 1].insertPosition
-                                )
-                              )}
-                            {isAdmin && suggestionsAfterThisSection.length === 0 && (
-                              <SuggestionDropZone
-                                getPosition={() => computeDropPosition(
-                                  section.order + 1,
-                                  index < topicSections.length - 1 ? topicSections[index + 1].order : null
-                                )}
-                                onDrop={(id, pos) => reorderMutation.mutate({ suggestionId: id, newInsertPosition: pos })}
-                                isAdmin={isAdmin}
-                              />
-                            )}
+                                               - BEFORE the first section (index=0): insertPosition === -1
+                                               - AFTER section at index i: insertPosition === topicSections[i].order
+                                               - AFTER the last section: insertPosition is null/undefined or doesn't match any section order */}
+                            {suggestionsAfterThisSection.
+                                          map((suggestion, suggIdx) =>
+                                          renderDraggableSuggestion(
+                                            suggestion,
+                                            suggIdx === 0 ? section.order + 1 : suggestionsAfterThisSection[suggIdx - 1].insertPosition,
+                                            suggIdx === suggestionsAfterThisSection.length - 1 ?
+                                            index < topicSections.length - 1 ? topicSections[index + 1].order : null :
+                                            suggestionsAfterThisSection[suggIdx + 1].insertPosition
+                                          )
+                                          )}
+                            {isAdmin && suggestionsAfterThisSection.length === 0 &&
+                                          <SuggestionDropZone
+                                            getPosition={() => computeDropPosition(
+                                              section.order + 1,
+                                              index < topicSections.length - 1 ? topicSections[index + 1].order : null
+                                            )}
+                                            onDrop={(id, pos) => reorderMutation.mutate({ suggestionId: id, newInsertPosition: pos })}
+                                            isAdmin={isAdmin} />
+
+                                          }
                             {/* Insert button after new section suggestion cards — maintains order by
-                                using the same insertPosition; newer suggestions sort after older ones */}
-                            {suggestionsAfterThisSection.length > 0 && (
-                              <div className="group relative h-8 flex items-center justify-center my-1 z-10">
+                                               using the same insertPosition; newer suggestions sort after older ones */}
+                            {suggestionsAfterThisSection.length > 0 &&
+                                          <div className="group relative h-8 flex items-center justify-center my-1 z-10">
                                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                   <div className="h-full flex items-center justify-center">
                                     <PointsCostTooltip gamificationEnabled={document?.gamificationEnabled} actionType="new" language={language} isRTL={isRTL}>
                                     <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => {
-                                        if (!user) {
-                                          base44.auth.redirectToLogin(window.location.href);
-                                          return;
-                                        }
-                                        if (!canParticipate) return;
-                                        onNewSection(topic.id, section.order + 1);
-                                      }}
-                                      className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
-                                    >
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                      if (!user) {
+                                                        base44.auth.redirectToLogin(window.location.href);
+                                                        return;
+                                                      }
+                                                      if (!canParticipate) return;
+                                                      onNewSection(topic.id, section.order + 1);
+                                                    }}
+                                                    className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50">
+                                                    
                                       <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                       {t('insertSectionHere')}
                                     </Button>
@@ -1134,27 +1134,27 @@ Return ONLY the translated text:`;
                                   </div>
                                 </div>
                               </div>
-                            )}
+                                          }
 
-                            {index === topicSections.length - 1 && (
-                              <>
+                            {index === topicSections.length - 1 &&
+                                          <>
                                 <div className="section-insert-space group relative h-4 flex items-center justify-center mt-2">
                                   <div className="absolute inset-0 opacity-0 group-hover:opacity-100 tutorial-force-insert-btn transition-opacity">
                                     <div className="h-full flex items-center justify-center">
                                       <PointsCostTooltip gamificationEnabled={document?.gamificationEnabled} actionType="new" language={language} isRTL={isRTL}>
                                       <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => {
-                                          if (!user) {
-                                            base44.auth.redirectToLogin(window.location.href);
-                                            return;
-                                          }
-                                          if (!canParticipate) return;
-                                          onNewSection(topic.id, section.order + 1);
-                                        }}
-                                        className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
-                                        >
+                                                      size="sm"
+                                                      variant="outline"
+                                                      onClick={() => {
+                                                        if (!user) {
+                                                          base44.auth.redirectToLogin(window.location.href);
+                                                          return;
+                                                        }
+                                                        if (!canParticipate) return;
+                                                        onNewSection(topic.id, section.order + 1);
+                                                      }}
+                                                      className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50">
+                                                      
                                         <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                         {t('insertSectionHere')}
                                         </Button>
@@ -1165,70 +1165,70 @@ Return ONLY the translated text:`;
                                         <div className="opacity-0 group-hover/section:opacity-100 transition-opacity absolute -bottom-4 left-1/2 -translate-x-1/2 z-10">
                                         <PointsCostTooltip gamificationEnabled={document?.gamificationEnabled} actionType="new" language={language} isRTL={isRTL}>
                                         <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => {
-                                        if (!user) {
-                                        base44.auth.redirectToLogin(window.location.href);
-                                        return;
-                                        }
-                                        if (!canParticipate) return;
-                                        onNewSection(topic.id, section.order + 1);
-                                        }}
-                                    className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50"
-                                  >
+                                                  size="sm"
+                                                  variant="outline"
+                                                  onClick={() => {
+                                                    if (!user) {
+                                                      base44.auth.redirectToLogin(window.location.href);
+                                                      return;
+                                                    }
+                                                    if (!canParticipate) return;
+                                                    onNewSection(topic.id, section.order + 1);
+                                                  }}
+                                                  className="bg-white shadow-md border-blue-300 text-blue-600 hover:bg-blue-50">
+                                                  
                                     <Plus className={`w-4 h-4 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                                     {t('insertSectionHere')}
                                   </Button>
                                   </PointsCostTooltip>
                                 </div>
                               </>
-                            )}
+                                          }
                           </>
                         </div>
-                      )}
+                                      }
                     </Draggable>
-                    {ghostsAfter.map(ghost => {
-                      const sortedGhostSuggestions = [...ghost.suggestions].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-                      const rootSuggestion = sortedGhostSuggestions[0];
-                      return (
-                        <div key={`ghost-${ghost.sectionId}`}>
+                    {ghostsAfter.map((ghost) => {
+                                      const sortedGhostSuggestions = [...ghost.suggestions].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+                                      const rootSuggestion = sortedGhostSuggestions[0];
+                                      return (
+                                        <div key={`ghost-${ghost.sectionId}`}>
                           <NewSectionSuggestionCard
-                            suggestion={rootSuggestion}
-                            document={document}
-                            getUserName={getUserName}
-                            acceptedSuggestions={acceptedSuggestions}
-                            user={user}
-                            getUserVote={getUserVote}
-                            voteMutation={voteMutation}
-                            onOpenSidebar={onOpenSuggestionSidebar}
-                            getCommentsCount={getCommentsCount}
-                            
-                            
-                            isAdmin={isAdmin}
-                            onEditSuggestion={onEditSuggestion}
-                            allDocumentSuggestions={suggestions}
-                            targetSuggestionId={targetSuggestionId}
-                            ghostChain={sortedGhostSuggestions}
-                          />
-                        </div>
-                      );
-                    })}
-                    </React.Fragment>
-                    );
-                    })}
+                                            suggestion={rootSuggestion}
+                                            document={document}
+                                            getUserName={getUserName}
+                                            acceptedSuggestions={acceptedSuggestions}
+                                            user={user}
+                                            getUserVote={getUserVote}
+                                            voteMutation={voteMutation}
+                                            onOpenSidebar={onOpenSuggestionSidebar}
+                                            getCommentsCount={getCommentsCount}
+
+
+                                            isAdmin={isAdmin}
+                                            onEditSuggestion={onEditSuggestion}
+                                            allDocumentSuggestions={suggestions}
+                                            targetSuggestionId={targetSuggestionId}
+                                            ghostChain={sortedGhostSuggestions} />
+                                          
+                        </div>);
+
+                                    })}
+                    </React.Fragment>);
+
+                              })}
                     {provided.placeholder}
                       </div>
-                    )}
+                            }
                   </Droppable>
                 </DragDropContext>
-                    )}
+                        }
                         </CardContent>
                       </Card>
 
                       {/* הצעות לנושאים חדשים שאמורות להופיע אחרי נושא זה */}
-                      {getNewTopicSuggestionsAfterTopic(topic.order).map((suggestion) => (
-                        <Card key={suggestion.id} className="bg-white border-slate-200 w-full overflow-hidden mt-4">
+                      {getNewTopicSuggestionsAfterTopic(topic.order).map((suggestion) =>
+                    <Card key={suggestion.id} className="bg-white border-slate-200 w-full overflow-hidden mt-4">
                           <CardHeader className="border-b border-slate-100 p-4 md:p-6 bg-purple-50">
                             <div className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                               <CardTitle className={`text-lg md:text-2xl break-words flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -1238,49 +1238,49 @@ Return ONLY the translated text:`;
                           </CardHeader>
                           <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
                             <NewSectionSuggestionCard
-                              suggestion={suggestion}
-                              document={document}
-                              getUserName={getUserName}
-                              acceptedSuggestions={acceptedSuggestions}
-                              user={user}
-                              getUserVote={getUserVote}
-                              voteMutation={voteMutation}
-                              onOpenSidebar={onOpenSuggestionSidebar}
-                              getCommentsCount={getCommentsCount}
-                              
-                              
-                              isAdmin={isAdmin}
-                              onEditSuggestion={onEditSuggestion}
-                              allDocumentSuggestions={suggestions}
-                              targetSuggestionId={targetSuggestionId}
-                              />
+                          suggestion={suggestion}
+                          document={document}
+                          getUserName={getUserName}
+                          acceptedSuggestions={acceptedSuggestions}
+                          user={user}
+                          getUserVote={getUserVote}
+                          voteMutation={voteMutation}
+                          onOpenSidebar={onOpenSuggestionSidebar}
+                          getCommentsCount={getCommentsCount}
+
+
+                          isAdmin={isAdmin}
+                          onEditSuggestion={onEditSuggestion}
+                          allDocumentSuggestions={suggestions}
+                          targetSuggestionId={targetSuggestionId} />
+                        
                               </CardContent>
                               </Card>
-                              ))}
+                    )}
                               </div>
-                              )}
-                              </Draggable>
-                              );
-                              })}
+                  }
+                              </Draggable>);
+
+            })}
                               {provided.placeholder}
 
                               {/* הצעות לנושאים חדשים בסוף (שלא שויכו לנושא מסוים) */}
-                            {getNewTopicSuggestions()
-                            .filter(s => {
-                            // אם אין נושאים - הצג הכל
-                            if (topics.length === 0) return true;
+                            {getNewTopicSuggestions().
+            filter((s) => {
+              // אם אין נושאים - הצג הכל
+              if (topics.length === 0) return true;
 
-                            // אם אין newTopicOrder - הצג בסוף (לא שויך לנושא ספציפי)
-                            if (s.newTopicOrder === undefined || s.newTopicOrder === null) return true;
+              // אם אין newTopicOrder - הצג בסוף (לא שויך לנושא ספציפי)
+              if (s.newTopicOrder === undefined || s.newTopicOrder === null) return true;
 
-                            // הצג רק אם newTopicOrder לא שויך לאף נושא קיים (כלומר לא הוצג כבר ע"י getNewTopicSuggestionsAfterTopic)
-                            const topicOrders = topics.map(t => t.order);
-                            // getNewTopicSuggestionsAfterTopic מציג הצעות עם newTopicOrder === topicOrder + 1
-                            const alreadyShown = topicOrders.some(order => s.newTopicOrder === order + 1);
-                            return !alreadyShown;
-                            })
-                            .map((suggestion) => (
-                            <Card key={suggestion.id} className="bg-white border-slate-200 w-full overflow-hidden">
+              // הצג רק אם newTopicOrder לא שויך לאף נושא קיים (כלומר לא הוצג כבר ע"י getNewTopicSuggestionsAfterTopic)
+              const topicOrders = topics.map((t) => t.order);
+              // getNewTopicSuggestionsAfterTopic מציג הצעות עם newTopicOrder === topicOrder + 1
+              const alreadyShown = topicOrders.some((order) => s.newTopicOrder === order + 1);
+              return !alreadyShown;
+            }).
+            map((suggestion) =>
+            <Card key={suggestion.id} className="bg-white border-slate-200 w-full overflow-hidden">
                             <CardHeader className="border-b border-slate-100 p-4 md:p-6 bg-purple-50">
                             <div className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <CardTitle className={`text-lg md:text-2xl break-words flex-1 min-w-0 ${isRTL ? 'text-right' : 'text-left'}`}>
@@ -1290,37 +1290,37 @@ Return ONLY the translated text:`;
                             </CardHeader>
                             <CardContent className="p-3 md:p-6 space-y-3 md:space-y-4 overflow-x-hidden">
                               <NewSectionSuggestionCard
-                                suggestion={suggestion}
-                                document={document}
-                                getUserName={getUserName}
-                                acceptedSuggestions={acceptedSuggestions}
-                                user={user}
-                                getUserVote={getUserVote}
-                                voteMutation={voteMutation}
-                                onOpenSidebar={onOpenSuggestionSidebar}
-                                getCommentsCount={getCommentsCount}
-                                
-                                
-                                isAdmin={isAdmin}
-                                onEditSuggestion={onEditSuggestion}
-                                allDocumentSuggestions={suggestions}
-                                targetSuggestionId={targetSuggestionId}
-                                />
+                  suggestion={suggestion}
+                  document={document}
+                  getUserName={getUserName}
+                  acceptedSuggestions={acceptedSuggestions}
+                  user={user}
+                  getUserVote={getUserVote}
+                  voteMutation={voteMutation}
+                  onOpenSidebar={onOpenSuggestionSidebar}
+                  getCommentsCount={getCommentsCount}
+
+
+                  isAdmin={isAdmin}
+                  onEditSuggestion={onEditSuggestion}
+                  allDocumentSuggestions={suggestions}
+                  targetSuggestionId={targetSuggestionId} />
+                
                             </CardContent>
                             </Card>
-                            ))}
+            )}
 
-            {topics.length === 0 && getNewTopicSuggestions().length === 0 && (
-              <Card className="bg-white border-slate-200 w-full overflow-hidden">
+            {topics.length === 0 && getNewTopicSuggestions().length === 0 &&
+            <Card className="bg-white border-slate-200 w-full overflow-hidden">
                 <CardContent className="p-6 md:p-12 text-center">
                   <p className="text-slate-500 text-sm md:text-base">{t('noTopicsYet')}</p>
                 </CardContent>
               </Card>
-            )}
+            }
           </div>
-        )}
+          }
       </Droppable>
     </DragDropContext>
-    </>
-  );
+    </>);
+
 }
