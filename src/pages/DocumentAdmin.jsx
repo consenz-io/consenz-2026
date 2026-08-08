@@ -33,14 +33,14 @@ export default function DocumentAdmin() {
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
-    queryFn: () => base44.entities.Document.filter({ id: documentId }).then(docs => docs[0]),
-    enabled: !!documentId,
+    queryFn: () => base44.entities.Document.filter({ id: documentId }).then((docs) => docs[0]),
+    enabled: !!documentId
   });
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    retry: false,
+    retry: false
   });
 
   const { data: isAdmin, isLoading: adminLoading } = useQuery({
@@ -50,33 +50,33 @@ export default function DocumentAdmin() {
       const admins = await base44.entities.DocumentAdmin.filter({ documentId, userId: user.id });
       return admins.length > 0;
     },
-    enabled: !!user?.id && !!documentId,
+    enabled: !!user?.id && !!documentId
   });
 
   const { data: admins } = useQuery({
     queryKey: ['documentAdmins', documentId],
     queryFn: async () => {
       const adminRecords = await base44.entities.DocumentAdmin.filter({ documentId });
-      const userIds = adminRecords.map(a => a.userId);
+      const userIds = adminRecords.map((a) => a.userId);
       const users = await base44.entities.User.list();
-      return users.filter(u => userIds.includes(u.id));
+      return users.filter((u) => userIds.includes(u.id));
     },
     enabled: !!documentId && isAdmin,
-    initialData: [],
+    initialData: []
   });
 
   const { data: allUsers } = useQuery({
     queryKey: ['allUsers'],
     queryFn: () => base44.entities.User.list('-created_date'),
     enabled: user?.role === 'admin',
-    initialData: [],
+    initialData: []
   });
 
   const [formData, setFormData] = useState({
     title: document?.title || "",
     votingButtonsEnabled: document?.votingButtonsEnabled ?? true,
     gamificationEnabled: document?.gamificationEnabled ?? false,
-    defaultSuggestionLifetimeHours: document?.defaultSuggestionLifetimeHours !== undefined ? document.defaultSuggestionLifetimeHours : null,
+    defaultSuggestionLifetimeHours: document?.defaultSuggestionLifetimeHours !== undefined ? document.defaultSuggestionLifetimeHours : null
   });
 
   React.useEffect(() => {
@@ -85,7 +85,7 @@ export default function DocumentAdmin() {
         title: document.title,
         votingButtonsEnabled: document.votingButtonsEnabled,
         gamificationEnabled: document.gamificationEnabled ?? false,
-        defaultSuggestionLifetimeHours: document.defaultSuggestionLifetimeHours !== undefined ? document.defaultSuggestionLifetimeHours : 72,
+        defaultSuggestionLifetimeHours: document.defaultSuggestionLifetimeHours !== undefined ? document.defaultSuggestionLifetimeHours : 72
       });
     }
   }, [document]);
@@ -96,13 +96,13 @@ export default function DocumentAdmin() {
       await base44.entities.Document.update(documentId, data);
       if (lifetimeChanged) {
         const pendingSuggestions = await base44.entities.Suggestion.filter({ documentId, status: 'pending' });
-        await Promise.all(pendingSuggestions.map(s => {
+        await Promise.all(pendingSuggestions.map((s) => {
           // Calculate timerEndsAt relative to when this suggestion was created,
           // so older suggestions don't get a full new period reset.
           // If no time limit, set to null.
-          const timerEndsAt = data.defaultSuggestionLifetimeHours === null
-            ? null
-            : new Date(new Date(s.created_date).getTime() + data.defaultSuggestionLifetimeHours * 60 * 60 * 1000).toISOString();
+          const timerEndsAt = data.defaultSuggestionLifetimeHours === null ?
+          null :
+          new Date(new Date(s.created_date).getTime() + data.defaultSuggestionLifetimeHours * 60 * 60 * 1000).toISOString();
           return base44.entities.Suggestion.update(s.id, { timerEndsAt });
         }));
         return { resetCount: pendingSuggestions.length };
@@ -112,31 +112,31 @@ export default function DocumentAdmin() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['document', documentId] });
       queryClient.invalidateQueries({ queryKey: ['suggestions', documentId] });
-      const msg = result.resetCount > 0
-        ? `${t('daSettingsSaved')} ${t('daTimersReset', { count: result.resetCount })}`
-        : t('daSettingsSaved');
+      const msg = result.resetCount > 0 ?
+      `${t('daSettingsSaved')} ${t('daTimersReset', { count: result.resetCount })}` :
+      t('daSettingsSaved');
       setSuccess(msg);
       setTimeout(() => setSuccess(null), 4000);
     },
     onError: (err) => {
       setError(err.message || "Failed to update document");
       setTimeout(() => setError(null), 5000);
-    },
+    }
   });
 
   const deleteDocMutation = useMutation({
     mutationFn: async () => {
-      await base44.entities.Section.filter({ documentId }).then(sections => 
-        Promise.all(sections.map(s => base44.entities.Section.delete(s.id)))
+      await base44.entities.Section.filter({ documentId }).then((sections) =>
+      Promise.all(sections.map((s) => base44.entities.Section.delete(s.id)))
       );
-      await base44.entities.Topic.filter({ documentId }).then(topics => 
-        Promise.all(topics.map(t => base44.entities.Topic.delete(t.id)))
+      await base44.entities.Topic.filter({ documentId }).then((topics) =>
+      Promise.all(topics.map((t) => base44.entities.Topic.delete(t.id)))
       );
-      await base44.entities.Suggestion.filter({ documentId }).then(suggestions => 
-        Promise.all(suggestions.map(s => base44.entities.Suggestion.delete(s.id)))
+      await base44.entities.Suggestion.filter({ documentId }).then((suggestions) =>
+      Promise.all(suggestions.map((s) => base44.entities.Suggestion.delete(s.id)))
       );
-      await base44.entities.DocumentAdmin.filter({ documentId }).then(admins => 
-        Promise.all(admins.map(a => base44.entities.DocumentAdmin.delete(a.id)))
+      await base44.entities.DocumentAdmin.filter({ documentId }).then((admins) =>
+      Promise.all(admins.map((a) => base44.entities.DocumentAdmin.delete(a.id)))
       );
       await base44.entities.Document.delete(documentId);
     },
@@ -146,7 +146,7 @@ export default function DocumentAdmin() {
     },
     onError: (err) => {
       setError(err.message || "Failed to delete document");
-    },
+    }
   });
 
   const addAdminMutation = useMutation({
@@ -156,10 +156,10 @@ export default function DocumentAdmin() {
         throw new Error("User not found with this email");
       }
       const targetUser = users[0];
-      
-      const existing = await base44.entities.DocumentAdmin.filter({ 
-        documentId, 
-        userId: targetUser.id 
+
+      const existing = await base44.entities.DocumentAdmin.filter({
+        documentId,
+        userId: targetUser.id
       });
       if (existing.length > 0) {
         throw new Error("User is already an admin");
@@ -167,7 +167,7 @@ export default function DocumentAdmin() {
 
       return await base44.entities.DocumentAdmin.create({
         documentId,
-        userId: targetUser.id,
+        userId: targetUser.id
       });
     },
     onSuccess: () => {
@@ -179,14 +179,14 @@ export default function DocumentAdmin() {
     onError: (err) => {
       setError(err.message || "Failed to add admin");
       setTimeout(() => setError(null), 5000);
-    },
+    }
   });
 
   const removeAdminMutation = useMutation({
     mutationFn: async (userId) => {
-      const adminRecords = await base44.entities.DocumentAdmin.filter({ 
-        documentId, 
-        userId 
+      const adminRecords = await base44.entities.DocumentAdmin.filter({
+        documentId,
+        userId
       });
       if (adminRecords.length > 0) {
         await base44.entities.DocumentAdmin.delete(adminRecords[0].id);
@@ -200,7 +200,7 @@ export default function DocumentAdmin() {
     onError: (err) => {
       setError(err.message || "Failed to remove admin");
       setTimeout(() => setError(null), 5000);
-    },
+    }
   });
 
   const [generatedInviteLink, setGeneratedInviteLink] = useState(null);
@@ -208,7 +208,7 @@ export default function DocumentAdmin() {
   const createInviteMutation = useMutation({
     mutationFn: async (email) => {
       console.log('🔄 Starting invitation process for:', email.trim());
-      
+
       // בדיקת תקינות מייל
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email.trim())) {
@@ -216,12 +216,12 @@ export default function DocumentAdmin() {
       }
 
       // בדיקה אם כבר קיימת הזמנה ממתינה
-      const existingInvitations = await base44.entities.Invitation.filter({ 
-        documentId, 
+      const existingInvitations = await base44.entities.Invitation.filter({
+        documentId,
         email: email.trim(),
         status: 'pending'
       });
-      
+
       if (existingInvitations.length > 0) {
         const existingToken = existingInvitations[0].token;
         const signupUrl = `${window.location.origin}?invite=${existingToken}`;
@@ -230,7 +230,7 @@ export default function DocumentAdmin() {
 
       const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
       console.log('🎟️ Generated token:', token.substring(0, 10) + '...');
-      
+
       // יצירת הזמנה במערכת
       console.log('💾 Creating invitation record...');
       await base44.entities.Invitation.create({
@@ -243,7 +243,7 @@ export default function DocumentAdmin() {
 
       const signupUrl = `${window.location.origin}?invite=${token}`;
       console.log('🔗 Signup URL:', signupUrl);
-      
+
       return { email: email.trim(), token, signupUrl, isExisting: false };
     },
     onSuccess: (data) => {
@@ -260,7 +260,7 @@ export default function DocumentAdmin() {
     onError: (err) => {
       setError(err.message || "Failed to create invitation.");
       setTimeout(() => setError(null), 5000);
-    },
+    }
   });
 
   const handleCreateInvite = () => {
@@ -288,12 +288,12 @@ export default function DocumentAdmin() {
 
   const copyInviteMessage = () => {
     if (generatedInviteLink) {
-      const greeting = language === 'he'
-        ? `שלום,\n\nהוזמנת על ידי ${user.full_name} להצטרף למסמך "${document.title}" בפלטפורמת Consenz.\n\nכדי להצטרף:\n1. לחץ על הקישור הבא להרשמה\n2. צור חשבון חדש או התחבר עם חשבון קיים\n3. לאחר ההרשמה תוכל לגשת למסמך ולהשתתף בדיונים\n\nקישור ההזמנה:\n${generatedInviteLink.signupUrl}\n\nבברכה,\nצוות Consenz`
-        : language === 'ar'
-        ? `مرحباً،\n\nلقد تمت دعوتك من قبل ${user.full_name} للانضمام إلى وثيقة "${document.title}" على منصة Consenz.\n\nللانضمام:\n1. انقر على الرابط التالي للتسجيل\n2. أنشئ حساباً جديداً أو سجل الدخول بحساب موجود\n3. بعد التسجيل يمكنك الوصول للوثيقة والمشاركة في النقاشات\n\nرابط الدعوة:\n${generatedInviteLink.signupUrl}\n\nمع التحية،\nفريق Consenz`
-        : `Hello,\n\nYou have been invited by ${user.full_name} to join the document "${document.title}" on the Consenz platform.\n\nTo join:\n1. Click the following link to register\n2. Create a new account or sign in with an existing one\n3. After registering you will be able to access the document and participate in discussions\n\nInvitation link:\n${generatedInviteLink.signupUrl}\n\nBest regards,\nThe Consenz Team`;
-      
+      const greeting = language === 'he' ?
+      `שלום,\n\nהוזמנת על ידי ${user.full_name} להצטרף למסמך "${document.title}" בפלטפורמת Consenz.\n\nכדי להצטרף:\n1. לחץ על הקישור הבא להרשמה\n2. צור חשבון חדש או התחבר עם חשבון קיים\n3. לאחר ההרשמה תוכל לגשת למסמך ולהשתתף בדיונים\n\nקישור ההזמנה:\n${generatedInviteLink.signupUrl}\n\nבברכה,\nצוות Consenz` :
+      language === 'ar' ?
+      `مرحباً،\n\nلقد تمت دعوتك من قبل ${user.full_name} للانضمام إلى وثيقة "${document.title}" على منصة Consenz.\n\nللانضمام:\n1. انقر على الرابط التالي للتسجيل\n2. أنشئ حساباً جديداً أو سجل الدخول بحساب موجود\n3. بعد التسجيل يمكنك الوصول للوثيقة والمشاركة في النقاشات\n\nرابط الدعوة:\n${generatedInviteLink.signupUrl}\n\nمع التحية،\nفريق Consenz` :
+      `Hello,\n\nYou have been invited by ${user.full_name} to join the document "${document.title}" on the Consenz platform.\n\nTo join:\n1. Click the following link to register\n2. Create a new account or sign in with an existing one\n3. After registering you will be able to access the document and participate in discussions\n\nInvitation link:\n${generatedInviteLink.signupUrl}\n\nBest regards,\nThe Consenz Team`;
+
       navigator.clipboard.writeText(greeting);
       setSuccess(t('daMessageCopied'));
       setTimeout(() => setSuccess(null), 2000);
@@ -332,16 +332,16 @@ export default function DocumentAdmin() {
     onError: (err) => {
       setError(err.message || "Failed to update user");
       setTimeout(() => setError(null), 5000);
-    },
+    }
   });
 
-  const filteredUsers = allUsers.filter(u => {
+  const filteredUsers = allUsers.filter((u) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
       u.full_name?.toLowerCase().includes(query) ||
-      u.email?.toLowerCase().includes(query)
-    );
+      u.email?.toLowerCase().includes(query));
+
   });
 
   if (docLoading || adminLoading) {
@@ -351,8 +351,8 @@ export default function DocumentAdmin() {
           <Skeleton className="h-12 w-64" />
           <Skeleton className="h-64 w-full" />
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!document) {
@@ -364,8 +364,8 @@ export default function DocumentAdmin() {
             {t('daGoHome')}
           </Button>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!isAdmin) {
@@ -378,46 +378,46 @@ export default function DocumentAdmin() {
             {t('daBackToDocument')}
           </Button>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
-        <PageHeader 
+        <PageHeader
           title={t('daDocumentSettings')}
-          backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
-        />
+          backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`} />
+        
 
         {/* Summary email button */}
         <div className={`flex ${isRTL ? 'justify-end' : 'justify-start'}`}>
           <Button
             onClick={() => setShowSummaryModal(true)}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 gap-2 shadow-md"
-          >
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 gap-2 shadow-md">
+            
             <Send className="w-4 h-4" />
             {t('daSendSummary')}
           </Button>
         </div>
         
-        {document && (
-          <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>{document.title}</p>
-        )}
+        {document &&
+        <p className={`text-slate-600 ${isRTL ? 'text-right' : ''}`}>{document.title}</p>
+        }
 
-        {error && (
-          <Alert variant="destructive">
+        {error &&
+        <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
-        )}
+        }
 
-        {success && (
-          <Alert className="bg-green-50 border-green-200">
+        {success &&
+        <Alert className="bg-green-50 border-green-200">
             <CheckCircle className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800">{success}</AlertDescription>
           </Alert>
-        )}
+        }
 
         <form onSubmit={handleSubmit}>
           <Card className="bg-white">
@@ -431,18 +431,18 @@ export default function DocumentAdmin() {
                 <Input
                   id="title"
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                />
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
+                
               </div>
 
-              <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 hidden">
                 <Label className="text-base">{t('daPrivacySetting')}</Label>
                 <p className="text-sm text-slate-500 mt-1">
-                  {language === 'he'
-                    ? 'הפרטיות נקבעת אוטומטית לפי הקבוצה שאליה שייך המסמך. אין הגדרה נפרדת למסמך.'
-                    : language === 'ar'
-                    ? 'تحدد الخصوصية تلقائياً بناءً على المجموعة التي ينتمي إليها المستند. لا يوجد إعداد منفصل للمستند.'
-                    : 'Privacy is inherited from the group this document belongs to. There is no separate per-document setting.'}
+                  {language === 'he' ?
+                  'הפרטיות נקבעת אוטומטית לפי הקבוצה שאליה שייך המסמך. אין הגדרה נפרדת למסמך.' :
+                  language === 'ar' ?
+                  'تحدد الخصوصية تلقائياً بناءً على المجموعة التي ينتمي إليها المستند. لا يوجد إعداد منفصل للمستند.' :
+                  'Privacy is inherited from the group this document belongs to. There is no separate per-document setting.'}
                 </p>
               </div>
 
@@ -450,11 +450,11 @@ export default function DocumentAdmin() {
                 <Label htmlFor="lifetime">{t('daDefaultVotingPeriod')}</Label>
                 <Select
                   value={formData.defaultSuggestionLifetimeHours === null ? "unlimited" : formData.defaultSuggestionLifetimeHours?.toString()}
-                  onValueChange={(value) => setFormData({ 
-                    ...formData, 
+                  onValueChange={(value) => setFormData({
+                    ...formData,
                     defaultSuggestionLifetimeHours: value === "unlimited" ? null : parseInt(value)
-                  })}
-                >
+                  })}>
+                  
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -477,8 +477,8 @@ export default function DocumentAdmin() {
                 <Switch
                   id="voting"
                   checked={formData.votingButtonsEnabled}
-                  onCheckedChange={(checked) => setFormData({ ...formData, votingButtonsEnabled: checked })}
-                />
+                  onCheckedChange={(checked) => setFormData({ ...formData, votingButtonsEnabled: checked })} />
+                
               </div>
 
               <div className={`flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200 ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -489,15 +489,15 @@ export default function DocumentAdmin() {
                 <Switch
                   id="gamification"
                   checked={formData.gamificationEnabled}
-                  onCheckedChange={(checked) => setFormData({ ...formData, gamificationEnabled: checked })}
-                />
+                  onCheckedChange={(checked) => setFormData({ ...formData, gamificationEnabled: checked })} />
+                
               </div>
 
               <Button
                 type="submit"
                 disabled={updateDocMutation.isPending}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600"
-              >
+                className="bg-gradient-to-r from-blue-600 to-indigo-600">
+                
                 <Save className="w-4 h-4 mr-2" />
                 {t('daSaveSettings')}
               </Button>
@@ -526,39 +526,39 @@ export default function DocumentAdmin() {
                     handleCreateInvite();
                   }
                 }}
-                dir={isRTL ? 'rtl' : 'ltr'}
-              />
+                dir={isRTL ? 'rtl' : 'ltr'} />
+              
               <Button
                 onClick={(e) => {
                   e.preventDefault();
                   handleCreateInvite();
                 }}
                 disabled={createInviteMutation.isPending || !document || !user}
-                className="bg-green-600 hover:bg-green-700"
-              >
+                className="bg-green-600 hover:bg-green-700">
+                
                 <Link2 className="w-4 h-4 mr-2" />
                 {createInviteMutation.isPending ? t('daGenerating') : t('daCreateInviteLink')}
               </Button>
             </div>
 
-            {generatedInviteLink && (
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
+            {generatedInviteLink &&
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
                 <div>
                   <Label className="text-sm font-semibold text-blue-900">
                     {t('daInviteLinkFor')} {generatedInviteLink.email}
                   </Label>
                   <div className="flex gap-2 mt-2">
                     <Input
-                      value={generatedInviteLink.signupUrl}
-                      readOnly
-                      className="font-mono text-sm"
-                      dir="ltr"
-                    />
+                    value={generatedInviteLink.signupUrl}
+                    readOnly
+                    className="font-mono text-sm"
+                    dir="ltr" />
+                  
                     <Button
-                      onClick={copyInviteLink}
-                      variant="outline"
-                      size="sm"
-                    >
+                    onClick={copyInviteLink}
+                    variant="outline"
+                    size="sm">
+                    
                       <Copy className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                       {t('daCopyLink')}
                     </Button>
@@ -567,11 +567,11 @@ export default function DocumentAdmin() {
 
                 <div className="pt-2 border-t border-blue-200">
                   <Button
-                    onClick={copyInviteMessage}
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                  >
+                  onClick={copyInviteMessage}
+                  variant="outline"
+                  size="sm"
+                  className="w-full">
+                  
                     <Mail className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                     {t('daCopyFullMessage')}
                   </Button>
@@ -581,7 +581,7 @@ export default function DocumentAdmin() {
                   {t('daSendLinkHint')}
                 </p>
               </div>
-            )}
+            }
           </CardContent>
         </Card>
 
@@ -595,49 +595,49 @@ export default function DocumentAdmin() {
               <Input
                 placeholder={t('daEnterUserEmail')}
                 value={newAdminEmail}
-                onChange={(e) => setNewAdminEmail(e.target.value)}
-              />
+                onChange={(e) => setNewAdminEmail(e.target.value)} />
+              
               <Button
                 onClick={handleAddAdmin}
-                disabled={addAdminMutation.isPending}
-              >
+                disabled={addAdminMutation.isPending}>
+                
                 <UserPlus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 {t('daAddAdmin')}
               </Button>
             </div>
 
             <div className="space-y-2">
-              {admins.length === 0 ? (
-                <p className="text-sm text-slate-500">{t('daNoAdmins')}</p>
-              ) : (
-                admins.map((admin) => (
-                  <div
-                    key={admin.id}
-                    className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
-                  >
+              {admins.length === 0 ?
+              <p className="text-sm text-slate-500">{t('daNoAdmins')}</p> :
+
+              admins.map((admin) =>
+              <div
+                key={admin.id}
+                className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                
                     <div>
                       <p className="font-medium text-slate-900">{admin.full_name}</p>
                       <p className="text-sm text-slate-500">{admin.email}</p>
                     </div>
-                    {admins.length > 1 && admin.id !== user.id && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeAdminMutation.mutate(admin.id)}
-                        disabled={removeAdminMutation.isPending}
-                      >
+                    {admins.length > 1 && admin.id !== user.id &&
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeAdminMutation.mutate(admin.id)}
+                  disabled={removeAdminMutation.isPending}>
+                  
                         <X className="w-4 h-4" />
                       </Button>
-                    )}
+                }
                   </div>
-                ))
-              )}
+              )
+              }
             </div>
           </CardContent>
         </Card>
 
-        {user?.role === 'admin' && (
-          <Card className="bg-white border-slate-200">
+        {user?.role === 'admin' &&
+        <Card className="bg-white border-slate-200">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="w-5 h-5" />
@@ -650,19 +650,19 @@ export default function DocumentAdmin() {
                 <div className="flex items-center gap-2">
                   <Search className="w-4 h-4 text-slate-400" />
                   <Input
-                    placeholder={t('daSearchUsers')}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="flex-1"
-                  />
+                  placeholder={t('daSearchUsers')}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1" />
+                
                 </div>
 
                 <div className="border rounded-lg divide-y max-h-[500px] overflow-y-auto">
-                  {filteredUsers.map((targetUser) => (
-                    <div 
-                      key={targetUser.id}
-                      className="p-4 hover:bg-slate-50 transition-colors"
-                    >
+                  {filteredUsers.map((targetUser) =>
+                <div
+                  key={targetUser.id}
+                  className="p-4 hover:bg-slate-50 transition-colors">
+                  
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex items-start gap-3 flex-1">
                           <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold">
@@ -672,17 +672,17 @@ export default function DocumentAdmin() {
                             <div className="flex items-center gap-2">
                               <p className="font-semibold text-slate-900">{targetUser.full_name}</p>
                               <Badge variant="outline" className={
-                                targetUser.role === 'admin' 
-                                  ? 'bg-purple-100 text-purple-800 border-purple-200'
-                                  : 'bg-blue-100 text-blue-800 border-blue-200'
-                              }>
+                          targetUser.role === 'admin' ?
+                          'bg-purple-100 text-purple-800 border-purple-200' :
+                          'bg-blue-100 text-blue-800 border-blue-200'
+                          }>
                                 {targetUser.role || 'user'}
                               </Badge>
-                              {targetUser.blocked && (
-                                <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">
+                              {targetUser.blocked &&
+                          <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200">
                                   {t('daBlocked')}
                                 </Badge>
-                              )}
+                          }
                             </div>
                             <p className="text-sm text-slate-600">{targetUser.email}</p>
                             <p className="text-xs text-slate-400 mt-1">
@@ -691,19 +691,19 @@ export default function DocumentAdmin() {
                           </div>
                         </div>
                         
-                        {targetUser.id !== user.id && (
-                          <div className="flex items-center gap-2">
+                        {targetUser.id !== user.id &&
+                    <div className="flex items-center gap-2">
                             <Select
-                              value={targetUser.role || 'user'}
-                              onValueChange={(value) => {
-                                if (confirm(t('daConfirmRoleChange', { name: targetUser.full_name, role: value }))) {
-                                  updateUserMutation.mutate({
-                                    userId: targetUser.id,
-                                    data: { role: value }
-                                  });
-                                }
-                              }}
-                            >
+                        value={targetUser.role || 'user'}
+                        onValueChange={(value) => {
+                          if (confirm(t('daConfirmRoleChange', { name: targetUser.full_name, role: value }))) {
+                            updateUserMutation.mutate({
+                              userId: targetUser.id,
+                              data: { role: value }
+                            });
+                          }
+                        }}>
+                        
                               <SelectTrigger className="w-28">
                                 <SelectValue />
                               </SelectTrigger>
@@ -714,26 +714,26 @@ export default function DocumentAdmin() {
                             </Select>
 
                             <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const action = targetUser.blocked ? t('daUnblock') : t('daBlock');
-                                if (confirm(`${action} ${targetUser.full_name}?`)) {
-                                  updateUserMutation.mutate({
-                                    userId: targetUser.id,
-                                    data: { blocked: !targetUser.blocked }
-                                  });
-                                }
-                              }}
-                              className={targetUser.blocked ? 'text-green-600 border-green-300' : 'text-red-600 border-red-300'}
-                            >
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const action = targetUser.blocked ? t('daUnblock') : t('daBlock');
+                          if (confirm(`${action} ${targetUser.full_name}?`)) {
+                            updateUserMutation.mutate({
+                              userId: targetUser.id,
+                              data: { blocked: !targetUser.blocked }
+                            });
+                          }
+                        }}
+                        className={targetUser.blocked ? 'text-green-600 border-green-300' : 'text-red-600 border-red-300'}>
+                        
                               <Ban className="w-4 h-4" />
                             </Button>
                           </div>
-                        )}
+                    }
                       </div>
                     </div>
-                  ))}
+                )}
                 </div>
 
                 <div className="text-sm text-slate-600 text-center pt-2">
@@ -742,18 +742,18 @@ export default function DocumentAdmin() {
               </div>
             </CardContent>
           </Card>
-        )}
+        }
 
         <EmailSentLog documentId={documentId} />
 
-        {showSummaryModal && (
-          <DocumentSummaryModal
-            documentId={documentId}
-            document={document}
-            user={user}
-            onClose={() => setShowSummaryModal(false)}
-          />
-        )}
+        {showSummaryModal &&
+        <DocumentSummaryModal
+          documentId={documentId}
+          document={document}
+          user={user}
+          onClose={() => setShowSummaryModal(false)} />
+
+        }
 
         <Card className="bg-red-50 border-red-200">
           <CardHeader>
@@ -769,8 +769,8 @@ export default function DocumentAdmin() {
               <Button
                 variant="destructive"
                 onClick={handleDelete}
-                disabled={deleteDocMutation.isPending}
-              >
+                disabled={deleteDocMutation.isPending}>
+                
                 <Trash2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 {t('daDelete')}
               </Button>
@@ -778,6 +778,6 @@ export default function DocumentAdmin() {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>);
+
 }
