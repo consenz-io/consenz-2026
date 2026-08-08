@@ -48,8 +48,12 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
 
   // Check if timer has expired on the frontend (even if status is still 'pending' — cron may not have run yet)
   const isTimerExpired = suggestion?.timerEndsAt && new Date(suggestion.timerEndsAt) <= new Date();
-  // Treat as effectively read-only if expired
-  const effectiveReadOnly = readOnly || isTimerExpired;
+  // Treat as effectively read-only only when the timer has actually expired.
+  // `readOnly` (e.g. user not logged in) should NOT freeze the display — the
+  // suggestion is still open, so non-logged-in users should see the active
+  // "supporters needed" message and blue bar, with buttons that redirect to
+  // login on click.
+  const effectiveReadOnly = isTimerExpired;
 
   // For accepted suggestions, freeze the threshold at what it was at acceptance time.
   // At the moment of acceptance, delta >= threshold exactly, so delta itself is the frozen threshold.
