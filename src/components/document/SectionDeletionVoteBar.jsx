@@ -384,15 +384,8 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
               >
                 <span className="w-5 h-5 rounded-full bg-white/25 flex items-center justify-center text-xs font-bold shrink-0">1</span>
                 <ThumbsDown className="w-4 h-4 shrink-0" />
-                {conComment.trim()
-                  ? (isHe ? 'פרסום ההסבר והצבעת נגד' : isAr ? 'انشر التوضيح وصوّت ضد' : 'Publish explanation & vote against')
-                  : (isHe ? 'להצביע נגד בלבד' : isAr ? 'صوّت ضد' : 'Vote against')}
+                {isHe ? 'להצביע נגד בלבד' : isAr ? 'صوّت ضد' : 'Vote against'}
               </Button>
-              {conComment.trim() && (
-                <p className="text-xs text-slate-500 text-center leading-tight">
-                  {isHe ? 'ההסבר יפורסם כתגובה יחד עם הצבעתך נגד' : isAr ? 'سيُنشر توضيحك كتعليق مع تصويتك ضد' : 'Your explanation will be posted as a comment together with your con vote'}
-                </p>
-              )}
             </div>
 
             {/* Option 2: Add explanation (optional) */}
@@ -434,6 +427,16 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                     className="min-h-[90px] resize-none rounded-xl border-slate-200 focus-visible:ring-red-200"
                     dir={isRTL ? 'rtl' : 'ltr'}
                   />
+                  <p className="text-xs text-slate-500 text-center leading-tight">
+                    {isHe ? 'ההסבר יפורסם כתגובה יחד עם הצבעתך נגד' : isAr ? 'سيُنشر توضيحك كتعليق مع تصويتك ضد' : 'Your explanation will be posted as a comment together with your con vote'}
+                  </p>
+                  <Button
+                    onClick={handleConVoteOnly}
+                    className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold shadow-sm gap-2"
+                  >
+                    <ThumbsDown className="w-4 h-4 shrink-0" />
+                    {isHe ? 'הצבע נגד ופרסם' : isAr ? 'صوّت ضد وانشر' : 'Vote against & publish'}
+                  </Button>
                 </motion.div>
               </AnimatePresence>
             )}
