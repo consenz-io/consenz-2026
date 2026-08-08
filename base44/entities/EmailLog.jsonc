@@ -18,6 +18,10 @@
       "type": "string",
       "description": "Email subject"
     },
+    "summaryContent": {
+      "type": "string",
+      "description": "The summary text content that was sent in the email (rich text HTML)"
+    },
     "purpose": {
       "type": "string",
       "enum": [

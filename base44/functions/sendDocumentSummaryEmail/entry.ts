@@ -195,6 +195,7 @@ Deno.serve(async (req) => {
         senderEmail: user.email,
         recipientEmail: email,
         subject: l.subject,
+        summaryContent,
         purpose: 'document_summary',
         status: 'sent', // will update if failed below
         relatedEntityId: documentId,

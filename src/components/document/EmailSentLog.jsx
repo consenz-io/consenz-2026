@@ -1,8 +1,9 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Mail, Eye, MousePointerClick, Users, CheckCircle, XCircle, TestTube } from "lucide-react";
 import { format } from "date-fns";
 import { useLanguage } from "@/components/LanguageContext";
@@ -23,6 +24,8 @@ const EMAIL_LOG_LABELS = {
     noLogs: 'עדיין לא נשלחו מיילים למסמך זה',
     sent: 'נשלח', failed: 'נכשל', opens: 'פתיחות', clicks: 'קליקים',
     recipients: 'נמענים', test: 'טסט', summary: 'סיכום',
+    sentBy: 'נשלח על ידי', sentAt: 'תאריך שליחה', emailContent: 'תוכן הסיכום שנשלח',
+    close: 'סגור', statistics: 'סטטיסטיקות', noContent: 'תוכן הסיכום לא נשמר עבור שליחה זו',
   },
   ar: {
     title: 'سجل إرسال الملخصات بالبريد',
@@ -30,6 +33,8 @@ const EMAIL_LOG_LABELS = {
     noLogs: 'لم يتم إرسال أي رسائل بريد إلكتروني لهذا المستند بعد',
     sent: 'مُرسل', failed: 'فاشل', opens: 'فتحات', clicks: 'نقرات',
     recipients: 'مستلمون', test: 'اختبار', summary: 'ملخص',
+    sentBy: 'أرسله', sentAt: 'تاريخ الإرسال', emailContent: 'محتوى الملخص المرسل',
+    close: 'إغلاق', statistics: 'الإحصائيات', noContent: 'لم يتم حفظ محتوى الملخص لهذه الشحنة',
   },
   en: {
     title: 'Email Summary Log',
@@ -37,12 +42,15 @@ const EMAIL_LOG_LABELS = {
     noLogs: 'No emails have been sent for this document yet',
     sent: 'Sent', failed: 'Failed', opens: 'Opens', clicks: 'Clicks',
     recipients: 'Recipients', test: 'Test', summary: 'Summary',
+    sentBy: 'Sent by', sentAt: 'Sent at', emailContent: 'Summary content sent',
+    close: 'Close', statistics: 'Statistics', noContent: 'Summary content was not saved for this send',
   },
 };
 
 export default function EmailSentLog({ documentId }) {
   const { language } = useLanguage();
   const isRTL = language === 'he' || language === 'ar';
+  const [selectedBatch, setSelectedBatch] = useState(null);
 
   const { data: logs = [], isLoading } = useQuery({
     queryKey: ['emailLogs', documentId],
@@ -63,6 +71,7 @@ export default function EmailSentLog({ documentId }) {
         batchMap.set(key, {
           batchId: key,
           subject: log.subject,
+          summaryContent: log.summaryContent,
           sentAt: log.created_date,
           senderEmail: log.senderEmail,
           isTestEmail: log.isTestEmail,
@@ -125,7 +134,8 @@ export default function EmailSentLog({ documentId }) {
             {batches.map(batch => (
               <div
                 key={batch.batchId}
-                className="border border-slate-200 rounded-xl p-4 hover:bg-slate-50 transition-colors"
+                onClick={() => setSelectedBatch(batch)}
+                className="border border-slate-200 rounded-xl p-4 hover:bg-slate-50 hover:border-indigo-300 transition-colors cursor-pointer"
                 dir={isRTL ? 'rtl' : 'ltr'}
               >
                 <div className="flex items-start justify-between gap-3 flex-wrap">
@@ -185,6 +195,81 @@ export default function EmailSentLog({ documentId }) {
           </div>
         )}
       </CardContent>
+
+      {/* Modal: view the summary text as it was sent, with statistics */}
+      <Dialog open={!!selectedBatch} onOpenChange={(open) => { if (!open) setSelectedBatch(null); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" dir={isRTL ? 'rtl' : 'ltr'}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <Mail className="w-5 h-5 text-indigo-600" />
+              <span className="truncate">{selectedBatch?.subject}</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {selectedBatch?.senderEmail} · {selectedBatch?.sentAt ? format(new Date(selectedBatch.sentAt), 'dd/MM/yyyy HH:mm') : '—'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedBatch && (
+            <div className="space-y-4">
+              {/* Statistics */}
+              <div>
+                <p className="text-sm font-semibold text-slate-700 mb-2">{l.statistics}</p>
+                <div className="flex flex-wrap gap-2">
+                  <StatPill
+                    icon={Users}
+                    label={l.recipients}
+                    value={selectedBatch.totalSent + selectedBatch.totalFailed}
+                    color="bg-blue-50 text-blue-700"
+                  />
+                  {selectedBatch.totalSent > 0 && (
+                    <StatPill
+                      icon={CheckCircle}
+                      label={l.sent}
+                      value={selectedBatch.totalSent}
+                      color="bg-green-50 text-green-700"
+                    />
+                  )}
+                  {selectedBatch.totalFailed > 0 && (
+                    <StatPill
+                      icon={XCircle}
+                      label={l.failed}
+                      value={selectedBatch.totalFailed}
+                      color="bg-red-50 text-red-700"
+                    />
+                  )}
+                  <StatPill
+                    icon={Eye}
+                    label={l.opens}
+                    value={selectedBatch.totalOpens}
+                    color="bg-indigo-50 text-indigo-700"
+                  />
+                  <StatPill
+                    icon={MousePointerClick}
+                    label={l.clicks}
+                    value={selectedBatch.totalClicks}
+                    color="bg-purple-50 text-purple-700"
+                  />
+                </div>
+              </div>
+
+              {/* Summary content as sent */}
+              <div>
+                <p className="text-sm font-semibold text-slate-700 mb-2">{l.emailContent}</p>
+                {selectedBatch.summaryContent ? (
+                  <div
+                    className="max-w-none p-4 bg-slate-50 rounded-lg border border-slate-200 text-slate-800 leading-relaxed text-sm [&_a]:text-blue-600 [&_a]:underline [&_h1]:text-lg [&_h1]:font-bold [&_h2]:text-base [&_h2]:font-bold [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-2"
+                    dangerouslySetInnerHTML={{ __html: selectedBatch.summaryContent }}
+                  />
+                ) : (
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-400 italic">
+                    {l.noContent}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
