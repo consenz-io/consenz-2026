@@ -458,13 +458,13 @@ export default function DocumentAdmin() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="24">{t('da24h')}</SelectItem>
-                    <SelectItem value="48">{t('da48h')}</SelectItem>
-                    <SelectItem value="72">{t('da72h')}</SelectItem>
-                    <SelectItem value="168">{t('da1week')}</SelectItem>
-                    <SelectItem value="336">{t('da2weeks')}</SelectItem>
-                    <SelectItem value="unlimited">{t('daNoTimeLimit')}</SelectItem>
+                  <SelectContent dir={isRTL ? 'rtl' : 'ltr'}>
+                    <SelectItem value="24" className={isRTL ? "text-right pl-8 pr-2 [&>span]:left-2 [&>span]:right-auto" : ""}>{t('da24h')}</SelectItem>
+                    <SelectItem value="48" className={isRTL ? "text-right pl-8 pr-2 [&>span]:left-2 [&>span]:right-auto" : ""}>{t('da48h')}</SelectItem>
+                    <SelectItem value="72" className={isRTL ? "text-right pl-8 pr-2 [&>span]:left-2 [&>span]:right-auto" : ""}>{t('da72h')}</SelectItem>
+                    <SelectItem value="168" className={isRTL ? "text-right pl-8 pr-2 [&>span]:left-2 [&>span]:right-auto" : ""}>{t('da1week')}</SelectItem>
+                    <SelectItem value="336" className={isRTL ? "text-right pl-8 pr-2 [&>span]:left-2 [&>span]:right-auto" : ""}>{t('da2weeks')}</SelectItem>
+                    <SelectItem value="unlimited" className={isRTL ? "text-right pl-8 pr-2 [&>span]:left-2 [&>span]:right-auto" : ""}>{t('daNoTimeLimit')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
