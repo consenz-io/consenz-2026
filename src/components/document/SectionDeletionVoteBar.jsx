@@ -378,6 +378,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
           <div className="px-6 pb-6 space-y-3">
             {/* Option 1: Vote against only */}
             <div className="flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">1</span>
               <Button
                 onClick={handleConVoteOnly}
                 className="flex-1 h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold shadow-sm gap-2"
@@ -385,7 +386,6 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                 <ThumbsDown className="w-4 h-4 shrink-0" />
                 {isHe ? 'להצביע נגד בלבד' : isAr ? 'صوّت ضد' : 'Vote against'}
               </Button>
-              <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">1</span>
             </div>
 
             <p className="text-xs text-slate-400 text-center font-medium">{isHe ? 'גם' : isAr ? 'أيضاً' : 'Also'}</p>
@@ -393,6 +393,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
             {/* Option 2: Explain reason */}
             {!showExplanation ? (
               <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">2</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -406,7 +407,6 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                   </span>
                   {isHe ? 'להסביר את הסיבה להתנגדתך' : isAr ? 'اشرح سبب معارضتك' : 'Explain your reason for opposing'}
                 </button>
-                <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">2</span>
               </div>
             ) : (
               <AnimatePresence>
@@ -417,6 +417,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                   transition={{ duration: 0.25, ease: 'easeOut' }}
                   className="flex items-start gap-2 overflow-hidden"
                 >
+                  <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0 mt-1">2</span>
                   <div className="flex-1 space-y-1.5">
                     <label className="text-sm text-slate-500">
                       {isHe ? 'מה לא עובד בסעיף הזה? ניתן להסביר את הסיבה להתנגדות או להציע לו נוסח חלופי' : isAr ? 'ما الخطأ في هذا القسم؟ يمكنك أيضاً اقتراح صياغة أخرى' : 'What doesn\'t work in this section? You can also suggest how to word it differently'}
@@ -440,7 +441,6 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                       {isHe ? 'הצבע נגד ופרסם' : isAr ? 'صوّت ضد وانشر' : 'Vote against & publish'}
                     </Button>
                   </div>
-                  <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0 mt-1">2</span>
                 </motion.div>
               </AnimatePresence>
             )}
@@ -449,6 +449,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
 
             {/* Option 3: Suggest alternative wording */}
             <div className="flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">3</span>
               <button
                 type="button"
                 onClick={handleConVoteAndSuggest}
@@ -473,7 +474,6 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                   {isRTL ? <ArrowLeft className="w-4 h-4 text-slate-400 shrink-0" /> : <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />}
                 </div>
               </button>
-              <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">3</span>
             </div>
           </div>
           </>
