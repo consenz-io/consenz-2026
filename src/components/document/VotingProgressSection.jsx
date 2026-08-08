@@ -6,6 +6,7 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/comp
 import { useLanguage } from "@/components/LanguageContext";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import CounterTooltip from "./CounterTooltip";
 
 function useTimeRemaining(timerEndsAt) {
   const [remaining, setRemaining] = React.useState(() => {
@@ -187,104 +188,21 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   return (
     <div className="space-y-3">
       {/* Progress bar section */}
-      <Link
-        to={`${createPageUrl("UnderstandingConsensus")}?id=${document?.id}`}
-        className="block group"
-        title={language === 'he'
+      <CounterTooltip
+        text={language === 'he'
           ? `${proVotes} הצבעות בעד ו-${conVotes} הצבעות נגד, ורף התמיכה הדרוש הוא ${threshold} • לחצו למידע נוסף על חישוב מד הקונסנזוס`
           : language === 'ar'
           ? `${proVotes} أصوات مع و-${conVotes} أصوات ضد، وعتبة الدعم المطلوبة هي ${threshold} • انقروا لمزيد من المعلومات حول حساب مقياس الإجماع`
           : `${proVotes} pro votes and ${conVotes} con votes, support threshold is ${threshold} • Click for more info on consensus meter calculation`}>
-        
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-blue-200 transition-colors" data-tutorial="support-threshold">
-          {/* Labels row */}
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-slate-600">
-              {isDeleteSection ?
-              language === 'he' ? 'התקדמות למחיקה' : language === 'ar' ? 'تقدم نحو الحذف' : 'Progress to deletion' :
-              language === 'he' ? 'התקדמות לאישור' : language === 'ar' ? 'تقدم نحو القبول' : 'Progress to acceptance'}
-            </span>
-            <div className="flex items-center gap-2">
-              {timeLabel && !effectiveReadOnly &&
-              <TooltipProvider delayDuration={300}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className={`flex items-center gap-0.5 text-xs font-medium cursor-help ${isUrgent ? 'text-orange-500' : 'text-slate-400'}`}>
-                      <Clock className="w-3 h-3 shrink-0" />
-                      {timeLabel}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-[240px] text-xs text-center">
-                    {language === 'he' ?
-                      'אם התמיכה בהצעה לא תגיע למספר התומכים הדרוש עד לפקיעת התוקף, ההצעה תידחה אוטומטית' :
-                      language === 'ar' ?
-                      'إذا لم تصل الدعومة للاقتراح إلى عدد المؤيدين المطلوب قبل انتهاء الوقت، سيُرفض تلقائياً' :
-                      'If the proposal doesn\'t reach the required supporters before the timer expires, it will be automatically rejected'}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              }
-              <span className={`text-xs font-bold ${passed ? isDeleteSection ? 'text-red-600' : 'text-green-600' : 'text-slate-500'}`}>
-                {passed ? '✓' : `${Math.max(0, delta)}/${threshold}`}
-              </span>
-            </div>
+        <Link
+          to={`${createPageUrl("UnderstandingConsensus")}?id=${document?.id}`}
+          className="block group">
+
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-blue-200 transition-colors" data-tutorial="support-threshold">
+...
           </div>
-
-          {/* Progress bar */}
-          <div className="relative h-3 bg-slate-200 rounded-full overflow-hidden">
-            
-            <motion.div
-              key={`${suggestion?.id}-bar`}
-              className={`h-full rounded-full ${barColor} transition-colors duration-300`}
-              initial={{ width: `${displayProgress}%` }}
-              animate={{ width: `${displayProgress}%` }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }} />
-            
-          </div>
-
-          {/* Status text */}
-          {!passed && !isExistingSection &&
-          <p className="text-xs text-slate-600 mt-1.5 font-medium text-center" dir={isRTL ? 'rtl' : 'ltr'}>
-              {statusText}
-            </p>
-          }
-          
-
-
-
-
-
-
-
-
-
-
-
-          
-          {belowBarInfo &&
-          <p className="text-xs text-center text-slate-500 mt-1.5 font-medium">
-              {belowBarInfo.label} {datePrefix}
-              {new Date(belowBarInfo.date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-            </p>
-          }
-          {rejectedDate &&
-          <p className="text-xs text-center text-slate-400 mt-1 flex items-center justify-center gap-1">
-              {suggestion?.rejectedByAdmin ?
-            <ShieldX className="w-3 h-3 text-red-400 shrink-0" /> :
-            <Timer className="w-3 h-3 text-orange-400 shrink-0" />
-            }
-              <span className={suggestion?.rejectedByAdmin ? 'text-red-400' : 'text-orange-400'}>
-                {suggestion?.rejectedByAdmin ?
-              language === 'he' ? 'נדחתה ע"י מנהל' : language === 'ar' ? 'رُفضت بواسطة المشرف' : 'Rejected by admin' :
-              language === 'he' ? 'פג תוקף ההצבעה' : language === 'ar' ? 'انتهت مدة التصويت' : 'Voting expired'
-              }
-              </span>
-              <span>·</span>
-              {new Date(rejectedDate).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-            </p>
-          }
-        </div>
       </Link>
+      </CounterTooltip>
 
       {/* Vote buttons - disabled in read-only mode or when timer expired */}
       {effectiveReadOnly ?
