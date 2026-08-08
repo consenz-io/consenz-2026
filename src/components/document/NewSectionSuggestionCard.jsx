@@ -48,6 +48,26 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   // Automatic navigation (targetSuggestionId, chain growth) must not land on a
   // rejected/expired version — the safeguard effect falls back to 'original'.
   const userNavigatedRef = React.useRef(false);
+  const cardRef = React.useRef(null);
+
+  // Scroll the card's top edge flush to the top of the screen (accounting for the sticky header).
+  // Waits for the new view to render and the layout to settle before measuring.
+  const scrollCardToTop = React.useCallback(() => {
+    const doScroll = () => {
+      const el = cardRef.current;
+      if (!el) return;
+      const header = window.document.querySelector('header[role="banner"]');
+      const headerOffset = header ? header.getBoundingClientRect().height : 0;
+      const top = el.getBoundingClientRect().top + window.scrollY - headerOffset - 8;
+      window.scrollTo({ top, behavior: 'smooth' });
+    };
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        doScroll();
+        setTimeout(doScroll, 250);
+      });
+    });
+  }, []);
 
   // Watch for pending -> accepted transition to trigger animation
   React.useEffect(() => {
@@ -235,6 +255,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
     const prevIndex = (currentViewIndex - 1 + allViews.length) % allViews.length;
     const prevView = allViews[prevIndex];
     setCurrentVersionId(prevView.type === 'original' ? 'original' : prevView.id);
+    scrollCardToTop();
   };
 
   const handleNext = () => {
@@ -243,10 +264,12 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
     const nextIndex = (currentViewIndex + 1) % allViews.length;
     const nextView = allViews[nextIndex];
     setCurrentVersionId(nextView.type === 'original' ? 'original' : nextView.id);
+    scrollCardToTop();
   };
 
   return (
     <div
+      ref={cardRef}
       id={`suggestion-${suggestion.id}`}
       className="group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50">
       
@@ -507,7 +530,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
             {allViews.map((view, idx) =>
               <button
                 key={view.id}
-                onClick={() => { userNavigatedRef.current = true; setCurrentVersionId(view.type === 'original' ? 'original' : view.id); }}
+                onClick={() => { userNavigatedRef.current = true; setCurrentVersionId(view.type === 'original' ? 'original' : view.id); scrollCardToTop(); }}
                 className={`rounded-full transition-all duration-200 ${
                   idx === currentViewIndex
                     ? 'w-5 h-2.5 bg-amber-500'
