@@ -388,7 +388,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
               </Button>
             </div>
 
-            <p className="text-xs text-slate-400 text-center font-medium">{isHe ? 'גם' : isAr ? 'أيضاً' : 'Also'}</p>
+            <p className="text-xs text-slate-400 text-center font-medium">{isHe ? 'וגם' : isAr ? 'وأيضاً' : 'And also'}</p>
 
             {/* Option 2: Explain reason */}
             {!showExplanation ? (
