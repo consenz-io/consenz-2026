@@ -227,7 +227,6 @@ Deno.serve(async (req) => {
         });
       } else {
         // Non-registered participant — use Resend API directly
-        // NOTE: Replace onboarding@resend.dev with your verified sending domain
         const resendKey = Deno.env.get('RESEND_API_KEY');
         if (!resendKey) throw new Error('RESEND_API_KEY not configured — cannot send to non-registered recipients');
 
@@ -238,7 +237,7 @@ Deno.serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'Consenz <onboarding@resend.dev>',
+            from: 'Consenz <no-reply@consenz.net>',
             to: [email],
             subject: l.subject,
             html: emailHtml,
