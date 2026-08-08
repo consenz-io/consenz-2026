@@ -130,13 +130,21 @@ export default function DocumentContent({
     initialData: [],
   });
 
+  const topicSuggestionIds = React.useMemo(
+    () => (topicEditSuggestions || []).map(s => s.id),
+    [topicEditSuggestions]
+  );
+
   const { data: topicEditVotes } = useQuery({
     queryKey: ['topicEditVotes', document?.id, user?.id],
     queryFn: async () => {
-      if (!user?.id) return [];
-      return await base44.entities.TopicEditVote.filter({ userId: user.id });
+      if (!user?.id || topicSuggestionIds.length === 0) return [];
+      return await base44.entities.TopicEditVote.filter({
+        suggestionId: { $in: topicSuggestionIds },
+        userId: user.id,
+      });
     },
-    enabled: !!user?.id && !!document?.id,
+    enabled: !!user?.id && !!document?.id && topicSuggestionIds.length > 0,
     initialData: [],
   });
 

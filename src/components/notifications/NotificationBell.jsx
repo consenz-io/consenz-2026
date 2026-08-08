@@ -34,29 +34,29 @@ export default function NotificationBell({ user }) {
     refetchOnMount: false,
   });
 
-  // Real-time subscription for notifications
+  // Ref to access latest notifications inside the subscription without re-subscribing
+  const notificationsRef = React.useRef(notifications);
+  notificationsRef.current = notifications;
+
+  // Real-time subscription for notifications — stable deps prevent subscribe→invalidate→resubscribe loop
   React.useEffect(() => {
     if (!user?.id) return;
-    
-    console.log('[REALTIME NOTIFICATIONS] Setting up Notification subscription for user:', user.id);
-    
+
     // Debounced to prevent rate limits
     let notifTimer;
     const unsubscribe = base44.entities.Notification.subscribe((event) => {
-      console.log('[REALTIME NOTIFICATIONS] Notification event:', event.type);
-      if (event.data?.userId === user.id || (event.type === 'update' && notifications?.some(n => n.id === event.id))) {
+      if (event.data?.userId === user.id || (event.type === 'update' && notificationsRef.current?.some(n => n.id === event.id))) {
         clearTimeout(notifTimer);
         notifTimer = setTimeout(() => {
           queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
         }, 800);
       }
     });
-    
+
     return () => {
-      console.log('[REALTIME NOTIFICATIONS] Cleaning up Notification subscription');
       unsubscribe();
     };
-  }, [user?.id, queryClient, notifications]);
+  }, [user?.id, queryClient]);
 
   const markAsReadMutation = useMutation({
     mutationFn: (notificationId) => base44.entities.Notification.update(notificationId, { read: true }),
@@ -68,8 +68,9 @@ export default function NotificationBell({ user }) {
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
       const unreadNotifications = notifications.filter(n => !n.read);
-      await Promise.all(
-        unreadNotifications.map(n => base44.entities.Notification.update(n.id, { read: true }))
+      if (unreadNotifications.length === 0) return;
+      await base44.entities.Notification.bulkUpdate(
+        unreadNotifications.map(n => ({ id: n.id, read: true }))
       );
     },
     onSuccess: () => {

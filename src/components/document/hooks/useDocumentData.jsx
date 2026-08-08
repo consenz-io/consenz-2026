@@ -176,7 +176,7 @@ export function useDocumentData(documentId) {
     queryFn: async () => {
       const [agreements, versions] = await Promise.all([
         base44.entities.DocumentAgreement.filter({ documentId }),
-        base44.entities.DocumentVersion.filter({ documentId }),
+        base44.entities.DocumentVersion.filter({ documentId }, '-version', 100),
       ]);
       return { agreements, versions };
     },
