@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/LanguageContext";
+import CounterTooltip from "./CounterTooltip";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -256,45 +257,47 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
 
   return (
     <div className="space-y-3">
-      <Link
-        to={`${createPageUrl("UnderstandingConsensus")}?id=${document?.id}`}
-        className="block group"
-        title={isHe
+      <CounterTooltip
+        text={isHe
           ? `${proCount} הצבעות בעד ו-${conCount} הצבעות נגד, ורף התמיכה הדרוש הוא ${threshold} • לחצו למידע נוסף על חישוב מד הקונסנזוס`
           : isAr
           ? `${proCount} أصوات مع و-${conCount} أصوات ضد، وعتبة الدعم المطلوبة هي ${threshold} • انقروا لمزيد من المعلومات حول حساب مقياس الإجماع`
           : `${proCount} pro votes and ${conCount} con votes, support threshold is ${threshold} • Click for more info on consensus meter calculation`}>
-        
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-red-200 transition-colors" data-tutorial="support-threshold">
-          {/* Labels row */}
-          <div className="flex items-center justify-between mb-2">
-            
+        <Link
+          to={`${createPageUrl("UnderstandingConsensus")}?id=${document?.id}`}
+          className="block group">
 
-            
-            
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-red-200 transition-colors" data-tutorial="support-threshold">
+            {/* Labels row */}
+            <div className="flex items-center justify-between mb-2">
 
-            
+
+
+
+
+
+            </div>
+
+            {/* Progress bar */}
+            <div className="relative h-3 bg-slate-200 rounded-full overflow-hidden">
+              <motion.div
+                key={`${section.id}-delete-bar`}
+                className={`h-full rounded-full ${barColor} transition-colors duration-300`}
+                initial={{ width: `${displayProgress}%` }}
+                animate={{ width: `${displayProgress}%` }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }} />
+
+            </div>
+
+            {/* Status text */}
+            {!passed &&
+            <p className="text-xs text-slate-600 mt-1.5 font-medium text-center" dir={isRTL ? 'rtl' : 'ltr'}>
+                {statusText}
+              </p>
+            }
           </div>
-
-          {/* Progress bar */}
-          <div className="relative h-3 bg-slate-200 rounded-full overflow-hidden">
-            <motion.div
-              key={`${section.id}-delete-bar`}
-              className={`h-full rounded-full ${barColor} transition-colors duration-300`}
-              initial={{ width: `${displayProgress}%` }}
-              animate={{ width: `${displayProgress}%` }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }} />
-            
-          </div>
-
-          {/* Status text */}
-          {!passed &&
-          <p className="text-xs text-slate-600 mt-1.5 font-medium text-center" dir={isRTL ? 'rtl' : 'ltr'}>
-              {statusText}
-            </p>
-          }
-        </div>
       </Link>
+      </CounterTooltip>
 
       {/* Vote buttons */}
       <div className="relative">

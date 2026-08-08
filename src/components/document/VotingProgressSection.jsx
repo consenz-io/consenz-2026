@@ -199,7 +199,49 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
           className="block group">
 
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-blue-200 transition-colors" data-tutorial="support-threshold">
-...
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-slate-500">
+                {statusText}
+              </span>
+              {timeLabel && !effectiveReadOnly && (
+                <span className={`text-xs font-medium flex items-center gap-1 ${isUrgent ? 'text-red-500' : 'text-slate-400'}`}>
+                  <Clock className="w-3 h-3" />
+                  {timeLabel}
+                </span>
+              )}
+            </div>
+
+            {/* Progress bar */}
+            <div className="relative h-2 bg-slate-200 rounded-full overflow-hidden">
+              <motion.div
+                className={`absolute inset-y-0 left-0 rounded-full ${barColor}`}
+                initial={{ width: 0 }}
+                animate={{ width: `${displayProgress}%` }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              />
+            </div>
+
+            {/* Vote counts and threshold */}
+            <div className="flex items-center justify-between mt-2 text-xs text-slate-500">
+              <span className="flex items-center gap-1">
+                <ThumbsUp className="w-3 h-3" />
+                {displayProVotes}
+              </span>
+              <span className="font-medium">
+                {language === 'he' ? `סף: ${threshold}` : language === 'ar' ? `العتبة: ${threshold}` : `Threshold: ${threshold}`}
+              </span>
+              <span className="flex items-center gap-1">
+                {displayConVotes}
+                <ThumbsDown className="w-3 h-3" />
+              </span>
+            </div>
+
+            {/* Below-bar info: accepted date or created-by-admin */}
+            {belowBarInfo && (
+              <div className="mt-2 pt-2 border-t border-slate-200 text-xs text-slate-500">
+                <span>{belowBarInfo.label} {datePrefix}{new Date(belowBarInfo.date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+            )}
           </div>
       </Link>
       </CounterTooltip>
