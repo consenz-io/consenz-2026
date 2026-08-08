@@ -552,10 +552,10 @@ export default function SuggestionDetail() {
       <div className="max-w-5xl mx-auto space-y-3 w-full overflow-x-hidden">
 
         <div className="flex items-start justify-between gap-2">
-          <h1 className="text-slate-900 text-sm font-bold md:text-base flex-1 min-w-0 leading-snug">
-            {document?.title
-              ? (language === 'he' ? `הצעה לעריכה במסמך "${document.title}"` : language === 'ar' ? `اقتراح تعديل في الوثيقة "${document.title}"` : `Suggestion to edit document "${document.title}"`)
-              : suggestion.title}
+          <h1 className="text-slate-900 font-bold flex-1 min-w-0 leading-snug text-xl md:text-xl">
+            {document?.title ?
+            language === 'he' ? `הצעה לעריכה במסמך "${document.title}"` : language === 'ar' ? `اقتراح تعديل في الوثيقة "${document.title}"` : `Suggestion to edit document "${document.title}"` :
+            suggestion.title}
           </h1>
           {user && user.id === suggestion.created_by_id && suggestion.status !== 'accepted' &&
           <button
@@ -595,20 +595,20 @@ export default function SuggestionDetail() {
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
               <Badge variant="outline" className={`text-xs ${suggestion.type === 'delete_section' ? 'bg-red-100 text-red-800 border-red-200' : ''}`}>
                 {suggestion.type === 'new_section' ? t('newSection') :
-                suggestion.type === 'delete_section' ? language === 'he' ? 'מחיקת סעיף' : language === 'ar' ? 'حذف قسم' : 'Delete Section' :
-                suggestion.type === 'edit_suggestion' ? t('editSuggestionType') :
-                t('suggestionToEditSection')}
+                  suggestion.type === 'delete_section' ? language === 'he' ? 'מחיקת סעיף' : language === 'ar' ? 'حذف قسم' : 'Delete Section' :
+                  suggestion.type === 'edit_suggestion' ? t('editSuggestionType') :
+                  t('suggestionToEditSection')}
               </Badge>
 
               {suggestion.status === 'rejected' && suggestion.rejectedByAdmin ?
-              <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200 text-xs">
+                <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200 text-xs">
                     {language === 'he' ? 'נדחתה על ידי אדמין' : language === 'ar' ? 'مرفوضة من المشرف' : 'Rejected by Admin'}
                   </Badge> :
-              suggestion.status === 'rejected' && !suggestion.rejectedByAdmin ?
-              <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
+                suggestion.status === 'rejected' && !suggestion.rejectedByAdmin ?
+                <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
                     {language === 'he' ? 'פג תוקפה' : language === 'ar' ? 'انتهت صلاحيتها' : 'Expired'}
                   </Badge> :
-              <TooltipProvider delayDuration={200}>
+                <TooltipProvider delayDuration={200}>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span>
@@ -619,34 +619,34 @@ export default function SuggestionDetail() {
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
                         {suggestion.status === 'pending' ? language === 'he' ? 'ממתינה להצבעה' : language === 'ar' ? 'في انتظار التصويت' : 'Awaiting votes' :
-                    suggestion.status === 'accepted' ? language === 'he' ? 'ההצעה התקבלה ויושמה במסמך' : language === 'ar' ? 'تمت الموافقة على الاقتراح' : 'Proposal accepted and applied' :
-                    suggestion.status === 'rejected' ? language === 'he' ? 'ההצעה נדחתה' : language === 'ar' ? 'تم رفض الاقتراح' : 'Proposal rejected' :
-                    suggestion.status === 'discussion' ? language === 'he' ? 'בדיון פתוח' : language === 'ar' ? 'قيد النقاش' : 'Open for discussion' :
-                    suggestion.status}
+                      suggestion.status === 'accepted' ? language === 'he' ? 'ההצעה התקבלה ויושמה במסמך' : language === 'ar' ? 'تمت الموافقة على الاقتراح' : 'Proposal accepted and applied' :
+                      suggestion.status === 'rejected' ? language === 'he' ? 'ההצעה נדחתה' : language === 'ar' ? 'تم رفض الاقتراح' : 'Proposal rejected' :
+                      suggestion.status === 'discussion' ? language === 'he' ? 'בדיון פתוח' : language === 'ar' ? 'قيد النقاش' : 'Open for discussion' :
+                      suggestion.status}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-              }
+                }
 
               <span className="text-slate-500">
                  {(() => {
-                  const authorName = getUserName(suggestion.created_by_id);
-                  if (authorName) {
-                    return <>{t('by')} <Link to={`${createPageUrl("Profile")}?userId=${suggestion.created_by_id || ''}`} className="hover:underline text-blue-600">{authorName}</Link></>;
-                  }
-                  return <span className="text-slate-400">{language === 'he' ? 'הצבעת קהילה' : language === 'ar' ? 'تصويت المجتمع' : 'Community vote'}</span>;
-                })()}
+                    const authorName = getUserName(suggestion.created_by_id);
+                    if (authorName) {
+                      return <>{t('by')} <Link to={`${createPageUrl("Profile")}?userId=${suggestion.created_by_id || ''}`} className="hover:underline text-blue-600">{authorName}</Link></>;
+                    }
+                    return <span className="text-slate-400">{language === 'he' ? 'הצבעת קהילה' : language === 'ar' ? 'تصويت المجتمع' : 'Community vote'}</span>;
+                  })()}
                </span>
               {suggestion.created_date &&
-              <span className="text-slate-400">
+                <span className="text-slate-400">
                   • {new Date(suggestion.created_date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
-              }
+                }
               {suggestion.status === 'rejected' && suggestion.rejectedByAdmin && suggestion.updated_date &&
-              <span className="text-slate-400">
+                <span className="text-slate-400">
                   • {language === 'he' ? 'נדחתה ב-' : language === 'ar' ? 'تم الرفض في' : 'Rejected on'} {new Date(suggestion.updated_date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
-              }
+                }
             </div>
             </div>
           </CardHeader>
@@ -666,17 +666,17 @@ export default function SuggestionDetail() {
                   </div>
                   {(suggestion.explanation || user && user.id === suggestion.created_by_id) &&
               <SuggestionExplanationBlock
-                  suggestion={suggestion}
-                  user={user}
-                  isEditingExplanation={isEditingExplanation}
-                  setIsEditingExplanation={setIsEditingExplanation}
-                  editedExplanation={editedExplanation}
-                  setEditedExplanation={setEditedExplanation}
-                  updateExplanationMutation={updateExplanationMutation}
-                  queryClient={queryClient}
-                  suggestionId={suggestionId}
-                  isRTL={isRTL}
-                />
+                suggestion={suggestion}
+                user={user}
+                isEditingExplanation={isEditingExplanation}
+                setIsEditingExplanation={setIsEditingExplanation}
+                editedExplanation={editedExplanation}
+                setEditedExplanation={setEditedExplanation}
+                updateExplanationMutation={updateExplanationMutation}
+                queryClient={queryClient}
+                suggestionId={suggestionId}
+                isRTL={isRTL} />
+
               }
                 </div> :
             suggestion.type === 'new_section' ?
@@ -686,17 +686,17 @@ export default function SuggestionDetail() {
                   </div>
                   {(suggestion.explanation || user && user.id === suggestion.created_by_id) &&
               <SuggestionExplanationBlock
-                  suggestion={suggestion}
-                  user={user}
-                  isEditingExplanation={isEditingExplanation}
-                  setIsEditingExplanation={setIsEditingExplanation}
-                  editedExplanation={editedExplanation}
-                  setEditedExplanation={setEditedExplanation}
-                  updateExplanationMutation={updateExplanationMutation}
-                  queryClient={queryClient}
-                  suggestionId={suggestionId}
-                  isRTL={isRTL}
-                />
+                suggestion={suggestion}
+                user={user}
+                isEditingExplanation={isEditingExplanation}
+                setIsEditingExplanation={setIsEditingExplanation}
+                editedExplanation={editedExplanation}
+                setEditedExplanation={setEditedExplanation}
+                updateExplanationMutation={updateExplanationMutation}
+                queryClient={queryClient}
+                suggestionId={suggestionId}
+                isRTL={isRTL} />
+
               }
                 </div> :
             null
@@ -780,13 +780,13 @@ export default function SuggestionDetail() {
             </CardHeader>
             <CardContent className="p-3 md:p-6">
               <SuggestionChainNavigation
-                chain={suggestionChain}
-                currentIndex={currentSuggestionIndexInChain}
-                isRTL={isRTL}
-                language={language}
-                getUserName={getUserName}
-                onNavigate={(id) => navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${id}`)}
-              />
+              chain={suggestionChain}
+              currentIndex={currentSuggestionIndexInChain}
+              isRTL={isRTL}
+              language={language}
+              getUserName={getUserName}
+              onNavigate={(id) => navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${id}`)} />
+            
             </CardContent>
           </Card>
         }
