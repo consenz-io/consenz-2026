@@ -48,12 +48,13 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
 
   // Check if timer has expired on the frontend (even if status is still 'pending' — cron may not have run yet)
   const isTimerExpired = suggestion?.timerEndsAt && new Date(suggestion.timerEndsAt) <= new Date();
-  // Treat as effectively read-only only when the timer has actually expired.
-  // `readOnly` (e.g. user not logged in) should NOT freeze the display — the
-  // suggestion is still open, so non-logged-in users should see the active
-  // "supporters needed" message and blue bar, with buttons that redirect to
-  // login on click.
-  const effectiveReadOnly = isTimerExpired;
+  // Treat as effectively read-only when the suggestion is closed (accepted/rejected)
+  // OR the timer has expired. `readOnly` (e.g. user not logged in) alone should NOT
+  // freeze the display — the suggestion is still open, so non-logged-in users should
+  // see the active "supporters needed" message and blue bar, with buttons that
+  // redirect to login on click.
+  const isClosed = suggestion?.status && suggestion.status !== 'pending';
+  const effectiveReadOnly = isClosed || isTimerExpired;
 
   // For accepted suggestions, freeze the threshold at what it was at acceptance time.
   // At the moment of acceptance, delta >= threshold exactly, so delta itself is the frozen threshold.
@@ -194,10 +195,10 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
       {/* Progress bar section */}
       <CounterTooltip
         text={language === 'he'
-          ? `${proVotes} הצבעות בעד ו-${conVotes} הצבעות נגד, ורף התמיכה הדרוש הוא ${threshold} • לחצו למידע נוסף על חישוב מד הקונסנזוס`
+          ? `${displayProVotes} הצבעות בעד ו-${displayConVotes} הצבעות נגד, ורף התמיכה הדרוש הוא ${threshold} • לחצו למידע נוסף על חישוב מד הקונסנזוס`
           : language === 'ar'
-          ? `${proVotes} أصوات مع و-${conVotes} أصوات ضد، وعتبة الدعم المطلوبة هي ${threshold} • انقروا لمزيد من المعلومات حول حساب مقياس الإجماع`
-          : `${proVotes} pro votes and ${conVotes} con votes, support threshold is ${threshold} • Click for more info on consensus meter calculation`}>
+          ? `${displayProVotes} أصوات مع و-${displayConVotes} أصوات ضد، وعتبة الدعم المطلوبة هي ${threshold} • انقروا لمزيد من المعلومات حول حساب مقياس الإجماع`
+          : `${displayProVotes} pro votes and ${displayConVotes} con votes, support threshold is ${threshold} • Click for more info on consensus meter calculation`}>
         <Link
           to={`${createPageUrl("UnderstandingConsensus")}?id=${document?.id}`}
           className="block group">
