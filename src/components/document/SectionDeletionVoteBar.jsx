@@ -375,8 +375,27 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
             </p>
           </DialogHeader>
 
-          <div className="px-6 pb-6 space-y-4">
-            {/* Explanation: collapsed by default, revealed on demand (input comes before its action button) */}
+          <div className="px-6 pb-6 space-y-3">
+            {/* Option 1: Vote against only */}
+            <div className="space-y-1.5">
+              <Button
+                onClick={handleConVoteOnly}
+                className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold shadow-sm gap-2"
+              >
+                <span className="w-5 h-5 rounded-full bg-white/25 flex items-center justify-center text-xs font-bold shrink-0">1</span>
+                <ThumbsDown className="w-4 h-4 shrink-0" />
+                {conComment.trim()
+                  ? (isHe ? 'פרסום ההסבר והצבעת נגד' : isAr ? 'انشر التوضيح وصوّت ضد' : 'Publish explanation & vote against')
+                  : (isHe ? 'להצביע נגד בלבד' : isAr ? 'صوّت ضد' : 'Vote against')}
+              </Button>
+              {conComment.trim() && (
+                <p className="text-xs text-slate-500 text-center leading-tight">
+                  {isHe ? 'ההסבר יפורסם כתגובה יחד עם הצבעתך נגד' : isAr ? 'سيُنشر توضيحك كتعليق مع تصويتك ضد' : 'Your explanation will be posted as a comment together with your con vote'}
+                </p>
+              )}
+            </div>
+
+            {/* Option 2: Add explanation (optional) */}
             {!showExplanation ? (
               <button
                 type="button"
@@ -384,8 +403,9 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                   setShowExplanation(true);
                   setTimeout(() => explanationRef.current?.focus(), 250);
                 }}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 text-slate-600 hover:border-slate-400 hover:bg-slate-100 hover:text-slate-800 transition-colors text-sm font-medium"
+                className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 text-slate-600 hover:border-slate-400 hover:bg-slate-100 hover:text-slate-800 transition-colors text-sm font-medium"
               >
+                <span className="w-5 h-5 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">2</span>
                 <span className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
                   <Plus className="w-3.5 h-3.5" />
                 </span>
@@ -400,9 +420,12 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
                   transition={{ duration: 0.25, ease: 'easeOut' }}
                   className="space-y-1.5 overflow-hidden"
                 >
-                  <label className="text-sm text-slate-500">
-                    {isHe ? 'מה לא עובד בסעיף הזה? ניתן להוסיף הסבר להתנגדות או להציע לו נוסח חלופי (אופציונלי)' : isAr ? 'ما الخطأ في هذا القسم؟ يمكنك أيضاً اقتراح صياغة أخرى (اختياري)' : 'What doesn\'t work in this section? You can also suggest how to word it differently (optional)'}
-                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">2</span>
+                    <label className="text-sm text-slate-500">
+                      {isHe ? 'מה לא עובד בסעיף הזה? ניתן להוסיף הסבר להתנגדות או להציע לו נוסח חלופי (אופציונלי)' : isAr ? 'ما الخطأ في هذا القسم؟ يمكنك أيضاً اقتراح صياغة أخرى (اختياري)' : 'What doesn\'t work in this section? You can also suggest how to word it differently (optional)'}
+                    </label>
+                  </div>
                   <Textarea
                     ref={explanationRef}
                     value={conComment}
@@ -415,58 +438,32 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
               </AnimatePresence>
             )}
 
-            {/* Primary action — sits right below its input. Label + hint make clear the explanation is published together with the con vote once text was entered */}
-            <div className="space-y-1.5">
-              <Button
-                onClick={handleConVoteOnly}
-                className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold shadow-sm gap-2"
-              >
-                <ThumbsDown className="w-4 h-4 shrink-0" />
-                {conComment.trim()
-                  ? (isHe ? 'פרסום ההסבר והצבעת נגד' : isAr ? 'انشر التوضيح وصوّت ضد' : 'Publish explanation & vote against')
-                  : (isHe ? 'להצביע נגד בלבד' : isAr ? 'صوّت ضد' : 'Vote against')}
-              </Button>
-              {conComment.trim() && (
-                <p className="text-xs text-slate-500 text-center leading-tight">
-                  {isHe ? 'ההסבר יפורסם כתגובה יחד עם הצבעתך נגד' : isAr ? 'سيُنشر توضيحك كتعليق مع تصويتك ضد' : 'Your explanation will be posted as a comment together with your con vote'}
-                </p>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-2.5">
-              <div className="relative flex items-center">
-                <div className="flex-1 border-t border-slate-200" />
-                <span className="px-3 text-xs text-slate-400">
-                  {isHe ? 'או' : isAr ? 'أو' : 'or'}
-                </span>
-                <div className="flex-1 border-t border-slate-200" />
-              </div>
-
-              <button
-                type="button"
-                onClick={handleConVoteAndSuggest}
-                className="w-full rounded-xl border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors p-3 text-start"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                    <Pencil className="w-4 h-4 text-slate-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 leading-tight">
-                      {isHe ? 'להציע נוסח חלופי לסעיף' : isAr ? 'اقتراح صياغة بديلة للقسم' : 'Suggest alternative wording'}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-0.5 leading-tight">
-                      {isHe
-                        ? (conComment.trim()
-                          ? 'תגובתך תפורסם, ההתנגדות תירשם ותועבר/י למסך לכתיבת הצעה לעריכת הסעיף'
-                          : 'ההצבעה נגד תירשם ותועבר/י למסך כתיבת נוסח חלופי')
-                        : isAr ? 'سيُسجّل تصويتك ضد وسيتم نقلك لكتابة صياغة بديلة' : 'Your con vote is recorded and you\'ll write a new version'}
-                    </p>
-                  </div>
-                  {isRTL ? <ArrowLeft className="w-4 h-4 text-slate-400 shrink-0" /> : <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />}
+            {/* Option 3: Suggest alternative wording */}
+            <button
+              type="button"
+              onClick={handleConVoteAndSuggest}
+              className="w-full rounded-xl border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors p-3 text-start"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">3</span>
+                <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
+                  <Pencil className="w-4 h-4 text-slate-600" />
                 </div>
-              </button>
-            </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-slate-800 leading-tight">
+                    {isHe ? 'להציע נוסח חלופי לסעיף' : isAr ? 'اقتراح صياغة بديلة للقسم' : 'Suggest alternative wording'}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-0.5 leading-tight">
+                    {isHe
+                      ? (conComment.trim()
+                        ? 'תגובתך תפורסם, ההתנגדות תירשם ותועבר/י למסך לכתיבת הצעה לעריכת הסעיף'
+                        : 'ההצבעה נגד תירשם ותועבר/י למסך כתיבת נוסח חלופי')
+                      : isAr ? 'سيُسجّل تصويتك ضد وسيتم نقلك لكتابة صياغة بديلة' : 'Your con vote is recorded and you\'ll write a new version'}
+                  </p>
+                </div>
+                {isRTL ? <ArrowLeft className="w-4 h-4 text-slate-400 shrink-0" /> : <ArrowRight className="w-4 h-4 text-slate-400 shrink-0" />}
+              </div>
+            </button>
           </div>
           </>
           )}
