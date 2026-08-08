@@ -68,7 +68,7 @@ const DocumentHeader = React.memo(function DocumentHeader({
     <div className={`document-title-area flex items-center gap-2 w-full max-w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
       <h1
         id="document-title"
-        className="font-bold text-slate-900 flex-1 min-w-0 break-words leading-tight max-w-full text-4xl md:text-4xl"
+        className="font-bold text-slate-900 flex-1 min-w-0 break-words leading-tight max-w-full text-3xl md:text-3xl"
         style={{ fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif" }}>
         
         {showTranslated && hasTranslation ? translatedTitle : document.title}
