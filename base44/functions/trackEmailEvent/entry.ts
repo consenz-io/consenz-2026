@@ -11,26 +11,29 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Invalid params' }, { status: 400 });
   }
 
-  // Track in background — non-blocking, never throws
+  // Atomic increment — avoids race condition when multiple opens/clicks arrive concurrently
   const track = async (field) => {
     try {
       const base44 = createClientFromRequest(req);
-      const logs = await base44.asServiceRole.entities.EmailLog.filter({ id: logId });
-      if (logs.length === 0) return;
-      const current = logs[0][field] || 0;
-      await base44.asServiceRole.entities.EmailLog.update(logId, { [field]: current + 1 });
+      await base44.asServiceRole.entities.EmailLog.updateMany(
+        { id: logId },
+        { $inc: { [field]: 1 } }
+      );
     } catch (_) {
       // analytics failure must never affect the response
     }
   };
 
   // For click events — track FIRST (await), then redirect
-  if (type === 'click' && redirectUrl) {
+  if (type === 'click') {
     await track('clickCount');
-    return new Response(null, {
-      status: 302,
-      headers: { Location: redirectUrl },
-    });
+    if (redirectUrl) {
+      return new Response(null, {
+        status: 302,
+        headers: { Location: redirectUrl },
+      });
+    }
+    return new Response('Tracked', { status: 200 });
   }
 
   // For open pixel — track first, then return pixel

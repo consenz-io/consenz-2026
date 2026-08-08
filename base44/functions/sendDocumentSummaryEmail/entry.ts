@@ -23,6 +23,10 @@ Deno.serve(async (req) => {
   // Determine recipients
   let recipientEmails = [];
 
+  // Fetch all registered users — used for SendEmail vs Resend routing and admin email lookup
+  const allUsers = await base44.asServiceRole.entities.User.list();
+  const registeredEmails = new Set(allUsers.map(u => u.email?.toLowerCase()).filter(Boolean));
+
   if (isTestEmail) {
     recipientEmails = [user.email];
   } else {
@@ -51,7 +55,6 @@ Deno.serve(async (req) => {
 
     // Always add document admins
     const docAdmins = await base44.asServiceRole.entities.DocumentAdmin.filter({ documentId });
-    const allUsers = await base44.asServiceRole.entities.User.list();
     const adminEmailMap = new Map(allUsers.map(u => [u.id, u.email]));
     docAdmins.forEach(da => {
       const adminEmail = adminEmailMap.get(da.userId);
@@ -173,7 +176,7 @@ Deno.serve(async (req) => {
     </tr>
   </table>
   <!-- Tracking pixel -->
-  <img src="${pixelUrl}" width="1" height="1" style="display:none;border:0;" alt="" />
+  <img src="${pixelUrl}" width="1" height="1" alt="" style="border:0;width:1px;height:1px;overflow:hidden;" />
 </body>
 </html>`;
   };
@@ -212,12 +215,40 @@ Deno.serve(async (req) => {
 
     try {
       const emailHtml = buildEmailHtml(logId || 'unknown');
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        to: email,
-        subject: l.subject,
-        body: emailHtml,
-        from_name: 'Consenz',
-      });
+      const isRegistered = registeredEmails.has(email.toLowerCase());
+
+      if (isRegistered) {
+        // Registered Base44 user — use built-in SendEmail integration
+        await base44.asServiceRole.integrations.Core.SendEmail({
+          to: email,
+          subject: l.subject,
+          body: emailHtml,
+          from_name: 'Consenz',
+        });
+      } else {
+        // Non-registered participant — use Resend API directly
+        // NOTE: Replace onboarding@resend.dev with your verified sending domain
+        const resendKey = Deno.env.get('RESEND_API_KEY');
+        if (!resendKey) throw new Error('RESEND_API_KEY not configured — cannot send to non-registered recipients');
+
+        const resendRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'Consenz <onboarding@resend.dev>',
+            to: [email],
+            subject: l.subject,
+            html: emailHtml,
+          }),
+        });
+        if (!resendRes.ok) {
+          const errBody = await resendRes.text();
+          throw new Error(`Resend API (${resendRes.status}): ${errBody}`);
+        }
+      }
       sent++;
     } catch (err) {
       failed.push(email);
