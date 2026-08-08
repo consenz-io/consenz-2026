@@ -214,7 +214,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             {/* Progress bar */}
             <div className="relative h-2 bg-slate-200 rounded-full overflow-hidden">
               <motion.div
-                className={`absolute inset-y-0 left-0 rounded-full ${barColor}`}
+                className={`absolute inset-y-0 ${isRTL ? 'right-0' : 'left-0'} rounded-full ${barColor}`}
                 initial={{ width: 0 }}
                 animate={{ width: `${displayProgress}%` }}
                 transition={{ duration: 0.4, ease: "easeOut" }}

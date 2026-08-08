@@ -282,7 +282,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
             <div className="relative h-3 bg-slate-200 rounded-full overflow-hidden">
               <motion.div
                 key={`${section.id}-delete-bar`}
-                className={`h-full rounded-full ${barColor} transition-colors duration-300`}
+                className={`absolute inset-y-0 ${isRTL ? 'right-0' : 'left-0'} rounded-full ${barColor} transition-colors duration-300`}
                 initial={{ width: `${displayProgress}%` }}
                 animate={{ width: `${displayProgress}%` }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }} />
