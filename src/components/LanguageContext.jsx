@@ -429,7 +429,7 @@ const translations = {
     pendingEditSuggestion: "הצעת עריכה ממתינה",
     viewDetails: "צפייה בפרטים",
     proposedChanges: "נוסח הסעיף המוצע",
-    sectionWording: "נוסח הסעיף",
+    sectionWording: "נוסח הסעיף:",
     lastEdited: "נערך לאחרונה",
     comments: "תגובות",
     admin: "ניהול",
