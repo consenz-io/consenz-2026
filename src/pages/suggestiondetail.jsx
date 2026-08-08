@@ -24,7 +24,6 @@ import { votingQueue } from "../components/document/VotingQueue";
 import { useOptimizedUserProfiles } from "@/components/hooks/useOptimizedUserProfiles";
 import { useLanguage } from "@/components/LanguageContext";
 import { notifySuggestionStatusChange } from "../components/notifications/createNotification";
-import PageHeader from "../components/PageHeader";
 import BackToDocumentButton from "@/components/suggestion/BackToDocumentButton";
 import SuggestionExplanationBlock from "@/components/suggestion/SuggestionExplanationBlock";
 import SuggestionChainNavigation from "@/components/suggestion/SuggestionChainNavigation";
@@ -550,25 +549,22 @@ export default function SuggestionDetail() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
-      <div className="max-w-5xl mx-auto space-y-4 md:space-y-6 w-full overflow-x-hidden">
+      <div className="max-w-5xl mx-auto space-y-3 w-full overflow-x-hidden">
 
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
-          <div className="flex-1 min-w-0 w-full">
-            <PageHeader
-              title={suggestion.title}
-              documentTitle={document?.title}
-              backUrl={`${createPageUrl(PAGE_NAMES.DOCUMENT_VIEW)}?id=${suggestion.documentId}`} />
-            
-          </div>
+        <div className="flex items-start justify-between gap-2">
+          <h1 className="text-slate-900 text-sm font-bold md:text-base flex-1 min-w-0 leading-snug">
+            {document?.title
+              ? (language === 'he' ? `הצעה לעריכה במסמך "${document.title}"` : language === 'ar' ? `اقتراح تعديل في الوثيقة "${document.title}"` : `Suggestion to edit document "${document.title}"`)
+              : suggestion.title}
+          </h1>
           {user && user.id === suggestion.created_by_id && suggestion.status !== 'accepted' &&
           <button
             onClick={() => {if (confirm(t('confirmDeleteSuggestion'))) deleteSuggestionMutation.mutate();}}
             disabled={deleteSuggestionMutation.isPending}
             className="shrink-0 p-1 text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors"
             title={t('deleteSuggestion')}>
-            
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <Trash2 className="w-4 h-4" />
+          </button>
           }
         </div>
 
@@ -654,20 +650,16 @@ export default function SuggestionDetail() {
             </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4 md:space-y-6 p-3 md:p-6 overflow-x-hidden">
+          <CardContent className="space-y-3 p-3 md:p-6 overflow-x-hidden">
 
             {suggestion.type === 'delete_section' ?
             <div>
-                  <h3 className="text-sm font-semibold text-red-700 mb-2">{language === 'he' ? 'סעיף שמוצע למחיקה' : language === 'ar' ? 'القسم المقترح حذفه' : 'Section to be deleted'}</h3>
                   <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                     <div className="prose prose-sm max-w-none text-slate-700 line-through opacity-60" dangerouslySetInnerHTML={{ __html: suggestion.originalContent }} />
                   </div>
                 </div> :
             suggestion.type === 'edit_section' || suggestion.type === 'edit_suggestion' && suggestion.originalContent ?
             <div>
-                  <h3 className="text-sm font-semibold text-slate-700 mb-2">
-                    {language === 'he' ? 'השוואת נוסחים' : language === 'ar' ? 'مقارنة الصيغ' : 'Wording comparison'}
-                  </h3>
                   <div className="relative">
                     {isAutoAccepting && <div className="absolute inset-0 bg-white/50 rounded-lg flex flex-col items-center justify-center z-10 gap-3"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /><p className="text-sm font-medium text-slate-700">{t('processingSuggestion')}</p></div>}
                     <SectionDiff originalContent={suggestion.originalContent} newContent={suggestion.newContent} suggestion={suggestion} documentId={suggestion.documentId} sectionId={suggestion.sectionId} section={section} />
@@ -689,7 +681,6 @@ export default function SuggestionDetail() {
                 </div> :
             suggestion.type === 'new_section' ?
             <div>
-                  <h3 className="text-sm font-semibold text-slate-700 mb-2">{t('proposedContent')}</h3>
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                     <TranslatableContent content={suggestion.newContent} entity={suggestion} entityType="Suggestion" onUpdate={(updated) => queryClient.setQueryData(['suggestion', suggestionId], updated)} className="prose prose-sm max-w-none" renderContent={(content) => <DocumentTextContent content={content} />} />
                   </div>
@@ -712,7 +703,7 @@ export default function SuggestionDetail() {
             }
 
             {suggestion.type === 'new_section' && suggestion.status === 'pending' &&
-            <div className="pt-4">
+            <div>
                 <Button variant="outline" onClick={() => setShowEditSuggestionModal(true)} className="w-full">
                   <Edit2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                   {language === 'he' ? 'הצעת עריכה להצעה זו' : language === 'ar' ? 'اقترح تعديلاً على هذا الاقتراح' : 'Suggest an Edit to this Suggestion'}
@@ -721,7 +712,7 @@ export default function SuggestionDetail() {
             }
 
             {document?.votingButtonsEnabled &&
-            <div className="pt-4 border-t space-y-4">
+            <div className="pt-3 border-t space-y-3">
 
                 {/* For closed suggestions: show VotingProgressSection in read-only mode */}
                 {suggestion.status !== 'pending' ?
