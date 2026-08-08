@@ -428,7 +428,7 @@ const translations = {
     editSection: "עריכת סעיף",
     pendingEditSuggestion: "הצעת עריכה ממתינה",
     viewDetails: "צפייה בפרטים",
-    proposedChanges: "נוסח הסעיף המוצע",
+    proposedChanges: "נוסח הסעיף המוצע:",
     sectionWording: "נוסח הסעיף:",
     lastEdited: "נערך לאחרונה",
     comments: "תגובות",
