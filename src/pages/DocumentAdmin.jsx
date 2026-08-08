@@ -446,7 +446,7 @@ export default function DocumentAdmin() {
 
               
 
-              <div>
+              <div dir={isRTL ? 'rtl' : 'ltr'} className={isRTL ? 'text-right' : ''}>
                 <Label htmlFor="lifetime">{t('daDefaultVotingPeriod')}</Label>
                 <Select
                   value={formData.defaultSuggestionLifetimeHours === null ? "unlimited" : formData.defaultSuggestionLifetimeHours?.toString()}
