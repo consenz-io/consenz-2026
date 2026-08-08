@@ -377,15 +377,15 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
 
           <div className="px-6 pb-6 space-y-3">
             {/* Option 1: Vote against only */}
-            <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
               <Button
                 onClick={handleConVoteOnly}
-                className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold shadow-sm gap-2"
+                className="flex-1 h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold shadow-sm gap-2"
               >
-                <span className="w-5 h-5 rounded-full bg-white/25 flex items-center justify-center text-xs font-bold shrink-0">1</span>
                 <ThumbsDown className="w-4 h-4 shrink-0" />
                 {isHe ? 'להצביע נגד בלבד' : isAr ? 'صوّت ضد' : 'Vote against'}
               </Button>
+              <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold shrink-0">1</span>
             </div>
 
             {/* Option 2: Add explanation (optional) */}
