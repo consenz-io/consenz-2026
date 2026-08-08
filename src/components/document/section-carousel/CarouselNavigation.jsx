@@ -164,7 +164,7 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
       <div className="flex flex-col md:flex-row items-stretch gap-2">
         <button
           onClick={onPrev}
-          className={`flex items-center justify-center px-3 py-2.5 rounded-xl border-2 transition-all shadow-sm ${btnClass}`}
+          className={`flex items-center justify-center w-10 py-2.5 rounded-xl border-2 transition-all shadow-sm ${btnClass}`}
           aria-label={language === 'he' ? 'להצעה הקודמת' : language === 'ar' ? 'الاقتراح السابق' : 'Previous suggestion'}>
           {isRTL ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
         </button>
