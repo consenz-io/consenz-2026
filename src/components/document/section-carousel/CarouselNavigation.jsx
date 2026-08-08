@@ -161,7 +161,7 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
 
   return (
     <div className={`proposal-navigation-arrows mt-4 pt-3 px-3 pb-3 rounded-lg border ${stripBg}`}>
-      <div className="flex flex-col md:flex-row items-center gap-2">
+      <div className="flex flex-row items-center gap-2">
         <button
           onClick={onPrev}
           className={`flex items-center justify-center w-10 py-2.5 rounded-xl border-2 transition-all shadow-sm ${btnClass}`}
