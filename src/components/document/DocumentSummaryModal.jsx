@@ -135,6 +135,7 @@ export default function DocumentSummaryModal({ documentId, document, user, onClo
         summaryContent: summary,
         isTestEmail: isTest,
         language,
+        appBaseUrl: window.location.origin,
       });
       setSendResult({ ...res.data, isTest });
       setPhase('done');

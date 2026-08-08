@@ -227,16 +227,26 @@ Add a clearly separated disclaimer paragraph styled with small gray text, statin
   // Remove excessive blank lines / whitespace between HTML tags
   summaryText = summaryText.replace(/>\s*\n\s*\n\s*</g, '>\n<').replace(/\n{3,}/g, '\n');
 
+  // Build pending suggestions with clickable links for the modal UI
+  const pendingSuggestions = pending.map(s => ({
+    id: s.id,
+    title: s.title,
+    url: suggestionUrl(s.id),
+    proVotes: s.proVotes || 0,
+    conVotes: s.conVotes || 0,
+  }));
+
   return Response.json({
-   summary: summaryText,
-   stats: {
-     participants: participantEmails.size,
-     totalSuggestions: suggestions.length,
-     accepted: acceptedByConsensus.length + acceptedByAdmin.length,
-     pending: pending.length,
-     rejected: rejected.length,
-     votes: relevantVotes.length,
-     comments: relevantComments.length,
-   },
+    summary: summaryText,
+    pendingSuggestions,
+    stats: {
+      participants: participantEmails.size,
+      totalSuggestions: suggestions.length,
+      accepted: acceptedByConsensus.length + acceptedByAdmin.length,
+      pending: pending.length,
+      rejected: rejected.length,
+      votes: relevantVotes.length,
+      comments: relevantComments.length,
+    },
   });
 });

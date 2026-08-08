@@ -6,7 +6,7 @@ Deno.serve(async (req) => {
   const user = await base44.auth.me();
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { documentId, summaryContent, isTestEmail, language } = await req.json();
+  const { documentId, summaryContent, isTestEmail, language, appBaseUrl } = await req.json();
   if (!documentId || !summaryContent) {
     return Response.json({ error: 'Missing required fields' }, { status: 400 });
   }
@@ -24,7 +24,8 @@ Deno.serve(async (req) => {
   let recipientEmails = [];
 
   // Fetch all registered users — used for SendEmail vs Resend routing and admin email lookup
-  const allUsers = await base44.asServiceRole.entities.User.list();
+  // Use a high limit to avoid missing users beyond the default 50-record cap
+  const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 10000);
   const registeredEmails = new Set(allUsers.map(u => u.email?.toLowerCase()).filter(Boolean));
 
   if (isTestEmail) {
@@ -34,24 +35,27 @@ Deno.serve(async (req) => {
     const [suggestions, sections, allVotes, allComments, allAgreements, publicProfiles] = await Promise.all([
       base44.asServiceRole.entities.Suggestion.filter({ documentId }),
       base44.asServiceRole.entities.Section.filter({ documentId }),
-      base44.asServiceRole.entities.Vote.list(),
-      base44.asServiceRole.entities.Comment.list(),
+      base44.asServiceRole.entities.Vote.list('-created_date', 10000),
+      base44.asServiceRole.entities.Comment.list('-created_date', 10000),
       base44.asServiceRole.entities.DocumentAgreement.filter({ documentId }),
-      base44.asServiceRole.entities.UserPublicProfile.list(),
+      base44.asServiceRole.entities.UserPublicProfile.list('-created_date', 10000),
     ]);
 
     const suggestionIds = new Set(suggestions.map(s => s.id));
     const sectionIds = new Set(sections.map(s => s.id));
     const emailSet = new Set();
 
-    suggestions.forEach(s => { if (s.created_by) emailSet.add(s.created_by); });
-    allVotes.filter(v => suggestionIds.has(v.suggestionId)).forEach(v => { if (v.created_by) emailSet.add(v.created_by); });
+    // Normalize all emails to lowercase for consistent comparison with registeredEmails
+    const addEmail = (email) => { if (email) emailSet.add(email.toLowerCase().trim()); };
+
+    suggestions.forEach(s => addEmail(s.created_by));
+    allVotes.filter(v => suggestionIds.has(v.suggestionId)).forEach(v => addEmail(v.created_by));
     allComments.filter(c =>
       (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
       (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
       (c.rootEntityType === 'document' && c.rootEntityId === documentId)
-    ).forEach(c => { if (c.created_by) emailSet.add(c.created_by); });
-    allAgreements.forEach(a => { if (a.userEmail) emailSet.add(a.userEmail); });
+    ).forEach(c => addEmail(c.created_by));
+    allAgreements.forEach(a => addEmail(a.userEmail));
 
     // Always add document admins
     const docAdmins = await base44.asServiceRole.entities.DocumentAdmin.filter({ documentId });
@@ -96,7 +100,9 @@ Deno.serve(async (req) => {
   };
 
   const l = labels[language] || labels['en'];
-  const appBase = new URL(req.url).origin;
+  // Use appBaseUrl from the frontend (the public-facing app URL).
+  // req.url gives the Base44 backend origin, NOT the app URL — links would break.
+  const appBase = appBaseUrl || new URL(req.url).origin;
   const docUrl = `${appBase}/DocumentView?id=${documentId}`;
 
   // Base URL for the trackEmailEvent backend function
