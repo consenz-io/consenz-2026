@@ -112,7 +112,7 @@ async function calculateContributors(base44, documentId) {
 
 Deno.serve(async (req) => {
   // Declared outside the try block so the catch handler below can reach them
-  // for cleanup (releasing the acceptance lock) if anything throws.
+  // for best-effort cleanup (releasing the acceptance lock) if anything throws.
   let base44;
   let suggestionId;
   let lockAcquired = false;
@@ -125,6 +125,7 @@ Deno.serve(async (req) => {
     ({ suggestionId, documentId, voterId, wasNewVote, forceAccept } = await req.json());
 
     console.log('[PROCESS ACCEPTANCE] Starting for suggestion:', suggestionId);
+
     // Fetch all needed data in parallel
     const [suggestion, document] = await Promise.all([
       base44.asServiceRole.entities.Suggestion.get(suggestionId),
@@ -175,18 +176,19 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'Already being processed' });
     }
 
-// Second guard: if acceptance was already fully completed by another instance that won the lock
+    // Second guard: if acceptance was already fully completed by another instance that won the lock
     if (lockedSuggestion.suggestionConsensus != null) {
       console.log('[PROCESS ACCEPTANCE] Already processed by another instance (suggestionConsensus set), skipping');
       return Response.json({ success: true, message: 'Already processed by another instance' });
     }
 
     // From this point on we hold the lock — if anything below throws, the catch
-    // handler at the bottom of this function releases it instead of leaving the
-    // suggestion permanently un-acceptable.
+    // handler at the bottom of this function will release it (acceptanceLock:false)
+    // instead of leaving the suggestion permanently un-acceptable.
     lockAcquired = true;
 
-    // We own the lock — for non-new_section types, mark accepted immediately so no other instance can proceed.    // For new_section: we cannot mark accepted yet because sectionId is not known until after Section.create.
+    // We own the lock — for non-new_section types, mark accepted immediately so no other instance can proceed.
+    // For new_section: we cannot mark accepted yet because sectionId is not known until after Section.create.
     // We will mark it accepted atomically together with sectionId at the end of the new_section block.
     if (suggestion.type !== 'new_section') {
       await base44.asServiceRole.entities.Suggestion.update(suggestionId, { status: 'accepted' });
@@ -608,10 +610,13 @@ Deno.serve(async (req) => {
         threshold: newThreshold,
         totalUsersInteracted: totalUsers
       }),
-// 'threshold' is a Document-level field only — Suggestion has no such
-      // property in its schema. Writing it here threw a schema-validation
-      // error whenever any other suggestion was pending in the document,
-      // which broke the whole update batch (document threshold + notifications).
+      // NOTE: 'threshold' is a Document-level field only (see base44/entities/Suggestion.jsonc —
+      // it has no 'threshold' property). Writing it here used to throw a schema-validation
+      // error on EVERY acceptance that happened while any other suggestion was pending
+      // (i.e. almost always, in an active document), which rejected this whole Promise.all
+      // batch and silently skipped the document threshold update + all outgoing
+      // notifications for that acceptance. We only need to touch sibling suggestions that
+      // target the exact same section being edited, to keep their originalContent in sync.
       ...pendingSuggestions
         .filter(p => p.id !== suggestionId)
         .filter(p => p.type === 'edit_section' && p.sectionId === suggestion.sectionId && suggestion.type === 'edit_section')
@@ -740,13 +745,17 @@ Deno.serve(async (req) => {
       message: 'Suggestion accepted successfully'
     });
 
-} catch (error) {
+  } catch (error) {
     console.error('[PROCESS ACCEPTANCE ERROR]', error);
 
-    // Release the acceptance lock on failure (deadlock fix). If we won the CAS
-    // lock above but then threw before finishing, acceptanceLock was left stuck
-    // at `true` while status stayed 'pending' — meaning the suggestion could
-    // NEVER be accepted again, no matter how many more votes came in.
+    // ── Release the acceptance lock on failure (deadlock fix) ───────────────
+    // If we won the CAS lock above but then threw before finishing, acceptanceLock
+    // was left stuck at `true` while status stayed 'pending'. Since re-acquiring
+    // the lock requires acceptanceLock:false, that suggestion could NEVER be
+    // accepted again — no matter how many further votes came in — because every
+    // future call would hit "Did not win the atomic lock" forever. Best-effort:
+    // reset the lock so the next vote can retry cleanly. Guarded by status:'pending'
+    // so we never clobber a suggestion that actually finished in an unrelated race.
     if (lockAcquired && base44 && suggestionId) {
       try {
         await base44.asServiceRole.entities.Suggestion.updateMany(
