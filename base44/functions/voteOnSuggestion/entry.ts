@@ -252,6 +252,7 @@ Deno.serve(async (req) => {
       processingAcceptance.add(lockKey);
 
       // Call processAcceptance synchronously (not fire-and-forget) so we have full context
+      let processAcceptanceFailed = false;
       try {
         await base44.asServiceRole.functions.invoke('processAcceptance', {
           suggestionId,
@@ -261,13 +262,27 @@ Deno.serve(async (req) => {
         });
         console.log('[VOTE FUNCTION] processAcceptance completed successfully');
       } catch (err) {
+        // IMPORTANT: do not swallow this. Previously `accepted` was force-set to true
+        // below regardless of what happened here, so a failure inside processAcceptance
+        // was invisible to the caller — the UI showed "🎉 accepted" while the suggestion
+        // actually stayed 'pending' in the database forever. We record the failure and
+        // verify the real outcome against the database below instead of assuming success.
+        processAcceptanceFailed = true;
         console.error('[VOTE FUNCTION] processAcceptance error:', err);
       } finally {
         processingAcceptance.delete(lockKey);
       }
 
-      accepted = true;
-      console.log('[VOTE FUNCTION] processAcceptance completed, suggestion accepted');
+      // Verify against the database — the single source of truth — rather than
+      // trusting that invoking processAcceptance implies it actually succeeded.
+      const refreshedSuggestions = await base44.asServiceRole.entities.Suggestion.filter({ id: suggestionId });
+      accepted = refreshedSuggestions[0]?.status === 'accepted';
+
+      if (processAcceptanceFailed && !accepted) {
+        console.error('[VOTE FUNCTION] Acceptance failed and suggestion is still pending:', suggestionId);
+      }
+
+      console.log('[VOTE FUNCTION] processAcceptance finished, accepted:', accepted);
     }
 
     return Response.json({
