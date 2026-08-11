@@ -23,16 +23,20 @@ Deno.serve(async (req) => {
 
       // ── Race guard vs processAcceptance (H2) ──────────────────────────
       // Only expire a suggestion that is STILL pending AND NOT currently locked for
-      // acceptance. This is an atomic compare-and-swap (mirrors processAcceptance's own
-      // lock): if processAcceptance already won the lock (acceptanceLock:true) or already
-      // accepted it (status != pending), updateMany matches zero rows and we skip — never
-      // clobbering an in-progress or completed acceptance with a 'rejected' status.
-      const rejectResult = await base44.asServiceRole.entities.Suggestion.updateMany(
+      // acceptance. This mirrors processAcceptance's own lock: if processAcceptance
+      // already won the lock (acceptanceLock:true) or already accepted it
+      // (status != pending), the conditional update below won't apply to this row.
+      //
+      // We verify by reading the record back afterward rather than trusting a guessed
+      // field name (modifiedCount/modified/count) on updateMany's return value — if that
+      // guess doesn't match this SDK's actual response shape, it silently resolves to 0
+      // on every call and NO suggestion would ever expire, with no error ever logged.
+      await base44.asServiceRole.entities.Suggestion.updateMany(
         { id: suggestion.id, status: 'pending', acceptanceLock: false },
         { $set: { status: 'rejected', rejectedByAdmin: false } }
       );
-      const rejectedCount = rejectResult?.modifiedCount ?? rejectResult?.modified ?? rejectResult?.count ?? 0;
-      if (rejectedCount < 1) {
+      const rejectedSuggestion = await base44.asServiceRole.entities.Suggestion.get(suggestion.id);
+      if (!rejectedSuggestion || rejectedSuggestion.status !== 'rejected') {
         console.log('[EXPIRE SUGGESTIONS] Skipping — acceptance in progress or already resolved:', suggestion.id);
         continue;
       }
