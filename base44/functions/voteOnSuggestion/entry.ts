@@ -253,14 +253,19 @@ Deno.serve(async (req) => {
 
       // Call processAcceptance synchronously (not fire-and-forget) so we have full context
       let processAcceptanceFailed = false;
+      let processAcceptanceDebug = null; // surfaced to the client for debugging — see below
       try {
-        await base44.asServiceRole.functions.invoke('processAcceptance', {
+        const acceptResult = await base44.asServiceRole.functions.invoke('processAcceptance', {
           suggestionId,
           documentId: document.id,
           voterId: user.id,
           wasNewVote: voteAction === 'created' && vote === 'pro'
         });
-        console.log('[VOTE FUNCTION] processAcceptance completed successfully');
+        // Capture whatever processAcceptance actually returned (success message OR
+        // {error, details} body) so we can hand it straight to the browser console below,
+        // instead of it being invisible inside Base44's server-side function logs.
+        processAcceptanceDebug = acceptResult?.data ?? acceptResult ?? null;
+        console.log('[VOTE FUNCTION] processAcceptance completed successfully:', processAcceptanceDebug);
       } catch (err) {
         // IMPORTANT: do not swallow this. Previously `accepted` was force-set to true
         // below regardless of what happened here, so a failure inside processAcceptance
@@ -268,21 +273,57 @@ Deno.serve(async (req) => {
         // actually stayed 'pending' in the database forever. We record the failure and
         // verify the real outcome against the database below instead of assuming success.
         processAcceptanceFailed = true;
-        console.error('[VOTE FUNCTION] processAcceptance error:', err);
+        // Grab as much detail as possible from whatever shape this SDK throws — different
+        // failure modes (HTTP error vs thrown JS error vs rejected fetch) expose the real
+        // message/body under different property names, so check all the likely spots.
+        processAcceptanceDebug = {
+          message: err?.message || String(err),
+          responseBody: err?.response?.data ?? err?.body ?? null,
+          stack: err?.stack || null
+        };
+        console.error('[VOTE FUNCTION] processAcceptance error:', err, processAcceptanceDebug);
       } finally {
         processingAcceptance.delete(lockKey);
       }
 
       // Verify against the database — the single source of truth — rather than
       // trusting that invoking processAcceptance implies it actually succeeded.
-      const refreshedSuggestions = await base44.asServiceRole.entities.Suggestion.filter({ id: suggestionId });
-      accepted = refreshedSuggestions[0]?.status === 'accepted';
+      const refreshedSuggestion = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
+      accepted = refreshedSuggestion?.status === 'accepted';
 
-      if (processAcceptanceFailed && !accepted) {
-        console.error('[VOTE FUNCTION] Acceptance failed and suggestion is still pending:', suggestionId);
+      if (!accepted) {
+        // Whether or not the invoke() call itself threw, the suggestion did NOT end up
+        // accepted — log everything we captured so the real cause is visible in the
+        // browser console via the response body below, not buried in server-side logs.
+        console.error('[VOTE FUNCTION] Acceptance did not happen. Debug info:', {
+          processAcceptanceFailed,
+          processAcceptanceDebug,
+          currentStatus: refreshedSuggestion?.status,
+          acceptanceLock: refreshedSuggestion?.acceptanceLock
+        });
       }
 
       console.log('[VOTE FUNCTION] processAcceptance finished, accepted:', accepted);
+
+      // On failure to accept, return the captured debug info directly in the response
+      // body (instead of just accepted:false) so it shows up in the browser's
+      // [VOTE] Backend response console log without needing Base44's log panel at all.
+      if (!accepted) {
+        return Response.json({
+          success: true,
+          newProVotes,
+          newConVotes,
+          accepted: false,
+          voteAction,
+          message: 'ההצבעה נספרה אך ההצעה לא התקבלה — ראה debug',
+          debug: {
+            processAcceptanceFailed,
+            processAcceptanceDebug,
+            currentStatus: refreshedSuggestion?.status,
+            acceptanceLock: refreshedSuggestion?.acceptanceLock
+          }
+        });
+      }
     }
 
     return Response.json({
