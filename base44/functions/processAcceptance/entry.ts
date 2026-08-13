@@ -182,11 +182,15 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'Already being processed' });
     }
 
-    // Second guard: if acceptance was already fully completed by another instance that won the lock
-    if (lockedSuggestion.suggestionConsensus != null) {
-      console.log('[PROCESS ACCEPTANCE] Already processed by another instance (suggestionConsensus set), skipping');
-      return Response.json({ success: true, message: 'Already processed by another instance' });
-    }
+    // NOTE: we intentionally do NOT add a second "already processed" guard here checking
+    // suggestionConsensus != null. That check used to exist, but it's both redundant (the
+    // status==='pending' checks above and the CAS lock already fully cover "was this already
+    // accepted") and dangerous: if suggestionConsensus defaults to 0 rather than null/undefined
+    // at the platform level (common for numeric fields with no explicit `default` in the
+    // schema), `0 != null` is true, silently blocking every single acceptance attempt right
+    // after acquiring the lock — as a clean `return`, not a `throw`, so it never reaches the
+    // catch block's lock-release cleanup either. That combination (100%-reproducible silent
+    // bail + permanently stuck lock) matches this bug's symptoms exactly.
 
     // From this point on we hold the lock — if anything below throws, the catch
     // handler at the bottom of this function will release it (acceptanceLock:false)
