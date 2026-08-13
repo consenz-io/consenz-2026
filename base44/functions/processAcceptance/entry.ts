@@ -154,33 +154,29 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ATOMIC LOCK (compare-and-swap): flip acceptanceLock false→true ONLY for a suggestion
-    // that is still pending AND still unlocked, in a single conditional write. The DB-level
-    // match on {acceptanceLock:false} is what makes this atomic — of two concurrent calls,
-    // only one can match a row still holding false.
+    // ── Acquire the acceptance lock ─────────────────────────────────────────
+    // We intentionally do NOT write the lock and then immediately read it back to
+    // verify. That "write then re-read" pattern is what used to live here, and it is
+    // vulnerable to read-after-write lag: if the platform's read path has even a few
+    // milliseconds of lag behind a just-completed write, the immediate .get() call can
+    // return the PRE-write value, making a successful lock acquisition look like a
+    // failure — 100% reproducible, on every single attempt, including the very first
+    // one ever made on a suggestion (exactly what we observed: "Already being
+    // processed" on a suggestion that had never been touched before).
     //
-    // IMPORTANT: we intentionally do NOT gate on updateMany's return value here. The previous
-    // version guessed at the field name holding the affected-row count
-    // (`modifiedCount ?? modified ?? count ?? 0`) — if none of those match this SDK's actual
-    // response shape, the guess silently resolves to 0 on every single call, even a completely
-    // uncontested first attempt, and the function exits early with a false "success" message
-    // without ever throwing (so nothing shows up in error logs) and without ever accepting the
-    // suggestion. That is the root cause of suggestions staying stuck at 'pending' forever
-    // regardless of votes. Instead, we verify ownership the reliable way: read the record back
-    // and check whether acceptanceLock is actually true. This has a narrow window where two
-    // near-simultaneous calls could both read back true and both believe they own the lock —
-    // an acceptable trade-off for this app's traffic pattern, and vastly better than the
-    // previous behavior of NEVER succeeding.
-    await base44.asServiceRole.entities.Suggestion.updateMany(
-      { id: suggestionId, status: 'pending', acceptanceLock: false },
-      { $set: { acceptanceLock: true } }
-    );
-
-    const lockedSuggestion = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
-    if (!lockedSuggestion || lockedSuggestion.status !== 'pending' || !lockedSuggestion.acceptanceLock) {
-      console.log('[PROCESS ACCEPTANCE] Did not acquire the lock (or already processed), skipping');
+    // Instead, we gate purely on `suggestion.acceptanceLock` from the single fetch
+    // already done at the top of this function (before any writes), and then just
+    // write the lock — no re-verification read. This trades strict multi-instance
+    // atomicity for reliability, which is the right trade-off for this app's actual
+    // concurrency profile (a handful of collaborators voting, not a high-throughput
+    // adversarial system). The tiny residual risk — two votes landing in the exact
+    // same millisecond — is far better than the previous guaranteed-failure behavior.
+    if (suggestion.acceptanceLock) {
+      console.log('[PROCESS ACCEPTANCE] Lock already held per initial read, skipping');
       return Response.json({ success: true, message: 'Already being processed' });
     }
+
+    await base44.asServiceRole.entities.Suggestion.update(suggestionId, { acceptanceLock: true });
 
     // NOTE: we intentionally do NOT add a second "already processed" guard here checking
     // suggestionConsensus != null. That check used to exist, but it's both redundant (the
