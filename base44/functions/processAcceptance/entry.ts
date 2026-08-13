@@ -154,39 +154,53 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Acquire the acceptance lock ─────────────────────────────────────────
-    // We intentionally do NOT write the lock and then immediately read it back to
-    // verify. That "write then re-read" pattern is what used to live here, and it is
-    // vulnerable to read-after-write lag: if the platform's read path has even a few
-    // milliseconds of lag behind a just-completed write, the immediate .get() call can
-    // return the PRE-write value, making a successful lock acquisition look like a
-    // failure — 100% reproducible, on every single attempt, including the very first
-    // one ever made on a suggestion (exactly what we observed: "Already being
-    // processed" on a suggestion that had never been touched before).
+    // ── Acquire the acceptance lock (CAS) ────────────────────────────────────
+    // This lock IS necessary: many collaborators can vote on the same document at
+    // once, and without it two near-simultaneous votes could both process the same
+    // acceptance (duplicate DocumentVersion, duplicate notifications, double points).
     //
-    // Instead, we gate purely on `suggestion.acceptanceLock` from the single fetch
-    // already done at the top of this function (before any writes), and then just
-    // write the lock — no re-verification read. This trades strict multi-instance
-    // atomicity for reliability, which is the right trade-off for this app's actual
-    // concurrency profile (a handful of collaborators voting, not a high-throughput
-    // adversarial system). The tiny residual risk — two votes landing in the exact
-    // same millisecond — is far better than the previous guaranteed-failure behavior.
-    if (suggestion.acceptanceLock) {
-      console.log('[PROCESS ACCEPTANCE] Lock already held per initial read, skipping');
-      return Response.json({ success: true, message: 'Already being processed' });
+    // Two earlier designs both turned out unreliable on this platform:
+    //  1) Trusting updateMany's return value to report how many rows it matched —
+    //     different SDK/response shapes meant our guess at the field name always
+    //     resolved to 0, even on a totally uncontested first attempt.
+    //  2) Writing the lock then immediately reading it back once to verify — the
+    //     read path can lag a just-completed write by some (variable) amount, so an
+    //     immediate read can return the PRE-write value even though the write itself
+    //     succeeded. This reproduced the exact failure we saw: "Already being
+    //     processed" on a suggestion that had never been touched before.
+    //
+    // Fix: write conditionally (the DB-level atomic match is what actually prevents
+    // two instances from both winning — that guarantee doesn't depend on what the
+    // response looks like), then verify with a short retry/backoff loop instead of a
+    // single immediate read, giving the write time to become visible. Only after
+    // several retries with no confirmation do we conclude someone else holds it.
+    await base44.asServiceRole.entities.Suggestion.updateMany(
+      { id: suggestionId, status: 'pending', acceptanceLock: false },
+      { $set: { acceptanceLock: true } }
+    );
+
+    let weOwnLock = false;
+    let lastCheck = null;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      lastCheck = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
+      if (lastCheck && lastCheck.status === 'pending' && lastCheck.acceptanceLock === true) {
+        weOwnLock = true;
+        break;
+      }
+      if (lastCheck && lastCheck.status !== 'pending') {
+        // Someone else has already fully finished processing this suggestion — genuinely not ours.
+        break;
+      }
+      // acceptanceLock still reads back false — could be genuine read-after-write lag on
+      // our own write, or a real loss of the race. Wait briefly and re-check before
+      // giving up, with increasing backoff.
+      await new Promise(resolve => setTimeout(resolve, 150 * (attempt + 1)));
     }
 
-    await base44.asServiceRole.entities.Suggestion.update(suggestionId, { acceptanceLock: true });
-
-    // NOTE: we intentionally do NOT add a second "already processed" guard here checking
-    // suggestionConsensus != null. That check used to exist, but it's both redundant (the
-    // status==='pending' checks above and the CAS lock already fully cover "was this already
-    // accepted") and dangerous: if suggestionConsensus defaults to 0 rather than null/undefined
-    // at the platform level (common for numeric fields with no explicit `default` in the
-    // schema), `0 != null` is true, silently blocking every single acceptance attempt right
-    // after acquiring the lock — as a clean `return`, not a `throw`, so it never reaches the
-    // catch block's lock-release cleanup either. That combination (100%-reproducible silent
-    // bail + permanently stuck lock) matches this bug's symptoms exactly.
+    if (!weOwnLock) {
+      console.log('[PROCESS ACCEPTANCE] Could not confirm lock ownership after retries, skipping:', lastCheck);
+      return Response.json({ success: true, message: 'Already being processed' });
+    }
 
     // From this point on we hold the lock — if anything below throws, the catch
     // handler at the bottom of this function will release it (acceptanceLock:false)
@@ -754,14 +768,12 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('[PROCESS ACCEPTANCE ERROR]', error);
 
-    // ── Release the acceptance lock on failure (deadlock fix) ───────────────
-    // If we won the CAS lock above but then threw before finishing, acceptanceLock
-    // was left stuck at `true` while status stayed 'pending'. Since re-acquiring
-    // the lock requires acceptanceLock:false, that suggestion could NEVER be
-    // accepted again — no matter how many further votes came in — because every
-    // future call would hit "Did not win the atomic lock" forever. Best-effort:
-    // reset the lock so the next vote can retry cleanly. Guarded by status:'pending'
-    // so we never clobber a suggestion that actually finished in an unrelated race.
+    // Release the acceptance lock on failure. If we won the lock above but then threw
+    // before finishing, acceptanceLock would otherwise stay stuck at true while status
+    // stays 'pending' — meaning this suggestion could never be retried by any future
+    // vote. Best-effort: reset it so the next vote can retry cleanly. Guarded by
+    // status:'pending' so we never clobber a suggestion that actually finished
+    // successfully in an unrelated race.
     if (lockAcquired && base44 && suggestionId) {
       try {
         await base44.asServiceRole.entities.Suggestion.updateMany(
