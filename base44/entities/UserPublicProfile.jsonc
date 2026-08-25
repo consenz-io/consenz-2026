@@ -29,5 +29,45 @@
     "userId",
     "email",
     "fullName"
-  ]
+  ],
+  "rls": {
+    "create": null,
+    "read": null,
+    "update": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "data.email": "{{user.email}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "data.email": "{{user.email}}"
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
 }

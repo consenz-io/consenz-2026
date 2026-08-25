@@ -51,5 +51,30 @@
     "amount",
     "action",
     "description"
-  ]
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "data.userId": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }
