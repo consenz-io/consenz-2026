@@ -13,10 +13,35 @@ Deno.serve(async (req) => {
     if (comments.length === 0) return Response.json({ error: 'Comment not found' }, { status: 404 });
     const comment = comments[0];
 
+    // ── Verify the caller actually performed the like/unlike ──────────────
+    // The comment.likes array stores user emails. If isLiking=true the caller's
+    // email must be present (they just liked); if isLiking=false it must be absent
+    // (they just unliked). This prevents an attacker from repeatedly calling the
+    // endpoint to inflate or drain the creator's points without actually liking.
+    const likes = comment.likes || [];
+    const userLiked = likes.includes(user.email);
+    if (isLiking && !userLiked) {
+      return Response.json({ error: 'Like not found — cannot award points' }, { status: 403 });
+    }
+    if (!isLiking && userLiked) {
+      return Response.json({ error: 'Like still present — cannot remove points' }, { status: 403 });
+    }
+
     const creatorId = comment.created_by_id;
     if (!creatorId) return Response.json({ success: true, message: 'No creator' });
     // Don't award points for self-likes
     if (creatorId === user.id) return Response.json({ success: true, message: 'Self-like' });
+
+    // ── Idempotency: skip if points were already adjusted for this comment ──
+    const expectedAction = isLiking ? 'comment_like_received' : 'comment_like_removed';
+    const existingTx = await base44.asServiceRole.entities.PointsTransaction.filter({
+      relatedEntityId: commentId,
+      userId: creatorId,
+      action: expectedAction
+    });
+    if (existingTx.length > 0) {
+      return Response.json({ success: true, message: 'Points already adjusted for this comment' });
+    }
 
     // Resolve documentId + build a deep-link URL to the comment.
     // Mirror handleNewComment: for section comments prefer the latest accepted suggestion
@@ -62,7 +87,7 @@ Deno.serve(async (req) => {
     }
 
     const amount = isLiking ? 5 : -5;
-    const action = isLiking ? 'comment_like_received' : 'comment_like_removed';
+    const action = expectedAction;
     const description = isLiking ? 'Comment like received' : 'Comment like removed';
 
     const usersList = await base44.asServiceRole.entities.User.filter({ id: creatorId });

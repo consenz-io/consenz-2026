@@ -28,6 +28,11 @@ Deno.serve(async (req) => {
   if (type === 'click') {
     await track('clickCount');
     if (redirectUrl) {
+      // Validate redirect URL — only allow relative paths to prevent open redirect.
+      // Reject protocol-relative URLs (//evil.com) and absolute URLs (https://evil.com).
+      if (!redirectUrl.startsWith('/') || redirectUrl.startsWith('//')) {
+        return new Response('Invalid redirect URL', { status: 400 });
+      }
       return new Response(null, {
         status: 302,
         headers: { Location: redirectUrl },

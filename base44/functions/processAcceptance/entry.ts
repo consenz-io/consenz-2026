@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { awardSuggestionPointsLogic } from '../../shared/awardSuggestionPointsLogic.ts';
 
 const NOTIF_TRANSLATIONS = {
   en: {
@@ -608,7 +609,7 @@ Deno.serve(async (req) => {
     // reaching points awarding at the end)
     if (document.gamificationEnabled) {
       try {
-        await base44.asServiceRole.functions.invoke('awardSuggestionPoints', {
+        await awardSuggestionPointsLogic(base44.asServiceRole, {
           suggestionId: suggestion.id,
           action: 'suggestion_accepted'
         });

@@ -37,9 +37,6 @@ setInterval(async () => {
     }
     
     console.log('[POINTS QUEUE] Grouped into', userPointsMap.size, 'unique users');
-    
-    // This will be called by backend with proper auth
-    // For now, just log the batch
     console.log('[POINTS QUEUE] Batch ready for processing');
     
   } catch (error) {
@@ -54,6 +51,13 @@ setInterval(async () => {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // Authenticate caller — this endpoint uses asServiceRole to modify arbitrary
+    // users' points, so it must be restricted to admin users only.
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
+
     const body = await req.json();
     const { operations, processImmediate = false } = body;
 
@@ -61,7 +65,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing or invalid operations array' }, { status: 400 });
     }
 
-    console.log('[POINTS QUEUE] Received', operations.length, 'operations');
+    console.log('[POINTS QUEUE] Received', operations.length, 'operations from admin', user.id);
 
     if (processImmediate) {
       // Process immediately (for critical operations)
