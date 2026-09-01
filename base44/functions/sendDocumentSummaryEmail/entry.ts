@@ -1,5 +1,28 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
+// Sanitize admin-supplied HTML before inserting into email templates.
+// Strips scripts, event handlers, and dangerous URLs to prevent content
+// injection / phishing via the app's verified sending domain.
+function sanitizeEmailHtml(html) {
+  if (!html) return '';
+  let s = String(html);
+  // Remove dangerous tags AND their content
+  s = s.replace(/<(script|style|iframe|object|embed|form|noscript|template|link|meta|base|svg|math)\b[^>]*>[\s\S]*?<\/\1>/gi, '');
+  // Remove self-closing / void dangerous tags
+  s = s.replace(/<(script|iframe|object|embed|link|meta|base|input|button|textarea|select|option|svg|math)\b[^>]*\/?>/gi, '');
+  // Strip on* event handler attributes (onclick, onerror, onload, etc.)
+  s = s.replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+  // Neutralize javascript:/vbscript:/data: URLs in href/src/action
+  s = s.replace(/(href|src|action|xlink:href)\s*=\s*("(?:javascript|vbscript|data):[^"]*"|'(?:javascript|vbscript|data):[^']*'|(?:javascript|vbscript|data):[^\s>]*)/gi, '$1="#"');
+  // Remove style attributes containing expression()/javascript:/vbscript:
+  s = s.replace(/\s+style\s*=\s*("[^"]*(?:expression|javascript|vbscript)[^"]*"|'[^']*(?:expression|javascript|vbscript)[^']*')/gi, '');
+  return s;
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').toLowerCase().trim());
+}
+
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
@@ -10,6 +33,10 @@ Deno.serve(async (req) => {
   if (!documentId || !summaryContent) {
     return Response.json({ error: 'Missing required fields' }, { status: 400 });
   }
+
+  // Sanitize admin-supplied HTML before it reaches the email template — prevents
+  // script/event-handler injection into emails sent from the verified domain.
+  const sanitizedSummary = sanitizeEmailHtml(summaryContent);
 
   // Verify user is document admin or system admin
   const adminRecords = await base44.asServiceRole.entities.DocumentAdmin.filter({ documentId, userId: user.id });
@@ -29,7 +56,7 @@ Deno.serve(async (req) => {
   const registeredEmails = new Set(allUsers.map(u => u.email?.toLowerCase()).filter(Boolean));
 
   if (isTestEmail) {
-    recipientEmails = [user.email];
+    recipientEmails = [user.email].filter(isValidEmail);
   } else {
     // Collect all participant emails from this document
     const [suggestions, sections, allVotes, allComments, allAgreements, publicProfiles] = await Promise.all([
@@ -65,7 +92,7 @@ Deno.serve(async (req) => {
       if (adminEmail) emailSet.add(adminEmail);
     });
 
-    recipientEmails = [...emailSet].filter(Boolean);
+    recipientEmails = [...emailSet].filter(e => e && isValidEmail(e));
   }
 
   if (recipientEmails.length === 0) {
@@ -118,7 +145,7 @@ Deno.serve(async (req) => {
     const trackedDocUrl = trackClick(logId, docUrl);
 
     // Wrap all <a href="..."> links inside summaryContent with click tracking
-    const trackedSummary = summaryContent.replace(
+    const trackedSummary = sanitizedSummary.replace(
       /<a\s+([^>]*?)href="([^"]+)"([^>]*?)>/gi,
       (match, before, url, after) => {
         // Don't double-wrap already tracked links
@@ -204,7 +231,7 @@ Deno.serve(async (req) => {
         senderEmail: user.email,
         recipientEmail: email,
         subject: l.subject,
-        summaryContent,
+        summaryContent: sanitizedSummary,
         purpose: 'document_summary',
         status: 'sent', // will update if failed below
         relatedEntityId: documentId,

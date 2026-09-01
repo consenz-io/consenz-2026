@@ -16,8 +16,30 @@ Deno.serve(async (req) => {
 
     const { groupId, email, language } = await req.json();
 
-    if (!groupId || !email || !email.includes('@')) {
+    if (!groupId || !email) {
       return Response.json({ error: 'Missing or invalid parameters' }, { status: 400 });
+    }
+
+    // Strict email validation — prevents malformed recipients being used as a relay
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim())) {
+      return Response.json({ error: 'Invalid email address' }, { status: 400 });
+    }
+
+    // Rate limit: max 10 invitations per user per hour — prevents open mail relay abuse
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const recentInvites = await base44.asServiceRole.entities.GroupInvitation.filter(
+      { invitedBy: user.id }, '-created_date', 15
+    );
+    const recentCount = recentInvites.filter(i => i.created_date && i.created_date >= oneHourAgo).length;
+    if (recentCount >= 10) {
+      return Response.json({ error: 'Rate limit exceeded: max 10 invitations per hour' }, { status: 429 });
+    }
+
+    // Duplicate check: don't allow re-inviting an email that already has a pending
+    // invitation to this group — prevents repeated relay to the same target
+    const existingInvites = await base44.asServiceRole.entities.GroupInvitation.filter({ groupId, email });
+    if (existingInvites.some(i => i.status === 'pending')) {
+      return Response.json({ error: 'A pending invitation already exists for this email' }, { status: 409 });
     }
 
     // Fetch the group from the server — do not trust client-supplied group

@@ -28,14 +28,22 @@ Deno.serve(async (req) => {
   if (type === 'click') {
     await track('clickCount');
     if (redirectUrl) {
-      // Validate redirect URL — only allow relative paths to prevent open redirect.
-      // Reject protocol-relative URLs (//evil.com) and absolute URLs (https://evil.com).
-      if (!redirectUrl.startsWith('/') || redirectUrl.startsWith('//')) {
+      // Strict same-origin validation using the URL parser — prevents open redirect
+      // via backslash/control-char evasions that bypass naive startsWith('/') checks.
+      const requestOrigin = new URL(req.url).origin;
+      let parsedUrl;
+      try {
+        parsedUrl = new URL(redirectUrl, requestOrigin);
+      } catch {
         return new Response('Invalid redirect URL', { status: 400 });
       }
+      if (parsedUrl.origin !== requestOrigin) {
+        return new Response('Invalid redirect URL', { status: 400 });
+      }
+      const safePath = parsedUrl.pathname + parsedUrl.search + parsedUrl.hash;
       return new Response(null, {
         status: 302,
-        headers: { Location: redirectUrl },
+        headers: { Location: safePath },
       });
     }
     return new Response('Tracked', { status: 200 });
