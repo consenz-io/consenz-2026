@@ -320,6 +320,11 @@ Deno.serve(async (req) => {
       }
 
     } else if (suggestion.type === 'new_section') {
+      // Guard: if sectionId is already set (previous partial run failed after section
+      // creation but before status update), skip section creation to prevent duplicates.
+      if (suggestion.sectionId) {
+        console.log('[PROCESS ACCEPTANCE V2] new_section already has sectionId', suggestion.sectionId, '— skipping section creation (retry recovery)');
+      } else {
       let targetTopicId = suggestion.topicId;
 
       if (!targetTopicId && suggestion.newTopicTitle) {
@@ -416,14 +421,16 @@ Deno.serve(async (req) => {
         }
       }
 
+      // NOTE: status is NOT set here — it's set at the very end (after notifications)
+      // so that if any later step fails, the catch block can release the lock and the
+      // frontend can retry. Setting status early would leave the suggestion "accepted"
+      // with no version/notifications and no way to retry.
       await base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
         sectionId: newSection.id,
-        status: 'accepted',
         originalContent: suggestion.newContent,
-        suggestionConsensus: boundedConsensus,
-        participantsAtAcceptance: totalUsers,
         parentSuggestionId: null
       });
+      } // end section-creation guard
 
     } else if (suggestion.type === 'edit_suggestion' && suggestion.parentSuggestionId) {
       const parentSuggestion = await base44.asServiceRole.entities.Suggestion.get(suggestion.parentSuggestionId);
@@ -447,7 +454,8 @@ Deno.serve(async (req) => {
                 documentId: suggestion.documentId,
                 voterId,
                 wasNewVote,
-                forceAccept: true
+                forceAccept: true,
+                forceReleaseLock: true
               });
               console.log('[PROCESS ACCEPTANCE V2] Parent suggestion processed successfully');
             } catch (parentErr) {
@@ -545,15 +553,15 @@ Deno.serve(async (req) => {
         }))
     ];
 
-    if (suggestion.type !== 'new_section') {
-      updates.push(
-        base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
-          status: 'accepted',
-          suggestionConsensus: boundedConsensus,
-          participantsAtAcceptance: totalUsers
-        })
-      );
-    }
+    // Status is set to 'accepted' for ALL types (including new_section) at the very end,
+    // after all side effects (section creation, versioning, notifications) are complete.
+    updates.push(
+      base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
+        status: 'accepted',
+        suggestionConsensus: boundedConsensus,
+        participantsAtAcceptance: totalUsers
+      })
+    );
 
     await Promise.all(updates);
 
