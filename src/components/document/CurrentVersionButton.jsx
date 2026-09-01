@@ -19,7 +19,11 @@ import {
  */
 export default function CurrentVersionButton({ onClick, language, isRTL, lastVersionDate }) {
   const label =
-    language === "he" ? "גרסת ההסכמה" : language === "ar" ? "نسخة التوافق" : "Consensus Version";
+    language === "he"
+      ? "לצפייה בגרסת ההסכמה העדכנית"
+      : language === "ar"
+      ? "لعرض نسخة التوافق الحديثة"
+      : "View the latest consensus version";
 
   const dateStr = lastVersionDate
     ? new Date(lastVersionDate).toLocaleString(
