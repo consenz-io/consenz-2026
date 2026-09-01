@@ -221,7 +221,13 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'Already processed' });
     }
 
-    if (!forceAccept) {
+    // forceAccept bypasses the threshold check (admin override). Only an authenticated
+    // admin may bypass it; internal chain calls only pass forceAccept after the parent
+    // already meets the threshold, so degrading to the threshold check here is safe.
+    let _forceUser = null;
+    try { _forceUser = await base44.auth.me(); } catch {}
+    const canForceAccept = !!forceAccept && _forceUser?.role === 'admin';
+    if (!canForceAccept) {
       const verifyDelta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
       const verifyThreshold = document.threshold > 0 ? Math.max(2, document.threshold) : 2;
       if (verifyDelta < verifyThreshold) {

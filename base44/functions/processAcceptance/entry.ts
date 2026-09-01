@@ -145,8 +145,14 @@ Deno.serve(async (req) => {
     }
 
     // Re-verify the suggestion actually meets the threshold (using stored document.threshold)
-    // Skip threshold check if forceAccept=true (e.g. triggered by an accepted edit_suggestion on a pending parent)
-    if (!forceAccept) {
+    // forceAccept bypasses the threshold check (admin override). Only an authenticated
+    // admin may bypass it — anonymous/external callers cannot force-accept a suggestion.
+    // Internal chain calls pass forceAccept=true but only after verifying the parent
+    // already meets the threshold, so degrading to the threshold check here is safe.
+    let _forceUser = null;
+    try { _forceUser = await base44.auth.me(); } catch {}
+    const canForceAccept = !!forceAccept && _forceUser?.role === 'admin';
+    if (!canForceAccept) {
       const verifyDelta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
       const verifyThreshold = document.threshold > 0 ? Math.max(2, document.threshold) : 2;
       if (verifyDelta < verifyThreshold) {
