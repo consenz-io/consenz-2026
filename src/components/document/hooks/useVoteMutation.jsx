@@ -26,8 +26,12 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
       votingInProgressRef.current.add(suggestionId);
 
       try {
-        // Single backend call handles everything
-        const response = await base44.functions.invoke('voteOnSuggestion', {
+        // voteOnSuggestionV2 calls processAcceptanceV4, which supports the
+        // edit_suggestion-on-new_section flow (creates a section + converts the
+        // parent + siblings to edit_section). The original voteOnSuggestion is a
+        // pre-existing function whose edits don't reliably propagate, so we call
+        // this new function name which deploys correctly.
+        const response = await base44.functions.invoke('voteOnSuggestionV2', {
           suggestionId,
           vote
         });
