@@ -44,6 +44,32 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
         if (voteAction === 'created') {
           ensureUserPublicProfile(user).catch(() => {});
         }
+
+        // ── Fallback: if vote reached threshold but acceptance didn't process ──
+        // The deployed processAcceptance may be stale (read-after-write lock bug).
+        // processAcceptanceV2 is a new function that deploys correctly and handles
+        // stuck locks. Call it as a fallback when delta >= threshold but accepted is false.
+        const delta = (newProVotes || 0) - (newConVotes || 0);
+        const threshold = Math.max(2, document?.threshold || 2);
+        if (!accepted && delta >= threshold) {
+          console.log('[VOTE] Threshold reached but not accepted, calling processAcceptanceV2 fallback...');
+          try {
+            const fallbackRes = await base44.functions.invoke('processAcceptanceV2', {
+              suggestionId,
+              documentId: document?.id,
+              voterId: user.id,
+              wasNewVote: voteAction === 'created',
+              forceReleaseLock: true
+            });
+            const fallbackData = fallbackRes?.data || fallbackRes;
+            console.log('[VOTE] processAcceptanceV2 fallback response:', fallbackData);
+            if (fallbackData?.accepted || fallbackData?.message === 'Already processed') {
+              return { accepted: true, newProVotes, newConVotes, voteAction };
+            }
+          } catch (fallbackErr) {
+            console.error('[VOTE] processAcceptanceV2 fallback error:', fallbackErr);
+          }
+        }
       
         return { accepted, newProVotes, newConVotes, voteAction };
       } catch (err) {
