@@ -173,6 +173,7 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Atomic CAS lock acquisition (v2 — redeployed to fix stuck locks)
     // Atomic CAS: the conditional filter { acceptanceLock: false } ensures only one
     // concurrent call can win. The return value { updated: 1 } definitively confirms we
     // acquired the lock; { updated: 0 } means another instance already holds it. This
