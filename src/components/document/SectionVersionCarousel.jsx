@@ -331,7 +331,7 @@ export default function SectionVersionCarousel({
             })()}
             <span className="text-[10px] text-slate-400">
               {new Date(currentVer?.created_date).toLocaleDateString(isRTL ? "he-IL" : "en-GB", {
-                day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+                timeZone: "Asia/Jerusalem", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
               })}
               {" · "}{safeIndex + 1} / {versionGroups.length}
             </span>

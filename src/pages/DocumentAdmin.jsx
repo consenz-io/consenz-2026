@@ -686,7 +686,7 @@ export default function DocumentAdmin() {
                             </div>
                             <p className="text-sm text-slate-600">{targetUser.email}</p>
                             <p className="text-xs text-slate-400 mt-1">
-                              {t('daPoints')}: {targetUser.points || 1000} | {t('daJoined')}: {new Date(targetUser.created_date).toLocaleDateString()}
+                              {t('daPoints')}: {targetUser.points || 1000} | {t('daJoined')}: {new Date(targetUser.created_date).toLocaleDateString(undefined, { timeZone: 'Asia/Jerusalem' })}
                             </p>
                           </div>
                         </div>

@@ -309,7 +309,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
               }
               {currentVersion.created_date &&
                 <span className="text-[10px] text-slate-400">
-                  {new Date(currentVersion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  {new Date(currentVersion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
               }
             </div>

@@ -133,7 +133,7 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
                   </div>
 
                   <div className="text-xs text-slate-400">
-                    {t('created')} {new Date(suggestion.created_date).toLocaleDateString()} {t('by')} {getUserName(suggestion.created_by)}
+                    {t('created')} {new Date(suggestion.created_date).toLocaleDateString(undefined, { timeZone: 'Asia/Jerusalem' })} {t('by')} {getUserName(suggestion.created_by)}
                   </div>
                 </div>
               </CardContent>

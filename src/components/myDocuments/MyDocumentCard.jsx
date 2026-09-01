@@ -111,7 +111,7 @@ export default function MyDocumentCard({ doc, mySuggestionsCount, myVotesCount, 
           </div>
         </div>
         <div className="text-xs text-slate-400">
-          {t('created')} {new Date(doc.created_date).toLocaleDateString()}
+          {t('created')} {new Date(doc.created_date).toLocaleDateString(undefined, { timeZone: 'Asia/Jerusalem' })}
         </div>
       </CardContent>
     </Card>
