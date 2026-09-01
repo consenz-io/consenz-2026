@@ -47,6 +47,7 @@ export default function GroupDocumentRow({ doc, unvotedCount, participantCount }
             entityType="Document"
             fieldName="description"
             className="text-sm text-slate-500 mt-1"
+            preview
           />
         )}
       </div>

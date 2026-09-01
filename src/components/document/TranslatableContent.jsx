@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Languages, Loader2, Check } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { useDocumentTranslation } from "./TranslationContext";
+import TranslatablePreview from "./TranslatablePreview";
 
 const languageNames = {
   en: "English",
@@ -35,7 +36,8 @@ export default function TranslatableContent({
   onUpdate,
   className = "",
   renderContent = null,
-  fieldName = null // Optional: specify which field is being translated (e.g., 'explanation', 'newContent')
+  fieldName = null, // Optional: specify which field is being translated (e.g., 'explanation', 'newContent')
+  preview = false, // When true, collapse long content to a few lines with a "show more" toggle
 }) {
   const { language: rawLanguage, isRTL } = useLanguage();
   const language = rawLanguage || 'he';
@@ -227,6 +229,13 @@ ${content}`,
             <div>
               {renderContent(displayContent)}
             </div>
+          ) : preview ? (
+            <TranslatablePreview
+              content={displayContent}
+              className={className}
+              isRTL={isRTL}
+              language={language}
+            />
           ) : (
             <div 
               className={className}
