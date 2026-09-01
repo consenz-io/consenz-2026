@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Award, Download, FileCheck2 } from "lucide-react";
 import { createPageUrl } from "@/utils";
@@ -10,7 +10,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import confetti from "canvas-confetti";
 
 const SERIF = "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif";
 
@@ -42,27 +41,6 @@ export default function CurrentVersionModal({
   lastVersionDate,
   documentId,
 }) {
-  // Subtle confetti burst when the modal opens — conveys "there is a product".
-  useEffect(() => {
-    if (!open) return;
-    const t = setTimeout(() => {
-      try {
-        confetti({
-          particleCount: 60,
-          spread: 70,
-          startVelocity: 35,
-          origin: { y: 0.2 },
-          colors: ["#3b82f6", "#6366f1", "#fbbf24", "#22c55e"],
-          scalar: 0.8,
-          disableForReducedMotion: true,
-        });
-      } catch (e) {
-        /* no-op — confetti is decorative only */
-      }
-    }, 120);
-    return () => clearTimeout(t);
-  }, [open]);
-
   const sortedTopics = useMemo(
     () => [...topics].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
     [topics]
