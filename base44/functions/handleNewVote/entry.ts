@@ -1,9 +1,15 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { INTERNAL_AUTOMATION_TOKEN } from "../../shared/internalToken.ts";
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { event, data: vote } = await req.json();
+    const body = await req.json();
+    const { event, data: vote, args = {} } = body;
+    // Gate: only the platform automation may invoke this (passes internalToken via function_args).
+    if (args.internalToken !== INTERNAL_AUTOMATION_TOKEN) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     if (!vote || event.type !== 'create') {
       return Response.json({ message: 'Not a create event' }, { status: 200 });
