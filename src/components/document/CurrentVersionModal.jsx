@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Award, Download, FileCheck2 } from "lucide-react";
+import { Handshake, Download, FileCheck2 } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import {
   Dialog,
@@ -116,29 +116,33 @@ export default function CurrentVersionModal({
   return (
     <Dialog open={open} onOpenChange={(o) => {if (!o) onClose();}}>
       <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
-        {/* Decorative top gradient ribbon — festive/formal cue */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-amber-400" />
+        {/* Decorative top accent — refined, formal */}
+        <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-600" />
 
-        {/* Header — festive stamp */}
-        <DialogHeader className="px-6 pt-6 pb-4 text-center space-y-3 border-b border-slate-100 bg-gradient-to-b from-blue-50/50 to-white">
-          <div className="flex justify-center">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 ring-4 ring-blue-100">
-              <Award className="w-7 h-7 text-white" />
+        {/* Header — consensus emblem, right-aligned editorial layout */}
+        <DialogHeader className="px-6 pt-5 pb-5 space-y-3 border-b border-slate-100 bg-gradient-to-b from-blue-50/40 to-white">
+          <div className="flex items-start gap-3" dir={isRTL ? "rtl" : "ltr"}>
+            <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-200/60 ring-1 ring-blue-100">
+              <Handshake className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex flex-col gap-1 min-w-0 flex-1">
+              <DialogTitle className="text-xl font-medium text-slate-800 text-right leading-snug">
+                {title}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-slate-500 leading-relaxed text-right">
+                {subtitle}
+              </DialogDescription>
             </div>
           </div>
-          <DialogTitle className="font-bold text-slate-900 text-lg">
-            {title}
-          </DialogTitle>
-          <DialogDescription className="text-sm text-slate-600 max-w-xl leading-relaxed text-right">
-            {subtitle}
-          </DialogDescription>
-          {dateStr &&
-          <div className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-100/70 px-3 py-1 rounded-full">
-              <FileCheck2 className="w-3.5 h-3.5" />
-              {asOf}
-              {dateStr}
+          {dateStr && (
+            <div className="flex justify-end" dir={isRTL ? "rtl" : "ltr"}>
+              <div className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-100/60 px-3 py-1 rounded-full">
+                <FileCheck2 className="w-3.5 h-3.5" />
+                {asOf}
+                {dateStr}
+              </div>
             </div>
-          }
+          )}
         </DialogHeader>
 
         {/* Body — clean document content */}
