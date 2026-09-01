@@ -10,6 +10,7 @@ import confetti from "canvas-confetti";
 import VotesNeededCounter from "./VotesNeededCounter";
 import CommentsSection from "./CommentsSection";
 import { format } from "date-fns";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 
@@ -121,7 +122,7 @@ const DeleteSectionSuggestionCard = React.memo(function DeleteSectionSuggestionC
               <User className="w-3 h-3" />
               <span>{creatorName}</span>
               <span>•</span>
-              <span>{format(new Date(suggestion.created_date), 'dd/MM/yyyy HH:mm')}</span>
+              <span>{format(parseUserDate(suggestion.created_date), 'dd/MM/yyyy HH:mm')}</span>
             </div>
           </div>
         </div>

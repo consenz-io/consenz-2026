@@ -1,6 +1,7 @@
 import React from "react";
 import { FileCheck2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 import {
   Tooltip,
   TooltipTrigger,
@@ -26,7 +27,7 @@ export default function CurrentVersionButton({ onClick, language, isRTL, lastVer
       : "View the latest consensus version";
 
   const dateStr = lastVersionDate
-    ? new Date(lastVersionDate).toLocaleString(
+    ? parseUserDate(lastVersionDate).toLocaleString(
         language === "he" ? "he-IL" : language === "ar" ? "ar-SA" : "en-GB",
         { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }
       )

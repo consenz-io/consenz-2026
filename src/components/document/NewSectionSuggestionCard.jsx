@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import VotingProgressSection from "./VotingProgressSection";
 import TranslatableContent from "./TranslatableContent";
 import CommentsSection from "./CommentsSection";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 import DocumentTextContent from "./DocumentTextContent";
 import { motion, AnimatePresence } from "framer-motion";
 import AcceptedAnimation from "./AcceptedAnimation";
@@ -309,7 +310,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
               }
               {currentVersion.created_date &&
                 <span className="text-[10px] text-slate-400">
-                  {new Date(currentVersion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  {parseUserDate(currentVersion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
               }
             </div>

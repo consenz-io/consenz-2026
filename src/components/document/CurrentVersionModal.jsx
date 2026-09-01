@@ -10,12 +10,13 @@ import {
   DialogDescription } from
 "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 
 const SERIF = "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif";
 
 function formatDate(dateStr, language) {
   if (!dateStr) return "";
-  return new Date(dateStr).toLocaleString(
+  return parseUserDate(dateStr).toLocaleString(
     language === "he" ? "he-IL" : language === "ar" ? "ar-SA" : "en-GB",
     { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }
   );

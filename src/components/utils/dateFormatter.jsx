@@ -1,6 +1,31 @@
 import moment from 'moment';
 
 /**
+ * Base44 stores timestamps as naive UTC strings without a timezone designator
+ * (e.g. "2026-09-01T10:33:44.911000"). Browsers parse such strings as LOCAL
+ * time, which shifts every displayed time by the user's UTC offset (3 hours
+ * for Jerusalem). This appends a "Z" when no designator is present so the
+ * value is treated as UTC, then converted to the user's local timezone for
+ * display. Strings that already carry a "Z" or a numeric offset pass through.
+ *
+ * @param {string|Date} date
+ * @returns {Date|null}
+ */
+export function parseUserDate(date) {
+  if (!date) return null;
+  if (typeof date === 'string') {
+    const s = date.trim();
+    const withZ = /([zZ]$)|([+-]\d{2}:?\d{2}$)/.test(s) ? s : s + 'Z';
+    return new Date(withZ);
+  }
+  return new Date(date);
+}
+
+function asMoment(date) {
+  return moment(parseUserDate(date));
+}
+
+/**
  * Format a date/time string to the user's local timezone
  * @param {string|Date} date - The date to format (ISO string or Date object)
  * @param {string} format - The format string (default: 'DD/MM/YYYY HH:mm')
@@ -8,7 +33,7 @@ import moment from 'moment';
  */
 export function formatLocalDateTime(date, format = 'DD/MM/YYYY HH:mm') {
   if (!date) return '';
-  return moment(date).local().format(format);
+  return asMoment(date).local().format(format);
 }
 
 /**
@@ -18,7 +43,7 @@ export function formatLocalDateTime(date, format = 'DD/MM/YYYY HH:mm') {
  */
 export function formatRelativeTime(date) {
   if (!date) return '';
-  return moment(date).local().fromNow();
+  return asMoment(date).local().fromNow();
 }
 
 /**
@@ -29,7 +54,7 @@ export function formatRelativeTime(date) {
  */
 export function formatLocalDate(date, format = 'DD/MM/YYYY') {
   if (!date) return '';
-  return moment(date).local().format(format);
+  return asMoment(date).local().format(format);
 }
 
 /**
@@ -40,7 +65,7 @@ export function formatLocalDate(date, format = 'DD/MM/YYYY') {
  */
 export function formatLocalTime(date, format = 'HH:mm') {
   if (!date) return '';
-  return moment(date).local().format(format);
+  return asMoment(date).local().format(format);
 }
 
 /**
@@ -50,5 +75,5 @@ export function formatLocalTime(date, format = 'HH:mm') {
  */
 export function formatFullTimestamp(date) {
   if (!date) return '';
-  return moment(date).local().format('dddd, DD/MM/YYYY, HH:mm');
+  return asMoment(date).local().format('dddd, DD/MM/YYYY, HH:mm');
 }

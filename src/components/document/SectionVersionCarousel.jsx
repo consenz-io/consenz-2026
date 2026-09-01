@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -330,7 +331,7 @@ export default function SectionVersionCarousel({
               return label ? <span className="text-sm font-bold text-teal-700">{label}</span> : null;
             })()}
             <span className="text-[10px] text-slate-400">
-              {new Date(currentVer?.created_date).toLocaleDateString(isRTL ? "he-IL" : "en-GB", {
+              {parseUserDate(currentVer?.created_date).toLocaleDateString(isRTL ? "he-IL" : "en-GB", {
                 day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
               })}
               {" · "}{safeIndex + 1} / {versionGroups.length}

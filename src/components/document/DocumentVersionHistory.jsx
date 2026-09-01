@@ -8,6 +8,7 @@ import { ExternalLink, MessageSquare, Languages, Loader2, GitCompare, ShieldChec
 import { useLanguage } from "@/components/LanguageContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 import TranslatableContent from "./TranslatableContent";
 import CommentsSection from "./CommentsSection";
 
@@ -216,10 +217,10 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
       )}
 
       <div className="text-xs text-slate-500">
-        {t('publishedBy')} <Link to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link> • {t('created')} {new Date(suggestion.created_date).toLocaleString()}
+        {t('publishedBy')} <Link to={`${createPageUrl("Profile")}?userId=${users?.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link> • {t('created')} {parseUserDate(suggestion.created_date).toLocaleString()}
         {suggestion.status === 'accepted' && suggestion.updated_date && (
           <span className="text-green-600 font-medium block mt-1">
-            {t('acceptedOn')} {new Date(suggestion.updated_date).toLocaleString()}
+            {t('acceptedOn')} {parseUserDate(suggestion.updated_date).toLocaleString()}
           </span>
         )}
       </div>
@@ -465,7 +466,7 @@ export default function DocumentVersionHistory({
               )}
 
               <div className="text-xs text-slate-500 pt-3 border-t">
-                {t('created')} {new Date(currentVer.created_date).toLocaleString()}
+                {t('created')} {parseUserDate(currentVer.created_date).toLocaleString()}
                 {currentVer.created_by && ` ${t('by')} ${getUserName(currentVer.created_by)}`}
               </div>
             </CardContent>

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Mail, Eye, MousePointerClick, Users, CheckCircle, XCircle, TestTube } from "lucide-react";
 import { format } from "date-fns";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 import { useLanguage } from "@/components/LanguageContext";
 
 function StatPill({ icon: Icon, label, value, color }) {
@@ -149,7 +150,7 @@ export default function EmailSentLog({ documentId }) {
                       )}
                     </div>
                     <p className="text-xs text-slate-400">
-                      {batch.senderEmail} · {batch.sentAt ? format(new Date(batch.sentAt), 'dd/MM/yyyy HH:mm') : '—'}
+                      {batch.senderEmail} · {batch.sentAt ? format(parseUserDate(batch.sentAt), 'dd/MM/yyyy HH:mm') : '—'}
                     </p>
                   </div>
                 </div>
@@ -205,7 +206,7 @@ export default function EmailSentLog({ documentId }) {
               <span className="truncate">{selectedBatch?.subject}</span>
             </DialogTitle>
             <DialogDescription className="text-xs">
-              {selectedBatch?.senderEmail} · {selectedBatch?.sentAt ? format(new Date(selectedBatch.sentAt), 'dd/MM/yyyy HH:mm') : '—'}
+              {selectedBatch?.senderEmail} · {selectedBatch?.sentAt ? format(parseUserDate(selectedBatch.sentAt), 'dd/MM/yyyy HH:mm') : '—'}
             </DialogDescription>
           </DialogHeader>
 

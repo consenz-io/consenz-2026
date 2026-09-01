@@ -10,6 +10,7 @@ import { ThumbsUp, ThumbsDown, MessageSquare, ArrowRight } from "lucide-react";
 import VotesNeededCounter from "./VotesNeededCounter";
 import TranslatableContent from "./TranslatableContent";
 import { useLanguage } from "@/components/LanguageContext";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 import SuggestionCountdown from "./SuggestionCountdown";
 
 export default function SuggestionsList({ suggestions, document, user, isAdmin }) {
@@ -133,7 +134,7 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
                   </div>
 
                   <div className="text-xs text-slate-400">
-                    {t('created')} {new Date(suggestion.created_date).toLocaleDateString()} {t('by')} {getUserName(suggestion.created_by)}
+                    {t('created')} {parseUserDate(suggestion.created_date).toLocaleDateString()} {t('by')} {getUserName(suggestion.created_by)}
                   </div>
                 </div>
               </CardContent>

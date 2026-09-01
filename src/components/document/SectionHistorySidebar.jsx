@@ -11,6 +11,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { PAGE_NAMES } from "@/components/pageNames";
 import SuggestionSidebar from "@/components/document/SuggestionSidebar";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 
 
 export default function SectionHistorySidebar({ sectionId, isOpen, onClose, document: parentDocument, user }) {
@@ -201,7 +202,7 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose, docu
                             {/* Date */}
                             {date && (
                               <span className="text-xs text-slate-400">
-                                {new Date(date).toLocaleDateString(
+                                {parseUserDate(date).toLocaleDateString(
                                   language === 'he' ? 'he-IL' : language === 'ar' ? 'ar' : 'en-GB',
                                   { day: 'numeric', month: 'short', year: 'numeric' }
                                 )}

@@ -14,6 +14,7 @@ import {
   CheckCircle, XCircle, AlertCircle, Trash2, ExternalLink, Edit2, Save, Loader2, ShieldCheck
 } from "lucide-react";
 import VotesNeededCounter from "./VotesNeededCounter";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 import VotingProgressSection from "./VotingProgressSection";
 import CommentsSection from "./CommentsSection";
 import SuggestionCountdown from "./SuggestionCountdown";
@@ -521,10 +522,10 @@ export default function SuggestionSidebar({
               })()}
             </span>
             {suggestion.created_date && (
-              <span>• {new Date(suggestion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+              <span>• {parseUserDate(suggestion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
             )}
             {suggestion.status === 'accepted' && suggestion.updated_date && (
-              <span className="text-green-600">• ✓ {t('acceptedOn')} {new Date(suggestion.updated_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+              <span className="text-green-600">• ✓ {t('acceptedOn')} {parseUserDate(suggestion.updated_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
             )}
             {suggestion.approvedByAdmin && suggestion.status === 'accepted' && (
               <span className="inline-flex items-center gap-1 text-indigo-700 font-medium">
