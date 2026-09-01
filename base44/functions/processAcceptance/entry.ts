@@ -175,6 +175,20 @@ Deno.serve(async (req) => {
     // response looks like), then verify with a short retry/backoff loop instead of a
     // single immediate read, giving the write time to become visible. Only after
     // several retries with no confirmation do we conclude someone else holds it.
+    // Stale lock recovery: if a previous processAcceptance call timed out or crashed
+    // after acquiring the lock but before releasing it, acceptanceLock would be stuck
+    // at 'true' with status still 'pending'. Detect this by checking updated_date — if
+    // the lock was set more than 2 minutes ago, it's definitely stale (no acceptance
+    // should take that long). Force-release it so this call can proceed cleanly.
+    const lockCheck = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
+    if (lockCheck && lockCheck.status === 'pending' && lockCheck.acceptanceLock === true) {
+      const lockAgeMs = Date.now() - new Date(lockCheck.updated_date).getTime();
+      if (lockAgeMs > 120000) { // 2 minutes
+        console.log('[PROCESS ACCEPTANCE] Detected stale lock (age:', Math.round(lockAgeMs / 1000) + 's), force-releasing for', suggestionId);
+        await base44.asServiceRole.entities.Suggestion.update(suggestionId, { acceptanceLock: false });
+      }
+    }
+
     await base44.asServiceRole.entities.Suggestion.updateMany(
       { id: suggestionId, status: 'pending', acceptanceLock: false },
       { $set: { acceptanceLock: true } }
@@ -208,12 +222,13 @@ Deno.serve(async (req) => {
     // instead of leaving the suggestion permanently un-acceptable.
     lockAcquired = true;
 
-    // We own the lock — for non-new_section types, mark accepted immediately so no other instance can proceed.
-    // For new_section: we cannot mark accepted yet because sectionId is not known until after Section.create.
-    // We will mark it accepted atomically together with sectionId at the end of the new_section block.
-    if (suggestion.type !== 'new_section') {
-      await base44.asServiceRole.entities.Suggestion.update(suggestionId, { status: 'accepted' });
-    }
+    // NOTE: status is NOT set to 'accepted' here. It is set at the END of this function
+    // (in the final Promise.all below) only after ALL work (version creation, section
+    // updates, notifications) has succeeded. This ensures that if the function fails
+    // midway, the catch block can release the lock (because status is still 'pending')
+    // and the suggestion remains retryable by a future vote. Setting status early
+    // caused a bug where the toast showed "accepted" but no version/notifications
+    // were created, and the lock got stuck permanently.
 
     // Calculate contributors and consensus
     const totalUsers = await calculateContributors(base44, documentId);
@@ -647,11 +662,14 @@ Deno.serve(async (req) => {
     ];
 
     // new_section is already fully updated inside its own block above (including suggestionConsensus)
-    // edit_suggestion needs its own consensus fields set here
+    // For all other types, set status to 'accepted' HERE — after all version creation and
+    // section updates have succeeded. This is the single atomic point where the suggestion
+    // transitions to 'accepted'. If anything above threw, the catch block releases the lock
+    // and the suggestion stays 'pending' (retryable).
     if (suggestion.type !== 'new_section') {
       updates.push(
         base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
-          // status already set to 'accepted' atomically at the start of this function
+          status: 'accepted',
           suggestionConsensus: boundedConsensus,
           participantsAtAcceptance: totalUsers
         })
