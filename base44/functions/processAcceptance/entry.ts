@@ -155,31 +155,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Acquire the acceptance lock (CAS) ────────────────────────────────────
-    // This lock IS necessary: many collaborators can vote on the same document at
-    // once, and without it two near-simultaneous votes could both process the same
+    // ── Acquire the acceptance lock (atomic CAS) ─────────────────────────────
+    // This lock prevents two near-simultaneous votes from both processing the same
     // acceptance (duplicate DocumentVersion, duplicate notifications, double points).
     //
-    // Two earlier designs both turned out unreliable on this platform:
-    //  1) Trusting updateMany's return value to report how many rows it matched —
-    //     different SDK/response shapes meant our guess at the field name always
-    //     resolved to 0, even on a totally uncontested first attempt.
-    //  2) Writing the lock then immediately reading it back once to verify — the
-    //     read path can lag a just-completed write by some (variable) amount, so an
-    //     immediate read can return the PRE-write value even though the write itself
-    //     succeeded. This reproduced the exact failure we saw: "Already being
-    //     processed" on a suggestion that had never been touched before.
-    //
-    // Fix: write conditionally (the DB-level atomic match is what actually prevents
-    // two instances from both winning — that guarantee doesn't depend on what the
-    // response looks like), then verify with a short retry/backoff loop instead of a
-    // single immediate read, giving the write time to become visible. Only after
-    // several retries with no confirmation do we conclude someone else holds it.
     // Stale lock recovery: if a previous processAcceptance call timed out or crashed
     // after acquiring the lock but before releasing it, acceptanceLock would be stuck
     // at 'true' with status still 'pending'. Detect this by checking updated_date — if
-    // the lock was set more than 2 minutes ago, it's definitely stale (no acceptance
-    // should take that long). Force-release it so this call can proceed cleanly.
+    // the lock was set more than 2 minutes ago, it's definitely stale. Force-release it
+    // so this call can proceed cleanly.
     const lockCheck = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
     if (lockCheck && lockCheck.status === 'pending' && lockCheck.acceptanceLock === true) {
       const lockAgeMs = Date.now() - new Date(lockCheck.updated_date).getTime();
@@ -189,31 +173,18 @@ Deno.serve(async (req) => {
       }
     }
 
-    await base44.asServiceRole.entities.Suggestion.updateMany(
+    // Atomic CAS: the conditional filter { acceptanceLock: false } ensures only one
+    // concurrent call can win. The return value { updated: 1 } definitively confirms we
+    // acquired the lock; { updated: 0 } means another instance already holds it. This
+    // is reliable unlike read-after-write verification, which can lag by several seconds
+    // on this platform and cause false "Already being processed" responses + stuck locks.
+    const lockResult = await base44.asServiceRole.entities.Suggestion.updateMany(
       { id: suggestionId, status: 'pending', acceptanceLock: false },
       { $set: { acceptanceLock: true } }
     );
 
-    let weOwnLock = false;
-    let lastCheck = null;
-    for (let attempt = 0; attempt < 5; attempt++) {
-      lastCheck = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
-      if (lastCheck && lastCheck.status === 'pending' && lastCheck.acceptanceLock === true) {
-        weOwnLock = true;
-        break;
-      }
-      if (lastCheck && lastCheck.status !== 'pending') {
-        // Someone else has already fully finished processing this suggestion — genuinely not ours.
-        break;
-      }
-      // acceptanceLock still reads back false — could be genuine read-after-write lag on
-      // our own write, or a real loss of the race. Wait briefly and re-check before
-      // giving up, with increasing backoff.
-      await new Promise(resolve => setTimeout(resolve, 150 * (attempt + 1)));
-    }
-
-    if (!weOwnLock) {
-      console.log('[PROCESS ACCEPTANCE] Could not confirm lock ownership after retries, skipping:', lastCheck);
+    if (!lockResult || lockResult.updated !== 1) {
+      console.log('[PROCESS ACCEPTANCE] Lock not acquired (another instance holds it). updateMany result:', lockResult);
       return Response.json({ success: true, message: 'Already being processed' });
     }
 
