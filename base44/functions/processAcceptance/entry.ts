@@ -155,37 +155,37 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Acquire the acceptance lock (atomic CAS) ─────────────────────────────
-    // This lock prevents two near-simultaneous votes from both processing the same
-    // acceptance (duplicate DocumentVersion, duplicate notifications, double points).
-    //
-    // Stale lock recovery: if a previous processAcceptance call timed out or crashed
-    // after acquiring the lock but before releasing it, acceptanceLock would be stuck
-    // at 'true' with status still 'pending'. Detect this by checking updated_date — if
-    // the lock was set more than 2 minutes ago, it's definitely stale. Force-release it
-    // so this call can proceed cleanly.
-    const lockCheck = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
-    if (lockCheck && lockCheck.status === 'pending' && lockCheck.acceptanceLock === true) {
-      const lockAgeMs = Date.now() - new Date(lockCheck.updated_date).getTime();
-      if (lockAgeMs > 120000) { // 2 minutes
-        console.log('[PROCESS ACCEPTANCE] Detected stale lock (age:', Math.round(lockAgeMs / 1000) + 's), force-releasing for', suggestionId);
-        await base44.asServiceRole.entities.Suggestion.update(suggestionId, { acceptanceLock: false });
+    // ── Acquire the acceptance lock (atomic CAS with stale recovery + retry) ──
+    // v3: Robust lock acquisition. If the first CAS attempt fails, check for a stale
+    // lock (updated_date older than 90s) and force-release it, then retry once. This
+    // eliminates the "Already being processed" false negative that left suggestions
+    // permanently stuck with acceptanceLock=true and status=pending.
+    let lockAcquired = false;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      const lockResult = await base44.asServiceRole.entities.Suggestion.updateMany(
+        { id: suggestionId, status: 'pending', acceptanceLock: false },
+        { $set: { acceptanceLock: true } }
+      );
+      if (lockResult && lockResult.updated === 1) {
+        lockAcquired = true;
+        console.log('[PROCESS ACCEPTANCE] Lock acquired on attempt', attempt);
+        break;
+      }
+      if (attempt === 1) {
+        // First attempt failed — check for stale lock and force-release
+        const lockCheck = await base44.asServiceRole.entities.Suggestion.get(suggestionId);
+        if (lockCheck && lockCheck.status === 'pending' && lockCheck.acceptanceLock === true) {
+          const lockAgeMs = Date.now() - new Date(lockCheck.updated_date).getTime();
+          console.log('[PROCESS ACCEPTANCE] Lock held (age:', Math.round(lockAgeMs / 1000) + 's) on attempt 1');
+          if (lockAgeMs > 90000) {
+            console.log('[PROCESS ACCEPTANCE] Force-releasing stale lock for', suggestionId);
+            await base44.asServiceRole.entities.Suggestion.update(suggestionId, { acceptanceLock: false });
+          }
+        }
       }
     }
-
-    // Atomic CAS lock acquisition (v2 — redeployed to fix stuck locks)
-    // Atomic CAS: the conditional filter { acceptanceLock: false } ensures only one
-    // concurrent call can win. The return value { updated: 1 } definitively confirms we
-    // acquired the lock; { updated: 0 } means another instance already holds it. This
-    // is reliable unlike read-after-write verification, which can lag by several seconds
-    // on this platform and cause false "Already being processed" responses + stuck locks.
-    const lockResult = await base44.asServiceRole.entities.Suggestion.updateMany(
-      { id: suggestionId, status: 'pending', acceptanceLock: false },
-      { $set: { acceptanceLock: true } }
-    );
-
-    if (!lockResult || lockResult.updated !== 1) {
-      console.log('[PROCESS ACCEPTANCE] Lock not acquired (another instance holds it). updateMany result:', lockResult);
+    if (!lockAcquired) {
+      console.log('[PROCESS ACCEPTANCE] Lock not acquired after retry, another instance holds it');
       return Response.json({ success: true, message: 'Already being processed' });
     }
 
