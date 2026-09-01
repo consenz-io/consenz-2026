@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
     let documentId, voterId, wasNewVote, forceAccept;
     ({ suggestionId, documentId, voterId, wasNewVote, forceAccept } = await req.json());
 
-    console.log('[PROCESS ACCEPTANCE] Starting for suggestion:', suggestionId);
+    console.log('[PROCESS ACCEPTANCE] Starting for suggestion:', suggestionId, 'at', new Date().toISOString());
 
     // Fetch all needed data in parallel
     const [suggestion, document] = await Promise.all([
