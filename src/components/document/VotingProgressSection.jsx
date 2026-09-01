@@ -9,6 +9,11 @@ import { createPageUrl } from "@/utils";
 import CounterTooltip from "./CounterTooltip";
 import { parseUserDate } from "@/components/utils/dateFormatter";
 
+// Boundary-aligned countdown: instead of a per-card setInterval(60s) that
+// re-renders every card every minute regardless of distance to expiry, this
+// schedules a single setTimeout at the next display-granularity boundary.
+// A card showing "3d" won't re-render for ~24h; "5h" won't re-render for ~1h;
+// only sub-hour cards update per-minute. Eliminates N concurrent intervals.
 function useTimeRemaining(timerEndsAt) {
   const [remaining, setRemaining] = React.useState(() => {
     if (!timerEndsAt) return null;
@@ -16,11 +21,29 @@ function useTimeRemaining(timerEndsAt) {
   });
 
   useEffect(() => {
-    if (!timerEndsAt) return;
-    const tick = () => setRemaining(Math.max(0, new Date(timerEndsAt) - Date.now()));
-    tick();
-    const id = setInterval(tick, 60000); // update every minute
-    return () => clearInterval(id);
+    if (!timerEndsAt) { setRemaining(null); return; }
+
+    let timer;
+    const scheduleNext = () => {
+      const ms = Math.max(0, new Date(timerEndsAt) - Date.now());
+      setRemaining(ms);
+      if (ms <= 0) return; // expired — no more updates
+
+      const totalMinutes = Math.floor(ms / 60000);
+      const hours = Math.floor(totalMinutes / 60);
+      const days = Math.floor(hours / 24);
+      let granularity;
+      if (days >= 2) granularity = 24 * 60 * 60 * 1000;       // day boundary
+      else if (hours >= 1) granularity = 60 * 60 * 1000;       // hour boundary
+      else granularity = 60000;                                // minute boundary
+
+      let delay = ms % granularity || granularity;
+      delay = Math.max(delay, 1000); // never tighter than 1s
+      timer = setTimeout(scheduleNext, delay);
+    };
+
+    scheduleNext();
+    return () => clearTimeout(timer);
   }, [timerEndsAt]);
 
   return remaining;

@@ -238,7 +238,7 @@ export default function DocumentView() {
       await base44.entities.DocumentAgreement.create({ documentId, userId: user.id, userEmail: user.email });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
+      queryClient.invalidateQueries({ queryKey: ['documentAgreements', documentId] });
       setShowAgreementModal(false);
     },
   });

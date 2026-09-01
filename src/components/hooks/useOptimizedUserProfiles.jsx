@@ -3,23 +3,18 @@ import { base44 } from '@/api/base44Client';
 import { userProfileCache } from '@/components/utils/cache';
 import { queryKeys, QUERY_STALE_TIMES } from '@/components/config/queryConfig';
 
-// Optimized hook for fetching user profiles with caching
+// Cache-only read — does NOT fetch. The ['publicProfiles'] cache is seeded by
+// page-scoped targeted fetches (useDocumentData, useHomeData, etc.) and per-page
+// targeted fetches (e.g. suggestiondetail's chain-author fetch). This avoids
+// loading up to 1000 profiles into memory on every consumer mount.
 export function useOptimizedUserProfiles() {
   return useQuery({
     queryKey: queryKeys.publicProfiles,
-    queryFn: async () => {
-      const profiles = await base44.entities.UserPublicProfile.list('-created_date', 1000);
-      
-      // Cache each profile individually
-      profiles.forEach(profile => {
-        userProfileCache.set(profile.userId, profile);
-        userProfileCache.setByEmail(profile.email, profile);
-      });
-      
-      return profiles;
-    },
+    queryFn: () => [],
+    enabled: false,
     staleTime: QUERY_STALE_TIMES.PUBLIC_PROFILES,
-    cacheTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    gcTime: 30 * 60 * 1000,
+    initialData: [],
   });
 }
 

@@ -171,19 +171,31 @@ export function useDocumentData(documentId) {
     });
   }, [aggregatedData, documentId, queryClient]);
 
-  const { data: documentMetadata } = useQuery({
-    queryKey: ['documentMetadata', documentId],
-    queryFn: async () => {
-      const [agreements, versions] = await Promise.all([
-        base44.entities.DocumentAgreement.filter({ documentId }),
-        base44.entities.DocumentVersion.filter({ documentId }, '-version', 100),
-      ]);
-      return { agreements, versions };
-    },
+  // Agreements — small, always needed for contributor counting. Split from
+  // versions so signing an agreement doesn't refetch 100 version records.
+  const { data: documentAgreements = [] } = useQuery({
+    queryKey: ['documentAgreements', documentId],
+    queryFn: () => base44.entities.DocumentAgreement.filter({ documentId }),
     enabled: !!documentId,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });
+
+  // Versions — capped at 100 (latest first). Used for the "last update" date and
+  // version count. Split from agreements so a new version doesn't refetch agreements.
+  const { data: documentVersions = [] } = useQuery({
+    queryKey: ['documentVersions', documentId],
+    queryFn: () => base44.entities.DocumentVersion.filter({ documentId }, '-version', 100),
+    enabled: !!documentId,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
+
+  // Backward-compat: keep the combined shape for consumers that read documentMetadata
+  const documentMetadata = React.useMemo(() => ({
+    agreements: documentAgreements,
+    versions: documentVersions,
+  }), [documentAgreements, documentVersions]);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -222,8 +234,7 @@ export function useDocumentData(documentId) {
   const allSectionVotes = aggregatedData?.sectionVotes || [];
   const publicProfiles = aggregatedData?.publicProfiles || [];
   const allComments = aggregatedData?.comments || [];
-  const documentAgreements = React.useMemo(() => documentMetadata?.agreements || [], [documentMetadata?.agreements]);
-  const documentVersions = React.useMemo(() => documentMetadata?.versions || [], [documentMetadata?.versions]);
+
 
   // Wait for document AND both topics+sections before showing content.
   // With keepPreviousData, isLoading stays false during refetch (good — no flicker).

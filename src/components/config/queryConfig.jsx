@@ -80,7 +80,8 @@ export const queryKeys = {
 export const invalidateQueries = {
   document: (queryClient, documentId) => {
     queryClient.invalidateQueries({ queryKey: queryKeys.document(documentId) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.documentMetadata(documentId) });
+    queryClient.invalidateQueries({ queryKey: ['documentAgreements', documentId] });
+    queryClient.invalidateQueries({ queryKey: ['documentVersions', documentId] });
     queryClient.invalidateQueries({ queryKey: queryKeys.documents() });
   },
 

@@ -38,7 +38,8 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
     const unsubscribe = base44.entities.Document.subscribe((event) => {
       if (event.id === documentId) {
         queryClient.invalidateQueries({ queryKey: ['document', documentId] });
-        queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
+        queryClient.invalidateQueries({ queryKey: ['documentAgreements', documentId] });
+        queryClient.invalidateQueries({ queryKey: ['documentVersions', documentId] });
       }
     });
     return unsubscribe;
@@ -130,13 +131,13 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
     const unsubscribeAgreement = base44.entities.DocumentAgreement.subscribe((event) => {
       if (event.data?.documentId === documentId ||
           (event.type === 'delete' && documentMetadata?.agreements?.some(a => a.id === event.id))) {
-        queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
+        queryClient.invalidateQueries({ queryKey: ['documentAgreements', documentId] });
       }
     });
 
     const unsubscribeVersion = base44.entities.DocumentVersion.subscribe((event) => {
       if (event.data?.documentId === documentId) {
-        queryClient.invalidateQueries({ queryKey: ['documentMetadata', documentId] });
+        queryClient.invalidateQueries({ queryKey: ['documentVersions', documentId] });
       }
     });
 

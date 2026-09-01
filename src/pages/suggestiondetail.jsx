@@ -22,7 +22,7 @@ import SectionDiff from "../components/document/SectionDiff";
 import TranslatableContent from "../components/document/TranslatableContent";
 import DocumentTextContent from "../components/document/DocumentTextContent";
 import { votingQueue } from "../components/document/VotingQueue";
-import { useOptimizedUserProfiles } from "@/components/hooks/useOptimizedUserProfiles";
+
 import { useLanguage } from "@/components/LanguageContext";
 import { notifySuggestionStatusChange } from "../components/notifications/createNotification";
 import BackToDocumentButton from "@/components/suggestion/BackToDocumentButton";
@@ -179,9 +179,6 @@ export default function SuggestionDetail() {
     initialData: [],
     enabled: !!suggestion?.sectionId && suggestion?.type === 'edit_section'
   });
-
-  // Bulk public profiles (up to 1000, cached) — admins aren't required to read these
-  const { data: publicProfiles = [] } = useOptimizedUserProfiles();
 
   // Fetch the author's profile specifically in case it falls outside the bulk list
   const { data: authorProfile } = useQuery({
@@ -495,11 +492,47 @@ export default function SuggestionDetail() {
 
   const currentSuggestionIndexInChain = useMemo(() => suggestionChain.findIndex((s) => s.id === suggestionId), [suggestionChain, suggestionId]);
 
+  // Targeted profiles for this suggestion's chain authors — avoids the global
+  // 1000-profile fetch. Collects only the user IDs that appear in the chain
+  // (typically 1-5) and fetches just those. Merges into the shared ['publicProfiles']
+  // cache so other cache-only readers (CommentsSection, etc.) benefit.
+  const chainUserIds = useMemo(() => {
+    const ids = new Set();
+    if (suggestion?.created_by_id) ids.add(suggestion.created_by_id);
+    if (suggestionChain) {
+      for (const s of suggestionChain) {
+        if (s.created_by_id) ids.add(s.created_by_id);
+      }
+    }
+    return Array.from(ids);
+  }, [suggestion?.created_by_id, suggestionChain]);
+
+  const chainUserIdsKey = chainUserIds.sort().join(',');
+  const { data: suggestionProfiles = [] } = useQuery({
+    queryKey: ['suggestionProfiles', chainUserIdsKey],
+    queryFn: async () => {
+      if (chainUserIds.length === 0) return [];
+      return await base44.entities.UserPublicProfile.filter({ userId: { $in: chainUserIds } });
+    },
+    enabled: chainUserIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  React.useEffect(() => {
+    if (!suggestionProfiles || suggestionProfiles.length === 0) return;
+    queryClient.setQueryData(['publicProfiles'], (old) => {
+      if (!old || old.length === 0) return suggestionProfiles;
+      const map = new Map(old.map(p => [p.id, p]));
+      suggestionProfiles.forEach(p => map.set(p.id, p));
+      return Array.from(map.values());
+    });
+  }, [suggestionProfiles, queryClient]);
+
   // ── Helper fns ─────────────────────────────────────────────────────────────
 
   const getUserName = (userId) => {
     if (!userId) return '';
-    const profile = (publicProfiles || []).find((p) => p.userId === userId) || (
+    const profile = (suggestionProfiles || []).find((p) => p.userId === userId) || (
     authorProfile?.userId === userId ? authorProfile : null);
     return profile?.fullName || '';
   };
