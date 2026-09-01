@@ -250,7 +250,13 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
         // Acceptance mutates section content, thresholds and multiple suggestion
         // statuses server-side — beyond what we can safely patch locally. Invalidate
         // the aggregated cache so the next read pulls the full reconciled state.
+        // Also invalidate suggestions + sections explicitly: processAcceptanceV4 may
+        // convert a parent new_section → edit_section and create a new section, and we
+        // cannot rely solely on realtime subscriptions to surface those changes.
         queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', document?.id] });
+        queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
+        queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
+        queryClient.invalidateQueries({ queryKey: ['documentVersions', document?.id] });
       }
       
       // Emit event for layout to update unvoted count (optimistic decrement)
