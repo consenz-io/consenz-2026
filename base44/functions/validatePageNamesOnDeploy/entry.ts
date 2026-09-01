@@ -1,3 +1,5 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+
 /**
  * Page Names Validation Function
  * 
@@ -15,8 +17,9 @@ Deno.serve(async (req) => {
     }
 
     // Verify admin authentication
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader || !authHeader.includes('Bearer ')) {
+    const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user || user.role !== 'admin') {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

@@ -14,9 +14,14 @@ import { INTERNAL_AUTOMATION_TOKEN } from "../../shared/internalToken.ts";
 
 Deno.serve(async (req) => {
   try {
-    const { event, data: suggestion, old_data: oldSuggestion, args = {} } = await req.json();
-    // Gate: only the platform automation may invoke this (passes internalToken via function_args).
-    if (args.internalToken !== INTERNAL_AUTOMATION_TOKEN) {
+    const base44 = createClientFromRequest(req);
+    const body = await req.json();
+    const { event, data: suggestion, old_data: oldSuggestion, args = {} } = body;
+    // Auth: allow the internal automation (token via function_args) or an admin.
+    // External anonymous callers are rejected with 401.
+    const user = await base44.auth.me().catch(() => null);
+    const isInternalAutomation = args.internalToken === INTERNAL_AUTOMATION_TOKEN;
+    if (!isInternalAutomation && user?.role !== 'admin') {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

@@ -52,8 +52,11 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
     const { event, data: comment, args = {} } = body;
-    // Gate: only the platform automation may invoke this (passes internalToken via function_args).
-    if (args.internalToken !== INTERNAL_AUTOMATION_TOKEN) {
+    // Auth: allow the internal automation (token via function_args) or an admin.
+    // External anonymous callers are rejected with 401.
+    const user = await base44.auth.me().catch(() => null);
+    const isInternalAutomation = args.internalToken === INTERNAL_AUTOMATION_TOKEN;
+    if (!isInternalAutomation && user?.role !== 'admin') {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
