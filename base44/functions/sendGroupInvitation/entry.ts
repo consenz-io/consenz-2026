@@ -1,5 +1,11 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -8,11 +14,34 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { groupId, email, groupName, language } = await req.json();
+    const { groupId, email, language } = await req.json();
 
     if (!groupId || !email || !email.includes('@')) {
       return Response.json({ error: 'Missing or invalid parameters' }, { status: 400 });
     }
+
+    // Fetch the group from the server — do not trust client-supplied group
+    // identity or name. This both validates the groupId and gives a trusted
+    // group name for the email body (preventing HTML injection via groupName).
+    const group = await base44.asServiceRole.entities.Group.get(groupId).catch(() => null);
+    if (!group) {
+      return Response.json({ error: 'Group not found' }, { status: 404 });
+    }
+
+    // Authorization: only system admins, the group creator, or an existing
+    // member/admin of the group may send invitations for it.
+    const isSystemAdmin = user.role === 'admin';
+    const isGroupCreator = group.created_by_id === user.id;
+    let isAuthorized = isSystemAdmin || isGroupCreator;
+    if (!isAuthorized) {
+      const memberships = await base44.asServiceRole.entities.GroupMember.filter({ groupId, userId: user.id });
+      isAuthorized = memberships.length > 0;
+    }
+    if (!isAuthorized) {
+      return Response.json({ error: 'Forbidden: not a group member' }, { status: 403 });
+    }
+
+    const groupName = group.name;
 
     // Generate unique token
     const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -32,12 +61,14 @@ Deno.serve(async (req) => {
     const lang = language || 'he';
     const isRTL = lang === 'he' || lang === 'ar';
     const senderName = user.full_name || (lang === 'he' ? 'מישהו' : lang === 'ar' ? 'شخص ما' : 'Someone');
+    const safeGroupName = escapeHtml(groupName);
+    const safeSenderName = escapeHtml(senderName);
 
     const emailContent = {
       he: {
         subject: `הוזמנת להצטרף לקבוצה "${groupName}" ב-Consenz`,
         title: 'הוזמנת להצטרף לקבוצה!',
-        body: `${senderName} הזמין אותך להצטרף לקבוצה <strong>"${groupName}"</strong> בפלטפורמת Consenz.`,
+        body: `${safeSenderName} הזמין אותך להצטרף לקבוצה <strong>"${safeGroupName}"</strong> בפלטפורמת Consenz.`,
         cta: 'לחץ על הכפתור למטה כדי לקבל את ההזמנה:',
         button: 'הצטרפות לקבוצה',
         fallback: 'אם הכפתור לא עובד, העתק את הקישור:',
@@ -45,7 +76,7 @@ Deno.serve(async (req) => {
       ar: {
         subject: `تمت دعوتك للانضمام إلى مجموعة "${groupName}" في Consenz`,
         title: 'تمت دعوتك للانضمام إلى المجموعة!',
-        body: `قام ${senderName} بدعوتك للانضمام إلى مجموعة <strong>"${groupName}"</strong> على منصة Consenz.`,
+        body: `قام ${safeSenderName} بدعوتك للانضمام إلى مجموعة <strong>"${safeGroupName}"</strong> على منصة Consenz.`,
         cta: 'انقر على الزر أدناه لقبول الدعوة:',
         button: 'الانضمام إلى المجموعة',
         fallback: 'إذا لم يعمل الزر، انسخ الرابط:',
@@ -53,7 +84,7 @@ Deno.serve(async (req) => {
       en: {
         subject: `You've been invited to join the group "${groupName}" on Consenz`,
         title: "You've been invited to join a group!",
-        body: `${senderName} has invited you to join the group <strong>"${groupName}"</strong> on the Consenz platform.`,
+        body: `${safeSenderName} has invited you to join the group <strong>"${safeGroupName}"</strong> on the Consenz platform.`,
         cta: 'Click the button below to accept the invitation:',
         button: 'Join the Group',
         fallback: "If the button doesn't work, copy the link:",

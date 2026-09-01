@@ -38,6 +38,13 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
+    // Authenticate the caller — this endpoint performs service-role mutations
+    // (rejecting suggestions, awarding points) and must not be callable anonymously.
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     // sectionIds: array of section IDs that were deleted
     // documentId: the document these sections belong to
     // gamificationEnabled: whether to award points
@@ -45,6 +52,23 @@ Deno.serve(async (req) => {
 
     if (!sectionIds || sectionIds.length === 0 || !documentId) {
       return Response.json({ success: true, message: 'No sectionIds provided' });
+    }
+
+    // Authorization: only system admins, the document creator, or a designated
+    // document admin may trigger rejection of orphaned suggestions for a document.
+    const isSystemAdmin = user.role === 'admin';
+    let isAuthorized = isSystemAdmin;
+    if (!isAuthorized) {
+      const doc = await base44.asServiceRole.entities.Document.get(documentId).catch(() => null);
+      if (doc && doc.created_by_id === user.id) {
+        isAuthorized = true;
+      } else {
+        const docAdmins = await base44.asServiceRole.entities.DocumentAdmin.filter({ documentId, userId: user.id });
+        if (docAdmins.length > 0) isAuthorized = true;
+      }
+    }
+    if (!isAuthorized) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     console.log('[REJECT ORPHANED] Checking orphaned suggestions for sections:', sectionIds);
