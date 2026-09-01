@@ -14,6 +14,18 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
   const sectionsRef = React.useRef([]);
   const suggestionsRef = React.useRef([]);
 
+  // Shared debounce for the aggregated-data refetch. Section/suggestion/comment/vote
+  // subscriptions all invalidate the same ['documentAggregatedData'] query — without
+  // coalescing, a burst of events (e.g. several votes in 2s) triggers N full refetches
+  // (each is 4 parallel API calls + a profile query). One timer collapses them to one.
+  const aggregatedTimerRef = React.useRef(null);
+  const debouncedInvalidateAggregated = React.useCallback(() => {
+    if (aggregatedTimerRef.current) clearTimeout(aggregatedTimerRef.current);
+    aggregatedTimerRef.current = setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
+    }, 400);
+  }, [documentId, queryClient]);
+
   // Stable setter functions — defined once, never change reference
   // (inline arrow functions would create a new reference on every render)
   const setTopicsRef = React.useCallback((v) => { topicsRef.current = v; }, []);
@@ -58,7 +70,7 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
       if (belongsToDoc || isKnownSection) {
         debouncedInvalidate(['sections', documentId]);
         // Also refresh aggregated data (votes, comments scoped to sections)
-        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
+        debouncedInvalidateAggregated();
       }
     });
 
@@ -66,7 +78,7 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
       if (event.data?.documentId === documentId ||
           (event.type === 'update' && event.id && suggestionsRef.current?.some(s => s.id === event.id))) {
         debouncedInvalidate(['suggestions', documentId]);
-        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
+        debouncedInvalidateAggregated();
       }
     });
 
@@ -88,7 +100,7 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
       const isSectionComment = rootEntityType === 'section' && sectionsRef.current?.some(s => s.id === rootEntityId);
       const isSuggestionComment = rootEntityType === 'suggestion' && suggestionsRef.current?.some(s => s.id === rootEntityId);
       if (isDocComment || isSectionComment || isSuggestionComment) {
-        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
+        debouncedInvalidateAggregated();
       }
       // Also update individual comment caches
       if (rootEntityType && rootEntityId) {
@@ -104,7 +116,7 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
     const unsubscribe = base44.entities.Vote.subscribe((event) => {
       const voteSuggestionId = event.data?.suggestionId;
       if (voteSuggestionId && suggestionsRef.current?.some(s => s.id === voteSuggestionId)) {
-        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', documentId] });
+        debouncedInvalidateAggregated();
         queryClient.invalidateQueries({ queryKey: ['suggestions', documentId] });
       }
     });
@@ -137,6 +149,13 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
   // not critical — the invalidation on create/update is sufficient.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [documentId, queryClient]);
+
+  // Clear the shared aggregated-debounce timer on unmount / document switch
+  React.useEffect(() => {
+    return () => {
+      if (aggregatedTimerRef.current) clearTimeout(aggregatedTimerRef.current);
+    };
+  }, []);
 
   return { setTopicsRef, setSectionsRef, setSuggestionsRef };
 }
