@@ -50,6 +50,11 @@ const detectLanguage = (text) => {
   return 'en';
 };
 
+// Filter out non-ObjectId strings (e.g. service-role UUIDs like "service_xxx-xxx-xxx")
+// before passing them to User.filter — MongoDB rejects them with "not a valid ObjectId".
+const isValidObjectId = (id) => typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id);
+const filterValidObjectIds = (ids) => ids.filter(isValidObjectId);
+
 async function calculateContributors(base44, documentId) {
   const [suggestions, sections, agreements] = await Promise.all([
     base44.asServiceRole.entities.Suggestion.filter({ documentId }),
@@ -599,8 +604,10 @@ Deno.serve(async (req) => {
 
     let allUsers = [];
     if (contributorIds.size > 0) {
-      const idArray = Array.from(contributorIds);
-      allUsers = await base44.asServiceRole.entities.User.filter({ id: { $in: idArray } });
+      const idArray = filterValidObjectIds(Array.from(contributorIds));
+      if (idArray.length > 0) {
+        allUsers = await base44.asServiceRole.entities.User.filter({ id: { $in: idArray } });
+      }
     }
 
     const suggTitle = suggestion.title || 'הצעה';

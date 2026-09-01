@@ -55,6 +55,14 @@ export async function awardSuggestionPointsLogic(base44, { suggestionId, action 
   }
 
   // 1. Award points to the suggestion CREATOR
+  // Guard: creatorId may be a service-role UUID (not a valid ObjectId) if the
+  // suggestion was created via a backend function using asServiceRole. In that
+  // case we cannot look up the User entity — skip points gracefully.
+  const isValidObjectId = (id) => typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id);
+  if (!isValidObjectId(creatorId)) {
+    console.log('[AWARD POINTS] creatorId is not a valid ObjectId (likely service-role), skipping points:', creatorId);
+    return { success: true, message: 'Creator is service role, no points to award', skipped: true };
+  }
   const usersList = await base44.entities.User.filter({ id: creatorId });
   if (usersList.length === 0) {
     return { success: false, error: 'Creator user not found', status: 404 };
