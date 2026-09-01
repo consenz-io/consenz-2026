@@ -76,7 +76,7 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
         )}
       />
       <div className="text-[10px] md:text-xs text-slate-400 mb-4">
-        {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString('en-GB', { timeZone: 'Asia/Jerusalem' })}
+        {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString('en-GB')}
       </div>
 
       {/* Section deletion vote bar */}

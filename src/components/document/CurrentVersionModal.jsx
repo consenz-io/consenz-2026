@@ -17,7 +17,7 @@ function formatDate(dateStr, language) {
   if (!dateStr) return "";
   return new Date(dateStr).toLocaleString(
     language === "he" ? "he-IL" : language === "ar" ? "ar-SA" : "en-GB",
-    { timeZone: "Asia/Jerusalem", day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }
+    { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }
   );
 }
 

@@ -413,7 +413,7 @@ export default function NotificationQA() {
                       </div>
                     </div>
                     <p className="text-xs text-slate-500">
-                      {new Date(notif.created_date).toLocaleDateString('he-IL', { timeZone: 'Asia/Jerusalem' })}
+                      {new Date(notif.created_date).toLocaleDateString('he-IL')}
                     </p>
                   </div>
                 </CardContent>

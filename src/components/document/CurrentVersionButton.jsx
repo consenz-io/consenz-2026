@@ -28,7 +28,7 @@ export default function CurrentVersionButton({ onClick, language, isRTL, lastVer
   const dateStr = lastVersionDate
     ? new Date(lastVersionDate).toLocaleString(
         language === "he" ? "he-IL" : language === "ar" ? "ar-SA" : "en-GB",
-        { timeZone: "Asia/Jerusalem", day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }
+        { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }
       )
     : null;
 

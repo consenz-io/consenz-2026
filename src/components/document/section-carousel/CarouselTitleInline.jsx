@@ -40,7 +40,7 @@ const CarouselTitleInline = React.memo(function CarouselTitleInline({
         <span className="text-[10px] text-slate-400 flex-shrink-0 hidden sm:inline">
           {new Date(createdDate).toLocaleDateString(
             lang === 'he' ? 'he-IL' : lang === 'ar' ? 'ar-SA' : 'en-GB',
-            { timeZone: 'Asia/Jerusalem', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }
+            { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }
           )}
         </span>
       )}

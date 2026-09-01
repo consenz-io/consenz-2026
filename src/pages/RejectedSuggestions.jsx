@@ -118,7 +118,7 @@ export default function RejectedSuggestions() {
                   <CardContent>
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                       <Clock className="w-4 h-4" />
-                      {new Date(suggestion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US', { timeZone: 'Asia/Jerusalem' })}
+                      {new Date(suggestion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US')}
                     </div>
                     {suggestion.explanation && (
                       <p className="text-slate-600 mt-3 line-clamp-2">

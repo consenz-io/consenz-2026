@@ -112,7 +112,7 @@ export default function RecentDocumentsSection({ documents, documentsLoading, gr
                       </div>
                     </div>
                     <div className="text-xs text-slate-400">
-                      {t('created')} {new Date(doc.created_date).toLocaleDateString(undefined, { timeZone: 'Asia/Jerusalem' })}
+                      {t('created')} {new Date(doc.created_date).toLocaleDateString()}
                     </div>
                   </CardContent>
                 </Card>

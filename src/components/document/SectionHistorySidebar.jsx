@@ -203,7 +203,7 @@ export default function SectionHistorySidebar({ sectionId, isOpen, onClose, docu
                               <span className="text-xs text-slate-400">
                                 {new Date(date).toLocaleDateString(
                                   language === 'he' ? 'he-IL' : language === 'ar' ? 'ar' : 'en-GB',
-                                  { timeZone: 'Asia/Jerusalem', day: 'numeric', month: 'short', year: 'numeric' }
+                                  { day: 'numeric', month: 'short', year: 'numeric' }
                                 )}
                               </span>
                             )}
