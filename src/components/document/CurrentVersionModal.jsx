@@ -146,15 +146,33 @@ export default function CurrentVersionModal({
           )}
         </DialogHeader>
 
-        {/* Body — clean document content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 bg-white" dir={isRTL ? "rtl" : "ltr"}>
-          <h2 className="text-2xl font-bold text-slate-900 mb-6 text-center" style={{ fontFamily: SERIF }}>
-            {document?.title}
-          </h2>
-          {sortedTopics.length === 0 ?
-          <p className="text-center text-slate-500 italic py-12">{emptyDoc}</p> :
+        {/* Body — the document presented as the product of consensus */}
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-8 bg-gradient-to-b from-slate-50 to-slate-100/70" dir={isRTL ? "rtl" : "ltr"}>
+          {/* Formal "agreement paper" — frame + shadow lift it as the focal artifact */}
+          <div className="relative mx-auto max-w-2xl bg-white rounded-lg shadow-xl shadow-slate-400/15 border border-slate-200">
+            {/* Ornamental inner frame — certificate feel */}
+            <div className="pointer-events-none absolute inset-3 sm:inset-4 rounded-md border border-slate-200/80" />
+            <div className="relative z-10 px-8 sm:px-12 py-10">
+              {/* Consensus emblem */}
+              <div className="flex justify-center mb-5">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-300/40 ring-1 ring-blue-100">
+                  <Handshake className="w-5 h-5 text-white" />
+                </div>
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900 mb-3 text-center" style={{ fontFamily: SERIF }}>
+                {document?.title}
+              </h2>
+              <div className="flex items-center justify-center gap-2 mb-8">
+                <span className="h-px w-10 bg-slate-300" />
+                <span className="text-[11px] uppercase tracking-[0.2em] text-slate-400 font-medium">
+                  {language === "he" ? "מסמך ההסכמות" : language === "ar" ? "وثيقة التوافق" : "Consensus Document"}
+                </span>
+                <span className="h-px w-10 bg-slate-300" />
+              </div>
+              {sortedTopics.length === 0 ?
+              <p className="text-center text-slate-500 italic py-12">{emptyDoc}</p> :
 
-          <div className="space-y-8">
+              <div className="space-y-8">
               {sortedTopics.map((topic, ti) => {
               const topicSections = sectionsByTopic.get(topic.id) || [];
               if (topicSections.length === 0) return null;
@@ -185,6 +203,8 @@ export default function CurrentVersionModal({
             })}
             </div>
           }
+            </div>
+          </div>
         </div>
 
         {/* Footer */}
