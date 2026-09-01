@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 import { PAGE_NAMES } from "@/components/pageNames";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -639,12 +640,12 @@ export default function SuggestionDetail() {
                </span>
               {suggestion.created_date &&
                 <span className="text-slate-400">
-                  • {new Date(suggestion.created_date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  • {parseUserDate(suggestion.created_date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
                 }
               {suggestion.status === 'rejected' && suggestion.rejectedByAdmin && suggestion.updated_date &&
                 <span className="text-slate-400">
-                  • {language === 'he' ? 'נדחתה ב-' : language === 'ar' ? 'تم الرفض في' : 'Rejected on'} {new Date(suggestion.updated_date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  • {language === 'he' ? 'נדחתה ב-' : language === 'ar' ? 'تم الرفض في' : 'Rejected on'} {parseUserDate(suggestion.updated_date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </span>
                 }
             </div>

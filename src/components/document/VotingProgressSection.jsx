@@ -7,6 +7,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import CounterTooltip from "./CounterTooltip";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 
 function useTimeRemaining(timerEndsAt) {
   const [remaining, setRemaining] = React.useState(() => {
@@ -183,7 +184,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
         </span>
         {acceptedDate &&
         <span className="text-xs text-indigo-400">
-            {new Date(acceptedDate).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            {parseUserDate(acceptedDate).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
           </span>
         }
       </div>);
@@ -244,7 +245,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             {/* Below-bar info: accepted date or created-by-admin */}
             {belowBarInfo && (
               <div className="mt-2 pt-2 border-t border-slate-200 text-xs text-slate-500">
-                <span>{belowBarInfo.label} {datePrefix}{new Date(belowBarInfo.date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                <span>{belowBarInfo.label} {datePrefix}{parseUserDate(belowBarInfo.date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
               </div>
             )}
           </div>

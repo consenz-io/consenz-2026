@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -686,7 +687,7 @@ export default function DocumentAdmin() {
                             </div>
                             <p className="text-sm text-slate-600">{targetUser.email}</p>
                             <p className="text-xs text-slate-400 mt-1">
-                              {t('daPoints')}: {targetUser.points || 1000} | {t('daJoined')}: {new Date(targetUser.created_date).toLocaleDateString()}
+                              {t('daPoints')}: {targetUser.points || 1000} | {t('daJoined')}: {parseUserDate(targetUser.created_date).toLocaleDateString()}
                             </p>
                           </div>
                         </div>

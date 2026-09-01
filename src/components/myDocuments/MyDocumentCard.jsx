@@ -7,6 +7,7 @@ import { FileText, Users, TrendingUp, Languages, Loader2, Bell } from "lucide-re
 import { useLanguage } from "@/components/LanguageContext";
 import { calculateContributorsFromData } from "@/components/document/calculateContributors";
 import { base44 } from "@/api/base44Client";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 
 export default function MyDocumentCard({ doc, mySuggestionsCount, myVotesCount, unvotedCount, allSuggestions, allVotes, allUsers, allComments, allSections, allSectionVotes }) {
   const { t, language } = useLanguage();
@@ -111,7 +112,7 @@ export default function MyDocumentCard({ doc, mySuggestionsCount, myVotesCount, 
           </div>
         </div>
         <div className="text-xs text-slate-400">
-          {t('created')} {new Date(doc.created_date).toLocaleDateString()}
+          {t('created')} {parseUserDate(doc.created_date).toLocaleDateString()}
         </div>
       </CardContent>
     </Card>

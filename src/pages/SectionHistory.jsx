@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -338,7 +339,7 @@ export default function SectionHistory() {
                         <div className={`flex items-center gap-4 mt-2 text-sm text-slate-500 ${isRTL ? 'flex-row-reverse' : ''}`}>
                           <div className={`flex items-center gap-1 ${isRTL ? 'flex-row-reverse' : ''}`}>
                             <Clock className="w-4 h-4" />
-                            {new Date(currentVer.created_date).toLocaleString(isRTL ? 'he-IL' : 'en-US')}
+                            {parseUserDate(currentVer.created_date).toLocaleString(isRTL ? 'he-IL' : 'en-US')}
                           </div>
                           {currentVer.created_by && (
                             <span>{t('by')} {getUserName(currentVer.created_by)}</span>
@@ -530,11 +531,11 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
 
       <div className="space-y-1">
         <div className="text-[10px] md:text-xs text-slate-500 break-words">
-          {t('publishedBy')} <Link to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link> • {t('created')} {new Date(suggestion.created_date).toLocaleString()}
+          {t('publishedBy')} <Link to={`${createPageUrl("Profile")}?userId=${users.find(u => u.email === suggestion.created_by)?.id}`} className="hover:underline text-blue-600">{getUserName(suggestion.created_by)}</Link> • {t('created')} {parseUserDate(suggestion.created_date).toLocaleString()}
         </div>
         {suggestion.status === 'accepted' && suggestion.updated_date && (
           <div className="text-[10px] md:text-xs text-green-600 font-medium">
-            {t('acceptedOn')} {new Date(suggestion.updated_date).toLocaleString()}
+            {t('acceptedOn')} {parseUserDate(suggestion.updated_date).toLocaleString()}
           </div>
         )}
       </div>

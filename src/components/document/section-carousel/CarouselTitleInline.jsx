@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 
 /**
  * Inline suggestion title + timestamp, rendered on the same row as the
@@ -38,7 +39,7 @@ const CarouselTitleInline = React.memo(function CarouselTitleInline({
       </span>
       {createdDate && (
         <span className="text-[10px] text-slate-400 flex-shrink-0 hidden sm:inline">
-          {new Date(createdDate).toLocaleDateString(
+          {parseUserDate(createdDate).toLocaleDateString(
             lang === 'he' ? 'he-IL' : lang === 'ar' ? 'ar-SA' : 'en-GB',
             { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }
           )}

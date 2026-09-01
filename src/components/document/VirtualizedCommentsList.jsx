@@ -3,6 +3,7 @@ import { Virtuoso } from "react-virtuoso";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 
 const CommentItem = React.memo(({ comment, onReply, onDelete, getUserName, user, isRTL }) => {
   const { t } = useLanguage();
@@ -14,7 +15,7 @@ const CommentItem = React.memo(({ comment, onReply, onDelete, getUserName, user,
       </p>
       <div className={`flex flex-wrap items-center ${isRTL ? 'justify-start' : 'justify-between'} gap-2 mt-2`}>
         <span className="text-xs text-slate-500">
-          {getUserName(comment)} • {new Date(comment.created_date).toLocaleDateString()}
+          {getUserName(comment)} • {parseUserDate(comment.created_date).toLocaleDateString()}
         </span>
         <div className="flex gap-2">
           {user && (

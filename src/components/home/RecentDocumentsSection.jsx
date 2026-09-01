@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, Users, TrendingUp, Globe, Lock } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 
 export default function RecentDocumentsSection({ documents, documentsLoading, groups, groupMembers, user, documentContributorCounts = {} }) {
   const { t, language } = useLanguage();
@@ -112,7 +113,7 @@ export default function RecentDocumentsSection({ documents, documentsLoading, gr
                       </div>
                     </div>
                     <div className="text-xs text-slate-400">
-                      {t('created')} {new Date(doc.created_date).toLocaleDateString()}
+                      {t('created')} {parseUserDate(doc.created_date).toLocaleDateString()}
                     </div>
                   </CardContent>
                 </Card>

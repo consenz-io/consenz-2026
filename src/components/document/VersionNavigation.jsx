@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 
 export default function VersionNavigation({ 
   currentIndex, 
@@ -38,7 +39,7 @@ export default function VersionNavigation({
   })() : null;
 
   const timestampLabel = currentSnapshot?.timestamp && !isCurrentVersion
-    ? format(new Date(currentSnapshot.timestamp), 'dd/MM/yy HH:mm')
+    ? format(parseUserDate(currentSnapshot.timestamp), 'dd/MM/yy HH:mm')
     : null;
 
   return (

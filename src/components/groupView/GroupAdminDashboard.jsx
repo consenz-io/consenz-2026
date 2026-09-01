@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
 import { MessageSquare, Lightbulb, CheckCircle, Clock, XCircle, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 
 function StatCard({ icon: Icon, label, value, color, onClick, isOpen }) {
   return (
@@ -77,7 +78,7 @@ export default function GroupAdminDashboard({ groupMembers, allDocSuggestions, a
 
   const fmtDate = (d) => {
     if (!d) return '—';
-    try { return format(new Date(d), 'dd/MM/yyyy HH:mm'); } catch { return '—'; }
+    try { return format(parseUserDate(d), 'dd/MM/yyyy HH:mm'); } catch { return '—'; }
   };
 
   const toggle = (panel) => setOpenPanel(prev => prev === panel ? null : panel);

@@ -3,6 +3,7 @@ import { MessageSquare, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "@/components/LanguageContext";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 import TranslatableContent from "../TranslatableContent";
 import DocumentTextContent from "../DocumentTextContent";
 import SectionDeletionVoteBar from "../SectionDeletionVoteBar";
@@ -76,7 +77,7 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
         )}
       />
       <div className="text-[10px] md:text-xs text-slate-400 mb-4">
-        {t('lastEdited')} {new Date(section.updated_date).toLocaleDateString('en-GB')}
+        {t('lastEdited')} {parseUserDate(section.updated_date).toLocaleDateString('en-GB')}
       </div>
 
       {/* Section deletion vote bar */}

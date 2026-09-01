@@ -9,6 +9,7 @@ import { ArrowLeft, AlertCircle, Clock } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "@/components/LanguageContext";
+import { parseUserDate } from "@/components/utils/dateFormatter";
 
 export default function RejectedSuggestions() {
   const { t, language, isRTL } = useLanguage();
@@ -118,7 +119,7 @@ export default function RejectedSuggestions() {
                   <CardContent>
                     <div className="flex items-center gap-2 text-sm text-slate-500">
                       <Clock className="w-4 h-4" />
-                      {new Date(suggestion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US')}
+                      {parseUserDate(suggestion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US')}
                     </div>
                     {suggestion.explanation && (
                       <p className="text-slate-600 mt-3 line-clamp-2">
