@@ -14,6 +14,11 @@ import PointsInfoModal from "./PointsInfoModal";
 import { resolveCommentUrl } from "@/components/profile/resolveCommentUrl";
 import { translateTransactionDescription } from "./translateTransaction";
 
+// Display priority within a same-minute cluster: the suggestion-acceptance reward
+// (+500, the headline result) is shown above the pro-vote reward (+10, its trigger).
+const ACTION_PRIORITY = { suggestion_accepted: 0, vote_received: 2, vote_influenced_acceptance: 2 };
+const getActionPriority = (action) => (action in ACTION_PRIORITY ? ACTION_PRIORITY[action] : 1);
+
 function AnimatedCounter({ value }) {
   const [displayValue, setDisplayValue] = React.useState(value);
 
@@ -107,6 +112,43 @@ export default function FloatingPointsBadge() {
   const hasNewPoints = totalNewPoints > 0;
   const currentPoints = user?.points || 1000;
 
+  // Balance per transaction, computed from the true chronological order (newest first)
+  // so balances stay accurate even though the display order is adjusted below.
+  const balanceByTxId = React.useMemo(() => {
+    const map = {};
+    let cumulative = 0;
+    for (const t of newPointsTransactions) {
+      map[t.id] = currentPoints - cumulative;
+      cumulative += t.amount || 0;
+    }
+    return map;
+  }, [newPointsTransactions, currentPoints]);
+
+  // Display order: within each same-minute cluster, float suggestion_accepted above
+  // vote_received / vote_influenced_acceptance. Other events keep their chronological order.
+  const displayTransactions = React.useMemo(() => {
+    const result = [];
+    let cluster = [];
+    let clusterKey = null;
+    const flush = () => {
+      if (cluster.length) {
+        cluster.sort((a, b) => getActionPriority(a.action) - getActionPriority(b.action));
+        result.push(...cluster);
+        cluster = [];
+      }
+    };
+    for (const tx of newPointsTransactions) {
+      const key = formatLocalDateTime(tx.created_date, 'DD/MM HH:mm');
+      if (key !== clusterKey) {
+        flush();
+        clusterKey = key;
+      }
+      cluster.push(tx);
+    }
+    flush();
+    return result;
+  }, [newPointsTransactions]);
+
   React.useEffect(() => {
     if (hasNewPoints && lastPointsVisit) {
       // Show toast notification when new points are earned
@@ -195,10 +237,8 @@ export default function FloatingPointsBadge() {
 
           {!isLoadingTransactions && newPointsTransactions.length > 0 && (
             <div className="space-y-2">
-              {newPointsTransactions.slice(0, 10).map((transaction, index) => {
-                const transactionsAfter = newPointsTransactions.slice(0, index);
-                const pointsAfter = transactionsAfter.reduce((sum, t) => sum + (t.amount || 0), 0);
-                const balanceAtTime = currentPoints - pointsAfter;
+              {displayTransactions.slice(0, 10).map((transaction) => {
+                const balanceAtTime = balanceByTxId[transaction.id] ?? currentPoints;
                 
                 const isCommentLike = transaction.action === 'comment_like_received' || transaction.action === 'comment_like_removed';
                 const suggestionUrl = transaction.relatedEntityType === 'suggestion'
