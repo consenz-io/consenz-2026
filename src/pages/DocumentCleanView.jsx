@@ -4,12 +4,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
-import { Download, Globe, Loader2 } from "lucide-react";
+import { Download, Globe, Loader2, ArrowLeft, ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
 import InlineDiff from "@/components/document/InlineDiff";
-import PageHeader from "@/components/PageHeader";
+import DocumentTitleHeading from "@/components/document/DocumentTitleHeading";
 import VersionNavigation from "@/components/document/VersionNavigation";
 import DocumentSnapshot from "@/components/document/DocumentSnapshot";
 import { useDocumentVersions } from "@/components/document/hooks/useDocumentVersions";
@@ -578,13 +578,17 @@ ${text}`;
       {/* Header - Hidden on print */}
       <div className="bg-slate-50 border-b border-slate-200 p-3 md:p-4 print:hidden sticky top-0 z-10">
         <div className="max-w-4xl mx-auto">
-          <div className="mb-4">
-            <PageHeader 
-              title={(document.originalLanguage || 'he') !== language && showTranslatedDoc
+          <div className="flex items-center gap-3 mb-4">
+            <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
+              <Button variant="outline" size="icon" className="shrink-0">
+                {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+              </Button>
+            </Link>
+            <DocumentTitleHeading>
+              {(document.originalLanguage || 'he') !== language && showTranslatedDoc
                 ? (translatedDocTitle || (typeof document.translations?.[language] === 'string' ? document.translations[language] : document.translations?.[language]?.title) || document.title)
                 : document.title}
-              backUrl={`${createPageUrl("DocumentView")}?id=${documentId}`}
-            />
+            </DocumentTitleHeading>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
 
