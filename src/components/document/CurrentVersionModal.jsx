@@ -120,16 +120,16 @@ export default function CurrentVersionModal({
         <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-amber-400" />
 
         {/* Header — festive stamp */}
-        <DialogHeader className="px-6 pt-6 pb-4 text-center items-center space-y-3 border-b border-slate-100 bg-gradient-to-b from-blue-50/50 to-white">
+        <DialogHeader className="px-6 pt-6 pb-4 text-center space-y-3 border-b border-slate-100 bg-gradient-to-b from-blue-50/50 to-white">
           <div className="flex justify-center">
             <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 ring-4 ring-blue-100">
               <Award className="w-7 h-7 text-white" />
             </div>
           </div>
-          <DialogTitle className="text-2xl font-bold text-slate-900" style={{ fontFamily: SERIF }}>
+          <DialogTitle className="text-2xl font-bold text-slate-900">
             {title}
           </DialogTitle>
-          <DialogDescription className="text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
+          <DialogDescription className="text-sm text-slate-600 max-w-xl leading-relaxed text-right">
             {subtitle}
           </DialogDescription>
           {dateStr && (
