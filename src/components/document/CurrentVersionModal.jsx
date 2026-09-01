@@ -1,0 +1,228 @@
+import React, { useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { Award, Download, FileCheck2 } from "lucide-react";
+import { createPageUrl } from "@/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import confetti from "canvas-confetti";
+
+const SERIF = "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif";
+
+function formatDate(dateStr, language) {
+  if (!dateStr) return "";
+  return new Date(dateStr).toLocaleString(
+    language === "he" ? "he-IL" : language === "ar" ? "ar-SA" : "en-GB",
+    { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }
+  );
+}
+
+/**
+ * Modal showing the most up-to-date, clean version of the document — the
+ * tangible product of the consensus process. Festive/formal look (ribbon,
+ * stamp badge, serif) to convey "this is the current agreement". A subtle
+ * confetti burst on open celebrates the fact that there is a product.
+ *
+ * Content is intentionally clean: topics + sections only, no diff tags,
+ * voting buttons, or change markers.
+ */
+export default function CurrentVersionModal({
+  open,
+  onClose,
+  document,
+  topics,
+  sections,
+  language,
+  isRTL,
+  lastVersionDate,
+  documentId,
+}) {
+  // Subtle confetti burst when the modal opens — conveys "there is a product".
+  useEffect(() => {
+    if (!open) return;
+    const t = setTimeout(() => {
+      try {
+        confetti({
+          particleCount: 60,
+          spread: 70,
+          startVelocity: 35,
+          origin: { y: 0.2 },
+          colors: ["#3b82f6", "#6366f1", "#fbbf24", "#22c55e"],
+          scalar: 0.8,
+          disableForReducedMotion: true,
+        });
+      } catch (e) {
+        /* no-op — confetti is decorative only */
+      }
+    }, 120);
+    return () => clearTimeout(t);
+  }, [open]);
+
+  const sortedTopics = useMemo(
+    () => [...topics].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+    [topics]
+  );
+
+  const sectionsByTopic = useMemo(() => {
+    const map = new Map();
+    for (const s of sections) {
+      if (!map.has(s.topicId)) map.set(s.topicId, []);
+      map.get(s.topicId).push(s);
+    }
+    map.forEach((arr) => arr.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
+    return map;
+  }, [sections]);
+
+  const title =
+    language === "he"
+      ? "הגרסה הנוכחית של המסמך"
+      : language === "ar"
+      ? "النسخة الحالية من الوثيقة"
+      : "Current Version of the Document";
+
+  const subtitle =
+    language === "he"
+      ? "זוהי הגרסה המעודכנת ביותר, המשקפת את ההסכמות שהתקבלו בקהילה עד כה. המסמך ממשיך להתעדכן ככל שמתקבלות הסכמות חדשות."
+      : language === "ar"
+      ? "هذه أحدث نسخة، تعكس التوافق الذي تم التوصل إليه في المجتمع حتى الآن. تستمر الوثيقة في التحديث مع كل توافق جديد."
+      : "This is the most up-to-date version, reflecting the consensus reached by the community so far. The document continues to evolve as new consensus is reached.";
+
+  const asOf = language === "he" ? "נכון ל-" : language === "ar" ? "حتى " : "As of ";
+  const downloadLabel = language === "he" ? "הורדה / הדפסה" : language === "ar" ? "تنزيل / طباعة" : "Download / Print";
+  const closeLabel = language === "he" ? "סגירה" : language === "ar" ? "إغلاق" : "Close";
+  const fullHistoryLabel =
+    language === "he"
+      ? "צפו בגרסה המלאה עם היסטוריית שינויים ←"
+      : language === "ar"
+      ? "اعرض النسخة الكاملة مع سجل التغييرات ←"
+      : "View full version with change history ←";
+  const emptyDoc =
+    language === "he"
+      ? "עדיין אין תוכן במסמך. ההסכמות שיתקבלו יופיעו כאן."
+      : language === "ar"
+      ? "لا يوجد محتوى بعد. التوافق الذي يتم التوصل إليه سيظهر هنا."
+      : "No content yet. Accepted consensus will appear here.";
+
+  const dateStr = formatDate(lastVersionDate, language);
+
+  const handleDownload = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    const docTitle = document?.title || "";
+    const dir = isRTL ? "rtl" : "ltr";
+    const topicRows = sortedTopics
+      .map((topic, ti) => {
+        const topicSections = sectionsByTopic.get(topic.id) || [];
+        if (topicSections.length === 0) return "";
+        const sectionsHtml = topicSections
+          .map(
+            (section, si) =>
+              `<div style="margin-bottom:1.5rem"><span style="color:#64748b;font-weight:500;margin-inline-end:0.5rem">${ti + 1}.${si + 1}</span><span style="font-size:1.1rem;line-height:1.8">${section.content || ""}</span></div>`
+          )
+          .join("");
+        return `<div style="margin-bottom:2.5rem"><h2 style="font-size:1.4rem;font-weight:bold;border-bottom:1px solid #cbd5e1;padding-bottom:0.5rem;margin-bottom:1rem">${ti + 1}. ${topic.title || ""}</h2>${sectionsHtml}</div>`;
+      })
+      .join("");
+
+    printWindow.document.write(
+      `<!DOCTYPE html><html dir="${dir}" lang="${language}"><head><meta charset="UTF-8"><title>${docTitle}</title><style>body{font-family:'Times New Roman','David Libre',Georgia,serif;max-width:800px;margin:2cm auto;padding:1rem;color:#1e293b}h1{font-size:2rem;margin-bottom:2rem}@page{margin:2cm}@media print{body{margin:0}}</style></head><body><h1>${docTitle}</h1>${topicRows}<footer style="margin-top:3rem;padding-top:1rem;border-top:1px solid #cbd5e1;text-align:center;color:#94a3b8;font-size:0.8rem">${asOf}${dateStr}</footer><script>window.onload=function(){window.print()}<\/script></body></html>`
+    );
+    printWindow.document.close();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+        {/* Decorative top gradient ribbon — festive/formal cue */}
+        <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-amber-400" />
+
+        {/* Header — festive stamp */}
+        <DialogHeader className="px-6 pt-6 pb-4 text-center items-center space-y-3 border-b border-slate-100 bg-gradient-to-b from-blue-50/50 to-white">
+          <div className="flex justify-center">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 ring-4 ring-blue-100">
+              <Award className="w-7 h-7 text-white" />
+            </div>
+          </div>
+          <DialogTitle className="text-2xl font-bold text-slate-900" style={{ fontFamily: SERIF }}>
+            {title}
+          </DialogTitle>
+          <DialogDescription className="text-sm text-slate-600 max-w-xl mx-auto leading-relaxed">
+            {subtitle}
+          </DialogDescription>
+          {dateStr && (
+            <div className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-100/70 px-3 py-1 rounded-full">
+              <FileCheck2 className="w-3.5 h-3.5" />
+              {asOf}
+              {dateStr}
+            </div>
+          )}
+        </DialogHeader>
+
+        {/* Body — clean document content */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 bg-white" dir={isRTL ? "rtl" : "ltr"}>
+          <h2 className="text-2xl font-bold text-slate-900 mb-6 text-center" style={{ fontFamily: SERIF }}>
+            {document?.title}
+          </h2>
+          {sortedTopics.length === 0 ? (
+            <p className="text-center text-slate-500 italic py-12">{emptyDoc}</p>
+          ) : (
+            <div className="space-y-8">
+              {sortedTopics.map((topic, ti) => {
+                const topicSections = sectionsByTopic.get(topic.id) || [];
+                if (topicSections.length === 0) return null;
+                return (
+                  <div key={topic.id} className="space-y-3">
+                    <h3
+                      className="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2"
+                      style={{ fontFamily: SERIF }}
+                    >
+                      {ti + 1}. {topic.title}
+                    </h3>
+                    <div className="space-y-4">
+                      {topicSections.map((section, si) => (
+                        <div key={section.id} className="flex gap-3">
+                          <span className="text-slate-400 font-medium min-w-[1.75rem] text-sm pt-1">
+                            {ti + 1}.{si + 1}
+                          </span>
+                          <div
+                            className="flex-1 text-slate-700 leading-relaxed prose prose-sm max-w-none"
+                            style={{ fontFamily: SERIF, fontSize: "1.125rem", lineHeight: "1.8" }}
+                            dangerouslySetInnerHTML={{ __html: section.content || "" }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/60 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <Link
+            to={`${createPageUrl("DocumentCleanView")}?id=${documentId}`}
+            className="text-xs text-blue-600 hover:text-blue-800 hover:underline font-medium text-center"
+          >
+            {fullHistoryLabel}
+          </Link>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleDownload}>
+              <Download className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
+              {downloadLabel}
+            </Button>
+            <Button size="sm" onClick={onClose} className="bg-blue-600 hover:bg-blue-700">
+              {closeLabel}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -21,6 +21,8 @@ import DocumentHeader from "../components/document/DocumentHeader";
 import DocumentDescription from "../components/document/DocumentDescription";
 import DocumentCounters from "../components/document/DocumentCounters";
 import FloatingSuggestionNav from "../components/document/FloatingSuggestionNav";
+import CurrentVersionButton from "../components/document/CurrentVersionButton";
+import CurrentVersionModal from "../components/document/CurrentVersionModal";
 
 // Lazy load heavy modals
 const CreateSuggestionModal = React.lazy(() => import("../components/document/CreateSuggestionModal"));
@@ -48,6 +50,7 @@ export default function DocumentView() {
   const [openSuggestionId, setOpenSuggestionId] = useState(null);
   const [newlyCreatedSuggestion, setNewlyCreatedSuggestion] = useState(null);
   const [showAgreementModal, setShowAgreementModal] = useState(false);
+  const [showCurrentVersion, setShowCurrentVersion] = useState(false);
   const [currentSuggestionIndex, setCurrentSuggestionIndex] = useState(0);
   const [targetSuggestionId, setTargetSuggestionId] = useState(null);
   const [showSuggestionNav, setShowSuggestionNav] = useState(false);
@@ -70,6 +73,11 @@ export default function DocumentView() {
     documentMetadata, user, isAdmin, groupData,
     isInitialLoading,
   } = useDocumentData(documentId);
+
+  // Most recent document-version creation date — conveys the living/dynamic
+  // nature of the consensus in the "Consensus Version" button + modal.
+  const lastVersionDate =
+    documentVersions[0]?.created_date || document?.updated_date || document?.created_date;
 
   const { setTopicsRef, setSectionsRef, setSuggestionsRef } = useDocumentSubscriptions(
     documentId, document, documentMetadata
@@ -528,6 +536,16 @@ export default function DocumentView() {
                 commentIdFromUrl={commentIdFromUrl}
                 showDescriptionComments={showDescriptionComments}
               />
+
+              {/* Consensus Version button — below the description box */}
+              <div className="flex justify-end w-full" dir={isRTL ? "rtl" : "ltr"}>
+                <CurrentVersionButton
+                  language={language}
+                  isRTL={isRTL}
+                  lastVersionDate={lastVersionDate}
+                  onClick={() => setShowCurrentVersion(true)}
+                />
+              </div>
             </div>
 
             {/* Counters */}
@@ -666,6 +684,18 @@ export default function DocumentView() {
               }}
             />
           )}
+
+          <CurrentVersionModal
+            open={showCurrentVersion}
+            onClose={() => setShowCurrentVersion(false)}
+            document={document}
+            topics={topics}
+            sections={sections}
+            language={language}
+            isRTL={isRTL}
+            lastVersionDate={lastVersionDate}
+            documentId={documentId}
+          />
         </div>
       </div>
     </TranslationProvider>
