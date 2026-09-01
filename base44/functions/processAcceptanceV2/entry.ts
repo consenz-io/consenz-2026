@@ -142,7 +142,10 @@ Deno.serve(async (req) => {
       console.log('[PROCESS ACCEPTANCE V2] forceReleaseLock=true, releasing any stuck lock for', suggestionId);
       await base44.asServiceRole.entities.Suggestion.update(suggestionId, { acceptanceLock: false }).catch(() => {});
     }
-    let lockAcquired = false;
+    // NOTE: do NOT redeclare lockAcquired here — the outer declaration (line 104)
+    // must be the same variable the catch block reads, otherwise shadowing causes
+    // the lock to never be released on failure (suggestion stays stuck with
+    // acceptanceLock=true, status=pending forever).
     for (let attempt = 1; attempt <= 2; attempt++) {
       const lockResult = await base44.asServiceRole.entities.Suggestion.updateMany(
         { id: suggestionId, status: 'pending', acceptanceLock: false },
