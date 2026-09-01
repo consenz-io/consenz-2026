@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { awardSuggestionPointsLogic } from '../../shared/awardSuggestionPointsLogic.ts';
+import { authorizeInternalOrUser, INTERNAL_AUTOMATION_TOKEN } from '../../shared/authGate.ts';
 
 const NOTIF_TRANSLATIONS = {
   en: {
@@ -112,7 +113,10 @@ Deno.serve(async (req) => {
     base44 = createClientFromRequest(req);
 
     let documentId, voterId, wasNewVote, forceAccept, forceReleaseLock;
-    ({ suggestionId, documentId, voterId, wasNewVote, forceAccept, forceReleaseLock } = await req.json());
+    const body = await req.json();
+    const { ok: _authOk, user: _gateUser, response: _authRes } = await authorizeInternalOrUser(base44, body);
+    if (!_authOk) return _authRes;
+    ({ suggestionId, documentId, voterId, wasNewVote, forceAccept, forceReleaseLock } = body);
 
     console.log('[PROCESS ACCEPTANCE V2] Starting for suggestion:', suggestionId, 'at', new Date().toISOString());
 
@@ -134,9 +138,7 @@ Deno.serve(async (req) => {
     // forceAccept bypasses the threshold check (admin override). Only an authenticated
     // admin may bypass it; internal chain calls only pass forceAccept after the parent
     // already meets the threshold, so degrading to the threshold check here is safe.
-    let _forceUser = null;
-    try { _forceUser = await base44.auth.me(); } catch {}
-    const canForceAccept = !!forceAccept && _forceUser?.role === 'admin';
+    const canForceAccept = !!forceAccept && _gateUser?.role === 'admin';
     if (!canForceAccept) {
       const verifyDelta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
       const verifyThreshold = document.threshold > 0 ? Math.max(2, document.threshold) : 2;
@@ -469,7 +471,8 @@ Deno.serve(async (req) => {
                 voterId,
                 wasNewVote,
                 forceAccept: true,
-                forceReleaseLock: true
+                forceReleaseLock: true,
+                internalToken: INTERNAL_AUTOMATION_TOKEN
               });
               console.log('[PROCESS ACCEPTANCE V2] Parent suggestion processed successfully');
             } catch (parentErr) {
