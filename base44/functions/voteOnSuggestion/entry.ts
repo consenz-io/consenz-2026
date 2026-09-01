@@ -255,7 +255,7 @@ Deno.serve(async (req) => {
       let processAcceptanceFailed = false;
       let processAcceptanceDebug = null; // surfaced to the client for debugging — see below
       try {
-        const acceptResult = await base44.asServiceRole.functions.invoke('processAcceptanceV3', {
+        const acceptResult = await base44.asServiceRole.functions.invoke('processAcceptanceV4', {
           suggestionId,
           documentId: document.id,
           voterId: user.id,

@@ -47,15 +47,17 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
 
         // ── Fallback: if vote reached threshold but acceptance didn't process ──
         // The deployed processAcceptance may be stale (read-after-write lock bug).
-        // processAcceptanceV3 is a new function that deploys correctly and handles
-        // stuck locks + service-role UUID ObjectId filtering. Call it as a fallback
-        // when delta >= threshold but accepted is false.
+        // processAcceptanceV4 is the current function: it deploys correctly, handles
+        // stuck locks + service-role UUID ObjectId filtering, and supports the
+        // edit_suggestion-on-new_section flow (creates a section + converts the parent
+        // and siblings to edit_section). Call it as a fallback when delta >= threshold
+        // but accepted is false.
         const delta = (newProVotes || 0) - (newConVotes || 0);
         const threshold = Math.max(2, document?.threshold || 2);
         if (!accepted && delta >= threshold) {
-          console.log('[VOTE] Threshold reached but not accepted, calling processAcceptanceV3 fallback...');
+          console.log('[VOTE] Threshold reached but not accepted, calling processAcceptanceV4 fallback...');
           try {
-            const fallbackRes = await base44.functions.invoke('processAcceptanceV3', {
+            const fallbackRes = await base44.functions.invoke('processAcceptanceV4', {
               suggestionId,
               documentId: document?.id,
               voterId: user.id,
@@ -63,12 +65,12 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
               forceReleaseLock: true
             });
             const fallbackData = fallbackRes?.data || fallbackRes;
-            console.log('[VOTE] processAcceptanceV3 fallback response:', fallbackData);
+            console.log('[VOTE] processAcceptanceV4 fallback response:', fallbackData);
             if (fallbackData?.accepted || fallbackData?.message === 'Already processed') {
               return { accepted: true, newProVotes, newConVotes, voteAction };
             }
           } catch (fallbackErr) {
-            console.error('[VOTE] processAcceptanceV3 fallback error:', fallbackErr);
+            console.error('[VOTE] processAcceptanceV4 fallback error:', fallbackErr);
           }
         }
       
