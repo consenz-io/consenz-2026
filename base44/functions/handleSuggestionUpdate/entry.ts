@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { INTERNAL_AUTOMATION_TOKEN } from "../../shared/internalToken.ts";
 
 // This automation handles suggestion status changes.
 // 
@@ -13,7 +14,11 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 Deno.serve(async (req) => {
   try {
-    const { event, data: suggestion, old_data: oldSuggestion } = await req.json();
+    const { event, data: suggestion, old_data: oldSuggestion, args = {} } = await req.json();
+    // Gate: only the platform automation may invoke this (passes internalToken via function_args).
+    if (args.internalToken !== INTERNAL_AUTOMATION_TOKEN) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     if (!suggestion || event.type !== 'update') {
       return Response.json({ message: 'Not an update event' }, { status: 200 });
