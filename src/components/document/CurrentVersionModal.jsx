@@ -77,11 +77,11 @@ export default function CurrentVersionModal({
   const asOf = language === "he" ? "נכון ל-" : language === "ar" ? "حتى " : "As of ";
 
   const versionCreatedByLabel =
-    language === "he"
-    ? `נוצרה ע״י ${participantsCount} משתתפים · ${suggestionsCount} עריכות · ${votesCount} הצבעות`
-    : language === "ar"
-    ? `أنشأها ${participantsCount} مشارك · ${suggestionsCount} تعديل · ${votesCount} تصويت`
-    : `Created by ${participantsCount} participants · ${suggestionsCount} edits · ${votesCount} votes`;
+  language === "he" ?
+  `נוצרה ע״י ${participantsCount} משתתפים · ${suggestionsCount} עריכות · ${votesCount} הצבעות` :
+  language === "ar" ?
+  `أنشأها ${participantsCount} مشارك · ${suggestionsCount} تعديل · ${votesCount} تصويت` :
+  `Created by ${participantsCount} participants · ${suggestionsCount} edits · ${votesCount} votes`;
   const downloadLabel = language === "he" ? "הורדה / הדפסה" : language === "ar" ? "تنزيل / طباعة" : "Download / Print";
   const closeLabel = language === "he" ? "סגירה" : language === "ar" ? "إغلاق" : "Close";
   const fullHistoryLabel =
@@ -178,7 +178,7 @@ export default function CurrentVersionModal({
                   <Handshake className="w-5 h-5 text-white" />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-3 text-center" style={{ fontFamily: SERIF }}>
+              <h2 className="text-2xl text-slate-900 mb-3 text-center [font-family:'Noto_Serif',_serif] font-normal" style={{ fontFamily: SERIF }}>
                 {document?.title}
               </h2>
               <div className="flex items-center justify-center gap-2 mb-8">
