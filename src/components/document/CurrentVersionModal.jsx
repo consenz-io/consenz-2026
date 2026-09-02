@@ -198,7 +198,7 @@ export default function CurrentVersionModal({
                   return (
                     <div key={topic.id} className="space-y-3">
                     <h3
-                        className="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2"
+                        className="text-xl text-slate-800 border-b border-slate-200 pb-2 [font-family:'Noto_Serif',_serif] font-normal"
                         style={{ fontFamily: SERIF }}>
                     
                       {ti + 1}. {topic.title}
