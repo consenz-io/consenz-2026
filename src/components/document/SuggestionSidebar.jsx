@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ensureUserPublicProfile } from "@/components/ensureUserPublicProfile";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -26,6 +25,7 @@ import { cleanDisplayName } from "@/lib/displayName";
 import { notifySuggestionStatusChange } from "../notifications/createNotification";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { castVote } from "@/components/document/utils/castVote";
 import { PAGE_NAMES } from "@/components/pageNames";
 // v2
 
@@ -173,25 +173,7 @@ export default function SuggestionSidebar({
       if (!user || !user.id) throw new Error(t('mustBeLoggedInToVote'));
       if (!suggestion || !suggestion.id) throw new Error('Suggestion not found');
 
-      // Call backend function - handles race conditions by re-counting from DB
-      const response = await base44.functions.invoke('voteOnSuggestion', { suggestionId, vote });
-      const result = response.data;
-
-      if (!result.success) {
-        throw new Error(result.error || 'שגיאה בעיבוד ההצבעה');
-      }
-
-      // Background: update contributor count if new vote
-      if (result.voteAction === 'created') {
-        ensureUserPublicProfile(user).catch(() => {});
-        import('./calculateContributors').then(({ calculateDocumentContributors }) =>
-          calculateDocumentContributors(suggestion.documentId).then(count =>
-            base44.entities.Document.update(suggestion.documentId, { totalUsersInteracted: count })
-          )
-        ).catch(() => {});
-      }
-
-      return { accepted: result.accepted, newProVotes: result.newProVotes, newConVotes: result.newConVotes };
+      return await castVote({ suggestionId, vote, document: document || parentDocument, user });
     },
     // Optimistic update - only for vote counts, NOT for status
     onMutate: async (vote) => {
@@ -242,9 +224,12 @@ export default function SuggestionSidebar({
       setError(err.message);
       setTimeout(() => setError(null), 5000);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
       queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
+      if (data?.accepted === true) {
+        toast.success(t('suggestionAcceptedToast'), { duration: 5000 });
+      }
     },
   });
 

@@ -30,6 +30,7 @@ import SuggestionExplanationBlock from "@/components/suggestion/SuggestionExplan
 import SuggestionChainNavigation from "@/components/suggestion/SuggestionChainNavigation";
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 import { toast } from "sonner";
+import { castVote } from "@/components/document/utils/castVote";
 
 export default function SuggestionDetail() {
   const { t, isRTL, language: rawLanguage } = useLanguage();
@@ -212,9 +213,7 @@ export default function SuggestionDetail() {
     mutationFn: async (vote) => {
       if (!user) throw new Error(t('mustBeLoggedInToVote'));
       if (!suggestion) throw new Error('Suggestion not found');
-      const response = await base44.functions.invoke('voteOnSuggestion', { suggestionId, vote });
-      if (!response.data.success) throw new Error(response.data.error || 'שגיאה בהצבעה');
-      return { accepted: response.data.accepted, newProVotes: response.data.newProVotes, newConVotes: response.data.newConVotes };
+      return await castVote({ suggestionId, vote, document, user });
     },
     onMutate: async (vote) => {
       return await votingQueue.add(async () => {

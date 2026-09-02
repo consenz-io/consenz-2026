@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { ensureUserPublicProfile } from "@/components/ensureUserPublicProfile";
+import { castVote } from "@/components/document/utils/castVote";
 import { toast } from "sonner";
 import React from "react";
 
@@ -26,59 +26,7 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
       votingInProgressRef.current.add(suggestionId);
 
       try {
-        // voteOnSuggestionV2 calls processAcceptanceV4, which supports the
-        // edit_suggestion-on-new_section flow (creates a section + converts the
-        // parent + siblings to edit_section). The original voteOnSuggestion is a
-        // pre-existing function whose edits don't reliably propagate, so we call
-        // this new function name which deploys correctly.
-        const response = await base44.functions.invoke('voteOnSuggestionV2', {
-          suggestionId,
-          vote
-        });
-
-        if (!response.data.success) {
-          throw new Error(response.data.error || 'שגיאה בהצבעה');
-        }
-
-        const { newProVotes, newConVotes, accepted, voteAction } = response.data;
-        
-        console.log('[VOTE] Backend response:', { newProVotes, newConVotes, accepted, voteAction });
-
-        // Ensure public profile exists for new voters
-        if (voteAction === 'created') {
-          ensureUserPublicProfile(user).catch(() => {});
-        }
-
-        // ── Fallback: if vote reached threshold but acceptance didn't process ──
-        // The deployed processAcceptance may be stale (read-after-write lock bug).
-        // processAcceptanceV4 is the current function: it deploys correctly, handles
-        // stuck locks + service-role UUID ObjectId filtering, and supports the
-        // edit_suggestion-on-new_section flow (creates a section + converts the parent
-        // and siblings to edit_section). Call it as a fallback when delta >= threshold
-        // but accepted is false.
-        const delta = (newProVotes || 0) - (newConVotes || 0);
-        const threshold = Math.max(2, document?.threshold || 2);
-        if (!accepted && delta >= threshold) {
-          console.log('[VOTE] Threshold reached but not accepted, calling processAcceptanceV4 fallback...');
-          try {
-            const fallbackRes = await base44.functions.invoke('processAcceptanceV4', {
-              suggestionId,
-              documentId: document?.id,
-              voterId: user.id,
-              wasNewVote: voteAction === 'created',
-              forceReleaseLock: true
-            });
-            const fallbackData = fallbackRes?.data || fallbackRes;
-            console.log('[VOTE] processAcceptanceV4 fallback response:', fallbackData);
-            if (fallbackData?.accepted || fallbackData?.message === 'Already processed') {
-              return { accepted: true, newProVotes, newConVotes, voteAction };
-            }
-          } catch (fallbackErr) {
-            console.error('[VOTE] processAcceptanceV4 fallback error:', fallbackErr);
-          }
-        }
-      
-        return { accepted, newProVotes, newConVotes, voteAction };
+        return await castVote({ suggestionId, vote, document, user });
       } catch (err) {
         throw err;
       } finally {
