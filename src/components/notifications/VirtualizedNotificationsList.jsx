@@ -71,13 +71,13 @@ const NotificationItem = React.memo(({
   };
 
   return (
-    <div className={`p-3 border rounded-lg ${getTypeColor(notification.type)} ${!notification.read ? 'ring-2 ring-blue-400' : ''} transition-all`}>
+    <div dir={isRTL ? "rtl" : "ltr"} className={`p-3 border rounded-lg ${getTypeColor(notification.type)} ${!notification.read ? 'ring-2 ring-blue-400' : ''} transition-all`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           {notification.actionUrl ? (
             <button 
               onClick={() => onNotificationClick(notification)} 
-              className="block hover:opacity-80 text-right w-full"
+              className={`block hover:opacity-80 w-full ${isRTL ? "text-right" : "text-left"}`}
             >
               <h4 className="font-medium text-sm text-slate-900 mb-1">{displayTitle}</h4>
               <p className="text-xs text-slate-600">{displayMessage}</p>
