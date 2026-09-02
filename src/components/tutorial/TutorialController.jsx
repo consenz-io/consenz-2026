@@ -11,6 +11,7 @@ import TutorialHomeIntro from './TutorialHomeIntro';
 import TutorialGhostVoting from './TutorialGhostVoting';
 import TutorialGhostPoints from './TutorialGhostPoints';
 import TutorialMobileSheet from './TutorialMobileSheet';
+import TutorialReturnButton from './TutorialReturnButton';
 import PointsInfoModal from '@/components/points/PointsInfoModal';
 import { useLanguage } from '@/components/LanguageContext';
 
@@ -78,6 +79,17 @@ export default function TutorialController() {
   // Suppress tooltip rendering briefly after a page navigation so the new DOM can settle.
   const [navPending, setNavPending] = useState(false);
   const navTimerRef = useRef(null);
+
+  // Track the last-known documentId so the "Return to tour" button can navigate
+  // back to the correct document when the user wanders off during the tour.
+  const lastDocumentIdRef = useRef(null);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const docId = params.get('id');
+    if (docId && (isDocumentPage(location.pathname) || isVersionsPage(location.pathname))) {
+      lastDocumentIdRef.current = docId;
+    }
+  }, [location.pathname]);
 
   // Open the persistent points-info modal when the ghost points badge is clicked.
   // The ghost badge lives inside the tutorial layer (unmounted when a dialog opens),
@@ -618,8 +630,13 @@ export default function TutorialController() {
         </>
       );
     }
-    // On any other page — hide bubble until user returns to home or group
-    return <>{SkipConfirmDialog}</>;
+    // On any other page — show a "Return to tour" button so the user can get back
+    return (
+      <>
+        {SkipConfirmDialog}
+        <TutorialReturnButton targetPage="home" isRTL={isRTL} />
+      </>
+    );
   }
 
   if (phase === 'running') {
@@ -638,7 +655,16 @@ export default function TutorialController() {
     const stepPage = getStepPage(step);
     const currentPage = getPageFromPathname(location.pathname);
     if (stepPage && currentPage !== stepPage) {
-      return <>{SkipConfirmDialog}</>;
+      return (
+        <>
+          {SkipConfirmDialog}
+          <TutorialReturnButton
+            targetPage={stepPage}
+            documentId={lastDocumentIdRef.current}
+            isRTL={isRTL}
+          />
+        </>
+      );
     }
 
     // Suppress rendering while waiting for a navigated page to settle
