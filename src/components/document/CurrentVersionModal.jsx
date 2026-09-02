@@ -142,7 +142,7 @@ export default function CurrentVersionModal({
 
             
             <div className="flex flex-col gap-1 min-w-0 flex-1">
-              <DialogTitle className="font-medium text-slate-800 text-right leading-snug text-base">
+              <DialogTitle className={`font-medium text-slate-800 leading-snug text-base ${isRTL ? "text-right" : "text-left"}`}>
                 {title}
               </DialogTitle>
               <DialogDescription className="text-slate-500 leading-relaxed text-justify text-xs">
