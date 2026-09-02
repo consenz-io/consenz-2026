@@ -695,6 +695,9 @@ export default function DocumentView() {
             isRTL={isRTL}
             lastVersionDate={lastVersionDate}
             documentId={documentId}
+            participantsCount={contributorsCount}
+            suggestionsCount={suggestions?.length || 0}
+            votesCount={(allVotes?.length || 0) + (allSectionVotes?.length || 0)}
           />
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Handshake, Download, FileCheck2 } from "lucide-react";
+import { Handshake, Download, FileCheck2, Users } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import {
   Dialog,
@@ -40,7 +40,10 @@ export default function CurrentVersionModal({
   language,
   isRTL,
   lastVersionDate,
-  documentId
+  documentId,
+  participantsCount = 0,
+  suggestionsCount = 0,
+  votesCount = 0
 }) {
   const sortedTopics = useMemo(
     () => [...topics].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
@@ -72,6 +75,13 @@ export default function CurrentVersionModal({
   "This is the most up-to-date version, reflecting the consensus reached by the community so far. The document continues to evolve as new consensus is reached.";
 
   const asOf = language === "he" ? "נכון ל-" : language === "ar" ? "حتى " : "As of ";
+
+  const versionCreatedByLabel =
+    language === "he"
+    ? `גרסה זו נוצרה ע״י ${participantsCount} משתתפים באמצעות ${suggestionsCount} הצעות עריכה ו-${votesCount} הצבעות`
+    : language === "ar"
+    ? `تم إنشاء هذه النسخة بواسطة ${participantsCount} مشاركين عبر ${suggestionsCount} مقترحات تعديل و${votesCount} تصويت`
+    : `This version was created by ${participantsCount} participants through ${suggestionsCount} edit suggestions and ${votesCount} votes`;
   const downloadLabel = language === "he" ? "הורדה / הדפסה" : language === "ar" ? "تنزيل / طباعة" : "Download / Print";
   const closeLabel = language === "he" ? "סגירה" : language === "ar" ? "إغلاق" : "Close";
   const fullHistoryLabel =
@@ -141,11 +151,15 @@ export default function CurrentVersionModal({
             </div>
           </div>
           {dateStr &&
-          <div className="flex justify-end" dir={isRTL ? "rtl" : "ltr"}>
+          <div className="flex flex-wrap items-center justify-end gap-2" dir={isRTL ? "rtl" : "ltr"}>
               <div className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-100/60 px-3 py-1 rounded-full">
                 <FileCheck2 className="w-3.5 h-3.5" />
                 {asOf}
                 {dateStr}
+              </div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-100/60 px-3 py-1 rounded-full">
+                <Users className="w-3.5 h-3.5" />
+                {versionCreatedByLabel}
               </div>
             </div>
           }
