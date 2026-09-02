@@ -9,7 +9,7 @@ import React from "react";
  * consistent size, weight, color, and alignment across the app.
  */
 const DOCUMENT_TITLE_FONT =
-"'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif";
+  "'Noto Serif Hebrew', 'Alegreya', 'Noto Serif', Georgia, serif";
 
 export default function DocumentTitleHeading({ children, id, className = "" }) {
   return (
