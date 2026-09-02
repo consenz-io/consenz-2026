@@ -78,10 +78,10 @@ export default function CurrentVersionModal({
 
   const versionCreatedByLabel =
     language === "he"
-    ? `גרסה זו נוצרה ע״י ${participantsCount} משתתפים באמצעות ${suggestionsCount} הצעות עריכה ו-${votesCount} הצבעות`
+    ? `נוצרה ע״י ${participantsCount} משתתפים · ${suggestionsCount} עריכות · ${votesCount} הצבעות`
     : language === "ar"
-    ? `تم إنشاء هذه النسخة بواسطة ${participantsCount} مشاركين عبر ${suggestionsCount} مقترحات تعديل و${votesCount} تصويت`
-    : `This version was created by ${participantsCount} participants through ${suggestionsCount} edit suggestions and ${votesCount} votes`;
+    ? `أنشأها ${participantsCount} مشارك · ${suggestionsCount} تعديل · ${votesCount} تصويت`
+    : `Created by ${participantsCount} participants · ${suggestionsCount} edits · ${votesCount} votes`;
   const downloadLabel = language === "he" ? "הורדה / הדפסה" : language === "ar" ? "تنزيل / طباعة" : "Download / Print";
   const closeLabel = language === "he" ? "סגירה" : language === "ar" ? "إغلاق" : "Close";
   const fullHistoryLabel =
