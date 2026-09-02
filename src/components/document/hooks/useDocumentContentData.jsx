@@ -24,7 +24,8 @@ export function useDocumentContentData({
   newlyCreatedSuggestion,
   onClearNewlyCreated,
   targetSuggestionId,
-  onEditSuggestion
+  onEditSuggestion,
+  scrollToSectionId
 }) {
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
   const [editingTopic, setEditingTopic] = useState(null);
@@ -630,7 +631,7 @@ Return ONLY the translated text:`;
     document, topics, sections, suggestions, user, isAdmin, canParticipate,
     onEditSection, onEditSectionThenVote, onNewSection, onDirectEdit,
     onOpenSuggestionSidebar, newlyCreatedSuggestion, onClearNewlyCreated,
-    targetSuggestionId, onEditSuggestion,
+    targetSuggestionId, onEditSuggestion, scrollToSectionId,
     // State
     showTranslatedTopics, setShowTranslatedTopics, editingTopic, setEditingTopic,
     // UI helpers

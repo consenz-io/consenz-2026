@@ -21,7 +21,7 @@ export default function SectionDraggable({ section, index, topic, topicSections,
     newlyCreatedSuggestion, onClearNewlyCreated, targetSuggestionId,
     publicProfiles, allSuggestionsBySectionId, sectionVotesBySectionId,
     sourceSuggestionBySectionId, targetSuggestionSectionId,
-    onNewSection, reorderMutation
+    onNewSection, reorderMutation, scrollToSectionId
   } = useDocContent();
 
   const allSectionSuggestions = getSuggestionsForSection(section.id);
@@ -99,7 +99,7 @@ export default function SectionDraggable({ section, index, topic, topicSections,
         })()}
 
         <LazySection
-          forceMount={section.id === targetSuggestionSectionId || newlyCreatedSuggestion?.sectionId === section.id}
+          forceMount={section.id === targetSuggestionSectionId || newlyCreatedSuggestion?.sectionId === section.id || section.id === scrollToSectionId}
           estimatedHeight={250}>
           <SectionCarousel
             section={section}

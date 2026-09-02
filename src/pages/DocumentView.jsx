@@ -38,6 +38,11 @@ export default function DocumentView() {
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
   const scrollToSectionId = searchParams.get('scrollTo');
+  // Normalized raw section ID (strips "section-" prefix) — passed to DocumentContent
+  // so LazySection force-mounts the target section, ensuring the scrollTo effect can find it.
+  const scrollToRawSectionId = scrollToSectionId?.startsWith('section-')
+    ? scrollToSectionId.slice(8)
+    : scrollToSectionId;
   const commentIdFromUrl = searchParams.get('commentId');
   const openSuggestionFromUrl = searchParams.get('openSuggestion');
   const targetSuggestionFromUrl = searchParams.get('targetSuggestion');
@@ -279,21 +284,21 @@ export default function DocumentView() {
       el.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
       setTimeout(() => el.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2'), 2000);
     };
-    setTimeout(() => {
+    let attempts = 0;
+    const maxAttempts = 8;
+    let scrollTimer;
+    const attemptScroll = () => {
       const element = findEl();
       if (element) {
         scrollToSectionDoneRef.current = scrollToSectionId;
         performScroll(element);
-      } else {
-        setTimeout(() => {
-          const retryElement = findEl();
-          if (retryElement) {
-            scrollToSectionDoneRef.current = scrollToSectionId;
-            performScroll(retryElement);
-          }
-        }, 1000);
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        scrollTimer = setTimeout(attemptScroll, 400 * attempts);
       }
-    }, 300);
+    };
+    scrollTimer = setTimeout(attemptScroll, 300);
+    return () => clearTimeout(scrollTimer);
   }, [scrollToSectionId, sections, suggestions]);
 
   useEffect(() => {
@@ -587,6 +592,7 @@ export default function DocumentView() {
                   onClearNewlyCreated={() => setNewlyCreatedSuggestion(null)}
                   targetSuggestionId={targetSuggestionId}
                   onEditSuggestion={handleEditSuggestion}
+                  scrollToSectionId={scrollToRawSectionId}
                 />
               </ErrorBoundary>
             </div>

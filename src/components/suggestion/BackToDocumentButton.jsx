@@ -6,23 +6,29 @@ import { createPageUrl } from "@/utils";
 import { useLanguage } from "@/components/LanguageContext";
 
 /**
- * Compact "Back to document" navigation anchor for the suggestion detail page.
- * Kept intentionally small: the page title already shows the document name,
- * so this is a secondary navigation affordance, not the primary action.
+ * "Back to document" button for the suggestion detail page.
+ * Navigates to the document and scrolls to the relevant position:
+ * - Pending suggestion → scrolls to the suggestion card (via targetSuggestion param,
+ *   which also auto-navigates the SectionCarousel to it and force-mounts its section)
+ * - Accepted suggestion with sectionId → scrolls to the section (via scrollTo param,
+ *   which force-mounts the section and scrolls with retries)
+ * - Rejected / accepted-without-section (e.g. delete_section) → just opens the document
  */
 export default function BackToDocumentButton({ suggestion, suggestionId, isRTL }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleClick = () => {
-    const anchor =
-      suggestion.type === 'edit_section' || suggestion.type === 'edit_suggestion'
-        ? `section-${suggestion.sectionId}`
-        : `suggestion-${suggestionId}`;
-    navigate(`${createPageUrl("DocumentView")}?id=${suggestion.documentId}#${anchor}`);
-    setTimeout(() => {
-      window.document?.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 300);
+    const docId = suggestion.documentId;
+    let url = `${createPageUrl("DocumentView")}?id=${docId}`;
+
+    if (suggestion.status === 'pending') {
+      url += `&targetSuggestion=${suggestionId}`;
+    } else if (suggestion.status === 'accepted' && suggestion.sectionId) {
+      url += `&scrollTo=section-${suggestion.sectionId}`;
+    }
+
+    navigate(url);
   };
 
   return (
