@@ -229,6 +229,26 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
     setSuggestTransition(true);
     const comment = await postConComment();
     setConComment("");
+
+    // When onSuggestEditThenVote is available, open the edit modal FIRST and
+    // defer the con vote until AFTER the edit suggestion is published. This
+    // ensures the section is not deleted (by the con vote reaching the
+    // deletion threshold) before the user has a chance to publish their edit
+    // suggestion — the user would otherwise lose the opportunity to suggest
+    // an alternative wording.
+    if (onSuggestEditThenVote) {
+      if (comment && onConCommentPosted) {
+        onConCommentPosted(comment.id);
+      }
+      setTimeout(() => {
+        setSuggestTransition(false);
+        setShowConDialog(false);
+        onSuggestEditThenVote(section);
+      }, 1800);
+      return;
+    }
+
+    // Fallback: vote first, then open edit modal on success (old behavior)
     pendingCommentRef.current = comment?.id || null;
     pendingSuggestEditRef.current = true;
     voteMutation.mutate('con');
