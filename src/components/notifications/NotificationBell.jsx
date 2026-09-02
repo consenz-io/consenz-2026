@@ -36,7 +36,7 @@ export default function NotificationBell({ user }) {
 
   // Ref to access latest notifications inside the subscription without re-subscribing
   const notificationsRef = React.useRef(notifications);
-  notificationsRef.current = notifications;
+  React.useEffect(() => { notificationsRef.current = notifications; }, [notifications]);
 
   // Real-time subscription for notifications — stable deps prevent subscribe→invalidate→resubscribe loop
   React.useEffect(() => {
@@ -85,7 +85,7 @@ export default function NotificationBell({ user }) {
     },
   });
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = React.useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
 
   const getNotificationIcon = (type) => {
     switch (type) {

@@ -13,6 +13,10 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
   const topicsRef = React.useRef([]);
   const sectionsRef = React.useRef([]);
   const suggestionsRef = React.useRef([]);
+  // ID Sets for O(1) lookup in subscription callbacks (was O(n) .some() scans)
+  const topicIdsRef = React.useRef(new Set());
+  const sectionIdsRef = React.useRef(new Set());
+  const suggestionIdsRef = React.useRef(new Set());
 
   // Shared debounce for the aggregated-data refetch. Section/suggestion/comment/vote
   // subscriptions all invalidate the same ['documentAggregatedData'] query — without
@@ -28,9 +32,18 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
 
   // Stable setter functions — defined once, never change reference
   // (inline arrow functions would create a new reference on every render)
-  const setTopicsRef = React.useCallback((v) => { topicsRef.current = v; }, []);
-  const setSectionsRef = React.useCallback((v) => { sectionsRef.current = v; }, []);
-  const setSuggestionsRef = React.useCallback((v) => { suggestionsRef.current = v; }, []);
+  const setTopicsRef = React.useCallback((v) => {
+    topicsRef.current = v;
+    topicIdsRef.current = new Set(v.map(t => t.id));
+  }, []);
+  const setSectionsRef = React.useCallback((v) => {
+    sectionsRef.current = v;
+    sectionIdsRef.current = new Set(v.map(s => s.id));
+  }, []);
+  const setSuggestionsRef = React.useCallback((v) => {
+    suggestionsRef.current = v;
+    suggestionIdsRef.current = new Set(v.map(s => s.id));
+  }, []);
 
   // Document subscription — only needs documentId, not the document object
   React.useEffect(() => {
@@ -60,14 +73,14 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
 
     const unsubscribeTopic = base44.entities.Topic.subscribe((event) => {
       if (event.data?.documentId === documentId ||
-          (event.type === 'update' && event.id && topicsRef.current?.some(t => t.id === event.id))) {
+          (event.type === 'update' && event.id && topicIdsRef.current.has(event.id))) {
         debouncedInvalidate(['topics', documentId]);
       }
     });
 
     const unsubscribeSection = base44.entities.Section.subscribe((event) => {
       const belongsToDoc = event.data?.documentId === documentId;
-      const isKnownSection = event.id && sectionsRef.current?.some(s => s.id === event.id);
+      const isKnownSection = event.id && sectionIdsRef.current.has(event.id);
       if (belongsToDoc || isKnownSection) {
         debouncedInvalidate(['sections', documentId]);
         // Also refresh aggregated data (votes, comments scoped to sections)
@@ -77,7 +90,7 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
 
     const unsubscribeSuggestion = base44.entities.Suggestion.subscribe((event) => {
       if (event.data?.documentId === documentId ||
-          (event.type === 'update' && event.id && suggestionsRef.current?.some(s => s.id === event.id))) {
+          (event.type === 'update' && event.id && suggestionIdsRef.current.has(event.id))) {
         debouncedInvalidate(['suggestions', documentId]);
         debouncedInvalidateAggregated();
       }
@@ -98,8 +111,8 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
       const { rootEntityType, rootEntityId } = event.data || {};
       // Always refresh aggregated data when any comment related to this doc changes
       const isDocComment = rootEntityType === 'document' && rootEntityId === documentId;
-      const isSectionComment = rootEntityType === 'section' && sectionsRef.current?.some(s => s.id === rootEntityId);
-      const isSuggestionComment = rootEntityType === 'suggestion' && suggestionsRef.current?.some(s => s.id === rootEntityId);
+      const isSectionComment = rootEntityType === 'section' && sectionIdsRef.current.has(rootEntityId);
+      const isSuggestionComment = rootEntityType === 'suggestion' && suggestionIdsRef.current.has(rootEntityId);
       if (isDocComment || isSectionComment || isSuggestionComment) {
         debouncedInvalidateAggregated();
       }
@@ -116,7 +129,7 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
     if (!documentId) return;
     const unsubscribe = base44.entities.Vote.subscribe((event) => {
       const voteSuggestionId = event.data?.suggestionId;
-      if (voteSuggestionId && suggestionsRef.current?.some(s => s.id === voteSuggestionId)) {
+      if (voteSuggestionId && suggestionIdsRef.current.has(voteSuggestionId)) {
         debouncedInvalidateAggregated();
         queryClient.invalidateQueries({ queryKey: ['suggestions', documentId] });
       }

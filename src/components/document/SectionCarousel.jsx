@@ -205,7 +205,13 @@ const SectionCarousel = React.memo(function SectionCarousel({
     const prevLen = prevSortedLengthRef.current;
     const newLen = sortedSuggestions.length;
     if (newLen > prevLen) {
-      const newest = [...sortedSuggestions].sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
+      // sortedSuggestions is NOT sorted by created_date — find newest in O(n)
+      // instead of O(n log n) re-sort. Server data arrives newest-first, but
+      // sortedSuggestions reorders by remaining-votes then created_date.
+      let newest = null;
+      for (const s of sortedSuggestions) {
+        if (!newest || new Date(s.created_date) > new Date(newest.created_date)) newest = s;
+      }
       if (newest) setCurrentSuggestionId(newest.id);
     }
     prevSortedLengthRef.current = newLen;
