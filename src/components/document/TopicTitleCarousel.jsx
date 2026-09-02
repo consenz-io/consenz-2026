@@ -79,7 +79,7 @@ const TopicTitleCarousel = React.memo(function TopicTitleCarousel({
         {isFirstView ?
         // הכותרת הנוכחית
         <div className="flex items-center gap-2">
-            <h3 className={`font-semibold break-words text-2xl md:text-2xl ${isRTL ? 'text-right' : 'text-left'}`} style={{ fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif" }}>
+            <h3 className={`break-words text-2xl md:text-2xl [font-family:'Noto_Serif',_serif] font-normal ${isRTL ? 'text-right' : 'text-left'}`} style={{ fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif" }}>
               {(() => {
               const translatedTitle = topic.translations?.[language]?.title;
               if (showTranslatedTopics[topic.id] && typeof translatedTitle === 'string') {
