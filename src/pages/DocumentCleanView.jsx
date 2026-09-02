@@ -475,11 +475,18 @@ ${text}`;
     topics.some(t => (t.originalLanguage || 'he') !== language) ||
     ((document?.originalLanguage || 'he') !== language);
     
+  const escapeHtml = (str) => String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
   const handleDownload = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const docTitle = (showTranslatedDoc && translatedDocTitle) || document.title;
+    const docTitle = escapeHtml((showTranslatedDoc && translatedDocTitle) || document.title);
     const isRtlDoc = isRTL;
     const dir = isRtlDoc ? 'rtl' : 'ltr';
 
@@ -490,8 +497,8 @@ ${text}`;
           .sort((a, b) => (a.order || 0) - (b.order || 0));
         if (topicSections.length === 0) return '';
 
-        const topicTitle = (showTranslatedTopics[topic.id] && (translatedTopics[topic.id] || topic.translations?.[language]))
-          || topic.title;
+        const topicTitle = escapeHtml((showTranslatedTopics[topic.id] && (translatedTopics[topic.id] || topic.translations?.[language]))
+          || topic.title);
 
         const sectionsHtml = topicSections.map((section, si) => {
           const content = (showTranslatedSections[section.id]
