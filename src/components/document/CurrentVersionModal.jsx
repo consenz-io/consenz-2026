@@ -128,9 +128,9 @@ export default function CurrentVersionModal({
         {/* Header — consensus emblem, right-aligned editorial layout */}
         <DialogHeader className="px-6 pt-5 pb-5 space-y-3 border-b border-slate-100 bg-gradient-to-b from-blue-50/40 to-white">
           <div className="flex items-start gap-3" dir={isRTL ? "rtl" : "ltr"}>
-            <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-200/60 ring-1 ring-blue-100 hidden">
-              <Handshake className="w-5 h-5 text-white" />
-            </div>
+            
+
+            
             <div className="flex flex-col gap-1 min-w-0 flex-1">
               <DialogTitle className="font-medium text-slate-800 text-right leading-snug text-base">
                 {title}
