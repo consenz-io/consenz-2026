@@ -92,7 +92,12 @@ export default function CurrentVersionModal({
   const handleDownload = () => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
-    const docTitle = document?.title || "";
+    // Escape user-controlled text before injecting into document.write() —
+    // prevents DOM-XSS via malicious document/topic titles.
+    const escapeHtml = (s) => String(s || "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+    const docTitle = escapeHtml(document?.title || "");
     const dir = isRTL ? "rtl" : "ltr";
     const topicRows = sortedTopics.
     map((topic, ti) => {
@@ -104,7 +109,7 @@ export default function CurrentVersionModal({
         `<div style="margin-bottom:1.5rem"><span style="color:#64748b;font-weight:500;margin-inline-end:0.5rem">${ti + 1}.${si + 1}</span><span style="font-size:1.1rem;line-height:1.8">${section.content || ""}</span></div>`
       ).
       join("");
-      return `<div style="margin-bottom:2.5rem"><h2 style="font-size:1.4rem;font-weight:bold;border-bottom:1px solid #cbd5e1;padding-bottom:0.5rem;margin-bottom:1rem">${ti + 1}. ${topic.title || ""}</h2>${sectionsHtml}</div>`;
+      return `<div style="margin-bottom:2.5rem"><h2 style="font-size:1.4rem;font-weight:bold;border-bottom:1px solid #cbd5e1;padding-bottom:0.5rem;margin-bottom:1rem">${ti + 1}. ${escapeHtml(topic.title || "")}</h2>${sectionsHtml}</div>`;
     }).
     join("");
 

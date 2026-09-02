@@ -76,14 +76,26 @@ export function showBrowserNotification({ title, body, actionUrl, icon }) {
       timestamp: Date.now(),
     });
 
-    // Handle notification click
+    // Handle notification click — validate the URL scheme before navigating
+    // to prevent javascript:/data: URIs from executing as DOM-XSS.
     if (actionUrl) {
-      notification.onclick = (event) => {
-        event.preventDefault();
-        window.focus();
-        window.location.href = actionUrl;
-        notification.close();
+      const isSafeUrl = (url) => {
+        if (typeof url !== 'string') return false;
+        const trimmed = url.trim().toLowerCase();
+        // Relative path is safe
+        if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return true;
+        // Only allow http/https absolute URLs
+        if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return true;
+        return false;
       };
+      if (isSafeUrl(actionUrl)) {
+        notification.onclick = (event) => {
+          event.preventDefault();
+          window.focus();
+          window.location.href = actionUrl;
+          notification.close();
+        };
+      }
     }
 
     // Auto-close after 10 seconds
