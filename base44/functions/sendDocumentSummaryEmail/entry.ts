@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { signLogId } from '../../shared/emailTrackingAuth.ts';
 
 // Sanitize admin-supplied HTML before inserting into email templates.
 // Strips scripts, event handlers, and dangerous URLs to prevent content
@@ -135,14 +136,14 @@ Deno.serve(async (req) => {
   // Base URL for the trackEmailEvent backend function
   const trackBase = `${appBase}/api/functions/trackEmailEvent`;
 
-  // Helper: wrap a URL with click tracking (given a logId)
-  const trackClick = (logId, targetUrl) =>
-    `${trackBase}?logId=${logId}&type=click&redirectUrl=${encodeURIComponent(targetUrl)}`;
+  // Helper: wrap a URL with click tracking (given a logId + signature)
+  const trackClick = (logId, sig, targetUrl) =>
+    `${trackBase}?logId=${logId}&type=click&redirectUrl=${encodeURIComponent(targetUrl)}&sig=${sig}`;
 
   // Helper: build full HTML for one recipient (with unique logId for pixel + links)
-  const buildEmailHtml = (logId) => {
-    const pixelUrl = `${trackBase}?logId=${logId}&type=open`;
-    const trackedDocUrl = trackClick(logId, docUrl);
+  const buildEmailHtml = (logId, sig) => {
+    const pixelUrl = `${trackBase}?logId=${logId}&type=open&sig=${sig}`;
+    const trackedDocUrl = trackClick(logId, sig, docUrl);
 
     // Wrap all <a href="..."> links inside summaryContent with click tracking
     const trackedSummary = sanitizedSummary.replace(
@@ -150,7 +151,7 @@ Deno.serve(async (req) => {
       (match, before, url, after) => {
         // Don't double-wrap already tracked links
         if (url.includes('trackEmailEvent')) return match;
-        return `<a ${before}href="${trackClick(logId, url)}"${after}>`;
+        return `<a ${before}href="${trackClick(logId, sig, url)}"${after}>`;
       }
     );
 
@@ -247,7 +248,8 @@ Deno.serve(async (req) => {
     }
 
     try {
-      const emailHtml = buildEmailHtml(logId || 'unknown');
+      const sig = logId ? await signLogId(logId) : '';
+      const emailHtml = buildEmailHtml(logId || 'unknown', sig);
       const isRegistered = registeredEmails.has(email.toLowerCase());
 
       if (isRegistered) {
