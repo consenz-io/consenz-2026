@@ -1,11 +1,14 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import { Button } from "@/components/ui/button";
 
 /**
- * Floating "Return to tour" button shown when the user navigates to a different
- * page during an active tutorial. Clicking it navigates back to the page the
+ * Centered "Return to tour" button shown when the user navigates to a different
+ * page during an active tutorial. Same centered bottom position as the "Tour the
+ * Platform" button for new users. Clicking it navigates back to the page the
  * current step expects (home / document / versions).
  */
 export default function TutorialReturnButton({ targetPage, documentId, isRTL }) {
@@ -29,13 +32,20 @@ export default function TutorialReturnButton({ targetPage, documentId, isRTL }) 
     : 'Return to tour';
 
   return (
-    <button
-      onClick={handleClick}
-      className={`fixed bottom-6 ${isRTL ? 'left-6' : 'right-6'} z-[10000] flex items-center gap-2 px-5 py-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-xl transition-all hover:scale-105 tutorial-card-flash`}
-      aria-label={label}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className="fixed bottom-6 inset-x-0 z-[10000] flex justify-center px-4 pointer-events-none"
     >
-      {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-      {label}
-    </button>
+      <Button
+        size="lg"
+        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg pointer-events-auto"
+        onClick={handleClick}
+      >
+        {label}
+        {isRTL ? <ArrowLeft className="w-4 h-4 mr-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
+      </Button>
+    </motion.div>
   );
 }
