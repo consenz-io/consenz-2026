@@ -96,7 +96,7 @@ export default function CurrentVersionModal({
     // prevents DOM-XSS via malicious document/topic titles.
     const escapeHtml = (s) => String(s || "").replace(/[&<>"']/g, (c) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-    }[c]));
+    })[c]);
     const docTitle = escapeHtml(document?.title || "");
     const dir = isRTL ? "rtl" : "ltr";
     const topicRows = sortedTopics.
@@ -128,27 +128,27 @@ export default function CurrentVersionModal({
         {/* Header — consensus emblem, right-aligned editorial layout */}
         <DialogHeader className="px-6 pt-5 pb-5 space-y-3 border-b border-slate-100 bg-gradient-to-b from-blue-50/40 to-white">
           <div className="flex items-start gap-3" dir={isRTL ? "rtl" : "ltr"}>
-            <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-200/60 ring-1 ring-blue-100">
+            <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-200/60 ring-1 ring-blue-100 hidden">
               <Handshake className="w-5 h-5 text-white" />
             </div>
             <div className="flex flex-col gap-1 min-w-0 flex-1">
-              <DialogTitle className="text-xl font-medium text-slate-800 text-right leading-snug">
+              <DialogTitle className="font-medium text-slate-800 text-right leading-snug text-base">
                 {title}
               </DialogTitle>
-              <DialogDescription className="text-sm text-slate-500 leading-relaxed text-right">
+              <DialogDescription className="text-sm text-slate-500 leading-relaxed text-center">
                 {subtitle}
               </DialogDescription>
             </div>
           </div>
-          {dateStr && (
-            <div className="flex justify-end" dir={isRTL ? "rtl" : "ltr"}>
+          {dateStr &&
+          <div className="flex justify-end" dir={isRTL ? "rtl" : "ltr"}>
               <div className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-100/60 px-3 py-1 rounded-full">
                 <FileCheck2 className="w-3.5 h-3.5" />
                 {asOf}
                 {dateStr}
               </div>
             </div>
-          )}
+          }
         </DialogHeader>
 
         {/* Body — the document presented as the product of consensus */}
@@ -179,35 +179,35 @@ export default function CurrentVersionModal({
 
               <div className="space-y-8">
               {sortedTopics.map((topic, ti) => {
-              const topicSections = sectionsByTopic.get(topic.id) || [];
-              if (topicSections.length === 0) return null;
-              return (
-                <div key={topic.id} className="space-y-3">
+                  const topicSections = sectionsByTopic.get(topic.id) || [];
+                  if (topicSections.length === 0) return null;
+                  return (
+                    <div key={topic.id} className="space-y-3">
                     <h3
-                    className="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2"
-                    style={{ fontFamily: SERIF }}>
+                        className="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2"
+                        style={{ fontFamily: SERIF }}>
                     
                       {ti + 1}. {topic.title}
                     </h3>
                     <div className="space-y-4">
                       {topicSections.map((section, si) =>
-                    <div key={section.id} className="flex gap-3">
+                        <div key={section.id} className="flex gap-3">
                           <span className="text-slate-400 font-medium min-w-[1.75rem] text-sm pt-1">
                             {ti + 1}.{si + 1}
                           </span>
                           <div
-                        className="flex-1 text-slate-700 leading-relaxed prose prose-sm max-w-none"
-                        style={{ fontFamily: SERIF, fontSize: "1.125rem", lineHeight: "1.8" }}
-                        dangerouslySetInnerHTML={{ __html: section.content || "" }} />
+                            className="flex-1 text-slate-700 leading-relaxed prose prose-sm max-w-none"
+                            style={{ fontFamily: SERIF, fontSize: "1.125rem", lineHeight: "1.8" }}
+                            dangerouslySetInnerHTML={{ __html: section.content || "" }} />
                       
                         </div>
-                    )}
+                        )}
                     </div>
                   </div>);
 
-            })}
+                })}
             </div>
-          }
+              }
             </div>
           </div>
         </div>
