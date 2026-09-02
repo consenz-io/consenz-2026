@@ -135,7 +135,7 @@ export default function CurrentVersionModal({
               <DialogTitle className="font-medium text-slate-800 text-right leading-snug text-base">
                 {title}
               </DialogTitle>
-              <DialogDescription className="text-sm text-slate-500 leading-relaxed text-center">
+              <DialogDescription className="text-sm text-slate-500 leading-relaxed text-justify">
                 {subtitle}
               </DialogDescription>
             </div>
