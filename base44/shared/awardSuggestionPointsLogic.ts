@@ -21,6 +21,13 @@ export async function awardSuggestionPointsLogic(base44, { suggestionId, action 
   }
   const suggestion = suggestions[0];
 
+  // Authorization guard: only award points for suggestions that have actually
+  // been accepted through the consensus process. Without this check, any caller
+  // could award 500 points to a creator by passing a pending/rejected suggestion ID.
+  if (suggestion.status !== 'accepted') {
+    return { success: false, error: 'Suggestion is not accepted — points cannot be awarded', status: 403 };
+  }
+
   const documents = await base44.entities.Document.filter({ id: suggestion.documentId });
   if (documents.length === 0 || !documents[0].gamificationEnabled) {
     return { success: true, message: 'Gamification not enabled' };
