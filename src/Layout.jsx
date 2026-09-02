@@ -445,7 +445,7 @@ function LayoutContent({ children, currentPageName }) {
                     sessionStorage.setItem('hideUnvotedNudge', 'true');
                   }}
                 >
-                  <div className="flex items-center gap-2 px-2 md:px-4 py-2 bg-orange-50 border-2 border-orange-300 rounded-lg hover:bg-orange-100 transition-all shadow-lg cursor-pointer">
+                  <div className="flex items-center justify-center gap-2 px-2 md:px-4 py-2 bg-orange-50 border-2 border-orange-300 rounded-lg hover:bg-orange-100 transition-all shadow-lg cursor-pointer">
                     <div className="w-7 h-7 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold animate-pulse flex-shrink-0">
                       {totalUnvotedSuggestions > 9 ? '9+' : totalUnvotedSuggestions}
                     </div>
