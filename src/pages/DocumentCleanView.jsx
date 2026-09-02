@@ -46,15 +46,15 @@ export default function DocumentCleanView() {
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
-    retry: false,
+    retry: false
   });
   const documentId = searchParams.get('id');
   const scrollToSuggestionId = searchParams.get('scrollToSuggestion');
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
-    queryFn: () => base44.entities.Document.filter({ id: documentId }).then(docs => docs[0]),
-    enabled: !!documentId,
+    queryFn: () => base44.entities.Document.filter({ id: documentId }).then((docs) => docs[0]),
+    enabled: !!documentId
   });
 
   const { data: topics = [], isLoading: topicsLoading } = useQuery({
@@ -62,7 +62,7 @@ export default function DocumentCleanView() {
     queryFn: () => base44.entities.Topic.filter({ documentId }, 'order'),
     enabled: !!documentId,
     staleTime: 0,
-    refetchOnMount: true,
+    refetchOnMount: true
   });
 
   const { data: sections = [], isLoading: sectionsLoading } = useQuery({
@@ -70,7 +70,7 @@ export default function DocumentCleanView() {
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order'),
     enabled: !!documentId,
     staleTime: 0,
-    refetchOnMount: true,
+    refetchOnMount: true
   });
 
   const { data: allVersions, isLoading: versionsLoading } = useQuery({
@@ -82,7 +82,7 @@ export default function DocumentCleanView() {
     },
     enabled: !!documentId,
     staleTime: 0,
-    refetchOnMount: true,
+    refetchOnMount: true
   });
 
   // Dispatch tutorial event when user lands on this page
@@ -107,26 +107,26 @@ export default function DocumentCleanView() {
     queryKey: ['suggestions', documentId],
     queryFn: () => base44.entities.Suggestion.filter({ documentId }),
     initialData: [],
-    enabled: !!documentId,
+    enabled: !!documentId
   });
 
   const { data: topicEditSuggestions } = useQuery({
     queryKey: ['topicEditSuggestions', documentId],
     queryFn: () => base44.entities.TopicEditSuggestion.filter({ documentId, status: 'accepted' }, 'created_date'),
     initialData: [],
-    enabled: !!documentId,
+    enabled: !!documentId
   });
 
   // Build lookup Map once: topicId → sorted array of accepted edit suggestions
   // O(n) build, O(1) lookup per topic — replaces the previous O(n²) per-render pattern
   const topicEditSuggestionsMap = React.useMemo(() => {
     const map = new Map();
-    topicEditSuggestions.forEach(s => {
+    topicEditSuggestions.forEach((s) => {
       if (!map.has(s.topicId)) map.set(s.topicId, []);
       map.get(s.topicId).push(s);
     });
     // Sort each topic's list by date ascending (once, not per-call)
-    map.forEach(list => list.sort((a, b) => new Date(a.created_date) - new Date(b.created_date)));
+    map.forEach((list) => list.sort((a, b) => new Date(a.created_date) - new Date(b.created_date)));
     return map;
   }, [topicEditSuggestions]);
 
@@ -141,11 +141,11 @@ export default function DocumentCleanView() {
 
   // Listen for tutorial navigate-older-version action
   const totalVersionCountRef = React.useRef(totalVersionCount);
-  React.useEffect(() => { totalVersionCountRef.current = totalVersionCount; }, [totalVersionCount]);
+  React.useEffect(() => {totalVersionCountRef.current = totalVersionCount;}, [totalVersionCount]);
   React.useEffect(() => {
     const handler = () => {
       const total = totalVersionCountRef.current;
-      setCurrentVersionIndex(prev => Math.min(prev + 1, Math.max(total - 1, 1)));
+      setCurrentVersionIndex((prev) => Math.min(prev + 1, Math.max(total - 1, 1)));
     };
     window.addEventListener('tutorial:navigateOlderVersion', handler);
     return () => window.removeEventListener('tutorial:navigateOlderVersion', handler);
@@ -153,7 +153,7 @@ export default function DocumentCleanView() {
 
   // Get topic title as it was at a specific version
   const getTopicTitleAtVersion = (topicId, versionIndex) => {
-    const topic = topics.find(t => t.id === topicId);
+    const topic = topics.find((t) => t.id === topicId);
     if (!topic) return '';
     if (versionIndex === 0) return topic.title;
 
@@ -163,7 +163,7 @@ export default function DocumentCleanView() {
     const versionTimestamp = new Date(displayedSnapshot.timestamp).getTime();
     const allForTopic = topicEditSuggestionsMap.get(topicId) || [];
 
-    const relevant = allForTopic.filter(s => new Date(s.created_date).getTime() <= versionTimestamp);
+    const relevant = allForTopic.filter((s) => new Date(s.created_date).getTime() <= versionTimestamp);
 
     if (relevant.length === 0) {
       return allForTopic.length > 0 ? allForTopic[0].originalTitle : topic.title;
@@ -172,70 +172,70 @@ export default function DocumentCleanView() {
   };
 
   const currentSnapshot = versionGroups[currentVersionIndex] || versionGroups[0];
-  
+
   // Build a complete list of all sections including deleted ones from versions
   const allSectionsMap = React.useMemo(() => {
     const sectionMap = new Map();
-    
+
     // Add current sections
-    sections.forEach(s => {
+    sections.forEach((s) => {
       sectionMap.set(s.id, s);
     });
-    
+
     // Add sections from versions that might be deleted now
     if (Array.isArray(allVersions)) {
-      allVersions.forEach(v => {
-      if (v.sectionId && !sectionMap.has(v.sectionId)) {
-        // Find the topic for this section from versions
-        const relatedVersions = (allVersions || []).filter(ver => ver.sectionId === v.sectionId);
-        if (relatedVersions.length > 0) {
-          // Get the earliest version (when section was created) to find original order
-          const earliestVersion = relatedVersions.sort((a, b) => (a.version || 0) - (b.version || 0))[0];
-          const latestVersion = relatedVersions.sort((a, b) => (b.version || 0) - (a.version || 0))[0];
-          
-          // Try to find the corresponding suggestion to get topic and order info
-          const relatedSuggestion = (suggestions || []).find(s => 
-            s.id === earliestVersion.suggestionId || 
-            (allVersions || []).some(ver => ver.sectionId === v.sectionId && ver.suggestionId === s.id)
-          );
-          
-          let topicId = null;
-          let order = 999; // Default fallback
-          
-          if (relatedSuggestion) {
-            topicId = relatedSuggestion.topicId;
-            order = relatedSuggestion.insertPosition || 999;
-          } else {
-            // Try to infer from other sections in the same topic
-            const currentSection = sections.find(s => s.id === v.sectionId);
-            if (currentSection) {
-              topicId = currentSection.topicId;
-              order = currentSection.order;
-            } else {
-              const sectionWithTopic = sections.find(s => s.topicId);
-              topicId = sectionWithTopic?.topicId || topics[0]?.id;
-            }
-          }
-          
-          // Prefer topicId/sectionOrder stored directly on the version record
-          const topicIdFromVersion = latestVersion.topicId || earliestVersion.topicId;
-          const orderFromVersion = latestVersion.sectionOrder ?? earliestVersion.sectionOrder;
+      allVersions.forEach((v) => {
+        if (v.sectionId && !sectionMap.has(v.sectionId)) {
+          // Find the topic for this section from versions
+          const relatedVersions = (allVersions || []).filter((ver) => ver.sectionId === v.sectionId);
+          if (relatedVersions.length > 0) {
+            // Get the earliest version (when section was created) to find original order
+            const earliestVersion = relatedVersions.sort((a, b) => (a.version || 0) - (b.version || 0))[0];
+            const latestVersion = relatedVersions.sort((a, b) => (b.version || 0) - (a.version || 0))[0];
 
-          sectionMap.set(v.sectionId, {
-            id: v.sectionId,
-            content: latestVersion.content,
-            topicId: topicIdFromVersion || topicId,
-            order: orderFromVersion ?? order,
-            isDeleted: true
-          });
+            // Try to find the corresponding suggestion to get topic and order info
+            const relatedSuggestion = (suggestions || []).find((s) =>
+            s.id === earliestVersion.suggestionId ||
+            (allVersions || []).some((ver) => ver.sectionId === v.sectionId && ver.suggestionId === s.id)
+            );
+
+            let topicId = null;
+            let order = 999; // Default fallback
+
+            if (relatedSuggestion) {
+              topicId = relatedSuggestion.topicId;
+              order = relatedSuggestion.insertPosition || 999;
+            } else {
+              // Try to infer from other sections in the same topic
+              const currentSection = sections.find((s) => s.id === v.sectionId);
+              if (currentSection) {
+                topicId = currentSection.topicId;
+                order = currentSection.order;
+              } else {
+                const sectionWithTopic = sections.find((s) => s.topicId);
+                topicId = sectionWithTopic?.topicId || topics[0]?.id;
+              }
+            }
+
+            // Prefer topicId/sectionOrder stored directly on the version record
+            const topicIdFromVersion = latestVersion.topicId || earliestVersion.topicId;
+            const orderFromVersion = latestVersion.sectionOrder ?? earliestVersion.sectionOrder;
+
+            sectionMap.set(v.sectionId, {
+              id: v.sectionId,
+              content: latestVersion.content,
+              topicId: topicIdFromVersion || topicId,
+              order: orderFromVersion ?? order,
+              isDeleted: true
+            });
+          }
         }
-      }
-    });
+      });
     }
-    
+
     return sectionMap;
-  }, [sections, allVersions, topics, suggestions]);  // eslint-disable-line
-  
+  }, [sections, allVersions, topics, suggestions]); // eslint-disable-line
+
   // Reset version index if it's out of bounds — clamp to latest valid version
   React.useEffect(() => {
     if (versionGroups.length > 0 && currentVersionIndex >= versionGroups.length) {
@@ -263,13 +263,13 @@ export default function DocumentCleanView() {
           if (changeElement) {
             changeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             changeElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
-            
+
             const highlightTimer = setTimeout(() => {
               if (changeElement) {
                 changeElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2', 'rounded-lg');
               }
             }, 2000);
-            
+
             return () => clearTimeout(highlightTimer);
           }
         }
@@ -307,24 +307,24 @@ ${text}`;
       }
 
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: prompt,
+        prompt: prompt
       });
 
       let translatedContent = typeof result === 'string' ? result : result.content || result;
-      
+
       // Clean up any markdown code blocks that might be added
       translatedContent = translatedContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
 
       return translatedContent;
-    },
+    }
   });
 
   const translateSectionMutation = useMutation({
     mutationFn: async ({ section, targetLanguage }) => {
-      const translatedContent = await translateTextMutation.mutateAsync({ 
-        text: section.content, 
-        targetLanguage, 
-        isHtml: true 
+      const translatedContent = await translateTextMutation.mutateAsync({
+        text: section.content,
+        targetLanguage,
+        isHtml: true
       });
 
       // Update section with translation
@@ -336,28 +336,28 @@ ${text}`;
       return { sectionId: section.id, translatedContent };
     },
     onSuccess: (data) => {
-      setTranslatedSections(prev => ({
+      setTranslatedSections((prev) => ({
         ...prev,
         [data.sectionId]: data.translatedContent
       }));
       queryClient.invalidateQueries({ queryKey: ['sections', documentId] });
-    },
+    }
   });
 
   const translateAllSections = async () => {
     setTranslatingAll(true);
-    
-    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-    
+
+    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
     try {
       // Translate document title
       const docOriginalLang = document.originalLanguage || 'he';
       if (docOriginalLang !== language) {
         if (!document.translations?.[language]) {
-          const translatedTitle = await translateTextMutation.mutateAsync({ 
-            text: document.title, 
-            targetLanguage: language, 
-            isHtml: false 
+          const translatedTitle = await translateTextMutation.mutateAsync({
+            text: document.title,
+            targetLanguage: language,
+            isHtml: false
           });
           const updatedTranslations = { ...document.translations, [language]: translatedTitle };
           await base44.entities.Document.update(document.id, {
@@ -378,23 +378,23 @@ ${text}`;
         const topicOriginalLang = topic.originalLanguage || 'he';
         if (topicOriginalLang !== language) {
           if (!topic.translations?.[language]) {
-            const translatedTitle = await translateTextMutation.mutateAsync({ 
-              text: topic.title, 
-              targetLanguage: language, 
-              isHtml: false 
+            const translatedTitle = await translateTextMutation.mutateAsync({
+              text: topic.title,
+              targetLanguage: language,
+              isHtml: false
             });
             const updatedTranslations = { ...topic.translations, [language]: translatedTitle };
             await base44.entities.Topic.update(topic.id, {
               translations: updatedTranslations,
               originalLanguage: topicOriginalLang
             });
-            setTranslatedTopics(prev => ({
+            setTranslatedTopics((prev) => ({
               ...prev,
               [topic.id]: translatedTitle
             }));
             await delay(1000);
           } else {
-            setTranslatedTopics(prev => ({
+            setTranslatedTopics((prev) => ({
               ...prev,
               [topic.id]: typeof topic.translations[language] === 'string' ? topic.translations[language] : topic.translations[language]?.title
             }));
@@ -413,7 +413,7 @@ ${text}`;
             await translateSectionMutation.mutateAsync({ section, targetLanguage: language });
             await delay(1000);
           } else {
-            setTranslatedSections(prev => ({
+            setTranslatedSections((prev) => ({
               ...prev,
               [section.id]: section.translations[language]
             }));
@@ -439,8 +439,8 @@ ${text}`;
     setOpeningSectionId(section.id);
     try {
       // Look for any accepted suggestion linked to this section
-      const linked = suggestions.filter(s =>
-        s.sectionId === section.id && s.status === 'accepted'
+      const linked = suggestions.filter((s) =>
+      s.sectionId === section.id && s.status === 'accepted'
       ).sort((a, b) => new Date(b.updated_date || b.created_date) - new Date(a.updated_date || a.created_date));
 
       if (linked.length > 0) {
@@ -460,7 +460,7 @@ ${text}`;
         status: 'accepted',
         approvedByAdmin: true,
         proVotes: 0,
-        conVotes: 0,
+        conVotes: 0
       });
       // Update the local suggestions cache
       queryClient.setQueryData(['suggestions', documentId], (old = []) => [...old, newSugg]);
@@ -471,51 +471,51 @@ ${text}`;
     }
   };
 
-  const needsTranslation = sections.some(s => (s.originalLanguage || 'he') !== language) || 
-    topics.some(t => (t.originalLanguage || 'he') !== language) ||
-    ((document?.originalLanguage || 'he') !== language);
-    
-  const escapeHtml = (str) => String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  const needsTranslation = sections.some((s) => (s.originalLanguage || 'he') !== language) ||
+  topics.some((t) => (t.originalLanguage || 'he') !== language) ||
+  (document?.originalLanguage || 'he') !== language;
+
+  const escapeHtml = (str) => String(str || '').
+  replace(/&/g, '&amp;').
+  replace(/</g, '&lt;').
+  replace(/>/g, '&gt;').
+  replace(/"/g, '&quot;').
+  replace(/'/g, '&#39;');
 
   const handleDownload = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const docTitle = escapeHtml((showTranslatedDoc && translatedDocTitle) || document.title);
+    const docTitle = escapeHtml(showTranslatedDoc && translatedDocTitle || document.title);
     const isRtlDoc = isRTL;
     const dir = isRtlDoc ? 'rtl' : 'ltr';
 
-    const topicRows = topics
-      .map((topic, ti) => {
-        const topicSections = Array.from(allSectionsMap.values())
-          .filter(s => s.topicId === topic.id && !s.isDeleted)
-          .sort((a, b) => (a.order || 0) - (b.order || 0));
-        if (topicSections.length === 0) return '';
+    const topicRows = topics.
+    map((topic, ti) => {
+      const topicSections = Array.from(allSectionsMap.values()).
+      filter((s) => s.topicId === topic.id && !s.isDeleted).
+      sort((a, b) => (a.order || 0) - (b.order || 0));
+      if (topicSections.length === 0) return '';
 
-        const topicTitle = escapeHtml((showTranslatedTopics[topic.id] && (translatedTopics[topic.id] || topic.translations?.[language]))
-          || topic.title);
+      const topicTitle = escapeHtml(showTranslatedTopics[topic.id] && (translatedTopics[topic.id] || topic.translations?.[language]) ||
+      topic.title);
 
-        const sectionsHtml = topicSections.map((section, si) => {
-          const content = (showTranslatedSections[section.id]
-            ? (translatedSections[section.id] || section.translations?.[language])
-            : null) || section.content || '';
-          return `<div style="margin-bottom:1.5rem">
+      const sectionsHtml = topicSections.map((section, si) => {
+        const content = (showTranslatedSections[section.id] ?
+        translatedSections[section.id] || section.translations?.[language] :
+        null) || section.content || '';
+        return `<div style="margin-bottom:1.5rem">
             <span style="color:#64748b;font-weight:500;margin-inline-end:0.5rem">${ti + 1}.${si + 1}</span>
             <span style="font-size:1.1rem;line-height:1.8">${content}</span>
           </div>`;
-        }).join('');
+      }).join('');
 
-        return `<div style="margin-bottom:2.5rem">
+      return `<div style="margin-bottom:2.5rem">
           <h2 style="font-size:1.4rem;font-weight:bold;border-bottom:1px solid #cbd5e1;padding-bottom:0.5rem;margin-bottom:1rem">${ti + 1}. ${topicTitle}</h2>
           ${sectionsHtml}
         </div>`;
-      })
-      .join('');
+    }).
+    join('');
 
     printWindow.document.write(`<!DOCTYPE html>
 <html dir="${dir}" lang="${language}">
@@ -549,8 +549,8 @@ ${text}`;
           <Skeleton className="h-32 w-full" />
           <Skeleton className="h-64 w-full" />
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!document) {
@@ -562,14 +562,14 @@ ${text}`;
             <Button className="mt-4">{t('goHome')}</Button>
           </Link>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
-  const allTranslated = sections.every(s => 
-    (s.originalLanguage || 'he') === language || translatedSections[s.id] || s.translations?.[language]
-  ) && topics.every(t => 
-    (t.originalLanguage || 'he') === language || translatedTopics[t.id] || t.translations?.[language]
+  const allTranslated = sections.every((s) =>
+  (s.originalLanguage || 'he') === language || translatedSections[s.id] || s.translations?.[language]
+  ) && topics.every((t) =>
+  (t.originalLanguage || 'he') === language || translatedTopics[t.id] || t.translations?.[language]
   ) && ((document.originalLanguage || 'he') === language || translatedDocTitle || document.translations?.[language]);
 
   return (
@@ -580,8 +580,8 @@ ${text}`;
         onNavigate={setCurrentVersionIndex}
         currentSnapshot={currentSnapshot}
         language={language}
-        isRTL={isRTL}
-      />
+        isRTL={isRTL} />
+      
       {/* Header - Hidden on print */}
       <div className="bg-slate-50 border-b border-slate-200 p-3 md:p-4 print:hidden sticky top-0 z-10">
         <div className="max-w-4xl mx-auto">
@@ -592,9 +592,9 @@ ${text}`;
               </Button>
             </Link>
             <DocumentTitleHeading>
-              {(document.originalLanguage || 'he') !== language && showTranslatedDoc
-                ? (translatedDocTitle || (typeof document.translations?.[language] === 'string' ? document.translations[language] : document.translations?.[language]?.title) || document.title)
-                : document.title}
+              {(document.originalLanguage || 'he') !== language && showTranslatedDoc ?
+              translatedDocTitle || (typeof document.translations?.[language] === 'string' ? document.translations[language] : document.translations?.[language]?.title) || document.title :
+              document.title}
             </DocumentTitleHeading>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -610,29 +610,29 @@ ${text}`;
       {/* Document Content */}
       <div className="max-w-4xl mx-auto p-4 md:p-8 print:p-12 pb-24">
         {/* Version Metadata */}
-        {currentVersionIndex > 0 && currentSnapshot && (
-          <div 
-            className={`mb-4 p-3 border rounded-lg text-xs text-slate-700 ${
-              currentSnapshot.isDirectEdit
-                ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200'
-                : 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'
-            }`}
-          >
+        {currentVersionIndex > 0 && currentSnapshot &&
+        <div
+          className={`mb-4 p-3 border rounded-lg text-xs text-slate-700 ${
+          currentSnapshot.isDirectEdit ?
+          'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200' :
+          'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'}`
+          }>
+          
             <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
-              {currentSnapshot.isTopicTitleChange ? (
-                <span className="px-2 py-1 bg-purple-100 rounded border border-purple-300 font-semibold text-purple-800">
-                  {language === 'he'
-                    ? `📝 שינוי כותרת נושא: "${currentSnapshot.topicTitleChangeMeta?.originalTitle}" → "${currentSnapshot.topicTitleChangeMeta?.newTitle}"`
-                    : language === 'ar'
-                    ? `📝 تغيير عنوان الموضوع: "${currentSnapshot.topicTitleChangeMeta?.originalTitle}" → "${currentSnapshot.topicTitleChangeMeta?.newTitle}"`
-                    : `📝 Topic title change: "${currentSnapshot.topicTitleChangeMeta?.originalTitle}" → "${currentSnapshot.topicTitleChangeMeta?.newTitle}"`}
-                </span>
-              ) : currentSnapshot.isDirectEdit ? (
-                <span className="px-2 py-1 bg-amber-100 rounded border border-amber-300 font-semibold text-amber-800">
+              {currentSnapshot.isTopicTitleChange ?
+            <span className="px-2 py-1 bg-purple-100 rounded border border-purple-300 font-semibold text-purple-800">
+                  {language === 'he' ?
+              `📝 שינוי כותרת נושא: "${currentSnapshot.topicTitleChangeMeta?.originalTitle}" → "${currentSnapshot.topicTitleChangeMeta?.newTitle}"` :
+              language === 'ar' ?
+              `📝 تغيير عنوان الموضوع: "${currentSnapshot.topicTitleChangeMeta?.originalTitle}" → "${currentSnapshot.topicTitleChangeMeta?.newTitle}"` :
+              `📝 Topic title change: "${currentSnapshot.topicTitleChangeMeta?.originalTitle}" → "${currentSnapshot.topicTitleChangeMeta?.newTitle}"`}
+                </span> :
+            currentSnapshot.isDirectEdit ?
+            <span className="px-2 py-1 bg-amber-100 rounded border border-amber-300 font-semibold text-amber-800">
                   {language === 'he' ? '✏️ עריכה ישירה על ידי מנהל' : language === 'ar' ? '✏️ تعديل مباشر من المسؤول' : '✏️ Direct Admin Edit'}
-                </span>
-              ) : currentSnapshot.suggestionId && (
-                <>
+                </span> :
+            currentSnapshot.suggestionId &&
+            <>
                   <span className="px-2 py-1 bg-white rounded border border-slate-300">
                     <span className="font-semibold">{language === 'he' ? 'גרסה:' : language === 'ar' ? 'إصدار:' : 'Version:'}</span>
                     {' '}<span className="text-slate-900 font-bold">{versionGroups.length - currentVersionIndex}</span>
@@ -648,216 +648,216 @@ ${text}`;
                     {' '}<span className="text-red-600 font-bold">{currentSnapshot.conVotes || 0}</span>
                   </span>
                 </>
-              )}
+            }
             </div>
           </div>
-        )}
+        }
         
         {/* Topics and Sections */}
         <div className="space-y-8 md:space-y-12">
-          {topics.length === 0 ? (
-            <p className="text-slate-500 text-center py-8">{t('noTopicsYet')}</p>
-          ) : (
-            topics.map((topic, topicIndex) => {
-              const isViewingHistory = currentVersionIndex > 0;
-              
-              // Filter sections for this topic using the complete sections map
-              const topicSections = Array.from(allSectionsMap.values())
-                .filter(s => s.topicId === topic.id)
-                .filter(section => {
-                  if (!isViewingHistory) {
-                    // In current view, only show non-deleted sections
-                    return !section.isDeleted;
-                  }
-                  
-                  // Always show sections that exist in snapshot OR were deleted in this snapshot
-                  const sectionExistsInSnapshot = currentSnapshot?.existingSections?.has(section.id) ?? 
-                    currentSnapshot?.sectionContents?.hasOwnProperty(section.id);
-                  const isDeletedInThisSnapshot = currentSnapshot?.isDeleted && 
-                    currentSnapshot?.deletedSectionId === section.id;
-                  
-                  return sectionExistsInSnapshot || isDeletedInThisSnapshot;
-                })
-                .sort((a, b) => {
-                  if ((a.order || 0) !== (b.order || 0)) return (a.order || 0) - (b.order || 0);
-                  return new Date(a.created_date || 0) - new Date(b.created_date || 0);
-                });
-              
-              // Don't show topics without sections in clean view
-              if (topicSections.length === 0) {
-                return null;
+          {topics.length === 0 ?
+          <p className="text-slate-500 text-center py-8">{t('noTopicsYet')}</p> :
+
+          topics.map((topic, topicIndex) => {
+            const isViewingHistory = currentVersionIndex > 0;
+
+            // Filter sections for this topic using the complete sections map
+            const topicSections = Array.from(allSectionsMap.values()).
+            filter((s) => s.topicId === topic.id).
+            filter((section) => {
+              if (!isViewingHistory) {
+                // In current view, only show non-deleted sections
+                return !section.isDeleted;
               }
-              
-              return (
-                <div key={topic.id} className="space-y-4 md:space-y-6 break-inside-avoid">
+
+              // Always show sections that exist in snapshot OR were deleted in this snapshot
+              const sectionExistsInSnapshot = currentSnapshot?.existingSections?.has(section.id) ??
+              currentSnapshot?.sectionContents?.hasOwnProperty(section.id);
+              const isDeletedInThisSnapshot = currentSnapshot?.isDeleted &&
+              currentSnapshot?.deletedSectionId === section.id;
+
+              return sectionExistsInSnapshot || isDeletedInThisSnapshot;
+            }).
+            sort((a, b) => {
+              if ((a.order || 0) !== (b.order || 0)) return (a.order || 0) - (b.order || 0);
+              return new Date(a.created_date || 0) - new Date(b.created_date || 0);
+            });
+
+            // Don't show topics without sections in clean view
+            if (topicSections.length === 0) {
+              return null;
+            }
+
+            return (
+              <div key={topic.id} className="space-y-4 md:space-y-6 break-inside-avoid">
                   {/* Topic Title */}
                   <div className="border-b border-slate-300 pb-2 mb-4 md:mb-6">
-                    <h2 className="text-xl md:text-2xl font-bold text-slate-800 leading-tight" style={{ fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif" }}>
-                      {topicIndex + 1}. {(topic.originalLanguage || 'he') !== language && showTranslatedTopics[topic.id]
-                        ? (translatedTopics[topic.id] || (typeof topic.translations?.[language] === 'string' ? topic.translations[language] : topic.translations?.[language]?.title) || getTopicTitleAtVersion(topic.id, currentVersionIndex))
-                        : getTopicTitleAtVersion(topic.id, currentVersionIndex)}
+                    <h2 className="text-xl md:text-2xl text-slate-800 leading-tight [font-family:'Noto_Serif',_serif] font-normal" style={{ fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif" }}>
+                      {topicIndex + 1}. {(topic.originalLanguage || 'he') !== language && showTranslatedTopics[topic.id] ?
+                    translatedTopics[topic.id] || (typeof topic.translations?.[language] === 'string' ? topic.translations[language] : topic.translations?.[language]?.title) || getTopicTitleAtVersion(topic.id, currentVersionIndex) :
+                    getTopicTitleAtVersion(topic.id, currentVersionIndex)}
                       {/* Highlight topic whose title changed in this version */}
-                      {currentSnapshot?.isTopicTitleChange && currentSnapshot?.topicTitleChangeMeta?.topicId === topic.id && (
-                        <span className="ml-2 text-sm font-normal text-purple-600 bg-purple-100 px-2 py-0.5 rounded">
+                      {currentSnapshot?.isTopicTitleChange && currentSnapshot?.topicTitleChangeMeta?.topicId === topic.id &&
+                    <span className="ml-2 text-sm font-normal text-purple-600 bg-purple-100 px-2 py-0.5 rounded">
                           {language === 'he' ? '← שונה בגרסה זו' : language === 'ar' ? '← تغيّر في هذا الإصدار' : '← changed in this version'}
                         </span>
-                      )}
+                    }
                     </h2>
-                    {(topic.originalLanguage || 'he') !== language && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs text-blue-600 hover:text-blue-700 mt-1 print:hidden"
-                        onClick={async () => {
-                          if (!translatedTopics[topic.id] && !topic.translations?.[language]) {
-                            const translatedTitle = await translateTextMutation.mutateAsync({ 
-                              text: topic.title, 
-                              targetLanguage: language, 
-                              isHtml: false 
-                            });
-                            const updatedTranslations = { ...topic.translations, [language]: translatedTitle };
-                            await base44.entities.Topic.update(topic.id, {
-                              translations: updatedTranslations,
-                              originalLanguage: topic.originalLanguage || 'he'
-                            });
-                            setTranslatedTopics(prev => ({
-                              ...prev,
-                              [topic.id]: translatedTitle
-                            }));
-                            setShowTranslatedTopics(prev => ({
-                              ...prev,
-                              [topic.id]: true
-                            }));
-                          } else {
-                            setShowTranslatedTopics(prev => ({
-                              ...prev,
-                              [topic.id]: !prev[topic.id]
-                            }));
-                          }
-                        }}
-                      >
+                    {(topic.originalLanguage || 'he') !== language &&
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-blue-600 hover:text-blue-700 mt-1 print:hidden"
+                    onClick={async () => {
+                      if (!translatedTopics[topic.id] && !topic.translations?.[language]) {
+                        const translatedTitle = await translateTextMutation.mutateAsync({
+                          text: topic.title,
+                          targetLanguage: language,
+                          isHtml: false
+                        });
+                        const updatedTranslations = { ...topic.translations, [language]: translatedTitle };
+                        await base44.entities.Topic.update(topic.id, {
+                          translations: updatedTranslations,
+                          originalLanguage: topic.originalLanguage || 'he'
+                        });
+                        setTranslatedTopics((prev) => ({
+                          ...prev,
+                          [topic.id]: translatedTitle
+                        }));
+                        setShowTranslatedTopics((prev) => ({
+                          ...prev,
+                          [topic.id]: true
+                        }));
+                      } else {
+                        setShowTranslatedTopics((prev) => ({
+                          ...prev,
+                          [topic.id]: !prev[topic.id]
+                        }));
+                      }
+                    }}>
+                    
                         <Globe className="w-3 h-3 mr-1" />
                         {showTranslatedTopics[topic.id] ? 'הצג מקור' : t('translateSection')}
                       </Button>
-                    )}
+                  }
                   </div>
 
                   {/* Sections */}
-                  {topicSections.length === 0 ? (
-                    <p className="text-slate-500 italic pr-2 md:pr-4">{t('noSectionsYet')}</p>
-                  ) : (
-                    <div className="space-y-4 md:space-y-6">
+                  {topicSections.length === 0 ?
+                <p className="text-slate-500 italic pr-2 md:pr-4">{t('noSectionsYet')}</p> :
+
+                <div className="space-y-4 md:space-y-6">
                       {topicSections.map((section, sectionIndex) => {
-                        // מציאת תוכן הסעיף בגרסה המוצגת ובגרסה החדשה יותר
-                        const isViewingHistory = currentVersionIndex > 0;
+                    // מציאת תוכן הסעיף בגרסה המוצגת ובגרסה החדשה יותר
+                    const isViewingHistory = currentVersionIndex > 0;
 
-                        // Get content to display (state after this version's change)
-                        const displayedContent = currentSnapshot?.sectionContents?.[section.id] || section.content;
+                    // Get content to display (state after this version's change)
+                    const displayedContent = currentSnapshot?.sectionContents?.[section.id] || section.content;
 
-                        // oldContent = what the section looked like BEFORE this version's change
-                        const oldContent = (isViewingHistory && currentSnapshot?.changedSectionId === section.id)
-                          ? currentSnapshot?.oldContent
-                          : null;
-                        
-                        // Check if this section was newly created in THIS snapshot (current view)
-                        const isNewlyCreatedSection = isViewingHistory && 
-                          currentSnapshot?.isNewSection && 
-                          currentSnapshot?.newSectionId === section.id;
-                        
-                        // Check if this section was deleted in THIS snapshot
-                        // isDeleted is set by useDocumentVersions when afterVersion.content === ''
-                        // We do NOT rely on suggestion.type here because new_section suggestions
-                        // get their type mutated to 'edit_section' after acceptance.
-                        const isDeletedSection = isViewingHistory &&
-                          currentSnapshot?.isDeleted &&
-                          currentSnapshot?.deletedSectionId === section.id;
+                    // oldContent = what the section looked like BEFORE this version's change
+                    const oldContent = isViewingHistory && currentSnapshot?.changedSectionId === section.id ?
+                    currentSnapshot?.oldContent :
+                    null;
 
-                        // Check if this section was directly edited by admin in this snapshot
-                        const isDirectlyEdited = isViewingHistory &&
-                          currentSnapshot?.isDirectEdit &&
-                          currentSnapshot?.changedSectionId === section.id;
+                    // Check if this section was newly created in THIS snapshot (current view)
+                    const isNewlyCreatedSection = isViewingHistory &&
+                    currentSnapshot?.isNewSection &&
+                    currentSnapshot?.newSectionId === section.id;
 
-                        // Check if this section changed in this version (has both old and new content)
-                        const hasChanged = isViewingHistory && 
-                          !isDeletedSection &&
-                          !isDirectlyEdited &&
-                          !isNewlyCreatedSection &&
-                          currentSnapshot?.changedSectionId === section.id && 
-                          currentSnapshot?.newContent && 
-                          currentSnapshot?.newContent !== '' &&
-                          oldContent !== null &&
-                          oldContent !== '' &&
-                          oldContent !== currentSnapshot?.newContent;
+                    // Check if this section was deleted in THIS snapshot
+                    // isDeleted is set by useDocumentVersions when afterVersion.content === ''
+                    // We do NOT rely on suggestion.type here because new_section suggestions
+                    // get their type mutated to 'edit_section' after acceptance.
+                    const isDeletedSection = isViewingHistory &&
+                    currentSnapshot?.isDeleted &&
+                    currentSnapshot?.deletedSectionId === section.id;
 
-                        return (
-                          <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
-                            <div 
-                              className="flex gap-2 md:gap-4 group p-2 rounded-lg transition-colors"
-                            >
-                                {!isDeletedSection && (
-                                  <span className="text-slate-500 font-medium min-w-[1.5rem] md:min-w-[2rem] text-sm md:text-base">
+                    // Check if this section was directly edited by admin in this snapshot
+                    const isDirectlyEdited = isViewingHistory &&
+                    currentSnapshot?.isDirectEdit &&
+                    currentSnapshot?.changedSectionId === section.id;
+
+                    // Check if this section changed in this version (has both old and new content)
+                    const hasChanged = isViewingHistory &&
+                    !isDeletedSection &&
+                    !isDirectlyEdited &&
+                    !isNewlyCreatedSection &&
+                    currentSnapshot?.changedSectionId === section.id &&
+                    currentSnapshot?.newContent &&
+                    currentSnapshot?.newContent !== '' &&
+                    oldContent !== null &&
+                    oldContent !== '' &&
+                    oldContent !== currentSnapshot?.newContent;
+
+                    return (
+                      <div key={section.id} id={`section-${section.id}`} className="break-inside-avoid transition-all">
+                            <div
+                          className="flex gap-2 md:gap-4 group p-2 rounded-lg transition-colors">
+                          
+                                {!isDeletedSection &&
+                          <span className="text-slate-500 font-medium min-w-[1.5rem] md:min-w-[2rem] text-sm md:text-base">
                                     {topicIndex + 1}.{sectionIndex + 1}
                                   </span>
-                                )}
+                          }
                                 <div className="flex-1">
-                                {isDeletedSection ? (
-                                 <div 
-                                   id={`change-${section.id}`} 
-                                   className="border-l-4 border-red-500 pl-3 py-2 bg-red-50 rounded cursor-pointer hover:bg-red-100 transition-colors"
-                                   onClick={() => openSectionDiscussion(section, currentSnapshot?.suggestionId)}
-                                   >
+                                {isDeletedSection ?
+                            <div
+                              id={`change-${section.id}`}
+                              className="border-l-4 border-red-500 pl-3 py-2 bg-red-50 rounded cursor-pointer hover:bg-red-100 transition-colors"
+                              onClick={() => openSectionDiscussion(section, currentSnapshot?.suggestionId)}>
+                              
                                     <Badge className="mb-2 bg-red-100 text-red-800 text-xs">
                                      {language === 'he' ? 'סעיף נמחק - לחץ לצפייה בדיון' : language === 'ar' ? 'تم حذف القسم - انقر لعرض النقاش' : 'Section Deleted - Click to view discussion'}
                                    </Badge>
-                                   <div 
-                                     className="prose prose-sm max-w-none text-red-700 font-bold line-through"
-                                     style={{ 
-                                       fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
-                                       fontSize: "1.125rem",
-                                       lineHeight: "1.8"
-                                     }}
-                                     dangerouslySetInnerHTML={{ __html: currentSnapshot?.deletedSectionContent || displayedContent }}
-                                   />
-                                 </div>
-                                ) : isDirectlyEdited ? (
-                                  <div
-                                    id={`change-${section.id}`}
-                                    className="border-l-4 border-amber-500 pl-3 py-2 bg-amber-50 rounded cursor-pointer hover:bg-amber-100 transition-colors"
-                                    onClick={() => openSectionDiscussion(section, currentSnapshot?.suggestionId)}
-                                  >
+                                   <div
+                                className="prose prose-sm max-w-none text-red-700 font-bold line-through"
+                                style={{
+                                  fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                  fontSize: "1.125rem",
+                                  lineHeight: "1.8"
+                                }}
+                                dangerouslySetInnerHTML={{ __html: currentSnapshot?.deletedSectionContent || displayedContent }} />
+                              
+                                 </div> :
+                            isDirectlyEdited ?
+                            <div
+                              id={`change-${section.id}`}
+                              className="border-l-4 border-amber-500 pl-3 py-2 bg-amber-50 rounded cursor-pointer hover:bg-amber-100 transition-colors"
+                              onClick={() => openSectionDiscussion(section, currentSnapshot?.suggestionId)}>
+                              
                                     <Badge className="mb-2 bg-amber-100 text-amber-800 text-xs">
                                       {language === 'he' ? '✏️ עריכה ישירה של מנהל' : language === 'ar' ? '✏️ تعديل مباشر من المسؤول' : '✏️ Direct Admin Edit'}
                                     </Badge>
                                     <InlineDiff
-                                      originalContent={currentSnapshot?.oldContent || displayedContent}
-                                      newContent={currentSnapshot?.newContent || displayedContent}
-                                    />
-                                  </div>
-                                ) : isViewingHistory && isNewlyCreatedSection ? (
-                                  <div 
-                                    id={`change-${section.id}`} 
-                                    className="bg-green-50 border-l-4 border-green-500 p-3 rounded cursor-pointer hover:bg-green-100 transition-colors"
-                                    onClick={() => openSectionDiscussion(section, currentSnapshot?.suggestionId)}
-                                  >
+                                originalContent={currentSnapshot?.oldContent || displayedContent}
+                                newContent={currentSnapshot?.newContent || displayedContent} />
+                              
+                                  </div> :
+                            isViewingHistory && isNewlyCreatedSection ?
+                            <div
+                              id={`change-${section.id}`}
+                              className="bg-green-50 border-l-4 border-green-500 p-3 rounded cursor-pointer hover:bg-green-100 transition-colors"
+                              onClick={() => openSectionDiscussion(section, currentSnapshot?.suggestionId)}>
+                              
                                     <Badge className="mb-2 bg-green-100 text-green-800 text-xs">
                                       {language === 'he' ? 'סעיף חדש - לחץ לצפייה בדיון' : language === 'ar' ? 'قسم جديد - انقر لعرض النقاش' : 'New Section - Click to view discussion'}
                                     </Badge>
-                                    <div 
-                                      className="prose prose-sm max-w-none text-green-800"
-                                      style={{ 
-                                        fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
-                                        fontSize: "1.125rem",
-                                        lineHeight: "1.8"
-                                      }}
-                                      dangerouslySetInnerHTML={{ __html: currentSnapshot?.newSectionContent || displayedContent }}
-                                    />
-                                  </div>
-                                ) : isViewingHistory && hasChanged ? (
-                                <div 
-                                  id={`change-${section.id}`} 
-                                  className={`border-l-4 border-amber-400 pl-3 py-2 bg-amber-50/30 rounded ${currentSnapshot?.suggestionId ? 'cursor-pointer hover:bg-amber-100/50 transition-colors' : ''}`}
-                                  onClick={() => { if (currentSnapshot?.suggestionId) { setOpenSuggestionId(currentSnapshot.suggestionId); window.dispatchEvent(new CustomEvent('sidebar:opened')); } }}
-                                >
+                                    <div
+                                className="prose prose-sm max-w-none text-green-800"
+                                style={{
+                                  fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                  fontSize: "1.125rem",
+                                  lineHeight: "1.8"
+                                }}
+                                dangerouslySetInnerHTML={{ __html: currentSnapshot?.newSectionContent || displayedContent }} />
+                              
+                                  </div> :
+                            isViewingHistory && hasChanged ?
+                            <div
+                              id={`change-${section.id}`}
+                              className={`border-l-4 border-amber-400 pl-3 py-2 bg-amber-50/30 rounded ${currentSnapshot?.suggestionId ? 'cursor-pointer hover:bg-amber-100/50 transition-colors' : ''}`}
+                              onClick={() => {if (currentSnapshot?.suggestionId) {setOpenSuggestionId(currentSnapshot.suggestionId);window.dispatchEvent(new CustomEvent('sidebar:opened'));}}}>
+                              
                                   <div className="flex items-center mb-2">
                                     <Badge className="bg-amber-100 text-amber-800 text-xs">
                                       {language === 'he' ? '✏️ שינוי בגרסה זו' : language === 'ar' ? '✏️ تغيير في هذا الإصدار' : '✏️ Changed in this version'}
@@ -865,76 +865,76 @@ ${text}`;
                                     </Badge>
                                   </div>
                                   <InlineDiff
-                                    originalContent={oldContent}
-                                    newContent={currentSnapshot?.newContent}
-                                  />
-                                </div>
-                                ) : (
+                                originalContent={oldContent}
+                                newContent={currentSnapshot?.newContent} />
+                              
+                                </div> :
+
+                            <>
+                                    <div
+                                className={`text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none cursor-pointer hover:bg-slate-50/50 p-2 rounded transition-colors ${openingSectionId === section.id ? 'opacity-60 pointer-events-none' : ''}`}
+                                onClick={() => openSectionDiscussion(section)}
+                                style={{
+                                  fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                  fontSize: "1.125rem",
+                                  lineHeight: "1.8",
+                                  letterSpacing: "0.01em"
+                                }}
+                                dangerouslySetInnerHTML={{
+                                  __html: showTranslatedSections[section.id] ?
+                                  translatedSections[section.id] || section.translations?.[language] || displayedContent :
+                                  displayedContent
+                                }} />
+                              
+                                    {(section.originalLanguage || detectLanguage(section.content)) !== language &&
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="mt-2 text-blue-600 hover:text-blue-700 print:hidden opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={async (e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (!translatedSections[section.id] && !section.translations?.[language]) {
+                                    await translateSectionMutation.mutateAsync({ section, targetLanguage: language });
+                                    setShowTranslatedSections((prev) => ({
+                                      ...prev,
+                                      [section.id]: true
+                                    }));
+                                  } else {
+                                    setShowTranslatedSections((prev) => ({
+                                      ...prev,
+                                      [section.id]: !prev[section.id]
+                                    }));
+                                  }
+                                }}
+                                disabled={translateSectionMutation.isPending}>
+                                
+                                        {translateSectionMutation.isPending ?
                                 <>
-                                    <div 
-                                      className={`text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none cursor-pointer hover:bg-slate-50/50 p-2 rounded transition-colors ${openingSectionId === section.id ? 'opacity-60 pointer-events-none' : ''}`}
-                                      onClick={() => openSectionDiscussion(section)}
-                                      style={{ 
-                                        fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
-                                        fontSize: "1.125rem",
-                                        lineHeight: "1.8",
-                                        letterSpacing: "0.01em"
-                                      }}
-                                      dangerouslySetInnerHTML={{ 
-                                        __html: showTranslatedSections[section.id] 
-                                          ? (translatedSections[section.id] || section.translations?.[language] || displayedContent)
-                                          : displayedContent 
-                                      }}
-                                    />
-                                    {(section.originalLanguage || detectLanguage(section.content)) !== language && (
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="mt-2 text-blue-600 hover:text-blue-700 print:hidden opacity-0 group-hover:opacity-100 transition-opacity"
-                                        onClick={async (e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          if (!translatedSections[section.id] && !section.translations?.[language]) {
-                                            await translateSectionMutation.mutateAsync({ section, targetLanguage: language });
-                                            setShowTranslatedSections(prev => ({
-                                              ...prev,
-                                              [section.id]: true
-                                            }));
-                                          } else {
-                                            setShowTranslatedSections(prev => ({
-                                              ...prev,
-                                              [section.id]: !prev[section.id]
-                                            }));
-                                          }
-                                        }}
-                                        disabled={translateSectionMutation.isPending}
-                                      >
-                                        {translateSectionMutation.isPending ? (
-                                          <>
                                             <Loader2 className="w-3 h-3 mr-1 animate-spin" />
                                             {t('translating')}
-                                          </>
-                                        ) : (
-                                          <>
+                                          </> :
+
+                                <>
                                             <Globe className="w-3 h-3 mr-1" />
                                             {showTranslatedSections[section.id] ? t('showOriginal') : t('translateSection')}
                                           </>
-                                        )}
+                                }
                                       </Button>
-                                    )}
+                              }
                                   </>
-                                )}
+                            }
                                 </div>
                               </div>
-                          </div>
-                        );
-                        })}
+                          </div>);
+
+                  })}
                     </div>
-                  )}
-                </div>
-              );
-            })
-          )}
+                }
+                </div>);
+
+          })
+          }
         </div>
 
         {/* Footer */}
@@ -963,17 +963,17 @@ ${text}`;
       `}</style>
 
       <React.Suspense fallback={<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50"><div className="bg-white p-4 rounded-lg shadow-lg">טוען...</div></div>}>
-        {openSuggestionId && (
-          <div data-tutorial="suggestion-sidebar">
+        {openSuggestionId &&
+        <div data-tutorial="suggestion-sidebar">
           <SuggestionSidebar
             suggestionId={openSuggestionId}
             onClose={() => setOpenSuggestionId(null)}
             document={document}
-            user={currentUser || null}
-          />
+            user={currentUser || null} />
+          
           </div>
-        )}
+        }
       </React.Suspense>
-    </div>
-  );
+    </div>);
+
 }
