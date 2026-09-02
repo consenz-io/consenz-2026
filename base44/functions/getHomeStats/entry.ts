@@ -100,7 +100,9 @@ Deno.serve(async (req) => {
         const profile = userIdToProfile.get(emailToUserId.get(email) || '');
         const u = emailToUser.get(email);
         return {
-          email,
+          // Email is only returned to admins to prevent mass harvesting by
+          // unauthenticated callers; non-admins get name + id only.
+          ...(isAdmin ? { email } : {}),
           name: profile?.fullName || u?.full_name || (email ? email.split('@')[0] : 'User'),
           id: profile?.userId || u?.id
         };
