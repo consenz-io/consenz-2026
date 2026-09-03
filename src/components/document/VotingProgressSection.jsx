@@ -155,6 +155,9 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   // so the status text only carries the checkmark here.
   const passedStatusText = '✓';
 
+  // Does the hovered pro vote reach the threshold? If so, this is the deciding vote.
+  const proWouldPass = hoverVote === 'pro' && afterProDelta >= threshold && !passed;
+
   const statusText = effectiveReadOnly ?
   isExistingSection ?
   passedStatusText :
@@ -170,7 +173,11 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   hoverVote === 'con' && userVote?.vote === 'con' ?
   language === 'he' ? 'הצבעת נגד • לחץ/י שוב לביטול' : language === 'ar' ? 'صوتك ضد • اضغط مجدداً للإلغاء' : 'You voted con • click again to remove' :
   hoverVote === 'pro' ?
-  language === 'he' ? `הצבעתך תקרב את ההצעה לאישור` : language === 'ar' ? 'سيقرب صوتك الاقتراح من القبول' : 'Your vote will help pass this proposal' :
+  (proWouldPass ?
+    (isDeleteSection ?
+      (language === 'he' ? 'הצבעתך תכריע ותוביל למחיקת הסעיף!' : language === 'ar' ? 'سيحسم صوتك ويحذف القسم!' : 'Your vote will decide and delete this section!') :
+      (language === 'he' ? 'הצבעתך תכריע ותוביל לאישור ההצעה!' : language === 'ar' ? 'سيحسم صوتك ويعتمد الاقتراح!' : 'Your vote will decide and approve this proposal!')) :
+    (language === 'he' ? `הצבעתך תקרב את ההצעה לאישור` : language === 'ar' ? 'سيقرب صوتك الاقتراح من القبول' : 'Your vote will help pass this proposal')) :
   hoverVote === 'con' ?
   language === 'he' ? `הצבעתך תרחיק את ההצעה מאישור` : language === 'ar' ? 'سيبعد صوتك الاقتراح عن القبول' : 'Your vote will push back the proposal' :
   votesNeeded === 1 ?
