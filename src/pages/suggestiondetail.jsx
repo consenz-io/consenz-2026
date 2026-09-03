@@ -48,6 +48,7 @@ export default function SuggestionDetail() {
   const [showEditSuggestionModal, setShowEditSuggestionModal] = useState(false);
   const [isAutoAccepting, setIsAutoAccepting] = useState(false);
   const [rateLimitRetryAfter, setRateLimitRetryAfter] = useState(null);
+  const [isAccepting, setIsAccepting] = useState(false);
 
   const { data: suggestion, isLoading: suggestionLoading, error: suggestionError } = useQuery({
     queryKey: ['suggestion', suggestionId],
@@ -283,10 +284,12 @@ export default function SuggestionDetail() {
       queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
       if (data?.accepted === true) {
         toast.success(t('suggestionAcceptedToast'), { duration: 4000 });
-        setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
-          queryClient.invalidateQueries({ queryKey: ['document', document?.id] });
-        }, 2000);
+        setIsAccepting(true);
+        Promise.all([
+          queryClient.refetchQueries({ queryKey: ['suggestion', suggestionId] }),
+          queryClient.refetchQueries({ queryKey: ['sections', document?.id] }),
+          queryClient.refetchQueries({ queryKey: ['document', document?.id] }),
+        ]).finally(() => setIsAccepting(false));
       }
     }
   });
@@ -765,7 +768,7 @@ export default function SuggestionDetail() {
                   suggestion={suggestion}
                   document={document}
                   userVote={userVote}
-                  voteMutation={{ mutate: (vote) => {if (!user) {base44.auth.redirectToLogin(window.location.href);return;}voteMutation.mutate(vote);}, isPending: voteMutation.isPending || rateLimitRetryAfter !== null }}
+                  voteMutation={{ mutate: (vote) => {if (!user) {base44.auth.redirectToLogin(window.location.href);return;}voteMutation.mutate(vote);}, isPending: voteMutation.isPending || rateLimitRetryAfter !== null, isAccepting }}
                   isRTL={isRTL}
                   readOnly={false} />
                 

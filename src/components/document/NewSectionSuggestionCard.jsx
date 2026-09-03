@@ -368,6 +368,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
             userVote={getUserVote(currentVersion.id)}
             voteMutation={{
               isPending: voteMutation.isPending,
+              isAccepting: voteMutation.isAccepting,
               mutate: (vote) => voteMutation.mutate({
                 suggestionId: currentVersion.id,
                 vote,

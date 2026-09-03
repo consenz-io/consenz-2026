@@ -42,6 +42,7 @@ export default function SuggestionSidebar({
   const [isEditingExplanation, setIsEditingExplanation] = useState(false);
   const [explanationText, setExplanationText] = useState("");
   const [showAcceptedAnimation, setShowAcceptedAnimation] = useState(false);
+  const [isAccepting, setIsAccepting] = useState(false);
   const prevStatusRef = React.useRef(null);
 
   // Polling interval for live sync (10 seconds for better responsiveness)
@@ -229,6 +230,13 @@ export default function SuggestionSidebar({
       queryClient.invalidateQueries({ queryKey: ['userVote', suggestionId, user?.id] });
       if (data?.accepted === true) {
         toast.success(t('suggestionAcceptedToast'), { duration: 5000 });
+        const docId = (document || parentDocument)?.id;
+        setIsAccepting(true);
+        Promise.all([
+          queryClient.refetchQueries({ queryKey: ['suggestion', suggestionId] }),
+          queryClient.refetchQueries({ queryKey: ['sections', docId] }),
+          queryClient.refetchQueries({ queryKey: ['suggestions', docId] }),
+        ]).finally(() => setIsAccepting(false));
       }
     },
   });
@@ -629,7 +637,7 @@ export default function SuggestionSidebar({
                     suggestion={suggestion}
                     document={document || parentDocument}
                     userVote={userVote}
-                    voteMutation={voteMutation}
+                    voteMutation={{ ...voteMutation, isAccepting }}
                     isRTL={isRTL}
                   />
                 ) : (

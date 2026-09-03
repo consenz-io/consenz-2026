@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ThumbsUp, ThumbsDown, Clock, ShieldX, Timer, ShieldCheck } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Clock, ShieldX, Timer, ShieldCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { useLanguage } from "@/components/LanguageContext";
@@ -320,6 +320,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
         <div className="flex gap-2 w-full min-w-0">
           <Button
             variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
+            disabled={voteMutation?.isAccepting}
             onClick={() => voteMutation.mutate('pro')}
             onMouseEnter={() => setHoverVote('pro')}
             onMouseLeave={() => setHoverVote(null)}
@@ -337,6 +338,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
           </Button>
           <Button
             variant={userVote?.vote === 'con' ? 'default' : 'outline'}
+            disabled={voteMutation?.isAccepting}
             onClick={() => voteMutation.mutate('con')}
             onMouseEnter={() => setHoverVote('con')}
             onMouseLeave={() => setHoverVote(null)}
@@ -352,16 +354,18 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             <span className="text-xs md:text-sm opacity-80 shrink-0">({conVotes})</span>
             }
           </Button>
-        </div>
-        
+          </div>
 
-
-
-
-
-        
-      </div>
-      }
-    </div>);
+          {voteMutation?.isAccepting && (
+          <div className="flex items-center justify-center gap-2 py-2 px-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <Loader2 className="w-4 h-4 text-blue-600 animate-spin shrink-0" />
+            <span className="text-sm font-medium text-blue-700">
+              {language === 'he' ? 'מעדכן את המסמך…' : language === 'ar' ? 'جارٍ تحديث المستند…' : 'Updating document…'}
+            </span>
+          </div>
+          )}
+          </div>
+          }
+          </div>);
 
 }

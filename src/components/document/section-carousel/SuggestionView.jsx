@@ -133,6 +133,7 @@ const SuggestionView = React.memo(function SuggestionView({
             userVote={getUserVote(suggestion.id)}
             voteMutation={{
               isPending: voteMutation.isPending,
+              isAccepting: voteMutation.isAccepting,
               mutate: (vote) => voteMutation.mutate({ suggestionId: suggestion.id, vote, currentVote: getUserVote(suggestion.id) })
             }}
             isRTL={isRTL} /> :

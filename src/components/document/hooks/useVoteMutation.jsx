@@ -219,5 +219,5 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
     },
   });
 
-  return voteMutation;
+  return { ...voteMutation, isAccepting };
 }
