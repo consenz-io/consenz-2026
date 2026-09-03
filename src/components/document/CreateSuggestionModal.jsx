@@ -623,7 +623,7 @@ export default function CreateSuggestionModal({
                   onClick={() => setShowDiff(!showDiff)}
                   className="h-8"
                 >
-                  {showDiff ? t('hideChanges') : t('showDiff')}
+                  {showDiff ? t('backToEditing') : t('showDiff')}
                 </Button>
               )}
             </div>
