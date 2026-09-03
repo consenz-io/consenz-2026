@@ -23,7 +23,7 @@ import { createPageUrl } from "@/utils";
 import InsufficientPointsDialog from "../InsufficientPointsDialog";
 import PointsCostConfirmDialog from "../PointsCostConfirmDialog";
 import { ensureUserPublicProfile } from "../ensureUserPublicProfile";
-import InlineDiff from "./InlineDiff";
+import ChangeBlockDiffView from "./ChangeBlockDiffView";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -633,7 +633,7 @@ export default function CreateSuggestionModal({
               </div>
             ) : showDiff && !isNewSection && existingSection ? (
               <div className="border border-slate-300 rounded-lg p-4 bg-white max-h-96 overflow-y-auto">
-                <InlineDiff 
+                <ChangeBlockDiffView 
                   originalContent={existingSection.content}
                   newContent={formData.newContent}
                 />

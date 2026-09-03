@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Globe, Loader2, Eye, EyeOff } from "lucide-react";
-import InlineDiff from "./InlineDiff";
+import ChangeBlockDiffView from "./ChangeBlockDiffView";
 import { useLanguage } from "@/components/LanguageContext";
 
 const detectLanguage = (text) => {
@@ -123,7 +123,7 @@ export default function DocumentSnapshot({
                         <Badge className="mb-2 bg-amber-100 text-amber-800 text-xs">
                           {language === 'he' ? 'שינוי - לחץ לצפייה בדיון' : language === 'ar' ? 'تغيير - انقر للعرض' : 'Change'}
                         </Badge>
-                        <InlineDiff
+                        <ChangeBlockDiffView
                           originalContent={displayedContent}
                           newContent={currentSnapshot?.newContent}
                         />
@@ -176,7 +176,7 @@ export default function DocumentSnapshot({
                               </div>
                             </div>
                             {showDiffForSections[section.id] ? (
-                              <InlineDiff
+                              <ChangeBlockDiffView
                                 originalContent={olderContent}
                                 newContent={displayedContent}
                               />

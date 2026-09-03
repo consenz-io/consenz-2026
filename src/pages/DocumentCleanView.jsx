@@ -8,7 +8,7 @@ import { Download, Globe, Loader2, ArrowLeft, ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
-import InlineDiff from "@/components/document/InlineDiff";
+import ChangeBlockDiffView from "@/components/document/ChangeBlockDiffView";
 import DocumentTitleHeading from "@/components/document/DocumentTitleHeading";
 import VersionNavigation from "@/components/document/VersionNavigation";
 import DocumentSnapshot from "@/components/document/DocumentSnapshot";
@@ -828,7 +828,7 @@ ${text}`;
                                     <Badge className="mb-2 bg-amber-100 text-amber-800 text-xs">
                                       {language === 'he' ? '✏️ עריכה ישירה של מנהל' : language === 'ar' ? '✏️ تعديل مباشر من المسؤول' : '✏️ Direct Admin Edit'}
                                     </Badge>
-                                    <InlineDiff
+                                    <ChangeBlockDiffView
                                 originalContent={currentSnapshot?.oldContent || displayedContent}
                                 newContent={currentSnapshot?.newContent || displayedContent} />
                               
@@ -864,7 +864,7 @@ ${text}`;
                                       {currentSnapshot?.suggestionId && (language === 'he' ? ' - לחץ לצפייה בדיון' : language === 'ar' ? ' - انقر لعرض النقاش' : ' - Click to view discussion')}
                                     </Badge>
                                   </div>
-                                  <InlineDiff
+                                  <ChangeBlockDiffView
                                 originalContent={oldContent}
                                 newContent={currentSnapshot?.newContent} />
                               
