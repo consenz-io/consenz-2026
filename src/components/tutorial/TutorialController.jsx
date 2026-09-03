@@ -736,6 +736,23 @@ export default function TutorialController() {
       );
     }
 
+    // Interstitial step — centered bubble with dimmed scrim, no spotlight
+    if (step.isInterstitial) {
+      const interstitialProps = {
+        step, stepIndex: currentStep, totalSteps: TUTORIAL_STEPS.length,
+        onNext: handleNextStep, onBack: handleBack, onSkip: skipTutorial,
+        practiceCompleted, showSuccess, showSignupPrompt, isAuthenticated,
+        isRTL, isInterstitial: true, onRequestSkip: () => setShowSkipConfirm(true),
+      };
+      return (
+        <>
+          {SkipConfirmDialog}
+          <div className="fixed inset-0 z-[10001] bg-black/70 pointer-events-none" aria-hidden="true" />
+          <TutorialTooltip {...interstitialProps} />
+        </>
+      );
+    }
+
     const sharedTooltipProps = {
       step,
       stepIndex: currentStep,

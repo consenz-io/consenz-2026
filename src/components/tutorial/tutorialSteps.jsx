@@ -79,7 +79,7 @@ export const tutorialStrings = {
     'ui.clickGroupContinue': 'בחרו קבוצה ונמשיך',
     'ui.clickPointsInfo': 'לחצו על סך הנקודות שלכם כדי לראות איך צוברים נקודות',
     'decomposition.explain.heading': 'דיון ממוקד, הסכמה רחבה',
-    'decomposition.explain.body': 'כדי שמאות אנשים יוכלו לכתוב יחד מסמך אחד, Consenz מפרקת אותו לנושאים ולסעיפים. כך כל משתתף יכול להתמקד בחלק שקרוב אליו — להציע שינוי מדויק לסעיף אחד, לנמק, ולהצביע סעיף-בסעיף. הדיון נשאר ממוקד, וההסכמה נבנית מלמטה למעלה.',
+    'decomposition.explain.body': 'כדי שאלפים רבים יוכלו לכתוב יחד מסמך המשקף הסכמה, Consenz מאפשרת דיון ממוקד באמצעות פירוק המסמך לנושאים וסעיפים. כל משתתף ומשתתפת יכולים להתמקד בחלק שרלוונטי להם: להשתתף בדיון על סעיף ספציפי, להציע שינויים לנוסח ולהצביע על הצעות של אחרים. כך הדיון לא מתפזר, לכולם קל להתמצא ולהבין את העמדות השונות, וההסכמה נבנית מלמטה למעלה.',
   },
   ar: {
     'home.intro.success': 'رائع، لنبدأ',
@@ -143,7 +143,7 @@ export const tutorialStrings = {
     'ui.clickGroupContinue': 'اختر مجموعة للمتابعة',
     'ui.clickPointsInfo': 'انقر على إجمالي نقاطك لمعرفة كيف تكسب النقاط',
     'decomposition.explain.heading': 'نقاش مركّز، توافق واسع',
-    'decomposition.explain.body': 'كي يتمكن مئات الأشخاص من كتابة وثيقة واحدة معاً، تُفكِّك Consenz الوثيقة إلى مواضيع وبنود. هكذا يستطيع كل مشارك التركيز على الجزء الأقرب إليه — اقتراح تعديل دقيق على بند واحد، وتبريره، والتصويت بنداً بنداً. يبقى النقاش مركّزاً، ويُبنى التوافق من الأسفل إلى الأعلى.',
+    'decomposition.explain.body': 'لكي يتمكن آلاف الأشخاص من كتابة وثيقة واحدة تعكس التوافق معاً، تتيح Consenz نقاشاً مركّزاً عبر تفكيك الوثيقة إلى مواضيع وبنود. يستطيع كل مشارك التركيز على الجزء ذي الصلة به: المشاركة في النقاش حول بند محدد، اقتراح تغييرات على الصياغة، والتصويت على اقتراحات الآخرين. هكذا لا يتشتت النقاش، ويصبح من السهل على الجميع التوجّه وفهم المواقف المختلفة، ويُبنى التوافق من الأسفل إلى الأعلى.',
   },
   en: {
     'home.intro.success': 'Great, let\'s go',
@@ -207,7 +207,7 @@ export const tutorialStrings = {
     'ui.clickGroupContinue': 'Click on a group to continue',
     'ui.clickPointsInfo': 'Click on your total points to see how you earn points',
     'decomposition.explain.heading': 'Focused discussion, broad consensus',
-    'decomposition.explain.body': 'So hundreds of people can write one document together, Consenz breaks it into topics and sections. Each participant can focus on the part closest to them — propose a precise change to a single section, explain it, and vote section by section. The discussion stays focused, and consensus is built from the bottom up.',
+    'decomposition.explain.body': 'So that many thousands can write together a document that reflects consensus, Consenz enables focused discussion by breaking the document into topics and sections. Each participant can focus on the part relevant to them: take part in the discussion of a specific section, propose changes to the wording, and vote on the proposals of others. This way the discussion doesn\'t scatter, everyone can easily orient themselves and understand the different positions, and consensus is built from the bottom up.',
   },
 };
 
@@ -282,8 +282,7 @@ export const TUTORIAL_STEPS = [
   {
     id: 'decomposition-explain',
     type: 'explain',
-    targetSelector: '.document-topic-card',
-    tooltipPosition: 'bottom',
+    isInterstitial: true,
     heading: 'decomposition.explain.heading',
     body: 'decomposition.explain.body',
   },

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, X, UserPlus, PartyPopper, Compass } from 'lucide-react';
+import { CheckCircle, X, UserPlus, PartyPopper, Compass, Layers } from 'lucide-react';
 import { tTutorial } from './tutorialSteps';
 import { useLanguage } from '@/components/LanguageContext';
 import { base44 } from '@/api/base44Client';
@@ -151,6 +151,7 @@ export default function TutorialTooltip({
   isAuthenticated,
   isRTL,
   isSummary,
+  isInterstitial,
   onOpenPointsModal,
   onRequestSkip,
 }) {
@@ -174,6 +175,7 @@ export default function TutorialTooltip({
   const tooltipRef = useRef(null);
 
   useEffect(() => {
+    if (isInterstitial) return;
     let pollInterval = null;
     let pollAttempts = 0;
     const MAX_POLL_ATTEMPTS = 20; // 20 × 150ms = 3s max wait
@@ -279,6 +281,7 @@ export default function TutorialTooltip({
   // TOOLTIP_HEIGHT estimate under-measures long translations, which previously
   // let a "top"/"bottom" side falsely "fit" and cover the target.
   useEffect(() => {
+    if (isInterstitial) return;
     if (!pos || !tooltipRef.current) return;
     if (step.tooltipPosition === 'sidebar') return;
     const el = document.querySelector(step.targetSelector);
@@ -304,7 +307,7 @@ export default function TutorialTooltip({
   const mobile = isMobileViewport();
 
   // Don't render until we have a valid position (target element found in DOM)
-  if (!pos && !isSummary && !mobile) return null;
+  if (!pos && !isSummary && !isInterstitial && !mobile) return null;
 
   // Summary step — centered card, no arrow, finish button
   if (isSummary) {
@@ -423,13 +426,15 @@ export default function TutorialTooltip({
     <div
       ref={tooltipRef}
       className="fixed shadow-2xl border-l-4 border-blue-500 tutorial-highlight-bubble flex flex-col"
-      style={mobile
+      style={isInterstitial
+        ? { width: 380, left: '50%', top: '50%', transform: 'translate(-50%, -50%)', maxWidth: 'calc(100vw - 32px)', maxHeight: 'calc(100vh - 32px)', borderRadius: '16px', padding: '24px', zIndex: 10002, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)' }
+        : mobile
         ? { left: 0, right: 0, bottom: 0, top: 'auto', width: '100%', borderRadius: '16px 16px 0 0', padding: '20px 16px 24px', zIndex: 99999, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', borderLeft: '4px solid #3b82f6', maxHeight: 'calc(100vh - 16px)' }
         : { width: TOOLTIP_WIDTH, borderRadius: '12px', padding: '18px', zIndex: 10002, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', maxHeight: 'calc(100vh - 16px)', ...pos }
       }
       dir={isRTL ? 'rtl' : 'ltr'}
       role="dialog"
-      aria-modal="false"
+      aria-modal={isInterstitial ? 'true' : 'false'}
       aria-label={step.heading}
     >
       {/* Tour identifier badge */}
@@ -446,7 +451,7 @@ export default function TutorialTooltip({
       >
         <X className="w-4 h-4" />
       </button>
-      {!mobile && <ArrowEl position={resolvedPosition} isRTL={isRTL} />}
+      {!mobile && !isInterstitial && <ArrowEl position={resolvedPosition} isRTL={isRTL} />}
 
       {/* Success state */}
       {showSuccess && successMessage ? (
@@ -471,6 +476,12 @@ export default function TutorialTooltip({
           {/* Scrollable content area — grows as needed, scrolls when the bubble
               hits its max height, so the pinned footer stays visible. */}
           <div className="flex-1 min-h-0 overflow-y-auto">
+             {/* Interstitial icon */}
+             {isInterstitial && (
+               <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg mb-3">
+                 <Layers className="w-7 h-7 text-white" />
+               </div>
+             )}
              {/* Heading */}
              <h3 className="font-bold text-slate-900 text-lg mb-2">{heading}</h3>
 
