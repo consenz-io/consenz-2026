@@ -65,9 +65,7 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
     <>
       <SidebarHeader className="border-b border-slate-200 p-4">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-            <FileText className="w-6 h-6 text-white" />
-          </div>
+          <img src="https://media.base44.com/images/public/69ef99e5583af6a64ca3772e/5569749ec_image.png" alt="Consenz" className="w-10 h-10 rounded-xl shadow-lg" />
           <div>
             <h2 className="font-bold text-xl text-slate-900">Consenz</h2>
             <p className="text-xs text-slate-500">Collaborative Consensus</p>
