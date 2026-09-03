@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Coins, HelpCircle, Loader2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
@@ -182,22 +183,35 @@ export default function FloatingPointsBadge() {
         markAsViewedMutation.mutate();
       }
     }}>
-      <PopoverTrigger asChild>
-        <button
-          className={`user-points-badge bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all hover:scale-110 focus:ring-4 focus:ring-amber-300 ${hasNewPoints ? 'animate-pulse scale-110' : ''}`}
-          aria-label={language === 'he' ? `${currentPoints} נקודות` : language === 'ar' ? `${currentPoints} نقاط` : `${currentPoints} points`}
-        >
-          <div className="flex items-center gap-1.5">
-            <Coins className="w-5 h-5" aria-hidden="true" />
-            <AnimatedCounter value={currentPoints} />
-          </div>
-          {hasNewPoints && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-bounce">
-              +{totalNewPoints > 99 ? '99' : totalNewPoints}
-            </span>
-          )}
-        </button>
-      </PopoverTrigger>
+      <TooltipProvider delayDuration={400}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <button
+                className={`user-points-badge bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-full p-3 shadow-lg hover:shadow-xl transition-all hover:scale-110 focus:ring-4 focus:ring-amber-300 ${hasNewPoints ? 'animate-pulse scale-110' : ''}`}
+                aria-label={language === 'he' ? `${currentPoints} נקודות` : language === 'ar' ? `${currentPoints} نقاط` : `${currentPoints} points`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <Coins className="w-5 h-5" aria-hidden="true" />
+                  <AnimatedCounter value={currentPoints} />
+                </div>
+                {hasNewPoints && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-bounce">
+                    +{totalNewPoints > 99 ? '99' : totalNewPoints}
+                  </span>
+                )}
+              </button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-[240px] text-center font-medium">
+            {language === 'he'
+              ? 'נקודות מעודדות תרומה איכותית למסמכים. לחץ לפרטים נוספים ולהיסטוריית הנקודות שלך'
+              : language === 'ar'
+              ? 'النقاط تكافئ المساهمات عالية الجودة في الوثائق. انقر لمعرفة المزيد وعرض سجل نقاطك'
+              : 'Points reward quality contributions to documents. Click to learn more and view your points history'}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <PopoverContent 
         className="w-80 p-0 flex flex-col" 
         style={{ maxHeight: '24rem' }}
