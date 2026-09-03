@@ -19,6 +19,10 @@ const LEGACY_FALLBACKS = {
     suggestion_expiring: { title: "Voting period ended", message: "The voting period for a suggestion has ended" },
     document_comment: { title: "New comment in document", message: "Someone commented in a document discussion" },
     group_join_request: { title: "Join request approved!", message: "You have been accepted to the group" },
+    direct_message: { title: "New message", message: "You have a new direct message" },
+  },
+  he: {
+    direct_message: { title: "הודעה חדשה", message: "יש לך הודעה חדשה" },
   },
   ar: {
     suggestion_accepted: { title: "تم قبول اقتراح", message: "تم قبول اقتراح في مستند تتابعه" },
@@ -30,6 +34,7 @@ const LEGACY_FALLBACKS = {
     suggestion_expiring: { title: "انتهت فترة التصويت", message: "انتهت فترة التصويت على اقتراح" },
     document_comment: { title: "تعليق جديد في المستند", message: "علق أحدهم في نقاش المستند" },
     group_join_request: { title: "تمت الموافقة على طلب الانضمام!", message: "تم قبولك في المجموعة" },
+    direct_message: { title: "رسالة جديدة", message: "لديك رسالة مباشرة جديدة" },
   }
 };
 
@@ -41,11 +46,18 @@ function getLocalizedNotification(notification, language) {
       message: notification.translations[language].message,
     };
   }
-  // 2. For non-Hebrew languages, use legacy fallback by type
+  // 2. For direct_message, use legacy fallback for title but keep original message (user content)
+  if (notification.type === 'direct_message' && LEGACY_FALLBACKS[language]?.direct_message) {
+    return {
+      title: LEGACY_FALLBACKS[language].direct_message.title,
+      message: notification.message,
+    };
+  }
+  // 3. For non-Hebrew languages, use legacy fallback by type
   if (language !== 'he' && LEGACY_FALLBACKS[language]?.[notification.type]) {
     return LEGACY_FALLBACKS[language][notification.type];
   }
-  // 3. Default: show stored title/message (Hebrew or whatever was stored)
+  // 4. Default: show stored title/message (Hebrew or whatever was stored)
   return { title: notification.title, message: notification.message };
 }
 

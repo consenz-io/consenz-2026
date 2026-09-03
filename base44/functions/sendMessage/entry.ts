@@ -58,11 +58,19 @@ export default async function(req) {
     // Create notification for recipient (service role ensures it's created)
     try {
       const senderName = user.full_name || 'User';
+      const titleEn = `New message from ${senderName}`;
+      const titleHe = `הודעה חדשה מ${senderName}`;
+      const titleAr = `رسالة جديدة من ${senderName}`;
       await base44.asServiceRole.entities.Notification.create({
         userId: recipientId,
         type: 'direct_message',
-        title: `New message from ${senderName}`,
+        title: titleHe, // Default language is Hebrew
         message: preview,
+        translations: {
+          en: { title: titleEn, message: preview },
+          he: { title: titleHe, message: preview },
+          ar: { title: titleAr, message: preview }
+        },
         relatedEntityId: conversation.id,
         relatedEntityType: 'conversation',
         actionUrl: '/Messages?conversation=' + conversation.id
