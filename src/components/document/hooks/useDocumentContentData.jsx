@@ -60,17 +60,21 @@ export function useDocumentContentData({
   // Includes individual voter user IDs so SectionDeletionVoteBar can deduplicate:
   // a user who voted on the suggestion AND then votes directly on the section should
   // be counted once (their direct vote overrides the inherited one).
-  const sourceSuggestionBySectionId = useMemo(() => {
-    // Group suggestion votes by suggestionId for O(1) lookup
-    const votesBySuggestionId = new Map();
+  // Group all document votes by suggestionId — depends ONLY on allDocumentVotes,
+  // not on suggestions. Split from sourceSuggestionBySectionId so that a
+  // suggestions-only change (e.g. new suggestion created, no new votes) doesn't
+  // trigger a full O(allVotes) regroup.
+  const votesBySuggestionId = useMemo(() => {
+    const map = new Map();
     for (const v of allDocumentVotes) {
       if (!v.suggestionId) continue;
-      if (!votesBySuggestionId.has(v.suggestionId)) {
-        votesBySuggestionId.set(v.suggestionId, []);
-      }
-      votesBySuggestionId.get(v.suggestionId).push({ userId: v.userId, vote: v.vote });
+      if (!map.has(v.suggestionId)) map.set(v.suggestionId, []);
+      map.get(v.suggestionId).push({ userId: v.userId, vote: v.vote });
     }
+    return map;
+  }, [allDocumentVotes]);
 
+  const sourceSuggestionBySectionId = useMemo(() => {
     const map = new Map();
     for (const s of suggestions) {
       if (s.status === 'accepted' && (s.type === 'new_section' || s.type === 'edit_section') && s.sectionId) {
@@ -86,7 +90,7 @@ export function useDocumentContentData({
       }
     }
     return map;
-  }, [suggestions, allDocumentVotes]);
+  }, [suggestions, votesBySuggestionId]);
 
   // Read from cache — populated by useDocumentData's aggregated fetch (targeted, not global).
   // Avoids fetching 1000 profiles when only ~10-30 are relevant to this document.

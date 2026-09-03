@@ -14,6 +14,15 @@ export default function DocumentContent(props) {
     document, user, getNewTopicSuggestions, getNewTopicSuggestionsAfterTopic
   } = data;
 
+  // Memoize end-of-list new-topic suggestions — avoids O(n×m) filter on every render
+  // and prevents unnecessary NewTopicSuggestionCard re-renders.
+  const endNewTopicSuggestions = React.useMemo(() => {
+    const allNewTopics = getNewTopicSuggestions();
+    if (topics.length === 0) return allNewTopics;
+    const shownOrders = new Set(topics.map(tp => tp.order + 1));
+    return allNewTopics.filter(s => s.newTopicOrder == null || !shownOrders.has(s.newTopicOrder));
+  }, [getNewTopicSuggestions, topics]);
+
   return (
     <DocumentContentDataProvider value={data}>
       <EditTopicModal
@@ -47,20 +56,9 @@ export default function DocumentContent(props) {
               {provided.placeholder}
 
               {/* הצעות לנושאים חדשים בסוף (שלא שויכו לנושא מסוים) */}
-              {getNewTopicSuggestions()
-                .filter((s) => {
-                  // אם אין נושאים - הצג הכל
-                  if (topics.length === 0) return true;
-                  // אם אין newTopicOrder - הצג בסוף (לא שויך לנושא ספציפי)
-                  if (s.newTopicOrder === undefined || s.newTopicOrder === null) return true;
-                  // הצג רק אם newTopicOrder לא שויך לאף נושא קיים (כלומר לא הוצג כבר ע"י getNewTopicSuggestionsAfterTopic)
-                  const topicOrders = topics.map((t) => t.order);
-                  const alreadyShown = topicOrders.some((order) => s.newTopicOrder === order + 1);
-                  return !alreadyShown;
-                })
-                .map((suggestion) => (
-                  <NewTopicSuggestionCard key={suggestion.id} suggestion={suggestion} />
-                ))}
+              {endNewTopicSuggestions.map((suggestion) => (
+                <NewTopicSuggestionCard key={suggestion.id} suggestion={suggestion} />
+              ))}
 
               {topics.length === 0 && getNewTopicSuggestions().length === 0 && (
                 <Card className="bg-white border-slate-200 w-full overflow-hidden">

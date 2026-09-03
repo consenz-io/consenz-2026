@@ -137,12 +137,6 @@ export default function DocumentView() {
     return allComments.filter(c => c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)).length;
   }, [allComments, sections]);
 
-  const profileByUserId = React.useMemo(() => {
-    const map = new Map();
-    publicProfiles.forEach(p => { if (p.userId) map.set(p.userId, p); });
-    return map;
-  }, [publicProfiles]);
-
   const contributorsCount = React.useMemo(() => {
     const emailToUserId = new Map();
     publicProfiles.forEach(p => { if (p.email && p.userId) emailToUserId.set(p.email, p.userId); });

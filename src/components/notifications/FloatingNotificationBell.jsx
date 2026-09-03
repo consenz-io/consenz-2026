@@ -11,6 +11,7 @@ export default function FloatingNotificationBell() {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     retry: false,
+    staleTime: 60 * 1000,
   });
 
   if (!user) return null;
