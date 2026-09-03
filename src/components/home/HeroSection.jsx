@@ -17,9 +17,9 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
   const { t, isRTL, language } = useLanguage();
 
   const description = {
-    he: 'פלטפורמה מבוססת AI ליצירת מסמכים משותפים בקבוצות גדולות — במהירות, בשקיפות ובאופן דמוקרטי. בינה מלאכותית מסייעת בתרגום אוטומטי בין שפות, ומנגנון ההצבעות יוצר קונצנזוס דינמי שמקרב בין דעות ומבטיח שכל קול יישמע.',
-    ar: 'منصة قائمة على الذكاء الاصطناعي لإنشاء مستندات مشتركة في مجموعات كبيرة - بسرعة وشفافية وديمقراطية. يساعد الذكاء الاصطناعي في الصياغة وتكييف المحتوى لكل مشارك، مع ترجمة تلقائية بين اللغات وآلية إجماع ديناميكية تقرب الآراء وتضمن سماع كل صوت.',
-    en: 'AI-powered platform for creating shared documents in large groups — quickly, transparently, and democratically. AI assists in drafting and adapting content for each participant, with automatic translation across languages and a dynamic consensus mechanism that bridges opinions and ensures every voice is heard.',
+    he: 'פלטפורמה מבוססת AI ליצירת מסמכים משותפים בקבוצות גדולות — במהירות, בשקיפות ובאופן דמוקרטי. הסכמות נבנות מלמטה למעלה: בינה מלאכותית מסייעת בתרגום אוטומטי בין שפות, מנגנון ההצבעות יוצר קונצנזוס דינמי שמקרב בין דעות ומבטיח שכל קול יישמע, ומערכת גיימיפיקציה מעניקה נקודות על תרומות איכותיות ומסננת רעש לשמירה על איכות השיח.',
+    ar: 'منصة قائمة على الذكاء الاصطناعي لإنشاء مستندات مشتركة في مجموعات كبيرة - بسرعة وشفافية وديمقراطية. الاتفاقيات تُبنى من الأسفل إلى الأعلى: يساعد الذكاء الاصطناعي في الترجمة التلقائية بين اللغات، وتصنع آلية التصويت إجماعاً ديناميكياً يقرب الآراء ويضمن سماع كل صوت، ونظام التلعيب يمنح نقاطاً على المساهمات الجيدة ويرشح الضوض للحفاظ على جودة النقاش.',
+    en: 'AI-powered platform for creating shared documents in large groups — quickly, transparently, and democratically. Agreements are built bottom-up: AI assists with automatic translation across languages, the voting mechanism creates dynamic consensus that bridges opinions and ensures every voice is heard, and a gamification system awards points for quality contributions while filtering noise to maintain discussion quality.',
   };
 
   const agreementsLabel = { he: 'הסכמות והסכמים', ar: 'اتفاقيات وعقود', en: 'Agreements' };
