@@ -320,7 +320,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
         <div className="flex gap-2 w-full min-w-0">
           <Button
             variant={userVote?.vote === 'pro' ? 'default' : 'outline'}
-            disabled={voteMutation?.isAccepting}
+            disabled={voteMutation?.isPending || voteMutation?.isAccepting}
             onClick={() => voteMutation.mutate('pro')}
             onMouseEnter={() => setHoverVote('pro')}
             onMouseLeave={() => setHoverVote(null)}
@@ -338,7 +338,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
           </Button>
           <Button
             variant={userVote?.vote === 'con' ? 'default' : 'outline'}
-            disabled={voteMutation?.isAccepting}
+            disabled={voteMutation?.isPending || voteMutation?.isAccepting}
             onClick={() => voteMutation.mutate('con')}
             onMouseEnter={() => setHoverVote('con')}
             onMouseLeave={() => setHoverVote(null)}
@@ -356,7 +356,7 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
           </Button>
           </div>
 
-          {voteMutation?.isAccepting && (
+          {(voteMutation?.isPending || voteMutation?.isAccepting) && (
           <div className="flex items-center justify-center gap-2 py-2 px-3 bg-blue-50 border border-blue-200 rounded-lg">
             <Loader2 className="w-4 h-4 text-blue-600 animate-spin shrink-0" />
             <span className="text-sm font-medium text-blue-700">
