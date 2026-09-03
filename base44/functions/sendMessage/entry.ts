@@ -59,7 +59,7 @@ export default async function(req) {
     try {
       const senderName = user.full_name || 'User';
       const titleEn = `New message from ${senderName}`;
-      const titleHe = `הודעה חדשה מ${senderName}`;
+      const titleHe = `הודעה חדשה מאת ${senderName}`;
       const titleAr = `رسالة جديدة من ${senderName}`;
       await base44.asServiceRole.entities.Notification.create({
         userId: recipientId,
