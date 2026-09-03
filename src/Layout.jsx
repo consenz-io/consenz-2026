@@ -94,7 +94,7 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
                       <item.icon className="w-4 h-4" />
                       <span className="font-medium">{item.title}</span>
                       {item.badge && (
-                        <span className="absolute top-1 left-1 bg-orange-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                        <span className={`absolute top-1 left-1 ${item.badgeType === 'messages' ? 'bg-blue-500' : 'bg-orange-500'} text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse`}>
                           {item.badge > 9 ? '9+' : item.badge}
                         </span>
                       )}
@@ -110,11 +110,17 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
                             {navButton}
                           </TooltipTrigger>
                           <TooltipContent side={isRTL ? "left" : "right"} className="max-w-[240px] text-center font-medium">
-                            {language === 'he'
-                              ? `${item.badge} הצעות פתוחות ממתינות להצבעתך`
-                              : language === 'ar'
-                              ? `${item.badge} اقتراحات مفتوحة تنتظر تصويتك`
-                              : `${item.badge} open suggestions awaiting your vote`}
+                            {item.badgeType === 'messages'
+                              ? (language === 'he'
+                                ? `${item.badge} הודעות חדשות`
+                                : language === 'ar'
+                                ? `${item.badge} رسائل جديدة`
+                                : `${item.badge} new messages`)
+                              : (language === 'he'
+                                ? `${item.badge} הצעות פתוחות ממתינות להצבעתך`
+                                : language === 'ar'
+                                ? `${item.badge} اقتراحات مفتوحة تنتظر تصويتك`
+                                : `${item.badge} open suggestions awaiting your vote`)}
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -271,6 +277,17 @@ function LayoutContent({ children, currentPageName }) {
 
   const totalUnvotedSuggestions = unvotedData?.data?.count ?? 0;
 
+  const { data: unreadMessagesData } = useQuery({
+    queryKey: ['unreadMessageCount'],
+    queryFn: () => base44.entities.Message.filter({ recipientId: user.id, read: false }, '-created_date', 50),
+    enabled: !!user?.id,
+    staleTime: 30 * 1000,
+    gcTime: 60 * 1000,
+    refetchInterval: 30000,
+  });
+
+  const totalUnreadMessages = unreadMessagesData?.length ?? 0;
+
 
 
 
@@ -317,6 +334,14 @@ function LayoutContent({ children, currentPageName }) {
       window.removeEventListener('consenz:vote-cast', handleVoteCast);
       clearTimeout(timer);
     };
+  }, [queryClient]);
+
+  // Refresh unread message count when new messages arrive
+  React.useEffect(() => {
+    const unsub = base44.entities.Message.subscribe(() => {
+      queryClient.invalidateQueries({ queryKey: ['unreadMessageCount'] });
+    });
+    return unsub;
   }, [queryClient]);
 
   const scrollToTop = () => {
@@ -384,6 +409,7 @@ function LayoutContent({ children, currentPageName }) {
       url: createPageUrl("MyDocuments"),
       icon: FileText,
       badge: totalUnvotedSuggestions > 0 ? totalUnvotedSuggestions : null,
+      badgeType: 'suggestions',
     },
     {
       title: language === 'he' ? 'הקבוצות שלי' : language === 'ar' ? 'مجموعاتي' : 'My Groups',
@@ -394,6 +420,8 @@ function LayoutContent({ children, currentPageName }) {
       title: language === 'he' ? 'הודעות' : language === 'ar' ? 'الرسائل' : 'Messages',
       url: createPageUrl("Messages"),
       icon: MessageSquare,
+      badge: totalUnreadMessages > 0 ? totalUnreadMessages : null,
+      badgeType: 'messages',
     },
   ];
 
