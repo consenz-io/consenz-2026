@@ -10,6 +10,7 @@ import { MessageSquare, Send, Reply, Trash2, Edit2, X, ThumbsUp } from "lucide-r
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
+import MessageUserButton from "@/components/messages/MessageUserButton";
 import { ensureUserPublicProfile } from "@/components/ensureUserPublicProfile";
 import { rateLimitedAction, RATE_LIMITS } from "@/components/utils/rateLimiter";
 import { toast } from "sonner";
@@ -175,6 +176,7 @@ const CommentItem = memo(({
               >
                 {getUserName(comment)}
               </Link>
+              <MessageUserButton userId={getUserId(comment)} currentUserId={user?.id} />
               <span className="text-xs text-slate-500">
                 {formatLocalDateTime(comment.created_date, 'DD/MM HH:mm')}
               </span>

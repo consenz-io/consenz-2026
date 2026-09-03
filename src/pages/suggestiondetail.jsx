@@ -31,6 +31,7 @@ import SuggestionChainNavigation from "@/components/suggestion/SuggestionChainNa
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 import { toast } from "sonner";
 import { castVote } from "@/components/document/utils/castVote";
+import MessageUserButton from "@/components/messages/MessageUserButton";
 
 export default function SuggestionDetail() {
   const { t, isRTL, language: rawLanguage } = useLanguage();
@@ -668,7 +669,7 @@ export default function SuggestionDetail() {
                  {(() => {
                     const authorName = getUserName(suggestion.created_by_id);
                     if (authorName) {
-                      return <>{t('by')} <Link to={`${createPageUrl("Profile")}?userId=${suggestion.created_by_id || ''}`} className="hover:underline text-blue-600">{authorName}</Link></>;
+                      return <>{t('by')} <Link to={`${createPageUrl("Profile")}?userId=${suggestion.created_by_id || ''}`} className="hover:underline text-blue-600">{authorName}</Link> <MessageUserButton userId={suggestion.created_by_id} currentUserId={user?.id} /></>;
                     }
                     return <span className="text-slate-400">{language === 'he' ? 'הצבעת קהילה' : language === 'ar' ? 'تصويت المجتمع' : 'Community vote'}</span>;
                   })()}
