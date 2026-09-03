@@ -18,7 +18,12 @@ export default function Messages() {
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const convId = params.get("conversation");
-    if (convId) setActiveConversationId(convId);
+    const recipientId = params.get("newRecipient");
+    if (convId) {
+      setActiveConversationId(convId);
+    } else if (recipientId) {
+      setNewRecipientId(recipientId);
+    }
   }, []);
 
   const { data: user } = useQuery({

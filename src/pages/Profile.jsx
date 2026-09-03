@@ -267,7 +267,15 @@ export default function Profile() {
                     {updateProfileMutation.isPending ? t('saving') : t('saveChanges')}
                   </Button>
                 </div> :
-              null}
+              <Button
+                asChild
+                size="sm"
+                className="shrink-0 bg-gradient-to-r from-blue-600 to-indigo-600">
+                <Link to={`/Messages?newRecipient=${user.id}`}>
+                  <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {language === 'he' ? 'שלח הודעה' : language === 'ar' ? 'إرسال رسالة' : 'Send Message'}
+                </Link>
+              </Button>}
             </div>
           </CardHeader>
           <CardContent className="space-y-3 md:space-y-6 p-3 md:p-6 w-full max-w-full">
