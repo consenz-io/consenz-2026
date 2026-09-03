@@ -28,7 +28,7 @@ export default function DocumentTopicCard({ topic, topicIndex, topicProvided }) 
   const topicNewSectionSuggestions = getNewSectionSuggestionsForTopic(topic.id);
 
   return (
-    <Card className="bg-white border-slate-200 w-full overflow-hidden">
+    <Card className="document-topic-card bg-white border-slate-200 w-full overflow-hidden">
       <CardHeader className="border-b border-slate-100 md:p-6 px-4">
         <div className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
           {/* Drag handle - only for admin */}

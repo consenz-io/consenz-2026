@@ -78,6 +78,8 @@ export const tutorialStrings = {
     'ui.exitHint': 'תמיד אפשר להתחיל אותו מחדש מתפריט הניווט.',
     'ui.clickGroupContinue': 'בחרו קבוצה ונמשיך',
     'ui.clickPointsInfo': 'לחצו על סך הנקודות שלכם כדי לראות איך צוברים נקודות',
+    'decomposition.explain.heading': 'דיון ממוקד, הסכמה רחבה',
+    'decomposition.explain.body': 'כדי שמאות אנשים יוכלו לכתוב יחד מסמך אחד, Consenz מפרקת אותו לנושאים ולסעיפים. כך כל משתתף יכול להתמקד בחלק שקרוב אליו — להציע שינוי מדויק לסעיף אחד, לנמק, ולהצביע סעיף-בסעיף. הדיון נשאר ממוקד, וההסכמה נבנית מלמטה למעלה.',
   },
   ar: {
     'home.intro.success': 'رائع، لنبدأ',
@@ -140,6 +142,8 @@ export const tutorialStrings = {
     'ui.exitHint': 'يمكنك دائمًا إعادة تشغيله من قائمة التنقل.',
     'ui.clickGroupContinue': 'اختر مجموعة للمتابعة',
     'ui.clickPointsInfo': 'انقر على إجمالي نقاطك لمعرفة كيف تكسب النقاط',
+    'decomposition.explain.heading': 'نقاش مركّز، توافق واسع',
+    'decomposition.explain.body': 'كي يتمكن مئات الأشخاص من كتابة وثيقة واحدة معاً، تُفكِّك Consenz الوثيقة إلى مواضيع وبنود. هكذا يستطيع كل مشارك التركيز على الجزء الأقرب إليه — اقتراح تعديل دقيق على بند واحد، وتبريره، والتصويت بنداً بنداً. يبقى النقاش مركّزاً، ويُبنى التوافق من الأسفل إلى الأعلى.',
   },
   en: {
     'home.intro.success': 'Great, let\'s go',
@@ -202,6 +206,8 @@ export const tutorialStrings = {
     'ui.exitHint': 'You can always restart it from the navigation menu.',
     'ui.clickGroupContinue': 'Click on a group to continue',
     'ui.clickPointsInfo': 'Click on your total points to see how you earn points',
+    'decomposition.explain.heading': 'Focused discussion, broad consensus',
+    'decomposition.explain.body': 'So hundreds of people can write one document together, Consenz breaks it into topics and sections. Each participant can focus on the part closest to them — propose a precise change to a single section, explain it, and vote section by section. The discussion stays focused, and consensus is built from the bottom up.',
   },
 };
 
@@ -271,6 +277,16 @@ export const HOME_INTRO_STEP = {
 export const TUTORIAL_STEPS = [
   // -1. Welcome intro prep — shown before group-explain step on group page
   WELCOME_INTRO_PREPARE_STEP,
+
+  // 2.5. Decomposition — explain how the document is broken into topics & sections
+  {
+    id: 'decomposition-explain',
+    type: 'explain',
+    targetSelector: '.document-topic-card',
+    tooltipPosition: 'bottom',
+    heading: 'decomposition.explain.heading',
+    body: 'decomposition.explain.body',
+  },
 
   // 3. Proposal editing - explain concept
   {
