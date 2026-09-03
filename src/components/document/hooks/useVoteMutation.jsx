@@ -12,6 +12,7 @@ import React from "react";
 export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNotMember) {
   const queryClient = useQueryClient();
   const votingInProgressRef = React.useRef(new Set());
+  const [isAccepting, setIsAccepting] = React.useState(false);
   
   const voteMutation = useMutation({
     mutationFn: async ({ suggestionId, vote, currentVote }) => {
@@ -195,16 +196,17 @@ export function useVoteMutation(document, user, suggestions, hasCheckedRef, onNo
 
       if (data?.accepted === true) {
         toast.success('🎉 ההצעה התקבלה והמסמך עודכן!', { duration: 5000 });
-        // Acceptance mutates section content, thresholds and multiple suggestion
-        // statuses server-side — beyond what we can safely patch locally. Invalidate
-        // the aggregated cache so the next read pulls the full reconciled state.
-        // Also invalidate suggestions + sections explicitly: processAcceptanceV4 may
-        // convert a parent new_section → edit_section and create a new section, and we
-        // cannot rely solely on realtime subscriptions to surface those changes.
-        queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', document?.id] });
-        queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
-        queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
-        queryClient.invalidateQueries({ queryKey: ['documentVersions', document?.id] });
+        // Show a spinner until the refetch completes — the user sees it until the
+        // text change is visible (sections refetched) and the toast is shown.
+        setIsAccepting(true);
+        Promise.all([
+          queryClient.refetchQueries({ queryKey: ['documentAggregatedData', document?.id] }),
+          queryClient.refetchQueries({ queryKey: ['suggestions', document?.id] }),
+          queryClient.refetchQueries({ queryKey: ['sections', document?.id] }),
+          queryClient.refetchQueries({ queryKey: ['documentVersions', document?.id] }),
+        ]).finally(() => {
+          setIsAccepting(false);
+        });
       }
       
       // Emit event for layout to update unvoted count (optimistic decrement)
