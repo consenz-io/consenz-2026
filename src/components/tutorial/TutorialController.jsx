@@ -38,7 +38,8 @@ function useIsMobile() {
 const NAV_DELAY_MS = 600;
 
 function isDocumentPage(pathname) {
-  return /\/(DocumentView|document)/i.test(pathname) || pathname.includes('urlName');
+  // Only the actual document page counts — NOT DocumentComments, DocumentAdmin, etc.
+  return /^\/DocumentView(\/|$)/i.test(pathname) || pathname.includes('urlName');
 }
 
 function isHomePage(pathname) {
