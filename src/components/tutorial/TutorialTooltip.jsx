@@ -114,6 +114,25 @@ function getTooltipStyle(rect, position, bubbleH = TOOLTIP_HEIGHT) {
   }
 }
 
+// Render body text with quoted button names highlighted as "lit up" badges.
+// Matches text wrapped in Hebrew quote marks (״…״) or standard quotes ("…").
+function renderBodyWithButtonHighlight(body) {
+  const parts = body.split(/(״[^״]+״|"[^"]+")/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('״') || part.startsWith('"')) {
+      return (
+        <span
+          key={i}
+          className="inline-flex items-center bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded border border-blue-300 shadow-sm mx-0.5"
+        >
+          {part}
+        </span>
+      );
+    }
+    return <React.Fragment key={i}>{part}</React.Fragment>;
+  });
+}
+
 function ArrowEl({ position, isRTL }) {
   const base = 'absolute w-0 h-0 border-solid';
   const styles = {
@@ -488,7 +507,9 @@ export default function TutorialTooltip({
             {/* Body */}
             {body && (
               <p className="text-sm text-slate-600 mb-3 leading-relaxed">
-                {body}
+                {step.highlightButton
+                  ? renderBodyWithButtonHighlight(body)
+                  : body}
               </p>
             )}
 

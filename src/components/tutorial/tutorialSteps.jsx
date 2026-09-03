@@ -305,6 +305,7 @@ export const TUTORIAL_STEPS = [
     tooltipPosition: 'bottom',
     heading: 'editclause.buttons.heading',
     body: 'editclause.buttons.body',
+    highlightButton: true,
   },
 
   // 5. Browsing proposals (viewing versions) — target the carousel nav buttons
