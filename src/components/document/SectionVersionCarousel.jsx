@@ -379,7 +379,7 @@ export default function SectionVersionCarousel({
               style={{
                 direction: isRTL ? "rtl" : "ltr",
                 textAlign: isRTL ? "right" : "left",
-                fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                fontFamily: "var(--font-document)",
                 fontSize: "1rem",
                 lineHeight: "1.75",
               }}

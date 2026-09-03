@@ -133,7 +133,7 @@ const InlineDiff = ({ originalContent, newContent, className = "" }) => {
       className={`text-slate-700 leading-relaxed prose prose-slate max-w-none ${className}`} 
       dir={isRTL ? 'rtl' : 'ltr'}
       style={{ 
-        fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+        fontFamily: "var(--font-document)",
         fontSize: "1.125rem",
         lineHeight: "1.8"
       }}

@@ -9,6 +9,12 @@ module.exports = {
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
+  		fontFamily: {
+  			ui: ['var(--font-ui)'],
+  			discussion: ['var(--font-discussion)'],
+  			document: ['var(--font-document)'],
+  			display: ['var(--font-display)']
+  		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',

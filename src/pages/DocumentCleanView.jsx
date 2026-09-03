@@ -523,7 +523,7 @@ ${text}`;
   <meta charset="UTF-8">
   <title>${docTitle}</title>
   <style>
-    body { font-family: 'Times New Roman', 'David Libre', Georgia, serif; max-width: 800px; margin: 2cm auto; padding: 1rem; color: #1e293b; }
+    body { font-family: 'Noto Serif Hebrew', 'David Libre', 'Alegreya', 'Noto Serif', Georgia, serif; max-width: 800px; margin: 2cm auto; padding: 1rem; color: #1e293b; }
     h1 { font-size: 2rem; margin-bottom: 2rem; }
     @page { margin: 2cm; }
     @media print { body { margin: 0; } }
@@ -692,7 +692,7 @@ ${text}`;
               <div key={topic.id} className="space-y-4 md:space-y-6 break-inside-avoid">
                   {/* Topic Title */}
                   <div className="border-b border-slate-300 pb-2 mb-4 md:mb-6">
-                    <h2 className="text-xl md:text-2xl text-slate-800 leading-tight [font-family:'Noto_Serif',_serif] font-normal" style={{ fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif" }}>
+                    <h2 className="text-xl md:text-2xl text-slate-800 leading-tight font-display font-normal" style={{ fontFamily: "var(--font-display)" }}>
                       {topicIndex + 1}. {(topic.originalLanguage || 'he') !== language && showTranslatedTopics[topic.id] ?
                     translatedTopics[topic.id] || (typeof topic.translations?.[language] === 'string' ? topic.translations[language] : topic.translations?.[language]?.title) || getTopicTitleAtVersion(topic.id, currentVersionIndex) :
                     getTopicTitleAtVersion(topic.id, currentVersionIndex)}
@@ -812,7 +812,7 @@ ${text}`;
                                    <div
                                 className="prose prose-sm max-w-none text-red-700 font-bold line-through"
                                 style={{
-                                  fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                  fontFamily: "var(--font-document)",
                                   fontSize: "1.125rem",
                                   lineHeight: "1.8"
                                 }}
@@ -845,7 +845,7 @@ ${text}`;
                                     <div
                                 className="prose prose-sm max-w-none text-green-800"
                                 style={{
-                                  fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                  fontFamily: "var(--font-document)",
                                   fontSize: "1.125rem",
                                   lineHeight: "1.8"
                                 }}
@@ -875,7 +875,7 @@ ${text}`;
                                 className={`text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none cursor-pointer hover:bg-slate-50/50 p-2 rounded transition-colors ${openingSectionId === section.id ? 'opacity-60 pointer-events-none' : ''}`}
                                 onClick={() => openSectionDiscussion(section)}
                                 style={{
-                                  fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                  fontFamily: "var(--font-document)",
                                   fontSize: "1.125rem",
                                   lineHeight: "1.8",
                                   letterSpacing: "0.01em"

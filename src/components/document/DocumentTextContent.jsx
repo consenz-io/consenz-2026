@@ -9,7 +9,7 @@ export default function DocumentTextContent({ content, className = "" }) {
       className={`document-content ${className}`}
       dangerouslySetInnerHTML={{ __html: content }}
       style={{
-        fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+        fontFamily: "var(--font-document)",
         fontSize: "1.375rem",
         lineHeight: "1.8",
         letterSpacing: "0.01em",

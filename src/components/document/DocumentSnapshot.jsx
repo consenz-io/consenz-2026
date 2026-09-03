@@ -88,7 +88,7 @@ export default function DocumentSnapshot({
                         <div 
                           className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
                           style={{ 
-                            fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                            fontFamily: "var(--font-document)",
                             fontSize: "1.125rem",
                             lineHeight: "1.8"
                           }}
@@ -107,7 +107,7 @@ export default function DocumentSnapshot({
                         <div 
                           className="prose prose-sm max-w-none text-green-800"
                           style={{ 
-                            fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                            fontFamily: "var(--font-document)",
                             fontSize: "1.125rem",
                             lineHeight: "1.8"
                           }}
@@ -186,7 +186,7 @@ export default function DocumentSnapshot({
                                 style={{ 
                                   direction: isRTL ? 'rtl' : 'ltr', 
                                   textAlign: isRTL ? 'right' : 'left',
-                                  fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                                  fontFamily: "var(--font-document)",
                                   fontSize: "1.125rem",
                                   lineHeight: "1.8",
                                   letterSpacing: "0.01em"
@@ -199,7 +199,7 @@ export default function DocumentSnapshot({
                           <div 
                             className="text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none"
                             style={{ 
-                              fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                              fontFamily: "var(--font-document)",
                               fontSize: "1.125rem",
                               lineHeight: "1.8",
                               letterSpacing: "0.01em"

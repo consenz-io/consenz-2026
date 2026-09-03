@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Alegreya:wght@400;500;600;700&family=Abril+Fatface:wght@400&family=Albert+Sans:wght@300;400;500;600;700&family=Archivo:wght@300;400;500;600;700&family=Bebas+Neue:wght@400&family=Bitter:wght@300;400;500;600;700&family=Bungee:wght@400&family=Noto+Serif:wght@300;400;500;600;700&family=Noto+Serif+Hebrew:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Alegreya:wght@400;500;600;700&family=David+Libre:wght@400;500;600;700&family=Heebo:wght@300;400;500;600;700&family=Noto+Serif:wght@400;500;600;700&family=Noto+Serif+Hebrew:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -104,6 +104,10 @@ button:focus-visible {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --font-ui: 'Heebo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-discussion: 'Heebo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-document: 'Noto Serif Hebrew', 'Alegreya', 'Noto Serif', Georgia, serif;
+    --font-display: 'Noto Serif Hebrew', 'David Libre', 'Alegreya', 'Noto Serif', Georgia, serif;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -157,6 +161,7 @@ button:focus-visible {
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-ui);
   }
 }
 

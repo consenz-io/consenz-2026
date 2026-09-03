@@ -380,7 +380,7 @@ export default function SectionHistory() {
                         style={{ 
                           direction: isRTL ? 'rtl' : 'ltr', 
                           textAlign: isRTL ? 'right' : 'left',
-                          fontFamily: "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif",
+                          fontFamily: "var(--font-document)",
                           fontSize: "1.125rem",
                           lineHeight: "1.8",
                           letterSpacing: "0.01em"

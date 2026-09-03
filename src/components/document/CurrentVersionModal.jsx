@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { parseUserDate } from "@/components/utils/dateFormatter";
 
-const SERIF = "'Times New Roman', 'David Libre', 'Noto Serif', Georgia, serif";
+const SERIF = "var(--font-document)";
 
 function formatDate(dateStr, language) {
   if (!dateStr) return "";
@@ -124,7 +124,7 @@ export default function CurrentVersionModal({
     join("");
 
     printWindow.document.write(
-      `<!DOCTYPE html><html dir="${dir}" lang="${language}"><head><meta charset="UTF-8"><title>${docTitle}</title><style>body{font-family:'Times New Roman','David Libre',Georgia,serif;max-width:800px;margin:2cm auto;padding:1rem;color:#1e293b}h1{font-size:2rem;margin-bottom:2rem}@page{margin:2cm}@media print{body{margin:0}}</style></head><body><h1>${docTitle}</h1>${topicRows}<footer style="margin-top:3rem;padding-top:1rem;border-top:1px solid #cbd5e1;text-align:center;color:#94a3b8;font-size:0.8rem">${asOf}${dateStr}</footer><script>window.onload=function(){window.print()}<\/script></body></html>`
+      `<!DOCTYPE html><html dir="${dir}" lang="${language}"><head><meta charset="UTF-8"><title>${docTitle}</title><style>body{font-family:'Noto Serif Hebrew','David Libre','Alegreya','Noto Serif',Georgia,serif;max-width:800px;margin:2cm auto;padding:1rem;color:#1e293b}h1{font-size:2rem;margin-bottom:2rem}@page{margin:2cm}@media print{body{margin:0}}</style></head><body><h1>${docTitle}</h1>${topicRows}<footer style="margin-top:3rem;padding-top:1rem;border-top:1px solid #cbd5e1;text-align:center;color:#94a3b8;font-size:0.8rem">${asOf}${dateStr}</footer><script>window.onload=function(){window.print()}<\/script></body></html>`
     );
     printWindow.document.close();
   };
@@ -178,7 +178,7 @@ export default function CurrentVersionModal({
                   <Handshake className="w-5 h-5 text-white" />
                 </div>
               </div>
-              <h2 className="text-2xl text-slate-900 mb-3 text-center [font-family:'Noto_Serif',_serif] font-normal" style={{ fontFamily: SERIF }}>
+              <h2 className="text-2xl text-slate-900 mb-3 text-center font-display font-normal" style={{ fontFamily: "var(--font-display)" }}>
                 {document?.title}
               </h2>
               <div className="flex items-center justify-center gap-2 mb-8">
@@ -198,8 +198,8 @@ export default function CurrentVersionModal({
                   return (
                     <div key={topic.id} className="space-y-3">
                     <h3
-                        className="text-xl text-slate-800 border-b border-slate-200 pb-2 [font-family:'Noto_Serif',_serif] font-normal"
-                        style={{ fontFamily: SERIF }}>
+                        className="text-xl text-slate-800 border-b border-slate-200 pb-2 font-display font-normal"
+                        style={{ fontFamily: "var(--font-display)" }}>
                     
                       {ti + 1}. {topic.title}
                     </h3>
