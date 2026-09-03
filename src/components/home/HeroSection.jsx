@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ArrowLeft, FileText } from "lucide-react";
+import { ArrowRight, ArrowLeft, Users } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import StatsCards from "./StatsCards";
 
@@ -57,9 +57,9 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
       <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-indigo-600/10 to-purple-600/10" />
       {/* Background watermark logo — absolutely positioned, doesn't affect content flow */}
       <div className="absolute top-0 left-0 right-0 flex justify-center pt-6 md:pt-10 pointer-events-none select-none" aria-hidden="true">
-        <div className="flex items-center gap-3 opacity-[0.15]">
+        <div className="flex items-center gap-3 opacity-[0.25]">
           <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
-            <FileText className="w-7 h-7 md:w-10 md:h-10 text-white" />
+            <Users className="w-7 h-7 md:w-10 md:h-10 text-white" />
           </div>
           <span className="text-4xl md:text-6xl font-bold text-slate-900 tracking-tight">consenz</span>
         </div>
