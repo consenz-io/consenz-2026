@@ -16,7 +16,7 @@ import "react-quill/dist/quill.snow.css";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Sparkles, ExternalLink } from "lucide-react";
+import { AlertCircle, Sparkles, ExternalLink, Pencil } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import TranslatableContent from "./TranslatableContent";
 import { createPageUrl } from "@/utils";
@@ -613,7 +613,7 @@ export default function CreateSuggestionModal({
             <div>
             <div className="flex items-center justify-between mb-2">
               <Label htmlFor="content">
-                {isNewSection ? t('sectionContent') : t('proposedChanges')}
+                {isNewSection ? t('sectionContent') : t('suggestionEditFieldLabel')}
               </Label>
               {!isNewSection && existingSection && (
                 <Button
@@ -645,15 +645,18 @@ export default function CreateSuggestionModal({
                     {language === 'he' ? 'אין לך מספיק נקודות כדי ליצור הצעה' : language === 'ar' ? 'ليس لديك نقاط كافية لإنشاء اقتراح' : 'You don\'t have enough points to create a suggestion'}
                   </div>
                 )}
-                <Textarea
-                  id="content"
-                  value={formData.newContent.replace(/<[^>]*>/g, '')}
-                  onChange={(e) => setFormData({ ...formData, newContent: e.target.value })}
-                  placeholder={t('enterContent')}
-                  rows={8}
-                  className={isRTL ? "text-right" : "text-left"}
-                  disabled={document.gamificationEnabled && (currentUser?.points || 1000) < pointsCost}
-                />
+                <div className="relative">
+                  <Pencil className={`absolute top-3 ${isRTL ? 'left-3' : 'right-3'} w-4 h-4 text-blue-400 pointer-events-none z-10`} />
+                  <Textarea
+                    id="content"
+                    value={formData.newContent.replace(/<[^>]*>/g, '')}
+                    onChange={(e) => setFormData({ ...formData, newContent: e.target.value })}
+                    placeholder={t('enterContent')}
+                    rows={8}
+                    className={`${isRTL ? "text-right" : "text-left"} border-2 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-blue-50/30 ${isRTL ? 'pr-3 pl-10' : 'pl-3 pr-10'}`}
+                    disabled={document.gamificationEnabled && (currentUser?.points || 1000) < pointsCost}
+                  />
+                </div>
               </>
             )}
           </div>
