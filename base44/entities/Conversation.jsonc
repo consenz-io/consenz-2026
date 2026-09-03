@@ -1,0 +1,60 @@
+{
+  "name": "Conversation",
+  "type": "object",
+  "properties": {
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "User IDs of the two participants in this 1-on-1 conversation"
+    },
+    "conversationKey": {
+      "type": "string",
+      "description": "Sorted 'userId1|userId2' for deduplication and fast lookup"
+    },
+    "lastMessageAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of the most recent message"
+    },
+    "lastMessagePreview": {
+      "type": "string",
+      "description": "Preview text of the most recent message (truncated)"
+    },
+    "lastMessageSenderId": {
+      "type": "string",
+      "description": "User ID of the sender of the most recent message"
+    }
+  },
+  "required": [
+    "participants",
+    "conversationKey"
+  ],
+  "rls": {
+    "read": {
+      "data.participants": "{{user.id}}"
+    },
+    "create": {
+      "data.participants": {
+        "$in": [
+          "{{user.id}}"
+        ]
+      }
+    },
+    "update": {
+      "data.participants": {
+        "$in": [
+          "{{user.id}}"
+        ]
+      }
+    },
+    "delete": {
+      "data.participants": {
+        "$in": [
+          "{{user.id}}"
+        ]
+      }
+    }
+  }
+}

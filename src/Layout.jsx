@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages, ArrowUp, Users } from "lucide-react";
+import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages, ArrowUp, Users, MessageSquare } from "lucide-react";
 import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
 import { Toaster } from "sonner";
 import { initBrowserNotifications } from "@/components/notifications/browserNotifications";
@@ -389,6 +389,11 @@ function LayoutContent({ children, currentPageName }) {
       title: language === 'he' ? 'הקבוצות שלי' : language === 'ar' ? 'مجموعاتي' : 'My Groups',
       url: createPageUrl("Groups"),
       icon: Users,
+    },
+    {
+      title: language === 'he' ? 'הודעות' : language === 'ar' ? 'الرسائل' : 'Messages',
+      url: createPageUrl("Messages"),
+      icon: MessageSquare,
     },
   ];
 

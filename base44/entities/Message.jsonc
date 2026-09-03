@@ -1,0 +1,54 @@
+{
+  "name": "Message",
+  "type": "object",
+  "properties": {
+    "conversationId": {
+      "type": "string",
+      "description": "Conversation this message belongs to"
+    },
+    "senderId": {
+      "type": "string",
+      "description": "User ID of the sender"
+    },
+    "recipientId": {
+      "type": "string",
+      "description": "User ID of the recipient"
+    },
+    "content": {
+      "type": "string",
+      "description": "Message text content"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the recipient has read this message"
+    }
+  },
+  "required": [
+    "conversationId",
+    "senderId",
+    "recipientId",
+    "content"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.senderId": "{{user.id}}"
+        },
+        {
+          "data.recipientId": "{{user.id}}"
+        }
+      ]
+    },
+    "create": {
+      "data.senderId": "{{user.id}}"
+    },
+    "update": {
+      "data.recipientId": "{{user.id}}"
+    },
+    "delete": {
+      "data.senderId": "{{user.id}}"
+    }
+  }
+}

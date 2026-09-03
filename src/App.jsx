@@ -11,6 +11,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import RejectedSuggestions from './pages/RejectedSuggestions';
+import Messages from './pages/Messages';
 
 // Clear cache - EmailLogs has been removed
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -74,6 +75,14 @@ const AuthenticatedApp = () => {
         element={
           <LayoutWrapper currentPageName="RejectedSuggestions">
             <RejectedSuggestions />
+          </LayoutWrapper>
+        }
+      />
+      <Route
+        path="/Messages"
+        element={
+          <LayoutWrapper currentPageName="Messages">
+            <Messages />
           </LayoutWrapper>
         }
       />
