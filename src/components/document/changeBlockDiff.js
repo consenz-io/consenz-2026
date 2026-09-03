@@ -274,14 +274,18 @@ export function computeChangeBlockDiff(oldHtml, newHtml) {
         const res = advanceToWord(oldTokens, oi, oldWords, wi, (seg) => segments.push(seg));
         oi = res.cursor;
         if (oldPhraseHtml.length === 0) oldLeading = res.leading;
-        oldPhraseHtml.push(oldWords[wi].html);
+        // First word's leading space is emitted separately (oldLeading); subsequent
+        // words keep their own leading space so words inside the phrase stay separated.
+        oldPhraseHtml.push((oldPhraseHtml.length === 0 ? "" : oldWords[wi].leadingSpace) + oldWords[wi].html);
       }
       // Emit blocks for the new phrase (suppress leading space — no space between old→new).
       const newPhraseHtml = [];
       for (const wi of newIdxs) {
         const res = advanceToWord(newTokens, ni, newWords, wi, () => {});
         ni = res.cursor;
-        newPhraseHtml.push(newWords[wi].html);
+        // First new word directly follows the old phrase (no space); subsequent
+        // words keep their leading space so the new phrase reads naturally.
+        newPhraseHtml.push((newPhraseHtml.length === 0 ? "" : newWords[wi].leadingSpace) + newWords[wi].html);
       }
 
       if (oldLeading) segments.push({ type: "space", html: oldLeading });
