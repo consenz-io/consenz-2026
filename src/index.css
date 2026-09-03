@@ -214,6 +214,26 @@ button:focus-visible {
   border-radius: 8px;
 }
 
+/* Tutorial: "lit up" button — the target itself glows, not just a border around it */
+.tutorial-lit-up {
+  background-color: #dbeafe !important;
+  border-color: #3b82f6 !important;
+  color: #1e40af !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.5) !important;
+  animation: tutorial-lit-up-pulse 1.5s ease-in-out infinite !important;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes tutorial-lit-up-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.45), 0 0 30px rgba(59, 130, 246, 0.7);
+  }
+}
+
 /* Tutorial: pulse animation (CSS-based instead of inline style) */
 @keyframes tutorial-pulse-ring {
   0% {

@@ -396,7 +396,15 @@ export default function TutorialController() {
     if (!el) return;
 
     el.classList.add('tutorial-highlight-target');
-    return () => { el.classList.remove('tutorial-highlight-target'); };
+    // When the step asks for the button to be "lit up" (not just outlined),
+    // add a glowing highlight class so the button itself appears illuminated.
+    if (step.highlightButton) {
+      el.classList.add('tutorial-lit-up');
+    }
+    return () => {
+      el.classList.remove('tutorial-highlight-target');
+      el.classList.remove('tutorial-lit-up');
+    };
   }, [phase, currentStep, navPending]);
 
   // ── Handle newclause-explain: force-show the insert-section button ──────────
