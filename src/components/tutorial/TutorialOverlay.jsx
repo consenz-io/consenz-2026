@@ -16,9 +16,9 @@ export default function TutorialOverlay({ targetSelector, additionalSpotlights =
       style.id = 'tutorial-pulse-style';
       style.textContent = `
         @keyframes tutorial-pulse-ring {
-          0%   { box-shadow: 0 0 0 9999px rgba(0,0,0,0.6), 0 0 0 0 rgba(59,130,246,0.7); }
-          70%  { box-shadow: 0 0 0 9999px rgba(0,0,0,0.6), 0 0 0 10px rgba(59,130,246,0); }
-          100% { box-shadow: 0 0 0 9999px rgba(0,0,0,0.6), 0 0 0 0 rgba(59,130,246,0); }
+          0%   { box-shadow: 0 0 0 0 rgba(59,130,246,0.7); }
+          70%  { box-shadow: 0 0 0 10px rgba(59,130,246,0); }
+          100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
         }
         @media (prefers-reduced-motion: reduce) {
           .tutorial-spotlight-pulse {
@@ -64,7 +64,6 @@ export default function TutorialOverlay({ targetSelector, additionalSpotlights =
     el.style.position = 'relative';
     el.style.zIndex = '10001';
     el.style.borderRadius = computedRadius;
-    el.style.boxShadow = `0 0 0 9999px rgba(0,0,0,0.6)`;
 
     // Additional spotlight elements (raised z-index only, no shadow)
     const additionalEls = additionalSpotlights
@@ -88,9 +87,11 @@ export default function TutorialOverlay({ targetSelector, additionalSpotlights =
 
   return (
     <>
-      {/* Scrim — pointer-events-none so clicks pass through to tooltip/target */}
+      {/* Scrim — full-viewport dim (covers sidebar too, which the box-shadow
+          trick could not reach because the main content clips overflow).
+          pointer-events-none so clicks pass through to tooltip/target. */}
       <div
-        className="fixed inset-0 z-[10000] pointer-events-none"
+        className="fixed inset-0 z-[10000] pointer-events-none bg-black/60"
         aria-hidden="true"
       />
       {/* Tooltip and other interactive content */}
