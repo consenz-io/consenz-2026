@@ -646,7 +646,7 @@ const translations = {
     showOriginal: "הצג מקור",
     showTranslation: "הצג תרגום",
     showDiff: "הצג שינויים",
-    hideChanges: "הסתר שינויים",
+    hideChanges: "חזרה לעריכה",
     crossLanguageSuggestionAlert: "הצעה זו נכתבה ב{language}",
     fromCache: "מהמטמון",
     activityOf: "פעילות של {name}",
