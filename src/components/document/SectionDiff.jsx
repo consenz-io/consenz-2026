@@ -10,7 +10,7 @@ import { Languages, Loader2, Eye, FileText, Check, Info } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { getDiffInLanguage, detectLanguage } from "./SmartDiffTranslationService";
 import DiffModeSelector, { DIFF_MODES, useDiffMode } from "./DiffModeSelector";
-import { extractText, tokenize, computeWordDiff } from "./InlineDiff";
+import ChangeBlockDiffView from "./ChangeBlockDiffView";
 
 const languageLabels = {
   en: "English",
@@ -146,16 +146,6 @@ export default function SectionDiff({
     return originalSourceLang === modifiedSourceLang;
   }, [showTranslated, hasTranslation, originalSourceLang, modifiedSourceLang]);
   
-  // Compute diff with memoization
-  const diff = useMemo(() => {
-    if (!canShowDiff) return [];
-    const oldText = extractText(displayOriginal);
-    const newText = extractText(displayNew);
-    const oldTokens = tokenize(oldText);
-    const newTokens = tokenize(newText);
-    return computeWordDiff(oldTokens, newTokens);
-  }, [displayOriginal, displayNew, canShowDiff]);
-
   const contentStyle = {
     direction: isRTL ? 'rtl' : 'ltr',
     textAlign: isRTL ? 'right' : 'left',
@@ -166,32 +156,16 @@ export default function SectionDiff({
     fontWeight: "400"
   };
 
-  // Render inline diff
-  const renderInlineDiff = () => {
-    return (
-      <div style={{...contentStyle, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-        {diff.map((part, idx) => {
-          if (part.type === 'removed') {
-            return (
-              <span key={idx} className="bg-[#fef2f2] text-red-700 line-through opacity-70 inline">
-                {part.value}
-              </span>
-            );
-          } else if (part.type === 'added') {
-            return (
-              <span key={idx} className="bg-[#dcfce7] text-green-800 border-b-2 border-green-500 font-medium inline">
-                {part.value}
-              </span>
-            );
-          } else {
-            return <span key={idx} className="inline">{part.value}</span>;
-          }
-        })}
-      </div>
-    );
-  };
+  // Render inline diff — change-block engine (old phrase → new phrase, no space)
+  const renderInlineDiff = () => (
+    <ChangeBlockDiffView
+      originalContent={displayOriginal}
+      newContent={displayNew}
+      style={{ fontSize: contentStyle.fontSize, lineHeight: contentStyle.lineHeight, fontFamily: contentStyle.fontFamily }}
+    />
+  );
 
-  // Render split view (stacked)
+  // Render split view (stacked) — preserves rich-text formatting
   const renderSplitDiff = () => (
     <div className="space-y-3">
       <div className="p-3 bg-red-50/50 border border-red-200 rounded-lg overflow-hidden">
@@ -199,42 +173,34 @@ export default function SectionDiff({
           <span className="w-2 h-2 bg-red-500 rounded-full"></span>
           {t('originalContent') || 'מקור'}
         </div>
-        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700">
-          {extractText(displayOriginal)}
-        </div>
+        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700" dangerouslySetInnerHTML={{ __html: displayOriginal }} />
       </div>
       <div className="p-3 bg-green-50/50 border border-green-200 rounded-lg overflow-hidden">
         <div className="text-xs font-medium text-green-600 mb-2 flex items-center gap-1">
           <span className="w-2 h-2 bg-green-500 rounded-full"></span>
           {t('proposedContent') || 'מוצע'}
         </div>
-        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700">
-          {extractText(displayNew)}
-        </div>
+        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700" dangerouslySetInnerHTML={{ __html: displayNew }} />
       </div>
     </div>
   );
 
-  // Render side-by-side view
+  // Render side-by-side view — collapses to stacked below sm breakpoint
   const renderSideBySideDiff = () => (
-    <div className={`grid grid-cols-2 gap-3 ${isRTL ? 'direction-rtl' : ''}`}>
+    <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 ${isRTL ? 'direction-rtl' : ''}`}>
       <div className="p-3 bg-red-50/50 border border-red-200 rounded-lg overflow-hidden">
         <div className="text-xs font-medium text-red-600 mb-2 flex items-center gap-1">
           <span className="w-2 h-2 bg-red-500 rounded-full"></span>
           {t('originalContent') || 'מקור'}
         </div>
-        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700 text-sm">
-          {extractText(displayOriginal)}
-        </div>
+        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700 text-sm" dangerouslySetInnerHTML={{ __html: displayOriginal }} />
       </div>
       <div className="p-3 bg-green-50/50 border border-green-200 rounded-lg overflow-hidden">
         <div className="text-xs font-medium text-green-600 mb-2 flex items-center gap-1">
           <span className="w-2 h-2 bg-green-500 rounded-full"></span>
           {t('proposedContent') || 'מוצע'}
         </div>
-        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700 text-sm">
-          {extractText(displayNew)}
-        </div>
+        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700 text-sm" dangerouslySetInnerHTML={{ __html: displayNew }} />
       </div>
     </div>
   );
