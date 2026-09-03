@@ -2,6 +2,8 @@ import React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { ArrowLeft, ArrowRight, Send, Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 export default function ChatView({
   conversationId,
@@ -90,12 +92,14 @@ export default function ChatView({
         >
           <BackIcon className="w-5 h-5 text-slate-700" />
         </button>
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold flex-shrink-0">
-          {initial}
-        </div>
-        <div className="min-w-0">
-          <h2 className="font-semibold text-slate-900 truncate">{otherUserName}</h2>
-        </div>
+        <Link to={`${createPageUrl("Profile")}?userId=${recipientId}`} className="flex items-center gap-3 min-w-0 hover:opacity-80 transition-opacity">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold flex-shrink-0">
+            {initial}
+          </div>
+          <div className="min-w-0">
+            <h2 className="font-semibold text-slate-900 truncate hover:text-blue-600 transition-colors">{otherUserName}</h2>
+          </div>
+        </Link>
       </div>
 
       {/* Messages */}
