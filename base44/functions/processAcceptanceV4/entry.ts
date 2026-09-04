@@ -1,7 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { awardSuggestionPointsLogic } from '../../shared/awardSuggestionPointsLogic.ts';
 import { authorizeInternalOrUser, INTERNAL_AUTOMATION_TOKEN } from '../../shared/authGate.ts';
-import { transferVotesToSection } from '../../shared/transferVotesToSection.ts';
 
 const NOTIF_TRANSLATIONS = {
   en: {
@@ -504,9 +503,6 @@ Deno.serve(async (req) => {
               sectionId: newSection.id
             });
           }
-
-          // Transfer votes from the accepted edit_suggestion to the new section
-          await transferVotesToSection(base44, suggestion.id, newSection.id, false);
         }
       } else if (parentSuggestion && suggestion.sectionId) {
         // Retry recovery: section already created and parent already converted in a
