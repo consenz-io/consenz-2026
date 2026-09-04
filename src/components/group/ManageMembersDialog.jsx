@@ -211,7 +211,9 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
         const response = await base44.functions.invoke('sendGroupInvitation', {
           groupId,
           email: trimmedEmail,
-          groupName
+          groupName,
+          language,
+          appUrl: window.location.origin
         });
 
         if (!response.data.success) {

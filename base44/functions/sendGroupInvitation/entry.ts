@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { groupId, email, language } = await req.json();
+    const { groupId, email, language, appUrl } = await req.json();
 
     if (!groupId || !email) {
       return Response.json({ error: 'Missing or invalid parameters' }, { status: 400 });
@@ -77,7 +77,8 @@ Deno.serve(async (req) => {
       status: 'pending'
     });
 
-    const inviteUrl = `https://consenz.net/login?groupInvite=${token}`;
+    const baseUrl = appUrl || 'https://consenz-copy-4ca3772e.base44.app';
+    const inviteUrl = `${baseUrl}?groupInvite=${token}`;
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
     const lang = language || 'he';

@@ -20,8 +20,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Token is required' }, { status: 400 });
     }
 
-    // Find invitation
-    const invitations = await base44.entities.GroupInvitation.filter({ token, status: 'pending' });
+    // Find invitation — use service role to bypass RLS, since link-based
+    // invitations (empty email) would be unreadable by the accepting user
+    const invitations = await base44.asServiceRole.entities.GroupInvitation.filter({ token, status: 'pending' });
     if (invitations.length === 0) {
       return Response.json({ error: 'Invitation not found or already used' }, { status: 404 });
     }
@@ -33,30 +34,31 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invitation has expired' }, { status: 400 });
     }
 
-    // Verify email matches
-    if (invitation.email.toLowerCase() !== user.email.toLowerCase()) {
+    // Verify email matches — only for email-based invitations (link-based
+    // invitations have an empty email field and can be accepted by any user)
+    if (invitation.email && invitation.email.trim() !== '' && invitation.email.toLowerCase() !== user.email.toLowerCase()) {
       return Response.json({ 
         error: 'Email mismatch. This invitation is for ' + invitation.email 
       }, { status: 403 });
     }
 
-    // Check if already a member
-    const existingMemberships = await base44.entities.GroupMember.filter({
+    // Check if already a member — use service role to bypass RLS
+    const existingMemberships = await base44.asServiceRole.entities.GroupMember.filter({
       groupId: invitation.groupId,
       userId: user.id
     });
 
     if (existingMemberships.length === 0) {
       // Add user to group
-      await base44.entities.GroupMember.create({
+      await base44.asServiceRole.entities.GroupMember.create({
         groupId: invitation.groupId,
         userId: user.id,
         role: 'member'
       });
     }
 
-    // Mark invitation as accepted
-    await base44.entities.GroupInvitation.update(invitation.id, {
+    // Mark invitation as accepted — use service role to bypass RLS
+    await base44.asServiceRole.entities.GroupInvitation.update(invitation.id, {
       status: 'accepted'
     });
 

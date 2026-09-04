@@ -30,6 +30,7 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/comp
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import FloatingNotificationBell from "@/components/notifications/FloatingNotificationBell";
 import FloatingPointsBadge from "@/components/points/FloatingPointsBadge";
+import GroupInviteHandler from "@/components/group/GroupInviteHandler";
 import { AccessibilityAnnouncer } from "@/components/AccessibilityAnnouncer";
 import { AccessibilityToolbarContent } from "@/components/AccessibilityToolbar";
 
@@ -523,6 +524,7 @@ function LayoutContent({ children, currentPageName }) {
        <ErrorBoundary>
          <TutorialController currentPageName={currentPageName} language={language} isRTL={isRTL} />
        </ErrorBoundary>
+       <GroupInviteHandler user={user} />
        <ErrorBoundary inline>
          <GlobalTourButton user={user} />
        </ErrorBoundary>

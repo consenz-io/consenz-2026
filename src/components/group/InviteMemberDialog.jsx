@@ -30,7 +30,8 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
         groupId,
         email: emailAddress,
         groupName,
-        language
+        language,
+        appUrl: window.location.origin
       });
       
       if (!response.data.success) {
@@ -78,7 +79,7 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
   });
 
   const inviteUrl = inviteToken 
-    ? `https://consenz.net/login?groupInvite=${inviteToken}`
+    ? `${window.location.origin}/?groupInvite=${inviteToken}`
     : '';
 
   const handleCopyLink = () => {
