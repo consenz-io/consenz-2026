@@ -26,19 +26,24 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
 
   const sendEmailInviteMutation = useMutation({
     mutationFn: async (emailAddress) => {
-      const response = await base44.functions.invoke('sendGroupInvitation', {
-        groupId,
-        email: emailAddress,
-        groupName,
-        language,
-        appUrl: window.location.origin
-      });
-      
-      if (!response.data.success) {
-        throw new Error(response.data.error || 'Failed to send invitation');
+      try {
+        const response = await base44.functions.invoke('sendGroupInvitation', {
+          groupId,
+          email: emailAddress,
+          groupName,
+          language,
+          appUrl: window.location.origin
+        });
+
+        if (!response.data.success) {
+          throw new Error(response.data.error || 'Failed to send invitation');
+        }
+
+        return response.data;
+      } catch (err) {
+        const serverMsg = err?.response?.data?.error || err?.data?.error || err?.message;
+        throw new Error(serverMsg || 'Failed to send invitation');
       }
-      
-      return response.data;
     },
     onSuccess: () => {
       setError(null);

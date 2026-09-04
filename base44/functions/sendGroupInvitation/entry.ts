@@ -35,13 +35,6 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Rate limit exceeded: max 10 invitations per hour' }, { status: 429 });
     }
 
-    // Duplicate check: don't allow re-inviting an email that already has a pending
-    // invitation to this group — prevents repeated relay to the same target
-    const existingInvites = await base44.asServiceRole.entities.GroupInvitation.filter({ groupId, email });
-    if (existingInvites.some(i => i.status === 'pending')) {
-      return Response.json({ error: 'A pending invitation already exists for this email' }, { status: 409 });
-    }
-
     // Fetch the group from the server — do not trust client-supplied group
     // identity or name. This both validates the groupId and gives a trusted
     // group name for the email body (preventing HTML injection via groupName).
@@ -68,14 +61,21 @@ Deno.serve(async (req) => {
     // Generate unique token
     const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
 
-    // Create invitation record
-    await base44.asServiceRole.entities.GroupInvitation.create({
-      groupId,
-      email,
-      invitedBy: user.id,
-      token,
-      status: 'pending'
-    });
+    // If a pending invitation already exists for this email, refresh its token
+    // so the new link works (re-invite flow). Otherwise create a new record.
+    const existingInvites = await base44.asServiceRole.entities.GroupInvitation.filter({ groupId, email });
+    const pendingInvite = existingInvites.find(i => i.status === 'pending');
+    if (pendingInvite) {
+      await base44.asServiceRole.entities.GroupInvitation.update(pendingInvite.id, { token, invitedBy: user.id });
+    } else {
+      await base44.asServiceRole.entities.GroupInvitation.create({
+        groupId,
+        email,
+        invitedBy: user.id,
+        token,
+        status: 'pending'
+      });
+    }
 
     const baseUrl = appUrl || 'https://consenz-copy-4ca3772e.base44.app';
     const inviteUrl = `${baseUrl}?groupInvite=${token}`;

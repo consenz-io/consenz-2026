@@ -208,16 +208,21 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
         // User not registered - send invitation email
         const groupName = group?.name || 'קבוצה';
         
-        const response = await base44.functions.invoke('sendGroupInvitation', {
-          groupId,
-          email: trimmedEmail,
-          groupName,
-          language,
-          appUrl: window.location.origin
-        });
+        try {
+          const response = await base44.functions.invoke('sendGroupInvitation', {
+            groupId,
+            email: trimmedEmail,
+            groupName,
+            language,
+            appUrl: window.location.origin
+          });
 
-        if (!response.data.success) {
-          throw new Error(response.data.error || (language === 'he' ? 'שגיאה בשליחת הזמנה' : language === 'ar' ? 'خطأ في إرسال الدعوة' : 'Error sending invitation'));
+          if (!response.data.success) {
+            throw new Error(response.data.error || (language === 'he' ? 'שגיאה בשליחת הזמנה' : language === 'ar' ? 'خطأ في إرسال الدعوة' : 'Error sending invitation'));
+          }
+        } catch (err) {
+          const serverMsg = err?.response?.data?.error || err?.data?.error || err?.message;
+          throw new Error(serverMsg || (language === 'he' ? 'שגיאה בשליחת הזמנה' : language === 'ar' ? 'خطأ في إرسال الدعوة' : 'Error sending invitation'));
         }
 
         return { type: 'invitation_sent', email: trimmedEmail };
