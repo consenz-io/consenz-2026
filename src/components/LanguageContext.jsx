@@ -431,7 +431,7 @@ const translations = {
     pendingEditSuggestion: "הצעת עריכה ממתינה",
     viewDetails: "צפייה בפרטים",
     proposedChanges: "נוסח הסעיף המוצע:",
-    suggestionEditFieldLabel: "זה המקום לכתוב את ההצעה שלכם לשינוי נוסח הסעיף",
+    suggestionEditFieldLabel: "זה המקום לערוך את נוסח הסעיף ולהעמיד את הצעת השיפור שלכם להצבעת הקהילה",
     sectionWording: "נוסח הסעיף:",
     lastEdited: "נערך לאחרונה",
     comments: "תגובות",
