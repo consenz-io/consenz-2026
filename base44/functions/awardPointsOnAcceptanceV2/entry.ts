@@ -4,13 +4,10 @@ import { INTERNAL_AUTOMATION_TOKEN } from '../../shared/internalToken.ts';
 
 /**
  * Entity automation handler — fires when a Suggestion's status changes to "accepted".
+ * V2: Same logic as awardPointsOnAcceptance but with auth check (internal token or admin).
  *
- * This is an INDEPENDENT safety net that does not depend on processAcceptanceV4
- * or voteOnSuggestionV2 being deployed with the latest code. Even if those
- * functions run stale versions that skip point-awarding, this automation will
- * still fire (it's a new function + new automation, not an update to existing
- * code) and call the shared awardSuggestionPointsLogic which has its own
- * idempotency guards — so duplicate calls are safe.
+ * AUTH: Requires internal automation token (via function_args) or admin user.
+ * Anonymous external callers are rejected with 401.
  */
 Deno.serve(async (req) => {
   try {
@@ -69,10 +66,10 @@ Deno.serve(async (req) => {
       action: 'suggestion_accepted'
     });
 
-    console.log('[AWARD ON ACCEPTANCE] Suggestion:', suggestionId, 'Result:', result);
+    console.log('[AWARD ON ACCEPTANCE V2] Suggestion:', suggestionId, 'Result:', result);
     return Response.json({ success: true, result });
   } catch (error) {
-    console.error('[AWARD ON ACCEPTANCE ERROR]', error);
+    console.error('[AWARD ON ACCEPTANCE V2 ERROR]', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
