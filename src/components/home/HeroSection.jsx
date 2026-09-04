@@ -74,7 +74,7 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
               {t('draftTogetherTitle')} {agreementsLabel[language] || agreementsLabel.en}
             </span>
           </h1>
-          <p className="text-sm md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-slate-600 max-w-2xl mx-auto leading-relaxed text-base md:text-base">
             {description[language] || description.en}
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
