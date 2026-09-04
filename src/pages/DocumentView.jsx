@@ -698,6 +698,7 @@ export default function DocumentView() {
             participantsCount={contributorsCount}
             suggestionsCount={suggestions?.length || 0}
             votesCount={(allVotes?.length || 0) + (allSectionVotes?.length || 0)}
+            consensusPct={consensusPct}
           />
         </div>
       </div>

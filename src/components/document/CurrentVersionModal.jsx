@@ -10,6 +10,7 @@ import {
   DialogDescription } from
 "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { parseUserDate } from "@/components/utils/dateFormatter";
 
 const SERIF = "var(--font-document)";
@@ -43,7 +44,8 @@ export default function CurrentVersionModal({
   documentId,
   participantsCount = 0,
   suggestionsCount = 0,
-  votesCount = 0
+  votesCount = 0,
+  consensusPct = '0'
 }) {
   const sortedTopics = useMemo(
     () => [...topics].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
@@ -84,10 +86,16 @@ export default function CurrentVersionModal({
   `Created by ${participantsCount} participants · ${suggestionsCount} edits · ${votesCount} votes`;
   const consensusLabel =
   language === "he" ?
-  "רמת קונצנזוס" :
+  "רמת הסכמה" :
   language === "ar" ?
-  "مستوى التوافق" :
-  "Consensus level";
+  "مستوى الاتفاق" :
+  "Agreement level";
+  const consensusTooltip =
+  language === "he" ?
+  "מד הקונצנזוס משקף את רמת ההסכמה על גרסת המסמך הנוכחית. לחץ להסבר מפורט." :
+  language === "ar" ?
+  "مقياس الإجماع يعكس مستوى الاتفاق على النسخة الحالية. انقر لشرح مفصل." :
+  "The consensus meter reflects the level of agreement on the current document version. Click for details.";
   const downloadLabel = language === "he" ? "הורדה / הדפסה" : language === "ar" ? "تنزيل / طباعة" : "Download / Print";
   const closeLabel = language === "he" ? "סגירה" : language === "ar" ? "إغلاق" : "Close";
   const fullHistoryLabel =
@@ -167,12 +175,23 @@ export default function CurrentVersionModal({
                 <Users className="w-3.5 h-3.5" />
                 {versionCreatedByLabel}
               </div>
-              {document?.avgSuggestionConsensus != null && (
-                <div className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-700 bg-indigo-100/60 px-3 py-1 rounded-full">
-                  <Gauge className="w-3.5 h-3.5" />
-                  {consensusLabel}: {Math.round((document.avgSuggestionConsensus ?? 0) * 100)}%
-                </div>
-              )}
+              <TooltipProvider delayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link
+                      to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
+                      onClick={() => onClose()}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-700 bg-indigo-100/60 hover:bg-indigo-200/70 px-3 py-1 rounded-full transition-colors cursor-pointer"
+                    >
+                      <Gauge className="w-3.5 h-3.5" />
+                      {consensusLabel}: {consensusPct}%
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side={isRTL ? "left" : "right"} className="max-w-[240px] text-center">
+                    {consensusTooltip}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           }
         </DialogHeader>
