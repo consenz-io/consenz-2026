@@ -283,9 +283,11 @@ export function computeChangeBlockDiff(oldHtml, newHtml) {
       for (const wi of newIdxs) {
         const res = advanceToWord(newTokens, ni, newWords, wi, () => {});
         ni = res.cursor;
-        // First new word directly follows the old phrase (no space); subsequent
-        // words keep their leading space so the new phrase reads naturally.
-        newPhraseHtml.push((newPhraseHtml.length === 0 ? "" : newWords[wi].leadingSpace) + newWords[wi].html);
+        // First new word directly follows the old phrase (no space) ONLY when
+        // there IS an old phrase being replaced. For pure additions (no old
+        // words removed), keep the leading space so the added word is properly
+        // separated from the preceding unchanged text.
+        newPhraseHtml.push((newPhraseHtml.length === 0 && oldPhraseHtml.length > 0 ? "" : newWords[wi].leadingSpace) + newWords[wi].html);
       }
 
       if (oldLeading) segments.push({ type: "space", html: oldLeading });
