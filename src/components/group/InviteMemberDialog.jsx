@@ -98,6 +98,8 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
       setError(language === 'he' ? 'נא להזין כתובת אימייל תקינה' : language === 'ar' ? 'يرجى إدخال عنوان بريد إلكتروني صحيح' : 'Please enter a valid email address');
       return;
     }
+    sendEmailInviteMutation.reset();
+    setError(null);
     sendEmailInviteMutation.mutate(email);
   };
 
