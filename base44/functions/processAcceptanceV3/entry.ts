@@ -527,18 +527,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (document.gamificationEnabled) {
-      try {
-        await awardSuggestionPointsLogic(base44.asServiceRole, {
-          suggestionId: suggestion.id,
-          action: 'suggestion_accepted'
-        });
-        console.log('[PROCESS ACCEPTANCE V3] ✓ Points awarded to creator');
-      } catch (err) {
-        console.error('[PROCESS ACCEPTANCE V3] Points award failed:', err);
-      }
-    }
-
     const pendingSuggestions = await base44.asServiceRole.entities.Suggestion.filter({
       documentId: document.id,
       status: 'pending'
@@ -567,6 +555,20 @@ Deno.serve(async (req) => {
     );
 
     await Promise.all(updates);
+
+    // Award gamification points AFTER the suggestion status is set to 'accepted',
+    // so the guard in awardSuggestionPointsLogic (status !== 'accepted') passes.
+    if (document.gamificationEnabled) {
+      try {
+        await awardSuggestionPointsLogic(base44.asServiceRole, {
+          suggestionId: suggestion.id,
+          action: 'suggestion_accepted'
+        });
+        console.log('[PROCESS ACCEPTANCE V3] ✓ Points awarded to creator');
+      } catch (err) {
+        console.error('[PROCESS ACCEPTANCE V3] Points award failed:', err);
+      }
+    }
 
     console.log('[PROCESS ACCEPTANCE V3] Preparing notifications...');
     const notifications = [];

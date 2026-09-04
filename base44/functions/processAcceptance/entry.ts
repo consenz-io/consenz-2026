@@ -600,21 +600,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Points - award to suggestion creator (moved BEFORE notification logic which can fail
-    // due to unreliable $in queries on User entity, causing the function to throw before
-    // reaching points awarding at the end)
-    if (document.gamificationEnabled) {
-      try {
-        await awardSuggestionPointsLogic(base44.asServiceRole, {
-          suggestionId: suggestion.id,
-          action: 'suggestion_accepted'
-        });
-        console.log('[PROCESS ACCEPTANCE] ✓ Points awarded to creator');
-      } catch (err) {
-        console.error('[PROCESS ACCEPTANCE] Points award failed:', err);
-      }
-    }
-
     // Update document and suggestion status (if not new_section which was already handled)
     const pendingSuggestions = await base44.asServiceRole.entities.Suggestion.filter({
       documentId: document.id,
@@ -658,6 +643,20 @@ Deno.serve(async (req) => {
     }
 
     await Promise.all(updates);
+
+    // Award gamification points AFTER the suggestion status is set to 'accepted',
+    // so the guard in awardSuggestionPointsLogic (status !== 'accepted') passes.
+    if (document.gamificationEnabled) {
+      try {
+        await awardSuggestionPointsLogic(base44.asServiceRole, {
+          suggestionId: suggestion.id,
+          action: 'suggestion_accepted'
+        });
+        console.log('[PROCESS ACCEPTANCE] ✓ Points awarded to creator');
+      } catch (err) {
+        console.error('[PROCESS ACCEPTANCE] Points award failed:', err);
+      }
+    }
 
     // Send notifications in batch - fetch all document participants
     console.log('[PROCESS ACCEPTANCE] Preparing notifications...');
