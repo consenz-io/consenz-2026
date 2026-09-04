@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { awardSuggestionPointsLogic } from '../../shared/awardSuggestionPointsLogic.ts';
+import { INTERNAL_AUTOMATION_TOKEN } from '../../shared/internalToken.ts';
 
 /**
  * Entity automation handler — fires when a Suggestion's status changes to "accepted".
@@ -22,7 +23,15 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'No body' });
     }
 
-    const { event, data, payload_too_large } = body || {};
+    const { event, data, payload_too_large, args = {} } = body || {};
+
+    // Auth: allow the internal automation (token via function_args) or an admin.
+    // External anonymous callers are rejected with 401.
+    const user = await base44.auth.me().catch(() => null);
+    const isInternalAutomation = args.internalToken === INTERNAL_AUTOMATION_TOKEN;
+    if (!isInternalAutomation && user?.role !== 'admin') {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     // Only handle update events on Suggestion entity
     if (event?.type !== 'update' || event?.entity_name !== 'Suggestion') {
