@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Handshake, Download, FileCheck2, Users } from "lucide-react";
+import { Handshake, Download, FileCheck2, Users, Gauge } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import {
   Dialog,
@@ -82,6 +82,12 @@ export default function CurrentVersionModal({
   language === "ar" ?
   `أنشأها ${participantsCount} مشارك · ${suggestionsCount} تعديل · ${votesCount} تصويت` :
   `Created by ${participantsCount} participants · ${suggestionsCount} edits · ${votesCount} votes`;
+  const consensusLabel =
+  language === "he" ?
+  "רמת קונצנזוס" :
+  language === "ar" ?
+  "مستوى التوافق" :
+  "Consensus level";
   const downloadLabel = language === "he" ? "הורדה / הדפסה" : language === "ar" ? "تنزيل / طباعة" : "Download / Print";
   const closeLabel = language === "he" ? "סגירה" : language === "ar" ? "إغلاق" : "Close";
   const fullHistoryLabel =
@@ -161,6 +167,12 @@ export default function CurrentVersionModal({
                 <Users className="w-3.5 h-3.5" />
                 {versionCreatedByLabel}
               </div>
+              {document?.avgSuggestionConsensus != null && (
+                <div className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-700 bg-indigo-100/60 px-3 py-1 rounded-full">
+                  <Gauge className="w-3.5 h-3.5" />
+                  {consensusLabel}: {Math.round((document.avgSuggestionConsensus ?? 0) * 100)}%
+                </div>
+              )}
             </div>
           }
         </DialogHeader>
