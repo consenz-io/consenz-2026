@@ -17,7 +17,7 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
   const { t, isRTL, language } = useLanguage();
 
   const description = {
-    he: 'כלי שמאפשר לקהילות וארגונים כמו מפלגות, עמותות ובי״ס דמוקרטיים לשתף את חבריהם בקבלת ההחלטות. הפלטפורמה מעודדת השתתפות איכותית דרך מערכת ניקוד שהופכת את התהליך לחוויה משחקית, מהנה ומתגמלת, ושילוב מנגנון ההצבעות חכם עם רכיבי דיון ועריכה מאפשר תהליך יעיל ופורה גם באלפי משתתפים ויותר',
+    he: 'כלי שמאפשר לקהילות וארגונים לשתף את חבריהם בקבלת ההחלטות. הפלטפורמה מעודדת השתתפות דרך מערכת ניקוד שהופכת את התהליך לחוויה משחקית ומתגמלת, ושילוב מנגנון ההצבעות חכם עם רכיבי דיון ועריכה מאפשר תהליך פורה גם באלפי משתתפים ויותר',
     ar: 'منصة قائمة على الذكاء الاصطناعي لإنشاء مستندات مشتركة في مجموعات كبيرة - بسرعة وشفافية وديمقراطية. يساعد الذكاء الاصطناعي في الصياغة وتكييف المحتوى لكل مشارك، مع ترجمة تلقائية بين اللغات وآلية إجماع ديناميكية تقرب الآراء وتضمن سماع كل صوت.',
     en: 'AI-powered platform for creating shared documents in large groups — quickly, transparently, and democratically. AI assists in drafting and adapting content for each participant, with automatic translation across languages and a dynamic consensus mechanism that bridges opinions and ensures every voice is heard.'
   };
