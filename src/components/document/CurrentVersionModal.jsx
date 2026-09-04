@@ -166,7 +166,7 @@ export default function CurrentVersionModal({
           </div>
           {dateStr &&
           <div className="flex flex-wrap items-center justify-end gap-2" dir={isRTL ? "rtl" : "ltr"}>
-              <div className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-100/60 px-3 py-1 rounded-full">
+              <div className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-100/60 px-3 py-1 rounded-full hidden">
                 <FileCheck2 className="w-3.5 h-3.5" />
                 {asOf}
                 {dateStr}
@@ -179,10 +179,10 @@ export default function CurrentVersionModal({
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Link
-                      to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
-                      onClick={() => onClose()}
-                      className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-700 bg-indigo-100/60 hover:bg-indigo-200/70 px-3 py-1 rounded-full transition-colors cursor-pointer"
-                    >
+                    to={`${createPageUrl("UnderstandingConsensus")}?id=${documentId}`}
+                    onClick={() => onClose()}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-indigo-700 bg-indigo-100/60 hover:bg-indigo-200/70 px-3 py-1 rounded-full transition-colors cursor-pointer">
+                    
                       <Gauge className="w-3.5 h-3.5" />
                       {consensusLabel}: {consensusPct}%
                     </Link>
