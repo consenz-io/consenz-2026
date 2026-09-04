@@ -80,7 +80,7 @@ export default function CurrentVersionModal({
 
   const versionCreatedByLabel =
   language === "he" ?
-  `נוצרה ע״י ${participantsCount} משתתפים · ${suggestionsCount} עריכות · ${votesCount} הצבעות` :
+  ` ${participantsCount} משתתפים · ${suggestionsCount} עריכות · ${votesCount} הצבעות` :
   language === "ar" ?
   `أنشأها ${participantsCount} مشارك · ${suggestionsCount} تعديل · ${votesCount} تصويت` :
   `Created by ${participantsCount} participants · ${suggestionsCount} edits · ${votesCount} votes`;
