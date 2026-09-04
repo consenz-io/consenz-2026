@@ -64,7 +64,7 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
       </div>
       <div className="relative max-w-7xl mx-auto px-6 md:py-32 py-24">
         <div className="text-center space-y-3 md:space-y-6">
-          <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-4 py-1">
+          <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-4 py-2">
             {t('democraticCollaboration')}
           </Badge>
           <h1 id="hero-heading" className="font-bold leading-tight">
