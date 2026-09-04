@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { awardSuggestionPointsLogic } from '../../shared/awardSuggestionPointsLogic.ts';
 import { authorizeInternalOrUser, INTERNAL_AUTOMATION_TOKEN } from '../../shared/authGate.ts';
+import { transferVotesToSection } from '../../shared/transferVotesToSection.ts';
 
 const NOTIF_TRANSLATIONS = {
   en: {
@@ -268,6 +269,9 @@ Deno.serve(async (req) => {
           originalSectionOrder: null
         });
 
+        // Transfer votes from the suggestion to the resurrected section
+        await transferVotesToSection(base44, suggestion.id, section.id, false);
+
         const resurrectChildren = await base44.asServiceRole.entities.Suggestion.filter({
           parentSuggestionId: suggestion.id
         });
@@ -333,6 +337,9 @@ Deno.serve(async (req) => {
           changeType: 'suggestion_accepted',
           suggestionId: suggestion.id
         });
+
+        // Transfer votes from the suggestion to the updated section (replace existing)
+        await transferVotesToSection(base44, suggestion.id, section.id, true);
       }
 
     } else if (suggestion.type === 'new_section') {
@@ -446,6 +453,9 @@ Deno.serve(async (req) => {
         originalContent: suggestion.newContent,
         parentSuggestionId: null
       });
+
+      // Transfer votes from the suggestion to the new section
+      await transferVotesToSection(base44, suggestion.id, newSection.id, false);
       } // end section-creation guard
 
     } else if (suggestion.type === 'edit_suggestion' && suggestion.parentSuggestionId) {
