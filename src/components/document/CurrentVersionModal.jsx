@@ -166,11 +166,11 @@ export default function CurrentVersionModal({
           </div>
           {dateStr &&
           <div className="flex flex-wrap items-center justify-end gap-2" dir={isRTL ? "rtl" : "ltr"}>
-              <div className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-100/60 px-3 py-1 rounded-full hidden">
-                <FileCheck2 className="w-3.5 h-3.5" />
-                {asOf}
-                {dateStr}
-              </div>
+              
+
+
+
+            
               <div className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-100/60 px-3 py-1 rounded-full">
                 <Users className="w-3.5 h-3.5" />
                 {versionCreatedByLabel}
