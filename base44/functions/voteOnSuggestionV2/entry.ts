@@ -283,6 +283,21 @@ Deno.serve(async (req) => {
 
       console.log('[VOTE V2 FUNCTION] processAcceptanceV4 finished, accepted:', accepted);
 
+      // Fallback: award points via HTTP endpoint in case the deployed
+      // processAcceptanceV4 is running stale code that didn't award points.
+      // awardSuggestionPoints has its own idempotency guard, so duplicate calls are safe.
+      if (accepted && document.gamificationEnabled) {
+        try {
+          await base44.asServiceRole.functions.invoke('awardSuggestionPoints', {
+            suggestionId,
+            action: 'suggestion_accepted'
+          });
+          console.log('[VOTE V2 FUNCTION] ✓ Fallback points award completed');
+        } catch (err) {
+          console.error('[VOTE V2 FUNCTION] Fallback points award failed:', err);
+        }
+      }
+
       if (!accepted) {
         return Response.json({
           success: true,

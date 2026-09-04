@@ -305,6 +305,21 @@ Deno.serve(async (req) => {
 
       console.log('[VOTE FUNCTION] processAcceptance finished, accepted:', accepted);
 
+      // Fallback: award points via HTTP endpoint in case the deployed
+      // processAcceptanceV4 is running stale code that didn't award points.
+      // awardSuggestionPoints has its own idempotency guard, so duplicate calls are safe.
+      if (accepted && document.gamificationEnabled) {
+        try {
+          await base44.asServiceRole.functions.invoke('awardSuggestionPoints', {
+            suggestionId,
+            action: 'suggestion_accepted'
+          });
+          console.log('[VOTE FUNCTION] ✓ Fallback points award completed');
+        } catch (err) {
+          console.error('[VOTE FUNCTION] Fallback points award failed:', err);
+        }
+      }
+
       // On failure to accept, return the captured debug info directly in the response
       // body (instead of just accepted:false) so it shows up in the browser's
       // [VOTE] Backend response console log without needing Base44's log panel at all.
