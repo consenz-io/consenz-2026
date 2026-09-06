@@ -29,6 +29,11 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
   // Compute running average using the stored suggestionConsensus values,
   // matching the document's consensuses array calculation:
   //   meter = average of min(1, suggestionConsensus) across all accepted
+  //
+  // The threshold used to accept suggestion N is derived from the meter
+  // computed from all PREVIOUSLY accepted suggestions (1..N-1), multiplied
+  // by the participant count at the moment of acceptance. For the first
+  // suggestion the meter is 0 so the default threshold (2) applies.
   let runningSum = 0;
   const rows = accepted.map((s, i) => {
     const pro = s.proVotes || 0;
@@ -36,9 +41,14 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
     // Use the stored consensus value (what the system actually used), not a
     // naive pro/(pro+con) which can differ from the stored calculation.
     const consensus = Math.min(1, s.suggestionConsensus ?? 0);
+    // Meter BEFORE this suggestion was accepted (average of all prior ones)
+    const prevRunningAvg = i === 0 ? 0 : runningSum / i;
     runningSum += consensus;
     const runningAvg = runningSum / (i + 1);
-    return { ...s, pro, con, consensus, runningAvg, index: i + 1 };
+    // Threshold required at the moment this suggestion was accepted
+    const participants = s.participantsAtAcceptance || 0;
+    const thresholdUsed = Math.max(2, Math.round(prevRunningAvg * participants));
+    return { ...s, pro, con, consensus, runningAvg, prevRunningAvg, participants, thresholdUsed, index: i + 1 };
   });
 
   const typeLabel = (s) => {
@@ -71,6 +81,7 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
   const colCon = language === 'he' ? 'נגד' : language === 'ar' ? 'ضد' : 'Con';
   const colConsensus = language === 'he' ? 'קונצנזוס' : language === 'ar' ? 'إجماع' : 'Consensus';
   const colRunning = language === 'he' ? 'ממוצע מצטבר' : language === 'ar' ? 'المتوسط التراكمي' : 'Running Avg';
+  const colThreshold = language === 'he' ? 'רף תומכים דרוש' : language === 'ar' ? 'عتبة المؤيدين المطلوبة' : 'Required Threshold';
 
   return (
     <div className="space-y-3">
@@ -91,6 +102,7 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
               <th className="py-2 px-3 font-semibold text-center">{colPro}</th>
               <th className="py-2 px-3 font-semibold text-center">{colCon}</th>
               <th className="py-2 px-3 font-semibold text-center">{colConsensus}</th>
+              <th className="py-2 px-3 font-semibold text-center">{colThreshold}</th>
               <th className="py-2 px-3 font-semibold text-center">{colRunning}</th>
             </tr>
           </thead>
@@ -106,7 +118,7 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
                   <td className={`py-3 px-3 text-slate-400 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{s.index}</td>
                   <td className={`py-3 px-3 ${isRTL ? 'text-right' : 'text-left'}`}>
                     <div className="flex flex-col gap-1">
-                      <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                      <div className="flex items-center gap-2">
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
                           s.type === 'new_section' ? 'bg-green-50 text-green-700' :
                           s.type === 'delete_section' ? 'bg-red-50 text-red-700' :
@@ -146,7 +158,15 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
                     </span>
                   </td>
                   <td className="py-3 px-3 text-center">
-                    <div className={`flex items-center justify-center gap-1.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="font-bold text-amber-700 text-sm">{s.thresholdUsed}</span>
+                      <span className="text-[10px] text-slate-400">
+                        {language === 'he' ? `${(s.prevRunningAvg * 100).toFixed(0)}% × ${s.participants}` : language === 'ar' ? `${(s.prevRunningAvg * 100).toFixed(0)}% × ${s.participants}` : `${(s.prevRunningAvg * 100).toFixed(0)}% × ${s.participants}`}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="py-3 px-3 text-center">
+                    <div className="flex items-center justify-center gap-1.5">
                       <TrendingUp className="w-3.5 h-3.5 text-purple-500" />
                       <span className="font-bold text-purple-700">{(s.runningAvg * 100).toFixed(0)}%</span>
                     </div>
