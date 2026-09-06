@@ -79,7 +79,9 @@ export function useDocumentContentData({
     for (const s of suggestions) {
       if (s.status === 'accepted' && (s.type === 'new_section' || s.type === 'edit_section') && s.sectionId) {
         const existing = map.get(s.sectionId);
-        if (!existing || new Date(s.updated_date) > new Date(existing._updated_date)) {
+        // ISO-8601 strings compare lexicographically in chronological order —
+        // avoids allocating two Date objects per accepted suggestion per render.
+        if (!existing || s.updated_date > existing._updated_date) {
           map.set(s.sectionId, {
             proVotes: s.proVotes || 0,
             conVotes: s.conVotes || 0,
