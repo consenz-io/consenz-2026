@@ -6,11 +6,12 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Info, Scale, Gauge, Target } from "lucide-react";
+import { Users, Info, Scale, Gauge, Target, CheckCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
 import ConsensusGaugeAnimation from "@/components/document/ConsensusGaugeAnimation";
+import AcceptedSuggestionsConsensusList from "@/components/document/AcceptedSuggestionsConsensusList";
 
 export default function UnderstandingConsensus() {
   const { t, isRTL, language } = useLanguage();
@@ -281,6 +282,21 @@ export default function UnderstandingConsensus() {
           </CardContent>
         </Card>
 
+        {/* רשימת הצעות שהתקבלו עם חישוב הקונצנזוס */}
+        <Card>
+          <CardHeader>
+            <CardTitle className={`flex items-center gap-2 text-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              {language === 'he' ? 'היסטוריית הצעות שהתקבלו וחישוב הקונצנזוס' : language === 'ar' ? 'سجل الاقتراحات المقبولة وحساب الإجماع' : 'Accepted Suggestions History & Consensus Calculation'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AcceptedSuggestionsConsensusList
+              suggestions={suggestions}
+              currentMeter={documentConsensusMeter}
+            />
+          </CardContent>
+        </Card>
 
       </div>
     </div>
