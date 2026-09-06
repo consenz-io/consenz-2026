@@ -94,9 +94,12 @@ export function useDocumentContentData({
 
   // Read from cache — populated by useDocumentData's aggregated fetch (targeted, not global).
   // Avoids fetching 1000 profiles when only ~10-30 are relevant to this document.
+  // Cache-only read — seeded by useDocumentData's targeted aggregated fetch.
+  // queryFn is a no-op (never called with enabled:false); the 1000-record
+  // fetch that was here was dead code and misleading.
   const { data: publicProfiles = [] } = useQuery({
     queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list('-created_date', 1000),
+    queryFn: () => [],
     enabled: false,
     staleTime: Infinity,
     initialData: []

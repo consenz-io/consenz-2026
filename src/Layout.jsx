@@ -271,7 +271,7 @@ function LayoutContent({ children, currentPageName }) {
     enabled: !!user?.id,
     staleTime: 15 * 60 * 1000,
     gcTime: 20 * 60 * 1000,
-    retry: false
+    retry: 1 // Allow one retry — a transient failure with retry:false suppressed the badge for 15min
   });
 
   const totalUnvotedSuggestions = unvotedData?.data?.count ?? 0;
@@ -280,9 +280,10 @@ function LayoutContent({ children, currentPageName }) {
     queryKey: ['unreadMessageCount'],
     queryFn: () => base44.entities.Message.filter({ recipientId: user.id, read: false }, '-created_date', 50),
     enabled: !!user?.id,
-    staleTime: 30 * 1000,
-    gcTime: 60 * 1000,
-    refetchInterval: 30000
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    // No refetchInterval — the Message subscription below handles real-time updates.
+    // Polling every 30s was redundant and caused unnecessary API calls during idle sessions.
   });
 
   const totalUnreadMessages = unreadMessagesData?.length ?? 0;
@@ -335,13 +336,28 @@ function LayoutContent({ children, currentPageName }) {
     };
   }, [queryClient]);
 
-  // Refresh unread message count when new messages arrive
+  // Refresh unread message count when new messages arrive.
+  // Only invalidate for messages received by the current user — sent messages
+  // don't affect the unread count and invalidating on them caused redundant
+  // refetches during active chat.
   React.useEffect(() => {
-    const unsub = base44.entities.Message.subscribe(() => {
-      queryClient.invalidateQueries({ queryKey: ['unreadMessageCount'] });
+    if (!user?.id) return;
+    let timer;
+    const unsub = base44.entities.Message.subscribe((event) => {
+      const data = event?.data;
+      if (!data) return;
+      // Only care about messages where the current user is the recipient
+      if (data.recipientId !== user.id) return;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['unreadMessageCount'] });
+      }, 500);
     });
-    return unsub;
-  }, [queryClient]);
+    return () => {
+      unsub();
+      clearTimeout(timer);
+    };
+  }, [queryClient, user?.id]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });

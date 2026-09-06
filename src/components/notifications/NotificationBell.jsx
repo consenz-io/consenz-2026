@@ -60,8 +60,10 @@ export default function NotificationBell({ user }) {
 
   const markAsReadMutation = useMutation({
     mutationFn: (notificationId) => base44.entities.Notification.update(notificationId, { read: true }),
+    // Narrow invalidation to this user's notifications only — the broad
+    // ['notifications'] key invalidated every user's notification cache.
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
     },
   });
 
@@ -74,14 +76,14 @@ export default function NotificationBell({ user }) {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
     },
   });
 
   const deleteNotificationMutation = useMutation({
     mutationFn: (notificationId) => base44.entities.Notification.delete(notificationId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
     },
   });
 

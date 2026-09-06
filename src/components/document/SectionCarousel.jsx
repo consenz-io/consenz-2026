@@ -103,13 +103,11 @@ const SectionCarousel = React.memo(function SectionCarousel({
       const top = el.getBoundingClientRect().top + window.scrollY - headerOffset - 8;
       window.scrollTo({ top, behavior: 'smooth' });
     };
-    // Two RAFs let React commit the new view; the timeout absorbs late layout
-    // shifts (e.g. an open comments thread re-measuring) before the final scroll.
+    // Two RAFs let React commit the new view and layout settle before scrolling.
+    // Previously also fired a 250ms delayed scroll — that caused a visible
+    // double-scroll jump and wasted a second layout read.
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        doScroll();
-        setTimeout(doScroll, 250);
-      });
+      requestAnimationFrame(doScroll);
     });
   }, []);
   const prevSuggestionsStatusRef = useRef({});
