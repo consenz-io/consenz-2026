@@ -133,8 +133,9 @@ Deno.serve(async (req) => {
   const appBase = appBaseUrl || new URL(req.url).origin;
   const docUrl = `${appBase}/DocumentView?id=${documentId}`;
 
-  // Base URL for the trackEmailEvent backend function
-  const trackBase = `${appBase}/api/functions/trackEmailEvent`;
+  // Base URL for the trackEmailEvent backend function.
+  // Base44 exposes backend functions at /functions/<name> (NOT /api/functions/<name>).
+  const trackBase = `${appBase}/functions/trackEmailEvent`;
 
   // Helper: wrap a URL with click tracking (given a logId + signature)
   const trackClick = (logId, sig, targetUrl) =>

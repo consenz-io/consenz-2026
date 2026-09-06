@@ -68,7 +68,8 @@ Deno.serve(async (req) => {
 
   // Build base URL for links
   const baseUrl = appBaseUrl || 'https://app.base44.com';
-  const suggestionUrl = (id) => `${baseUrl}/SuggestionDetail?id=${id}`;
+  // Route name must match the key in pages.config.js exactly — it's "suggestiondetail" (lowercase).
+  const suggestionUrl = (id) => `${baseUrl}/suggestiondetail?id=${id}`;
   const docUrl = `${baseUrl}/DocumentView?id=${documentId}`;
 
   // Filter arguments relevant to this document's suggestions
