@@ -39,7 +39,7 @@ export default function GroupsSection({ groups, groupsLoading, groupMembers, doc
       </div>
 
       {groupsLoading ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="groups-list grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
             <Card key={i} className="bg-white border-slate-200">
               <CardHeader>

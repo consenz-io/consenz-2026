@@ -139,12 +139,15 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
       return true;
     }
 
-    // Try immediately, then poll every 200ms up to 3s if element not yet in DOM
+    // Try immediately, then poll every 200ms up to 6s if element not yet in DOM.
+    // The extra attempts (30 vs 15) cover the case where the user is navigated to
+    // the home page from another page — the page mounts, data fetches, and the
+    // target element appears only after all of that completes.
     if (!tryInit()) {
       let attempts = 0;
       const interval = setInterval(() => {
         attempts++;
-        if (tryInit() || attempts >= 15) clearInterval(interval);
+        if (tryInit() || attempts >= 30) clearInterval(interval);
       }, 200);
     }
 
@@ -153,11 +156,31 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
       if (el) updatePosition(el);
     }
 
+    // Re-apply spotlight when the target element is replaced in the DOM
+    // (e.g. skeleton → real group cards). React swaps the element, so the
+    // spotlight styles applied to the old element are lost. This observer
+    // watches the parent and re-applies the spotlight to the new element.
+    let currentEl = document.querySelector(activeStep.targetSelector);
+    let spotlightObserver = null;
+    if (currentEl && currentEl.parentElement) {
+      spotlightObserver = new MutationObserver(() => {
+        const newEl = document.querySelector(activeStep.targetSelector);
+        if (newEl && newEl !== currentEl) {
+          currentEl = newEl;
+          if (cleanupSpotlight) cleanupSpotlight();
+          cleanupSpotlight = applySpotlight(newEl);
+          updatePosition(newEl);
+        }
+      });
+      spotlightObserver.observe(currentEl.parentElement, { childList: true });
+    }
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleScroll);
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
+      if (spotlightObserver) spotlightObserver.disconnect();
       if (cleanupSpotlight) cleanupSpotlight();
     };
   }, [activeStep.targetSelector, activeStep.tooltipPosition]);
@@ -195,7 +218,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
     if (!findAndFlash()) {
       interval = setInterval(() => {
         attempts++;
-        if (findAndFlash() || attempts >= 15) clearInterval(interval);
+        if (findAndFlash() || attempts >= 30) clearInterval(interval);
       }, 200);
     }
 
