@@ -116,7 +116,7 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
   const voteMutation = useMutation({
     mutationFn: async (voteType) => {
       if (!user?.id) return;
-      const res = await base44.functions.invoke('voteOnSection', { sectionId: section.id, vote: voteType });
+      const res = await base44.functions.invoke('voteOnSectionV2', { sectionId: section.id, vote: voteType });
       return res.data;
     },
     onSuccess: (data) => {
