@@ -1,10 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { verifyLogId } from '../../shared/emailTrackingAuth.ts';
 
-// Public endpoint — verified via HMAC signature in the query string (signed by
-// sendDocumentSummaryEmail when generating tracking URLs). This prevents
-// unauthorized callers from manipulating email analytics counters.
-Deno.serve(async (req) => {
+// Public webhook endpoint — verified via HMAC signature in the query string
+// (signed by sendDocumentSummaryEmail when generating tracking URLs). This
+// prevents unauthorized callers from manipulating email analytics counters.
+// No user session is available (email clients open the tracking pixel), so
+// HMAC signature validation is the authentication mechanism.
+export default async function(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const logId = url.searchParams.get('logId');
   const type = url.searchParams.get('type');
@@ -75,4 +77,4 @@ Deno.serve(async (req) => {
     status: 200,
     headers: { 'Content-Type': 'image/gif', 'Cache-Control': 'no-store' },
   });
-});
+}
