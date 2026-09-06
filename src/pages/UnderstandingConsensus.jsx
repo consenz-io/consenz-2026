@@ -73,13 +73,22 @@ export default function UnderstandingConsensus() {
     staleTime: Infinity,
   });
 
-  const totalUsers = contributorsCount || 1;
   const consensuses = document?.consensuses || [];
 
-  // Find participants count at the time the last suggestion was accepted
+  // Find participants count at the time the last suggestion was accepted.
+  // This value is the comprehensive backend snapshot (includes section-vote
+  // voters, suggestion creators, commenters and agreement signers) stored on
+  // the suggestion at acceptance time.
   const acceptedSuggestions = (suggestions || []).filter(s => s.status === 'accepted' && s.participantsAtAcceptance);
   const lastAcceptedSuggestion = acceptedSuggestions.sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
-  const participantsAtLastAcceptance = lastAcceptedSuggestion?.participantsAtAcceptance || totalUsers;
+  const participantsAtLastAcceptance = lastAcceptedSuggestion?.participantsAtAcceptance || 0;
+
+  // Current total participants. The live client count (contributorsCount) only
+  // tallies suggestion-voters, commenters and agreement-signers — it misses
+  // section-vote voters and suggestion creators, so it can undercount vs. the
+  // comprehensive snapshot stored at acceptance. Participants never shrink, so
+  // clamp the current count to the high-water mark from the last acceptance.
+  const totalUsers = Math.max(contributorsCount || 0, participantsAtLastAcceptance, 1);
   
   // מד הקונצנזוס הממוצע - ערך בין 0 ל-1 (מוגבל למקסימום 1)
   const documentConsensusMeter = consensuses.length > 0 
