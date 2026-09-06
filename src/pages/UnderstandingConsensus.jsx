@@ -125,7 +125,7 @@ export default function UnderstandingConsensus() {
         {/* Animated consensus gauge */}
         <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-indigo-50/50">
           <CardContent className="p-2 md:p-4">
-            <ConsensusGaugeAnimation value={documentConsensusMeter} />
+            <ConsensusGaugeAnimation value={documentConsensusMeter} documentTitle={document?.title} />
           </CardContent>
         </Card>
 
