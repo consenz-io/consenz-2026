@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Mail, Shield, Sparkles, FileText, CheckCircle, AlertCircle, Edit2, Save, X, Linkedin, Twitter, Facebook, Instagram, Globe, ArrowRight, MessageSquare, ThumbsUp, Bell } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,6 +32,7 @@ export default function Profile() {
   const [success, setSuccess] = useState(null);
   const [showPointsHistory, setShowPointsHistory] = useState(false);
   const [activeTab, setActiveTab] = useState('accepted');
+  const [showNameChangeWarning, setShowNameChangeWarning] = useState(false);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -71,6 +73,9 @@ export default function Profile() {
   });
 
   // Use viewUser if available (own profile or admin), otherwise use viewUserProfile
+  // Whether the current user has already used their one-time name change.
+  const hasChangedName = !!ownPublicProfile?.nameChangedAt;
+
   const user = viewUserId ?
   viewUser || (viewUserProfile ? {
     id: viewUserProfile.userId,
@@ -144,9 +149,15 @@ export default function Profile() {
       // Update or create public profile
       const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: currentUser.id });
       if (existingProfiles.length > 0) {
+        // Enforce one-time name change limit (server-side guard against race conditions)
+        const nameIsChanging = data.full_name.trim() !== (existingProfiles[0].fullName || "");
+        if (nameIsChanging && existingProfiles[0].nameChangedAt) {
+          throw new Error(t('nameChangeLocked'));
+        }
         await base44.entities.UserPublicProfile.update(existingProfiles[0].id, {
           fullName: data.full_name.trim(),
           email: currentUser.email,
+          nameChangedAt: nameIsChanging ? new Date().toISOString() : (existingProfiles[0].nameChangedAt || undefined),
           bio: data.bio?.trim() || "",
           linkedin: data.linkedin?.trim() || "",
           twitter: data.twitter?.trim() || "",
@@ -203,6 +214,19 @@ export default function Profile() {
   const handleSave = (e) => {
     if (e) e.preventDefault();
     setError(null);
+
+    // If the user is changing their name for the first time, show a warning dialog.
+    const nameChanged = formData.full_name.trim() !== (user?.full_name || "").trim();
+    if (nameChanged && !hasChangedName) {
+      setShowNameChangeWarning(true);
+      return;
+    }
+
+    updateProfileMutation.mutate(formData);
+  };
+
+  const confirmNameChange = () => {
+    setShowNameChangeWarning(false);
     updateProfileMutation.mutate(formData);
   };
 
@@ -262,6 +286,28 @@ export default function Profile() {
 
 
 
+        <AlertDialog open={showNameChangeWarning} onOpenChange={setShowNameChangeWarning}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                {t('nameChangeWarningTitle')}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('nameChangeWarningMessage')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmNameChange}
+                className="bg-amber-600 hover:bg-amber-700 text-white">
+                {t('nameChangeConfirm')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <Card className="bg-white overflow-hidden w-full max-w-full">
           <CardHeader className="p-3 md:p-6">
             <div className="flex flex-col md:flex-row justify-between md:items-center gap-2 md:gap-3">
@@ -314,12 +360,21 @@ export default function Profile() {
                       {t('displayName')}
                     </Label>
                     {isEditing ?
-                    <Input
-                      id="full_name"
-                      value={formData.full_name}
-                      onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                      placeholder={t('enterDisplayName')}
-                      className="mt-1" /> :
+                    <>
+                      <Input
+                        id="full_name"
+                        value={formData.full_name}
+                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                        placeholder={t('enterDisplayName')}
+                        disabled={hasChangedName}
+                        className="mt-1" />
+                      {hasChangedName &&
+                        <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 flex-shrink-0" />
+                          {t('nameChangeLocked')}
+                        </p>
+                      }
+                    </> :
 
 
                     <p className="text-base md:text-lg font-medium text-slate-900 mt-1 break-words">{user.full_name}</p>

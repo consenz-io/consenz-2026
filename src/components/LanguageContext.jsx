@@ -413,6 +413,10 @@ const translations = {
     daAdminAdded: "Admin added successfully!",
     daAdminRemoved: "Admin removed successfully!",
     daBlocked: "Blocked",
+    nameChangeWarningTitle: "One-Time Name Change",
+    nameChangeWarningMessage: "You can change your display name only once. After this change, you will not be able to change it again. Are you sure you want to proceed?",
+    nameChangeLocked: "Your display name has already been changed and cannot be changed again.",
+    nameChangeConfirm: "Confirm Change",
     },
   he: {
     // ניווט
@@ -825,6 +829,10 @@ const translations = {
     daAdminAdded: "מנהל נוסף בהצלחה!",
     daAdminRemoved: "מנהל הוסר בהצלחה!",
     daBlocked: "חסום",
+    nameChangeWarningTitle: "שינוי שם חד-פעמי",
+    nameChangeWarningMessage: "ניתן לשנות את שם התצוגה פעם אחת בלבד. לאחר שינוי זה, לא ניתן יהיה לשנות את השם שוב. האם להמשיך?",
+    nameChangeLocked: "שם התצוגה כבר שונה ואינו ניתן לשינוי נוסף.",
+    nameChangeConfirm: "אישור ושינוי שם",
     },
   ar: {
     // التنقل
@@ -1236,6 +1244,10 @@ const translations = {
     daAdminAdded: "تمت إضافة المدير بنجاح!",
     daAdminRemoved: "تمت إزالة المدير بنجاح!",
     daBlocked: "محظور",
+    nameChangeWarningTitle: "تغيير الاسم لمرة واحدة",
+    nameChangeWarningMessage: "يمكنك تغيير اسم العرض مرة واحدة فقط. بعد هذا التغيير، لن تتمكن من تغييره مرة أخرى. هل تريد المتابعة؟",
+    nameChangeLocked: "تم تغيير اسم العرض بالفعل ولا يمكن تغييره مرة أخرى.",
+    nameChangeConfirm: "تأكيد التغيير"
     }
 };
 

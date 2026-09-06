@@ -23,6 +23,11 @@
     "avatar": {
       "type": "string",
       "description": "Avatar URL (optional)"
+    },
+    "nameChangedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of the user's one-time display name change. If set, the name cannot be changed again."
     }
   },
   "required": [
