@@ -146,11 +146,18 @@ export default function UnderstandingConsensus() {
                 </div>
               </div>
 
+              {/* סמל × - מובייל */}
+              <div className="md:hidden flex justify-center py-1">
+                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-indigo-300">
+                  <span className="text-indigo-600 font-bold text-xl">×</span>
+                </div>
+              </div>
+
               {/* עמודה 2: משתתפים בעת הקבלה האחרונה */}
               <div className="bg-gradient-to-br from-blue-600 to-cyan-600 text-white p-6 flex flex-col items-center justify-center text-center relative">
-                {/* סמל X */}
-                <div className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-0 translate-x-1/2' : 'left-0 -translate-x-1/2'} md:flex hidden w-8 h-8 bg-white rounded-full items-center justify-center shadow-lg z-10`}>
-                  <span className="text-slate-700 font-bold text-lg">×</span>
+                {/* סמל × - דסקטופ */}
+                <div className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-0 translate-x-1/2' : 'left-0 -translate-x-1/2'} md:flex hidden w-10 h-10 bg-white rounded-full items-center justify-center shadow-lg z-10 border-2 border-indigo-300`}>
+                  <span className="text-indigo-600 font-bold text-xl">×</span>
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
                   <Users className="w-6 h-6" />
@@ -167,11 +174,18 @@ export default function UnderstandingConsensus() {
                 </div>
               </div>
 
+              {/* סמל = - מובייל */}
+              <div className="md:hidden flex justify-center py-1">
+                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-emerald-300">
+                  <span className="text-emerald-600 font-bold text-xl">=</span>
+                </div>
+              </div>
+
               {/* עמודה 3: רף התמיכה - התוצאה */}
               <div className="bg-gradient-to-br from-emerald-600 to-teal-600 text-white p-6 flex flex-col items-center justify-center text-center relative">
-                {/* סמל = */}
-                <div className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-0 translate-x-1/2' : 'left-0 -translate-x-1/2'} md:flex hidden w-8 h-8 bg-white rounded-full items-center justify-center shadow-lg z-10`}>
-                  <span className="text-slate-700 font-bold text-lg">=</span>
+                {/* סמל = - דסקטופ */}
+                <div className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-0 translate-x-1/2' : 'left-0 -translate-x-1/2'} md:flex hidden w-10 h-10 bg-white rounded-full items-center justify-center shadow-lg z-10 border-2 border-emerald-300`}>
+                  <span className="text-emerald-600 font-bold text-xl">=</span>
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
                   <Scale className="w-6 h-6" />
