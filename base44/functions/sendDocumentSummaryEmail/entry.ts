@@ -137,9 +137,24 @@ Deno.serve(async (req) => {
   // Base44 exposes backend functions at /functions/<name> (NOT /api/functions/<name>).
   const trackBase = `${appBase}/functions/trackEmailEvent`;
 
-  // Helper: wrap a URL with click tracking (given a logId + signature)
+  // Helper: wrap a URL with click tracking (given a logId + signature).
+  // Extract ONLY the path+query+hash from the target URL — not the full URL.
+  // trackEmailEvent redirects to the same origin as the tracking request, so
+  // passing a relative path ensures the same-origin check passes even when
+  // the app uses a custom domain (consenz.net) that differs from the Base44
+  // platform domain (consenz-copy-4ca3772e.base44.app). The browser resolves
+  // the relative redirect against the request URL, keeping the user on the
+  // same domain they clicked from.
+  const toRelativePath = (url) => {
+    try {
+      const parsed = new URL(url);
+      return parsed.pathname + parsed.search + parsed.hash;
+    } catch {
+      return url.startsWith('/') ? url : '/' + url;
+    }
+  };
   const trackClick = (logId, sig, targetUrl) =>
-    `${trackBase}?logId=${logId}&type=click&redirectUrl=${encodeURIComponent(targetUrl)}&sig=${sig}`;
+    `${trackBase}?logId=${logId}&type=click&redirectUrl=${encodeURIComponent(toRelativePath(targetUrl))}&sig=${sig}`;
 
   // Helper: build full HTML for one recipient (with unique logId for pixel + links)
   const buildEmailHtml = (logId, sig) => {
