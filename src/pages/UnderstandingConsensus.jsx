@@ -10,6 +10,7 @@ import { Users, Info, Scale, Gauge, Target } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
+import ConsensusGaugeAnimation from "@/components/document/ConsensusGaugeAnimation";
 
 export default function UnderstandingConsensus() {
   const { t, isRTL, language } = useLanguage();
@@ -120,6 +121,13 @@ export default function UnderstandingConsensus() {
           title={t('understandingConsensusTitle')}
           backUrl={returnUrl || `${createPageUrl("DocumentView")}?id=${documentId}`}
         />
+
+        {/* Animated consensus gauge */}
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-indigo-50/50">
+          <CardContent className="p-2 md:p-4">
+            <ConsensusGaugeAnimation value={documentConsensusMeter} />
+          </CardContent>
+        </Card>
 
         {/* Hero Section - הסבר ויזואלי על החישוב */}
         <Card className="border-0 shadow-xl overflow-hidden">
