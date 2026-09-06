@@ -1,16 +1,21 @@
 import React from "react";
-import { CheckCircle, ThumbsUp, ThumbsDown, TrendingUp } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ThumbsUp, ThumbsDown, TrendingUp, FilePlus, FileEdit, Trash2, ExternalLink } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import { createPageUrl } from "@/utils";
 
 /**
- * Lists all accepted suggestions with their vote counts, individual consensus
- * calculation, and how each contributed to the running consensus meter average.
+ * Lists all accepted suggestions (excluding admin overrides) with their vote
+ * counts, individual consensus value, and how each contributed to the running
+ * consensus meter average.
  */
 export default function AcceptedSuggestionsConsensusList({ suggestions, currentMeter }) {
   const { language, isRTL } = useLanguage();
 
+  // Only community-accepted suggestions (not admin overrides) contribute to
+  // the consensus meter — exclude approvedByAdmin per the schema.
   const accepted = (suggestions || [])
-    .filter(s => s.status === 'accepted')
+    .filter(s => s.status === 'accepted' && !s.approvedByAdmin)
     .sort((a, b) => new Date(a.updated_date) - new Date(b.updated_date));
 
   if (accepted.length === 0) {
@@ -21,24 +26,51 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
     );
   }
 
-  // Compute running average
+  // Compute running average using the stored suggestionConsensus values,
+  // matching the document's consensuses array calculation:
+  //   meter = average of min(1, suggestionConsensus) across all accepted
   let runningSum = 0;
   const rows = accepted.map((s, i) => {
     const pro = s.proVotes || 0;
     const con = s.conVotes || 0;
-    const total = pro + con;
-    const consensus = total > 0 ? pro / total : (s.suggestionConsensus || 0);
-    runningSum += Math.min(1, consensus);
+    // Use the stored consensus value (what the system actually used), not a
+    // naive pro/(pro+con) which can differ from the stored calculation.
+    const consensus = Math.min(1, s.suggestionConsensus ?? 0);
+    runningSum += consensus;
     const runningAvg = runningSum / (i + 1);
-    return { ...s, pro, con, total, consensus, runningAvg, index: i + 1 };
+    return { ...s, pro, con, consensus, runningAvg, index: i + 1 };
   });
 
-  const title = language === 'he' ? 'היסטוריית הצעות שהתקבלו וחישוב הקונצנזוס' : language === 'ar' ? 'سجل الاقتراحات المقبولة وحساب الإجماع' : 'Accepted Suggestions History & Consensus Calculation';
+  const typeLabel = (s) => {
+    if (language === 'he') {
+      if (s.type === 'new_section') return 'סעיף חדש';
+      if (s.type === 'edit_section') return 'עריכת סעיף';
+      if (s.type === 'delete_section') return 'מחיקת סעיף';
+      return 'הצעה';
+    }
+    if (language === 'ar') {
+      if (s.type === 'new_section') return 'قسم جديد';
+      if (s.type === 'edit_section') return 'تعديل قسم';
+      if (s.type === 'delete_section') return 'حذف قسم';
+      return 'اقتراح';
+    }
+    if (s.type === 'new_section') return 'New section';
+    if (s.type === 'edit_section') return 'Edited section';
+    if (s.type === 'delete_section') return 'Deleted section';
+    return 'Suggestion';
+  };
+
+  const TypeIcon = (s) => {
+    if (s.type === 'new_section') return FilePlus;
+    if (s.type === 'delete_section') return Trash2;
+    return FileEdit;
+  };
+
   const colTitle = language === 'he' ? 'הצעה' : language === 'ar' ? 'الاقتراح' : 'Suggestion';
   const colPro = language === 'he' ? 'בעד' : language === 'ar' ? 'مع' : 'Pro';
   const colCon = language === 'he' ? 'נגד' : language === 'ar' ? 'ضد' : 'Con';
-  const colConsensus = language === 'he' ? 'קונצנזוס הצעה' : language === 'ar' ? 'إجماع الاقتراح' : 'Suggestion Consensus';
-  const colRunning = language === 'he' ? 'ממוצע מצטבר' : language === 'ar' ? 'المتوسط التراكمي' : 'Running Average';
+  const colConsensus = language === 'he' ? 'קונצנזוס' : language === 'ar' ? 'إجماع' : 'Consensus';
+  const colRunning = language === 'he' ? 'ממוצע מצטבר' : language === 'ar' ? 'المتوسط التراكمي' : 'Running Avg';
 
   return (
     <div className="space-y-3">
@@ -64,14 +96,36 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
           </thead>
           <tbody>
             {rows.map((s) => {
-              const title = s.title || (s.newContent ? s.newContent.replace(/<[^>]*>/g, '').slice(0, 60) : '');
+              const suggestionTitle = s.title || '';
+              const contentSnippet = s.newContent
+                ? s.newContent.replace(/<[^>]*>/g, '').trim().slice(0, 80)
+                : '';
+              const Icon = TypeIcon(s);
               return (
                 <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                   <td className={`py-3 px-3 text-slate-400 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{s.index}</td>
                   <td className={`py-3 px-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <div className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-slate-700 line-clamp-2 max-w-xs">{title}</span>
+                    <div className="flex flex-col gap-1">
+                      <div className={`flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                          s.type === 'new_section' ? 'bg-green-50 text-green-700' :
+                          s.type === 'delete_section' ? 'bg-red-50 text-red-700' :
+                          'bg-blue-50 text-blue-700'
+                        }`}>
+                          <Icon className="w-3 h-3" />
+                          {typeLabel(s)}
+                        </span>
+                        <Link
+                          to={`${createPageUrl("suggestiondetail")}?id=${s.id}`}
+                          className="text-slate-700 hover:text-indigo-600 hover:underline font-medium text-sm truncate max-w-xs inline-flex items-center gap-1"
+                        >
+                          {suggestionTitle}
+                          <ExternalLink className="w-3 h-3 flex-shrink-0 opacity-50" />
+                        </Link>
+                      </div>
+                      {contentSnippet && (
+                        <p className="text-xs text-slate-400 truncate max-w-md">{contentSnippet}</p>
+                      )}
                     </div>
                   </td>
                   <td className="py-3 px-3 text-center">
@@ -92,7 +146,7 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
                     </span>
                   </td>
                   <td className="py-3 px-3 text-center">
-                    <div className="flex items-center justify-center gap-1.5">
+                    <div className={`flex items-center justify-center gap-1.5 ${isRTL ? 'flex-row-reverse' : ''}`}>
                       <TrendingUp className="w-3.5 h-3.5 text-purple-500" />
                       <span className="font-bold text-purple-700">{(s.runningAvg * 100).toFixed(0)}%</span>
                     </div>

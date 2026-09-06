@@ -252,7 +252,7 @@ export default function UnderstandingConsensus() {
         {/* נוסחת החישוב */}
         <Card>
           <CardHeader>
-            <CardTitle className={`flex items-center gap-2 text-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <CardTitle className={`flex items-center gap-2 text-lg w-full ${isRTL ? 'justify-start' : 'justify-start'}`}>
               <Target className="w-5 h-5 text-blue-600" />
               {t('calculationFormula')}
             </CardTitle>
@@ -285,7 +285,7 @@ export default function UnderstandingConsensus() {
         {/* רשימת הצעות שהתקבלו עם חישוב הקונצנזוס */}
         <Card>
           <CardHeader>
-            <CardTitle className={`flex items-center gap-2 text-lg ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <CardTitle className={`flex items-center gap-2 text-lg w-full ${isRTL ? 'justify-start' : 'justify-start'}`}>
               <CheckCircle className="w-5 h-5 text-green-600" />
               {language === 'he' ? 'היסטוריית הצעות שהתקבלו וחישוב הקונצנזוס' : language === 'ar' ? 'سجل الاقتراحات المقبولة وحساب الإجماع' : 'Accepted Suggestions History & Consensus Calculation'}
             </CardTitle>
