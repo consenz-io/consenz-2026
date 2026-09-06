@@ -629,7 +629,6 @@ export default function DocumentView() {
                     setPendingConVoteSectionId(null);
                   }
                 }}
-                isDeletingSuggestion={editingSection?.isDeletingSuggestion}
               />
             )}
 

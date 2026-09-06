@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { calculateContributors, calculateActiveVoterCount, computeConsensusUpdate } from '../../shared/consensusLogic.ts';
 
 // In-memory lock to prevent the same user voting on the same section concurrently
 const processingVotes = new Set();
@@ -201,6 +202,31 @@ Deno.serve(async (req) => {
         const threshold = Math.max(2, document?.threshold || 2);
 
         if (totalCon - totalPro >= threshold) {
+          // ── Compute consensus impact (mirrors processAcceptanceV2) ────────
+          // For a community-voted section deletion, delta = supporters of
+          // deletion (totalCon) minus opponents of deletion (totalPro).
+          let boundedConsensus = null;
+          let updatedConsensuses = null;
+          let newThreshold = threshold;
+          let consensusTotalUsers = null;
+          try {
+            consensusTotalUsers = await calculateContributors(base44, section.documentId);
+            const activeVoterCount = await calculateActiveVoterCount(base44, section.documentId);
+            const deleteDelta = totalCon - totalPro;
+            const consensusRes = computeConsensusUpdate({
+              document,
+              delta: deleteDelta,
+              totalUsers: consensusTotalUsers,
+              activeVoterCount,
+            });
+            boundedConsensus = consensusRes.boundedConsensus;
+            updatedConsensuses = consensusRes.updatedConsensuses;
+            newThreshold = consensusRes.newThreshold;
+            console.log('[VOTE ON SECTION] Consensus update:', { consensusTotalUsers, deleteDelta, boundedConsensus, newThreshold });
+          } catch (e) {
+            console.error('[VOTE ON SECTION consensus calc error]', e);
+          }
+
           // ── Create a delete_section suggestion record FIRST ──────────────
           // This makes the deletion visible on the suggestion detail page with
           // full voting results (date + vote counts), exactly like an accepted
@@ -229,7 +255,8 @@ Deno.serve(async (req) => {
               timerEndsAt: null,
               originalLanguage: section.originalLanguage || 'he',
               translations: {},
-              participantsAtAcceptance: (totalCon + totalPro),
+              suggestionConsensus: boundedConsensus,
+              participantsAtAcceptance: consensusTotalUsers,
             });
             deleteSuggestionId = deleteSuggestion?.id || null;
           } catch (e) {
@@ -331,6 +358,24 @@ Deno.serve(async (req) => {
             await base44.asServiceRole.entities.SectionVote.deleteMany({ sectionId });
           } catch (e) {
             console.error('[VOTE ON SECTION vote cleanup error]', e);
+          }
+
+          // ── Update document consensus meter + threshold ────────────────
+          // Mirrors processAcceptanceV2: push the bounded consensus, recompute
+          // the average and threshold (capped to active voters), and refresh
+          // the stored participant count so the consensus page stays in sync.
+          if (updatedConsensuses !== null && boundedConsensus !== null) {
+            try {
+              const consensusMeterAverage = updatedConsensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / updatedConsensuses.length;
+              await base44.asServiceRole.entities.Document.update(section.documentId, {
+                consensuses: updatedConsensuses,
+                avgSuggestionConsensus: consensusMeterAverage,
+                threshold: newThreshold,
+                totalUsersInteracted: consensusTotalUsers,
+              });
+            } catch (e) {
+              console.error('[VOTE ON SECTION document consensus update error]', e);
+            }
           }
 
           // ── Notify all document participants about the deletion ────────

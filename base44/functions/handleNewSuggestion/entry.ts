@@ -61,11 +61,25 @@ Deno.serve(async (req) => {
       return Response.json({ message: 'Not a create event' }, { status: 200 });
     }
 
-    // Skip system-generated delete_section suggestions — they are created by voteOnSection
-    // using the service role (no real user), and voteOnSection already sends its own
-    // section_deleted notifications. Without this guard, handleNewSuggestion fires for
-    // these system suggestions, fails to resolve a creator name, and falls back to 'User'.
+    // delete_section suggestions are no longer created via the UI (the suggestion
+    // path was deprecated in favor of direct community voting via voteOnSection).
+    // System-generated delete_section suggestions (created by voteOnSection using
+    // the service role) arrive with status 'accepted' and are skipped here —
+    // voteOnSection already sends its own section_deleted notifications.
+    // A user-created delete_section (status 'pending') means someone bypassed the
+    // UI and called the API directly — block it by deleting the record. Historical
+    // pending delete_section suggestions are unaffected: they were created before
+    // this change and won't re-trigger this create-event handler.
     if (suggestion.type === 'delete_section') {
+      if (suggestion.status === 'pending') {
+        try {
+          await base44.asServiceRole.entities.Suggestion.delete(suggestion.id);
+          console.log('[SUGGESTION AUTOMATION] Blocked user-created delete_section suggestion', suggestion.id);
+        } catch (e) {
+          console.error('[SUGGESTION AUTOMATION] Failed to block delete_section:', e);
+        }
+        return Response.json({ error: 'delete_section suggestions are no longer supported via this path' }, { status: 400 });
+      }
       return Response.json({ message: 'Skipping system-generated delete_section suggestion' }, { status: 200 });
     }
 

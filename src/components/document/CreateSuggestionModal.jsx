@@ -63,7 +63,6 @@ export default function CreateSuggestionModal({
   onClose,
   isAdmin,
   onSuggestionCreated,
-  isDeletingSuggestion
 }) {
   const queryClient = useQueryClient();
   const { t, isRTL, language } = useLanguage();
@@ -90,7 +89,6 @@ export default function CreateSuggestionModal({
   const isNewSection = editingSection?.isNew;
   const isEditingSuggestion = !!editingSuggestion;
   const isDirectEdit = editingSection?.isDirectEdit || false;
-  const isDeleteSection = isDeletingSuggestion || false;
   const existingSection = !isNewSection && !isEditingSuggestion ? sections.find(s => s.id === editingSection?.id) : null;
 
   const [formData, setFormData] = useState({
@@ -221,7 +219,7 @@ export default function CreateSuggestionModal({
       // Check if user has enough points (only if gamification is enabled)
       const currentPoints = currentUser.points || 1000;
       const gamificationEnabled = document.gamificationEnabled || false;
-      const pointsCost = isDeleteSection ? POINTS_COST_EDIT : isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
+      const pointsCost = isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
       
       if (gamificationEnabled && currentPoints < pointsCost) {
         throw new Error('INSUFFICIENT_POINTS');
@@ -255,9 +253,7 @@ export default function CreateSuggestionModal({
       }
 
       // Generate automatic title
-      const autoTitle = isDeleteSection
-        ? (language === 'he' ? `הצעה למחיקת סעיף ב-${topicTitle}` : language === 'ar' ? `اقتراح حذف قسم في ${topicTitle}` : `Delete section in ${topicTitle}`)
-        : isNewSection 
+      const autoTitle = isNewSection 
         ? t('newSectionIn', { topic: topicTitle })
         : t('editSectionIn', { topic: topicTitle });
 
@@ -269,10 +265,10 @@ export default function CreateSuggestionModal({
         topicId: isEditingSuggestion ? editingSuggestion.topicId : targetTopicId,
         newTopicTitle: isEditingSuggestion ? editingSuggestion.newTopicTitle : newTopicTitle, // Preserve new topic title when editing suggestion
         newTopicOrder: isEditingSuggestion ? editingSuggestion.newTopicOrder : newTopicOrder, // Preserve new topic order when editing suggestion
-        type: isDeleteSection ? 'delete_section' : isNewSection ? 'new_section' : (isEditingSuggestion ? 'edit_suggestion' : 'edit_section'),
+        type: isNewSection ? 'new_section' : (isEditingSuggestion ? 'edit_suggestion' : 'edit_section'),
         title: autoTitle,
-        newContent: isDeleteSection ? '' : data.newContent,
-        originalContent: isEditingSuggestion ? editingSuggestion.newContent : (isNewSection ? null : (isDeleteSection ? existingSection?.content : existingSection?.content)),
+        newContent: data.newContent,
+        originalContent: isEditingSuggestion ? editingSuggestion.newContent : (isNewSection ? null : existingSection?.content),
         explanation: data.explanation,
         status: 'pending',
         timerEndsAt: timerEndsAt.toISOString(),
@@ -322,7 +318,7 @@ export default function CreateSuggestionModal({
       // Dispatch tutorial completion events based on suggestion type
       if (result?.type === 'new_section') {
         window.dispatchEvent(new CustomEvent('proposal:clause-added'));
-      } else if (result?.type === 'edit_section' || result?.type === 'delete_section' || result?.type === 'edit_suggestion') {
+      } else if (result?.type === 'edit_section' || result?.type === 'edit_suggestion') {
         window.dispatchEvent(new CustomEvent('proposal:clause-edited'));
       }
 
@@ -400,7 +396,7 @@ export default function CreateSuggestionModal({
     e.preventDefault();
     setError(null);
 
-    if (!isDeleteSection && !formData.newContent.trim()) {
+    if (!formData.newContent.trim()) {
       setError(t('content'));
       return;
     }
@@ -419,7 +415,7 @@ export default function CreateSuggestionModal({
     // Check if should show points confirmation dialog
     const gamificationEnabled = document.gamificationEnabled || false;
     const skipConfirm = localStorage.getItem('consenz_skip_points_confirm_suggestion') === 'true';
-    const pointsCost = isDeleteSection ? POINTS_COST_EDIT : isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
+    const pointsCost = isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
     
     if (gamificationEnabled && !skipConfirm) {
       const currentPoints = currentUser.points || 1000;
@@ -451,7 +447,7 @@ export default function CreateSuggestionModal({
     );
   }
 
-  const pointsCost = isDeleteSection ? POINTS_COST_EDIT : isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
+  const pointsCost = isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
 
   return (
     <>
@@ -482,9 +478,7 @@ export default function CreateSuggestionModal({
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-labelledby="suggestion-modal-title" aria-describedby="suggestion-modal-description">
         <DialogHeader className={isRTL ? "text-start" : "text-start"}>
           <DialogTitle id="suggestion-modal-title" className="text-start">
-            {isDeleteSection 
-              ? (language === 'he' ? 'הצעה למחיקת סעיף' : language === 'ar' ? 'اقتراح حذف قسم' : 'Delete Section Suggestion')
-              : isDirectEdit ? 'Direct Edit' : (isNewSection ? t('suggestNewSection') : t('suggestEditSection'))}
+            {isDirectEdit ? 'Direct Edit' : (isNewSection ? t('suggestNewSection') : t('suggestEditSection'))}
           </DialogTitle>
         </DialogHeader>
 
@@ -529,18 +523,6 @@ export default function CreateSuggestionModal({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {isDeleteSection && existingSection && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <div className="text-sm font-medium text-red-800 mb-2">
-                {language === 'he' ? 'סעיף שיימחק:' : language === 'ar' ? 'القسم المراد حذفه:' : 'Section to be deleted:'}
-              </div>
-              <div 
-                className="prose prose-sm max-w-none text-slate-700"
-                dangerouslySetInnerHTML={{ __html: existingSection.content }}
-              />
-            </div>
-          )}
-
           {isNewSection && (
             <div className="space-y-2">
               <Label htmlFor="topic">{t('topic')}</Label>
@@ -592,7 +574,7 @@ export default function CreateSuggestionModal({
             </div>
           )}
 
-          {!isDeleteSection && (
+          {(
             <div>
             <div className="flex items-center justify-between mb-2">
               <Label htmlFor="content">
@@ -665,9 +647,9 @@ export default function CreateSuggestionModal({
               type="submit" 
               disabled={
                 createSuggestionMutation.isPending ||
-                (!isDeleteSection && !isDirectEdit && !formData.newContent?.trim()) ||
+                (!isDirectEdit && !formData.newContent?.trim()) ||
                 (isEditingSuggestion && formData.newContent === editingSuggestion.newContent) ||
-                (!isNewSection && !isDeleteSection && !isDirectEdit && !isEditingSuggestion &&
+                (!isNewSection && !isDirectEdit && !isEditingSuggestion &&
                   originalLoadedContent !== null && formData.newContent === originalLoadedContent)
               }
               className={isDirectEdit ? "bg-purple-600 hover:bg-purple-700" : "bg-gradient-to-r from-blue-600 to-indigo-600"}
