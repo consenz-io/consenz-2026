@@ -186,18 +186,12 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
           const groupName = group?.name || 'קבוצה';
           const adminName = currentUser?.full_name || 'מנהל';
           
-          await base44.integrations.Core.SendEmail({
-            to: trimmedEmail,
-            subject: language === 'he' 
-              ? `נוספת לקבוצה: ${groupName}`
-              : language === 'ar'
-              ? `تمت إضافتك إلى المجموعة: ${groupName}`
-              : `You were added to group: ${groupName}`,
-            body: language === 'he'
-              ? `שלום ${user.full_name},\n\n${adminName} הוסיף אותך לקבוצה "${groupName}".\n\nכעת תוכל לראות ולהשתתף במסמכים של הקבוצה.\n\nבברכה,\nצוות Consenz`
-              : language === 'ar'
-              ? `مرحباً ${user.full_name},\n\nقام ${adminName} بإضافتك إلى مجموعة "${groupName}".\n\nيمكنك الآن عرض مستندات المجموعة والمشاركة فيها.\n\nمع تحيات فريق Consenz`
-              : `Hello ${user.full_name},\n\n${adminName} added you to the group "${groupName}".\n\nYou can now view and participate in the group's documents.\n\nBest regards,\nConsenz Team`
+          await base44.functions.invoke('sendGroupEmail', {
+            type: 'member_added',
+            groupId,
+            language,
+            memberEmail: trimmedEmail,
+            memberName: user.full_name,
           });
         } catch (emailError) {
           console.error('Failed to send email:', emailError);

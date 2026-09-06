@@ -297,23 +297,12 @@ export function useDocumentContentData({
   const translateTopicMutation = useMutation({
     mutationFn: async (topic) => {
       const languagePrompts = { en: "English", he: "Hebrew", ar: "Arabic" };
-      const titlePrompt = `You are a professional translator. Translate the following text to ${languagePrompts[language]}.
-
-CRITICAL INSTRUCTIONS:
-- Return ONLY the translated text, nothing else
-- Do not add any explanations or comments
-- Maintain exact same formatting
-
-Text to translate:
-${topic.title}
-
-Return ONLY the translated text:`;
-
-      const titleResult = await base44.integrations.Core.InvokeLLM({
-        prompt: titlePrompt,
-        add_context_from_internet: false
+      const titleResult = await base44.functions.invoke('translateContent', {
+        content: topic.title,
+        targetLanguage: language,
+        isHtml: false,
       });
-      const translatedTitle = (typeof titleResult === 'string' ? titleResult : titleResult.content || titleResult).trim();
+      const translatedTitle = (titleResult.data?.translated || topic.title).trim();
 
       const newTranslations = {
         ...(topic.translations || {}),

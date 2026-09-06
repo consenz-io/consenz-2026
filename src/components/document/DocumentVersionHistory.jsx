@@ -201,12 +201,12 @@ export default function DocumentVersionHistory({
 
     setTranslatingVersions(prev => ({ ...prev, [versionId]: true }));
     try {
-      const prompt = `Translate the following HTML text to ${languagePrompts[language]}. Return ONLY the translated HTML, preserving all HTML tags:\n${content}`;
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        add_context_from_internet: false,
+      const result = await base44.functions.invoke('translateContent', {
+        content,
+        targetLanguage: language,
+        isHtml: true,
       });
-      const translatedContent = (typeof result === 'string' ? result : result.content || result).trim();
+      const translatedContent = (result.data?.translated || content).trim();
       setTranslatedVersions(prev => ({ ...prev, [versionId]: translatedContent }));
     } catch (err) {
       console.error('Translation error:', err);

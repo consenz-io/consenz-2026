@@ -20,11 +20,12 @@ export default function MyDocumentCard({ doc, mySuggestionsCount, myVotesCount, 
     if (translatedTitle) { setTranslatedTitle(null); return; }
     setTranslating(true);
     try {
-      const targetLang = language === 'ar' ? 'Arabic' : language === 'he' ? 'Hebrew' : 'English';
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `Translate the following text to ${targetLang}. Return ONLY the translation, nothing else:\n\n${doc.title}`,
+      const response = await base44.functions.invoke('translateContent', {
+        content: doc.title,
+        targetLanguage: language,
+        isHtml: false,
       });
-      setTranslatedTitle(typeof response === 'string' ? response : response?.content || response);
+      setTranslatedTitle(response.data?.translated || doc.title);
     } finally {
       setTranslating(false);
     }

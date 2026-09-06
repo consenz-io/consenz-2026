@@ -36,12 +36,12 @@ const DocumentHeader = React.memo(function DocumentHeader({
 
   const translateDocumentMutation = useMutation({
     mutationFn: async () => {
-      const titlePrompt = `Translate the following text to ${languagePrompts[language]}. Return ONLY the translated text:\n${document.title}`;
-      const titleResult = await base44.integrations.Core.InvokeLLM({
-        prompt: titlePrompt,
-        add_context_from_internet: false
+      const titleResult = await base44.functions.invoke('translateContent', {
+        content: document.title,
+        targetLanguage: language,
+        isHtml: false,
       });
-      const translatedTitle = (typeof titleResult === 'string' ? titleResult : titleResult.content || titleResult).trim();
+      const translatedTitle = (titleResult.data?.translated || document.title).trim();
       const newTranslations = {
         ...(document.translations || {}),
         [language]: { title: translatedTitle }

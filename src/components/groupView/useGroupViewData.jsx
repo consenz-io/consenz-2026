@@ -261,16 +261,8 @@ export function useGroupViewData(groupId) {
         userEmail: currentUser.email, userName, status: 'pending'
       });
 
-      const manageUrl = `${window.location.origin}${createPageUrl("GroupView")}?id=${group.id}`;
-      const subject = language === 'he' ? `בקשת הצטרפות לקבוצה: ${group?.name}` : language === 'ar' ? `طلب الانضمام إلى المجموعة: ${group?.name}` : `Request to join group: ${group?.name}`;
-      const body = language === 'he'
-        ? `שלום,\n\n${userName} מבקש/ת להצטרף לקבוצה "${group?.name}".\n\nאימייל המשתמש: ${currentUser.email}\n\nכדי לאשר או לדחות: ${manageUrl}\n\nתודה!`
-        : language === 'ar'
-        ? `مرحبًا,\n\n${userName} يطلب الانضمام إلى المجموعة "${group?.name}".\n\nبريد المستخدم: ${currentUser.email}\n\nللموافقة أو الرفض: ${manageUrl}\n\nشكرًا!`
-        : `Hello,\n\n${userName} would like to join "${group?.name}".\n\nUser email: ${currentUser.email}\n\nManage: ${manageUrl}\n\nThank you!`;
-
       await Promise.all([
-        ...adminProfiles.map(admin => base44.integrations.Core.SendEmail({ to: admin.email, subject, body })),
+        base44.functions.invoke('sendGroupEmail', { type: 'join_request', groupId: group.id, language }),
         ...admins.map(admin => base44.entities.Notification.create({
           userId: admin.userId,
           type: 'group_join_request',

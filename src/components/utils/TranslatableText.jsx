@@ -34,12 +34,12 @@ export default function TranslatableText({ text, isHtml = false, className = "",
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Translate the following text to ${languagePrompts[language]}. Return only the translated text with no commentary or markdown.\n\nText:\n${text}`,
+      const response = await base44.functions.invoke('translateContent', {
+        content: text,
+        targetLanguage: language,
+        isHtml: false,
       });
-      let out = typeof result === 'string' ? result : (result?.content || result?.text || result?.translation || text);
-      out = out.replace(/```[\w]*\n?/g, '').replace(/```\n?/g, '').trim();
-      return out;
+      return response.data?.translated || text;
     },
     onSuccess: (data) => {
       setTranslated(data);

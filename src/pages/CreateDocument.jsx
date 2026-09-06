@@ -149,46 +149,8 @@ export default function CreateDocument() {
       console.log("[PDF Upload] Starting LLM analysis...");
       const llmStartTime = Date.now();
 
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Extract document structure into topics and sections.
-
-RULES:
-1. Find all headings/chapters - each becomes a TOPIC
-2. Split content into SHORT sections - each paragraph = 1 section  
-3. Keep sections under 200 words each
-4. Preserve original text exactly
-5. Use exact heading text for topic titles
-
-Return JSON with title, topics array (each with title and sections array with content).`,
-        file_urls: [file_url],
-        response_json_schema: {
-          type: "object",
-          properties: {
-            title: { type: "string" },
-            topics: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  title: { type: "string" },
-                  sections: {
-                    type: "array",
-                    items: {
-                      type: "object",
-                      properties: {
-                        content: { type: "string" }
-                      },
-                      required: ["content"]
-                    }
-                  }
-                },
-                required: ["title", "sections"]
-              }
-            }
-          },
-          required: ["title", "topics"]
-        }
-      });
+      const response = await base44.functions.invoke('extractDocumentStructure', { fileUrl: file_url });
+      const result = response.data;
       
       console.log("[PDF Upload] LLM completed in", Date.now() - llmStartTime, "ms");
       console.log("[PDF Upload] Result:", JSON.stringify(result).substring(0, 500));

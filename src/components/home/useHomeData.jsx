@@ -60,11 +60,12 @@ export function useHomeData() {
   // ── Mutation: translate document title ────────────────────────────────────
   const translateDocumentMutation = useMutation({
     mutationFn: async (doc) => {
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Translate the following text to ${LANGUAGE_PROMPTS[language]}. Return ONLY the translated text:\n${doc.title}`,
-        add_context_from_internet: false,
+      const result = await base44.functions.invoke('translateContent', {
+        content: doc.title,
+        targetLanguage: language,
+        isHtml: false,
       });
-      const translatedTitle = (typeof result === 'string' ? result : result.content || result).trim();
+      const translatedTitle = (result.data?.translated || doc.title).trim();
       const newTranslations = { ...(doc.translations || {}), [language]: { title: translatedTitle } };
       await base44.entities.Document.update(doc.id, { translations: newTranslations });
       return { docId: doc.id, translations: newTranslations };

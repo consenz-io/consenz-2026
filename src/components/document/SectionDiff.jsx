@@ -92,11 +92,12 @@ export default function SectionDiff({
       // getDiffInLanguage failed (likely disabled cache-miss paths) — fall back to direct InvokeLLM
       try {
         const translateHtml = async (html) => {
-          const res = await base44.integrations.Core.InvokeLLM({
-            prompt: `Translate the following HTML content to ${languagePrompts[language]}. Preserve all HTML tags exactly. Return only the translated HTML with no commentary:\n${html}`
+          const res = await base44.functions.invoke('translateContent', {
+            content: html,
+            targetLanguage: language,
+            isHtml: true,
           });
-          const text = typeof res === 'string' ? res : res?.content || res?.text || html;
-          return text.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+          return res.data?.translated || html;
         };
 
         const [translatedOriginal, translatedNew] = await Promise.all([

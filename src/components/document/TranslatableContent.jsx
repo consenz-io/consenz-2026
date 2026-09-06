@@ -57,26 +57,12 @@ export default function TranslatableContent({
       
       const translations = entity?.translations || {};
 
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `Translate the following HTML content to ${languagePrompts[language]}. 
-Preserve all HTML tags exactly as-is. Only translate the text content between tags.
-Return only the translated HTML with no additional commentary or markdown.
-
-Content to translate:
-${content}`,
+      const response = await base44.functions.invoke('translateContent', {
+        content,
+        targetLanguage: language,
+        isHtml: true,
       });
-
-      let translatedText;
-      if (typeof result === 'string') {
-        translatedText = result;
-      } else if (result && typeof result === 'object') {
-        translatedText = result.content || result.text || result.translation || result.output || result.result || result.message || content;
-      } else {
-        translatedText = content;
-      }
-      
-      // Clean up any markdown code blocks that might be added
-      translatedText = translatedText.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
+      let translatedText = response.data?.translated || content;
 
       // Store translation with field name if provided
       let newTranslations;

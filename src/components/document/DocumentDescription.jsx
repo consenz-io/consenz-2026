@@ -45,12 +45,12 @@ const DocumentDescription = React.memo(function DocumentDescription({
 
   const translateDescriptionMutation = useMutation({
     mutationFn: async () => {
-      const descPrompt = `Translate the following HTML text to ${languagePrompts[language]}. Return ONLY the translated HTML, preserving all HTML tags:\n${document.description}`;
-      const descResult = await base44.integrations.Core.InvokeLLM({
-        prompt: descPrompt,
-        add_context_from_internet: false,
+      const descResult = await base44.functions.invoke('translateContent', {
+        content: document.description,
+        targetLanguage: language,
+        isHtml: true,
       });
-      const translatedDescription = (typeof descResult === 'string' ? descResult : descResult.content || descResult).trim();
+      const translatedDescription = (descResult.data?.translated || document.description).trim();
       const newTranslations = {
         ...(document.translations || {}),
         [language]: {

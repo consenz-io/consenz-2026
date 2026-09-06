@@ -74,22 +74,8 @@ export default function JoinGroupDialog({ isOpen, onClose, groupId, groupName: g
         status: 'pending',
       });
 
-      const manageUrl = `${window.location.origin}${createPageUrl("GroupView")}?id=${groupId}`;
-      const subject = language === 'he'
-        ? `בקשת הצטרפות לקבוצה: ${groupName}`
-        : language === 'ar'
-        ? `طلب انضمام إلى مجموعة: ${groupName}`
-        : `Request to join group: ${groupName}`;
-      const body = language === 'he'
-        ? `שלום,\n\n${userName} מבקש/ת להצטרף לקבוצה "${groupName}".\n\nאימייל: ${user.email}\n\nלניהול הבקשה:\n${manageUrl}`
-        : language === 'ar'
-        ? `مرحباً،\n\n${userName} يطلب الانضمام إلى مجموعة "${groupName}".\n\nالبريد الإلكتروني: ${user.email}\n\nإدارة الطلب:\n${manageUrl}`
-        : `Hello,\n\n${userName} wants to join "${groupName}".\n\nEmail: ${user.email}\n\nManage request:\n${manageUrl}`;
-
       await Promise.all([
-        ...adminProfiles.map(admin =>
-          base44.integrations.Core.SendEmail({ to: admin.email, subject, body })
-        ),
+        base44.functions.invoke('sendGroupEmail', { type: 'join_request', groupId, language }),
         ...admins.map(admin =>
           base44.entities.Notification.create({
             userId: admin.userId,

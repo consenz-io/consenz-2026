@@ -281,41 +281,12 @@ export default function DocumentCleanView() {
 
   const translateTextMutation = useMutation({
     mutationFn: async ({ text, targetLanguage, isHtml = false }) => {
-      const languageNames = { en: 'English', he: 'Hebrew', ar: 'Arabic' };
-      const targetLangName = languageNames[targetLanguage];
-
-      let prompt;
-      if (isHtml) {
-        prompt = `You are a professional translator. Translate the following HTML content to ${targetLangName}.
-
-CRITICAL INSTRUCTIONS:
-- Keep ALL HTML tags exactly as they are (including <p>, <strong>, <em>, <ul>, <li>, etc.)
-- Only translate the TEXT CONTENT between the tags
-- Return ONLY the translated HTML, nothing else
-- Do not add any explanations or comments
-- Do not escape HTML characters
-- Maintain exact same structure and formatting
-
-HTML content to translate:
-${text}
-
-Return ONLY the translated HTML:`;
-      } else {
-        prompt = `Translate the following text to ${targetLangName}. Return ONLY the translated text, nothing else:
-
-${text}`;
-      }
-
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt: prompt
+      const result = await base44.functions.invoke('translateContent', {
+        content: text,
+        targetLanguage,
+        isHtml,
       });
-
-      let translatedContent = typeof result === 'string' ? result : result.content || result;
-
-      // Clean up any markdown code blocks that might be added
-      translatedContent = translatedContent.replace(/```html\n?/g, '').replace(/```\n?/g, '').trim();
-
-      return translatedContent;
+      return result.data?.translated || text;
     }
   });
 

@@ -82,88 +82,17 @@ export default function DocumentSummaryDialog({ isOpen, onClose, document, sugge
   const generateSummary = async () => {
     setSummaryState('loading');
 
-    const acceptedSuggestions = suggestions.filter(s => s.status === 'accepted');
-    const pendingSuggestions = suggestions.filter(s => s.status === 'pending');
-
-    // Rich suggestion data with their comments
-    const suggestionLines = suggestions.map(s => {
-      const author = getUserName(s.created_by);
-      const proVotes = s.proVotes || 0;
-      const conVotes = s.conVotes || 0;
-      const commentsOnSuggestion = allComments
-        .filter(c => c.rootEntityType === 'suggestion' && c.rootEntityId === s.id)
-        .map(c => `    • ${getUserName(c.created_by)}: "${(c.content || '').substring(0, 120).replace(/<[^>]*>/g, '')}"`)
-        .join('\n');
-      return `- [${s.status}] "${s.title}" by ${author} | ${proVotes} pro / ${conVotes} con | ID: ${s.id}\n${commentsOnSuggestion ? `  Comments:\n${commentsOnSuggestion}` : '  (no comments)'}`;
-    }).join('\n\n');
-
-    // All comments with context
-    const allCommentLines = allComments.slice(0, 50).map(c => {
-      const author = getUserName(c.created_by);
-      const snippet = (c.content || '').substring(0, 150).replace(/<[^>]*>/g, '');
-      const entityType = c.rootEntityType;
-      const relatedSuggestion = entityType === 'suggestion' ? suggestions.find(s => s.id === c.rootEntityId) : null;
-      const context = relatedSuggestion ? `on suggestion "${relatedSuggestion.title}"` : `on ${entityType}`;
-      return `- ${author} (${context}): "${snippet}"`;
-    }).join('\n');
-
-    const langInstructions = {
-      he: `ענה בעברית בלבד. שפה חיה, ישירה, נרטיבית. אל תשתמש בביטויים כלליים כמו "מגוון רחב" או "פעילות ענפה". התייחס לאנשים בשמותיהם. IMPORTANT: Keep all user names exactly as they appear in the data — do NOT translate or transliterate names (e.g. write "Anay Ben Pazi" not "אנת בן פזי"). השתמש בשפה נייטרלית מגדרית (כלומר: "כתב/ה", "הציע/ה").`,
-      ar: `أجب بالعربية فقط. كن مباشراً وسردياً. IMPORTANT: Keep all user names exactly as they appear in the data — do NOT translate or transliterate names. استخدم لغة محايدة جندياً.`,
-      en: `Answer in English only. Be direct, vivid, and narrative. IMPORTANT: Keep all user names exactly as they appear in the data — do NOT translate or transliterate names. Avoid generic phrases.`,
-    };
-
-    const prompt = `
-You are writing an activity briefing for a new reader of the collaborative document titled: "${document.title}".
-
-${langInstructions[language] || langInstructions.en}
-
-== SUGGESTIONS AND THEIR COMMENTS ==
-${suggestionLines}
-
-== ALL COMMENTS ==
-${allCommentLines}
-
-== STATS ==
-- ${acceptedSuggestions.length} suggestions accepted, ${pendingSuggestions.length} pending
-- ${allComments.length} total comments, ${allVotes.length} total votes, ${uniqueParticipants} unique participants
-
-Write 3-4 paragraphs that:
-
-1. CONTENT FOCUS: Describe what the document is actually about and what specific changes have been proposed. Mention the accepted changes by name and describe what they changed. Do NOT just say "several changes were made" — describe the actual content.
-
-2. WHO SAID WHAT: Name specific people and what they wrote. If multiple commenters expressed similar views or concerns, group them together and say "Both X and Y argued that...". Surface the most interesting or contested ideas.
-
-3. COMMENTS AS POTENTIAL EDITS: Identify comments that contain substantive opinions or proposals (not just questions). Tell the reader: if these ideas resonate with them, they can turn them into edit suggestions and vote on them. Be specific — mention the comment content and who wrote it.
-
-4. CALL TO ACTION: Name the pending suggestions by title and tell the reader concretely what they're about and why their vote matters. Make it personal and specific — e.g. "If you think X should be included, vote for [suggestion title]".
-
-IMPORTANT: 
-- Never invent content. Only refer to what's in the data above.
-- For each pending suggestion you mention by title, wrap it in the link tag.
-- Keep it under 350 words total.
-- Be warm and engaging, not bureaucratic.
-
-Return JSON:
-{
-  "summary": "narrative HTML text. For each mentioned pending suggestion title, wrap it in: <a data-suggestion-id=\\"SUGGESTION_ID\\" class=\\"suggestion-link\\">TITLE</a>",
-  "highlightedSuggestionIds": ["id1", "id2"]
-}
-`;
-
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          summary: { type: 'string' },
-          highlightedSuggestionIds: { type: 'array', items: { type: 'string' } },
-        },
-      },
-    });
-
-    setSummaryData(result);
-    setSummaryState('done');
+    try {
+      const response = await base44.functions.invoke('generateDocumentDigest', {
+        documentId: document.id,
+        language,
+      });
+      setSummaryData(response.data || { summary: '', highlightedSuggestionIds: [] });
+      setSummaryState('done');
+    } catch (err) {
+      console.error('Summary generation failed:', err);
+      setSummaryState('idle');
+    }
   };
 
   // Parse summary text and replace suggestion links with React Link components
