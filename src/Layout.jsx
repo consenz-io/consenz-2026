@@ -22,8 +22,8 @@ import {
   SidebarFooter,
   SidebarProvider,
   SidebarTrigger,
-  useSidebar,
-} from "@/components/ui/sidebar";
+  useSidebar } from
+"@/components/ui/sidebar";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
@@ -41,27 +41,27 @@ function MobileMenuButton({ isRTL, nudgeActive }) {
       onClick={toggleSidebar}
       className={`md:hidden flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 active:bg-slate-200 transition-colors touch-manipulation min-h-[44px] ${nudgeActive ? 'md:absolute md:inset-inline-start-6' : ''}`}
       aria-label={isRTL ? 'פתיחת תפריט ניווט' : 'Open navigation menu'}
-      aria-controls="sidebar"
-    >
+      aria-controls="sidebar">
+      
       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-700" aria-hidden="true">
-        <rect width="18" height="18" x="3" y="3" rx="2"/>
-        <path d="M9 3v18"/>
+        <rect width="18" height="18" x="3" y="3" rx="2" />
+        <path d="M9 3v18" />
       </svg>
-      <span className="text-base font-bold text-slate-900">Consenz</span>
-    </button>
-  );
+      <span className="text-base font-bold text-slate-900 hidden">Consenz</span>
+    </button>);
+
 }
 
 function SidebarInner({ isMobileViewport, navigationItems, language, location, user, t, isRTL, setLanguage, handleLogout }) {
   const { setOpenMobile } = useSidebar();
-  
+
   const closeSidebarOnMobile = React.useCallback(() => {
     if (isMobileViewport) {
       // Use microtask queue to close after current interaction completes
       Promise.resolve().then(() => setOpenMobile(false));
     }
   }, [isMobileViewport, setOpenMobile]);
-  
+
   return (
     <>
       <SidebarHeader className="border-b border-slate-200 p-4">
@@ -82,50 +82,50 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
           <SidebarGroupContent>
             <SidebarMenu>
               {navigationItems.map((item) => {
-                const navButton = (
-                  <SidebarMenuButton 
-                    asChild 
-                    className={`hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 rounded-lg mb-1 ${
-                      location.pathname === item.url ? 'bg-blue-50 text-blue-700' : ''
-                    }`}
-                  >
+                const navButton =
+                <SidebarMenuButton
+                  asChild
+                  className={`hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 rounded-lg mb-1 ${
+                  location.pathname === item.url ? 'bg-blue-50 text-blue-700' : ''}`
+                  }>
+                  
                     <Link to={item.url} onClick={closeSidebarOnMobile} className="flex items-center gap-3 px-3 py-3 relative min-h-[44px]">
                       <item.icon className="w-4 h-4" />
                       <span className="font-medium">{item.title}</span>
-                      {item.badge && (
-                        <span className={`absolute top-1 left-1 ${item.badgeType === 'messages' ? 'bg-blue-500' : 'bg-orange-500'} text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse`}>
+                      {item.badge &&
+                    <span className={`absolute top-1 left-1 ${item.badgeType === 'messages' ? 'bg-blue-500' : 'bg-orange-500'} text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center animate-pulse`}>
                           {item.badge > 9 ? '9+' : item.badge}
                         </span>
-                      )}
+                    }
                     </Link>
-                  </SidebarMenuButton>
-                );
+                  </SidebarMenuButton>;
+
                 return (
                   <SidebarMenuItem key={item.title}>
-                    {item.badge ? (
-                      <TooltipProvider delayDuration={300}>
+                    {item.badge ?
+                    <TooltipProvider delayDuration={300}>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             {navButton}
                           </TooltipTrigger>
                           <TooltipContent side={isRTL ? "left" : "right"} className="max-w-[240px] text-center font-medium">
-                            {item.badgeType === 'messages'
-                              ? (language === 'he'
-                                ? `${item.badge} הודעות חדשות`
-                                : language === 'ar'
-                                ? `${item.badge} رسائل جديدة`
-                                : `${item.badge} new messages`)
-                              : (language === 'he'
-                                ? `${item.badge} הצעות פתוחות ממתינות להצבעתך`
-                                : language === 'ar'
-                                ? `${item.badge} اقتراحات مفتوحة تنتظر تصويتك`
-                                : `${item.badge} open suggestions awaiting your vote`)}
+                            {item.badgeType === 'messages' ?
+                          language === 'he' ?
+                          `${item.badge} הודעות חדשות` :
+                          language === 'ar' ?
+                          `${item.badge} رسائل جديدة` :
+                          `${item.badge} new messages` :
+                          language === 'he' ?
+                          `${item.badge} הצעות פתוחות ממתינות להצבעתך` :
+                          language === 'ar' ?
+                          `${item.badge} اقتراحات مفتوحة تنتظر تصويتك` :
+                          `${item.badge} open suggestions awaiting your vote`}
                           </TooltipContent>
                         </Tooltip>
-                      </TooltipProvider>
-                    ) : navButton}
-                  </SidebarMenuItem>
-                );
+                      </TooltipProvider> :
+                    navButton}
+                  </SidebarMenuItem>);
+
               })}
               <SidebarMenuItem>
                <ErrorBoundary inline>
@@ -138,8 +138,8 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {user?.role === 'admin' && (
-          <SidebarGroup>
+        {user?.role === 'admin' &&
+        <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
               {language === 'he' ? 'ניהול' : language === 'ar' ? 'إدارة' : 'Admin'}
             </SidebarGroupLabel>
@@ -147,7 +147,7 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
               <SidebarMenu></SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        )}
+        }
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-medium text-slate-500 uppercase tracking-wider px-2 py-2">
@@ -165,8 +165,8 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
                   }}
                   className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm font-medium bg-white cursor-pointer"
                   aria-label={isRTL ? 'בחירת שפה' : 'Select language'}
-                  id="language-selector"
-                >
+                  id="language-selector">
+                  
                   <option value="en">English</option>
                   <option value="ar">العربية</option>
                   <option value="he">עברית</option>
@@ -189,8 +189,8 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
       </SidebarContent>
 
       <SidebarFooter className="border-t border-slate-200 p-4">
-        {user ? (
-          <div className="space-y-2">
+        {user ?
+        <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Link to={createPageUrl("Profile")} onClick={closeSidebarOnMobile} className="flex-1">
                 <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer min-h-[44px]">
@@ -207,28 +207,28 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
               </Link>
             </div>
             <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              className="w-full"
-              aria-label={isRTL ? 'התנתקות מהמערכת' : 'Logout from system'}
-            >
+            variant="outline"
+            size="sm"
+            onClick={handleLogout}
+            className="w-full"
+            aria-label={isRTL ? 'התנתקות מהמערכת' : 'Logout from system'}>
+            
               <LogOut className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} aria-hidden="true" />
               {t('logout')}
             </Button>
-          </div>
-        ) : (
-          <Button
-            onClick={() => base44.auth.redirectToLogin()}
-            className="w-full"
-            aria-label={isRTL ? 'כניסה למערכת' : 'Sign in to system'}
-          >
+          </div> :
+
+        <Button
+          onClick={() => base44.auth.redirectToLogin()}
+          className="w-full"
+          aria-label={isRTL ? 'כניסה למערכת' : 'Sign in to system'}>
+          
             {t('signIn')}
           </Button>
-        )}
+        }
       </SidebarFooter>
-    </>
-  );
+    </>);
+
 }
 
 function LayoutContent({ children, currentPageName }) {
@@ -241,13 +241,13 @@ function LayoutContent({ children, currentPageName }) {
     if (typeof window === 'undefined') return true;
     return sessionStorage.getItem('hideUnvotedNudge') !== 'true';
   });
-  
+
   // Track mobile viewport for sidebar close behavior
   const [isMobileViewport, setIsMobileViewport] = React.useState(() => {
     if (typeof window === 'undefined') return false;
     return window.innerWidth < 768;
   });
-  
+
   React.useEffect(() => {
     const handleResize = () => {
       setIsMobileViewport(window.innerWidth < 768);
@@ -255,12 +255,12 @@ function LayoutContent({ children, currentPageName }) {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  
+
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     staleTime: 60 * 1000, // 1 minute — prevents cascading refetch on every render while still staying fresh
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    gcTime: 5 * 60 * 1000 // Keep in cache for 5 minutes
   });
 
 
@@ -271,7 +271,7 @@ function LayoutContent({ children, currentPageName }) {
     enabled: !!user?.id,
     staleTime: 15 * 60 * 1000,
     gcTime: 20 * 60 * 1000,
-    retry: false,
+    retry: false
   });
 
   const totalUnvotedSuggestions = unvotedData?.data?.count ?? 0;
@@ -282,7 +282,7 @@ function LayoutContent({ children, currentPageName }) {
     enabled: !!user?.id,
     staleTime: 30 * 1000,
     gcTime: 60 * 1000,
-    refetchInterval: 30000,
+    refetchInterval: 30000
   });
 
   const totalUnreadMessages = unreadMessagesData?.length ?? 0;
@@ -298,7 +298,7 @@ function LayoutContent({ children, currentPageName }) {
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 300);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -398,31 +398,31 @@ function LayoutContent({ children, currentPageName }) {
 
 
   const navigationItems = [
-    {
-      title: t('home'),
-      url: createPageUrl("Home"),
-      icon: Home,
-    },
-    {
-      title: t('myDocuments'),
-      url: createPageUrl("MyDocuments"),
-      icon: FileText,
-      badge: totalUnvotedSuggestions > 0 ? totalUnvotedSuggestions : null,
-      badgeType: 'suggestions',
-    },
-    {
-      title: language === 'he' ? 'הקבוצות שלי' : language === 'ar' ? 'مجموعاتي' : 'My Groups',
-      url: createPageUrl("Groups"),
-      icon: Users,
-    },
-    {
-      title: language === 'he' ? 'הודעות' : language === 'ar' ? 'الرسائل' : 'Messages',
-      url: createPageUrl("Messages"),
-      icon: MessageSquare,
-      badge: totalUnreadMessages > 0 ? totalUnreadMessages : null,
-      badgeType: 'messages',
-    },
-  ];
+  {
+    title: t('home'),
+    url: createPageUrl("Home"),
+    icon: Home
+  },
+  {
+    title: t('myDocuments'),
+    url: createPageUrl("MyDocuments"),
+    icon: FileText,
+    badge: totalUnvotedSuggestions > 0 ? totalUnvotedSuggestions : null,
+    badgeType: 'suggestions'
+  },
+  {
+    title: language === 'he' ? 'הקבוצות שלי' : language === 'ar' ? 'مجموعاتي' : 'My Groups',
+    url: createPageUrl("Groups"),
+    icon: Users
+  },
+  {
+    title: language === 'he' ? 'הודעות' : language === 'ar' ? 'الرسائل' : 'Messages',
+    url: createPageUrl("Messages"),
+    icon: MessageSquare,
+    badge: totalUnreadMessages > 0 ? totalUnreadMessages : null,
+    badgeType: 'messages'
+  }];
+
 
   return (
     <SidebarProvider>
@@ -431,8 +431,8 @@ function LayoutContent({ children, currentPageName }) {
         href="#main-content"
         onClick={skipToMainContent}
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-blue-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg"
-        style={{ position: 'absolute' }}
-      >
+        style={{ position: 'absolute' }}>
+        
         {language === 'he' ? 'דלג לתוכן המרכזי' : language === 'ar' ? 'تخطي إلى المحتوى الرئيسي' : 'Skip to main content'}
       </a>
       
@@ -447,19 +447,19 @@ function LayoutContent({ children, currentPageName }) {
             t={t}
             isRTL={isRTL}
             setLanguage={setLanguage}
-            handleLogout={handleLogout}
-          />
+            handleLogout={handleLogout} />
+          
         </Sidebar>
 
-        <main 
+        <main
           className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden touch-auto"
           id="main-content"
           ref={mainContentRef}
           tabIndex={-1}
           role="main"
           aria-label={isRTL ? 'תוכן ראשי' : 'Main content'}
-          style={{ '--sidebar-width': '16rem' }}
-        >
+          style={{ '--sidebar-width': '16rem' }}>
+          
           <header className={`bg-white/80 backdrop-blur-sm border-b border-slate-200 ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'fixed md:inset-inline-start-64 md:w-[calc(100vw-16rem)]' : 'sticky'} top-0 z-30 w-full ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'shadow-md' : ''}`} role="banner">
             <div className="flex items-center gap-2 px-2 md:px-6 py-2 md:py-4 w-full min-w-0">
               {/* Left side: Sidebar Trigger + Logo */}
@@ -468,15 +468,15 @@ function LayoutContent({ children, currentPageName }) {
               </div>
 
               {/* Center: Unvoted Suggestions Nudge — takes remaining space, never overflows */}
-              {user && totalUnvotedSuggestions > 0 && showUnvotedNudge && (
-                <Link
-                  to={createPageUrl("MyDocuments")}
-                  className="flex-1 min-w-0 mx-1 md:mx-4"
-                  onClick={() => {
-                    setShowUnvotedNudge(false);
-                    sessionStorage.setItem('hideUnvotedNudge', 'true');
-                  }}
-                >
+              {user && totalUnvotedSuggestions > 0 && showUnvotedNudge &&
+              <Link
+                to={createPageUrl("MyDocuments")}
+                className="flex-1 min-w-0 mx-1 md:mx-4"
+                onClick={() => {
+                  setShowUnvotedNudge(false);
+                  sessionStorage.setItem('hideUnvotedNudge', 'true');
+                }}>
+                
                   <div className="flex items-center justify-center gap-2 px-2 md:px-4 py-2 bg-orange-50 border-2 border-orange-300 rounded-lg hover:bg-orange-100 transition-all shadow-lg cursor-pointer">
                     <div className="w-7 h-7 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold animate-pulse flex-shrink-0">
                       {totalUnvotedSuggestions > 9 ? '9+' : totalUnvotedSuggestions}
@@ -486,20 +486,20 @@ function LayoutContent({ children, currentPageName }) {
                     </span>
                   </div>
                 </Link>
-              )}
+              }
 
               {/* Spacer when nudge is not shown */}
-              {!(user && totalUnvotedSuggestions > 0 && showUnvotedNudge) && (
-                <div className="flex-1" />
-              )}
+              {!(user && totalUnvotedSuggestions > 0 && showUnvotedNudge) &&
+              <div className="flex-1" />
+              }
 
               {/* Right side: Notification Bell + Points Badge */}
-              {user && (
-                <div className="flex items-center gap-1 flex-shrink-0">
+              {user &&
+              <div className="flex items-center gap-1 flex-shrink-0">
                   <FloatingNotificationBell />
                   <FloatingPointsBadge />
                 </div>
-              )}
+              }
             </div>
           </header>
 
@@ -508,17 +508,17 @@ function LayoutContent({ children, currentPageName }) {
           </div>
           </main>
 
-          {showScrollTop && (
-           <button
-             onClick={scrollToTop}
-             type="button"
-             className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50 focus:ring-4 focus:ring-blue-300"
-             aria-label={language === 'he' ? 'גלילה לראש העמוד' : language === 'ar' ? 'التمرير إلى الأعلى' : 'Scroll to top'}
-           >
+          {showScrollTop &&
+        <button
+          onClick={scrollToTop}
+          type="button"
+          className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 z-50 focus:ring-4 focus:ring-blue-300"
+          aria-label={language === 'he' ? 'גלילה לראש העמוד' : language === 'ar' ? 'التمرير إلى الأعلى' : 'Scroll to top'}>
+          
              <ArrowUp className="w-5 h-5" aria-hidden="true" />
              <span className="sr-only">{language === 'he' ? 'גלילה לראש העמוד' : language === 'ar' ? 'التمرير إلى الأعلى' : 'Scroll to top'}</span>
              </button>
-             )}
+        }
 
              <AccessibilityAnnouncer />
        <ErrorBoundary>
@@ -530,9 +530,9 @@ function LayoutContent({ children, currentPageName }) {
        </ErrorBoundary>
 
               </div>
-              </SidebarProvider>
-              );
-              }
+              </SidebarProvider>);
+
+}
 
 export default function Layout({ children, currentPageName }) {
   return (
@@ -541,6 +541,6 @@ export default function Layout({ children, currentPageName }) {
         <Toaster position="top-center" richColors closeButton />
         <LayoutContent children={children} currentPageName={currentPageName} />
       </LanguageProvider>
-    </ErrorBoundary>
-  );
+    </ErrorBoundary>);
+
 }
