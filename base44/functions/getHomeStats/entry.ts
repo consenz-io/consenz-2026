@@ -71,6 +71,14 @@ Deno.serve(async (req) => {
     for (const a of agreements) { addParticipant(a.userId, a.userEmail); }
     for (const s of suggestions) { addParticipant(s.created_by_id, s.created_by); }
 
+    // Collapse: if a user's userId is already counted, remove their email key too
+    // (prevents double-count when email-only records didn't resolve to userId)
+    for (const p of publicProfiles) {
+      if (p.userId && p.email && uniqueParticipants.has(p.userId)) {
+        uniqueParticipants.delete(p.email);
+      }
+    }
+
     // Build contributors list
     const emailToUser = new Map();
     for (const u of allUsers) { if (u.email) emailToUser.set(u.email, u); }
@@ -172,7 +180,12 @@ Deno.serve(async (req) => {
     }
 
     const groupParticipantCounts = {};
-    groupParticipantSets.forEach((idSet, gid) => { groupParticipantCounts[gid] = idSet.size; });
+    groupParticipantSets.forEach((idSet, gid) => {
+      for (const p of publicProfiles) {
+        if (p.userId && p.email && idSet.has(p.userId)) idSet.delete(p.email);
+      }
+      groupParticipantCounts[gid] = idSet.size;
+    });
 
     // ── Displayed users (for non-admins: just public profiles; for admins: all users) ──
     let displayedUsers;
@@ -234,12 +247,15 @@ Deno.serve(async (req) => {
 
     const documentContributorCounts = {};
     docContributorSets.forEach((set, docId) => {
+      for (const p of publicProfiles) {
+        if (p.userId && p.email && set.has(p.userId)) set.delete(p.email);
+      }
       documentContributorCounts[docId] = set.size;
     });
 
     return Response.json({
       documentsCount: documents.length,
-      totalUniqueContributors: Math.max(1, uniqueParticipants.size),
+      totalUniqueContributors: Math.max(1, contributorsList.length),
       contributorsList,
       averageConsensus,
       groupParticipantCounts,
