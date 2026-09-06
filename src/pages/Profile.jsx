@@ -18,6 +18,7 @@ import { formatLocalDate } from "@/components/utils/dateFormatter";
 import { useProfileActivity } from "@/components/profile/useProfileActivity";
 import ProfileActivityTabs from "@/components/profile/ProfileActivityTabs";
 import PointsHistoryList from "@/components/profile/PointsHistoryList";
+import { userProfileCache } from "@/components/utils/cache";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -60,6 +61,15 @@ export default function Profile() {
     retry: false
   });
 
+  // For own profile, fetch UserPublicProfile to get the editable fullName.
+  // full_name on the User entity is read-only and cannot be changed via updateMe,
+  // so we display fullName from UserPublicProfile (which IS editable) instead.
+  const { data: ownPublicProfile } = useQuery({
+    queryKey: ['viewUserProfile', currentUser?.id],
+    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: currentUser.id }).then((profiles) => profiles[0]),
+    enabled: !viewUserId && !!currentUser?.id,
+  });
+
   // Use viewUser if available (own profile or admin), otherwise use viewUserProfile
   const user = viewUserId ?
   viewUser || (viewUserProfile ? {
@@ -74,7 +84,7 @@ export default function Profile() {
     instagram: viewUserProfile.instagram,
     website: viewUserProfile.website
   } : null) :
-  currentUser;
+  (ownPublicProfile ? { ...currentUser, full_name: ownPublicProfile.fullName || currentUser.full_name } : currentUser);
   const isOwnProfile = !viewUserId || currentUser && viewUserId === currentUser.id;
   const isLoading = viewUserId ? viewUserLoading || viewUserProfileLoading : false;
 
@@ -166,6 +176,19 @@ export default function Profile() {
       await queryClient.invalidateQueries({ queryKey: ['viewUser'] });
       await queryClient.invalidateQueries({ queryKey: ['viewUserProfile'] });
       await queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
+      // Invalidate per-user profile query + in-memory cache so suggestions,
+      // comments, and other components using useUserProfile see the new name.
+      if (currentUser?.id) {
+        await queryClient.invalidateQueries({ queryKey: ['userProfile', currentUser.id] });
+        userProfileCache.invalidate(currentUser.id);
+      }
+      if (currentUser?.email) {
+        userProfileCache.invalidateByEmail(currentUser.email);
+      }
+      // Invalidate all document aggregated-data caches so suggestion cards and
+      // comments (which resolve names from aggregatedData.publicProfiles) refetch
+      // with the updated fullName on the next document visit.
+      await queryClient.invalidateQueries({ queryKey: ['documentAggregatedData'] });
 
       setSuccess(t('profileUpdatedSuccess'));
       setIsEditing(false);
