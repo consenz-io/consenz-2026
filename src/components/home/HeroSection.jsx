@@ -56,14 +56,14 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
     <section className="relative overflow-hidden" aria-labelledby="hero-heading">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-indigo-600/10 to-purple-600/10" />
       {/* Background watermark logo — absolutely positioned, doesn't affect content flow */}
-      <div className="absolute top-0 left-0 right-0 flex justify-center pt-3 md:pt-10 pointer-events-none select-none" aria-hidden="true">
+      <div className="absolute top-0 left-0 right-0 flex justify-center pt-8 md:pt-12 pointer-events-none select-none" aria-hidden="true">
         <div className="flex items-center gap-2 md:gap-3 opacity-[0.8]">
           <img src="https://media.base44.com/images/public/69ef99e5583af6a64ca3772e/5569749ec_image.png" alt="" className="w-9 h-9 md:w-16 md:h-16 shrink-0" />
           <span className="text-2xl md:text-6xl font-bold text-slate-900 tracking-tight">consenz</span>
         </div>
       </div>
-      <div className="relative max-w-7xl md:py-32 py-20 px-5">
-        <div className="text-center space-y-3 md:space-y-6">
+      <div className="relative max-w-7xl md:py-32 py-10 px-5">
+        <div className="text-center space-y-2 md:space-y-6">
           <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-4 py-2">
             {t('democraticCollaboration')}
           </Badge>
