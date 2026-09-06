@@ -43,9 +43,9 @@ export default function VersionNavigation({
     : null;
 
   return (
-    <div className="versions-list fixed bottom-0 right-0 z-50 print:hidden" style={{ left: 'var(--sidebar-nav-width, 16rem)' }}>
+    <div className="versions-list fixed bottom-0 right-0 left-0 md:left-[var(--sidebar-nav-width,16rem)] z-50 print:hidden">
       <div className="bg-white border-t-2 border-slate-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)]">
-        <div className="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
+        <div className="max-w-4xl mx-auto px-3 md:px-4 py-2 flex items-center justify-between gap-2 md:gap-3">
           
           {/* Left button: RTL=Older, LTR=Older */}
           <Button
@@ -57,10 +57,10 @@ export default function VersionNavigation({
               if (next > 0) window.dispatchEvent(new CustomEvent('versions:selected'));
             }}
             disabled={isLoading || !hasMultipleVersions || isOldestVersion}
-            className="versions-older-btn h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
+            className="versions-older-btn h-9 px-2 md:px-4 gap-1 text-xs font-medium flex-shrink-0"
           >
             {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            {language === 'he' ? 'גרסה קודמת' : language === 'ar' ? 'إصدار أقدم' : 'Older'}
+            <span className="hidden md:inline">{language === 'he' ? 'גרסה קודמת' : language === 'ar' ? 'إصدار أقدم' : 'Older'}</span>
           </Button>
 
           {/* Center info */}
@@ -69,7 +69,7 @@ export default function VersionNavigation({
               {label}
             </span>
             {changeLabel && (
-              <span className="text-[11px] text-slate-500 mt-0.5 truncate max-w-full">{changeLabel}</span>
+              <span className="text-[11px] text-slate-500 mt-0.5 truncate max-w-full hidden md:block">{changeLabel}</span>
             )}
             {timestampLabel && (
               <span className="text-[10px] text-slate-400">{timestampLabel}</span>
@@ -86,9 +86,9 @@ export default function VersionNavigation({
               if (prev > 0) window.dispatchEvent(new CustomEvent('versions:selected'));
             }}
             disabled={isLoading || !hasMultipleVersions || isCurrentVersion}
-            className="h-9 px-4 gap-1 text-xs font-medium flex-shrink-0"
+            className="h-9 px-2 md:px-4 gap-1 text-xs font-medium flex-shrink-0"
           >
-            {language === 'he' ? 'גרסה חדשה יותר' : language === 'ar' ? 'إصدار أحدث' : 'Newer'}
+            <span className="hidden md:inline">{language === 'he' ? 'גרסה חדשה יותר' : language === 'ar' ? 'إصدار أحدث' : 'Newer'}</span>
             {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </Button>
         </div>
