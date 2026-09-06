@@ -27,6 +27,26 @@ const detectLanguage = (text) => {
   return 'en';
 };
 
+// Sanitize rich-text HTML before writing it into the print/export window via
+// document.write(). Strips <script> tags, on* event-handler attributes, and
+// javascript: URLs while preserving safe formatting tags (<p>, <strong>, etc.).
+const sanitizeHtmlForExport = (html) => {
+  if (!html) return '';
+  const temp = document.createElement('div');
+  temp.innerHTML = html;
+  temp.querySelectorAll('script').forEach((el) => el.remove());
+  temp.querySelectorAll('*').forEach((el) => {
+    [...el.attributes].forEach((attr) => {
+      const name = attr.name.toLowerCase();
+      const value = (attr.value || '').toLowerCase().trim();
+      if (name.startsWith('on') || (name === 'href' && value.startsWith('javascript:')) || (name === 'src' && value.startsWith('javascript:'))) {
+        el.removeAttribute(attr.name);
+      }
+    });
+  });
+  return temp.innerHTML;
+};
+
 export default function DocumentCleanView() {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
@@ -472,9 +492,10 @@ export default function DocumentCleanView() {
       topic.title);
 
       const sectionsHtml = topicSections.map((section, si) => {
-        const content = (showTranslatedSections[section.id] ?
+        const rawContent = (showTranslatedSections[section.id] ?
         translatedSections[section.id] || section.translations?.[language] :
         null) || section.content || '';
+        const content = sanitizeHtmlForExport(rawContent);
         return `<div style="margin-bottom:1.5rem">
             <span style="color:#64748b;font-weight:500;margin-inline-end:0.5rem">${ti + 1}.${si + 1}</span>
             <span style="font-size:1.1rem;line-height:1.8">${content}</span>
