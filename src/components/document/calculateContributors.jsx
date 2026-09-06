@@ -132,7 +132,7 @@ export function calculateContributorsFromData({
   // Build email → userId map from public profiles
   const emailToUserId = {};
   allUsers.forEach(u => {
-    const uid = u.userId || u.id;
+    const uid = u.userId;
     if (uid && u.email) emailToUserId[u.email] = uid;
   });
 
@@ -188,6 +188,14 @@ export function calculateContributorsFromData({
   suggestions.forEach(s => {
     if (s.created_by_id) uniqueParticipants.add(s.created_by_id);
     else if (s.created_by) addByEmail(s.created_by);
+  });
+
+  // Collapse: if a user's userId is already counted, remove their email key too
+  // (prevents double-count when email-only records didn't resolve to userId)
+  allUsers.forEach(u => {
+    if (u.userId && u.email && uniqueParticipants.has(u.userId)) {
+      uniqueParticipants.delete(u.email);
+    }
   });
 
   return Math.max(1, uniqueParticipants.size);

@@ -163,6 +163,14 @@ export default function DocumentView() {
     });
     // Agreement signers
     documentAgreements.forEach(a => { addByKey(a.userId, a.userEmail); });
+    // Collapse: if a user's userId is already counted, remove their email key too
+    // (prevents double-count when email-only records didn't resolve to userId —
+    // e.g. after a name/email change the profile email may not match old records)
+    publicProfiles.forEach(p => {
+      if (p.userId && p.email && uniqueParticipants.has(p.userId)) {
+        uniqueParticipants.delete(p.email);
+      }
+    });
     return Math.max(1, uniqueParticipants.size);
   }, [suggestions, sections, allVotes, allSectionVotes, allComments, publicProfiles, documentAgreements, documentId]);
 

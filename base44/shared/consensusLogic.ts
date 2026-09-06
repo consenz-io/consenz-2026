@@ -47,6 +47,14 @@ export async function calculateContributors(base44, documentId) {
   suggestions.forEach(s => { addByKey(s.created_by_id, s.created_by); });
   sectionVotes.forEach(v => { addByKey(v.userId, v.created_by); });
 
+  // Collapse: if a user's userId is already counted, remove their email key too
+  // (prevents double-count when email-only records didn't resolve to userId)
+  profiles.forEach(p => {
+    if (p.userId && p.email && uniqueParticipants.has(p.userId)) {
+      uniqueParticipants.delete(p.email);
+    }
+  });
+
   return Math.max(1, uniqueParticipants.size);
 }
 

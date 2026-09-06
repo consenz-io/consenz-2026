@@ -126,6 +126,14 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     // 7. Suggestion creators
     suggestions.forEach(s => { addByKey(s.created_by_id, s.created_by); });
 
+    // Collapse: if a user's userId is already counted, remove their email key too
+    // (prevents double-count when email-only records didn't resolve to userId)
+    publicProfiles.forEach(p => {
+      if (p.userId && p.email && uniqueParticipants.has(p.userId)) {
+        uniqueParticipants.delete(p.email);
+      }
+    });
+
     // Build contributors list — include ALL participants so list count == counter count.
     // Users without a profile get a fallback display name.
     const profileByUserId = new Map();
