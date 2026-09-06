@@ -70,11 +70,11 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
           <h1 id="hero-heading" className="font-bold leading-tight">
             <span className="text-slate-900 text-2xl md:text-5xl">{t('buildConsensusTitle')}</span>
             <br />
-            <span className="text-lg md:text-4xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-lg md:text-4xl from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent py-1">
               {t('draftTogetherTitle')} {agreementsLabel[language] || agreementsLabel.en}
             </span>
           </h1>
-          <p className="text-slate-600 max-w-2xl mx-auto leading-relaxed text-sm md:text-base py-1 md:py-3 px-2 md:px-6">
+          <p className="text-slate-600 max-w-2xl mx-auto leading-relaxed text-sm md:text-base md:py-3 md:px-6 px-5 py-16">
             {description[language] || description.en}
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
