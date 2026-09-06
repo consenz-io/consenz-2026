@@ -67,7 +67,7 @@ const SuggestionView = React.memo(function SuggestionView({
               content={suggestion.explanation}
               entity={suggestion}
               entityType="Suggestion"
-              className="text-slate-700 text-sm whitespace-pre-wrap" />
+              className="text-slate-700 text-base whitespace-pre-wrap" />
             
               </div>
           }
@@ -83,7 +83,7 @@ const SuggestionView = React.memo(function SuggestionView({
             section={section} />
           
             {suggestion.explanation && typeof suggestion.explanation === 'string' &&
-          <div className="mt-3 text-sm">
+          <div className="mt-3 text-base">
                 <div className="font-semibold text-slate-700 mb-1">{t('explanation')}:</div>
                 <TranslatableContent
               content={suggestion.explanation}
@@ -94,8 +94,7 @@ const SuggestionView = React.memo(function SuggestionView({
               </div>
           }
           </div> :
-
-        <div>
+          <div>
             <div className="p-3 bg-green-50 rounded border border-green-200 hover:bg-green-100 hover:shadow-md transition-all">
               <TranslatableContent
               content={suggestion.newContent}
@@ -108,7 +107,7 @@ const SuggestionView = React.memo(function SuggestionView({
             
             </div>
             {suggestion.explanation && typeof suggestion.explanation === 'string' &&
-          <div className="mt-3 text-sm">
+          <div className="mt-3 text-base">
                 <div className="font-semibold text-slate-700 mb-1">{t('explanation')}:</div>
                 <TranslatableContent
               content={suggestion.explanation}

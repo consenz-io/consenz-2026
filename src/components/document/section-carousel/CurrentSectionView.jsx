@@ -66,7 +66,7 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
 
   return (
     <>
-      <div className="text-sm font-semibold text-slate-700 mb-2">{t('sectionWording')}</div>
+      <div className="text-base font-semibold text-slate-700 mb-2">{t('sectionWording')}</div>
       <TranslatableContent
         content={section.content}
         entity={section}

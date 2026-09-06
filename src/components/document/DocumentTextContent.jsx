@@ -6,11 +6,10 @@ export default function DocumentTextContent({ content, className = "" }) {
   
   return (
     <div 
-      className={`document-content ${className}`}
+      className={`document-content text-base md:text-xl ${className}`}
       dangerouslySetInnerHTML={{ __html: content }}
       style={{
         fontFamily: "var(--font-document)",
-        fontSize: "1.375rem",
         lineHeight: "1.8",
         letterSpacing: "0.01em",
         fontWeight: "400",

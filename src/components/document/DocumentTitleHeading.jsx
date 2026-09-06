@@ -15,7 +15,7 @@ export default function DocumentTitleHeading({ children, id, className = "" }) {
   return (
     <h1
       id={id}
-      className={`text-slate-900 flex-1 min-w-0 max-w-full break-words leading-tight text-3xl md:text-3xl font-display font-normal ${className}`}
+      className={`text-slate-900 flex-1 min-w-0 max-w-full break-words leading-tight text-2xl md:text-3xl font-display font-normal ${className}`}
       style={{ fontFamily: DOCUMENT_TITLE_FONT }}>
       
       {children}
