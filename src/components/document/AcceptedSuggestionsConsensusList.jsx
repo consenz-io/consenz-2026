@@ -1,16 +1,25 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { ThumbsUp, ThumbsDown, TrendingUp, FilePlus, FileEdit, Trash2, ExternalLink } from "lucide-react";
+import { ThumbsUp, ThumbsDown, TrendingUp, FilePlus, FileEdit, Trash2, ExternalLink, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { createPageUrl } from "@/utils";
+import { formatLocalDateTime } from "@/components/utils/dateFormatter";
+
+const PAGE_SIZE = 10;
 
 /**
  * Lists all accepted suggestions (excluding admin overrides) with their vote
  * counts, individual consensus value, and how each contributed to the running
  * consensus meter average.
+ *
+ * Rows are computed in chronological order (oldest first) so the running
+ * average is correct, then displayed newest-first. A "load more" button
+ * paginates the display to keep the DOM light for documents with many
+ * accepted suggestions.
  */
 export default function AcceptedSuggestionsConsensusList({ suggestions, currentMeter }) {
   const { language, isRTL } = useLanguage();
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   // Only community-accepted suggestions (not admin overrides) contribute to
   // the consensus meter — exclude approvedByAdmin per the schema.
@@ -26,30 +35,26 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
     );
   }
 
-  // Compute running average using the stored suggestionConsensus values,
-  // matching the document's consensuses array calculation:
-  //   meter = average of min(1, suggestionConsensus) across all accepted
-  //
-  // The threshold used to accept suggestion N is derived from the meter
-  // computed from all PREVIOUSLY accepted suggestions (1..N-1), multiplied
-  // by the participant count at the moment of acceptance. For the first
-  // suggestion the meter is 0 so the default threshold (2) applies.
+  // Compute running average in chronological order (oldest first) so each
+  // row's running average includes all suggestions accepted up to and
+  // including it.
   let runningSum = 0;
   const rows = accepted.map((s, i) => {
     const pro = s.proVotes || 0;
     const con = s.conVotes || 0;
-    // Use the stored consensus value (what the system actually used), not a
-    // naive pro/(pro+con) which can differ from the stored calculation.
     const consensus = Math.min(1, s.suggestionConsensus ?? 0);
-    // Meter BEFORE this suggestion was accepted (average of all prior ones)
     const prevRunningAvg = i === 0 ? 0 : runningSum / i;
     runningSum += consensus;
     const runningAvg = runningSum / (i + 1);
-    // Threshold required at the moment this suggestion was accepted
     const participants = s.participantsAtAcceptance || 0;
     const thresholdUsed = Math.max(2, Math.round(prevRunningAvg * participants));
     return { ...s, pro, con, consensus, runningAvg, prevRunningAvg, participants, thresholdUsed, index: i + 1 };
   });
+
+  // Display newest-first
+  const displayRows = [...rows].reverse();
+  const visibleRows = displayRows.slice(0, visibleCount);
+  const hasMore = visibleCount < displayRows.length;
 
   const typeLabel = (s) => {
     if (language === 'he') {
@@ -82,6 +87,13 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
   const colConsensus = language === 'he' ? 'קונצנזוס' : language === 'ar' ? 'إجماع' : 'Consensus';
   const colRunning = language === 'he' ? 'ממוצע מצטבר' : language === 'ar' ? 'المتوسط التراكمي' : 'Running Avg';
   const colThreshold = language === 'he' ? 'רף תומכים דרוש' : language === 'ar' ? 'عتبة المؤيدين المطلوبة' : 'Required Threshold';
+  const colDate = language === 'he' ? 'מועד קבלה' : language === 'ar' ? 'تاريخ القبول' : 'Accepted On';
+  const loadMoreLabel = language === 'he' ? 'טען עוד' : language === 'ar' ? 'تحميل المزيد' : 'Load more';
+  const showingLabel = language === 'he'
+    ? `מציג ${visibleRows.length} מתוך ${displayRows.length}`
+    : language === 'ar'
+    ? `عرض ${visibleRows.length} من ${displayRows.length}`
+    : `Showing ${visibleRows.length} of ${displayRows.length}`;
 
   return (
     <div className="space-y-3">
@@ -99,6 +111,7 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
             <tr className="border-b-2 border-slate-200 text-slate-600">
               <th className={`py-2 px-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>#</th>
               <th className={`py-2 px-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{colTitle}</th>
+              <th className="py-2 px-3 font-semibold text-center whitespace-nowrap">{colDate}</th>
               <th className="py-2 px-3 font-semibold text-center">{colPro}</th>
               <th className="py-2 px-3 font-semibold text-center">{colCon}</th>
               <th className="py-2 px-3 font-semibold text-center">{colConsensus}</th>
@@ -107,7 +120,7 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
             </tr>
           </thead>
           <tbody>
-            {rows.map((s) => {
+            {visibleRows.map((s) => {
               const suggestionTitle = s.title || '';
               const contentSnippet = s.newContent
                 ? s.newContent.replace(/<[^>]*>/g, '').trim().slice(0, 80)
@@ -140,6 +153,9 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
                       )}
                     </div>
                   </td>
+                  <td className="py-3 px-3 text-center whitespace-nowrap text-xs text-slate-500">
+                    {formatLocalDateTime(s.updated_date, 'DD/MM/YY HH:mm')}
+                  </td>
                   <td className="py-3 px-3 text-center">
                     <span className="inline-flex items-center gap-1 text-green-600 font-medium">
                       <ThumbsUp className="w-3.5 h-3.5" />
@@ -161,7 +177,7 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
                     <div className="flex flex-col items-center gap-0.5">
                       <span className="font-bold text-amber-700 text-sm">{s.thresholdUsed}</span>
                       <span className="text-[10px] text-slate-400">
-                        {language === 'he' ? `${(s.prevRunningAvg * 100).toFixed(0)}% × ${s.participants}` : language === 'ar' ? `${(s.prevRunningAvg * 100).toFixed(0)}% × ${s.participants}` : `${(s.prevRunningAvg * 100).toFixed(0)}% × ${s.participants}`}
+                        {`${(s.prevRunningAvg * 100).toFixed(0)}% × ${s.participants}`}
                       </span>
                     </div>
                   </td>
@@ -177,6 +193,19 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
           </tbody>
         </table>
       </div>
+
+      {hasMore && (
+        <div className="flex flex-col items-center gap-2 pt-2">
+          <button
+            onClick={() => setVisibleCount(c => c + PAGE_SIZE)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-300 hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-600 text-sm font-medium text-slate-600 transition-colors"
+          >
+            <ChevronDown className="w-4 h-4" />
+            {loadMoreLabel}
+          </button>
+          <span className="text-xs text-slate-400">{showingLabel}</span>
+        </div>
+      )}
     </div>
   );
 }
