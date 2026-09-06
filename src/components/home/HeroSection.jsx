@@ -56,13 +56,13 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
     <section className="relative overflow-hidden" aria-labelledby="hero-heading">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-indigo-600/10 to-purple-600/10" />
       {/* Background watermark logo — absolutely positioned, doesn't affect content flow */}
-      <div className="absolute top-0 left-0 right-0 flex justify-center pt-3 md:pt-10 pointer-events-none select-none" aria-hidden="true">
-        <div className="flex items-center gap-2 md:gap-3 opacity-[0.8]">
-          <img src="https://media.base44.com/images/public/69ef99e5583af6a64ca3772e/5569749ec_image.png" alt="" className="w-9 h-9 md:w-16 md:h-16 shrink-0" />
-          <span className="text-2xl md:text-6xl font-bold text-slate-900 tracking-tight">consenz</span>
+      <div className="absolute top-0 left-0 right-0 flex justify-center pt-2 md:pt-10 pointer-events-none select-none" aria-hidden="true">
+        <div className="flex items-center gap-2 md:gap-3 opacity-30 md:opacity-[0.8]">
+          <img src="https://media.base44.com/images/public/69ef99e5583af6a64ca3772e/5569749ec_image.png" alt="" className="w-7 h-7 md:w-16 md:h-16 shrink-0" />
+          <span className="text-xl md:text-6xl font-bold text-slate-900 tracking-tight">consenz</span>
         </div>
       </div>
-      <div className="relative max-w-7xl md:py-32 py-20 px-5">
+      <div className="relative max-w-7xl md:py-32 py-10 px-5">
         <div className="text-center space-y-3 md:space-y-6">
           <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-4 py-2">
             {t('democraticCollaboration')}
@@ -74,20 +74,20 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
               {t('draftTogetherTitle')} {agreementsLabel[language] || agreementsLabel.en}
             </span>
           </h1>
-          <p className="text-slate-600 max-w-2xl mx-auto leading-relaxed text-base md:text-base py-3 px-6">
+          <p className="text-slate-600 max-w-2xl mx-auto leading-relaxed text-sm md:text-base py-1 md:py-3 px-2 md:px-6">
             {description[language] || description.en}
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
-            <div ref={buttonRef}>
+            <div ref={buttonRef} className="w-full md:w-auto">
               {!showFloating &&
               <motion.div
                 layoutId="tour-button"
-                className="inline-flex"
+                className="inline-flex w-full md:w-auto"
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}>
                 
                   <Button
                   size="lg"
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                   onClick={startTutorial}>
                   
                     {tourLabel[language] || tourLabel.en}
@@ -96,7 +96,7 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
                 </motion.div>
               }
             </div>
-            <Link to={createPageUrl("LearnMore")}>
+            <Link to={createPageUrl("LearnMore")} className="hidden md:block">
               <Button size="lg" variant="outline">{t('learnMore')}</Button>
             </Link>
           </div>
