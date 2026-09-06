@@ -47,7 +47,7 @@ function MobileMenuButton({ isRTL, nudgeActive }) {
         <rect width="18" height="18" x="3" y="3" rx="2" />
         <path d="M9 3v18" />
       </svg>
-      <span className="text-base font-bold text-slate-900 hidden">Consenz</span>
+      
     </button>);
 
 }
