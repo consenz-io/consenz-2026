@@ -371,16 +371,20 @@ export function useDocumentContentData({
   // Pre-group ALL suggestions by sectionId (including edit_suggestion children)
   // — passed to SectionCarousel so it doesn't re-filter the full document array per section.
   // Was O(sections × suggestions) per render; now O(suggestions) once + O(1) per section.
+  // Single pass: build bySection + suggestionById incrementally, then attach
+  // edit_suggestion children in a second lightweight loop (only over children).
+  // Avoids building a full suggestionById Map when most suggestions have a sectionId.
   const allSuggestionsBySectionId = useMemo(() => {
-    const suggestionById = new Map(suggestions.map((s) => [s.id, s]));
     const bySection = new Map();
+    const suggestionById = new Map();
     for (const s of suggestions) {
+      suggestionById.set(s.id, s);
       if (s.sectionId) {
         if (!bySection.has(s.sectionId)) bySection.set(s.sectionId, []);
         bySection.get(s.sectionId).push(s);
       }
     }
-    // Add edit_suggestion children that don't have their own sectionId but whose parent does
+    // Attach edit_suggestion children whose parent has a sectionId
     for (const s of suggestions) {
       if (s.type === 'edit_suggestion' && !s.sectionId && s.parentSuggestionId) {
         const parent = suggestionById.get(s.parentSuggestionId);

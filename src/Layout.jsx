@@ -276,17 +276,17 @@ function LayoutContent({ children, currentPageName }) {
 
   const totalUnvotedSuggestions = unvotedData?.data?.count ?? 0;
 
+  // Lightweight count-only query — fetches a single number instead of up to 50
+  // full Message records. The Message subscription below still drives real-time updates.
   const { data: unreadMessagesData } = useQuery({
     queryKey: ['unreadMessageCount'],
-    queryFn: () => base44.entities.Message.filter({ recipientId: user.id, read: false }, '-created_date', 50),
+    queryFn: () => base44.functions.invoke('getUnreadMessageCount', {}),
     enabled: !!user?.id,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
-    // No refetchInterval — the Message subscription below handles real-time updates.
-    // Polling every 30s was redundant and caused unnecessary API calls during idle sessions.
   });
 
-  const totalUnreadMessages = unreadMessagesData?.length ?? 0;
+  const totalUnreadMessages = unreadMessagesData?.data?.count ?? 0;
 
 
 
