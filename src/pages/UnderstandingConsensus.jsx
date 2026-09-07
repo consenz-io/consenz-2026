@@ -145,24 +145,24 @@ export default function UnderstandingConsensus() {
             <div className={`grid grid-cols-1 md:grid-cols-3`} dir={isRTL ? 'rtl' : 'ltr'}>
 
               {/* עמודה 1: מד הקונצנזוס */}
-              <div className="bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-6 flex flex-col items-center justify-center text-center hidden">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
-                  <Gauge className="w-6 h-6" />
-                </div>
-                <h3 className="font-bold text-base mb-1">{t('consensusMeterLabel')}</h3>
-                <p className="text-indigo-200 text-xs mb-4">
-                  {language === 'he' ? 'ממוצע ההסכמה על שינויים שהתקבלו' : language === 'ar' ? 'متوسط الموافقة على التغييرات المقبولة' : 'Average agreement on accepted changes'}
-                </p>
-                <div className="text-5xl font-bold">{(documentConsensusMeter * 100).toFixed(0)}%</div>
-                <div className="mt-4 w-full">
-                  <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div className="h-full bg-white rounded-full" style={{ width: `${Math.min(100, documentConsensusMeter * 100)}%` }} />
-                  </div>
-                  <div className="flex justify-between text-xs text-indigo-200 mt-1">
-                    <span>0%</span><span>100%</span>
-                  </div>
-                </div>
-              </div>
+              
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              
 
               {/* סמל × - מובייל */}
               <div className="md:hidden flex justify-center py-1">
@@ -172,25 +172,25 @@ export default function UnderstandingConsensus() {
               </div>
 
               {/* עמודה 2: משתתפים בעת הקבלה האחרונה */}
-              <div className="bg-gradient-to-br from-blue-600 to-cyan-600 text-white p-6 flex flex-col items-center justify-center text-center relative hidden">
-                {/* סמל × - דסקטופ */}
-                <div className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-0 translate-x-1/2' : 'left-0 -translate-x-1/2'} md:flex hidden w-10 h-10 bg-white rounded-full items-center justify-center shadow-lg z-10 border-2 border-indigo-300`}>
-                  <span className="text-indigo-600 font-bold text-xl">×</span>
-                </div>
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
-                  <Users className="w-6 h-6" />
-                </div>
-                <h3 className="font-bold text-base mb-1">
-                  {language === 'he' ? 'משתתפים בעת יצירת הגרסה האחרונה' : language === 'ar' ? 'المشاركون عند القبول' : 'Participants at acceptance'}
-                </h3>
-                <p className="text-blue-200 text-xs mb-4">
-                  {language === 'he' ? 'מספר המשתתפים כשהתקבלה ההצעה האחרונה' : language === 'ar' ? 'عدد المشاركين عند قبول آخر اقتراح' : 'Participants when last suggestion was accepted'}
-                </p>
-                <div className="text-5xl font-bold">{participantsAtLastAcceptance}</div>
-                <div className="mt-4 bg-white/10 rounded-lg px-4 py-2 text-xs text-blue-100">
-                  {language === 'he' ? `סה"כ משתתפים כיום: ${totalUsers}` : language === 'ar' ? `إجمالي المشاركين الحاليين: ${totalUsers}` : `Current total participants: ${totalUsers}`}
-                </div>
-              </div>
+              
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              
 
               {/* סמל = - מובייל */}
               <div className="md:hidden flex justify-center py-1">
@@ -200,25 +200,25 @@ export default function UnderstandingConsensus() {
               </div>
 
               {/* עמודה 3: רף התמיכה - התוצאה */}
-              <div className="bg-gradient-to-br from-emerald-600 to-teal-600 text-white p-6 flex flex-col items-center justify-center text-center relative hidden">
-                {/* סמל = - דסקטופ */}
-                <div className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-0 translate-x-1/2' : 'left-0 -translate-x-1/2'} md:flex hidden w-10 h-10 bg-white rounded-full items-center justify-center shadow-lg z-10 border-2 border-emerald-300`}>
-                  <span className="text-emerald-600 font-bold text-xl">=</span>
-                </div>
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
-                  <Scale className="w-6 h-6" />
-                </div>
-                <h3 className="font-bold text-base mb-1">{t('supportThresholdLabel')}</h3>
-                <p className="text-emerald-100 text-xs mb-4">
-                  {language === 'he' ? 'פער תומכים-מתנגדים הדרוש לאישור הצעה' : language === 'ar' ? 'فرق المؤيدين والمعارضين المطلوب لقبول اقتراح' : 'Required pro-con gap to approve a suggestion'}
-                </p>
-                <div className="text-5xl font-bold">{threshold}</div>
-                <div className="mt-4 bg-white/10 rounded-lg px-4 py-2 text-xs text-emerald-100">
-                  {language === 'he' ?
-                  `${(documentConsensusMeter * 100).toFixed(0)}% × ${participantsAtLastAcceptance} = ${threshold}` :
-                  `${(documentConsensusMeter * 100).toFixed(0)}% × ${participantsAtLastAcceptance} = ${threshold}`}
-                </div>
-              </div>
+              
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+              
 
             </div>
           </CardContent>
@@ -250,11 +250,11 @@ export default function UnderstandingConsensus() {
             <p className="text-slate-300 leading-relaxed text-lg">
               {t('thresholdMeaningDetailed', { threshold })}
             </p>
-            <div className="mt-6 bg-white/10 rounded-lg p-4 hidden">
-              <p className="text-slate-200 text-sm">
-                <strong>{t('example')}:</strong> {t('thresholdExample', { threshold })}
-              </p>
-            </div>
+            
+
+
+
+            
           </CardContent>
         </Card>
 
