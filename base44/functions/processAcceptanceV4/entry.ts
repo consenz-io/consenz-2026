@@ -624,8 +624,7 @@ Deno.serve(async (req) => {
       base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
         status: 'accepted',
         suggestionConsensus: boundedConsensus,
-        participantsAtAcceptance: totalUsers,
-        acceptedAt: new Date().toISOString()
+        participantsAtAcceptance: totalUsers
       })
     );
 

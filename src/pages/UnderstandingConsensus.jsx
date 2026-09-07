@@ -99,6 +99,12 @@ export default function UnderstandingConsensus() {
   // הוא מתעדכן רק כשהצעה מתקבלת
   const threshold = Math.max(2, document?.threshold || 2);
 
+  // התוצאה הגולמית של מד × משתתפים (לפני עיגול והגבלה למינימום 2).
+  // משמשת להצגת הנוסחה בצורה כנה — הרף הסופי עובר Math.round ו-Math.max(2, …).
+  const rawCalculation = acceptedSuggestions.length > 0
+    ? documentConsensusMeter * participantsAtLastAcceptance
+    : 0;
+
   if (docLoading || suggestionsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6">
@@ -268,25 +274,48 @@ export default function UnderstandingConsensus() {
           </CardHeader>
           <CardContent>
             <div className="bg-slate-50 rounded-xl p-6">
-              <div className={`flex flex-col md:flex-row items-center justify-center gap-4 text-center ${isRTL ? 'md:flex-row-reverse' : ''}`}>
-                <div className="bg-white rounded-xl p-4 shadow-sm border-2 border-indigo-200 min-w-[140px]">
-                  <div className="text-2xl font-bold text-indigo-700">{(documentConsensusMeter * 100).toFixed(0)}%</div>
-                  <div className="text-xs text-slate-500 mt-1">{t('consensusMeterLabel')}</div>
+              {acceptedSuggestions.length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-sm text-slate-500">
+                    {language === 'he'
+                      ? 'עדיין לא אושרו הצעות במסמך — נעשה שימוש ברף ברירת המחדל של 2.'
+                      : language === 'ar'
+                      ? 'لم يتم قبول أي اقتراحات بعد — يتم استخدام الحد الافتراضي البالغ 2.'
+                      : 'No suggestions accepted yet — using the default threshold of 2.'}
+                  </p>
                 </div>
-                <div className="text-3xl text-slate-400 font-light">×</div>
-                <div className="bg-white rounded-xl p-4 shadow-sm border-2 border-blue-200 min-w-[140px]">
-                  <div className="text-2xl font-bold text-blue-700">{participantsAtLastAcceptance}</div>
-                  <div className="text-xs text-slate-500 mt-1">{language === 'he' ? 'משתתפים בעת הקבלה' : language === 'ar' ? 'المشاركون عند القبول' : 'Participants at acceptance'}</div>
-                </div>
-                <div className="text-3xl text-slate-400 font-light">=</div>
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 shadow-sm border-2 border-green-300 min-w-[140px]">
-                  <div className="text-2xl font-bold text-green-700">{threshold}</div>
-                  <div className="text-xs text-slate-500 mt-1">{t('supportThresholdLabel')}</div>
-                </div>
-              </div>
-              <p className="text-center text-sm text-slate-500 mt-4">
-                {language === 'he' ? 'הסף הנוכחי חושב בעת קבלת ההצעה האחרונה — מספר המשתתפים כפי שהיה באותו הרגע' : language === 'ar' ? 'تم حساب الحد الحالي عند قبول الاقتراح الأخير — عدد المشاركين في تلك اللحظة' : 'Current threshold was calculated when the last suggestion was accepted — participants count at that moment'}
-              </p>
+              ) : (
+                <>
+                  <div className={`flex flex-col md:flex-row items-center justify-center gap-3 text-center ${isRTL ? 'md:flex-row-reverse' : ''}`}>
+                    <div className="bg-white rounded-xl p-4 shadow-sm border-2 border-indigo-200 min-w-[130px]">
+                      <div className="text-2xl font-bold text-indigo-700">{(documentConsensusMeter * 100).toFixed(0)}%</div>
+                      <div className="text-xs text-slate-500 mt-1">{t('consensusMeterLabel')}</div>
+                    </div>
+                    <div className="text-2xl text-slate-400 font-light">×</div>
+                    <div className="bg-white rounded-xl p-4 shadow-sm border-2 border-blue-200 min-w-[130px]">
+                      <div className="text-2xl font-bold text-blue-700">{participantsAtLastAcceptance}</div>
+                      <div className="text-xs text-slate-500 mt-1">{language === 'he' ? 'משתתפים בעת הקבלה' : language === 'ar' ? 'المشاركون عند القبول' : 'Participants at acceptance'}</div>
+                    </div>
+                    <div className="text-2xl text-slate-400 font-light">=</div>
+                    <div className="bg-white rounded-xl p-4 shadow-sm border-2 border-slate-300 min-w-[130px]">
+                      <div className="text-2xl font-bold text-slate-700">{rawCalculation.toFixed(1)}</div>
+                      <div className="text-xs text-slate-500 mt-1">{language === 'he' ? 'תוצאה גולמית' : language === 'ar' ? 'نتيجة خام' : 'Raw result'}</div>
+                    </div>
+                    <div className="text-2xl text-slate-400 font-light">→</div>
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 shadow-sm border-2 border-green-300 min-w-[130px]">
+                      <div className="text-2xl font-bold text-green-700">{threshold}</div>
+                      <div className="text-xs text-slate-500 mt-1">{t('supportThresholdLabel')}</div>
+                    </div>
+                  </div>
+                  <p className="text-center text-sm text-slate-500 mt-4">
+                    {language === 'he'
+                      ? `התוצאה הגולמית מעוגלת למספר שלם ומוגבלת למינימום 2 — לכן הרף הסופי הוא ${threshold}.`
+                      : language === 'ar'
+                      ? `يتم تقريب النتيجة الخام وتحديدها بحد أدنى 2 — لذلك الحد النهائي هو ${threshold}.`
+                      : `The raw result is rounded and floored at a minimum of 2 — so the final threshold is ${threshold}.`}
+                  </p>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>

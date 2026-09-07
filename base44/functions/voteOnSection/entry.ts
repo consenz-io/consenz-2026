@@ -257,7 +257,6 @@ Deno.serve(async (req) => {
               translations: {},
               suggestionConsensus: boundedConsensus,
               participantsAtAcceptance: consensusTotalUsers,
-              acceptedAt: new Date().toISOString()
             });
             deleteSuggestionId = deleteSuggestion?.id || null;
           } catch (e) {

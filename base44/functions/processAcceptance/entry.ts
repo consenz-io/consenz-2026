@@ -495,8 +495,7 @@ Deno.serve(async (req) => {
         originalContent: suggestion.newContent,
         suggestionConsensus: boundedConsensus,
         participantsAtAcceptance: totalUsers,
-        parentSuggestionId: null,
-        acceptedAt: new Date().toISOString()
+        parentSuggestionId: null
       });
 
     } else if (suggestion.type === 'edit_suggestion' && suggestion.parentSuggestionId) {
@@ -638,8 +637,7 @@ Deno.serve(async (req) => {
         base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
           status: 'accepted',
           suggestionConsensus: boundedConsensus,
-          participantsAtAcceptance: totalUsers,
-          acceptedAt: new Date().toISOString()
+          participantsAtAcceptance: totalUsers
         })
       );
     }
