@@ -14,6 +14,8 @@ import { ensureUserPublicProfile } from "@/components/ensureUserPublicProfile";
 import { rateLimitedAction, RATE_LIMITS } from "@/components/utils/rateLimiter";
 import { toast } from "sonner";
 import { formatLocalDateTime } from "@/components/utils/dateFormatter";
+import { cleanDisplayName } from "@/lib/displayName";
+import { useOptimizedUserProfiles } from "@/components/hooks/useOptimizedUserProfiles";
 
 // ── ReplyForm — extracted to its own component with LOCAL state ──────────────
 // Typing in the reply textarea only re-renders THIS component, not all CommentItems.
@@ -35,15 +37,15 @@ const ReplyForm = memo(function ReplyForm({
     const id = parentComment?.created_by_id;
     if (id) {
       const profile = profileByUserId.get(id);
-      if (profile?.fullName) return profile.fullName;
+      if (profile?.fullName) return cleanDisplayName(profile.fullName, profile.email);
     }
     const email = parentComment?.created_by;
     if (email) {
       const profile = profileByEmail.get(email);
-      if (profile?.fullName) return profile.fullName;
+      if (profile?.fullName) return cleanDisplayName(profile.fullName, profile.email);
       return email.split('@')[0] || email;
     }
-    return '?';
+    return 'User';
   }, [parentComment, profileByUserId, profileByEmail]);
 
   return (
@@ -142,15 +144,15 @@ const CommentItem = memo(({
     const id = comment?.created_by_id;
     if (id) {
       const profile = profileByUserId.get(id);
-      if (profile?.fullName) return profile.fullName;
+      if (profile?.fullName) return cleanDisplayName(profile.fullName, profile.email);
     }
     const email = comment?.created_by;
     if (email) {
       const profile = profileByEmail.get(email);
-      if (profile?.fullName) return profile.fullName;
+      if (profile?.fullName) return cleanDisplayName(profile.fullName, profile.email);
       return email.split('@')[0] || email;
     }
-    return '?';
+    return 'User';
   }, [profileByUserId, profileByEmail]);
 
   const isEditing = editingComment?.id === comment.id;
@@ -434,28 +436,49 @@ export default function CommentsSection({ entityType, entityId, user, scrollToCo
   // already covers (every user gets one created in Layout on login).
   // Impact: eliminates 1 full API call per CommentsSection mount (one per section/suggestion).
 
-  const { data: publicProfiles = [] } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list('-created_date', 1000),
-    initialData: [],
-    staleTime: 2 * 60 * 1000, // 2 minutes — seeded by DocumentView, avoid redundant fetch
+  // Read from the global profile cache (seeded by useDocumentData) — cache-only, no fetch.
+  const { data: globalProfiles = [] } = useOptimizedUserProfiles();
+
+  // Targeted fetch: profiles for the specific users who commented in this thread.
+  // Guarantees all commenters' profiles are loaded even on suggestiondetail where
+  // useDocumentData doesn't run, and avoids fetching all 1000+ global profiles.
+  const commenterIds = useMemo(() => {
+    const ids = new Set();
+    const emails = new Set();
+    for (const c of comments) {
+      if (c.created_by_id) ids.add(c.created_by_id);
+      if (c.created_by) emails.add(c.created_by);
+    }
+    return { ids: Array.from(ids), emails: Array.from(emails) };
+  }, [comments]);
+
+  const { data: commenterProfiles = [] } = useQuery({
+    queryKey: ['commenterProfiles', entityType, entityId],
+    queryFn: async () => {
+      const query = [];
+      if (commenterIds.ids.length > 0) query.push({ userId: { $in: commenterIds.ids } });
+      if (commenterIds.emails.length > 0) query.push({ email: { $in: commenterIds.emails } });
+      if (query.length === 0) return [];
+      return await base44.entities.UserPublicProfile.filter({ $or: query }).catch(() => []);
+    },
+    enabled: comments.length > 0 && (commenterIds.ids.length > 0 || commenterIds.emails.length > 0),
+    staleTime: 60 * 1000,
   });
 
-  // ── O(1) lookup maps — built once per data change, reused by all CommentItems ──
-  // Previously, each CommentItem did Array.find (O(n)) on the full profiles array.
-  // With 50 comments × 1000 profiles × 12 lookups = 600,000 comparisons per render.
-  // Now: 50 × 12 Map.get = 600 operations — 1000× reduction.
+  // ── O(1) lookup maps — merge global cache + targeted commenter profiles ──
   const profileByUserId = useMemo(() => {
     const map = new Map();
-    publicProfiles.forEach(p => { if (p.userId) map.set(p.userId, p); });
+    globalProfiles.forEach(p => { if (p.userId) map.set(p.userId, p); });
+    commenterProfiles.forEach(p => { if (p.userId) map.set(p.userId, p); });
     return map;
-  }, [publicProfiles]);
+  }, [globalProfiles, commenterProfiles]);
 
   const profileByEmail = useMemo(() => {
     const map = new Map();
-    publicProfiles.forEach(p => { if (p.email) map.set(p.email, p); });
+    globalProfiles.forEach(p => { if (p.email) map.set(p.email, p); });
+    commenterProfiles.forEach(p => { if (p.email) map.set(p.email, p); });
     return map;
-  }, [publicProfiles]);
+  }, [globalProfiles, commenterProfiles]);
 
   // ── Pre-group replies by parentCommentId — O(n) once, O(1) per comment ──
   // Previously: each CommentItem did allComments.filter() → O(n²) total.

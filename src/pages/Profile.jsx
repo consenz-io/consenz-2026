@@ -200,6 +200,9 @@ export default function Profile() {
       // comments (which resolve names from aggregatedData.publicProfiles) refetch
       // with the updated fullName on the next document visit.
       await queryClient.invalidateQueries({ queryKey: ['documentAggregatedData'] });
+      // Invalidate targeted commenter-profile caches (CommentsSection) so comment
+      // threads refetch with the updated fullName.
+      await queryClient.invalidateQueries({ queryKey: ['commenterProfiles'] });
 
       setSuccess(t('profileUpdatedSuccess'));
       setIsEditing(false);
