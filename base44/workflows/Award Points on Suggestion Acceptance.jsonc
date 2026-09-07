@@ -1,0 +1,37 @@
+{
+  "name": "Award Points on Suggestion Acceptance",
+  "description": "Safety net: awards gamification points to suggestion creator and pro voters when a suggestion's status changes to accepted. Independent of processAcceptanceV4 deployment.",
+  "trigger": {
+    "condition": "${ ((.trigger.changed_fields | index(\"status\") != null) and (.trigger.data.status == \"accepted\")) }",
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "update"
+      ],
+      "entity_name": "Suggestion"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "award_points_on_suggestion_acceptance",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "awardPointsOnAcceptanceV2",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "awardPointsOnAcceptanceV2"
+  }
+}
