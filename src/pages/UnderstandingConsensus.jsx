@@ -21,15 +21,15 @@ export default function UnderstandingConsensus() {
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
-    queryFn: () => base44.entities.Document.filter({ id: documentId }).then(docs => docs[0]),
-    enabled: !!documentId,
+    queryFn: () => base44.entities.Document.filter({ id: documentId }).then((docs) => docs[0]),
+    enabled: !!documentId
   });
 
   const { data: suggestions, isLoading: suggestionsLoading } = useQuery({
     queryKey: ['suggestions', documentId],
     queryFn: () => base44.entities.Suggestion.filter({ documentId }, 'created_date'),
     initialData: [],
-    enabled: !!documentId,
+    enabled: !!documentId
   });
 
   // Reuse contributorsCount from DocumentView cache (same query key), fallback to fresh fetch
@@ -37,32 +37,32 @@ export default function UnderstandingConsensus() {
     queryKey: ['contributorsCount', documentId],
     queryFn: async () => {
       const [docSuggestions, docSections, allVotesRaw, publicProfilesRaw, allCommentsRaw, allAgreementsRaw] = await Promise.all([
-        base44.entities.Suggestion.filter({ documentId }),
-        base44.entities.Section.filter({ documentId }),
-        base44.entities.Vote.list(),
-        base44.entities.UserPublicProfile.list(),
-        base44.entities.Comment.list(),
-        base44.entities.DocumentAgreement.filter({ documentId }),
-      ]);
+      base44.entities.Suggestion.filter({ documentId }),
+      base44.entities.Section.filter({ documentId }),
+      base44.entities.Vote.list(),
+      base44.entities.UserPublicProfile.list(),
+      base44.entities.Comment.list(),
+      base44.entities.DocumentAgreement.filter({ documentId })]
+      );
       const contributorEmails = new Set();
-      const suggestionIds = new Set(docSuggestions.map(s => s.id));
-      const sectionIds = new Set(docSections.map(s => s.id));
-      allVotesRaw.forEach(v => {
+      const suggestionIds = new Set(docSuggestions.map((s) => s.id));
+      const sectionIds = new Set(docSections.map((s) => s.id));
+      allVotesRaw.forEach((v) => {
         if (suggestionIds.has(v.suggestionId)) {
           if (v.created_by) contributorEmails.add(v.created_by);
-          const profile = publicProfilesRaw.find(p => p.userId === v.userId);
+          const profile = publicProfilesRaw.find((p) => p.userId === v.userId);
           if (profile?.email) contributorEmails.add(profile.email);
         }
       });
-      allCommentsRaw.forEach(c => {
+      allCommentsRaw.forEach((c) => {
         if (!c.created_by) return;
         if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) contributorEmails.add(c.created_by);
         if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) contributorEmails.add(c.created_by);
         if (c.rootEntityType === 'document' && c.rootEntityId === documentId) contributorEmails.add(c.created_by);
       });
-      allAgreementsRaw.forEach(a => { if (a.userEmail) contributorEmails.add(a.userEmail); });
+      allAgreementsRaw.forEach((a) => {if (a.userEmail) contributorEmails.add(a.userEmail);});
       const contributorsMap = new Map();
-      publicProfilesRaw.forEach(profile => {
+      publicProfilesRaw.forEach((profile) => {
         if (contributorEmails.has(profile.email) && profile.userId) {
           contributorsMap.set(profile.userId, true);
         }
@@ -70,7 +70,7 @@ export default function UnderstandingConsensus() {
       return contributorsMap.size;
     },
     enabled: !!documentId,
-    staleTime: Infinity,
+    staleTime: Infinity
   });
 
   const consensuses = document?.consensuses || [];
@@ -79,7 +79,7 @@ export default function UnderstandingConsensus() {
   // This value is the comprehensive backend snapshot (includes section-vote
   // voters, suggestion creators, commenters and agreement signers) stored on
   // the suggestion at acceptance time.
-  const acceptedSuggestions = (suggestions || []).filter(s => s.status === 'accepted' && s.participantsAtAcceptance);
+  const acceptedSuggestions = (suggestions || []).filter((s) => s.status === 'accepted' && s.participantsAtAcceptance);
   const lastAcceptedSuggestion = acceptedSuggestions.sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
   const participantsAtLastAcceptance = lastAcceptedSuggestion?.participantsAtAcceptance || 0;
 
@@ -89,12 +89,12 @@ export default function UnderstandingConsensus() {
   // comprehensive snapshot stored at acceptance. Participants never shrink, so
   // clamp the current count to the high-water mark from the last acceptance.
   const totalUsers = Math.max(contributorsCount || 0, participantsAtLastAcceptance, 1);
-  
+
   // מד הקונצנזוס הממוצע - ערך בין 0 ל-1 (מוגבל למקסימום 1)
-  const documentConsensusMeter = consensuses.length > 0 
-    ? Math.min(1, consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length)
-    : 0;
-  
+  const documentConsensusMeter = consensuses.length > 0 ?
+  Math.min(1, consensuses.reduce((sum, val) => sum + Math.min(1, val), 0) / consensuses.length) :
+  0;
+
   // ה-threshold הקבוע מהמסמך - לא מחשבים אותו מחדש!
   // הוא מתעדכן רק כשהצעה מתקבלת
   const threshold = Math.max(2, document?.threshold || 2);
@@ -107,8 +107,8 @@ export default function UnderstandingConsensus() {
           <Skeleton className="h-32 w-full" />
           <Skeleton className="h-64 w-full" />
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   if (!document) {
@@ -120,17 +120,17 @@ export default function UnderstandingConsensus() {
             <Button className="mt-4">{t('goHome')}</Button>
           </Link>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className={`max-w-4xl mx-auto space-y-6 ${isRTL ? 'text-right' : 'text-left'}`}>
-        <PageHeader 
+        <PageHeader
           title={t('understandingConsensusTitle')}
-          backUrl={returnUrl || `${createPageUrl("DocumentView")}?id=${documentId}`}
-        />
+          backUrl={returnUrl || `${createPageUrl("DocumentView")}?id=${documentId}`} />
+        
 
         {/* Animated consensus gauge */}
         <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-indigo-50/50">
@@ -145,7 +145,7 @@ export default function UnderstandingConsensus() {
             <div className={`grid grid-cols-1 md:grid-cols-3`} dir={isRTL ? 'rtl' : 'ltr'}>
 
               {/* עמודה 1: מד הקונצנזוס */}
-              <div className="bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-6 flex flex-col items-center justify-center text-center">
+              <div className="bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-6 flex flex-col items-center justify-center text-center hidden">
                 <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3">
                   <Gauge className="w-6 h-6" />
                 </div>
@@ -172,7 +172,7 @@ export default function UnderstandingConsensus() {
               </div>
 
               {/* עמודה 2: משתתפים בעת הקבלה האחרונה */}
-              <div className="bg-gradient-to-br from-blue-600 to-cyan-600 text-white p-6 flex flex-col items-center justify-center text-center relative">
+              <div className="bg-gradient-to-br from-blue-600 to-cyan-600 text-white p-6 flex flex-col items-center justify-center text-center relative hidden">
                 {/* סמל × - דסקטופ */}
                 <div className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-0 translate-x-1/2' : 'left-0 -translate-x-1/2'} md:flex hidden w-10 h-10 bg-white rounded-full items-center justify-center shadow-lg z-10 border-2 border-indigo-300`}>
                   <span className="text-indigo-600 font-bold text-xl">×</span>
@@ -200,7 +200,7 @@ export default function UnderstandingConsensus() {
               </div>
 
               {/* עמודה 3: רף התמיכה - התוצאה */}
-              <div className="bg-gradient-to-br from-emerald-600 to-teal-600 text-white p-6 flex flex-col items-center justify-center text-center relative">
+              <div className="bg-gradient-to-br from-emerald-600 to-teal-600 text-white p-6 flex flex-col items-center justify-center text-center relative hidden">
                 {/* סמל = - דסקטופ */}
                 <div className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-0 translate-x-1/2' : 'left-0 -translate-x-1/2'} md:flex hidden w-10 h-10 bg-white rounded-full items-center justify-center shadow-lg z-10 border-2 border-emerald-300`}>
                   <span className="text-emerald-600 font-bold text-xl">=</span>
@@ -214,9 +214,9 @@ export default function UnderstandingConsensus() {
                 </p>
                 <div className="text-5xl font-bold">{threshold}</div>
                 <div className="mt-4 bg-white/10 rounded-lg px-4 py-2 text-xs text-emerald-100">
-                  {language === 'he'
-                    ? `${(documentConsensusMeter * 100).toFixed(0)}% × ${participantsAtLastAcceptance} = ${threshold}`
-                    : `${(documentConsensusMeter * 100).toFixed(0)}% × ${participantsAtLastAcceptance} = ${threshold}`}
+                  {language === 'he' ?
+                  `${(documentConsensusMeter * 100).toFixed(0)}% × ${participantsAtLastAcceptance} = ${threshold}` :
+                  `${(documentConsensusMeter * 100).toFixed(0)}% × ${participantsAtLastAcceptance} = ${threshold}`}
                 </div>
               </div>
 
@@ -250,7 +250,7 @@ export default function UnderstandingConsensus() {
             <p className="text-slate-300 leading-relaxed text-lg">
               {t('thresholdMeaningDetailed', { threshold })}
             </p>
-            <div className="mt-6 bg-white/10 rounded-lg p-4">
+            <div className="mt-6 bg-white/10 rounded-lg p-4 hidden">
               <p className="text-slate-200 text-sm">
                 <strong>{t('example')}:</strong> {t('thresholdExample', { threshold })}
               </p>
@@ -302,12 +302,12 @@ export default function UnderstandingConsensus() {
           <CardContent>
             <AcceptedSuggestionsConsensusList
               suggestions={suggestions}
-              currentMeter={documentConsensusMeter}
-            />
+              currentMeter={documentConsensusMeter} />
+            
           </CardContent>
         </Card>
 
       </div>
-    </div>
-  );
+    </div>);
+
 }
