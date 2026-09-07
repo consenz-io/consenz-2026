@@ -25,7 +25,7 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
   // the consensus meter — exclude approvedByAdmin per the schema.
   const accepted = (suggestions || [])
     .filter(s => s.status === 'accepted' && !s.approvedByAdmin)
-    .sort((a, b) => new Date(a.updated_date) - new Date(b.updated_date));
+    .sort((a, b) => new Date(a.acceptedAt || a.updated_date) - new Date(b.acceptedAt || b.updated_date));
 
   if (accepted.length === 0) {
     return (
@@ -154,7 +154,7 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
                     </div>
                   </td>
                   <td className="py-3 px-3 text-center whitespace-nowrap text-xs text-slate-500">
-                    {formatLocalDateTime(s.updated_date, 'DD/MM/YY HH:mm')}
+                    {formatLocalDateTime(s.acceptedAt || s.updated_date, 'DD/MM/YY HH:mm')}
                   </td>
                   <td className="py-3 px-3 text-center">
                     <span className="inline-flex items-center gap-1 text-green-600 font-medium">
