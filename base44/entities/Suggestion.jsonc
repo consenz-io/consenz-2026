@@ -63,6 +63,11 @@
       "default": "pending",
       "description": "Current status"
     },
+    "acceptedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when the suggestion was accepted. Set once at acceptance time and never modified afterwards, unlike updated_date which changes on any record update. Used for chronological ordering in the consensus history."
+    },
     "acceptanceLock": {
       "type": "boolean",
       "default": false,
