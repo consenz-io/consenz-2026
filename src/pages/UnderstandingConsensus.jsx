@@ -179,7 +179,7 @@ export default function UnderstandingConsensus() {
 
               
 
-              {/* עמודה 2: משתתפים בעת הקבלה האחרונה */}
+              {/* עמודה 2: משתתפים בעת יצירת הגרסה האחרונה */}
               
 
 
