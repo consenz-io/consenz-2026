@@ -548,7 +548,8 @@ Deno.serve(async (req) => {
       base44.asServiceRole.entities.Document.update(document.id, {
         consensuses: updatedConsensuses,
         threshold: newThreshold,
-        totalUsersInteracted: totalUsers
+        totalUsersInteracted: totalUsers,
+        participantsAtThreshold: totalUsers
       }),
       ...pendingSuggestions
         .filter(p => p.id !== suggestionId)

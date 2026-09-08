@@ -43,6 +43,11 @@
       "default": 2,
       "description": "Current acceptance threshold for suggestions (delta between pro and con votes)"
     },
+    "participantsAtThreshold": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of participants at the time the threshold was last computed. Always in sync with threshold since both are set in the same update call."
+    },
     "consensuses": {
       "type": "array",
       "description": "Array of section_consensus_meter values from accepted suggestions",

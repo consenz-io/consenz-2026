@@ -297,6 +297,7 @@ Deno.serve(async (req) => {
                 avgSuggestionConsensus: consensusMeterAverage,
                 threshold: newThreshold,
                 totalUsersInteracted: consensusTotalUsers,
+                participantsAtThreshold: consensusTotalUsers,
               });
             } catch (e) {
               console.error('[VOTE ON SECTION V2 document consensus update error]', e);

@@ -80,7 +80,9 @@ export default function UnderstandingConsensus() {
   // voters, suggestion creators, commenters and agreement signers) stored on
   // the suggestion at acceptance time.
   const acceptedSuggestions = (suggestions || []).filter((s) => s.status === 'accepted' && s.participantsAtAcceptance);
-  const lastAcceptedSuggestion = acceptedSuggestions.sort((a, b) => new Date(b.updated_date) - new Date(a.updated_date))[0];
+  const lastAcceptedSuggestion = acceptedSuggestions.sort((a, b) =>
+    new Date(b.acceptedAt || b.updated_date || b.created_date) - new Date(a.acceptedAt || a.updated_date || a.created_date)
+  )[0];
   const participantsAtLastAcceptance = lastAcceptedSuggestion?.participantsAtAcceptance || 0;
 
   // Current total participants. The live client count (contributorsCount) only
@@ -89,6 +91,12 @@ export default function UnderstandingConsensus() {
   // comprehensive snapshot stored at acceptance. Participants never shrink, so
   // clamp the current count to the high-water mark from the last acceptance.
   const totalUsers = Math.max(contributorsCount || 0, participantsAtLastAcceptance, 1);
+
+  // Participants used to compute the stored threshold — always in sync with
+  // document.threshold since both are set in the same update call. Falls back
+  // to totalUsersInteracted (which is set in the same call) for legacy docs
+  // that predate the participantsAtThreshold field.
+  const participantsForFormula = document?.participantsAtThreshold || document?.totalUsersInteracted || totalUsers;
 
   // מד הקונצנזוס הממוצע - ערך בין 0 ל-1 (מוגבל למקסימום 1)
   const documentConsensusMeter = consensuses.length > 0 ?
@@ -275,7 +283,7 @@ export default function UnderstandingConsensus() {
                 </div>
                 <div className="text-3xl text-slate-400 font-light">×</div>
                 <div className="bg-white rounded-xl p-4 shadow-sm border-2 border-blue-200 min-w-[140px]">
-                  <div className="text-2xl font-bold text-blue-700">{participantsAtLastAcceptance}</div>
+                  <div className="text-2xl font-bold text-blue-700">{participantsForFormula}</div>
                   <div className="text-xs text-slate-500 mt-1">{language === 'he' ? 'משתתפים בעת הקבלה' : language === 'ar' ? 'المشاركون عند القبول' : 'Participants at acceptance'}</div>
                 </div>
                 <div className="text-3xl text-slate-400 font-light">=</div>
