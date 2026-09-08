@@ -17,7 +17,7 @@ const PAGE_SIZE = 10;
  * paginates the display to keep the DOM light for documents with many
  * accepted suggestions.
  */
-export default function AcceptedSuggestionsConsensusList({ suggestions, currentMeter }) {
+export default function AcceptedSuggestionsConsensusList({ suggestions, consensuses, currentMeter }) {
   const { language, isRTL } = useLanguage();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
@@ -25,7 +25,7 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
   // the consensus meter — exclude approvedByAdmin per the schema.
   const accepted = (suggestions || [])
     .filter(s => s.status === 'accepted' && !s.approvedByAdmin)
-    .sort((a, b) => new Date(a.acceptedAt || a.updated_date) - new Date(b.acceptedAt || b.updated_date));
+    .sort((a, b) => new Date(a.acceptedAt || a.updated_date || a.created_date) - new Date(b.acceptedAt || b.updated_date || b.created_date));
 
   if (accepted.length === 0) {
     return (
@@ -35,9 +35,16 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
     );
   }
 
-  // Compute running average in chronological order (oldest first) so each
-  // row's running average includes all suggestions accepted up to and
-  // including it.
+  // Use the document's stored consensuses array as the source of truth for the
+  // running average. Each consensuses[i] maps to the i-th chronologically-sorted
+  // accepted suggestion, so the running-average column matches the stored meter
+  // exactly. If the array length doesn't match the filtered suggestion count
+  // (admin overrides or legacy data), fall back to local computation.
+  const useStoredConsensuses = Array.isArray(consensuses) && consensuses.length === accepted.length;
+  if (!useStoredConsensuses && Array.isArray(consensuses) && consensuses.length !== accepted.length) {
+    console.warn('[AcceptedSuggestionsConsensusList] consensuses array length mismatch', { consensusesLen: consensuses.length, acceptedLen: accepted.length });
+  }
+
   let runningSum = 0;
   const rows = accepted.map((s, i) => {
     const pro = s.proVotes || 0;
@@ -45,7 +52,11 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
     const consensus = Math.min(1, s.suggestionConsensus ?? 0);
     const prevRunningAvg = i === 0 ? 0 : runningSum / i;
     runningSum += consensus;
-    const runningAvg = runningSum / (i + 1);
+    const localRunningAvg = runningSum / (i + 1);
+    const storedRunningAvg = useStoredConsensuses
+      ? consensuses.slice(0, i + 1).reduce((sum, val) => sum + Math.min(1, val), 0) / (i + 1)
+      : localRunningAvg;
+    const runningAvg = storedRunningAvg;
     const participants = s.participantsAtAcceptance || 0;
     const thresholdUsed = Math.max(2, Math.round(prevRunningAvg * participants));
     return { ...s, pro, con, consensus, runningAvg, prevRunningAvg, participants, thresholdUsed, index: i + 1 };
@@ -154,7 +165,7 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, currentM
                     </div>
                   </td>
                   <td className="py-3 px-3 text-center whitespace-nowrap text-xs text-slate-500">
-                    {formatLocalDateTime(s.acceptedAt || s.updated_date, 'DD/MM/YY HH:mm')}
+                    {formatLocalDateTime(s.acceptedAt || s.updated_date || s.created_date, 'DD/MM/YY HH:mm')}
                   </td>
                   <td className="py-3 px-3 text-center">
                     <span className="inline-flex items-center gap-1 text-green-600 font-medium">

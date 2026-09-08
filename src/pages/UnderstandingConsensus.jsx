@@ -302,6 +302,7 @@ export default function UnderstandingConsensus() {
           <CardContent>
             <AcceptedSuggestionsConsensusList
               suggestions={suggestions}
+              consensuses={consensuses}
               currentMeter={documentConsensusMeter} />
             
           </CardContent>
