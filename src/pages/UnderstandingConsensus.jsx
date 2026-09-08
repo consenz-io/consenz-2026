@@ -165,7 +165,7 @@ export default function UnderstandingConsensus() {
               
 
               {/* סמל × - מובייל */}
-              <div className="md:hidden flex justify-center py-1">
+              <div className="md:hidden flex justify-center py-1 hidden">
                 <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-indigo-300">
                   <span className="text-indigo-600 font-bold text-xl">×</span>
                 </div>
@@ -193,7 +193,7 @@ export default function UnderstandingConsensus() {
               
 
               {/* סמל = - מובייל */}
-              <div className="md:hidden flex justify-center py-1">
+              <div className="md:hidden flex justify-center py-1 hidden">
                 <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-emerald-300">
                   <span className="text-emerald-600 font-bold text-xl">=</span>
                 </div>
