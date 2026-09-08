@@ -36,7 +36,9 @@
     "fullName"
   ],
   "rls": {
-    "create": null,
+    "create": {
+      "data.userId": "{{user.id}}"
+    },
     "read": null,
     "update": {
       "$or": [
