@@ -332,12 +332,14 @@ export default function DocumentView() {
     }
   }, [targetSuggestionFromUrl]);
 
-  // Fallback: if data is loaded and the target suggestion is not pending (accepted/rejected/expired/not found),
-  // redirect to suggestiondetail so the user sees the suggestion's full details instead of a blank document
+  // Fallback: if data is loaded and the target suggestion is not found at all,
+  // redirect to suggestiondetail so the user sees the suggestion's full details.
+  // When the suggestion exists but was accepted/rejected/expired, stay on the
+  // document page — the SectionCarousel shows the accepted state in-place.
   useEffect(() => {
     if (!targetSuggestionFromUrl || isInitialLoading || !suggestions) return;
     const targetSuggestion = suggestions.find(s => s.id === targetSuggestionFromUrl);
-    if (!targetSuggestion || targetSuggestion.status !== 'pending') {
+    if (!targetSuggestion) {
       navigate(`/suggestiondetail?id=${targetSuggestionFromUrl}`, { replace: true });
     }
   }, [targetSuggestionFromUrl, suggestions, isInitialLoading, navigate]);
