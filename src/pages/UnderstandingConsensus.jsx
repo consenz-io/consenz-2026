@@ -179,7 +179,7 @@ export default function UnderstandingConsensus() {
 
               
 
-              {/* עמודה 2: משתתפים בעת יצירת הגרסה האחרונה */}
+              {/* עמודה 2: משתתפים */}
               
 
 
@@ -284,7 +284,7 @@ export default function UnderstandingConsensus() {
                 <div className="text-3xl text-slate-400 font-light">×</div>
                 <div className="bg-white rounded-xl p-4 shadow-sm border-2 border-blue-200 min-w-[140px]">
                   <div className="text-2xl font-bold text-blue-700">{participantsForFormula}</div>
-                  <div className="text-xs text-slate-500 mt-1">{language === 'he' ? 'משתתפים בעת יצירת הגרסה האחרונה' : language === 'ar' ? 'المشاركون عند القبول' : 'Participants at acceptance'}</div>
+                  <div className="text-xs text-slate-500 mt-1">{language === 'he' ? 'משתתפים' : language === 'ar' ? 'المشاركون عند القبول' : 'Participants at acceptance'}</div>
                 </div>
                 <div className="text-3xl text-slate-400 font-light">=</div>
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 shadow-sm border-2 border-green-300 min-w-[140px]">
