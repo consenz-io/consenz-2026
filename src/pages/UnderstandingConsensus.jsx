@@ -293,7 +293,7 @@ export default function UnderstandingConsensus() {
                 </div>
               </div>
               <p className="text-center text-sm text-slate-500 mt-4">
-                {language === 'he' ? 'הסף הנוכחי חושב בעת קבלת ההצעה האחרונה — מספר המשתתפים כפי שהיה באותו הרגע' : language === 'ar' ? 'تم حساب الحد الحالي عند قبول الاقتراح الأخير — عدد المشاركين في تلك اللحظة' : 'Current threshold was calculated when the last suggestion was accepted — participants count at that moment'}
+                {language === 'he' ? 'הסף הנוכחי חושב בעת יצירת גרסת המסמך העדכנית ביותר — מספר המשתתפים כפי שהיה בעת קבלת ההצעה האחרונה' : language === 'ar' ? 'تم حساب الحد الحالي عند قبول الاقتراح الأخير — عدد المشاركين في تلك اللحظة' : 'Current threshold was calculated when the last suggestion was accepted — participants count at that moment'}
               </p>
             </div>
           </CardContent>
