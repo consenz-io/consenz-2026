@@ -22,6 +22,7 @@ import DocumentDescription from "../components/document/DocumentDescription";
 import DocumentCounters from "../components/document/DocumentCounters";
 import FloatingSuggestionNav from "../components/document/FloatingSuggestionNav";
 import CurrentVersionButton from "../components/document/CurrentVersionButton";
+import DocumentDiscussionButton from "../components/document/DocumentDiscussionButton";
 import CurrentVersionModal from "../components/document/CurrentVersionModal";
 
 // Lazy load heavy modals
@@ -546,13 +547,21 @@ export default function DocumentView() {
                 showDescriptionComments={showDescriptionComments}
               />
 
-              {/* Consensus Version button — below the description box */}
-              <div className="flex justify-end w-full" dir={isRTL ? "rtl" : "ltr"}>
+              {/* Consensus Version + General Discussion buttons — below the description box */}
+              <div className="flex flex-col md:flex-row justify-end items-stretch md:items-center gap-2 w-full" dir={isRTL ? "rtl" : "ltr"}>
                 <CurrentVersionButton
                   language={language}
                   isRTL={isRTL}
                   lastVersionDate={lastVersionDate}
                   onClick={() => setShowCurrentVersion(true)}
+                />
+                <DocumentDiscussionButton
+                  t={t}
+                  language={language}
+                  isRTL={isRTL}
+                  active={showDescriptionComments}
+                  count={documentComments.length}
+                  onClick={() => setShowDescriptionComments(!showDescriptionComments)}
                 />
               </div>
             </div>

@@ -102,12 +102,6 @@ const DocumentHeader = React.memo(function DocumentHeader({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuItem onSelect={() => setShowDescriptionComments(!showDescriptionComments)}>
-            <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-            {t('documentDiscussion')}
-            {documentComments.length > 0 && ` (${documentComments.length})`}
-          </DropdownMenuItem>
-
           <DropdownMenuItem asChild>
             <Link to={`${createPageUrl("DocumentComments")}?id=${documentId}`} className="flex items-center">
               <MessageSquare className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
