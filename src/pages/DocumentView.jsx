@@ -548,13 +548,7 @@ export default function DocumentView() {
               />
 
               {/* Consensus Version + General Discussion buttons — below the description box */}
-              <div className="flex flex-col md:flex-row justify-end items-stretch md:items-center gap-2 w-full" dir={isRTL ? "rtl" : "ltr"}>
-                <CurrentVersionButton
-                  language={language}
-                  isRTL={isRTL}
-                  lastVersionDate={lastVersionDate}
-                  onClick={() => setShowCurrentVersion(true)}
-                />
+              <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-2 w-full" dir={isRTL ? "rtl" : "ltr"}>
                 <DocumentDiscussionButton
                   t={t}
                   language={language}
@@ -562,6 +556,12 @@ export default function DocumentView() {
                   active={showDescriptionComments}
                   count={documentComments.length}
                   onClick={() => setShowDescriptionComments(!showDescriptionComments)}
+                />
+                <CurrentVersionButton
+                  language={language}
+                  isRTL={isRTL}
+                  lastVersionDate={lastVersionDate}
+                  onClick={() => setShowCurrentVersion(true)}
                 />
               </div>
             </div>
