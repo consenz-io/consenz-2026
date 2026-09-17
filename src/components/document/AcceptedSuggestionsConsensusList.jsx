@@ -95,8 +95,9 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
   const colTitle = language === 'he' ? 'הצעה' : language === 'ar' ? 'الاقتراح' : 'Suggestion';
   const colPro = language === 'he' ? 'בעד' : language === 'ar' ? 'مع' : 'Pro';
   const colCon = language === 'he' ? 'נגד' : language === 'ar' ? 'ضد' : 'Con';
+  const colParticipants = language === 'he' ? 'משתתפים' : language === 'ar' ? 'المشاركون' : 'Participants';
   const colRunning = language === 'he' ? 'קונצנזוס עדכני' : language === 'ar' ? 'الإجماع الحالي' : 'Current Consensus';
-  const colThreshold = language === 'he' ? 'רף תומכים דרוש (לאחר קבלה)' : language === 'ar' ? 'عتبة المؤيدين المطلوبة (بعد القبول)' : 'Required Threshold (post-acceptance)';
+  const colThreshold = language === 'he' ? 'רף תומכים דרוש מעודכן' : language === 'ar' ? 'عتبة المؤيدين المطلوبة المحدثة' : 'Updated Required Threshold';
   const colDate = language === 'he' ? 'מועד קבלה' : language === 'ar' ? 'تاريخ القبول' : 'Accepted On';
   const loadMoreLabel = language === 'he' ? 'טען עוד' : language === 'ar' ? 'تحميل المزيد' : 'Load more';
   const showingLabel = language === 'he'
@@ -123,6 +124,7 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
               <th className={`py-2 px-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{colTitle}</th>
               <th className="py-2 px-3 font-semibold text-center">{colPro}</th>
               <th className="py-2 px-3 font-semibold text-center">{colCon}</th>
+              <th className="py-2 px-3 font-semibold text-center">{colParticipants}</th>
               <th className="py-2 px-3 font-semibold text-center">{colThreshold}</th>
               <th className="py-2 px-3 font-semibold text-center">{colRunning}</th>
             </tr>
@@ -175,6 +177,9 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
                       <ThumbsDown className="w-3.5 h-3.5" />
                       {s.con}
                     </span>
+                  </td>
+                  <td className="py-3 px-3 text-center">
+                    <span className="font-medium text-slate-600">{s.participants}</span>
                   </td>
                   <td className="py-3 px-3 text-center">
                     <div className="flex flex-col items-center gap-0.5">
