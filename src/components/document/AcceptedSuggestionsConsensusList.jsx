@@ -58,7 +58,7 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
       : localRunningAvg;
     const runningAvg = storedRunningAvg;
     const participants = s.participantsAtAcceptance || 0;
-    const thresholdUsed = Math.max(2, Math.round(prevRunningAvg * participants));
+    const thresholdUsed = Math.max(2, Math.round(runningAvg * participants));
     return { ...s, pro, con, consensus, runningAvg, prevRunningAvg, participants, thresholdUsed, index: i + 1 };
   });
 
@@ -95,9 +95,8 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
   const colTitle = language === 'he' ? 'הצעה' : language === 'ar' ? 'الاقتراح' : 'Suggestion';
   const colPro = language === 'he' ? 'בעד' : language === 'ar' ? 'مع' : 'Pro';
   const colCon = language === 'he' ? 'נגד' : language === 'ar' ? 'ضد' : 'Con';
-  const colConsensus = language === 'he' ? 'קונצנזוס' : language === 'ar' ? 'إجماع' : 'Consensus';
-  const colRunning = language === 'he' ? 'ממוצע מצטבר' : language === 'ar' ? 'المتوسط التراكمي' : 'Running Avg';
-  const colThreshold = language === 'he' ? 'רף תומכים דרוש' : language === 'ar' ? 'عتبة المؤيدين المطلوبة' : 'Required Threshold';
+  const colRunning = language === 'he' ? 'קונצנזוס עדכני' : language === 'ar' ? 'الإجماع الحالي' : 'Current Consensus';
+  const colThreshold = language === 'he' ? 'רף תומכים דרוש (לאחר קבלה)' : language === 'ar' ? 'عتبة المؤيدين المطلوبة (بعد القبول)' : 'Required Threshold (post-acceptance)';
   const colDate = language === 'he' ? 'מועד קבלה' : language === 'ar' ? 'تاريخ القبول' : 'Accepted On';
   const loadMoreLabel = language === 'he' ? 'טען עוד' : language === 'ar' ? 'تحميل المزيد' : 'Load more';
   const showingLabel = language === 'he'
@@ -124,7 +123,6 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
               <th className={`py-2 px-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{colTitle}</th>
               <th className="py-2 px-3 font-semibold text-center">{colPro}</th>
               <th className="py-2 px-3 font-semibold text-center">{colCon}</th>
-              <th className="py-2 px-3 font-semibold text-center">{colConsensus}</th>
               <th className="py-2 px-3 font-semibold text-center">{colThreshold}</th>
               <th className="py-2 px-3 font-semibold text-center">{colRunning}</th>
             </tr>
@@ -179,15 +177,10 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
                     </span>
                   </td>
                   <td className="py-3 px-3 text-center">
-                    <span className="inline-block px-2 py-1 rounded-full bg-indigo-50 text-indigo-700 font-bold text-xs">
-                      {(s.consensus * 100).toFixed(0)}%
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-center">
                     <div className="flex flex-col items-center gap-0.5">
                       <span className="font-bold text-amber-700 text-sm">{s.thresholdUsed}</span>
                       <span className="text-[10px] text-slate-400">
-                        {`${(s.prevRunningAvg * 100).toFixed(0)}% × ${s.participants}`}
+                        {`${(s.runningAvg * 100).toFixed(0)}% × ${s.participants}`}
                       </span>
                     </div>
                   </td>
