@@ -122,7 +122,6 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
             <tr className="border-b-2 border-slate-200 text-slate-600">
               <th className={`py-2 px-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>#</th>
               <th className={`py-2 px-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{colTitle}</th>
-              <th className="py-2 px-3 font-semibold text-center whitespace-nowrap">{colDate}</th>
               <th className="py-2 px-3 font-semibold text-center">{colPro}</th>
               <th className="py-2 px-3 font-semibold text-center">{colCon}</th>
               <th className="py-2 px-3 font-semibold text-center">{colConsensus}</th>
@@ -159,13 +158,13 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
                           <ExternalLink className="w-3 h-3 flex-shrink-0 opacity-50" />
                         </Link>
                       </div>
+                      <span className="text-[10px] text-slate-400 leading-tight">
+                        {formatLocalDateTime(s.acceptedAt || s.updated_date || s.created_date, 'DD/MM/YY HH:mm')}
+                      </span>
                       {contentSnippet && (
                         <p className="text-xs text-slate-400 truncate max-w-md">{contentSnippet}</p>
                       )}
                     </div>
-                  </td>
-                  <td className="py-3 px-3 text-center whitespace-nowrap text-xs text-slate-500">
-                    {formatLocalDateTime(s.acceptedAt || s.updated_date || s.created_date, 'DD/MM/YY HH:mm')}
                   </td>
                   <td className="py-3 px-3 text-center">
                     <span className="inline-flex items-center gap-1 text-green-600 font-medium">
