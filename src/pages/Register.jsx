@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Mail, Lock, Loader2 } from "lucide-react";
+import { UserPlus, Mail, Lock, Loader2, User } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
@@ -15,6 +15,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
@@ -23,6 +24,10 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if (!fullName.trim() || fullName.trim().length < 2) {
+      setError("Please enter your full name (at least 2 characters)");
+      return;
+    }
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -45,6 +50,23 @@ export default function Register() {
       const result = await base44.auth.verifyOtp({ email, otpCode });
       if (result?.access_token) {
         base44.auth.setToken(result.access_token);
+        // Set display name for email-registered users right after verification
+        if (fullName.trim().length >= 2) {
+          try {
+            await base44.auth.updateMe({ full_name: fullName.trim() });
+            const me = await base44.auth.me();
+            const existing = await base44.entities.UserPublicProfile.filter({ userId: me.id });
+            if (existing.length === 0) {
+              await base44.entities.UserPublicProfile.create({
+                userId: me.id,
+                email: me.email,
+                fullName: fullName.trim(),
+              });
+            }
+          } catch (err) {
+            console.error("Failed to set display name:", err);
+          }
+        }
       }
       window.location.href = safeReturnTo();
     } catch (err) {
@@ -168,6 +190,23 @@ export default function Register() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
+          <Label htmlFor="fullName">Full name</Label>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Input
+              id="fullName"
+              type="text"
+              autoComplete="name"
+              autoFocus
+              placeholder="Your full name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="pl-10 h-12"
+              required
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
@@ -175,7 +214,6 @@ export default function Register() {
               id="email"
               type="email"
               autoComplete="email"
-              autoFocus
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
