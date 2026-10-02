@@ -244,9 +244,13 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
 
   const toggleAdminMutation = useMutation({
     mutationFn: async ({ memberId, currentRole }) => {
-      const newRole = currentRole === 'admin' ? 'member' : 'admin';
-      await base44.entities.GroupMember.update(memberId, { role: newRole });
-      return newRole;
+      const res = await base44.functions.invoke('manageGroupMembership', {
+        action: 'toggleAdmin',
+        groupId,
+        memberId,
+        currentRole,
+      });
+      return res.data.newRole;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groupMembers', groupId] });
@@ -264,40 +268,18 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
 
   const handleJoinRequestMutation = useMutation({
     mutationFn: async ({ requestId, approved, userId }) => {
-      if (approved) {
-        await base44.entities.GroupMember.create({
-          groupId,
-          userId,
-          role: 'member',
-        });
-
-        // Notify the user that their request was approved
-        const groupName = group?.name || '';
-        const joinApprovedTranslations = {
-          en: { title: 'Join request approved!', message: `You have been accepted to the group "${groupName}" - you can now view and participate in the group's documents` },
-          he: { title: 'בקשת ההצטרפות אושרה!', message: `התקבלת לקבוצה "${groupName}" - עכשיו תוכל לצפות ולהשתתף במסמכי הקבוצה` },
-          ar: { title: 'تمت الموافقة على طلب الانضمام!', message: `تم قبولك في المجموعة "${groupName}" - يمكنك الآن عرض المستندات والمشاركة فيها` },
-        };
-        await base44.entities.Notification.create({
-          userId,
-          type: 'group_join_request',
-          title: joinApprovedTranslations.he.title,
-          message: joinApprovedTranslations.he.message,
-          translations: joinApprovedTranslations,
-          relatedEntityId: groupId,
-          relatedEntityType: 'group',
-          actionUrl: `/GroupView?id=${groupId}`,
-          read: false,
-        });
-      }
-      await base44.entities.GroupJoinRequest.update(requestId, {
-        status: approved ? 'approved' : 'rejected'
+      await base44.functions.invoke('manageGroupMembership', {
+        action: 'handleJoinRequest',
+        groupId,
+        requestId,
+        approved,
+        userId,
       });
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['groupMembers', groupId] });
       queryClient.invalidateQueries({ queryKey: ['joinRequests', groupId] });
-      const message = variables.approved 
+      const message = variables.approved
         ? (language === 'he' ? 'הבקשה אושרה והמשתמש נוסף לקבוצה' : language === 'ar' ? 'تمت الموافقة على الطلب وإضافة المستخدم' : 'Request approved and user added')
         : (language === 'he' ? 'הבקשה נדחתה' : language === 'ar' ? 'تم رفض الطلب' : 'Request rejected');
       setSuccess(message);
