@@ -47,6 +47,21 @@ export default async function(req) {
 
     if (!document) return Response.json({ error: 'Document not found' }, { status: 404 });
 
+    // Authorization: only the document creator, a document admin, or a system
+    // admin may trigger service-role translation writes on a document. Without
+    // this, any signed-in user could mutate other users' documents and burn
+    // LLM integration credits at the app owner's expense.
+    const isSystemAdmin = user.role === 'admin';
+    const isCreator = document.created_by_id === user.id;
+    let isAuthorized = isSystemAdmin || isCreator;
+    if (!isAuthorized) {
+      const docAdmins = await base44.asServiceRole.entities.DocumentAdmin.filter({ documentId, userId: user.id });
+      isAuthorized = docAdmins.length > 0;
+    }
+    if (!isAuthorized) {
+      return Response.json({ error: 'Forbidden: not authorized to translate this document' }, { status: 403 });
+    }
+
     let translatedCount = 0;
     const tasks = [];
 

@@ -71,8 +71,28 @@ export default async function(req) {
       if (!isAdmin) return Response.json({ error: 'Forbidden' }, { status: 403 });
       if (!memberEmail) return Response.json({ error: 'Missing memberEmail' }, { status: 400 });
 
+      // Validate email format — prevents malformed recipients being used as a relay
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(memberEmail).trim())) {
+        return Response.json({ error: 'Invalid email address' }, { status: 400 });
+      }
+
+      // Verify the recipient is a registered app user AND an actual member of
+      // this group — closes the open mail relay that previously let any group
+      // admin send "you were added" emails to arbitrary third-party addresses.
+      const memberUser = await base44.asServiceRole.entities.User
+        .filter({ email: String(memberEmail).trim() })
+        .then(r => r[0])
+        .catch(() => null);
+      if (!memberUser) {
+        return Response.json({ error: 'Recipient is not a registered user' }, { status: 400 });
+      }
+      const isMember = members.some(m => m.userId === memberUser.id);
+      if (!isMember) {
+        return Response.json({ error: 'Recipient is not a member of this group' }, { status: 403 });
+      }
+
       const adminName = user.full_name || 'מנהל';
-      const name = memberName || memberEmail.split('@')[0];
+      const name = memberName || memberUser.full_name || memberEmail.split('@')[0];
       const { subject, body } = memberAddedEmail(lang, name, adminName, group.name);
       await base44.asServiceRole.integrations.Core.SendEmail({ to: memberEmail, subject, body });
       return Response.json({ sent: 1 });

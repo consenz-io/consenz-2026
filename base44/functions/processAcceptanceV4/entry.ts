@@ -229,6 +229,12 @@ Deno.serve(async (req) => {
     // admin may bypass it; internal chain calls only pass forceAccept after the parent
     // already meets the threshold, so degrading to the threshold check here is safe.
     const canForceAccept = !!forceAccept && _gateUser?.role === 'admin';
+    // forceReleaseLock bypasses the stale-lock age check and forcibly clears the
+    // acceptance CAS lock. Restrict it to admins and internal chain calls (which
+    // pass INTERNAL_AUTOMATION_TOKEN) — any signed-in user could otherwise wipe
+    // another caller's lock and cause duplicate section/version creation.
+    const isInternalCall = !!body.internalToken && body.internalToken === INTERNAL_AUTOMATION_TOKEN;
+    const canForceRelease = !!forceReleaseLock && (_gateUser?.role === 'admin' || isInternalCall);
     if (!canForceAccept) {
       const verifyDelta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
       const verifyThreshold = document.threshold > 0 ? Math.max(2, document.threshold) : 2;
@@ -239,7 +245,7 @@ Deno.serve(async (req) => {
     }
 
     // ── Acquire the acceptance lock (atomic CAS with stale recovery + retry) ──
-    if (forceReleaseLock) {
+    if (canForceRelease) {
       console.log('[PROCESS ACCEPTANCE V4] forceReleaseLock=true, releasing any stuck lock for', suggestionId);
       await base44.asServiceRole.entities.Suggestion.update(suggestionId, { acceptanceLock: false }).catch(() => {});
     }
@@ -258,7 +264,7 @@ Deno.serve(async (req) => {
         if (lockCheck && lockCheck.status === 'pending' && lockCheck.acceptanceLock === true) {
           const lockAgeMs = Date.now() - new Date(lockCheck.updated_date).getTime();
           console.log('[PROCESS ACCEPTANCE V4] Lock held (age:', Math.round(lockAgeMs / 1000) + 's) on attempt 1');
-          if (lockAgeMs > 90000 || forceReleaseLock) {
+          if (lockAgeMs > 90000 || canForceRelease) {
             console.log('[PROCESS ACCEPTANCE V4] Force-releasing stale lock for', suggestionId);
             await base44.asServiceRole.entities.Suggestion.update(suggestionId, { acceptanceLock: false });
           }

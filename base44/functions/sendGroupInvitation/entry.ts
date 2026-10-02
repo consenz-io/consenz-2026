@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { groupId, email, language, appUrl } = await req.json();
+    const { groupId, email, language } = await req.json();
 
     if (!groupId || !email) {
       return Response.json({ error: 'Missing or invalid parameters' }, { status: 400 });
@@ -58,8 +58,9 @@ Deno.serve(async (req) => {
 
     const groupName = group.name;
 
-    // Generate unique token
-    const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    // Generate a cryptographically-secure invitation token (128-bit UUID).
+    // Math.random() is not cryptographically secure and was predictable.
+    const token = crypto.randomUUID();
 
     // If a pending invitation already exists for this email, refresh its token
     // so the new link works (re-invite flow). Otherwise create a new record.
@@ -77,7 +78,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    const baseUrl = appUrl || 'https://consenz-copy-4ca3772e.base44.app';
+    // Derive the invitation link base from a trusted server-side constant only.
+    // The client-supplied appUrl is ignored — an attacker could otherwise point
+    // the "Join" button at a phishing page from the app's verified sender domain.
+    const baseUrl = 'https://consenz-copy-4ca3772e.base44.app';
     const inviteUrl = `${baseUrl}?groupInvite=${token}`;
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 
