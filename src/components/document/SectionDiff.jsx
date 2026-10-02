@@ -11,6 +11,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import { getDiffInLanguage, detectLanguage } from "./SmartDiffTranslationService";
 import DiffModeSelector, { DIFF_MODES, useDiffMode } from "./DiffModeSelector";
 import ChangeBlockDiffView from "./ChangeBlockDiffView";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 const languageLabels = {
   en: "English",
@@ -174,14 +175,14 @@ export default function SectionDiff({
           <span className="w-2 h-2 bg-red-500 rounded-full"></span>
           {t('originalContent') || 'מקור'}
         </div>
-        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700" dangerouslySetInnerHTML={{ __html: displayOriginal }} />
+        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700" dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayOriginal) }} />
       </div>
       <div className="p-3 bg-green-50/50 border border-green-200 rounded-lg overflow-hidden">
         <div className="text-xs font-medium text-green-600 mb-2 flex items-center gap-1">
           <span className="w-2 h-2 bg-green-500 rounded-full"></span>
           {t('proposedContent') || 'מוצע'}
         </div>
-        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700" dangerouslySetInnerHTML={{ __html: displayNew }} />
+        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700" dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayNew) }} />
       </div>
     </div>
   );
@@ -194,14 +195,14 @@ export default function SectionDiff({
           <span className="w-2 h-2 bg-red-500 rounded-full"></span>
           {t('originalContent') || 'מקור'}
         </div>
-        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700 text-sm" dangerouslySetInnerHTML={{ __html: displayOriginal }} />
+        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700 text-sm" dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayOriginal) }} />
       </div>
       <div className="p-3 bg-green-50/50 border border-green-200 rounded-lg overflow-hidden">
         <div className="text-xs font-medium text-green-600 mb-2 flex items-center gap-1">
           <span className="w-2 h-2 bg-green-500 rounded-full"></span>
           {t('proposedContent') || 'מוצע'}
         </div>
-        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700 text-sm" dangerouslySetInnerHTML={{ __html: displayNew }} />
+        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700 text-sm" dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayNew) }} />
       </div>
     </div>
   );
@@ -322,7 +323,7 @@ export default function SectionDiff({
             <span className="text-sm">{t('translating')}</span>
           </div>
         ) : !showDiff || !canShowDiff ? (
-          <div style={contentStyle} dangerouslySetInnerHTML={{ __html: displayNew }} />
+          <div style={contentStyle} dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayNew) }} />
         ) : diffMode === DIFF_MODES.INLINE ? (
           renderInlineDiff()
         ) : diffMode === DIFF_MODES.SPLIT ? (

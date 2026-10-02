@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FileText, Users, TrendingUp, Globe, Lock } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { parseUserDate } from "@/components/utils/dateFormatter";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 export default function RecentDocumentsSection({ documents, documentsLoading, groups, groupMembers, user, documentContributorCounts = {} }) {
   const { t, language } = useLanguage();
@@ -94,7 +95,7 @@ export default function RecentDocumentsSection({ documents, documentsLoading, gr
                   </CardHeader>
                   <CardContent className="pt-4 space-y-3">
                     {doc.description && (
-                      <p className="text-sm text-slate-600 line-clamp-2" dangerouslySetInnerHTML={{ __html: doc.description }} />
+                      <p className="text-sm text-slate-600 line-clamp-2" dangerouslySetInnerHTML={{ __html: sanitizeHtml(doc.description) }} />
                     )}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="flex items-center gap-2">

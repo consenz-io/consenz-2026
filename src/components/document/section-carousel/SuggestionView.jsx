@@ -7,6 +7,7 @@ import DocumentTextContent from "../DocumentTextContent";
 import VotingProgressSection from "../VotingProgressSection";
 import CommentsSection from "../CommentsSection";
 import { base44 } from "@/api/base44Client";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 /**
  * Renders a suggestion view — proposed content (diff or new), voting buttons,
@@ -57,7 +58,7 @@ const SuggestionView = React.memo(function SuggestionView({
               </div>
               <div
               className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
-              dangerouslySetInnerHTML={{ __html: suggestion.originalContent }} />
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(suggestion.originalContent) }} />
             
             </div>
             {suggestion.explanation &&

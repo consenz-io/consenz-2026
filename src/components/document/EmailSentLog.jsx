@@ -8,6 +8,7 @@ import { Mail, Eye, MousePointerClick, Users, CheckCircle, XCircle, TestTube } f
 import { format } from "date-fns";
 import { parseUserDate } from "@/components/utils/dateFormatter";
 import { useLanguage } from "@/components/LanguageContext";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 function StatPill({ icon: Icon, label, value, color }) {
   return (
@@ -259,7 +260,7 @@ export default function EmailSentLog({ documentId }) {
                 {selectedBatch.summaryContent ? (
                   <div
                     className="max-w-none p-4 bg-slate-50 rounded-lg border border-slate-200 text-slate-800 leading-relaxed text-sm [&_a]:text-blue-600 [&_a]:underline [&_h1]:text-lg [&_h1]:font-bold [&_h2]:text-base [&_h2]:font-bold [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:mb-2"
-                    dangerouslySetInnerHTML={{ __html: selectedBatch.summaryContent }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedBatch.summaryContent) }}
                   />
                 ) : (
                   <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-400 italic">

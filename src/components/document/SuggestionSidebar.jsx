@@ -27,6 +27,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { castVote } from "@/components/document/utils/castVote";
 import { PAGE_NAMES } from "@/components/pageNames";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 // v2
 
 export default function SuggestionSidebar({ 
@@ -536,7 +537,7 @@ export default function SuggestionSidebar({
                 </div>
                 <div 
                   className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
-                  dangerouslySetInnerHTML={{ __html: suggestion.originalContent }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(suggestion.originalContent) }}
                 />
               </div>
               {suggestion.explanation && (

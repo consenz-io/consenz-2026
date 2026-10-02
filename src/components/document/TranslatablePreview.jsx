@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 /**
  * Preview-style rendering of rich-text (HTML) content: shows the first few
@@ -40,7 +41,7 @@ export default function TranslatablePreview({
         ref={ref}
         className={className}
         style={showFull ? undefined : { maxHeight: `${maxLines * 1.25}rem`, overflow: "hidden" }}
-        dangerouslySetInnerHTML={{ __html: content }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
         dir={isRTL ? "rtl" : "ltr"}
       />
       {!showFull && isOverflowing && (

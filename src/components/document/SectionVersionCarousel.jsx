@@ -25,6 +25,7 @@ import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
 import VotingProgressSection from "./VotingProgressSection";
 import SectionCommentsFooter from "./SectionCommentsFooter";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 // ─── SuggestionMeta ────────────────────────────────────────────────────────
 // Renders suggestion info + voting + ONE comment button for suggestion_accepted versions.
@@ -383,7 +384,7 @@ export default function SectionVersionCarousel({
                 fontSize: "1rem",
                 lineHeight: "1.75",
               }}
-              dangerouslySetInnerHTML={{ __html: currentVer?.content }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentVer?.content) }}
             />
           )}
 

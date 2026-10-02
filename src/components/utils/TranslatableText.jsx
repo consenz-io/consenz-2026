@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Languages, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/LanguageContext";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 const languageNames = { en: "English", he: "עברית", ar: "العربية" };
 const languagePrompts = { en: "English", he: "Hebrew", ar: "Arabic" };
@@ -69,7 +70,7 @@ export default function TranslatableText({ text, isHtml = false, className = "",
           {language === 'he' ? 'מתרגם...' : language === 'ar' ? 'جارٍ الترجمة...' : 'Translating...'}
         </span>
       ) : isHtml ? (
-        <span className={className} dangerouslySetInnerHTML={{ __html: displayText }} />
+        <span className={className} dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayText) }} />
       ) : (
         <span className={className}>{displayText}</span>
       )}

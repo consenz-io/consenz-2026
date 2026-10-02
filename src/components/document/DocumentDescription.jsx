@@ -5,6 +5,7 @@ import ReactQuill from "react-quill";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import CommentsSection from "./CommentsSection";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 /**
  * Document description area — view, edit, translate, read more/less, and comments.
@@ -211,14 +212,14 @@ const DescriptionContent = React.memo(function DescriptionContent({ content, sho
     const afterMarker = parts.slice(1).join('');
     return (
       <>
-        <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: beforeMarker }} dir={isRTL ? 'rtl' : 'ltr'} />
+        <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(beforeMarker) }} dir={isRTL ? 'rtl' : 'ltr'} />
         {!showFull ? (
           <Button variant="link" size="sm" onClick={onToggle} className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800">
             {readMoreText}
           </Button>
         ) : (
           <>
-            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: afterMarker }} dir={isRTL ? 'rtl' : 'ltr'} />
+            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizeHtml(afterMarker) }} dir={isRTL ? 'rtl' : 'ltr'} />
             <Button variant="link" size="sm" onClick={onToggle} className="mt-2 p-0 h-auto text-blue-600 hover:text-blue-800">
               {showLessText}
             </Button>
@@ -236,7 +237,7 @@ const DescriptionContent = React.memo(function DescriptionContent({ content, sho
       <div className="prose prose-sm max-w-none relative" dir={isRTL ? 'rtl' : 'ltr'}>
         <div
           className={!showFull && hasLongContent ? 'max-h-[15rem] overflow-hidden relative' : ''}
-          dangerouslySetInnerHTML={{ __html: content }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
         />
         {!showFull && hasLongContent && (
           <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white to-transparent pointer-events-none" />
