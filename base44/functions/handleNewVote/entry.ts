@@ -1,17 +1,24 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-import { INTERNAL_AUTOMATION_TOKEN } from "../../shared/internalToken.ts";
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
     const { event, data: vote, args = {} } = body;
-    // Auth: allow the internal automation (token via function_args) or an admin.
-    // External anonymous callers are rejected with 401.
+    // Auth: admin can call directly. Non-admin callers (including the workflow
+    // engine, which has no user session) must reference a real Vote record —
+    // this verifies the call is from a genuine entity-create trigger, not a
+    // fabricated external request. The idempotency check (keyed on vote.id)
+    // further prevents replay with real vote IDs.
     const user = await base44.auth.me().catch(() => null);
-    const isInternalAutomation = args.internalToken === INTERNAL_AUTOMATION_TOKEN;
-    if (!isInternalAutomation && user?.role !== 'admin') {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user?.role !== 'admin') {
+      if (!vote?.id || event?.type !== 'create') {
+        return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      const realVotes = await base44.asServiceRole.entities.Vote.filter({ id: vote.id });
+      if (realVotes.length === 0) {
+        return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      }
     }
 
     if (!vote || event.type !== 'create') {

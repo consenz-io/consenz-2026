@@ -1,5 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-import { INTERNAL_AUTOMATION_TOKEN } from "../../shared/internalToken.ts";
 
 const TRANSLATIONS = {
   en: {
@@ -52,12 +51,18 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
     const { event, data: comment, args = {} } = body;
-    // Auth: allow the internal automation (token via function_args) or an admin.
-    // External anonymous callers are rejected with 401.
+    // Auth: admin can call directly. Non-admin callers (including the workflow
+    // engine) must reference a real Comment record — verifies the call is from
+    // a genuine entity-create trigger, not a fabricated external request.
     const user = await base44.auth.me().catch(() => null);
-    const isInternalAutomation = args.internalToken === INTERNAL_AUTOMATION_TOKEN;
-    if (!isInternalAutomation && user?.role !== 'admin') {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user?.role !== 'admin') {
+      if (!comment?.id || event?.type !== 'create') {
+        return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      const realComments = await base44.asServiceRole.entities.Comment.filter({ id: comment.id });
+      if (realComments.length === 0) {
+        return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      }
     }
 
     if (!comment || event.type !== 'create') {

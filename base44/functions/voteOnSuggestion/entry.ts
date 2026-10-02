@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { INTERNAL_AUTOMATION_TOKEN } from '../../shared/authGate.ts';
 
 // Rate limiter for voting
 const voteRateLimiter = new Map();
@@ -259,7 +260,8 @@ Deno.serve(async (req) => {
           suggestionId,
           documentId: document.id,
           voterId: user.id,
-          wasNewVote: voteAction === 'created' && vote === 'pro'
+          wasNewVote: voteAction === 'created' && vote === 'pro',
+          internalToken: INTERNAL_AUTOMATION_TOKEN
         });
         // Capture whatever processAcceptance actually returned (success message OR
         // {error, details} body) so we can hand it straight to the browser console below,

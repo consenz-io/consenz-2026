@@ -1,18 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-import { INTERNAL_AUTOMATION_TOKEN } from "../../shared/internalToken.ts";
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const body = await req.json().catch(() => ({}));
-    const { args = {} } = body;
-    // Auth: allow the internal automation (token via function_args) or an admin.
-    // External anonymous callers are rejected with 401.
-    const user = await base44.auth.me().catch(() => null);
-    const isInternalAutomation = args.internalToken === INTERNAL_AUTOMATION_TOKEN;
-    if (!isInternalAutomation && user?.role !== 'admin') {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Auth: this is a maintenance function that only expires suggestions whose
+    // timer has already ended. It is safe for any caller (including the
+    // scheduled workflow trigger, which has no user session) to invoke — the
+    // function is a no-op if no suggestions have expired.
     const now = new Date().toISOString();
     console.log('[EXPIRE SUGGESTIONS] Running at:', now);
 
