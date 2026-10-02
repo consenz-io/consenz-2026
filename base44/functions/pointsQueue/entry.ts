@@ -127,8 +127,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('[POINTS QUEUE ERROR]', error);
     return Response.json({ 
-      error: error.message,
-      details: error.stack
+      error: 'Internal server error'
     }, { status: 500 });
   }
 });

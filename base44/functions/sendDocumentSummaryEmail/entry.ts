@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { signLogId } from '../../shared/emailTrackingAuth.ts';
+import { checkDocumentAuthorization } from '../../shared/documentAuth.ts';
 
 // Sanitize admin-supplied HTML before inserting into email templates.
 // Strips scripts, event handlers, and dangerous URLs to prevent content
@@ -63,14 +64,13 @@ Deno.serve(async (req) => {
   // script/event-handler injection into emails sent from the verified domain.
   const sanitizedSummary = sanitizeEmailHtml(summaryContent);
 
-  // Verify user is document admin or system admin
-  const adminRecords = await base44.asServiceRole.entities.DocumentAdmin.filter({ documentId, userId: user.id });
-  if (adminRecords.length === 0 && user.role !== 'admin') {
-    return Response.json({ error: 'Forbidden' }, { status: 403 });
-  }
-
-  const document = await base44.asServiceRole.entities.Document.filter({ id: documentId }).then(r => r[0]);
-  if (!document) return Response.json({ error: 'Document not found' }, { status: 404 });
+  // Authorization: verify against non-client-writable data (document ownership
+  // or a DocumentAdmin record created by the document's original creator) —
+  // NOT the openly-creatable DocumentAdmin entity alone, which any user could
+  // self-grant to bypass this check.
+  const { authorized, document, notFound } = await checkDocumentAuthorization(base44, documentId, user);
+  if (notFound) return Response.json({ error: 'Document not found' }, { status: 404 });
+  if (!authorized) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
   // Determine recipients
   let recipientEmails = [];

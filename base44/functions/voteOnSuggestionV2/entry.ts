@@ -305,13 +305,7 @@ Deno.serve(async (req) => {
           newConVotes,
           accepted: false,
           voteAction,
-          message: 'ההצבעה נספרה אך ההצעה לא התקבלה — ראה debug',
-          debug: {
-            processAcceptanceFailed,
-            processAcceptanceDebug,
-            currentStatus: refreshedSuggestion?.status,
-            acceptanceLock: refreshedSuggestion?.acceptanceLock
-          }
+          message: 'ההצבעה נספרה אך ההצעה לא התקבלה'
         });
       }
     }
@@ -328,8 +322,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('[VOTE V2 FUNCTION ERROR]', error);
     return Response.json({ 
-      error: error.message || 'שגיאה בעיבוד ההצבעה',
-      details: error.stack
+      error: 'שגיאה בעיבוד ההצבעה'
     }, { status: 500 });
   }
 });

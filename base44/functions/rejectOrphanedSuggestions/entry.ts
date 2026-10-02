@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { checkDocumentAuthorization } from '../../shared/documentAuth.ts';
 
 const TRANSLATIONS = {
   en: {
@@ -47,28 +48,30 @@ Deno.serve(async (req) => {
 
     // sectionIds: array of section IDs that were deleted
     // documentId: the document these sections belong to
-    // gamificationEnabled: whether to award points
-    const { sectionIds, documentId, gamificationEnabled } = await req.json();
+    // gamificationEnabled is read from the document record server-side (not
+    // the request body) to prevent point farming via a client-supplied flag.
+    const { sectionIds, documentId } = await req.json();
 
     if (!sectionIds || sectionIds.length === 0 || !documentId) {
       return Response.json({ success: true, message: 'No sectionIds provided' });
     }
 
-    // Authorization: only system admins, the document creator, or a designated
-    // document admin may trigger rejection of orphaned suggestions for a document.
-    const isSystemAdmin = user.role === 'admin';
-    let isAuthorized = isSystemAdmin;
-    if (!isAuthorized) {
-      const doc = await base44.asServiceRole.entities.Document.get(documentId).catch(() => null);
-      if (doc && doc.created_by_id === user.id) {
-        isAuthorized = true;
-      } else {
-        const docAdmins = await base44.asServiceRole.entities.DocumentAdmin.filter({ documentId, userId: user.id });
-        if (docAdmins.length > 0) isAuthorized = true;
-      }
-    }
-    if (!isAuthorized) {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    // Authorization: verify against non-client-writable data (document
+    // ownership or a DocumentAdmin record created by the document's original
+    // creator) — NOT the openly-creatable DocumentAdmin entity alone, which
+    // any user could self-grant to bypass this check.
+    const { authorized, document, notFound } = await checkDocumentAuthorization(base44, documentId, user);
+    if (notFound) return Response.json({ error: 'Document not found' }, { status: 404 });
+    if (!authorized) return Response.json({ error: 'Forbidden' }, { status: 403 });
+
+    // Verify the referenced sections actually no longer exist — prevents
+    // abuse where a caller passes active sectionIds to reject suggestions on
+    // live sections.
+    const stillExisting = await base44.asServiceRole.entities.Section.filter({
+      id: { $in: sectionIds }
+    });
+    if (stillExisting.length > 0) {
+      return Response.json({ error: 'Cannot reject: one or more sections still exist' }, { status: 400 });
     }
 
     console.log('[REJECT ORPHANED] Checking orphaned suggestions for sections:', sectionIds);
@@ -118,8 +121,9 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Award 50 points to con-voters if gamification is enabled
-      if (gamificationEnabled) {
+      // Award 50 points to con-voters if gamification is enabled (read from
+      // the document record, not the client-supplied request body)
+      if (document?.gamificationEnabled) {
         const conVotes = await base44.asServiceRole.entities.Vote.filter({
           suggestionId: suggestion.id,
           vote: 'con'
@@ -129,6 +133,15 @@ Deno.serve(async (req) => {
           const voterUsers = await base44.asServiceRole.entities.User.filter({ id: vote.userId });
           const voter = voterUsers[0];
           if (!voter) continue;
+
+          // Idempotency: skip if points were already awarded for this
+          // suggestion + voter pair, preventing repeated award cycles.
+          const existingTx = await base44.asServiceRole.entities.PointsTransaction.filter({
+            userId: voter.id,
+            relatedEntityId: suggestion.id,
+            action: 'vote_influenced_acceptance'
+          });
+          if (existingTx.length > 0) continue;
 
           const newPoints = (voter.points || 1000) + 50;
           await Promise.all([

@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { checkDocumentAuthorization } from '../../shared/documentAuth.ts';
 
 const LANGUAGE_PROMPTS = { en: "English", he: "Hebrew", ar: "Arabic" };
 const VALID_LANGS = new Set(["en", "he", "ar"]);
@@ -39,28 +40,20 @@ export default async function(req) {
 
     const langName = LANGUAGE_PROMPTS[targetLanguage];
 
-    const [document, topics, sections] = await Promise.all([
-      base44.asServiceRole.entities.Document.filter({ id: documentId }).then(r => r[0]),
+    // Authorization: verify against non-client-writable data (document
+    // ownership or a DocumentAdmin record created by the document's original
+    // creator) — NOT the openly-creatable DocumentAdmin entity alone, which
+    // any user could self-grant to bypass this check.
+    const { authorized, document, notFound } = await checkDocumentAuthorization(base44, documentId, user);
+    if (notFound) return Response.json({ error: 'Document not found' }, { status: 404 });
+    if (!authorized) {
+      return Response.json({ error: 'Forbidden: not authorized to translate this document' }, { status: 403 });
+    }
+
+    const [topics, sections] = await Promise.all([
       base44.asServiceRole.entities.Topic.filter({ documentId }),
       base44.asServiceRole.entities.Section.filter({ documentId }),
     ]);
-
-    if (!document) return Response.json({ error: 'Document not found' }, { status: 404 });
-
-    // Authorization: only the document creator, a document admin, or a system
-    // admin may trigger service-role translation writes on a document. Without
-    // this, any signed-in user could mutate other users' documents and burn
-    // LLM integration credits at the app owner's expense.
-    const isSystemAdmin = user.role === 'admin';
-    const isCreator = document.created_by_id === user.id;
-    let isAuthorized = isSystemAdmin || isCreator;
-    if (!isAuthorized) {
-      const docAdmins = await base44.asServiceRole.entities.DocumentAdmin.filter({ documentId, userId: user.id });
-      isAuthorized = docAdmins.length > 0;
-    }
-    if (!isAuthorized) {
-      return Response.json({ error: 'Forbidden: not authorized to translate this document' }, { status: 403 });
-    }
 
     let translatedCount = 0;
     const tasks = [];

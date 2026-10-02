@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { checkDocumentAuthorization } from '../../shared/documentAuth.ts';
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
@@ -9,15 +10,16 @@ Deno.serve(async (req) => {
   const { documentId, additionalInstructions, language, appBaseUrl } = await req.json();
   if (!documentId) return Response.json({ error: 'Missing documentId' }, { status: 400 });
 
-  // Verify user is document admin or system admin
-  const adminRecords = await base44.asServiceRole.entities.DocumentAdmin.filter({ documentId, userId: user.id });
-  if (adminRecords.length === 0 && user.role !== 'admin') {
-    return Response.json({ error: 'Forbidden' }, { status: 403 });
-  }
+  // Authorization: verify against non-client-writable data (document ownership
+  // or a DocumentAdmin record created by the document's original creator) —
+  // NOT the openly-creatable DocumentAdmin entity alone, which any user could
+  // self-grant to bypass this check.
+  const { authorized, document, notFound } = await checkDocumentAuthorization(base44, documentId, user);
+  if (notFound) return Response.json({ error: 'Document not found' }, { status: 404 });
+  if (!authorized) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
   // Fetch all relevant data in parallel
-  const [document, topics, sections, suggestions, allVotes, allComments, publicProfiles, documentVersions, allArguments] = await Promise.all([
-    base44.asServiceRole.entities.Document.filter({ id: documentId }).then(r => r[0]),
+  const [topics, sections, suggestions, allVotes, allComments, publicProfiles, documentVersions, allArguments] = await Promise.all([
     base44.asServiceRole.entities.Topic.filter({ documentId }),
     base44.asServiceRole.entities.Section.filter({ documentId }),
     base44.asServiceRole.entities.Suggestion.filter({ documentId }),
@@ -27,8 +29,6 @@ Deno.serve(async (req) => {
     base44.asServiceRole.entities.DocumentVersion.filter({ documentId }),
     base44.asServiceRole.entities.Argument.list(),
   ]);
-
-  if (!document) return Response.json({ error: 'Document not found' }, { status: 404 });
 
   // Build lookup: email -> displayName (created_by is email)
   const profileMap = {};
