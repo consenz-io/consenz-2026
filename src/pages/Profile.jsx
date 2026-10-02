@@ -187,6 +187,7 @@ export default function Profile() {
       await queryClient.invalidateQueries({ queryKey: ['viewUser'] });
       await queryClient.invalidateQueries({ queryKey: ['viewUserProfile'] });
       await queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
+      await queryClient.invalidateQueries({ queryKey: ['ownPublicProfile'] });
       // Invalidate per-user profile query + in-memory cache so suggestions,
       // comments, and other components using useUserProfile see the new name.
       if (currentUser?.id) {
