@@ -324,19 +324,22 @@ Deno.serve(async (req) => {
       // body (instead of just accepted:false) so it shows up in the browser's
       // [VOTE] Backend response console log without needing Base44's log panel at all.
       if (!accepted) {
+        // Log full debug info server-side only — do NOT expose internal error
+        // messages, HTTP response bodies, stack traces, or acceptanceLock
+        // values to the client (CWE-209).
+        console.error('[VOTE FUNCTION] Acceptance did not happen. Debug info:', {
+          processAcceptanceFailed,
+          processAcceptanceDebug,
+          currentStatus: refreshedSuggestion?.status,
+          acceptanceLock: refreshedSuggestion?.acceptanceLock
+        });
         return Response.json({
           success: true,
           newProVotes,
           newConVotes,
           accepted: false,
           voteAction,
-          message: 'ההצבעה נספרה אך ההצעה לא התקבלה — ראה debug',
-          debug: {
-            processAcceptanceFailed,
-            processAcceptanceDebug,
-            currentStatus: refreshedSuggestion?.status,
-            acceptanceLock: refreshedSuggestion?.acceptanceLock
-          }
+          message: 'ההצבעה נספרה אך ההצעה לא התקבלה'
         });
       }
     }
@@ -353,8 +356,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('[VOTE FUNCTION ERROR]', error);
     return Response.json({ 
-      error: error.message || 'שגיאה בעיבוד ההצבעה',
-      details: error.stack
+      error: 'שגיאה בעיבוד ההצבעה'
     }, { status: 500 });
   }
 });

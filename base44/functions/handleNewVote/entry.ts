@@ -55,20 +55,31 @@ Deno.serve(async (req) => {
     // Award points if gamification enabled and pro vote
     if (document.gamificationEnabled && vote.vote === 'pro') {
       try {
-        await Promise.all([
-          base44.asServiceRole.entities.User.update(creator.id, {
-            points: (creator.points || 1000) + 10
-          }),
-          base44.asServiceRole.entities.PointsTransaction.create({
-            userId: creator.id,
-            amount: 10,
-            action: 'vote_received',
-            description: `Received a pro vote on suggestion: ${suggestion.title}`,
-            relatedEntityId: suggestion.id,
-            relatedEntityType: 'suggestion'
-          })
-        ]);
-        console.log('[VOTE AUTOMATION] ✅ Awarded 10 points to creator');
+        // Idempotency: key the award to the specific Vote record id so that
+        // re-created votes (after a cancel/re-vote toggle) don't re-award
+        // points. Each Vote row fires this automation exactly once.
+        const existingTx = await base44.asServiceRole.entities.PointsTransaction.filter({
+          relatedEntityId: vote.id,
+          action: 'vote_received'
+        });
+        if (existingTx.length > 0) {
+          console.log('[VOTE AUTOMATION] Points already awarded for vote', vote.id, '— skipping');
+        } else {
+          await Promise.all([
+            base44.asServiceRole.entities.User.update(creator.id, {
+              points: (creator.points || 1000) + 10
+            }),
+            base44.asServiceRole.entities.PointsTransaction.create({
+              userId: creator.id,
+              amount: 10,
+              action: 'vote_received',
+              description: `Received a pro vote on suggestion: ${suggestion.title}`,
+              relatedEntityId: vote.id,
+              relatedEntityType: 'vote'
+            })
+          ]);
+          console.log('[VOTE AUTOMATION] ✅ Awarded 10 points to creator');
+        }
       } catch (pointsError) {
         console.error('[VOTE AUTOMATION] Points error (non-critical):', pointsError.message);
       }

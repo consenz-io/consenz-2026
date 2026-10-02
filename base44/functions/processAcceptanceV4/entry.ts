@@ -236,7 +236,15 @@ Deno.serve(async (req) => {
     const isInternalCall = !!body.internalToken && body.internalToken === INTERNAL_AUTOMATION_TOKEN;
     const canForceRelease = !!forceReleaseLock && (_gateUser?.role === 'admin' || isInternalCall);
     if (!canForceAccept) {
-      const verifyDelta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
+      // Recount the real vote delta from the Vote entity instead of trusting
+      // the Suggestion record's proVotes/conVotes fields — those are client-
+      // writable (Suggestion update RLS allows the creator to set them to
+      // any value), so a suggestion creator could bypass consensus by
+      // setting proVotes high and invoking this function directly.
+      const realVotes = await base44.asServiceRole.entities.Vote.filter({ suggestionId });
+      const realProVotes = realVotes.filter(v => v.vote === 'pro').length;
+      const realConVotes = realVotes.filter(v => v.vote === 'con').length;
+      const verifyDelta = realProVotes - realConVotes;
       const verifyThreshold = document.threshold > 0 ? Math.max(2, document.threshold) : 2;
       if (verifyDelta < verifyThreshold) {
         console.log('[PROCESS ACCEPTANCE V4] Suggestion no longer meets threshold, aborting. delta:', verifyDelta, 'threshold:', verifyThreshold);

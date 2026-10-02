@@ -25,14 +25,24 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid email address' }, { status: 400 });
     }
 
-    // Rate limit: max 10 invitations per user per hour — prevents open mail relay abuse
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    // Rate limit: max 5 invitations per user per hour and max 10 per day —
+    // prevents open mail relay abuse from the app's verified sender domain.
+    // Any registered user can create a group (Group create RLS is open) and
+    // thereby become its creator, so the authorization check alone is not
+    // sufficient to prevent relay abuse.
+    const now = Date.now();
+    const oneHourAgo = new Date(now - 60 * 60 * 1000).toISOString();
+    const oneDayAgo = new Date(now - 24 * 60 * 60 * 1000).toISOString();
     const recentInvites = await base44.asServiceRole.entities.GroupInvitation.filter(
-      { invitedBy: user.id }, '-created_date', 15
+      { invitedBy: user.id }, '-created_date', 30
     );
-    const recentCount = recentInvites.filter(i => i.created_date && i.created_date >= oneHourAgo).length;
-    if (recentCount >= 10) {
-      return Response.json({ error: 'Rate limit exceeded: max 10 invitations per hour' }, { status: 429 });
+    const hourlyCount = recentInvites.filter(i => i.created_date && i.created_date >= oneHourAgo).length;
+    if (hourlyCount >= 5) {
+      return Response.json({ error: 'Rate limit exceeded: max 5 invitations per hour' }, { status: 429 });
+    }
+    const dailyCount = recentInvites.filter(i => i.created_date && i.created_date >= oneDayAgo).length;
+    if (dailyCount >= 10) {
+      return Response.json({ error: 'Rate limit exceeded: max 10 invitations per day' }, { status: 429 });
     }
 
     // Fetch the group from the server — do not trust client-supplied group
