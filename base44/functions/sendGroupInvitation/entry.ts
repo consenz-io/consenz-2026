@@ -50,10 +50,10 @@ Deno.serve(async (req) => {
     let isAuthorized = isSystemAdmin || isGroupCreator;
     if (!isAuthorized) {
       const memberships = await base44.asServiceRole.entities.GroupMember.filter({ groupId, userId: user.id });
-      isAuthorized = memberships.length > 0;
+      isAuthorized = memberships.some(m => m.role === 'admin');
     }
     if (!isAuthorized) {
-      return Response.json({ error: 'Forbidden: not a group member' }, { status: 403 });
+      return Response.json({ error: 'Forbidden: only group admins can send invitations' }, { status: 403 });
     }
 
     const groupName = group.name;

@@ -32,6 +32,22 @@ Deno.serve(async (req) => {
     // Don't award points for self-likes
     if (creatorId === user.id) return Response.json({ success: true, message: 'Self-like' });
 
+    // For unlike: require positive proof that a prior like award exists.
+    // The like-state check above only verifies the caller's email is absent
+    // from comment.likes, which is trivially true for someone who never
+    // liked — so we must confirm a +5 comment_like_received transaction was
+    // actually recorded before applying the -5 removal.
+    if (!isLiking) {
+      const priorAward = await base44.asServiceRole.entities.PointsTransaction.filter({
+        relatedEntityId: commentId,
+        userId: creatorId,
+        action: 'comment_like_received'
+      });
+      if (priorAward.length === 0) {
+        return Response.json({ error: 'No prior like to remove' }, { status: 403 });
+      }
+    }
+
     // ── Idempotency: skip if points were already adjusted for this comment ──
     const expectedAction = isLiking ? 'comment_like_received' : 'comment_like_removed';
     const existingTx = await base44.asServiceRole.entities.PointsTransaction.filter({
