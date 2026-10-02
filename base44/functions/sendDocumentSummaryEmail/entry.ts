@@ -13,6 +13,23 @@ function sanitizeEmailHtml(html) {
   s = s.replace(/<(script|iframe|object|embed|link|meta|base|input|button|textarea|select|option|svg|math)\b[^>]*\/?>/gi, '');
   // Strip on* event handler attributes (onclick, onerror, onload, etc.)
   s = s.replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+
+  // Decode HTML entities within href/src/action/xlink:href attribute values
+  // BEFORE scheme checking, so entity-encoded payloads (e.g. &#106;avascript:
+  // or jav&#x09;ascript:) are normalized and caught by the scheme regex below.
+  const decodeEntities = (str) => str
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#([0-9]+);/g, (_, dec) => String.fromCodePoint(parseInt(dec, 10)))
+    .replace(/&tab;/gi, '\t')
+    .replace(/&newline;/gi, '\n')
+    .replace(/&NewLine;/gi, '\n')
+    .replace(/&colon;/gi, ':');
+  s = s.replace(/((?:href|src|action|xlink:href)\s*=\s*)("[^"]*"|'[^']*'|[^\s>]+)/gi, (m, attr, val) => {
+    const q = val[0];
+    if (q === '"' || q === "'") return attr + q + decodeEntities(val.slice(1, -1)) + q;
+    return attr + decodeEntities(val);
+  });
+
   // Neutralize javascript:/vbscript:/data: URLs in href/src/action
   s = s.replace(/(href|src|action|xlink:href)\s*=\s*("(?:javascript|vbscript|data):[^"]*"|'(?:javascript|vbscript|data):[^']*'|(?:javascript|vbscript|data):[^\s>]*)/gi, '$1="#"');
   // Remove style attributes containing expression()/javascript:/vbscript:
@@ -30,7 +47,14 @@ Deno.serve(async (req) => {
   const user = await base44.auth.me();
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { documentId, summaryContent, isTestEmail, language, appBaseUrl } = await req.json();
+  // appBaseUrl is intentionally NOT read from the request body — a client-
+  // supplied value could point links and tracking endpoints at an attacker
+  // domain while emails still come from the app's verified sender. Use a
+  // trusted server-side constant instead (same approach as sendGroupEmail
+  // and sendGroupInvitation).
+  const APP_BASE_URL = 'https://consenz-copy-4ca3772e.base44.app';
+
+  const { documentId, summaryContent, isTestEmail, language } = await req.json();
   if (!documentId || !summaryContent) {
     return Response.json({ error: 'Missing required fields' }, { status: 400 });
   }
@@ -128,9 +152,7 @@ Deno.serve(async (req) => {
   };
 
   const l = labels[language] || labels['en'];
-  // Use appBaseUrl from the frontend (the public-facing app URL).
-  // req.url gives the Base44 backend origin, NOT the app URL — links would break.
-  const appBase = appBaseUrl || new URL(req.url).origin;
+  const appBase = APP_BASE_URL;
   const docUrl = `${appBase}/DocumentView?id=${documentId}`;
 
   // Base URL for the trackEmailEvent backend function.

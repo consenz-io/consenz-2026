@@ -51,6 +51,26 @@ export default async function(req) {
     const userName = user.full_name || user.email?.split('@')[0] || 'משתמש';
 
     if (type === 'join_request') {
+      // Rate limit: max 5 join-request emails per user per hour — prevents
+      // any authenticated user from mass-emailing arbitrary groups' admins.
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const recentRequests = await base44.asServiceRole.entities.GroupJoinRequest.filter(
+        { userId: user.id }, '-created_date', 10
+      );
+      const recentCount = recentRequests.filter(r => r.created_date && r.created_date >= oneHourAgo).length;
+      if (recentCount >= 5) {
+        return Response.json({ error: 'Rate limit exceeded: too many join requests' }, { status: 429 });
+      }
+
+      // One pending request per user per group — if a pending request already
+      // exists, don't re-email admins (dedup). Otherwise persist the request
+      // and notify.
+      const existing = await base44.asServiceRole.entities.GroupJoinRequest.filter({ groupId, userId: user.id });
+      const pending = existing.find(r => r.status === 'pending');
+      if (pending) {
+        return Response.json({ sent: 0, pending: true });
+      }
+
       const adminMembers = members.filter(m => m.role === 'admin');
       const adminProfiles = await base44.asServiceRole.entities.UserPublicProfile.filter({
         userId: { $in: adminMembers.map(m => m.userId) },
@@ -58,6 +78,9 @@ export default async function(req) {
       const manageUrl = `${baseUrl}/GroupView?id=${groupId}`;
       const { subject, body } = joinRequestEmail(lang, userName, user.email, group.name, manageUrl);
 
+      await base44.asServiceRole.entities.GroupJoinRequest.create({
+        groupId, userId: user.id, userEmail: user.email, userName, status: 'pending',
+      });
       await Promise.all(adminProfiles.map(admin =>
         base44.asServiceRole.integrations.Core.SendEmail({ to: admin.email, subject, body })
       ));
