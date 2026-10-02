@@ -59,8 +59,11 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
     mutationFn: async () => {
       const currentUser = await base44.auth.me();
       
-      // Generate unique token
-      const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+      // Generate unique token using cryptographically secure randomUUID
+      const token = crypto.randomUUID();
+      
+      // Set expiry to 7 days from now
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
       
       // Create invitation record
       await base44.entities.GroupInvitation.create({
@@ -68,7 +71,8 @@ export default function InviteMemberDialog({ groupId, groupName, isOpen, onClose
         email: '',
         invitedBy: currentUser.id,
         token,
-        status: 'pending'
+        status: 'pending',
+        expiresAt
       });
       
       return token;

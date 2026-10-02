@@ -42,6 +42,35 @@ Deno.serve(async (req) => {
       }, { status: 403 });
     }
 
+    // Link-based invitations (empty email) must have an expiry — prevents
+    // never-expiring forged link invitations.
+    const isLinkInvitation = !invitation.email || invitation.email.trim() === '';
+    if (isLinkInvitation && !invitation.expiresAt) {
+      return Response.json({ error: 'Invitation has expired' }, { status: 400 });
+    }
+
+    // Provenance check: verify the invitation was created by the group's
+    // creator, an existing group member/admin, or a system admin. The
+    // GroupInvitation entity's create rule is open, so any user could
+    // self-mint a record naming any group. created_by_id is platform-set
+    // and not client-writable, so we trust it as the inviter's identity.
+    const [groupRecords, groupMembers] = await Promise.all([
+      base44.asServiceRole.entities.Group.filter({ id: invitation.groupId }),
+      base44.asServiceRole.entities.GroupMember.filter({ groupId: invitation.groupId })
+    ]);
+    const group = groupRecords[0];
+    if (!group) {
+      return Response.json({ error: 'Group not found' }, { status: 404 });
+    }
+
+    const isSystemAdmin = user.role === 'admin';
+    const isGroupCreator = group.created_by_id === invitation.created_by_id;
+    const isInviterAMember = groupMembers.some(m => m.userId === invitation.created_by_id);
+
+    if (!isSystemAdmin && !isGroupCreator && !isInviterAMember) {
+      return Response.json({ error: 'Invalid invitation' }, { status: 403 });
+    }
+
     // Check if already a member — use service role to bypass RLS
     const existingMemberships = await base44.asServiceRole.entities.GroupMember.filter({
       groupId: invitation.groupId,
