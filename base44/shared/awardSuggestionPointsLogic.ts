@@ -38,24 +38,22 @@ export async function awardSuggestionPointsLogic(base44, { suggestionId, action 
     return { success: false, error: 'No creator ID found', status: 404 };
   }
 
-  let pointsAmount = 0;
-  let description = '';
+  // Derive the action server-side from the suggestion's own type rather than
+  // trusting the caller-supplied value. The caller could otherwise alternate
+  // the action parameter ('suggestion_accepted' then 'topic_edit_accepted') to
+  // double-award points for the same accepted suggestion, since the idempotency
+  // guard below is keyed on (relatedEntityId, userId, action). This function
+  // only handles Suggestion entities (not TopicEditSuggestion), so the action is
+  // always 'suggestion_accepted' regardless of what the caller passes.
+  const resolvedAction = 'suggestion_accepted';
+  const pointsAmount = 500;
+  const description = `Your suggestion was accepted: ${suggestion.title || 'Suggestion'}`;
 
-  if (action === 'suggestion_accepted') {
-    pointsAmount = 500;
-    description = `Your suggestion was accepted: ${suggestion.title || 'Suggestion'}`;
-  } else if (action === 'topic_edit_accepted') {
-    pointsAmount = 100;
-    description = `Your topic title edit was accepted`;
-  } else {
-    return { success: false, error: 'Invalid action', status: 400 };
-  }
-
-  // Idempotency: skip if points were already awarded for this suggestion + action + creator
+  // Idempotency: skip if points were already awarded for this suggestion + creator
   const existingTx = await base44.entities.PointsTransaction.filter({
     relatedEntityId: suggestionId,
     userId: creatorId,
-    action
+    action: resolvedAction
   });
   if (existingTx.length > 0) {
     return { success: true, message: 'Points already awarded', skipped: true };
@@ -82,18 +80,17 @@ export async function awardSuggestionPointsLogic(base44, { suggestionId, action 
     base44.entities.PointsTransaction.create({
       userId: creator.id,
       amount: pointsAmount,
-      action,
+      action: resolvedAction,
       description,
       relatedEntityId: suggestionId,
-      relatedEntityType: action === 'topic_edit_accepted' ? 'topic' : 'suggestion'
+      relatedEntityType: 'suggestion'
     })
   ]);
 
   console.log('[AWARD POINTS] ✓ Creator awarded', pointsAmount, 'points to user:', creator.id);
 
   // 2. Award 50 points to each PRO voter who influenced the acceptance
-  //    (only for suggestion_accepted, not topic_edit_accepted)
-  if (action === 'suggestion_accepted') {
+  if (resolvedAction === 'suggestion_accepted') {
     const votes = await base44.entities.Vote.filter({ suggestionId });
     const proVoterIds = votes.filter(v => v.vote === 'pro').map(v => v.userId).filter(Boolean);
 
