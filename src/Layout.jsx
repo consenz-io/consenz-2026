@@ -386,16 +386,17 @@ function LayoutContent({ children, currentPageName }) {
         queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       }
 
-      // Create or update UserPublicProfile — only once per session
+      // Create UserPublicProfile if missing — only once per session.
+      // Never overwrite an existing fullName: the User entity's full_name
+      // defaults to the email prefix for email-registered users and cannot be
+      // changed via updateMe, so syncing it here would clobber the real name
+      // set during registration or via the Profile page.
       try {
         const fullName = (user.full_name || '').trim();
         if (fullName.length < 2) return;
         const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
         if (existingProfiles.length === 0) {
           await base44.entities.UserPublicProfile.create({ userId: user.id, email: user.email, fullName });
-          queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
-        } else if (existingProfiles[0].fullName !== fullName) {
-          await base44.entities.UserPublicProfile.update(existingProfiles[0].id, { fullName, email: user.email });
           queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
         }
       } catch (err) {
