@@ -263,6 +263,19 @@ function LayoutContent({ children, currentPageName }) {
     gcTime: 5 * 60 * 1000 // Keep in cache for 5 minutes
   });
 
+  // Fetch the user's public profile so the sidebar shows their chosen display
+  // name (UserPublicProfile.fullName) instead of the email-prefix default that
+  // the User entity's full_name holds for email-registered users.
+  const { data: publicProfile } = useQuery({
+    queryKey: ['ownPublicProfile', user?.id],
+    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: user.id }).then((profiles) => profiles[0]),
+    enabled: !!user?.id,
+    staleTime: 60 * 1000,
+    gcTime: 5 * 60 * 1000
+  });
+
+  const displayUser = user && publicProfile ? { ...user, full_name: publicProfile.fullName || user.full_name } : user;
+
 
 
   const { data: unvotedData } = useQuery({
@@ -398,6 +411,7 @@ function LayoutContent({ children, currentPageName }) {
         if (existingProfiles.length === 0) {
           await base44.entities.UserPublicProfile.create({ userId: user.id, email: user.email, fullName });
           queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
+          queryClient.invalidateQueries({ queryKey: ['ownPublicProfile'] });
         }
       } catch (err) {
         console.error('Error managing UserPublicProfile:', err);
@@ -460,7 +474,7 @@ function LayoutContent({ children, currentPageName }) {
             navigationItems={navigationItems}
             language={language}
             location={location}
-            user={user}
+            user={displayUser}
             t={t}
             isRTL={isRTL}
             setLanguage={setLanguage}
