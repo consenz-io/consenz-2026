@@ -83,8 +83,6 @@ Deno.serve(async (req) => {
     // the "Join" button at a phishing page from the app's verified sender domain.
     const baseUrl = 'https://consenz-copy-4ca3772e.base44.app';
     const inviteUrl = `${baseUrl}?groupInvite=${token}`;
-    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
-
     const lang = language || 'he';
     const isRTL = lang === 'he' || lang === 'ar';
     const senderName = user.full_name || (lang === 'he' ? 'מישהו' : lang === 'ar' ? 'شخص ما' : 'Someone');
@@ -122,36 +120,29 @@ Deno.serve(async (req) => {
     const dir = isRTL ? 'rtl' : 'ltr';
     const textAlign = isRTL ? 'right' : 'left';
 
-    const emailRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Consenz <no-reply@consenz.net>',
-        to: [email],
-        subject: c.subject,
-        html: `
-          <div dir="${dir}" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; text-align: ${textAlign};">
-            <h2 style="color: #1e40af;">${c.title}</h2>
-            <p>${c.body}</p>
-            <p>${c.cta}</p>
-            <a href="${inviteUrl}" 
-               style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 16px 0;">
-              ${c.button}
-            </a>
-            <p style="color: #64748b; font-size: 14px;">${c.fallback} <br/><a href="${inviteUrl}">${inviteUrl}</a></p>
-          </div>
-        `
-      })
-    });
+    // Route through Core.SendEmail — the platform's content screening and
+    // recipient-hygiene provide anti-abuse controls that direct Resend API
+    // calls bypass, preventing the verified sender domain from being used
+    // as an open mail relay to arbitrary external addresses.
+    const emailHtml = `
+      <div dir="${dir}" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; text-align: ${textAlign};">
+        <h2 style="color: #1e40af;">${c.title}</h2>
+        <p>${c.body}</p>
+        <p>${c.cta}</p>
+        <a href="${inviteUrl}" 
+           style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 16px 0;">
+          ${c.button}
+        </a>
+        <p style="color: #64748b; font-size: 14px;">${c.fallback} <br/><a href="${inviteUrl}">${inviteUrl}</a></p>
+      </div>
+    `;
 
-    if (!emailRes.ok) {
-      const errBody = await emailRes.json();
-      console.error('[sendGroupInvitation] Resend error:', errBody);
-      return Response.json({ error: errBody.message || 'Failed to send email' }, { status: 500 });
-    }
+    await base44.asServiceRole.integrations.Core.SendEmail({
+      to: email,
+      subject: c.subject,
+      body: emailHtml,
+      from_name: 'Consenz',
+    });
 
     return Response.json({ success: true });
 

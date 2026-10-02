@@ -7,8 +7,13 @@ Deno.serve(async (req) => {
   const user = await base44.auth.me();
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { documentId, additionalInstructions, language, appBaseUrl } = await req.json();
+  const { documentId, additionalInstructions, language } = await req.json();
   if (!documentId) return Response.json({ error: 'Missing documentId' }, { status: 400 });
+
+  // appBaseUrl is intentionally NOT read from the request body — a client-
+  // supplied value could point links at an attacker domain. Use a trusted
+  // server-side constant instead (same approach as sendDocumentSummaryEmail).
+  const APP_BASE_URL = 'https://consenz-copy-4ca3772e.base44.app';
 
   // Authorization: verify against non-client-writable data (document ownership
   // or a DocumentAdmin record created by the document's original creator) —
@@ -66,8 +71,8 @@ Deno.serve(async (req) => {
   const pending = suggestions.filter(s => s.status === 'pending');
   const rejected = suggestions.filter(s => s.status === 'rejected');
 
-  // Build base URL for links
-  const baseUrl = appBaseUrl || 'https://app.base44.com';
+  // Build base URL for links — trusted server-side constant, not client-supplied
+  const baseUrl = APP_BASE_URL;
   // Route name must match the key in pages.config.js exactly — it's "suggestiondetail" (lowercase).
   const suggestionUrl = (id) => `${baseUrl}/suggestiondetail?id=${id}`;
   const docUrl = `${baseUrl}/DocumentView?id=${documentId}`;

@@ -82,10 +82,9 @@ export function showBrowserNotification({ title, body, actionUrl, icon }) {
       const isSafeUrl = (url) => {
         if (typeof url !== 'string') return false;
         const trimmed = url.trim().toLowerCase();
-        // Relative path is safe
+        // Same-origin relative paths only — prevents open redirect / phishing
+        // via forged notifications with attacker-controlled absolute URLs.
         if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return true;
-        // Only allow http/https absolute URLs
-        if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return true;
         return false;
       };
       if (isSafeUrl(actionUrl)) {

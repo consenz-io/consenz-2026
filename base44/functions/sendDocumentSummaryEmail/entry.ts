@@ -288,39 +288,17 @@ Deno.serve(async (req) => {
     try {
       const sig = logId ? await signLogId(logId) : '';
       const emailHtml = buildEmailHtml(logId || 'unknown', sig);
-      const isRegistered = registeredEmails.has(email.toLowerCase());
-
-      if (isRegistered) {
-        // Registered Base44 user — use built-in SendEmail integration
-        await base44.asServiceRole.integrations.Core.SendEmail({
-          to: email,
-          subject: l.subject,
-          body: emailHtml,
-          from_name: 'Consenz',
-        });
-      } else {
-        // Non-registered participant — use Resend API directly
-        const resendKey = Deno.env.get('RESEND_API_KEY');
-        if (!resendKey) throw new Error('RESEND_API_KEY not configured — cannot send to non-registered recipients');
-
-        const resendRes = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${resendKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: 'Consenz <no-reply@consenz.net>',
-            to: [email],
-            subject: l.subject,
-            html: emailHtml,
-          }),
-        });
-        if (!resendRes.ok) {
-          const errBody = await resendRes.text();
-          throw new Error(`Resend API (${resendRes.status}): ${errBody}`);
-        }
-      }
+      // Route ALL sends through Core.SendEmail — the platform's content
+      // screening and recipient-hygiene provide server-side sanitization
+      // and anti-abuse controls that the bypassable regex sanitizer and
+      // direct Resend API calls cannot. The regex sanitizer above remains
+      // as a first-pass defense, but SendEmail is the trust boundary.
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        to: email,
+        subject: l.subject,
+        body: emailHtml,
+        from_name: 'Consenz',
+      });
       sent++;
     } catch (err) {
       failed.push(email);

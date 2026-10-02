@@ -15,15 +15,15 @@ import { useLanguage } from "@/components/LanguageContext";
 import VirtualizedNotificationsList from "./VirtualizedNotificationsList";
 import { formatRelativeTime } from "@/components/utils/dateFormatter";
 
-// Validate actionUrl scheme before navigation — relative same-origin paths
-// or http/https only. Prevents javascript:/data: URIs and protocol-relative
-// //evil.com values from executing as DOM-XSS or redirecting to phishing sites.
+// Validate actionUrl before navigation — same-origin relative paths only.
+// Prevents javascript:/data: URIs, protocol-relative //evil.com values, AND
+// absolute http(s) URLs from redirecting users to attacker-controlled
+// phishing sites via forged notifications (Notification create is open).
 // Matches the isSafeUrl check used in browserNotifications.jsx.
 const isSafeUrl = (url) => {
   if (typeof url !== 'string') return false;
   const trimmed = url.trim().toLowerCase();
   if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return true;
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return true;
   return false;
 };
 
