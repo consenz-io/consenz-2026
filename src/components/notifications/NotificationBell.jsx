@@ -15,6 +15,18 @@ import { useLanguage } from "@/components/LanguageContext";
 import VirtualizedNotificationsList from "./VirtualizedNotificationsList";
 import { formatRelativeTime } from "@/components/utils/dateFormatter";
 
+// Validate actionUrl scheme before navigation — relative same-origin paths
+// or http/https only. Prevents javascript:/data: URIs and protocol-relative
+// //evil.com values from executing as DOM-XSS or redirecting to phishing sites.
+// Matches the isSafeUrl check used in browserNotifications.jsx.
+const isSafeUrl = (url) => {
+  if (typeof url !== 'string') return false;
+  const trimmed = url.trim().toLowerCase();
+  if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return true;
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return true;
+  return false;
+};
+
 export default function NotificationBell({ user }) {
   const { t, isRTL, language } = useLanguage();
   const [open, setOpen] = useState(false);
@@ -158,6 +170,11 @@ export default function NotificationBell({ user }) {
             .replace(/\/email-logs(\?|#|$)/, '/emaillogs$1');
         };
         const normalizedUrl = normalizeUrl(notification.actionUrl);
+        // Reject non-http schemes and protocol-relative URLs before navigation
+        if (!isSafeUrl(normalizedUrl)) {
+          console.warn('[NOTIFICATION] Blocked unsafe actionUrl:', notification.actionUrl);
+          return;
+        }
         // Small delay to ensure popover closes smoothly
         setTimeout(() => {
           try {

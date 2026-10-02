@@ -7,6 +7,7 @@ import { Loader2, Sparkles, X, ExternalLink, Pencil, Check } from "lucide-react"
 import { useLanguage } from "@/components/LanguageContext";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 /**
  * DocumentSummaryDialog
@@ -105,7 +106,7 @@ export default function DocumentSummaryDialog({ isOpen, onClose, document, sugge
     let match;
     while ((match = regex.exec(html)) !== null) {
       if (match.index > lastIndex) {
-        parts.push(<span key={lastIndex} dangerouslySetInnerHTML={{ __html: html.slice(lastIndex, match.index) }} />);
+        parts.push(<span key={lastIndex} dangerouslySetInnerHTML={{ __html: sanitizeHtml(html.slice(lastIndex, match.index)) }} />);
       }
       const suggestionId = match[1];
       const title = match[2];
@@ -126,7 +127,7 @@ export default function DocumentSummaryDialog({ isOpen, onClose, document, sugge
       lastIndex = match.index + match[0].length;
     }
     if (lastIndex < html.length) {
-      parts.push(<span key="tail" dangerouslySetInnerHTML={{ __html: html.slice(lastIndex) }} />);
+      parts.push(<span key="tail" dangerouslySetInnerHTML={{ __html: sanitizeHtml(html.slice(lastIndex)) }} />);
     }
     return parts;
   };
@@ -199,7 +200,7 @@ export default function DocumentSummaryDialog({ isOpen, onClose, document, sugge
                   suppressContentEditableWarning
                   className="text-sm text-slate-800 leading-relaxed outline-none border border-indigo-300 rounded-lg p-3 min-h-[120px] focus:ring-2 focus:ring-indigo-200 bg-indigo-50/30 whitespace-pre-wrap"
                   dir={isRTL ? 'rtl' : 'ltr'}
-                  dangerouslySetInnerHTML={{ __html: summaryData.summary || '' }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(summaryData.summary || '') }}
                 />
               ) : (
                 <div className="space-y-3 text-sm text-slate-800 leading-relaxed">

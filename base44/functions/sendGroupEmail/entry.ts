@@ -1,10 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 
-const buildAppUrl = (req) => {
-  const origin = req.headers.get('origin') || req.headers.get('referer') || '';
-  if (origin) return origin.replace(/\/$/, '');
-  return 'https://consenz-copy-4ca3772e.base44.app';
-};
+// Trusted base URL — hardcoded, not derived from client-controlled request
+// headers (Origin/Referer), to prevent phishing of group admins via forged
+// headers that redirect the "Manage request" link to an attacker domain.
+const APP_BASE_URL = 'https://consenz-copy-4ca3772e.base44.app';
 
 const joinRequestEmail = (language, userName, userEmail, groupName, manageUrl) => ({
   subject: language === 'he'
@@ -47,7 +46,7 @@ export default async function(req) {
     ]);
     if (!group) return Response.json({ error: 'Group not found' }, { status: 404 });
 
-    const baseUrl = buildAppUrl(req);
+    const baseUrl = APP_BASE_URL;
     const lang = language || 'he';
     const userName = user.full_name || user.email?.split('@')[0] || 'משתמש';
 
