@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { parseUserDate } from "@/components/utils/dateFormatter";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 const DeleteSectionSuggestionCard = React.memo(function DeleteSectionSuggestionCard({ 
   suggestion, 
@@ -190,7 +191,7 @@ const DeleteSectionSuggestionCard = React.memo(function DeleteSectionSuggestionC
         </div> {/* Note: this text doesn't need t() - it's using language variable already defined */}
         <div 
           className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
-          dangerouslySetInnerHTML={{ __html: section?.content || suggestion.originalContent }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(section?.content || suggestion.originalContent) }}
         />
       </div>
 

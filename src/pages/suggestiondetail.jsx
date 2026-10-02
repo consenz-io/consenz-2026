@@ -31,6 +31,7 @@ import SuggestionChainNavigation from "@/components/suggestion/SuggestionChainNa
 import CreateSuggestionModal from "../components/document/CreateSuggestionModal";
 import { toast } from "sonner";
 import { castVote } from "@/components/document/utils/castVote";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 export default function SuggestionDetail() {
   const { t, isRTL, language: rawLanguage } = useLanguage();
@@ -691,7 +692,7 @@ export default function SuggestionDetail() {
             {suggestion.type === 'delete_section' ?
             <div>
                   <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <div className="prose prose-sm max-w-none text-slate-700 line-through opacity-60" dangerouslySetInnerHTML={{ __html: suggestion.originalContent }} />
+                    <div className="prose prose-sm max-w-none text-slate-700 line-through opacity-60" dangerouslySetInnerHTML={{ __html: sanitizeHtml(suggestion.originalContent) }} />
                   </div>
                 </div> :
             suggestion.type === 'edit_section' || suggestion.type === 'edit_suggestion' && suggestion.originalContent ?

@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { parseUserDate } from "@/components/utils/dateFormatter";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 const SERIF = "var(--font-document)";
 
@@ -130,7 +131,7 @@ export default function CurrentVersionModal({
       const sectionsHtml = topicSections.
       map(
         (section, si) =>
-        `<div style="margin-bottom:1.5rem"><span style="color:#64748b;font-weight:500;margin-inline-end:0.5rem">${ti + 1}.${si + 1}</span><span style="font-size:1.1rem;line-height:1.8">${section.content || ""}</span></div>`
+        `<div style="margin-bottom:1.5rem"><span style="color:#64748b;font-weight:500;margin-inline-end:0.5rem">${ti + 1}.${si + 1}</span><span style="font-size:1.1rem;line-height:1.8">${sanitizeHtml(section.content || "")}</span></div>`
       ).
       join("");
       return `<div style="margin-bottom:2.5rem"><h2 style="font-size:1.4rem;font-weight:bold;border-bottom:1px solid #cbd5e1;padding-bottom:0.5rem;margin-bottom:1rem">${ti + 1}. ${escapeHtml(topic.title || "")}</h2>${sectionsHtml}</div>`;
@@ -243,7 +244,7 @@ export default function CurrentVersionModal({
                           <div
                             className="flex-1 text-slate-700 leading-relaxed prose prose-sm max-w-none"
                             style={{ fontFamily: SERIF, fontSize: "1.125rem", lineHeight: "1.8" }}
-                            dangerouslySetInnerHTML={{ __html: section.content || "" }} />
+                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.content || "") }} />
                       
                         </div>
                         )}

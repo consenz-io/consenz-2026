@@ -16,6 +16,7 @@ import CommentsSection from "../components/document/CommentsSection";
 import TranslatableContent from "../components/document/TranslatableContent";
 import PageHeader from "../components/PageHeader";
 import SectionVersionCarousel from "../components/document/SectionVersionCarousel";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 export default function SectionHistory() {
   const { t, isRTL, language } = useLanguage();
@@ -385,7 +386,7 @@ export default function SectionHistory() {
                           lineHeight: "1.8",
                           letterSpacing: "0.01em"
                         }}
-                        dangerouslySetInnerHTML={{ __html: currentVer.content }}
+                        dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentVer.content) }}
                       />
                     )}
 

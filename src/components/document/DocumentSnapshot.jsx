@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Globe, Loader2, Eye, EyeOff } from "lucide-react";
 import ChangeBlockDiffView from "./ChangeBlockDiffView";
 import { useLanguage } from "@/components/LanguageContext";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 const detectLanguage = (text) => {
   if (!text) return 'en';
@@ -92,7 +93,7 @@ export default function DocumentSnapshot({
                             fontSize: "1.125rem",
                             lineHeight: "1.8"
                           }}
-                          dangerouslySetInnerHTML={{ __html: currentSnapshot?.deletedSectionContent || displayedContent }}
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentSnapshot?.deletedSectionContent || displayedContent) }}
                         />
                       </div>
                     ) : isViewingHistory && isNewlyCreatedSection ? (
@@ -111,7 +112,7 @@ export default function DocumentSnapshot({
                             fontSize: "1.125rem",
                             lineHeight: "1.8"
                           }}
-                          dangerouslySetInnerHTML={{ __html: currentSnapshot?.newSectionContent || displayedContent }}
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentSnapshot?.newSectionContent || displayedContent) }}
                         />
                       </div>
                     ) : isViewingHistory && hasChanged ? (
@@ -191,7 +192,7 @@ export default function DocumentSnapshot({
                                   lineHeight: "1.8",
                                   letterSpacing: "0.01em"
                                 }}
-                                dangerouslySetInnerHTML={{ __html: displayedContent }}
+                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayedContent) }}
                               />
                             )}
                           </div>
@@ -205,9 +206,9 @@ export default function DocumentSnapshot({
                               letterSpacing: "0.01em"
                             }}
                             dangerouslySetInnerHTML={{ 
-                              __html: showTranslatedSections[section.id] 
+                              __html: sanitizeHtml(showTranslatedSections[section.id] 
                                 ? (translatedSections[section.id] || section.translations?.[language] || displayedContent)
-                                : displayedContent 
+                                : displayedContent)
                             }}
                           />
                         )}

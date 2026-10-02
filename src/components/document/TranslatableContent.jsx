@@ -7,6 +7,7 @@ import { Languages, Loader2, Check } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { useDocumentTranslation } from "./TranslationContext";
 import TranslatablePreview from "./TranslatablePreview";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 const languageNames = {
   en: "English",
@@ -196,7 +197,7 @@ export default function TranslatableContent({
   // Render simple content if no entity - after all hooks have been called
   if (!entity) {
     return renderContent ? renderContent(content) : (
-      <div className={className} dangerouslySetInnerHTML={{ __html: content }} />
+      <div className={className} dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />
     );
   }
 
@@ -225,7 +226,7 @@ export default function TranslatableContent({
           ) : (
             <div 
               className={className}
-              dangerouslySetInnerHTML={{ __html: displayContent }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayContent) }}
             />
           )}
           

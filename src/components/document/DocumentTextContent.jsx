@@ -1,5 +1,6 @@
 import React from "react";
 import { useLanguage } from "@/components/LanguageContext";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 export default function DocumentTextContent({ content, className = "" }) {
   const { isRTL } = useLanguage();
@@ -7,7 +8,7 @@ export default function DocumentTextContent({ content, className = "" }) {
   return (
     <div 
       className={`document-content text-base md:text-xl ${className}`}
-      dangerouslySetInnerHTML={{ __html: content }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
       style={{
         fontFamily: "var(--font-document)",
         lineHeight: "1.8",

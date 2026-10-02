@@ -12,6 +12,7 @@ import ChangeBlockDiffView from "@/components/document/ChangeBlockDiffView";
 import DocumentTitleHeading from "@/components/document/DocumentTitleHeading";
 import VersionNavigation from "@/components/document/VersionNavigation";
 import DocumentSnapshot from "@/components/document/DocumentSnapshot";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { useDocumentVersions } from "@/components/document/hooks/useDocumentVersions";
 
 // Lazy load sidebars
@@ -27,25 +28,9 @@ const detectLanguage = (text) => {
   return 'en';
 };
 
-// Sanitize rich-text HTML before writing it into the print/export window via
-// document.write(). Strips <script> tags, on* event-handler attributes, and
-// javascript: URLs while preserving safe formatting tags (<p>, <strong>, etc.).
-const sanitizeHtmlForExport = (html) => {
-  if (!html) return '';
-  const temp = document.createElement('div');
-  temp.innerHTML = html;
-  temp.querySelectorAll('script').forEach((el) => el.remove());
-  temp.querySelectorAll('*').forEach((el) => {
-    [...el.attributes].forEach((attr) => {
-      const name = attr.name.toLowerCase();
-      const value = (attr.value || '').toLowerCase().trim();
-      if (name.startsWith('on') || (name === 'href' && value.startsWith('javascript:')) || (name === 'src' && value.startsWith('javascript:'))) {
-        el.removeAttribute(attr.name);
-      }
-    });
-  });
-  return temp.innerHTML;
-};
+// Rich-text HTML for the print/export window is sanitized via the shared
+// sanitizeHtml() (DOMPurify) — see src/lib/sanitizeHtml.js. The previous
+// homemade sanitizer was bypassable (iframe/srcdoc/embed survived).
 
 export default function DocumentCleanView() {
   const { t, isRTL, language: rawLanguage } = useLanguage();
@@ -495,7 +480,7 @@ export default function DocumentCleanView() {
         const rawContent = (showTranslatedSections[section.id] ?
         translatedSections[section.id] || section.translations?.[language] :
         null) || section.content || '';
-        const content = sanitizeHtmlForExport(rawContent);
+        const content = sanitizeHtml(rawContent);
         return `<div style="margin-bottom:1.5rem">
             <span style="color:#64748b;font-weight:500;margin-inline-end:0.5rem">${ti + 1}.${si + 1}</span>
             <span style="font-size:1.1rem;line-height:1.8">${content}</span>
@@ -808,7 +793,7 @@ export default function DocumentCleanView() {
                                   fontSize: "1.125rem",
                                   lineHeight: "1.8"
                                 }}
-                                dangerouslySetInnerHTML={{ __html: currentSnapshot?.deletedSectionContent || displayedContent }} />
+                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentSnapshot?.deletedSectionContent || displayedContent) }} />
                               
                                  </div> :
                             isDirectlyEdited ?
@@ -841,7 +826,7 @@ export default function DocumentCleanView() {
                                   fontSize: "1.125rem",
                                   lineHeight: "1.8"
                                 }}
-                                dangerouslySetInnerHTML={{ __html: currentSnapshot?.newSectionContent || displayedContent }} />
+                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentSnapshot?.newSectionContent || displayedContent) }} />
                               
                                   </div> :
                             isViewingHistory && hasChanged ?
@@ -873,9 +858,9 @@ export default function DocumentCleanView() {
                                   letterSpacing: "0.01em"
                                 }}
                                 dangerouslySetInnerHTML={{
-                                  __html: showTranslatedSections[section.id] ?
+                                  __html: sanitizeHtml(showTranslatedSections[section.id] ?
                                   translatedSections[section.id] || section.translations?.[language] || displayedContent :
-                                  displayedContent
+                                  displayedContent)
                                 }} />
                               
                                     {(section.originalLanguage || detectLanguage(section.content)) !== language &&

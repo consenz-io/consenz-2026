@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { useLanguage } from "@/components/LanguageContext";
 import { computeChangeBlockDiff } from "./changeBlockDiff";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 /**
  * ChangeBlockDiffView — renders a change-block diff between two HTML strings.
@@ -41,7 +42,7 @@ export default function ChangeBlockDiffView({
       <div
         className={className}
         style={baseStyle}
-        dangerouslySetInnerHTML={{ __html: newContent || originalContent || "" }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(newContent || originalContent || "") }}
       />
     );
   }
@@ -57,11 +58,11 @@ export default function ChangeBlockDiffView({
             <span key={idx} className="change-block">
               <span
                 className="bg-[#fef2f2] text-red-700 line-through opacity-80 rounded-[3px] px-[1px]"
-                dangerouslySetInnerHTML={{ __html: seg.oldHtml }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(seg.oldHtml) }}
               />
               <span
                 className="bg-[#dcfce7] text-green-800 font-medium rounded-[3px] px-[1px] border-b border-green-400/60"
-                dangerouslySetInnerHTML={{ __html: seg.newHtml }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(seg.newHtml) }}
               />
             </span>
           );
@@ -71,7 +72,7 @@ export default function ChangeBlockDiffView({
             <span
               key={idx}
               className="bg-[#fef2f2] text-red-700 line-through opacity-80 rounded-[3px] px-[1px]"
-              dangerouslySetInnerHTML={{ __html: seg.html }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(seg.html) }}
             />
           );
         }
@@ -80,7 +81,7 @@ export default function ChangeBlockDiffView({
             <span
               key={idx}
               className="bg-[#dcfce7] text-green-800 font-medium rounded-[3px] px-[1px] border-b border-green-400/60"
-              dangerouslySetInnerHTML={{ __html: seg.html }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(seg.html) }}
             />
           );
         }
@@ -88,7 +89,7 @@ export default function ChangeBlockDiffView({
         return (
           <span
             key={idx}
-            dangerouslySetInnerHTML={{ __html: seg.html }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(seg.html) }}
           />
         );
       })}
