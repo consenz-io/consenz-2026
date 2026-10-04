@@ -131,7 +131,6 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
           </thead>
           <tbody>
             {visibleRows.map((s) => {
-              const suggestionTitle = s.title || '';
               const contentSnippet = s.newContent
                 ? s.newContent.replace(/<[^>]*>/g, '').trim().slice(0, 80)
                 : '';
@@ -141,23 +140,18 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
                   <td className={`py-3 px-3 text-slate-400 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{s.index}</td>
                   <td className={`py-3 px-3 ${isRTL ? 'text-right' : 'text-left'}`}>
                     <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                      <Link
+                        to={`${createPageUrl("suggestiondetail")}?id=${s.id}`}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium hover:opacity-80 transition-opacity w-fit ${
                           s.type === 'new_section' ? 'bg-green-50 text-green-700' :
                           s.type === 'delete_section' ? 'bg-red-50 text-red-700' :
                           'bg-blue-50 text-blue-700'
-                        }`}>
-                          <Icon className="w-3 h-3" />
-                          {typeLabel(s)}
-                        </span>
-                        <Link
-                          to={`${createPageUrl("suggestiondetail")}?id=${s.id}`}
-                          className="text-slate-700 hover:text-indigo-600 hover:underline font-medium text-sm truncate max-w-xs inline-flex items-center gap-1"
-                        >
-                          {suggestionTitle}
-                          <ExternalLink className="w-3 h-3 flex-shrink-0 opacity-50" />
-                        </Link>
-                      </div>
+                        }`}
+                      >
+                        <Icon className="w-3 h-3" />
+                        {typeLabel(s)}
+                        <ExternalLink className="w-3 h-3 flex-shrink-0 opacity-50" />
+                      </Link>
                       <span className="text-[10px] text-slate-400 leading-tight">
                         {formatLocalDateTime(s.acceptedAt || s.updated_date || s.created_date, 'DD/MM/YY HH:mm')}
                       </span>
