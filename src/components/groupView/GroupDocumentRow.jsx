@@ -38,7 +38,7 @@ export default function GroupDocumentRow({ doc, unvotedCount, participantCount }
           entity={doc}
           entityType="Document"
           fieldName="title"
-          renderContent={(text) => <h3 className="font-semibold text-slate-900">{text}</h3>}
+          renderContent={(text) => <h3 className="font-semibold text-slate-900 font-document">{text}</h3>}
         />
         {doc.description && (
           <TranslatableContent

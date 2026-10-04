@@ -73,7 +73,7 @@ export default function MyDocumentCard({ doc, mySuggestionsCount, myVotesCount, 
       <CardHeader className="border-b border-slate-100">
         <div className="flex items-start justify-between gap-2">
           <Link to={`${createPageUrl("DocumentView")}?id=${doc.id}`} className="flex-1 cursor-pointer">
-            <CardTitle className="text-xl line-clamp-2">
+            <CardTitle className="text-xl line-clamp-2 font-document">
               {translatedTitle || doc.title}
             </CardTitle>
           </Link>

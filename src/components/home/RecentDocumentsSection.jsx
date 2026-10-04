@@ -86,7 +86,7 @@ export default function RecentDocumentsSection({ documents, documentsLoading, gr
                 <Card className="bg-white border-slate-200 hover:shadow-lg hover:border-blue-300 transition-all duration-200 h-full">
                   <CardHeader className="border-b border-slate-100">
                     <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-lg line-clamp-2">{doc.title}</CardTitle>
+                      <CardTitle className="text-lg line-clamp-2 font-document">{doc.title}</CardTitle>
                       <span className={`flex-shrink-0 inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full border ${isOpen ? 'bg-green-50 text-green-700 border-green-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                         {isOpen ? <Globe className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
                         {publicLabel[language] || publicLabel.en}
