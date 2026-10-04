@@ -10,7 +10,7 @@ export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
-    if (!user) return Response.json({ count: 0 });
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     // Cap at 200 — the badge only needs a lower bound (displays "9+" above 9).
     const unread = await base44.asServiceRole.entities.Message.filter(

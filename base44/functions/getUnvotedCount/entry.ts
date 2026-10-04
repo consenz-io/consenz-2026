@@ -5,7 +5,7 @@ Deno.serve(async (req) => {
   const user = await base44.auth.me();
 
   if (!user) {
-    return Response.json({ count: 0 });
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   // Use asServiceRole to avoid per-user rate limits on heavy queries
