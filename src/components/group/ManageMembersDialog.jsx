@@ -597,7 +597,7 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
             {language === 'he' ? 'חברי הקבוצה' : language === 'ar' ? 'أعضاء المجموعة' : 'Group Members'} ({allParticipants.totalCount} {language === 'he' ? 'משתתפים' : language === 'ar' ? 'مشاركون' : 'participants'})
           </h3>
           
-          {groupMembers.map((member) => {
+          {groupMembers.filter(member => publicProfiles.some(p => p.userId === member.userId)).map((member) => {
             const profile = publicProfiles.find(p => p.userId === member.userId);
             const isCurrentUser = member.userId === currentUser?.id;
             

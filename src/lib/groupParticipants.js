@@ -37,15 +37,17 @@ export function calcGroupParticipants(
 ) {
   // Build email → userId map from public profiles
   const emailToUserId = new Map();
+  const validUserIds = new Set();
   publicProfiles.forEach(p => {
     if (p.email && p.userId) emailToUserId.set(p.email, p.userId);
+    if (p.userId) validUserIds.add(p.userId);
   });
 
   const ids = new Set();
 
-  // 1. Formal group members
+  // 1. Formal group members (skip orphaned records pointing to deleted users)
   groupMembers
-    .filter(m => m.groupId === groupId)
+    .filter(m => m.groupId === groupId && validUserIds.has(m.userId))
     .forEach(m => ids.add(m.userId));
 
   // Gather doc IDs for this group
@@ -69,7 +71,7 @@ export function calcGroupParticipants(
 
   // 3. Voters on group suggestions
   votes.forEach(v => {
-    if (groupSuggestionIds.has(v.suggestionId) && v.userId) {
+    if (groupSuggestionIds.has(v.suggestionId) && v.userId && validUserIds.has(v.userId)) {
       ids.add(v.userId);
     }
   });
@@ -94,14 +96,14 @@ export function calcGroupParticipants(
 
   // 5. DocumentAgreement signers
   agreements.forEach(a => {
-    if (groupDocIds.has(a.documentId) && a.userId) {
+    if (groupDocIds.has(a.documentId) && a.userId && validUserIds.has(a.userId)) {
       ids.add(a.userId);
     }
   });
 
   // 6. Section voters (users who voted on sections in group documents)
   sectionVotes.forEach(v => {
-    if (groupSectionIds.has(v.sectionId) && v.userId) {
+    if (groupSectionIds.has(v.sectionId) && v.userId && validUserIds.has(v.userId)) {
       ids.add(v.userId);
     }
   });
@@ -135,8 +137,10 @@ export function calcAllGroupParticipants(
 
   // email → userId (built once)
   const emailToUserId = new Map();
+  const validUserIds = new Set();
   for (const p of publicProfiles) {
     if (p.email && p.userId) emailToUserId.set(p.email, p.userId);
+    if (p.userId) validUserIds.add(p.userId);
   }
 
   // docId → groupId
@@ -154,9 +158,9 @@ export function calcAllGroupParticipants(
   const groupParticipantSets = new Map();
   for (const g of groups) groupParticipantSets.set(g.id, new Set());
 
-  // 1. Formal group members
+  // 1. Formal group members (skip orphaned records pointing to deleted users)
   for (const m of groupMembers) {
-    if (m.groupId && groupParticipantSets.has(m.groupId) && m.userId) {
+    if (m.groupId && groupParticipantSets.has(m.groupId) && m.userId && validUserIds.has(m.userId)) {
       groupParticipantSets.get(m.groupId).add(m.userId);
     }
   }
@@ -174,7 +178,7 @@ export function calcAllGroupParticipants(
 
   // 3. Voters on group suggestions (O(1) lookup via suggestionId→groupId)
   for (const v of votes) {
-    if (!v.userId) continue;
+    if (!v.userId || !validUserIds.has(v.userId)) continue;
     const gid = suggestionIdToGroupId.get(v.suggestionId);
     if (gid && groupParticipantSets.has(gid)) {
       groupParticipantSets.get(gid).add(v.userId);
@@ -202,7 +206,7 @@ export function calcAllGroupParticipants(
 
   // 5. DocumentAgreement signers
   for (const a of agreements) {
-    if (!a.userId) continue;
+    if (!a.userId || !validUserIds.has(a.userId)) continue;
     const gid = docIdToGroupId.get(a.documentId);
     if (gid && groupParticipantSets.has(gid)) {
       groupParticipantSets.get(gid).add(a.userId);
@@ -211,7 +215,7 @@ export function calcAllGroupParticipants(
 
   // 6. Section voters (users who voted on sections in group documents)
   for (const v of sectionVotes) {
-    if (!v.userId) continue;
+    if (!v.userId || !validUserIds.has(v.userId)) continue;
     const gid = sectionIdToGroupId.get(v.sectionId);
     if (gid && groupParticipantSets.has(gid)) {
       groupParticipantSets.get(gid).add(v.userId);
