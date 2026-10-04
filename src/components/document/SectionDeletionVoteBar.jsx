@@ -142,21 +142,16 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
         const delSuggId = data?.deleteSuggestionId;
         if (delSuggId) {
           // Comments were repointed to the suggestion on the backend — invalidate
-          // so the suggestion detail page fetches fresh data.
+          // so the suggestion detail page fetches fresh data if visited later.
           queryClient.invalidateQueries({ queryKey: ['comments', 'suggestion', delSuggId] });
-          // Redirect to the delete suggestion detail page so the user sees the
-          // voting result and their comment (with scroll). Short delay for the toast.
-          setTimeout(() => {
-            const url = `${createPageUrl("suggestiondetail")}?id=${delSuggId}${commentId ? `&commentId=${commentId}` : ''}`;
-            navigate(url);
-          }, 1000);
-        } else {
-          // Fallback: no suggestion was created — stay on page, invalidate after flash
-          setTimeout(() => {
-            queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
-            queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', document.id] });
-          }, 4000);
         }
+        // Stay on the document page — refresh sections and aggregated data so the
+        // deleted section disappears from the view after the flash animation.
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
+          queryClient.invalidateQueries({ queryKey: ['documentAggregatedData', document.id] });
+          queryClient.invalidateQueries({ queryKey: ['suggestions', document.id] });
+        }, 1500);
       } else {
         // Section NOT deleted — provide local in-document feedback
         if (commentId && onConCommentPosted) {
