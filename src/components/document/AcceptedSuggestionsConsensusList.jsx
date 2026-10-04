@@ -117,16 +117,16 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
       </p>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-fixed">
           <thead>
             <tr className="border-b-2 border-slate-200 text-slate-600">
-              <th className={`py-2 px-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>#</th>
-              <th className={`py-2 px-3 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{colTitle}</th>
-              <th className="py-2 px-3 font-semibold text-center">{colPro}</th>
-              <th className="py-2 px-3 font-semibold text-center">{colCon}</th>
-              <th className="py-2 px-3 font-semibold text-center">{colParticipants}</th>
-              <th className="py-2 px-3 font-semibold text-center">{colThreshold}</th>
-              <th className="py-2 px-3 font-semibold text-center">{colRunning}</th>
+              <th className={`w-10 py-1.5 px-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>#</th>
+              <th className={`py-1.5 px-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{colTitle}</th>
+              <th className="w-16 py-1.5 px-1 font-semibold text-center">{colPro}</th>
+              <th className="w-16 py-1.5 px-1 font-semibold text-center">{colCon}</th>
+              <th className="w-20 py-1.5 px-2 font-semibold text-center hidden sm:table-cell">{colParticipants}</th>
+              <th className="w-28 py-1.5 px-2 font-semibold text-center hidden md:table-cell">{colThreshold}</th>
+              <th className="w-24 py-1.5 px-2 font-semibold text-center">{colRunning}</th>
             </tr>
           </thead>
           <tbody>
@@ -137,9 +137,9 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
               const Icon = TypeIcon(s);
               return (
                 <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                  <td className={`py-3 px-3 text-slate-400 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{s.index}</td>
-                  <td className={`py-3 px-3 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <div className="flex flex-col gap-1">
+                  <td className={`py-2 px-2 text-slate-400 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{s.index}</td>
+                  <td className={`py-2 px-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className="flex flex-col gap-0.5">
                       <Link
                         to={`${createPageUrl("suggestiondetail")}?id=${s.id}`}
                         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium hover:opacity-80 transition-opacity w-fit ${
@@ -156,35 +156,35 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
                         {formatLocalDateTime(s.acceptedAt || s.updated_date || s.created_date, 'DD/MM/YY HH:mm')}
                       </span>
                       {contentSnippet && (
-                        <p className="text-xs text-slate-400 truncate max-w-md">{contentSnippet}</p>
+                        <p className="text-xs text-slate-400 truncate">{contentSnippet}</p>
                       )}
                     </div>
                   </td>
-                  <td className="py-3 px-3 text-center">
-                    <span className="inline-flex items-center gap-1 text-green-600 font-medium">
+                  <td className="py-2 px-1 text-center">
+                    <span className="inline-flex items-center gap-0.5 text-green-600 font-medium">
                       <ThumbsUp className="w-3.5 h-3.5" />
                       {s.pro}
                     </span>
                   </td>
-                  <td className="py-3 px-3 text-center">
-                    <span className="inline-flex items-center gap-1 text-red-500 font-medium">
+                  <td className="py-2 px-1 text-center">
+                    <span className="inline-flex items-center gap-0.5 text-red-500 font-medium">
                       <ThumbsDown className="w-3.5 h-3.5" />
                       {s.con}
                     </span>
                   </td>
-                  <td className="py-3 px-3 text-center">
+                  <td className="py-2 px-2 text-center hidden sm:table-cell">
                     <span className="font-medium text-slate-600">{s.participants}</span>
                   </td>
-                  <td className="py-3 px-3 text-center">
-                    <div className="flex flex-col items-center gap-0.5">
+                  <td className="py-2 px-2 text-center hidden md:table-cell">
+                    <div className="flex flex-col items-center gap-0 leading-tight">
                       <span className="font-bold text-amber-700 text-sm">{s.thresholdUsed}</span>
                       <span className="text-[10px] text-slate-400">
                         {`${(s.runningAvg * 100).toFixed(0)}% × ${s.participants}`}
                       </span>
                     </div>
                   </td>
-                  <td className="py-3 px-3 text-center">
-                    <div className="flex items-center justify-center gap-1.5">
+                  <td className="py-2 px-2 text-center">
+                    <div className="flex items-center justify-center gap-1">
                       <TrendingUp className="w-3.5 h-3.5 text-purple-500" />
                       <span className="font-bold text-purple-700">{(s.runningAvg * 100).toFixed(0)}%</span>
                     </div>
