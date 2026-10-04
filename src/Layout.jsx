@@ -409,6 +409,18 @@ function LayoutContent({ children, currentPageName }) {
         if (fullName.length < 2) return;
         const existingProfiles = await base44.entities.UserPublicProfile.filter({ userId: user.id });
         if (existingProfiles.length === 0) {
+          // Clean up stale profiles with the same email that belong to a
+          // different (deleted) userId — these are created when a user
+          // re-registers with the same email after their old account was
+          // removed. Without this, the old orphaned profile remains and
+          // creates a duplicate-email entry in the database.
+          const sameEmailProfiles = await base44.entities.UserPublicProfile.filter({ email: user.email });
+          const staleProfiles = sameEmailProfiles.filter(p => p.userId !== user.id);
+          if (staleProfiles.length > 0) {
+            await Promise.all(
+              staleProfiles.map(p => base44.entities.UserPublicProfile.delete(p.id).catch(() => {}))
+            );
+          }
           await base44.entities.UserPublicProfile.create({ userId: user.id, email: user.email, fullName });
           queryClient.invalidateQueries({ queryKey: ['publicProfiles'] });
           queryClient.invalidateQueries({ queryKey: ['ownPublicProfile'] });
