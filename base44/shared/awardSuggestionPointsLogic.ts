@@ -10,7 +10,7 @@
  * @param suggestionId
  * @param action - 'suggestion_accepted' | 'topic_edit_accepted'
  */
-export async function awardSuggestionPointsLogic(base44, { suggestionId, action }) {
+export async function awardSuggestionPointsLogic(base44, { suggestionId, action, skipThresholdVerification }) {
   if (!suggestionId) {
     return { success: false, error: 'Missing suggestionId', status: 400 };
   }
@@ -31,6 +31,26 @@ export async function awardSuggestionPointsLogic(base44, { suggestionId, action 
   const documents = await base44.entities.Document.filter({ id: suggestion.documentId });
   if (documents.length === 0 || !documents[0].gamificationEnabled) {
     return { success: true, message: 'Gamification not enabled' };
+  }
+
+  // ── Server-side consensus verification ──────────────────────────────────
+  // The Suggestion.status field is client-writable (creator-scoped update RLS
+  // allows setting it to any value), so checking status === 'accepted' alone is
+  // not sufficient. When the caller has NOT already verified the threshold
+  // (i.e. the HTTP endpoint or entity-automation handler), recount real Vote
+  // records and verify the delta meets the document's threshold — exactly as
+  // processAcceptanceV4 does. processAcceptance V1-V4 pass
+  // skipThresholdVerification=true because they already verified server-side.
+  if (!skipThresholdVerification) {
+    const realVotes = await base44.entities.Vote.filter({ suggestionId });
+    const realProVotes = realVotes.filter(v => v.vote === 'pro').length;
+    const realConVotes = realVotes.filter(v => v.vote === 'con').length;
+    const verifyDelta = realProVotes - realConVotes;
+    const verifyThreshold = documents[0].threshold > 0 ? Math.max(2, documents[0].threshold) : 2;
+    if (verifyDelta < verifyThreshold) {
+      console.log('[AWARD POINTS] Threshold not met (delta:', verifyDelta, 'threshold:', verifyThreshold, ') — rejecting');
+      return { success: false, error: 'Suggestion does not meet consensus threshold', status: 403 };
+    }
   }
 
   const creatorId = suggestion.created_by_id;

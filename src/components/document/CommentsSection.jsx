@@ -243,12 +243,14 @@ const CommentItem = memo(({
                           const newLikes = isLiked
                             ? likes.filter(e => e !== user.email)
                             : [...likes, user.email];
-                          base44.entities.Comment.update(comment.id, { likes: newLikes });
-                          // Award/deduct 5 points to comment creator (only if gamification enabled)
+                          // The awardCommentLikePoints function owns the likes-array transition
+                          // server-side (it updates comment.likes via asServiceRole). The client
+                          // no longer updates comment.likes directly — doing so would race with
+                          // the server-side update and bypass the authorization check that
+                          // verifies the caller's email is actually present/absent in the array.
                           base44.functions.invoke('awardCommentLikePoints', { commentId: comment.id, isLiking: !isLiked })
                             .catch(err => console.error('[comment like points]', err));
-                          // Optimistic update via queryClient passed down would need prop drilling,
-                          // so just invalidate — the mutation is fast enough
+                          // Optimistic update for immediate UI feedback — server will reconcile
                           queryClient.setQueryData(
                             ['comments', comment.rootEntityType, comment.rootEntityId],
                             (old = []) => old.map(c => c.id === comment.id ? { ...c, likes: newLikes } : c)

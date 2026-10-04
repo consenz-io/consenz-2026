@@ -652,7 +652,8 @@ Deno.serve(async (req) => {
       try {
         await awardSuggestionPointsLogic(base44.asServiceRole, {
           suggestionId: suggestion.id,
-          action: 'suggestion_accepted'
+          action: 'suggestion_accepted',
+          skipThresholdVerification: true
         });
         console.log('[PROCESS ACCEPTANCE] ✓ Points awarded to creator');
       } catch (err) {
