@@ -42,6 +42,15 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || '').toLowerCase().trim());
 }
 
+// HTML-escape user-authored fields (document.title, user.full_name) before
+// interpolating into email HTML/subject. The sanitizer handles summaryContent
+// but record fields interpolated directly into the template bypass it.
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
@@ -129,25 +138,29 @@ Deno.serve(async (req) => {
   const dir = isRTL ? 'rtl' : 'ltr';
   const textAlign = isRTL ? 'right' : 'left';
 
+  // HTML-escape user-authored fields before interpolation into subject/body.
+  const safeTitle = escapeHtml(document.title);
+  const safeSenderName = escapeHtml(user.full_name);
+
   // Labels per language
   const labels = {
     he: {
-      subject: `סיכום פעילות: ${document.title}`,
+      subject: `סיכום פעילות: ${safeTitle}`,
       viewDoc: 'לצפייה במסמך',
       footer: 'מייל זה נשלח אוטומטית על ידי פלטפורמת Consenz.',
-      sentBy: `נשלח על ידי ${user.full_name}`,
+      sentBy: `נשלח על ידי ${safeSenderName}`,
     },
     ar: {
-      subject: `ملخص النشاط: ${document.title}`,
+      subject: `ملخص النشاط: ${safeTitle}`,
       viewDoc: 'عرض الوثيقة',
       footer: 'تم إرسال هذا البريد الإلكتروني تلقائيًا بواسطة منصة Consenz.',
-      sentBy: `أرسله ${user.full_name}`,
+      sentBy: `أرسله ${safeSenderName}`,
     },
     en: {
-      subject: `Activity Summary: ${document.title}`,
+      subject: `Activity Summary: ${safeTitle}`,
       viewDoc: 'View Document',
       footer: 'This email was sent automatically by the Consenz platform.',
-      sentBy: `Sent by ${user.full_name}`,
+      sentBy: `Sent by ${safeSenderName}`,
     },
   };
 
@@ -217,7 +230,7 @@ Deno.serve(async (req) => {
           <!-- Document title bar -->
           <tr>
             <td style="background:#eff6ff;padding:16px 24px;border-bottom:1px solid #dbeafe;">
-              <div style="font-size:18px;font-weight:700;color:#1e3a8a;direction:${dir};text-align:${textAlign};">${document.title}</div>
+              <div style="font-size:18px;font-weight:700;color:#1e3a8a;direction:${dir};text-align:${textAlign};">${safeTitle}</div>
               <div style="font-size:12px;color:#3b82f6;margin-top:4px;">${l.sentBy}</div>
             </td>
           </tr>

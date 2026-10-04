@@ -25,6 +25,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invalid email address' }, { status: 400 });
     }
 
+    // Restrict recipients to registered app users — prevents using the app's
+    // verified sending domain to deliver invitation emails to arbitrary
+    // external addresses (spam/relay abuse). To invite someone who is not yet
+    // an app user, use the platform's user invite mechanism instead.
+    const normalizedEmail = email.trim().toLowerCase();
+    const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 10000);
+    const isRegistered = allUsers.some(u => u.email?.toLowerCase().trim() === normalizedEmail);
+    if (!isRegistered) {
+      return Response.json({ error: 'Recipient is not a registered app user. Use the platform invite mechanism to invite new users.' }, { status: 403 });
+    }
+
     // Rate limit: max 5 invitations per user per hour and max 10 per day —
     // prevents open mail relay abuse from the app's verified sender domain.
     // Any registered user can create a group (Group create RLS is open) and
