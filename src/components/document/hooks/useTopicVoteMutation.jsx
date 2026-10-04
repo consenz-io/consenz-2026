@@ -96,8 +96,10 @@ export function useTopicVoteMutation({ document, user, topicEditSuggestions, que
 
           // Create version record
           try {
-            const allVersions = await base44.entities.DocumentVersion.filter({ documentId: document.id });
-            const nextVersion = allVersions.length > 0 ? Math.max(...allVersions.map(v => v.version || 0)) + 1 : 1;
+            // Fetch only the latest version (sorted desc, limit 1) instead of loading
+            // ALL version records — O(1) network instead of O(N) for large documents
+            const latestVersions = await base44.entities.DocumentVersion.filter({ documentId: document.id }, '-version', 1);
+            const nextVersion = latestVersions.length > 0 ? (latestVersions[0].version || 0) + 1 : 1;
             const topicSections = await base44.entities.Section.filter({ topicId: topicSuggestion.topicId });
             const firstSectionId = topicSections[0]?.id;
             if (firstSectionId) {
@@ -136,7 +138,6 @@ export function useTopicVoteMutation({ document, user, topicEditSuggestions, que
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
             queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
-            queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions'] }),
             queryClient.invalidateQueries({ queryKey: ['document', document.id] }),
             queryClient.invalidateQueries({ queryKey: ['allVersions', document.id] }),
           ]);
@@ -147,8 +148,8 @@ export function useTopicVoteMutation({ document, user, topicEditSuggestions, que
     },
     onSuccess: () => {
       Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions'] }),
-        queryClient.invalidateQueries({ queryKey: ['topicEditVotes'] }),
+        queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
+        queryClient.invalidateQueries({ queryKey: ['topicEditVotes', document.id] }),
       ]);
     },
   });

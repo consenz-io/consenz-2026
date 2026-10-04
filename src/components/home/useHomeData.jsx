@@ -33,13 +33,10 @@ export function useHomeData() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: publicProfiles = [], isLoading: publicProfilesLoading } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-    staleTime: 5 * 60 * 1000,
-  });
-
   // ── Aggregate stats from backend (replaces 6 queries fetching up to 12,000 records) ──
+  // NOTE: The old ['publicProfiles'] query (UserPublicProfile.list() — up to 1000 records)
+  // was removed because its data was never consumed; only the loading flag was used.
+  // Contributor data now comes exclusively from homeStats (computed server-side).
   const { data: homeStats, isLoading: statsLoading } = useQuery({
     queryKey: ['homeStats'],
     queryFn: async () => {
@@ -79,7 +76,7 @@ export function useHomeData() {
 
   return {
     user, groups, groupsLoading, groupMembers, membersLoading, documents,
-    displayedUsers, publicProfilesLoading,
+    displayedUsers, publicProfilesLoading: statsLoading,
     totalUniqueContributors, contributorsList,
     averageConsensus, groupParticipantCounts, documentContributorCounts,
     translateDocumentMutation,
