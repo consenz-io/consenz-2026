@@ -32,19 +32,24 @@ Deno.serve(async (req) => {
     // Don't award points for self-likes
     if (creatorId === user.id) return Response.json({ success: true, message: 'Self-like' });
 
-    // For unlike: require positive proof that a prior like award exists.
-    // The like-state check above only verifies the caller's email is absent
-    // from comment.likes, which is trivially true for someone who never
-    // liked — so we must confirm a +5 comment_like_received transaction was
-    // actually recorded before applying the -5 removal.
+    // For unlike: require positive proof that the CALLER was the original liker.
+    // The comment.likes array only stores emails and has already been updated
+    // client-side before this function runs, so "my email is absent" is trivially
+    // true for an attacker who never liked. Instead we verify that a
+    // comment_like_received transaction exists whose embedded likerId matches
+    // the caller — only the original liker can undo their own award.
     if (!isLiking) {
-      const priorAward = await base44.asServiceRole.entities.PointsTransaction.filter({
+      const priorAwards = await base44.asServiceRole.entities.PointsTransaction.filter({
         relatedEntityId: commentId,
         userId: creatorId,
         action: 'comment_like_received'
       });
-      if (priorAward.length === 0) {
-        return Response.json({ error: 'No prior like to remove' }, { status: 403 });
+      const callerWasLiker = priorAwards.some(tx => {
+        const match = tx.description?.match(/likerId:(\S+)/);
+        return match && match[1] === user.id;
+      });
+      if (!callerWasLiker) {
+        return Response.json({ error: 'Caller did not like this comment' }, { status: 403 });
       }
     }
 
@@ -104,7 +109,9 @@ Deno.serve(async (req) => {
 
     const amount = isLiking ? 5 : -5;
     const action = expectedAction;
-    const description = isLiking ? 'Comment like received' : 'Comment like removed';
+    // Embed the liker's userId in the description so the unlike path can verify
+    // the caller was the original liker (see authorization check above).
+    const description = isLiking ? `Comment like received likerId:${user.id}` : 'Comment like removed';
 
     const usersList = await base44.asServiceRole.entities.User.filter({ id: creatorId });
     if (usersList.length === 0) return Response.json({ error: 'Creator not found' }, { status: 404 });
