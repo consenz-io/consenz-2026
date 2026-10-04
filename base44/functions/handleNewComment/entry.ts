@@ -69,6 +69,16 @@ Deno.serve(async (req) => {
       return Response.json({ message: 'Not a create event' }, { status: 200 });
     }
 
+    // Idempotency: skip if notifications were already created for this comment
+    // (prevents replay attacks using real comment IDs)
+    const existingNotifs = await base44.asServiceRole.entities.Notification.filter({
+      relatedEntityId: comment.id
+    });
+    if (existingNotifs.length > 0) {
+      console.log('[AUTOMATION] Already processed comment', comment.id, '— skipping');
+      return Response.json({ success: true, notificationsSent: 0, skipped: true });
+    }
+
     console.log('[AUTOMATION] New comment created:', comment.id);
 
     const [commenterProfileArr, commenterUserArr] = await Promise.all([

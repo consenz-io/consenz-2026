@@ -3,10 +3,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    // Auth: this is a maintenance function that only expires suggestions whose
-    // timer has already ended. It is safe for any caller (including the
-    // scheduled workflow trigger, which has no user session) to invoke — the
-    // function is a no-op if no suggestions have expired.
+    // Auth: reject authenticated non-admin callers — only the scheduled workflow
+    // trigger (no user session) or an admin may invoke this maintenance function.
+    // This prevents authenticated users from manually triggering expiration to
+    // farm gamification points via self-created suggestions with past timers.
+    const caller = await base44.auth.me().catch(() => null);
+    if (caller && caller.role !== 'admin') {
+      return Response.json({ error: 'Unauthorized' }, { status: 403 });
+    }
     const now = new Date().toISOString();
     console.log('[EXPIRE SUGGESTIONS] Running at:', now);
 
@@ -78,7 +82,7 @@ Deno.serve(async (req) => {
         const documents = await base44.asServiceRole.entities.Document.filter({ id: suggestion.documentId });
         const document = documents[0];
         if (document?.gamificationEnabled) {
-          const conVoterIds = votes.filter(v => v.vote === 'con').map(v => v.userId).filter(Boolean);
+          const conVoterIds = votes.filter(v => v.vote === 'con' && v.userId !== suggestion.created_by_id).map(v => v.userId).filter(Boolean);
           if (conVoterIds.length > 0) {
             // Fetch all users and filter client-side (platform doesn't reliably support $in on User)
             const allUsers = await base44.asServiceRole.entities.User.list();

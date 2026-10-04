@@ -90,6 +90,28 @@ Deno.serve(async (req) => {
 
     console.log('[SUGGESTION AUTOMATION] Processing new suggestion:', suggestion.id);
 
+    // Idempotency: skip if notifications were already created for this suggestion
+    // (prevents replay attacks using real suggestion IDs)
+    const existingNotifs = await base44.asServiceRole.entities.Notification.filter({
+      relatedEntityId: suggestion.id,
+      type: 'new_suggestion_in_followed_document'
+    });
+    if (existingNotifs.length > 0) {
+      console.log('[SUGGESTION AUTOMATION] Already processed suggestion', suggestion.id, '— skipping');
+      return Response.json({ success: true, notificationsSent: 0, skipped: true });
+    }
+
+    // Defense-in-depth: clamp timerEndsAt to a minimum of 1 hour from now to
+    // prevent point farming via suggestions created with already-expired timers
+    if (suggestion.timerEndsAt) {
+      const timerEnd = new Date(suggestion.timerEndsAt);
+      const minEnd = new Date(Date.now() + 60 * 60 * 1000);
+      if (timerEnd < minEnd) {
+        await base44.asServiceRole.entities.Suggestion.update(suggestion.id, { timerEndsAt: minEnd.toISOString() });
+        console.log('[SUGGESTION AUTOMATION] Clamped timerEndsAt to 1h minimum for suggestion', suggestion.id);
+      }
+    }
+
     const [documents, interactions, creatorProfiles, creatorUsers] = await Promise.all([
       base44.asServiceRole.entities.Document.filter({ id: suggestion.documentId }),
       base44.asServiceRole.entities.UserInteraction.filter({ documentId: suggestion.documentId }),

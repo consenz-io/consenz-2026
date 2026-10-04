@@ -28,16 +28,28 @@ export default async function(req) {
       if (!memberId || !currentRole) {
         return Response.json({ error: 'Missing memberId or currentRole' }, { status: 400 });
       }
+      // Verify the target member record belongs to the authorized group
+      const targetMember = await base44.asServiceRole.entities.GroupMember.filter({ id: memberId }).then(m => m[0]);
+      if (!targetMember || targetMember.groupId !== groupId) {
+        return Response.json({ error: 'Member does not belong to this group' }, { status: 403 });
+      }
       const newRole = currentRole === 'admin' ? 'member' : 'admin';
       await base44.asServiceRole.entities.GroupMember.update(memberId, { role: newRole });
       return Response.json({ success: true, newRole });
     }
 
     if (action === 'handleJoinRequest') {
-      const { requestId, approved, userId } = body;
-      if (!requestId || !userId) {
-        return Response.json({ error: 'Missing requestId or userId' }, { status: 400 });
+      const { requestId, approved } = body;
+      if (!requestId) {
+        return Response.json({ error: 'Missing requestId' }, { status: 400 });
       }
+      // Verify the join request belongs to the authorized group and derive
+      // userId from the record itself — never trust the request body for userId
+      const joinRequest = await base44.asServiceRole.entities.GroupJoinRequest.filter({ id: requestId }).then(r => r[0]);
+      if (!joinRequest || joinRequest.groupId !== groupId) {
+        return Response.json({ error: 'Join request does not belong to this group' }, { status: 403 });
+      }
+      const userId = joinRequest.userId;
 
       if (approved) {
         // Check if already a member to avoid duplicates
