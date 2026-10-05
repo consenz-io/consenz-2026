@@ -72,10 +72,10 @@ export default function CurrentVersionModal({
 
   const subtitle =
   language === "he" ?
-  "זוהי הגרסה המעודכנת ביותר, המשקפת את ההסכמות שהתקבלו בקהילה עד כה. המסמך ממשיך להתעדכן ככל שמתקבלות הסכמות חדשות." :
+  "הגרסה המשקפת את ההסכמות שהתקבלו עד כה. המסמך ממשיך להתעדכן ככל שמתקבלות הסכמות חדשות." :
   language === "ar" ?
   "هذه أحدث نسخة، تعكس التوافق الذي تم التوصل إليه في المجتمع حتى الآن. تستمر الوثيقة في التحديث مع كل توافق جديد." :
-  "This is the most up-to-date version, reflecting the consensus reached by the community so far. The document continues to evolve as new consensus is reached.";
+  "This version reflecting the consensus reached by the community so far. The document continues to evolve as new consensus is reached.";
 
   const asOf = language === "he" ? "נכון ל-" : language === "ar" ? "حتى " : "As of ";
 
