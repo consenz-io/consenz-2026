@@ -137,9 +137,9 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
               const Icon = TypeIcon(s);
               return (
                 <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                  <td className={`py-1 px-2 text-slate-400 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{s.index}</td>
-                  <td className={`py-1 px-2 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    <div className="flex flex-col gap-0">
+                  <td className={`py-2 px-2 text-slate-400 font-medium ${isRTL ? 'text-right' : 'text-left'}`}>{s.index}</td>
+                  <td className={`py-2 px-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                    <div className="flex flex-col gap-0.5">
                       <Link
                         to={`${createPageUrl("suggestiondetail")}?id=${s.id}`}
                         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium hover:opacity-80 transition-opacity w-fit ${
@@ -160,22 +160,22 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
                       )}
                     </div>
                   </td>
-                  <td className="py-1 px-1 text-center">
+                  <td className="py-2 px-1 text-center">
                     <span className="inline-flex items-center gap-0.5 text-green-600 font-medium">
                       <ThumbsUp className="w-3.5 h-3.5" />
                       {s.pro}
                     </span>
                   </td>
-                  <td className="py-1 px-1 text-center">
+                  <td className="py-2 px-1 text-center">
                     <span className="inline-flex items-center gap-0.5 text-red-500 font-medium">
                       <ThumbsDown className="w-3.5 h-3.5" />
                       {s.con}
                     </span>
                   </td>
-                  <td className="py-1 px-2 text-center hidden sm:table-cell">
+                  <td className="py-2 px-2 text-center hidden sm:table-cell">
                     <span className="font-medium text-slate-600">{s.participants}</span>
                   </td>
-                  <td className="py-1 px-2 text-center hidden md:table-cell">
+                  <td className="py-2 px-2 text-center hidden md:table-cell">
                     <div className="flex flex-col items-center gap-0 leading-tight">
                       <span className="font-bold text-amber-700 text-sm">{s.thresholdUsed}</span>
                       <span className="text-[10px] text-slate-400">
@@ -183,7 +183,7 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
                       </span>
                     </div>
                   </td>
-                  <td className="py-1 px-2 text-center">
+                  <td className="py-2 px-2 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <TrendingUp className="w-3.5 h-3.5 text-purple-500" />
                       <span className="font-bold text-purple-700">{(s.runningAvg * 100).toFixed(0)}%</span>
