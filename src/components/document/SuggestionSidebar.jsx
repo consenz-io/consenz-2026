@@ -724,6 +724,7 @@ export default function SuggestionSidebar({
               entityType="suggestion"
               entityId={suggestionId}
               user={user}
+              documentId={suggestion?.documentId}
             />
           </div>
         </div>

@@ -833,7 +833,7 @@ export default function SuggestionDetail() {
             <CardTitle className="text-base md:text-lg">{t('commentsOnSuggestion')} ({totalCommentsCount})</CardTitle>
           </CardHeader>
           <CardContent className="p-3 md:p-6 overflow-x-hidden">
-            <CommentsSection entityType="suggestion" entityId={suggestionId} user={user} scrollToCommentId={commentId} />
+            <CommentsSection entityType="suggestion" entityId={suggestionId} user={user} documentId={suggestion.documentId} scrollToCommentId={commentId} />
           </CardContent>
         </Card>
       </div>

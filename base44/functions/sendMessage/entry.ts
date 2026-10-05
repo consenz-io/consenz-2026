@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { buildTranslationsWithMessage } from '../../shared/notificationTranslations.ts';
 
 export default async function(req) {
   try {
@@ -58,19 +59,12 @@ export default async function(req) {
     // Create notification for recipient (service role ensures it's created)
     try {
       const senderName = user.full_name || 'User';
-      const titleEn = `New message from ${senderName}`;
-      const titleHe = `הודעה חדשה מ${senderName}`;
-      const titleAr = `رسالة جديدة من ${senderName}`;
       await base44.asServiceRole.entities.Notification.create({
         userId: recipientId,
         type: 'direct_message',
-        title: titleHe, // Default language is Hebrew
+        title: `הודעה חדשה מ${senderName}`, // Default language is Hebrew
         message: preview,
-        translations: {
-          en: { title: titleEn, message: preview },
-          he: { title: titleHe, message: preview },
-          ar: { title: titleAr, message: preview }
-        },
+        translations: buildTranslationsWithMessage('directMessageTitle', preview, { name: senderName }),
         relatedEntityId: conversation.id,
         relatedEntityType: 'conversation',
         actionUrl: '/Messages?conversation=' + conversation.id

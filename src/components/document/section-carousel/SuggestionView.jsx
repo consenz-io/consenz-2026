@@ -197,7 +197,7 @@ const SuggestionView = React.memo(function SuggestionView({
         </div>
         {showComments[commentsKey] &&
         <div className="mt-4 pt-4 border-t border-slate-200">
-            <CommentsSection entityType="suggestion" entityId={suggestion.id} user={user} />
+            <CommentsSection entityType="suggestion" entityId={suggestion.id} user={user} documentId={suggestion.documentId} />
           </div>
         }
       </div>

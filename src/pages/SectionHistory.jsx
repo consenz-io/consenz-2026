@@ -407,6 +407,7 @@ export default function SectionHistory() {
                             entityType="section"
                             entityId={sectionId}
                             user={user}
+                            documentId={document?.id}
                           />
                         </div>
                       )}
@@ -527,6 +528,7 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
             entityType="suggestion"
             entityId={suggestionId}
             user={user}
+            documentId={document?.id}
           />
         </div>
       )}

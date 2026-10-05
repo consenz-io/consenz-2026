@@ -1,40 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { t } from '../../shared/notificationTranslations.ts';
 
 // Migration: Fix notifications where "User" was baked in as the actor name
 // instead of the real full name. This happens when UserPublicProfile didn't
 // exist yet at notification creation time (race condition with Layout.jsx).
-
-const TRANSLATIONS = {
-  en: {
-    newSuggestionMessage: "{name} added a new suggestion in the document \"{title}\"",
-    editSuggestionMessage: "{name} suggested an edit to a suggestion in document \"{title}\"",
-    replyMessage: "{name} replied to your comment",
-    suggestionCommentMessage: "{name} commented on your suggestion",
-    sectionCommentMessage: "{name} commented on your section",
-  },
-  he: {
-    newSuggestionMessage: "{name} הוסיף הצעה חדשה במסמך \"{title}\"",
-    editSuggestionMessage: "{name} הציע/ה עריכה להצעה במסמך \"{title}\"",
-    replyMessage: "{name} השיב לתגובה שלך",
-    suggestionCommentMessage: "{name} הגיב על ההצעה שלך",
-    sectionCommentMessage: "{name} הגיב על הסעיף שלך",
-  },
-  ar: {
-    newSuggestionMessage: "{name} أضاف اقتراحًا جديدًا في المستند \"{title}\"",
-    editSuggestionMessage: "{name} اقترح تعديلاً على اقتراح في المستند \"{title}\"",
-    replyMessage: "{name} رد على تعليقك",
-    suggestionCommentMessage: "{name} علق على اقتراحك",
-    sectionCommentMessage: "{name} علق على قسمك",
-  }
-};
-
-function t(lang, key, replacements = {}) {
-  let text = TRANSLATIONS[lang]?.[key] || TRANSLATIONS['he'][key] || key;
-  for (const [k, v] of Object.entries(replacements)) {
-    text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
-  }
-  return text;
-}
 
 // Check if a message contains the "User" fallback placeholder
 function hasUserPlaceholder(message) {

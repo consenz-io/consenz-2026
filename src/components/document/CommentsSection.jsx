@@ -106,6 +106,7 @@ const CommentItem = memo(({
   profileByUserId,
   profileByEmail,
   user,
+  documentId,
   editingComment,
   setEditingComment,
   updateCommentMutation,
@@ -227,6 +228,7 @@ const CommentItem = memo(({
                   content={comment.content}
                   entity={comment}
                   entityType="Comment"
+                  documentId={documentId}
                   className="text-sm text-slate-700 whitespace-pre-wrap break-words"
                   renderContent={(text) => <span>{text?.replace(/<[^>]*>/g, '')}</span>}
                 />
@@ -345,6 +347,7 @@ const CommentItem = memo(({
               profileByUserId={profileByUserId}
               profileByEmail={profileByEmail}
               user={user}
+              documentId={documentId}
               editingComment={editingComment}
               setEditingComment={setEditingComment}
               updateCommentMutation={updateCommentMutation}
@@ -391,7 +394,7 @@ const runBackgroundTasks = async (comment, entityType, entityId) => {
   }
 };
 
-export default function CommentsSection({ entityType, entityId, user, scrollToCommentId }) {
+export default function CommentsSection({ entityType, entityId, user, documentId, scrollToCommentId }) {
   const { t, isRTL, language } = useLanguage();
   const [newComment, setNewComment] = useState("");
   // Store only the ID (string) instead of the comment object.
@@ -675,6 +678,7 @@ export default function CommentsSection({ entityType, entityId, user, scrollToCo
               profileByUserId={profileByUserId}
               profileByEmail={profileByEmail}
               user={user}
+              documentId={documentId}
               editingComment={editingComment}
               setEditingComment={setEditingComment}
               updateCommentMutation={updateCommentMutation}

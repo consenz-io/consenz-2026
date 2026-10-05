@@ -172,6 +172,7 @@ const DocumentDescription = React.memo(function DocumentDescription({
             entityType="document"
             entityId={documentId}
             user={user}
+            documentId={documentId}
             scrollToCommentId={commentIdFromUrl}
           />
         </div>

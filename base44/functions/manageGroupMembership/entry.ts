@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { buildTranslations } from '../../shared/notificationTranslations.ts';
 
 export default async function(req) {
   try {
@@ -65,11 +66,7 @@ export default async function(req) {
         // Send approval notification
         const group = await base44.asServiceRole.entities.Group.filter({ id: groupId }).then(g => g[0]);
         const groupName = group?.name || '';
-        const translations = {
-          en: { title: 'Join request approved!', message: `You have been accepted to the group "${groupName}"` },
-          he: { title: 'בקשת ההצרפות אושרה!', message: `התקבלת לקבוצה "${groupName}"` },
-          ar: { title: 'تمت الموافقة على طلب الانضمام!', message: `تم قبولك في المجموعة "${groupName}"` },
-        };
+        const translations = buildTranslations('groupJoinApprovedTitle', 'groupJoinApprovedMessage', { groupName });
         await base44.asServiceRole.entities.Notification.create({
           userId,
           type: 'group_join_request',

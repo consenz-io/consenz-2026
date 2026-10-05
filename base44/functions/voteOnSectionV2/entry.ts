@@ -1,43 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { calculateContributors, calculateActiveVoterCount, computeConsensusUpdate } from '../../shared/consensusLogic.ts';
+import { buildTranslations } from '../../shared/notificationTranslations.ts';
 
 // In-memory lock to prevent the same user voting on the same section concurrently
 const processingVotes = new Set();
-
-// ─── i18n for section-deleted notifications ─────────────────────────────────
-const TRANSLATIONS = {
-  en: {
-    sectionDeletedTitle: "A section was removed from the document",
-    sectionDeletedMessage: "A section in the document \"{title}\" was removed by community vote",
-  },
-  he: {
-    sectionDeletedTitle: "סעיף הוסר מהמסמך",
-    sectionDeletedMessage: "סעיף במסמך \"{title}\" הוסר בהצבעת קהילה",
-  },
-  ar: {
-    sectionDeletedTitle: "تمت إزالة بند من الوثيقة",
-    sectionDeletedMessage: "تمت إزالة بند في الوثيقة \"{title}\" بتصويت المجتمع",
-  }
-};
-
-function t(lang, key, replacements = {}) {
-  let text = TRANSLATIONS[lang]?.[key] || TRANSLATIONS['he'][key] || key;
-  for (const [k, v] of Object.entries(replacements)) {
-    text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
-  }
-  return text;
-}
-
-function buildTranslations(titleKey, messageKey, replacements = {}) {
-  const result = {};
-  for (const lang of ['en', 'he', 'ar']) {
-    result[lang] = {
-      title: t(lang, titleKey, replacements),
-      message: t(lang, messageKey, replacements),
-    };
-  }
-  return result;
-}
 
 Deno.serve(async (req) => {
   try {

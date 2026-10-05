@@ -1,45 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { authorizeInternalOrUser } from '../../shared/authGate.ts';
-
-const TRANSLATIONS = {
-  en: {
-    newSuggestionTitle: "New suggestion in document",
-    newSuggestionMessage: "{name} added a new suggestion in the document \"{title}\"",
-    editSuggestionTitle: "Suggestion to edit a suggestion",
-    editSuggestionMessage: "{name} suggested an edit to a suggestion in document \"{title}\"",
-  },
-  he: {
-    newSuggestionTitle: "הצעה חדשה במסמך",
-    newSuggestionMessage: "{name} הוסיף הצעה חדשה במסמך \"{title}\"",
-    editSuggestionTitle: "הצעה לעריכת הצעה",
-    editSuggestionMessage: "{name} הציע/ה עריכה להצעה במסמך \"{title}\"",
-  },
-  ar: {
-    newSuggestionTitle: "اقتراح جديد في المستند",
-    newSuggestionMessage: "{name} أضاف اقتراحًا جديدًا في المستند \"{title}\"",
-    editSuggestionTitle: "اقتراح لتعديل اقتراح",
-    editSuggestionMessage: "{name} اقترح تعديلاً على اقتراح في المستند \"{title}\"",
-  }
-};
-
-function t(lang, key, replacements = {}) {
-  let text = TRANSLATIONS[lang]?.[key] || TRANSLATIONS['he'][key] || key;
-  for (const [k, v] of Object.entries(replacements)) {
-    text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
-  }
-  return text;
-}
-
-function buildTranslations(titleKey, messageKey, replacements = {}) {
-  const result = {};
-  for (const lang of ['en', 'he', 'ar']) {
-    result[lang] = {
-      title: t(lang, titleKey, replacements),
-      message: t(lang, messageKey, replacements),
-    };
-  }
-  return result;
-}
+import { buildTranslations } from '../../shared/notificationTranslations.ts';
 
 Deno.serve(async (req) => {
   const startTime = Date.now();

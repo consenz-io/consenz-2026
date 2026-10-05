@@ -33,11 +33,6 @@
       "default": "he",
       "description": "Original language of the content"
     },
-    "translations": {
-      "type": "object",
-      "description": "Cached translations {language_code: translated_content}",
-      "default": {}
-    },
     "likes": {
       "type": "array",
       "description": "Array of user emails who liked this comment",
