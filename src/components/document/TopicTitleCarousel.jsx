@@ -19,9 +19,8 @@ const TopicTitleCarousel = React.memo(function TopicTitleCarousel({
   isAdmin,
   users,
   publicProfiles,
-  showTranslatedTopics,
-  setShowTranslatedTopics,
-  translateTopicMutation,
+  translatedTitle,
+  showTranslatedTitle,
   setEditingTopic,
   language,
   isRTL
@@ -80,13 +79,7 @@ const TopicTitleCarousel = React.memo(function TopicTitleCarousel({
         // הכותרת הנוכחית
         <div className="flex items-center gap-2">
             <h3 className={`break-words text-xl md:text-2xl font-display font-normal ${isRTL ? 'text-right' : 'text-left'}`} style={{ fontFamily: "var(--font-display)" }}>
-              {(() => {
-              const translatedTitle = topic.translations?.[language]?.title;
-              if (showTranslatedTopics[topic.id] && typeof translatedTitle === 'string') {
-                return translatedTitle;
-              }
-              return topic.title;
-            })()}
+              {showTranslatedTitle && typeof translatedTitle === 'string' ? translatedTitle : topic.title}
             </h3>
             {allViews.length > 1 &&
           <Badge variant="outline" className="text-xs flex-shrink-0">

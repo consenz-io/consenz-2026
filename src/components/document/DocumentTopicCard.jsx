@@ -12,16 +12,43 @@ import DraggableSuggestionCardWrapper from "@/components/document/DraggableSugge
 import SuggestionDropZone from "@/components/document/SuggestionDropZone";
 import { computeDropPosition } from "@/components/document/utils/dropPosition";
 import { useDocContent } from "@/components/document/DocumentContentContext";
+import { useVersionTranslation } from "@/components/document/hooks/useVersionTranslation";
+
+const detectLanguage = (text) => {
+  if (!text) return 'en';
+  if (/[\u0590-\u05FF]/.test(text)) return 'he';
+  if (/[\u0600-\u06FF]/.test(text)) return 'ar';
+  return 'en';
+};
 
 export default function DocumentTopicCard({ topic, topicIndex, topicProvided }) {
   const {
     isRTL, isAdmin, t, language, document, user, canParticipate,
     getSectionsForTopic, getGhostSlotsForTopic, getNewSectionSuggestionsForTopic,
     getTopicEditSuggestions, getUserTopicVote, voteTopicEditMutation,
-    getUserName, publicProfiles, showTranslatedTopics, setShowTranslatedTopics,
-    translateTopicMutation, setEditingTopic, handleDeleteTopic,
+    getUserName, publicProfiles, setEditingTopic, handleDeleteTopic,
     onNewSection, reorderMutation
   } = useDocContent();
+
+  // Version-aware translation for the topic title.
+  // The translation is canonical and shared across all users.
+  const {
+    translatedContent: translatedTitle,
+    showTranslated: showTranslatedTitle,
+    isTranslating: isTranslatingTitle,
+    handleToggle: onToggleTitleTranslation,
+    needsTranslation: needsTitleTranslation,
+  } = useVersionTranslation({
+    documentId: document?.id,
+    sourceEntityType: 'topic',
+    sourceEntityId: topic.id,
+    sourceField: 'title',
+    content: topic.title,
+    isHtml: false,
+    sourceLanguage: topic.originalLanguage || detectLanguage(topic.title),
+  });
+
+  const hasTranslatedTitle = !!translatedTitle;
 
   const topicSections = getSectionsForTopic(topic.id);
   const topicGhostSlots = getGhostSlotsForTopic(topic.id);
@@ -52,9 +79,8 @@ export default function DocumentTopicCard({ topic, topicIndex, topicProvided }) 
               getUserName={getUserName}
               isAdmin={isAdmin}
               publicProfiles={publicProfiles}
-              showTranslatedTopics={showTranslatedTopics}
-              setShowTranslatedTopics={setShowTranslatedTopics}
-              translateTopicMutation={translateTopicMutation}
+              translatedTitle={translatedTitle}
+              showTranslatedTitle={showTranslatedTitle}
               setEditingTopic={setEditingTopic}
               language={language}
               isRTL={isRTL} />
@@ -62,27 +88,19 @@ export default function DocumentTopicCard({ topic, topicIndex, topicProvided }) 
 
           {/* Action buttons - fixed on the side */}
           <div className={`flex items-center gap-1 flex-shrink-0 ${isRTL ? 'flex-row-reverse' : ''}`}>
-            {/* Translate button - always visible */}
-            {translateTopicMutation.isPending && translateTopicMutation.variables?.id === topic.id ? (
+            {/* Translate button - always visible when translation is needed */}
+            {isTranslatingTitle ? (
               <Loader2 className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />
-            ) : (
+            ) : needsTitleTranslation ? (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  if (showTranslatedTopics[topic.id] && topic.translations?.[language]?.title) {
-                    setShowTranslatedTopics((prev) => ({ ...prev, [topic.id]: false }));
-                  } else if (topic.translations?.[language]?.title) {
-                    setShowTranslatedTopics((prev) => ({ ...prev, [topic.id]: true }));
-                  } else {
-                    translateTopicMutation.mutate(topic);
-                  }
-                }}
+                onClick={onToggleTitleTranslation}
                 className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                title={showTranslatedTopics[topic.id] ? t('showOriginal') : t('translate')}>
+                title={showTranslatedTitle && hasTranslatedTitle ? t('showOriginal') : t('translate')}>
                 <Languages className="w-4 h-4" />
               </Button>
-            )}
+            ) : null}
 
             {/* Edit button */}
             <Button

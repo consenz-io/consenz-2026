@@ -27,7 +27,6 @@ export function useDocumentContentData({
   onEditSuggestion,
   scrollToSectionId
 }) {
-  const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
   const [editingTopic, setEditingTopic] = useState(null);
 
   const queryClient = useQueryClient();
@@ -298,44 +297,6 @@ export function useDocumentContentData({
     if (profile?.fullName) return cleanDisplayName(profile.fullName, profile.email);
     return 'User';
   }, [profileByUserId, profileByEmail]);
-
-  const translateTopicMutation = useMutation({
-    mutationFn: async (topic) => {
-      const languagePrompts = { en: "English", he: "Hebrew", ar: "Arabic" };
-      const titleResult = await base44.functions.invoke('translateContent', {
-        content: topic.title,
-        targetLanguage: language,
-        isHtml: false,
-      });
-      const translatedTitle = (titleResult.data?.translated || topic.title).trim();
-
-      const newTranslations = {
-        ...(topic.translations || {}),
-        [language]: {
-          title: translatedTitle
-        }
-      };
-
-      await base44.entities.Topic.update(topic.id, {
-        translations: newTranslations
-      });
-
-      return { topicId: topic.id, translations: newTranslations };
-    },
-    onMutate: async (topic) => {
-      setShowTranslatedTopics((prev) => ({ ...prev, [topic.id]: true }));
-    },
-    onSuccess: (data) => {
-      queryClient.setQueryData(['topics', document.id], (oldData) => {
-        if (!oldData) return oldData;
-        return oldData.map((t) =>
-          t.id === data.topicId ?
-            { ...t, translations: data.translations } :
-            t
-        );
-      });
-    }
-  });
 
   // Pre-group sections by topicId so getSectionsForTopic is O(1)
   const sectionsByTopicId = useMemo(() => {
@@ -635,7 +596,7 @@ export function useDocumentContentData({
     onOpenSuggestionSidebar, newlyCreatedSuggestion, onClearNewlyCreated,
     targetSuggestionId, onEditSuggestion, scrollToSectionId,
     // State
-    showTranslatedTopics, setShowTranslatedTopics, editingTopic, setEditingTopic,
+    editingTopic, setEditingTopic,
     // UI helpers
     t, isRTL, language,
     // Data maps
@@ -645,7 +606,6 @@ export function useDocumentContentData({
     getGhostSlotsForTopic, getNewSectionSuggestionsForTopic,
     getNewTopicSuggestions, getNewTopicSuggestionsAfterTopic,
     getTopicEditSuggestions, getUserTopicVote, voteTopicEditMutation,
-    translateTopicMutation,
     targetSuggestionSectionId,
     allSuggestionsBySectionId, sectionVotesBySectionId, sourceSuggestionBySectionId,
     // Mutations / handlers
