@@ -36,7 +36,9 @@
     "token"
   ],
   "rls": {
-    "create": null,
+    "create": {
+      "data.invitedBy": "{{user.id}}"
+    },
     "read": {
       "$or": [
         {
