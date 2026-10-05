@@ -121,7 +121,7 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
           <thead>
             <tr className="border-b-2 border-slate-200 text-slate-600">
               <th className={`w-10 py-1.5 px-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>#</th>
-              <th className={`py-1.5 px-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{colTitle}</th>
+              <th className={`w-48 py-1.5 px-2 font-semibold ${isRTL ? 'text-right' : 'text-left'}`}>{colTitle}</th>
               <th className="w-16 py-1.5 px-1 font-semibold text-center">{colPro}</th>
               <th className="w-16 py-1.5 px-1 font-semibold text-center">{colCon}</th>
               <th className="w-20 py-1.5 px-2 font-semibold text-center hidden sm:table-cell">{colParticipants}</th>
