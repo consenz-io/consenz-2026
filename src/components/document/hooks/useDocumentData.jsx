@@ -203,6 +203,31 @@ export function useDocumentData(documentId) {
     staleTime: 60 * 1000, // 1 minute — auth state doesn't change every render
   });
 
+  // Record that the user interacted with this document — feeds the "My Documents"
+  // page. Uses a ref to skip redundant checks for docs already recorded this session.
+  const interactionRecordedRef = useRef(new Set());
+  useEffect(() => {
+    if (!user?.id || !documentId) return;
+    if (interactionRecordedRef.current.has(documentId)) return;
+    interactionRecordedRef.current.add(documentId);
+
+    (async () => {
+      try {
+        const existing = await base44.entities.UserInteraction.filter({ userId: user.id, documentId });
+        if (existing.length === 0) {
+          await base44.entities.UserInteraction.create({
+            userId: user.id,
+            documentId,
+            firstInteractionAt: new Date().toISOString(),
+          });
+          queryClient.invalidateQueries({ queryKey: ['userInteractions', user.id] });
+        }
+      } catch (e) {
+        // Non-critical — silently ignore
+      }
+    })();
+  }, [user?.id, documentId, queryClient]);
+
   const { data: isAdmin = false } = useQuery({
     queryKey: ['isAdmin', documentId, user?.id],
     queryFn: async () => {
