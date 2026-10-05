@@ -84,6 +84,7 @@ export function showBrowserNotification({ title, body, actionUrl, icon }) {
         const trimmed = url.trim().toLowerCase();
         // Same-origin relative paths only — prevents open redirect / phishing
         // via forged notifications with attacker-controlled absolute URLs.
+        if (trimmed.includes('\\')) return false;
         if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return true;
         return false;
       };

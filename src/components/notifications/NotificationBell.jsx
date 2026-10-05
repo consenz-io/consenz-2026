@@ -23,6 +23,7 @@ import { formatRelativeTime } from "@/components/utils/dateFormatter";
 const isSafeUrl = (url) => {
   if (typeof url !== 'string') return false;
   const trimmed = url.trim().toLowerCase();
+  if (trimmed.includes('\\')) return false;
   if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return true;
   return false;
 };
