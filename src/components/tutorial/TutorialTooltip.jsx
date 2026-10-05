@@ -115,15 +115,27 @@ function getTooltipStyle(rect, position, bubbleH = TOOLTIP_HEIGHT) {
 }
 
 // Render body text with quoted button names highlighted as "lit up" badges.
-// Matches text wrapped in Hebrew quote marks (״…״) or standard quotes ("…").
+// Matches text wrapped in Hebrew quote marks (״…״), standard quotes ("…"),
+// Hebrew geresh (׳…׳), or single quotes ('…').
+// Pro-vote terms (בעד/for/مع) get green styling; con-vote terms (נגד/against/ضد) get red.
 function renderBodyWithButtonHighlight(body) {
-  const parts = body.split(/(״[^״]+״|"[^"]+")/g);
+  const parts = body.split(/(״[^״]+״|"[^"]+"|׳[^׳]+׳|'[^']+')/g);
+  const proTerms = ['בעד', 'for', 'مع'];
+  const conTerms = ['נגד', 'against', 'ضد'];
   return parts.map((part, i) => {
-    if (part.startsWith('״') || part.startsWith('"')) {
+    if (part.startsWith('״') || part.startsWith('"') || part.startsWith('׳') || part.startsWith("'")) {
+      const inner = part.slice(1, -1);
+      const isPro = proTerms.includes(inner);
+      const isCon = conTerms.includes(inner);
+      const colorClasses = isPro
+        ? 'bg-green-100 text-green-800 border-green-400'
+        : isCon
+        ? 'bg-red-100 text-red-800 border-red-400'
+        : 'bg-blue-100 text-blue-800 border-blue-300';
       return (
         <span
           key={i}
-          className="inline-flex items-center bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded border border-blue-300 shadow-sm mx-0.5"
+          className={`inline-flex items-center ${colorClasses} font-bold px-1.5 py-0.5 rounded border shadow-sm mx-0.5`}
         >
           {part}
         </span>

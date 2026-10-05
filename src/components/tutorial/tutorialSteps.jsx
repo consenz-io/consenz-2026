@@ -329,6 +329,7 @@ export const TUTORIAL_STEPS = [
     tooltipPosition: 'top',
     heading: 'vote.explain.heading',
     body: 'vote.explain.body',
+    highlightButton: true,
   },
 
   // 8. Support threshold - explain the support bar above voting buttons
@@ -351,6 +352,7 @@ export const TUTORIAL_STEPS = [
     heading: 'newclause.explain.heading',
     body: 'newclause.explain.body',
     forceRevealTarget: true,
+    highlightButton: true,
   },
 
   // Community stats — "the pulse of the document"
