@@ -1,0 +1,103 @@
+{
+  "name": "Translation",
+  "type": "object",
+  "properties": {
+    "documentId": {
+      "type": "string",
+      "description": "Parent document ID \u2014 used for authorization checks and safe bulk deletion"
+    },
+    "sourceEntityType": {
+      "type": "string",
+      "enum": [
+        "section",
+        "version",
+        "suggestion",
+        "document",
+        "topic",
+        "comment"
+      ],
+      "description": "Type of the source content unit"
+    },
+    "sourceEntityId": {
+      "type": "string",
+      "description": "ID of the original entity (Section, DocumentVersion, Suggestion, etc.)"
+    },
+    "sourceVersionId": {
+      "type": "string",
+      "description": "Stable version identifier, e.g. 'section:{id}:current', 'version:{id}', 'suggestion:{id}:proposed'. Language-independent \u2014 identifies the source text, not the viewer's language."
+    },
+    "sourceField": {
+      "type": "string",
+      "description": "Which field of the source entity this translation covers (e.g. 'content', 'title', 'description', 'newContent', 'explanation')"
+    },
+    "sourceLanguage": {
+      "type": "string",
+      "enum": [
+        "en",
+        "he",
+        "ar"
+      ],
+      "description": "Language of the original content"
+    },
+    "targetLanguage": {
+      "type": "string",
+      "enum": [
+        "en",
+        "he",
+        "ar"
+      ],
+      "description": "Language of the translation"
+    },
+    "sourceContentHash": {
+      "type": "string",
+      "description": "Short hash of the source content at translation time. Used to detect if the source changed since the translation was created."
+    },
+    "translatedContent": {
+      "type": "string",
+      "description": "The translated text (rich text HTML or plain text)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ready",
+        "failed",
+        "stale"
+      ],
+      "default": "ready",
+      "description": "ready = canonical and usable; failed = translation attempt failed; stale = source changed since translation was created"
+    },
+    "errorMessage": {
+      "type": "string",
+      "description": "Error message if status is 'failed'"
+    },
+    "translatedBy": {
+      "type": "string",
+      "description": "User ID of the user who initiated the translation (for audit only \u2014 the translation is shared by all users)"
+    }
+  },
+  "required": [
+    "documentId",
+    "sourceEntityType",
+    "sourceEntityId",
+    "sourceVersionId",
+    "sourceField",
+    "sourceLanguage",
+    "targetLanguage",
+    "translatedContent",
+    "status"
+  ],
+  "rls": {
+    "create": null,
+    "read": null,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
