@@ -543,7 +543,7 @@ export default function SuggestionSidebar({
               {suggestion.explanation && (
                 <div className="mt-3 bg-slate-50 rounded-lg p-3">
                   <h3 className="text-xs font-semibold text-slate-700 mb-1">{t('explanation')}</h3>
-                  <TranslatableContent content={suggestion.explanation} entity={suggestion} entityType="Suggestion" fieldName="explanation" className="text-sm text-slate-600" />
+                  <TranslatableContent content={suggestion.explanation} entity={suggestion} entityType="Suggestion" documentId={suggestion.documentId} fieldName="explanation" className="text-sm text-slate-600" />
                 </div>
               )}
             </div>
@@ -578,7 +578,7 @@ export default function SuggestionSidebar({
                       </div>
                     </div>
                   ) : suggestion.explanation ? (
-                    <TranslatableContent content={suggestion.explanation} entity={suggestion} entityType="Suggestion" fieldName="explanation" className="text-sm text-slate-600" />
+                    <TranslatableContent content={suggestion.explanation} entity={suggestion} entityType="Suggestion" documentId={suggestion.documentId} fieldName="explanation" className="text-sm text-slate-600" />
                   ) : (
                     <p className="text-sm text-slate-400 italic">{t('noDescription')}</p>
                   )}
@@ -593,6 +593,7 @@ export default function SuggestionSidebar({
                   content={suggestion.newContent}
                   entity={suggestion}
                   entityType="Suggestion"
+                  documentId={suggestion.documentId}
                   className="prose prose-sm max-w-none"
                   renderContent={(content) => (
                     <DocumentTextContent content={content} />
@@ -620,7 +621,7 @@ export default function SuggestionSidebar({
                       </div>
                     </div>
                   ) : suggestion.explanation ? (
-                    <TranslatableContent content={suggestion.explanation} entity={suggestion} entityType="Suggestion" fieldName="explanation" className="text-sm text-slate-600" />
+                    <TranslatableContent content={suggestion.explanation} entity={suggestion} entityType="Suggestion" documentId={suggestion.documentId} fieldName="explanation" className="text-sm text-slate-600" />
                   ) : (
                     <p className="text-sm text-slate-400 italic">{t('noDescription')}</p>
                   )}

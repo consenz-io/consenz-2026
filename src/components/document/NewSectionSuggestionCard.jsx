@@ -336,6 +336,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
             content={currentVersion.newContent}
             entity={currentVersion}
             entityType="Suggestion"
+            documentId={doc?.id}
             className="prose prose-sm max-w-none"
             renderContent={(content) =>
             <DocumentTextContent content={content} />
@@ -351,6 +352,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
             content={currentVersion.explanation}
             entity={currentVersion}
             entityType="Suggestion"
+            documentId={doc?.id}
             className="text-slate-600" />
           
           </div>

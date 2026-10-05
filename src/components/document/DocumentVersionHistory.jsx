@@ -70,6 +70,7 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
             content={suggestion.explanation}
             entity={suggestion}
             entityType="Suggestion"
+            documentId={suggestion.documentId}
             fieldName="explanation"
             className="text-xs text-slate-600"
           />
@@ -282,6 +283,7 @@ export default function DocumentVersionHistory({
                     content={currentVer.content}
                     entity={currentVer}
                     entityType="DocumentVersion"
+                    documentId={documentId}
                     onUpdate={(updated) => {
                       queryClient.setQueryData(['versions', documentId], (old) => 
                         old?.map(v => v.id === currentVer.id ? updated : v)

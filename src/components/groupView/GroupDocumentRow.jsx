@@ -37,6 +37,7 @@ export default function GroupDocumentRow({ doc, unvotedCount, participantCount }
           content={doc.title}
           entity={doc}
           entityType="Document"
+          documentId={doc.id}
           fieldName="title"
           renderContent={(text) => <h3 className="font-semibold text-slate-900 font-document">{text}</h3>}
         />
@@ -45,6 +46,7 @@ export default function GroupDocumentRow({ doc, unvotedCount, participantCount }
             content={doc.description}
             entity={doc}
             entityType="Document"
+            documentId={doc.id}
             fieldName="description"
             className="text-sm text-slate-500 mt-1"
             preview

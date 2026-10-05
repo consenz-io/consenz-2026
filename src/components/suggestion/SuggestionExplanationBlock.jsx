@@ -70,6 +70,7 @@ export default function SuggestionExplanationBlock({
           content={suggestion.explanation}
           entity={suggestion}
           entityType="Suggestion"
+          documentId={suggestion.documentId}
           fieldName="explanation"
           onUpdate={(updated) => queryClient.setQueryData(['suggestion', suggestionId], updated)}
           className="text-slate-600"

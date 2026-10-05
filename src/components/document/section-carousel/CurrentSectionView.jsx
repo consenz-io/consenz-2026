@@ -71,6 +71,7 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
         content={section.content}
         entity={section}
         entityType="Section"
+        documentId={document.id}
         className="prose prose-sm max-w-none"
         renderContent={(content) => (
           <DocumentTextContent content={content} className="text-slate-800" />

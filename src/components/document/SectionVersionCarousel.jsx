@@ -100,6 +100,7 @@ function SuggestionMeta({ suggestionId, user, getUserName, document }) {
             content={suggestion.explanation}
             entity={suggestion}
             entityType="Suggestion"
+            documentId={document?.id}
             fieldName="explanation"
             className="text-xs text-slate-600"
           />
