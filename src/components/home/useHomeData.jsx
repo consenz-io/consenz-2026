@@ -57,20 +57,16 @@ export function useHomeData() {
   // ── Mutation: translate document title ────────────────────────────────────
   const translateDocumentMutation = useMutation({
     mutationFn: async (doc) => {
-      const result = await base44.functions.invoke('translateContent', {
-        content: doc.title,
+      const result = await base44.functions.invoke('translateVersion', {
+        documentId: doc.id,
+        sourceEntityType: 'document',
+        sourceEntityId: doc.id,
+        sourceField: 'title',
         targetLanguage: language,
+        content: doc.title,
         isHtml: false,
       });
-      const translatedTitle = (result.data?.translated || doc.title).trim();
-      const newTranslations = { ...(doc.translations || {}), [language]: { title: translatedTitle } };
-      await base44.entities.Document.update(doc.id, { translations: newTranslations });
-      return { docId: doc.id, translations: newTranslations };
-    },
-    onSuccess: (data) => {
-      queryClient.setQueryData(['publicDocuments'], (old) =>
-        old?.map(d => d.id === data.docId ? { ...d, translations: data.translations } : d)
-      );
+      return { docId: doc.id, translatedTitle: (result.data?.translatedContent || doc.title).trim() };
     },
   });
 

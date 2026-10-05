@@ -4,7 +4,6 @@ import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Languages, MoreVertical, MessageSquare, FileText, AlertCircle, Settings } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import TranslateAllButton from "./TranslateAllButton";
 import DocumentTitleHeading from "./DocumentTitleHeading";
 import { useVersionTranslation } from "./hooks/useVersionTranslation";
 
@@ -102,12 +101,6 @@ const DocumentHeader = React.memo(function DocumentHeader({
               <FileText className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
               {t('cleanView')}
             </Link>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem>
-            <div className="w-full" id="translate-all-wrapper">
-              <TranslateAllButton document={document} topics={topics} sections={sections} />
-            </div>
           </DropdownMenuItem>
 
           {isAdmin &&

@@ -8,7 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Languages, Loader2, Eye, FileText, Check, Info } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
-import { getDiffInLanguage, detectLanguage } from "./SmartDiffTranslationService";
+const detectLanguage = (text) => {
+  if (!text) return 'en';
+  if (/[\u0590-\u05FF]/.test(text)) return 'he';
+  if (/[\u0600-\u06FF]/.test(text)) return 'ar';
+  return 'en';
+};
 import DiffModeSelector, { DIFF_MODES, useDiffMode } from "./DiffModeSelector";
 import ChangeBlockDiffView from "./ChangeBlockDiffView";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
@@ -74,49 +79,55 @@ export default function SectionDiff({
   const handleSmartTranslate = async () => {
     if (isTranslating) return;
     setIsTranslating(true);
-    const languagePrompts = { en: 'English', he: 'Hebrew', ar: 'Arabic' };
     try {
-      const result = await getDiffInLanguage({
-        originalContent,
-        modifiedContent: newContent,
-        originalEntity: originalVersion || section,
-        originalEntityType: originalVersion ? 'DocumentVersion' : 'Section',
-        modifiedEntity: suggestion || newVersion,
-        modifiedEntityType: suggestion ? 'Suggestion' : 'DocumentVersion',
-        targetLanguage: language,
-        originalFieldName: 'content',
-        modifiedFieldName: suggestion ? 'newContent' : 'content'
+      const translateHtml = async (html, entityType, entityId, entityField, sourceLang) => {
+        if (sourceLang === language) return html;
+        const res = await base44.functions.invoke('translateVersion', {
+          documentId,
+          sourceEntityType: entityType,
+          sourceEntityId: entityId,
+          sourceField: entityField,
+          sourceLanguage: sourceLang,
+          targetLanguage: language,
+          content: html,
+          isHtml: true,
+        });
+        return res.data?.translatedContent || html;
+      };
+
+      // Determine entity info for original content
+      const originalEntityInfo = originalVersion
+        ? { type: 'version', id: originalVersion.id, field: 'content' }
+        : section
+          ? { type: 'section', id: section.id, field: 'content' }
+          : null;
+
+      // Determine entity info for new content
+      const newEntityInfo = suggestion
+        ? { type: 'suggestion', id: suggestion.id, field: 'newContent' }
+        : newVersion
+          ? { type: 'version', id: newVersion.id, field: 'content' }
+          : null;
+
+      const [translatedOriginal, translatedNew] = await Promise.all([
+        originalEntityInfo
+          ? translateHtml(originalContent, originalEntityInfo.type, originalEntityInfo.id, originalEntityInfo.field, originalSourceLang)
+          : Promise.resolve(originalContent),
+        newEntityInfo
+          ? translateHtml(newContent, newEntityInfo.type, newEntityInfo.id, newEntityInfo.field, modifiedSourceLang)
+          : Promise.resolve(newContent),
+      ]);
+
+      setTranslationResult({
+        original: translatedOriginal,
+        modified: translatedNew,
+        fromCache: { original: false, modified: false },
+        strategy: 'direct',
+        sourceLanguages: { original: originalSourceLang, modified: modifiedSourceLang }
       });
-      setTranslationResult(result);
       setShowTranslated(true);
     } catch (error) {
-      // getDiffInLanguage failed (likely disabled cache-miss paths) — fall back to direct InvokeLLM
-      try {
-        const translateHtml = async (html) => {
-          const res = await base44.functions.invoke('translateContent', {
-            content: html,
-            targetLanguage: language,
-            isHtml: true,
-          });
-          return res.data?.translated || html;
-        };
-
-        const [translatedOriginal, translatedNew] = await Promise.all([
-          originalSourceLang !== language ? translateHtml(originalContent) : Promise.resolve(originalContent),
-          modifiedSourceLang !== language ? translateHtml(newContent) : Promise.resolve(newContent)
-        ]);
-
-        setTranslationResult({
-          original: translatedOriginal,
-          modified: translatedNew,
-          fromCache: { original: false, modified: false },
-          strategy: 'direct',
-          sourceLanguages: { original: originalSourceLang, modified: modifiedSourceLang }
-        });
-        setShowTranslated(true);
-      } catch (fallbackError) {
-        console.error('Translation fallback error:', fallbackError);
-      }
+      console.error('Translation error:', error);
     } finally {
       setIsTranslating(false);
     }

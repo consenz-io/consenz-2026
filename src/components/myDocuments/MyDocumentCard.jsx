@@ -20,12 +20,16 @@ export default function MyDocumentCard({ doc, mySuggestionsCount, myVotesCount, 
     if (translatedTitle) { setTranslatedTitle(null); return; }
     setTranslating(true);
     try {
-      const response = await base44.functions.invoke('translateContent', {
-        content: doc.title,
+      const response = await base44.functions.invoke('translateVersion', {
+        documentId: doc.id,
+        sourceEntityType: 'document',
+        sourceEntityId: doc.id,
+        sourceField: 'title',
         targetLanguage: language,
+        content: doc.title,
         isHtml: false,
       });
-      setTranslatedTitle(response.data?.translated || doc.title);
+      setTranslatedTitle(response.data?.translatedContent || doc.title);
     } finally {
       setTranslating(false);
     }

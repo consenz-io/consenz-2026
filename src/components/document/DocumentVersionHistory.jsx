@@ -190,7 +190,7 @@ export default function DocumentVersionHistory({
     }));
   };
 
-  const translateVersion = async (versionId, content) => {
+  const handleTranslateVersion = async (versionId, content) => {
     if (translatedVersions[versionId]) {
       setTranslatedVersions(prev => {
         const newState = { ...prev };
@@ -202,12 +202,16 @@ export default function DocumentVersionHistory({
 
     setTranslatingVersions(prev => ({ ...prev, [versionId]: true }));
     try {
-      const result = await base44.functions.invoke('translateContent', {
-        content,
+      const result = await base44.functions.invoke('translateVersion', {
+        documentId,
+        sourceEntityType: 'version',
+        sourceEntityId: versionId,
+        sourceField: 'content',
         targetLanguage: language,
+        content,
         isHtml: true,
       });
-      const translatedContent = (result.data?.translated || content).trim();
+      const translatedContent = (result.data?.translatedContent || content).trim();
       setTranslatedVersions(prev => ({ ...prev, [versionId]: translatedContent }));
     } catch (err) {
       console.error('Translation error:', err);
@@ -318,7 +322,7 @@ export default function DocumentVersionHistory({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => translateVersion(currentVer.id, currentVer.content)}
+                        onClick={() => handleTranslateVersion(currentVer.id, currentVer.content)}
                         disabled={translatingVersions[currentVer.id]}
                         className={`h-7 text-xs gap-1 ${translatedVersions[currentVer.id] ? 'bg-blue-50 text-blue-600 border-blue-200' : ''}`}
                       >

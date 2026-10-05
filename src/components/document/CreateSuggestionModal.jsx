@@ -130,14 +130,7 @@ export default function CreateSuggestionModal({
         return;
       }
       
-      // If translation exists, use it
-      if (existingSection.translations?.[language]) {
-        setFormData(prev => ({ ...prev, newContent: existingSection.translations[language] }));
-        setOriginalLoadedContent(existingSection.translations[language]);
-        return;
-      }
-      
-      // Otherwise, translate
+      // Otherwise, translate via the version-aware translation system
       setIsLoadingTranslation(true);
       try {
         // Validate content before translation
@@ -148,12 +141,17 @@ export default function CreateSuggestionModal({
           return;
         }
 
-        const result = await base44.functions.invoke('translateContent', {
-          content: existingSection.content,
+        const result = await base44.functions.invoke('translateVersion', {
+          documentId: existingSection.documentId,
+          sourceEntityType: 'section',
+          sourceEntityId: existingSection.id,
+          sourceField: 'content',
+          sourceLanguage: sectionOriginalLang,
           targetLanguage: language,
+          content: existingSection.content,
           isHtml: true,
         });
-        let translatedContent = result.data?.translated || existingSection.content;
+        let translatedContent = result.data?.translatedContent || existingSection.content;
 
         // Validate translated content
         if (!translatedContent || translatedContent.length === 0) {
@@ -165,12 +163,6 @@ export default function CreateSuggestionModal({
 
         setFormData(prev => ({ ...prev, newContent: translatedContent }));
         setOriginalLoadedContent(translatedContent);
-        
-        // Save translation to cache
-        const updatedTranslations = { ...existingSection.translations, [language]: translatedContent };
-        await base44.entities.Section.update(existingSection.id, {
-          translations: updatedTranslations
-        });
       } catch (err) {
         console.error('Translation error:', err);
         setFormData(prev => ({ ...prev, newContent: existingSection.content }));

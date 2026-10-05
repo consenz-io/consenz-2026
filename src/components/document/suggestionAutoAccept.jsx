@@ -401,8 +401,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
               version: nextVersion,
               changeType: 'suggestion_accepted',
               suggestionId: freshSuggestion.id,
-              originalLanguage: section.originalLanguage || 'he',
-              translations: section.translations || {}
+              originalLanguage: section.originalLanguage || 'he'
             });
 
             console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Created "before" version:', nextVersion);
@@ -725,8 +724,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
         version: nextVersion,
         changeType: 'suggestion_accepted',
         suggestionId: freshSuggestion.id,
-        originalLanguage: section.originalLanguage || 'he',
-        translations: section.translations || {}
+        originalLanguage: section.originalLanguage || 'he'
       });
 
       console.log('[AUTO-ACCEPT DELETE] Created "before" version:', nextVersion);
@@ -740,8 +738,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
         version: nextVersion + 1,
         changeType: 'suggestion_accepted',
         suggestionId: freshSuggestion.id,
-        originalLanguage: section.originalLanguage || 'he',
-        translations: section.translations || {}
+        originalLanguage: section.originalLanguage || 'he'
       });
 
       console.log('[AUTO-ACCEPT DELETE] Created "after" version:', nextVersion + 1);

@@ -207,7 +207,7 @@ export default function DocumentSnapshot({
                             }}
                             dangerouslySetInnerHTML={{ 
                               __html: sanitizeHtml(showTranslatedSections[section.id] 
-                                ? (translatedSections[section.id] || section.translations?.[language] || displayedContent)
+                                ? (translatedSections[section.id] || displayedContent)
                                 : displayedContent)
                             }}
                           />
