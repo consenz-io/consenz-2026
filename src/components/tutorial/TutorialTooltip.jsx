@@ -5,6 +5,7 @@ import { CheckCircle, X, UserPlus, PartyPopper, Compass, Layers } from 'lucide-r
 import { tTutorial } from './tutorialSteps';
 import { useLanguage } from '@/components/LanguageContext';
 import { base44 } from '@/api/base44Client';
+import { scrollBubbleIntoView } from './scrollBubbleIntoView';
 
 const TOOLTIP_WIDTH = 320;
 const TOOLTIP_HEIGHT = 200; // fallback estimate before the bubble is measured
@@ -260,6 +261,9 @@ export default function TutorialTooltip({
         // Two consecutive stable frames → scroll finished
         if (stableCount >= 2) {
           applyPosition(el);
+          // After positioning, ensure the tooltip bubble itself is fully
+          // visible in the viewport (not just the target element).
+          requestAnimationFrame(() => scrollBubbleIntoView());
           return;
         }
         settleTimer = setTimeout(() => {

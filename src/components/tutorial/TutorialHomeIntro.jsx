@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { CheckCircle, X, Compass } from 'lucide-react';
 import { tTutorial } from './tutorialSteps';
 import { useLanguage } from '@/components/LanguageContext';
+import { scrollBubbleIntoView, waitForScrollSettle } from './scrollBubbleIntoView';
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState(() => window.innerWidth <= 768);
@@ -47,6 +48,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
   const [arrowDirection, setArrowDirection] = useState('down'); // 'up' | 'down' | 'left' | 'right' | 'none'
 
   // Position tooltip + spotlight — poll until element is in DOM (handles async data load)
+  const cancelScrollSettleRef = useRef(null);
   useEffect(() => {
     let cleanupSpotlight = null;
 
@@ -135,6 +137,10 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
         scrollTargetAboveSheet(el);
       } else {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // After the smooth scroll settles, ensure the tooltip bubble itself
+        // is fully visible (not just the target element).
+        if (cancelScrollSettleRef.current) cancelScrollSettleRef.current();
+        cancelScrollSettleRef.current = waitForScrollSettle(el, () => scrollBubbleIntoView());
       }
       return true;
     }
@@ -182,6 +188,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
       window.removeEventListener('resize', handleScroll);
       if (spotlightObserver) spotlightObserver.disconnect();
       if (cleanupSpotlight) cleanupSpotlight();
+      if (cancelScrollSettleRef.current) cancelScrollSettleRef.current();
     };
   }, [activeStep.targetSelector, activeStep.tooltipPosition]);
 
