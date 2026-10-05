@@ -131,9 +131,10 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
           </thead>
           <tbody>
             {visibleRows.map((s) => {
-              const contentSnippet = s.newContent
-                ? s.newContent.replace(/<[^>]*>/g, '').trim().slice(0, 80)
+              const fullContent = s.newContent
+                ? s.newContent.replace(/<[^>]*>/g, '').trim()
                 : '';
+              const contentSnippet = fullContent.slice(0, 80);
               const Icon = TypeIcon(s);
               return (
                 <tr key={s.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
@@ -156,7 +157,7 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
                         {formatLocalDateTime(s.acceptedAt || s.updated_date || s.created_date, 'DD/MM/YY HH:mm')}
                       </span>
                       {contentSnippet && (
-                        <p className="text-xs text-slate-400 truncate">{contentSnippet}</p>
+                        <p className="text-xs text-slate-400 truncate" title={fullContent}>{contentSnippet}</p>
                       )}
                     </div>
                   </td>
