@@ -193,7 +193,6 @@ Deno.serve(async (req) => {
               conVotes: totalPro,
               timerEndsAt: null,
               originalLanguage: section.originalLanguage || 'he',
-              translations: {},
               suggestionConsensus: boundedConsensus,
               participantsAtAcceptance: consensusTotalUsers,
               acceptedAt: new Date().toISOString()
@@ -240,7 +239,6 @@ Deno.serve(async (req) => {
               changeType: 'section_deleted',
               suggestionId: deleteSuggestionId || undefined,
               originalLanguage: section.originalLanguage || 'he',
-              translations: section.translations || {},
             });
             await base44.asServiceRole.entities.DocumentVersion.create({
               documentId: section.documentId,
@@ -253,7 +251,6 @@ Deno.serve(async (req) => {
               changeType: 'section_deleted',
               suggestionId: deleteSuggestionId || undefined,
               originalLanguage: section.originalLanguage || 'he',
-              translations: {},
             });
           } catch (e) {
             console.error('[VOTE ON SECTION V2 version log error]', e);

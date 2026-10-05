@@ -23,11 +23,6 @@
       ],
       "default": "he",
       "description": "Original language of the content"
-    },
-    "translations": {
-      "type": "object",
-      "description": "Cached translations {language_code: translated_title}",
-      "default": {}
     }
   },
   "required": [

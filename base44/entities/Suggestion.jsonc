@@ -129,11 +129,6 @@
       ],
       "description": "Language the creator wrote the suggestion in"
     },
-    "translations": {
-      "type": "object",
-      "description": "Cached translations {language_code: {newContent: string, explanation: string, translatedAt: date}}",
-      "default": {}
-    },
     "parentSuggestionId": {
       "type": "string",
       "description": "ID of the parent suggestion if this is an edit to another suggestion"

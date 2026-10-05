@@ -176,7 +176,6 @@ async function createNewSectionFromSuggestion(base44, suggestion, voterId) {
     order: newOrder,
     lastEditedBy: voterId,
     originalLanguage: newContentLanguage,
-    translations: {}
   });
 
   await base44.asServiceRole.entities.DocumentVersion.create({
@@ -188,7 +187,6 @@ async function createNewSectionFromSuggestion(base44, suggestion, voterId) {
     changeType: 'section_created',
     suggestionId: suggestion.id,
     originalLanguage: newContentLanguage,
-    translations: {}
   });
 
   return { newSection, targetTopicId };
@@ -355,7 +353,6 @@ Deno.serve(async (req) => {
           order: resurrectOrder,
           lastEditedBy: voterId,
           originalLanguage: newContentLanguage,
-          translations: {}
         });
 
         await base44.asServiceRole.entities.DocumentVersion.create({
@@ -367,7 +364,6 @@ Deno.serve(async (req) => {
           changeType: 'section_created',
           suggestionId: suggestion.id,
           originalLanguage: newContentLanguage,
-          translations: {}
         });
 
         await base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
@@ -427,7 +423,6 @@ Deno.serve(async (req) => {
             content: suggestion.newContent,
             lastEditedBy: voterId,
             originalLanguage: newContentLanguage,
-            translations: {}
           })
         ]);
 
@@ -540,7 +535,6 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.Suggestion.update(suggestion.parentSuggestionId, {
           newContent: suggestion.newContent,
           originalLanguage: newContentLanguage,
-          translations: {}
         });
         console.log('[PROCESS ACCEPTANCE V4] Updated parent suggestion content:', suggestion.parentSuggestionId);
 
@@ -585,8 +579,7 @@ Deno.serve(async (req) => {
           version: nextVersion,
           changeType: 'suggestion_accepted',
           suggestionId: suggestion.id,
-          originalLanguage: section.originalLanguage || 'he',
-          translations: section.translations || {}
+          originalLanguage: section.originalLanguage || 'he'
         });
 
         await base44.asServiceRole.entities.Section.delete(section.id);
