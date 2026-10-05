@@ -18,23 +18,50 @@ export default async function(req) {
     if (!documentId) return Response.json({ error: 'Missing documentId' }, { status: 400 });
     const lang = language || 'he';
 
-    const [document, suggestions, allComments, allVotes, publicProfiles] = await Promise.all([
-      base44.asServiceRole.entities.Document.filter({ id: documentId }).then(r => r[0]),
-      base44.asServiceRole.entities.Suggestion.filter({ documentId }),
-      base44.asServiceRole.entities.Comment.list(),
-      base44.asServiceRole.entities.Vote.list(),
-      base44.asServiceRole.entities.UserPublicProfile.list(),
-    ]);
-
+    const document = await base44.asServiceRole.entities.Document.filter({ id: documentId }).then(r => r[0]);
     if (!document) return Response.json({ error: 'Document not found' }, { status: 404 });
 
-    // Filter comments/votes to this document's suggestions
+    // Authorization: if the document belongs to a private/hidden group, verify
+    // the caller is a member. Without this, any authenticated user could request
+    // a digest of any private document via this service-role endpoint.
+    if (document.groupId) {
+      const groups = await base44.asServiceRole.entities.Group.filter({ id: document.groupId });
+      if (groups.length > 0) {
+        const group = groups[0];
+        if (group.status === 'private' || group.status === 'hidden') {
+          const memberships = await base44.asServiceRole.entities.GroupMember.filter({
+            groupId: document.groupId,
+            userId: user.id
+          });
+          if (memberships.length === 0 && user.role !== 'admin') {
+            return Response.json({ error: 'Forbidden' }, { status: 403 });
+          }
+        }
+      }
+    }
+
+    // Fetch only this document's data — not the entire database.
+    const suggestions = await base44.asServiceRole.entities.Suggestion.filter({ documentId });
     const suggestionIds = new Set(suggestions.map(s => s.id));
-    const comments = allComments.filter(c =>
-      (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
-      (c.rootEntityType === 'document' && c.rootEntityId === documentId)
-    );
-    const votes = allVotes.filter(v => suggestionIds.has(v.suggestionId));
+
+    // Fetch comments scoped to this document (document-level + suggestion-level).
+    // Section comments are fetched by sectionId below.
+    const sections = await base44.asServiceRole.entities.Section.filter({ documentId });
+    const sectionIds = new Set(sections.map(s => s.id));
+
+    const commentQuery = [
+      { rootEntityType: 'document', rootEntityId: documentId },
+    ];
+    if (suggestionIds.size > 0) commentQuery.push({ rootEntityType: 'suggestion', rootEntityId: { $in: [...suggestionIds] } });
+    if (sectionIds.size > 0) commentQuery.push({ rootEntityType: 'section', rootEntityId: { $in: [...sectionIds] } });
+
+    const [comments, votes, publicProfiles] = await Promise.all([
+      base44.asServiceRole.entities.Comment.filter({ $or: commentQuery }).catch(() => []),
+      suggestionIds.size > 0
+        ? base44.asServiceRole.entities.Vote.filter({ suggestionId: { $in: [...suggestionIds] } }).catch(() => [])
+        : Promise.resolve([]),
+      base44.asServiceRole.entities.UserPublicProfile.list(),
+    ]);
 
     const profileMap = {};
     publicProfiles.forEach(p => { if (p.email) profileMap[p.email] = p.fullName || p.email?.split('@')[0] || 'משתמש'; });
