@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { authorizeInternalOrUser } from '../../shared/authGate.ts';
 
 const TRANSLATIONS = {
   en: {
@@ -48,19 +49,11 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
     const { event, data: suggestion, args = {} } = body;
-    // Auth: admin can call directly. Non-admin callers (including the workflow
-    // engine) must reference a real Suggestion record — verifies the call is
-    // from a genuine entity-create trigger, not a fabricated external request.
-    const user = await base44.auth.me().catch(() => null);
-    if (user?.role !== 'admin') {
-      if (!suggestion?.id || event?.type !== 'create') {
-        return Response.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-      const realSuggestions = await base44.asServiceRole.entities.Suggestion.filter({ id: suggestion.id });
-      if (realSuggestions.length === 0) {
-        return Response.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-    }
+    // Auth: only the platform workflow (internal token) or an admin may call.
+    // Previously any anonymous caller who referenced a real Suggestion ID
+    // could pass the check and trigger notifications.
+    const { ok, response } = await authorizeInternalOrUser(base44, body);
+    if (!ok) return response;
 
     if (!suggestion || event.type !== 'create') {
       return Response.json({ message: 'Not a create event' }, { status: 200 });

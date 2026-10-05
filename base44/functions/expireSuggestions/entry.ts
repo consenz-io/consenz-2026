@@ -1,16 +1,15 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { authorizeInternalOrUser } from '../../shared/authGate.ts';
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    // Auth: reject authenticated non-admin callers — only the scheduled workflow
-    // trigger (no user session) or an admin may invoke this maintenance function.
-    // This prevents authenticated users from manually triggering expiration to
-    // farm gamification points via self-created suggestions with past timers.
-    const caller = await base44.auth.me().catch(() => null);
-    if (caller && caller.role !== 'admin') {
-      return Response.json({ error: 'Unauthorized' }, { status: 403 });
-    }
+    const body = await req.json().catch(() => ({}));
+    // Auth: only the scheduled workflow trigger (internal token) or an admin
+    // may invoke this maintenance function. Previously any anonymous caller
+    // could run it since the check only rejected authenticated non-admins.
+    const { ok, response } = await authorizeInternalOrUser(base44, body);
+    if (!ok) return response;
     const now = new Date().toISOString();
     console.log('[EXPIRE SUGGESTIONS] Running at:', now);
 
