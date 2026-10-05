@@ -6,6 +6,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import CommentsSection from "./CommentsSection";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import { useVersionTranslation } from "./hooks/useVersionTranslation";
+
+const detectLanguage = (text) => {
+  if (!text) return 'en';
+  if (/[\u0590-\u05FF]/.test(text)) return 'he';
+  if (/[\u0600-\u06FF]/.test(text)) return 'ar';
+  return 'en';
+};
 
 /**
  * Document description area — view, edit, translate, read more/less, and comments.
@@ -26,15 +34,11 @@ const DocumentDescription = React.memo(function DocumentDescription({
   const queryClient = useQueryClient();
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [description, setDescription] = useState("");
-  const [showTranslatedDescription, setShowTranslatedDescription] = useState(false);
-  const [isTranslatingDescription, setIsTranslatingDescription] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
 
   useEffect(() => {
     if (document) setDescription(document.description || "");
   }, [document]);
-
-  const languagePrompts = { en: "English", he: "Hebrew", ar: "Arabic" };
 
   const updateDescriptionMutation = useMutation({
     mutationFn: (newDescription) => base44.entities.Document.update(documentId, { description: newDescription }),
@@ -44,41 +48,27 @@ const DocumentDescription = React.memo(function DocumentDescription({
     },
   });
 
-  const translateDescriptionMutation = useMutation({
-    mutationFn: async () => {
-      const descResult = await base44.functions.invoke('translateContent', {
-        content: document.description,
-        targetLanguage: language,
-        isHtml: true,
-      });
-      const translatedDescription = (descResult.data?.translated || document.description).trim();
-      const newTranslations = {
-        ...(document.translations || {}),
-        [language]: {
-          ...(document.translations?.[language] || {}),
-          description: translatedDescription,
-        },
-      };
-      await base44.entities.Document.update(document.id, { translations: newTranslations });
-      return newTranslations;
-    },
-    onMutate: () => {
-      setIsTranslatingDescription(true);
-      setShowTranslatedDescription(true);
-    },
-    onSuccess: (newTranslations) => {
-      setIsTranslatingDescription(false);
-      queryClient.setQueryData(['document', documentId], (oldData) =>
-        oldData ? { ...oldData, translations: newTranslations } : oldData
-      );
-    },
-    onError: () => setIsTranslatingDescription(false),
+  // Version-aware translation for the document description.
+  // Uses translateVersion — canonical, shared across all users.
+  const {
+    translatedContent: translatedDesc,
+    showTranslated: showTranslatedDescription,
+    isTranslating: isTranslatingDescription,
+    handleToggle: handleToggleDescription,
+    needsTranslation: needsDescriptionTranslation,
+  } = useVersionTranslation({
+    documentId: document?.id,
+    sourceEntityType: 'document',
+    sourceEntityId: document?.id,
+    sourceField: 'description',
+    content: document?.description || '',
+    isHtml: true,
+    sourceLanguage: document?.originalLanguage || detectLanguage(document?.description || ''),
   });
 
   const hasDescription = !!document?.description;
   const showContainer = hasDescription || isAdmin || showDescriptionComments;
-  const translatedDesc = document?.translations?.[language]?.description;
-  const hasTranslatedDesc = typeof translatedDesc === 'string';
+  const hasTranslatedDesc = typeof translatedDesc === 'string' && translatedDesc.length > 1;
   const currentDescription = showTranslatedDescription && hasTranslatedDesc ? translatedDesc : (document?.description || "");
 
   const scrollToTitle = () => {
@@ -93,25 +83,17 @@ const DocumentDescription = React.memo(function DocumentDescription({
   return (
     <div className={`relative ${showContainer ? 'bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-4' : ''}`}>
       {/* Translate button */}
-      {!isEditingDescription && (
+      {!isEditingDescription && needsDescriptionTranslation && (
         <div className="absolute top-2 left-2 z-10">
           {isTranslatingDescription ? (
             <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-          ) : !hasTranslatedDesc ? (
-            <button
-              onClick={() => translateDescriptionMutation.mutate()}
-              className="p-1.5 hover:bg-blue-50 rounded transition-colors"
-              title={t('translate')}
-            >
-              <Languages className="w-4 h-4 text-blue-600" />
-            </button>
           ) : (
             <button
-              onClick={() => setShowTranslatedDescription(!showTranslatedDescription)}
-              className="p-1.5 hover:bg-slate-100 rounded transition-colors"
-              title={showTranslatedDescription ? t('showOriginal') : t('showTranslation')}
+              onClick={handleToggleDescription}
+              className="p-1.5 hover:bg-blue-50 rounded transition-colors"
+              title={showTranslatedDescription && hasTranslatedDesc ? t('showOriginal') : t('translate')}
             >
-              <Languages className={`w-4 h-4 ${showTranslatedDescription ? 'text-slate-600' : 'text-blue-600'}`} />
+              <Languages className={`w-4 h-4 ${showTranslatedDescription && hasTranslatedDesc ? 'text-slate-600' : 'text-blue-600'}`} />
             </button>
           )}
         </div>

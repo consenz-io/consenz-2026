@@ -1,17 +1,23 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
 import { Languages, MoreVertical, MessageSquare, FileText, AlertCircle, Settings } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
 import TranslateAllButton from "./TranslateAllButton";
 import DocumentTitleHeading from "./DocumentTitleHeading";
+import { useVersionTranslation } from "./hooks/useVersionTranslation";
+
+const detectLanguage = (text) => {
+  if (!text) return 'en';
+  if (/[\u0590-\u05FF]/.test(text)) return 'he';
+  if (/[\u0600-\u06FF]/.test(text)) return 'ar';
+  return 'en';
+};
 
 /**
  * Document title area — title, translate button, and action dropdown menu.
- * Self-contained: manages its own translation state + mutation.
+ * Self-contained: manages its own translation state via useVersionTranslation.
  * Extracted from DocumentView to reduce re-render scope.
  */
 const DocumentHeader = React.memo(function DocumentHeader({
@@ -28,42 +34,23 @@ const DocumentHeader = React.memo(function DocumentHeader({
   topics,
   sections
 }) {
-  const queryClient = useQueryClient();
-  const [showTranslated, setShowTranslated] = useState(false);
-  const [isTranslating, setIsTranslating] = useState(false);
-
-  const languagePrompts = { en: "English", he: "Hebrew", ar: "Arabic" };
-
-  const translateDocumentMutation = useMutation({
-    mutationFn: async () => {
-      const titleResult = await base44.functions.invoke('translateContent', {
-        content: document.title,
-        targetLanguage: language,
-        isHtml: false,
-      });
-      const translatedTitle = (titleResult.data?.translated || document.title).trim();
-      const newTranslations = {
-        ...(document.translations || {}),
-        [language]: { title: translatedTitle }
-      };
-      await base44.entities.Document.update(document.id, { translations: newTranslations });
-      return newTranslations;
-    },
-    onMutate: () => {
-      setIsTranslating(true);
-      setShowTranslated(true);
-    },
-    onSuccess: (newTranslations) => {
-      setIsTranslating(false);
-      queryClient.setQueryData(['document', documentId], (oldData) =>
-      oldData ? { ...oldData, translations: newTranslations } : oldData
-      );
-    },
-    onError: () => setIsTranslating(false)
+  const {
+    translatedContent: translatedTitle,
+    showTranslated,
+    isTranslating,
+    handleToggle,
+    needsTranslation,
+  } = useVersionTranslation({
+    documentId: document.id,
+    sourceEntityType: 'document',
+    sourceEntityId: document.id,
+    sourceField: 'title',
+    content: document.title,
+    isHtml: false,
+    sourceLanguage: document.originalLanguage || detectLanguage(document.title),
   });
 
-  const translatedTitle = document.translations?.[language]?.title;
-  const hasTranslation = typeof translatedTitle === 'string';
+  const hasTranslation = !!translatedTitle;
 
   return (
     <div className={`document-title-area flex items-center gap-2 w-full max-w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -74,24 +61,16 @@ const DocumentHeader = React.memo(function DocumentHeader({
       <div className="flex-shrink-0">
         {isTranslating ?
         <div className="w-3.5 h-3.5 md:w-5 md:h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" /> :
-        !hasTranslation ?
+        needsTranslation ?
         <button
           type="button"
-          onClick={() => translateDocumentMutation.mutate()}
+          onClick={handleToggle}
           className="p-0.5 md:p-1.5 hover:bg-blue-50 rounded transition-colors"
-          aria-label={t('translate')}>
-          
-            <Languages className="w-3.5 h-3.5 md:w-5 md:h-5 text-blue-600" aria-hidden="true" />
-          </button> :
+          aria-label={showTranslated && hasTranslation ? t('showOriginal') : t('translate')}>
 
-        <button
-          type="button"
-          onClick={() => setShowTranslated(!showTranslated)}
-          className="p-0.5 md:p-1.5 hover:bg-slate-100 rounded transition-colors"
-          aria-label={showTranslated ? t('showOriginal') : t('showTranslation')}>
-          
-            <Languages className={`w-3.5 h-3.5 md:w-5 md:h-5 ${showTranslated ? 'text-slate-600' : 'text-blue-600'}`} aria-hidden="true" />
-          </button>
+            <Languages className={`w-3.5 h-3.5 md:w-5 md:h-5 ${showTranslated && hasTranslation ? 'text-slate-600' : 'text-blue-600'}`} aria-hidden="true" />
+          </button> :
+        null
         }
       </div>
 
