@@ -410,8 +410,7 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
             await base44.entities.Section.update(section.id, {
               content: freshSuggestion.newContent,
               lastEditedBy: userId,
-              originalLanguage: newContentLanguage,
-              translations: {} // איפוס תרגומים כי התוכן השתנה
+              originalLanguage: newContentLanguage
             });
             
             console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Section updated with new content');
@@ -426,7 +425,6 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
               changeType: 'suggestion_accepted',
               suggestionId: freshSuggestion.id,
               originalLanguage: newContentLanguage,
-              translations: {}
             });
             
             console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Created "after" version:', nextVersion + 1);
@@ -491,7 +489,6 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
               title: parentSuggestion.newTopicTitle,
               order: topicOrderToUse,
               originalLanguage: newTopicLanguage,
-              translations: {}
             });
             
             targetTopicId = newTopic.id;
@@ -535,7 +532,6 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
             order: newOrder,
             lastEditedBy: userId,
             originalLanguage: newContentLanguage,
-            translations: {}
           });
           
           console.log('[AUTO-ACCEPT EDIT_SUGGESTION] ✅ Created new section with ID:', newSection.id);
@@ -557,7 +553,6 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
             changeType: 'section_created',
             suggestionId: freshSuggestion.id,
             originalLanguage: newContentLanguage,
-            translations: {}
           });
           
           console.log('[AUTO-ACCEPT EDIT_SUGGESTION] Created version 1 for new section');
@@ -845,7 +840,6 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
          order: newOrder,
          lastEditedBy: userId,
          originalLanguage: newContentLanguage,
-         translations: {}
        });
 
        console.log('[AUTO-ACCEPT NEW_SECTION] Created new section with ID:', newSection.id);
@@ -860,7 +854,6 @@ export async function autoAcceptSuggestion(suggestion, userId, document) {
          changeType: 'section_created',
          suggestionId: freshSuggestion.id,
          originalLanguage: newContentLanguage,
-         translations: {}
        });
 
        console.log('[AUTO-ACCEPT NEW_SECTION] Created version 1 for new section');
@@ -1125,8 +1118,7 @@ export async function autoAcceptTopicEditSuggestion(suggestion, userId, document
       version: nextVersion,
       changeType: 'suggestion_accepted',
       suggestionId: freshSuggestion.id,
-      originalLanguage: 'he',
-      translations: {}
+      originalLanguage: 'he'
     });
   }
 

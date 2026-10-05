@@ -112,7 +112,6 @@ export function useTopicVoteMutation({ document, user, topicEditSuggestions, que
                 changeType: 'suggestion_accepted',
                 suggestionId: topicSuggestion.id,
                 originalLanguage: 'he',
-                translations: {},
               });
             }
           } catch (versionErr) {
