@@ -18,6 +18,9 @@ export default function TranslatablePreview({
   language = "he",
   maxLines = 5,
 }) {
+  // Direction follows the content's language, not the UI language.
+  // Hebrew/Arabic → RTL, everything else → LTR.
+  const isContentRTL = language === 'he' || language === 'ar';
   const [showFull, setShowFull] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const ref = useRef(null);
@@ -42,7 +45,7 @@ export default function TranslatablePreview({
         className={className}
         style={showFull ? undefined : { maxHeight: `${maxLines * 1.25}rem`, overflow: "hidden" }}
         dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
-        dir={isRTL ? "rtl" : "ltr"}
+        dir={isContentRTL ? "rtl" : "ltr"}
       />
       {!showFull && isOverflowing && (
         <div

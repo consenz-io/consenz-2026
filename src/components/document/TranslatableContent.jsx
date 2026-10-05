@@ -81,6 +81,7 @@ export default function TranslatableContent({
     translatedContent,
     showTranslated: localShowTranslated,
     isTranslating,
+    translateError,
     handleToggle,
     needsTranslation,
   } = useVersionTranslation({
@@ -104,6 +105,14 @@ export default function TranslatableContent({
     ? translatedContent
     : content;
 
+  // Direction follows the DISPLAYED content's language, not the UI language.
+  // When showing translated content → target language direction.
+  // When showing original → source language direction.
+  const displayLanguage = showTranslated && isValidTranslation
+    ? language
+    : resolvedSourceLanguage;
+  const isContentRTL = displayLanguage === 'he' || displayLanguage === 'ar';
+
   // Fallback: render plain content when no entity or no documentId
   if (!entity || !documentId) {
     return renderContent ? renderContent(content) : (
@@ -112,11 +121,11 @@ export default function TranslatableContent({
   }
 
   return (
-    <div className="space-y-2" dir={isRTL ? 'rtl' : 'ltr'} style={{ textAlign: isRTL ? 'right' : 'left' }}>
+    <div className="space-y-2" dir={isContentRTL ? 'rtl' : 'ltr'} style={{ textAlign: isContentRTL ? 'right' : 'left' }}>
       {isTranslating ? (
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-          <span className={`text-sm text-slate-600 ${isRTL ? 'mr-2' : 'ml-2'}`}>
+          <span className={`text-sm text-slate-600 ${isContentRTL ? 'mr-2' : 'ml-2'}`}>
             {rawLanguage === 'he' ? 'מתרגם...' : rawLanguage === 'ar' ? 'جارٍ الترجمة...' : 'Translating...'}
           </span>
         </div>
@@ -141,7 +150,12 @@ export default function TranslatableContent({
           )}
 
           {needsTranslation && resolvedSourceLanguage !== language && (
-            <div className={`flex items-center gap-2 pt-1 ${isRTL ? 'justify-end' : 'justify-start'}`}>
+            <div className={`flex items-center gap-2 pt-1 ${isContentRTL ? 'justify-end' : 'justify-start'}`}>
+              {translateError && !isTranslating && (
+                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs gap-1">
+                  {rawLanguage === 'he' ? 'התרגום נכשל' : rawLanguage === 'ar' ? 'فشل الترجمة' : 'Translation failed'}
+                </Badge>
+              )}
               {hasTranslation && showTranslated && (
                 <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs gap-1">
                   <Check className="w-3 h-3" />

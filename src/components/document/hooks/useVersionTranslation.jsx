@@ -102,6 +102,10 @@ export function useVersionTranslation({
         content,
         isHtml,
       });
+      // Backend returns { status: "failed", translatedContent: content } on error
+      if (result.data?.status === 'failed') {
+        throw new Error(result.data?.error || 'Translation failed');
+      }
       return result.data?.translatedContent || content;
     },
     onSuccess: (data) => {
@@ -125,6 +129,7 @@ export function useVersionTranslation({
     showTranslated,
     setShowTranslated: setLocalShowTranslated,
     isTranslating: translateMutation.isPending,
+    translateError: translateMutation.error?.message || null,
     translate: translateMutation.mutate,
     handleToggle,
     needsTranslation,

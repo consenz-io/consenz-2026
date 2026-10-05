@@ -107,6 +107,41 @@ export async function translateUnit(
     });
   }
 
+  // Reuse by content hash: if any translation with the same source hash +
+  // target language already exists (even from a different sourceVersionId),
+  // clone it for this version. This avoids re-translating identical content
+  // when a suggestion is accepted and becomes a section, or when the same
+  // text appears as both a "current" section and a "version" snapshot.
+  const existingByHash = await base44.asServiceRole.entities.Translation.filter({
+    sourceContentHash: contentHash,
+    targetLanguage,
+    status: "ready",
+  }).catch(() => []);
+
+  if (existingByHash.length > 0) {
+    const reusable = existingByHash[0];
+    await base44.asServiceRole.entities.Translation.create({
+      documentId,
+      sourceEntityType,
+      sourceEntityId,
+      sourceVersionId,
+      sourceField,
+      sourceLanguage,
+      targetLanguage,
+      sourceContentHash: contentHash,
+      translatedContent: reusable.translatedContent,
+      status: "ready",
+      translatedBy: user.id,
+    });
+
+    return {
+      sourceVersionId,
+      translatedContent: reusable.translatedContent,
+      status: "from_cache",
+      fromCache: true,
+    };
+  }
+
   // Translate via LLM
   try {
     const langName = LANGUAGE_NAMES[targetLanguage as keyof typeof LANGUAGE_NAMES];

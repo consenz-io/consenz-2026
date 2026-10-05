@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { translateUnit } from "../../shared/translateLogic.ts";
 import { SUPPORTED_LANGUAGES, detectLanguage } from "../../shared/translationVersioning.ts";
+import { checkDocumentAccess } from "../../shared/documentAuth.ts";
 
 const VALID_ENTITY_TYPES = new Set([
   "section",
@@ -57,6 +58,11 @@ export default async function (req: Request): Promise<Response> {
     }).then((r: any[]) => r[0]);
     if (!document)
       return Response.json({ error: "Document not found" }, { status: 404 });
+
+    // Scoped authorization: verify the user can access this document's group
+    const { authorized } = await checkDocumentAccess(base44, document, user);
+    if (!authorized)
+      return Response.json({ error: "Forbidden" }, { status: 403 });
 
     const result = await translateUnit(base44, user, {
       documentId,

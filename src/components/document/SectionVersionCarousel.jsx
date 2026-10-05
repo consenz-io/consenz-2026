@@ -139,7 +139,7 @@ function SuggestionMeta({ suggestionId, user, getUserName, document }) {
           so they appear correctly in the sidebar and suggestion detail page too */}
       {showSuggComments && (
         <div className="pt-2 border-t border-teal-200">
-          <CommentsSection entityType="suggestion" entityId={suggestionId} user={user} documentId={documentId} />
+          <CommentsSection entityType="suggestion" entityId={suggestionId} user={user} documentId={document?.id} />
         </div>
       )}
     </div>
