@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { INTERNAL_AUTOMATION_TOKEN } from '../../shared/authGate.ts';
+import { checkDocumentAccess } from '../../shared/documentAuth.ts';
 
 // Rate limiter for voting
 const voteRateLimiter = new Map();
@@ -101,6 +102,12 @@ Deno.serve(async (req) => {
 
     if (!document) {
       return Response.json({ error: 'Document not found' }, { status: 404 });
+    }
+
+    // Scoped authorization: verify the user can access this document's group
+    const { authorized: accessAuthorized } = await checkDocumentAccess(base44, document, user);
+    if (!accessAuthorized) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     if (suggestion.status !== 'pending') {

@@ -33,6 +33,20 @@ Deno.serve(async (req) => {
     setTimeout(() => processingVotes.delete(lockKey), 10000);
 
     try {
+      // Fetch section for access check
+      const sectionRecord = await base44.asServiceRole.entities.Section.filter({ id: sectionId }).then(r => r[0]);
+      if (!sectionRecord) {
+        return Response.json({ error: 'Section not found' }, { status: 404 });
+      }
+      const document = await base44.asServiceRole.entities.Document.filter({ id: sectionRecord.documentId }).then(r => r[0]);
+      if (!document) {
+        return Response.json({ error: 'Document not found' }, { status: 404 });
+      }
+      const { authorized: accessAuthorized } = await checkDocumentAccess(base44, document, user);
+      if (!accessAuthorized) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+
       const allVotes = await base44.asServiceRole.entities.SectionVote.filter({ sectionId });
       const userVotes = allVotes.filter(v => v.userId === user.id);
 

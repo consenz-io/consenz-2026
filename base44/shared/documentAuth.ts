@@ -38,3 +38,43 @@ export async function checkDocumentAuthorization(base44, documentId, user) {
 
   return { authorized: hasValidAdmin, document };
 }
+
+/**
+ * Verify that a user can access a document, considering group privacy.
+ * If the document belongs to a private or hidden group, the user must be
+ * a member. Public groups and documents without a group are accessible to
+ * all authenticated users.
+ *
+ * Returns { authorized: boolean, reason?: string }.
+ */
+export async function checkDocumentAccess(base44, document, user) {
+  // Admins can access everything
+  if (user.role === 'admin') return { authorized: true };
+
+  // No group — accessible to all authenticated users
+  if (!document.groupId) return { authorized: true };
+
+  // Fetch the group to check privacy status
+  const groups = await base44.asServiceRole.entities.Group
+    .filter({ id: document.groupId })
+    .catch(() => []);
+
+  if (groups.length === 0) return { authorized: true };
+
+  const group = groups[0];
+
+  // Public group — accessible to all
+  if (group.status !== 'private' && group.status !== 'hidden') {
+    return { authorized: true };
+  }
+
+  // Private/hidden group — verify membership
+  const memberships = await base44.asServiceRole.entities.GroupMember
+    .filter({ groupId: document.groupId, userId: user.id });
+
+  if (memberships.length === 0) {
+    return { authorized: false, reason: 'Forbidden' };
+  }
+
+  return { authorized: true };
+}

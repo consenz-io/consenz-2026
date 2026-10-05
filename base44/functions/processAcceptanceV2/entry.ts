@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { awardSuggestionPointsLogic } from '../../shared/awardSuggestionPointsLogic.ts';
 import { authorizeInternalOrUser, INTERNAL_AUTOMATION_TOKEN } from '../../shared/authGate.ts';
-import { buildTranslations } from '../../shared/notificationTranslations.ts';
+import { buildTranslations, t } from '../../shared/notificationTranslations.ts';
 
 const detectLanguage = (text) => {
   if (!text) return 'he';
@@ -100,8 +100,19 @@ Deno.serve(async (req) => {
     // admin may bypass it; internal chain calls only pass forceAccept after the parent
     // already meets the threshold, so degrading to the threshold check here is safe.
     const canForceAccept = !!forceAccept && _gateUser?.role === 'admin';
+    const isInternalCall = !!body.internalToken && body.internalToken === INTERNAL_AUTOMATION_TOKEN;
+    const canForceRelease = !!forceReleaseLock && (_gateUser?.role === 'admin' || isInternalCall);
     if (!canForceAccept) {
-      const verifyDelta = (suggestion.proVotes || 0) - (suggestion.conVotes || 0);
+      const realVotes = await base44.asServiceRole.entities.Vote.filter({ suggestionId });
+      const votesByVoter = new Map();
+      for (const v of realVotes) {
+        if (!v.userId) continue;
+        votesByVoter.set(v.userId, v);
+      }
+      const dedupedVotes = Array.from(votesByVoter.values());
+      const realProVotes = dedupedVotes.filter(v => v.vote === 'pro').length;
+      const realConVotes = dedupedVotes.filter(v => v.vote === 'con').length;
+      const verifyDelta = realProVotes - realConVotes;
       const verifyThreshold = document.threshold > 0 ? Math.max(2, document.threshold) : 2;
       if (verifyDelta < verifyThreshold) {
         console.log('[PROCESS ACCEPTANCE V2] Suggestion no longer meets threshold, aborting. delta:', verifyDelta, 'threshold:', verifyThreshold);
@@ -112,7 +123,7 @@ Deno.serve(async (req) => {
     // ── Acquire the acceptance lock (atomic CAS with stale recovery + retry) ──
     // forceReleaseLock: when called as a frontend fallback after the old deployed
     // processAcceptance fails, force-release any stuck lock immediately (no 90s wait).
-    if (forceReleaseLock) {
+    if (canForceRelease) {
       console.log('[PROCESS ACCEPTANCE V2] forceReleaseLock=true, releasing any stuck lock for', suggestionId);
       await base44.asServiceRole.entities.Suggestion.update(suggestionId, { acceptanceLock: false }).catch(() => {});
     }
@@ -135,7 +146,7 @@ Deno.serve(async (req) => {
         if (lockCheck && lockCheck.status === 'pending' && lockCheck.acceptanceLock === true) {
           const lockAgeMs = Date.now() - new Date(lockCheck.updated_date).getTime();
           console.log('[PROCESS ACCEPTANCE V2] Lock held (age:', Math.round(lockAgeMs / 1000) + 's) on attempt 1');
-          if (lockAgeMs > 90000 || forceReleaseLock) {
+          if (lockAgeMs > 90000 || canForceRelease) {
             console.log('[PROCESS ACCEPTANCE V2] Force-releasing stale lock for', suggestionId);
             await base44.asServiceRole.entities.Suggestion.update(suggestionId, { acceptanceLock: false });
           }
@@ -590,8 +601,8 @@ Deno.serve(async (req) => {
         notifications.push({
           userId: user.id,
           type: 'suggestion_accepted',
-          title: nt(userLang, 'creatorTitle', creatorReplacements),
-          message: nt(userLang, 'creatorMessage', creatorReplacements),
+          title: t(userLang, 'creatorTitle', creatorReplacements),
+          message: t(userLang, 'creatorMessage', creatorReplacements),
           translations: creatorTranslations,
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
@@ -603,8 +614,8 @@ Deno.serve(async (req) => {
         notifications.push({
           userId: user.id,
           type: 'suggestion_accepted',
-          title: nt(userLang, 'participantTitle', participantReplacements),
-          message: nt(userLang, 'participantMessage', participantReplacements),
+          title: t(userLang, 'participantTitle', participantReplacements),
+          message: t(userLang, 'participantMessage', participantReplacements),
           translations: participantTranslations,
           relatedEntityId: suggestion.id,
           relatedEntityType: 'suggestion',
