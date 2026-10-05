@@ -27,9 +27,9 @@ export default function UnderstandingConsensus() {
 
   const { data: suggestions, isLoading: suggestionsLoading } = useQuery({
     queryKey: ['suggestions', documentId],
-    queryFn: () => base44.entities.Suggestion.filter({ documentId }, 'created_date'),
-    initialData: [],
-    enabled: !!documentId
+    queryFn: () => base44.entities.Suggestion.filter({ documentId }, '-created_date', 1000),
+    enabled: !!documentId,
+    staleTime: 30 * 1000
   });
 
   // Reuse contributorsCount from DocumentView cache (same query key), fallback to fresh fetch

@@ -14,7 +14,7 @@ export default function ConsensusGaugeAnimation({ value, documentTitle }) {
 
   // Animate the number counter from 0 → pct after mount
   useEffect(() => {
-    const duration = 1400;
+    const duration = 800;
     const start = performance.now();
     let raf;
     const tick = (now) => {
@@ -84,7 +84,6 @@ export default function ConsensusGaugeAnimation({ value, documentTitle }) {
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={dashOffset}
-          style={{ transition: "stroke-dashoffset 0.05s linear" }}
         />
         {/* Tick marks at 0%, 50%, 100% */}
         {[0, 50, 100].map((tick) => {
