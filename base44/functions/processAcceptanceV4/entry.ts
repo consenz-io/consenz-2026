@@ -242,8 +242,17 @@ Deno.serve(async (req) => {
       // any value), so a suggestion creator could bypass consensus by
       // setting proVotes high and invoking this function directly.
       const realVotes = await base44.asServiceRole.entities.Vote.filter({ suggestionId });
-      const realProVotes = realVotes.filter(v => v.vote === 'pro').length;
-      const realConVotes = realVotes.filter(v => v.vote === 'con').length;
+      // Deduplicate by voter userId — Vote create RLS only requires userId ==
+      // user.id, so a single voter can create multiple rows. Without dedup,
+      // a user could fabricate apparent consensus and farm points.
+      const votesByVoter = new Map();
+      for (const v of realVotes) {
+        if (!v.userId) continue;
+        votesByVoter.set(v.userId, v);
+      }
+      const dedupedVotes = Array.from(votesByVoter.values());
+      const realProVotes = dedupedVotes.filter(v => v.vote === 'pro').length;
+      const realConVotes = dedupedVotes.filter(v => v.vote === 'con').length;
       const verifyDelta = realProVotes - realConVotes;
       const verifyThreshold = document.threshold > 0 ? Math.max(2, document.threshold) : 2;
       if (verifyDelta < verifyThreshold) {

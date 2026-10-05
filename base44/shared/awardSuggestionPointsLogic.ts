@@ -24,7 +24,11 @@ export async function awardSuggestionPointsLogic(base44, { suggestionId, action,
   // Authorization guard: only award points for suggestions that have actually
   // been accepted through the consensus process. Without this check, any caller
   // could award 500 points to a creator by passing a pending/rejected suggestion ID.
-  if (suggestion.status !== 'accepted') {
+  // Derive acceptance from the server-managed acceptedAt field (set only by
+  // processAcceptance at acceptance time) rather than the client-writable
+  // status field — Suggestion update RLS allows the creator to set status to
+  // 'accepted' themselves, but they cannot set acceptedAt.
+  if (suggestion.status !== 'accepted' || !suggestion.acceptedAt) {
     return { success: false, error: 'Suggestion is not accepted — points cannot be awarded', status: 403 };
   }
 
@@ -43,8 +47,17 @@ export async function awardSuggestionPointsLogic(base44, { suggestionId, action,
   // skipThresholdVerification=true because they already verified server-side.
   if (!skipThresholdVerification) {
     const realVotes = await base44.entities.Vote.filter({ suggestionId });
-    const realProVotes = realVotes.filter(v => v.vote === 'pro').length;
-    const realConVotes = realVotes.filter(v => v.vote === 'con').length;
+    // Deduplicate by voter userId — Vote create RLS only requires userId ==
+    // user.id, so a single voter can create multiple rows. Without dedup,
+    // a user could fabricate apparent consensus and farm points.
+    const votesByVoter = new Map();
+    for (const v of realVotes) {
+      if (!v.userId) continue;
+      votesByVoter.set(v.userId, v);
+    }
+    const dedupedVotes = Array.from(votesByVoter.values());
+    const realProVotes = dedupedVotes.filter(v => v.vote === 'pro').length;
+    const realConVotes = dedupedVotes.filter(v => v.vote === 'con').length;
     const verifyDelta = realProVotes - realConVotes;
     const verifyThreshold = documents[0].threshold > 0 ? Math.max(2, documents[0].threshold) : 2;
     if (verifyDelta < verifyThreshold) {
@@ -112,7 +125,13 @@ export async function awardSuggestionPointsLogic(base44, { suggestionId, action,
   // 2. Award 50 points to each PRO voter who influenced the acceptance
   if (resolvedAction === 'suggestion_accepted') {
     const votes = await base44.entities.Vote.filter({ suggestionId });
-    const proVoterIds = votes.filter(v => v.vote === 'pro').map(v => v.userId).filter(Boolean);
+    // Deduplicate by voter — same dedup as the threshold check above.
+    const voterMap = new Map();
+    for (const v of votes) {
+      if (!v.userId) continue;
+      voterMap.set(v.userId, v);
+    }
+    const proVoterIds = Array.from(voterMap.values()).filter(v => v.vote === 'pro').map(v => v.userId).filter(Boolean);
 
     if (proVoterIds.length > 0) {
       const allUsers = await base44.entities.User.list();
