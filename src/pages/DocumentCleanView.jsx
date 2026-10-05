@@ -284,117 +284,95 @@ export default function DocumentCleanView() {
     }
   }, [currentVersionIndex, currentSnapshot]);
 
-  const translateTextMutation = useMutation({
-    mutationFn: async ({ text, targetLanguage, isHtml = false }) => {
-      const result = await base44.functions.invoke('translateContent', {
-        content: text,
-        targetLanguage,
+  // Unified translation via the canonical Translation entity (translateVersion).
+  // One translation per (sourceVersionId, targetLanguage), shared by all users.
+  const translateVersionMutation = useMutation({
+    mutationFn: async ({ sourceEntityType, sourceEntityId, sourceField, sourceLanguage, content, isHtml }) => {
+      const result = await base44.functions.invoke('translateVersion', {
+        documentId,
+        sourceEntityType,
+        sourceEntityId,
+        sourceField,
+        sourceLanguage,
+        targetLanguage: language,
+        content,
         isHtml,
       });
-      return result.data?.translated || text;
+      return result.data?.translatedContent || content;
     }
   });
 
-  const translateSectionMutation = useMutation({
-    mutationFn: async ({ section, targetLanguage }) => {
-      const translatedContent = await translateTextMutation.mutateAsync({
-        text: section.content,
-        targetLanguage,
-        isHtml: true
-      });
+  const translateDocTitle = async () => {
+    const docLang = document.originalLanguage || detectLanguage(document.title);
+    const translated = await translateVersionMutation.mutateAsync({
+      sourceEntityType: 'document',
+      sourceEntityId: document.id,
+      sourceField: 'title',
+      sourceLanguage: docLang,
+      content: document.title,
+      isHtml: false,
+    });
+    setTranslatedDocTitle(translated);
+    return translated;
+  };
 
-      // Update section with translation
-      const updatedTranslations = { ...section.translations, [targetLanguage]: translatedContent };
-      await base44.entities.Section.update(section.id, {
-        translations: updatedTranslations
-      });
+  const translateTopicTitle = async (topic) => {
+    const topicLang = topic.originalLanguage || detectLanguage(topic.title);
+    const translated = await translateVersionMutation.mutateAsync({
+      sourceEntityType: 'topic',
+      sourceEntityId: topic.id,
+      sourceField: 'title',
+      sourceLanguage: topicLang,
+      content: topic.title,
+      isHtml: false,
+    });
+    setTranslatedTopics((prev) => ({ ...prev, [topic.id]: translated }));
+    return translated;
+  };
 
-      return { sectionId: section.id, translatedContent };
-    },
-    onSuccess: (data) => {
-      setTranslatedSections((prev) => ({
-        ...prev,
-        [data.sectionId]: data.translatedContent
-      }));
-      queryClient.invalidateQueries({ queryKey: ['sections', documentId] });
-    }
-  });
+  const translateSectionContent = async (section) => {
+    const sectionLang = section.originalLanguage || detectLanguage(section.content);
+    const translated = await translateVersionMutation.mutateAsync({
+      sourceEntityType: 'section',
+      sourceEntityId: section.id,
+      sourceField: 'content',
+      sourceLanguage: sectionLang,
+      content: section.content,
+      isHtml: true,
+    });
+    setTranslatedSections((prev) => ({ ...prev, [section.id]: translated }));
+    return translated;
+  };
 
   const translateAllSections = async () => {
     setTranslatingAll(true);
-
     const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
     try {
-      // Translate document title
-      const docOriginalLang = document.originalLanguage || 'he';
-      if (docOriginalLang !== language) {
-        if (!document.translations?.[language]) {
-          const translatedTitle = await translateTextMutation.mutateAsync({
-            text: document.title,
-            targetLanguage: language,
-            isHtml: false
-          });
-          const updatedTranslations = { ...document.translations, [language]: translatedTitle };
-          await base44.entities.Document.update(document.id, {
-            translations: updatedTranslations,
-            originalLanguage: docOriginalLang
-          });
-          setTranslatedDocTitle(translatedTitle);
-          await delay(1000);
-        } else {
-          setTranslatedDocTitle(document.translations[language]);
-        }
+      const docLang = document.originalLanguage || detectLanguage(document.title);
+      if (docLang !== language) {
+        await translateDocTitle();
         setShowTranslatedDoc(true);
+        await delay(500);
       }
 
-      // Translate topics
       const newShowTranslatedTopics = {};
       for (const topic of topics) {
-        const topicOriginalLang = topic.originalLanguage || 'he';
-        if (topicOriginalLang !== language) {
-          if (!topic.translations?.[language]) {
-            const translatedTitle = await translateTextMutation.mutateAsync({
-              text: topic.title,
-              targetLanguage: language,
-              isHtml: false
-            });
-            const updatedTranslations = { ...topic.translations, [language]: translatedTitle };
-            await base44.entities.Topic.update(topic.id, {
-              translations: updatedTranslations,
-              originalLanguage: topicOriginalLang
-            });
-            setTranslatedTopics((prev) => ({
-              ...prev,
-              [topic.id]: translatedTitle
-            }));
-            await delay(1000);
-          } else {
-            setTranslatedTopics((prev) => ({
-              ...prev,
-              [topic.id]: typeof topic.translations[language] === 'string' ? topic.translations[language] : topic.translations[language]?.title
-            }));
-          }
+        const topicLang = topic.originalLanguage || detectLanguage(topic.title);
+        if (topicLang !== language) {
+          await translateTopicTitle(topic);
           newShowTranslatedTopics[topic.id] = true;
+          await delay(500);
         }
       }
       setShowTranslatedTopics(newShowTranslatedTopics);
 
-      // Translate sections
       const newShowTranslatedSections = {};
       for (const section of sections) {
-        const sectionOriginalLang = section.originalLanguage || 'he';
-        if (sectionOriginalLang !== language) {
-          if (!section.translations?.[language]) {
-            await translateSectionMutation.mutateAsync({ section, targetLanguage: language });
-            await delay(1000);
-          } else {
-            setTranslatedSections((prev) => ({
-              ...prev,
-              [section.id]: section.translations[language]
-            }));
-          }
+        const sectionLang = section.originalLanguage || detectLanguage(section.content);
+        if (sectionLang !== language) {
+          await translateSectionContent(section);
           newShowTranslatedSections[section.id] = true;
+          await delay(500);
         }
       }
       setShowTranslatedSections(newShowTranslatedSections);
@@ -447,9 +425,9 @@ export default function DocumentCleanView() {
     }
   };
 
-  const needsTranslation = sections.some((s) => (s.originalLanguage || 'he') !== language) ||
-  topics.some((t) => (t.originalLanguage || 'he') !== language) ||
-  (document?.originalLanguage || 'he') !== language;
+  const needsTranslation = sections.some((s) => (s.originalLanguage || detectLanguage(s.content)) !== language) ||
+  topics.some((t) => (t.originalLanguage || detectLanguage(t.title)) !== language) ||
+  (document?.originalLanguage || detectLanguage(document?.title)) !== language;
 
   const escapeHtml = (str) => String(str || '').
   replace(/&/g, '&amp;').
@@ -473,12 +451,12 @@ export default function DocumentCleanView() {
       sort((a, b) => (a.order || 0) - (b.order || 0));
       if (topicSections.length === 0) return '';
 
-      const topicTitle = escapeHtml(showTranslatedTopics[topic.id] && (translatedTopics[topic.id] || topic.translations?.[language]) ||
+      const topicTitle = escapeHtml(showTranslatedTopics[topic.id] && translatedTopics[topic.id] ||
       topic.title);
 
       const sectionsHtml = topicSections.map((section, si) => {
         const rawContent = (showTranslatedSections[section.id] ?
-        translatedSections[section.id] || section.translations?.[language] :
+        translatedSections[section.id] :
         null) || section.content || '';
         const content = sanitizeHtml(rawContent);
         return `<div style="margin-bottom:1.5rem">
@@ -544,10 +522,10 @@ export default function DocumentCleanView() {
   }
 
   const allTranslated = sections.every((s) =>
-  (s.originalLanguage || 'he') === language || translatedSections[s.id] || s.translations?.[language]
+  (s.originalLanguage || detectLanguage(s.content)) === language || translatedSections[s.id]
   ) && topics.every((t) =>
-  (t.originalLanguage || 'he') === language || translatedTopics[t.id] || t.translations?.[language]
-  ) && ((document.originalLanguage || 'he') === language || translatedDocTitle || document.translations?.[language]);
+  (t.originalLanguage || detectLanguage(t.title)) === language || translatedTopics[t.id]
+  ) && ((document.originalLanguage || detectLanguage(document.title)) === language || translatedDocTitle);
 
   return (
     <div className="min-h-screen bg-white">
@@ -569,8 +547,8 @@ export default function DocumentCleanView() {
               </Button>
             </Link>
             <DocumentTitleHeading>
-              {(document.originalLanguage || 'he') !== language && showTranslatedDoc ?
-              translatedDocTitle || (typeof document.translations?.[language] === 'string' ? document.translations[language] : document.translations?.[language]?.title) || document.title :
+              {(document.originalLanguage || detectLanguage(document.title)) !== language && showTranslatedDoc ?
+              translatedDocTitle || document.title :
               document.title}
             </DocumentTitleHeading>
           </div>
@@ -670,9 +648,9 @@ export default function DocumentCleanView() {
                   {/* Topic Title */}
                   <div className="border-b border-slate-300 pb-2 mb-4 md:mb-6">
                     <h2 className="text-xl md:text-2xl text-slate-800 leading-tight font-display font-normal" style={{ fontFamily: "var(--font-display)" }}>
-                      {topicIndex + 1}. {(topic.originalLanguage || 'he') !== language && showTranslatedTopics[topic.id] ?
-                    translatedTopics[topic.id] || (typeof topic.translations?.[language] === 'string' ? topic.translations[language] : topic.translations?.[language]?.title) || getTopicTitleAtVersion(topic.id, currentVersionIndex) :
-                    getTopicTitleAtVersion(topic.id, currentVersionIndex)}
+                      {topicIndex + 1}. {(topic.originalLanguage || detectLanguage(topic.title)) !== language && showTranslatedTopics[topic.id] ?
+                      translatedTopics[topic.id] || getTopicTitleAtVersion(topic.id, currentVersionIndex) :
+                      getTopicTitleAtVersion(topic.id, currentVersionIndex)}
                       {/* Highlight topic whose title changed in this version */}
                       {currentSnapshot?.isTopicTitleChange && currentSnapshot?.topicTitleChangeMeta?.topicId === topic.id &&
                     <span className="ml-2 text-sm font-normal text-purple-600 bg-purple-100 px-2 py-0.5 rounded">
@@ -680,36 +658,18 @@ export default function DocumentCleanView() {
                         </span>
                     }
                     </h2>
-                    {(topic.originalLanguage || 'he') !== language &&
+                    {(topic.originalLanguage || detectLanguage(topic.title)) !== language &&
                   <Button
                     variant="ghost"
                     size="sm"
                     className="text-xs text-blue-600 hover:text-blue-700 mt-1 print:hidden"
+                    disabled={translateVersionMutation.isPending}
                     onClick={async () => {
-                      if (!translatedTopics[topic.id] && !topic.translations?.[language]) {
-                        const translatedTitle = await translateTextMutation.mutateAsync({
-                          text: topic.title,
-                          targetLanguage: language,
-                          isHtml: false
-                        });
-                        const updatedTranslations = { ...topic.translations, [language]: translatedTitle };
-                        await base44.entities.Topic.update(topic.id, {
-                          translations: updatedTranslations,
-                          originalLanguage: topic.originalLanguage || 'he'
-                        });
-                        setTranslatedTopics((prev) => ({
-                          ...prev,
-                          [topic.id]: translatedTitle
-                        }));
-                        setShowTranslatedTopics((prev) => ({
-                          ...prev,
-                          [topic.id]: true
-                        }));
+                      if (!translatedTopics[topic.id]) {
+                        await translateTopicTitle(topic);
+                        setShowTranslatedTopics((prev) => ({ ...prev, [topic.id]: true }));
                       } else {
-                        setShowTranslatedTopics((prev) => ({
-                          ...prev,
-                          [topic.id]: !prev[topic.id]
-                        }));
+                        setShowTranslatedTopics((prev) => ({ ...prev, [topic.id]: !prev[topic.id] }));
                       }
                     }}>
                     
@@ -859,7 +819,7 @@ export default function DocumentCleanView() {
                                 }}
                                 dangerouslySetInnerHTML={{
                                   __html: sanitizeHtml(showTranslatedSections[section.id] ?
-                                  translatedSections[section.id] || section.translations?.[language] || displayedContent :
+                                  translatedSections[section.id] || displayedContent :
                                   displayedContent)
                                 }} />
                               
@@ -871,8 +831,8 @@ export default function DocumentCleanView() {
                                 onClick={async (e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  if (!translatedSections[section.id] && !section.translations?.[language]) {
-                                    await translateSectionMutation.mutateAsync({ section, targetLanguage: language });
+                                  if (!translatedSections[section.id]) {
+                                    await translateSectionContent(section);
                                     setShowTranslatedSections((prev) => ({
                                       ...prev,
                                       [section.id]: true
@@ -884,9 +844,9 @@ export default function DocumentCleanView() {
                                     }));
                                   }
                                 }}
-                                disabled={translateSectionMutation.isPending}>
+                                disabled={translateVersionMutation.isPending}>
                                 
-                                        {translateSectionMutation.isPending ?
+                                        {translateVersionMutation.isPending ?
                                 <>
                                             <Loader2 className="w-3 h-3 mr-1 animate-spin" />
                                             {t('translating')}
