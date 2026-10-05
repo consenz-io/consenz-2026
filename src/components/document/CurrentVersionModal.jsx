@@ -72,7 +72,7 @@ export default function CurrentVersionModal({
 
   const subtitle =
   language === "he" ?
-  "הגרסה המשקפת את ההסכמות שהתקבלו עד כה. המסמך ממשיך להתעדכן ככל שמתקבלות הסכמות חדשות." :
+  "גרסה זו משקפת את ההסכמות שהתקבלו עד כה. המסמך ממשיך להתעדכן ככל שמתקבלות הסכמות חדשות." :
   language === "ar" ?
   "هذه أحدث نسخة، تعكس التوافق الذي تم التوصل إليه في المجتمع حتى الآن. تستمر الوثيقة في التحديث مع كل توافق جديد." :
   "This version reflecting the consensus reached by the community so far. The document continues to evolve as new consensus is reached.";
