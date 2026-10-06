@@ -7,7 +7,11 @@ import DocumentTopicCard from "@/components/document/DocumentTopicCard";
 import { useDocumentContentData } from "@/components/document/hooks/useDocumentContentData";
 import { DocumentContentDataProvider } from "@/components/document/DocumentContentContext";
 
-export default function DocumentContent(props) {
+// React.memo skips re-render when props are referentially equal, so the
+// 100+ section/topic cards below don't re-render on every DocumentView
+// state change (scroll, suggestion nav, etc.). The props are stabilized
+// with useCallback in DocumentView.
+const DocumentContentInner = React.memo(function DocumentContent(props) {
   const data = useDocumentContentData(props);
   const {
     editingTopic, setEditingTopic, handleTopicDragEnd, topics, isAdmin, t,
@@ -73,4 +77,6 @@ export default function DocumentContent(props) {
       </DragDropContext>
     </DocumentContentDataProvider>
   );
-}
+});
+
+export default DocumentContentInner;

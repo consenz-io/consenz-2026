@@ -441,6 +441,23 @@ export default function DocumentView() {
     setShowCreateSuggestion(true);
   }, []);
 
+  // Stabilized callbacks passed to DocumentContent — prevents the entire
+  // content tree from re-rendering when DocumentView re-renders for unrelated
+  // state (showScrollTop, currentSuggestionIndex, openSuggestionId, etc.).
+  // Combined with React.memo on DocumentContent, the context value keeps a
+  // stable identity and the 100+ section cards don't re-render on every scroll.
+  const handleDirectEdit = React.useCallback((section) => {
+    handleEditSection(section, true);
+  }, [handleEditSection]);
+
+  const handleOpenSuggestionSidebar = React.useCallback((suggestionId) => {
+    setOpenSuggestionId(suggestionId);
+  }, []);
+
+  const handleClearNewlyCreated = React.useCallback(() => {
+    setNewlyCreatedSuggestion(null);
+  }, []);
+
   // ── Loading / Not Found / Restricted states ───────────────────────────────────
   if (isInitialLoading) {
     return (
@@ -606,10 +623,10 @@ export default function DocumentView() {
                   isAdmin={isAdmin}
                   user={user}
                   canParticipate={canParticipate}
-                  onDirectEdit={(section) => handleEditSection(section, true)}
-                  onOpenSuggestionSidebar={(suggestionId) => setOpenSuggestionId(suggestionId)}
+                  onDirectEdit={handleDirectEdit}
+                  onOpenSuggestionSidebar={handleOpenSuggestionSidebar}
                   newlyCreatedSuggestion={newlyCreatedSuggestion}
-                  onClearNewlyCreated={() => setNewlyCreatedSuggestion(null)}
+                  onClearNewlyCreated={handleClearNewlyCreated}
                   targetSuggestionId={targetSuggestionId}
                   onEditSuggestion={handleEditSuggestion}
                   scrollToSectionId={scrollToRawSectionId}
