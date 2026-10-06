@@ -107,11 +107,14 @@ export default function CurrentVersionModal({
 
   const translateAll = async () => {
     setTranslatingAll(true);
-    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     try {
+      // Single batch request — backend checks cache for each unit, only
+      // calls LLM for uncached ones. Re-translation is near-instant.
+      const units = [];
+
       const docLang = document.originalLanguage || detectLanguage(document.title);
       if (docLang !== language) {
-        const translated = await translateVersionMutation.mutateAsync({
+        units.push({
           sourceEntityType: 'document',
           sourceEntityId: document.id,
           sourceField: 'title',
@@ -119,16 +122,12 @@ export default function CurrentVersionModal({
           content: document.title,
           isHtml: false,
         });
-        setTranslatedDocTitle(translated);
-        setShowTranslatedDoc(true);
-        await delay(500);
       }
 
-      const newShowTranslatedTopics = {};
       for (const topic of topics) {
         const topicLang = topic.originalLanguage || detectLanguage(topic.title);
         if (topicLang !== language) {
-          const translated = await translateVersionMutation.mutateAsync({
+          units.push({
             sourceEntityType: 'topic',
             sourceEntityId: topic.id,
             sourceField: 'title',
@@ -136,18 +135,13 @@ export default function CurrentVersionModal({
             content: topic.title,
             isHtml: false,
           });
-          setTranslatedTopics((prev) => ({ ...prev, [topic.id]: translated }));
-          newShowTranslatedTopics[topic.id] = true;
-          await delay(500);
         }
       }
-      setShowTranslatedTopics(newShowTranslatedTopics);
 
-      const newShowTranslatedSections = {};
       for (const section of sections) {
         const sectionLang = section.originalLanguage || detectLanguage(section.content);
         if (sectionLang !== language) {
-          const translated = await translateVersionMutation.mutateAsync({
+          units.push({
             sourceEntityType: 'section',
             sourceEntityId: section.id,
             sourceField: 'content',
@@ -155,11 +149,46 @@ export default function CurrentVersionModal({
             content: section.content,
             isHtml: true,
           });
-          setTranslatedSections((prev) => ({ ...prev, [section.id]: translated }));
-          newShowTranslatedSections[section.id] = true;
-          await delay(500);
         }
       }
+
+      if (units.length === 0) {
+        setTranslatingAll(false);
+        return;
+      }
+
+      const result = await base44.functions.invoke('batchTranslateVersions', {
+        documentId,
+        targetLanguage: language,
+        units,
+      });
+
+      const results = result.data?.results || [];
+      const newTranslatedSections = {};
+      const newTranslatedTopics = {};
+      let newTranslatedDocTitle = null;
+      const newShowTranslatedSections = {};
+      const newShowTranslatedTopics = {};
+      let newShowTranslatedDoc = false;
+
+      for (const r of results) {
+        if (r.sourceField === 'content' && r.sourceEntityType === 'section') {
+          newTranslatedSections[r.sourceEntityId] = r.translatedContent;
+          newShowTranslatedSections[r.sourceEntityId] = true;
+        } else if (r.sourceField === 'title' && r.sourceEntityType === 'topic') {
+          newTranslatedTopics[r.sourceEntityId] = r.translatedContent;
+          newShowTranslatedTopics[r.sourceEntityId] = true;
+        } else if (r.sourceField === 'title' && r.sourceEntityType === 'document') {
+          newTranslatedDocTitle = r.translatedContent;
+          newShowTranslatedDoc = true;
+        }
+      }
+
+      setTranslatedSections((prev) => ({ ...prev, ...newTranslatedSections }));
+      setTranslatedTopics((prev) => ({ ...prev, ...newTranslatedTopics }));
+      if (newTranslatedDocTitle) setTranslatedDocTitle(newTranslatedDocTitle);
+      setShowTranslatedDoc(newShowTranslatedDoc);
+      setShowTranslatedTopics(newShowTranslatedTopics);
       setShowTranslatedSections(newShowTranslatedSections);
     } catch (error) {
       console.error('Translation error:', error);

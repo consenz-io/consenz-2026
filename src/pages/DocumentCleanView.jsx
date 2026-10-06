@@ -346,35 +346,90 @@ export default function DocumentCleanView() {
 
   const translateAllSections = async () => {
     setTranslatingAll(true);
-    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     try {
+      // Build all translation units in one batch — single network round-trip.
+      // The backend checks the Translation cache for each unit and only calls
+      // the LLM for uncached ones, so re-translating an already-translated
+      // document is near-instant.
+      const units = [];
+
       const docLang = document.originalLanguage || detectLanguage(document.title);
       if (docLang !== language) {
-        await translateDocTitle();
-        setShowTranslatedDoc(true);
-        await delay(500);
+        units.push({
+          sourceEntityType: 'document',
+          sourceEntityId: document.id,
+          sourceField: 'title',
+          sourceLanguage: docLang,
+          content: document.title,
+          isHtml: false,
+        });
       }
 
-      const newShowTranslatedTopics = {};
       for (const topic of topics) {
         const topicLang = topic.originalLanguage || detectLanguage(topic.title);
         if (topicLang !== language) {
-          await translateTopicTitle(topic);
-          newShowTranslatedTopics[topic.id] = true;
-          await delay(500);
+          units.push({
+            sourceEntityType: 'topic',
+            sourceEntityId: topic.id,
+            sourceField: 'title',
+            sourceLanguage: topicLang,
+            content: topic.title,
+            isHtml: false,
+          });
         }
       }
-      setShowTranslatedTopics(newShowTranslatedTopics);
 
-      const newShowTranslatedSections = {};
       for (const section of sections) {
         const sectionLang = section.originalLanguage || detectLanguage(section.content);
         if (sectionLang !== language) {
-          await translateSectionContent(section);
-          newShowTranslatedSections[section.id] = true;
-          await delay(500);
+          units.push({
+            sourceEntityType: 'section',
+            sourceEntityId: section.id,
+            sourceField: 'content',
+            sourceLanguage: sectionLang,
+            content: section.content,
+            isHtml: true,
+          });
         }
       }
+
+      if (units.length === 0) {
+        setTranslatingAll(false);
+        return;
+      }
+
+      const result = await base44.functions.invoke('batchTranslateVersions', {
+        documentId,
+        targetLanguage: language,
+        units,
+      });
+
+      const results = result.data?.results || [];
+      const newTranslatedSections = {};
+      const newTranslatedTopics = {};
+      let newTranslatedDocTitle = null;
+      const newShowTranslatedSections = {};
+      const newShowTranslatedTopics = {};
+      let newShowTranslatedDoc = false;
+
+      for (const r of results) {
+        if (r.sourceField === 'content' && r.sourceEntityType === 'section') {
+          newTranslatedSections[r.sourceEntityId] = r.translatedContent;
+          newShowTranslatedSections[r.sourceEntityId] = true;
+        } else if (r.sourceField === 'title' && r.sourceEntityType === 'topic') {
+          newTranslatedTopics[r.sourceEntityId] = r.translatedContent;
+          newShowTranslatedTopics[r.sourceEntityId] = true;
+        } else if (r.sourceField === 'title' && r.sourceEntityType === 'document') {
+          newTranslatedDocTitle = r.translatedContent;
+          newShowTranslatedDoc = true;
+        }
+      }
+
+      setTranslatedSections((prev) => ({ ...prev, ...newTranslatedSections }));
+      setTranslatedTopics((prev) => ({ ...prev, ...newTranslatedTopics }));
+      if (newTranslatedDocTitle) setTranslatedDocTitle(newTranslatedDocTitle);
+      setShowTranslatedDoc(newShowTranslatedDoc);
+      setShowTranslatedTopics(newShowTranslatedTopics);
       setShowTranslatedSections(newShowTranslatedSections);
     } catch (error) {
       console.error('Translation error:', error);
