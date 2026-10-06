@@ -80,17 +80,21 @@ export default function SectionDiff({
     if (isTranslating) return;
     setIsTranslating(true);
     try {
-      const translateHtml = async (html, entityType, entityId, entityField, sourceLang) => {
-        if (sourceLang === language) return html;
+      const translateHtml = async (html, entityType, entityId, entityField, sourceLang, targetLang = language, anchor = null) => {
+        if (sourceLang === targetLang) return html;
         const res = await base44.functions.invoke('translateVersion', {
           documentId,
           sourceEntityType: entityType,
           sourceEntityId: entityId,
           sourceField: entityField,
           sourceLanguage: sourceLang,
-          targetLanguage: language,
+          targetLanguage: targetLang,
           content: html,
           isHtml: true,
+          ...(anchor ? {
+            anchorOriginalContent: anchor.anchorOriginalContent,
+            anchorTranslatedContent: anchor.anchorTranslatedContent,
+          } : {}),
         });
         return res.data?.translatedContent || html;
       };
@@ -109,20 +113,55 @@ export default function SectionDiff({
           ? { type: 'version', id: newVersion.id, field: 'content' }
           : null;
 
-      const [translatedOriginal, translatedNew] = await Promise.all([
-        originalEntityInfo
-          ? translateHtml(originalContent, originalEntityInfo.type, originalEntityInfo.id, originalEntityInfo.field, originalSourceLang)
-          : Promise.resolve(originalContent),
-        newEntityInfo
-          ? translateHtml(newContent, newEntityInfo.type, newEntityInfo.id, newEntityInfo.field, modifiedSourceLang)
-          : Promise.resolve(newContent),
-      ]);
+      // Cross-language anchoring: when a suggestion was written in a different
+      // language than the section, translate the proposed edit relative to the
+      // section's existing translations. This keeps the translated suggestion
+      // aligned with the section's original wording instead of drifting into an
+      // independent re-translation (the "version C" problem).
+      const useAnchor =
+        isCrossLanguageSuggestion &&
+        newEntityInfo?.type === 'suggestion' &&
+        modifiedSourceLang !== language &&
+        !!originalEntityInfo;
+
+      let translatedOriginal = originalContent;
+      let anchorTranslatedContent = null;
+
+      if (originalEntityInfo) {
+        // Fetch the section in the viewer's language and (when anchoring) in
+        // the suggestion's source language — i.e. the translation the proposer
+        // saw and edited. The latter is almost always already cached.
+        const basePromises = [
+          translateHtml(originalContent, originalEntityInfo.type, originalEntityInfo.id, originalEntityInfo.field, originalSourceLang, language),
+        ];
+        if (useAnchor) {
+          basePromises.push(
+            translateHtml(originalContent, originalEntityInfo.type, originalEntityInfo.id, originalEntityInfo.field, originalSourceLang, modifiedSourceLang)
+              .catch(() => null)
+          );
+        }
+        const baseResults = await Promise.all(basePromises);
+        translatedOriginal = baseResults[0];
+        anchorTranslatedContent = useAnchor ? baseResults[1] : null;
+      }
+
+      // Translate the proposed edit. When anchoring, pass the section in the
+      // viewer's language (anchorOriginalContent) and the section in the
+      // suggestion's language (anchorTranslatedContent) so the backend can
+      // apply the edit to the original wording instead of re-translating.
+      let translatedNew = newContent;
+      if (newEntityInfo) {
+        const anchor = useAnchor && anchorTranslatedContent
+          ? { anchorOriginalContent: translatedOriginal, anchorTranslatedContent }
+          : null;
+        translatedNew = await translateHtml(newContent, newEntityInfo.type, newEntityInfo.id, newEntityInfo.field, modifiedSourceLang, language, anchor);
+      }
 
       setTranslationResult({
         original: translatedOriginal,
         modified: translatedNew,
         fromCache: { original: false, modified: false },
-        strategy: 'direct',
+        strategy: useAnchor && anchorTranslatedContent ? 'anchored' : 'direct',
         sourceLanguages: { original: originalSourceLang, modified: modifiedSourceLang }
       });
       setShowTranslated(true);

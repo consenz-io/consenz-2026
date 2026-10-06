@@ -25,6 +25,19 @@ export interface TranslateUnitParams {
   targetLanguage: string;
   content: string;
   isHtml: boolean;
+  /**
+   * Optional anchor for cross-language suggestion translation. When a
+   * suggestion was written in language B based on a section originally in
+   * language A, translating the suggestion back to A should be anchored to
+   * the section's existing translations to avoid drift:
+   *   - anchorOriginalContent: the section content in the TARGET language
+   *   - anchorTranslatedContent: the section content in the SOURCE language
+   *     (i.e. the translation the proposer saw and edited)
+   * The LLM then produces the target-language version by applying the edit
+   * to the anchored original, instead of re-translating the whole text.
+   */
+  anchorOriginalContent?: string;
+  anchorTranslatedContent?: string;
 }
 
 export interface TranslateUnitResult {
@@ -53,6 +66,8 @@ export async function translateUnit(
     targetLanguage,
     content,
     isHtml,
+    anchorOriginalContent,
+    anchorTranslatedContent,
   } = params;
 
   const sourceVersionId = buildVersionId(
@@ -112,7 +127,11 @@ export async function translateUnit(
   // clone it for this version. This avoids re-translating identical content
   // when a suggestion is accepted and becomes a section, or when the same
   // text appears as both a "current" section and a "version" snapshot.
-  const existingByHash = await base44.asServiceRole.entities.Translation.filter({
+  // Skip reuse when an anchor is provided — anchored translations are aligned
+  // to a specific base section and must not be cloned from an unrelated
+  // un-anchored translation of identical content.
+  const hasAnchor = !!(anchorOriginalContent && anchorTranslatedContent);
+  const existingByHash = hasAnchor ? [] : await base44.asServiceRole.entities.Translation.filter({
     sourceContentHash: contentHash,
     targetLanguage,
     status: "ready",
@@ -145,7 +164,12 @@ export async function translateUnit(
   // Translate via LLM
   try {
     const langName = LANGUAGE_NAMES[targetLanguage as keyof typeof LANGUAGE_NAMES];
-    const prompt = isHtml
+    const sourceLangName = LANGUAGE_NAMES[sourceLanguage as keyof typeof LANGUAGE_NAMES];
+    const prompt = hasAnchor
+      ? (isHtml
+        ? `You are updating a document section. The original section in ${langName}:\n\n${anchorOriginalContent}\n\nIt was translated to ${sourceLangName} for an editor:\n\n${anchorTranslatedContent}\n\nThe editor proposed this edit in ${sourceLangName}:\n\n${content}\n\nProduce the ${langName} version that incorporates the edit. Start from the original ${langName} section and apply only the changes the editor made. Preserve the original's wording, terminology, and HTML structure. Return only the HTML with no commentary.`
+        : `You are updating a document section. The original section in ${langName}:\n\n${anchorOriginalContent}\n\nIt was translated to ${sourceLangName} for an editor:\n\n${anchorTranslatedContent}\n\nThe editor proposed this edit in ${sourceLangName}:\n\n${content}\n\nProduce the ${langName} version that incorporates the edit. Start from the original ${langName} text and apply only the changes the editor made. Preserve the original's wording and terminology. Return only the text with no commentary.`)
+      : isHtml
       ? `Translate the following HTML content to ${langName}. Preserve all HTML tags exactly as-is. Only translate the text content between tags. Return only the translated HTML with no additional commentary or markdown.\n\nContent to translate:\n${content}`
       : `Translate the following text to ${langName}. Return only the translated text with no commentary or markdown.\n\nText:\n${content}`;
 

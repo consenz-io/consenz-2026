@@ -30,6 +30,8 @@ export default async function (req: Request): Promise<Response> {
       targetLanguage,
       content,
       isHtml = false,
+      anchorOriginalContent,
+      anchorTranslatedContent,
     } = body;
 
     // Validate required fields
@@ -73,6 +75,8 @@ export default async function (req: Request): Promise<Response> {
       targetLanguage,
       content,
       isHtml,
+      anchorOriginalContent,
+      anchorTranslatedContent,
     });
 
     return Response.json(result);
