@@ -509,20 +509,20 @@ export default function TutorialTooltip({
 
         <>
           {/* Scrollable content area — grows as needed, scrolls when the bubble
-               hits its max height, so the pinned footer stays visible. */}
+                hits its max height, so the pinned footer stays visible. */}
           <div className="flex-1 min-h-0 overflow-y-auto">
              {/* Interstitial icon */}
              {isInterstitial &&
             <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg mb-3">
-                 <Layers className="w-7 h-7 text-white" />
+                 <Layers className="w-7 h-7 text-white hidden" />
                </div>
             }
              {/* Heading */}
-             <h3 className="font-bold text-slate-900 text-lg mb-2">{heading}</h3>
+             <h3 className="font-bold text-slate-900 text-lg mb-2 text-center">{heading}</h3>
 
             {/* Body */}
             {body &&
-            <p className="text-sm text-slate-600 mb-3 leading-relaxed text-justify">
+            <p className="text-sm text-slate-600 mb-3 leading-relaxed text-center">
                 {step.highlightButton ?
               renderBodyWithButtonHighlight(body) :
               body}
