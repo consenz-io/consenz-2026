@@ -47,8 +47,10 @@ Deno.serve(async (req) => {
 
     return Response.json({ data: versions });
   } catch (error) {
+    // Log full SDK error details server-side only — error.data may contain
+    // internal query/validation/provider messages useful for reconnaissance.
     console.error('Error fetching document versions:', error);
     console.error('Error data:', JSON.stringify(error.data));
-    return Response.json({ error: error.message, detail: error.data }, { status: 500 });
+    return Response.json({ error: 'Failed to fetch versions' }, { status: 500 });
   }
 });
