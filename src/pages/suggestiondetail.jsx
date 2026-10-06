@@ -344,6 +344,29 @@ function SuggestionDetail() {
         new Date(Date.now() + (document?.defaultSuggestionLifetimeHours || 72) * 60 * 60 * 1000).toISOString();
         updateData.timerEndsAt = timerEndsAt;
         updateData.rejectedByAdmin = false; // Clear the rejected flag
+        // Clear stale acceptance fields so the reopened suggestion starts clean.
+        // The required support threshold is always read live from document.threshold,
+        // so clearing these prevents any frozen/stale consensus snapshot from
+        // lingering after a reopen.
+        updateData.acceptanceLock = false;
+        updateData.approvedByAdmin = false;
+        updateData.acceptedAt = null;
+        updateData.participantsAtAcceptance = null;
+        updateData.suggestionConsensus = null;
+
+        // Re-sync proVotes/conVotes from the actual Vote records so that all
+        // past votes are preserved accurately even if the denormalized counts
+        // drifted out of sync during the expired period.
+        try {
+          const existingVotes = await retryWithBackoff(() =>
+            base44.entities.Vote.filter({ suggestionId })
+          );
+          updateData.proVotes = existingVotes.filter(v => v.vote === 'pro').length;
+          updateData.conVotes = existingVotes.filter(v => v.vote === 'con').length;
+        } catch (syncErr) {
+          console.error('Failed to re-sync votes on reopen:', syncErr);
+          // Keep existing proVotes/conVotes if re-sync fails — do NOT zero them.
+        }
       } else if (status === 'rejected') {
         updateData.rejectedByAdmin = true; // Mark as rejected by admin
       } else if (status === 'accepted') {
@@ -407,6 +430,9 @@ function SuggestionDetail() {
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });
       queryClient.invalidateQueries({ queryKey: ['sections', document?.id] });
       queryClient.invalidateQueries({ queryKey: ['versions'] });
+      // Invalidate the document query so the UI re-reads the current
+      // document.threshold (the required support threshold) after a reopen.
+      queryClient.invalidateQueries({ queryKey: ['document', suggestion?.documentId] });
     },
     onError: (err) => {setError(err.message);setTimeout(() => setError(null), 5000);}
   });
