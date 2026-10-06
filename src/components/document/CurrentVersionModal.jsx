@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Handshake, Download, FileCheck2, Users, Gauge } from "lucide-react";
+import { Handshake, Download, FileCheck2, Users, Gauge, Globe, Loader2 } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import {
   Dialog,
@@ -11,6 +11,8 @@ import {
 "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import { useMutation } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 import { parseUserDate } from "@/components/utils/dateFormatter";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
@@ -62,6 +64,123 @@ export default function CurrentVersionModal({
     map.forEach((arr) => arr.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
     return map;
   }, [sections]);
+
+  // --- Translation ---
+  const detectLanguage = (text) => {
+    if (!text) return 'en';
+    if (/[\u0590-\u05FF]/.test(text)) return 'he';
+    if (/[\u0600-\u06FF]/.test(text)) return 'ar';
+    return 'en';
+  };
+
+  const [translatedSections, setTranslatedSections] = useState({});
+  const [translatedTopics, setTranslatedTopics] = useState({});
+  const [translatedDocTitle, setTranslatedDocTitle] = useState(null);
+  const [showTranslatedDoc, setShowTranslatedDoc] = useState(false);
+  const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
+  const [showTranslatedSections, setShowTranslatedSections] = useState({});
+  const [translatingAll, setTranslatingAll] = useState(false);
+
+  const translateVersionMutation = useMutation({
+    mutationFn: async ({ sourceEntityType, sourceEntityId, sourceField, sourceLanguage, content, isHtml }) => {
+      const result = await base44.functions.invoke('translateVersion', {
+        documentId,
+        sourceEntityType,
+        sourceEntityId,
+        sourceField,
+        sourceLanguage,
+        targetLanguage: language,
+        content,
+        isHtml,
+      });
+      return result.data?.translatedContent || content;
+    }
+  });
+
+  const needsTranslation = sections.some((s) => (s.originalLanguage || detectLanguage(s.content)) !== language) ||
+    topics.some((tp) => (tp.originalLanguage || detectLanguage(tp.title)) !== language) ||
+    (document?.originalLanguage || detectLanguage(document?.title)) !== language;
+
+  const isShowingTranslations = showTranslatedDoc ||
+    Object.values(showTranslatedTopics).some(Boolean) ||
+    Object.values(showTranslatedSections).some(Boolean);
+
+  const translateAll = async () => {
+    setTranslatingAll(true);
+    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    try {
+      const docLang = document.originalLanguage || detectLanguage(document.title);
+      if (docLang !== language) {
+        const translated = await translateVersionMutation.mutateAsync({
+          sourceEntityType: 'document',
+          sourceEntityId: document.id,
+          sourceField: 'title',
+          sourceLanguage: docLang,
+          content: document.title,
+          isHtml: false,
+        });
+        setTranslatedDocTitle(translated);
+        setShowTranslatedDoc(true);
+        await delay(500);
+      }
+
+      const newShowTranslatedTopics = {};
+      for (const topic of topics) {
+        const topicLang = topic.originalLanguage || detectLanguage(topic.title);
+        if (topicLang !== language) {
+          const translated = await translateVersionMutation.mutateAsync({
+            sourceEntityType: 'topic',
+            sourceEntityId: topic.id,
+            sourceField: 'title',
+            sourceLanguage: topicLang,
+            content: topic.title,
+            isHtml: false,
+          });
+          setTranslatedTopics((prev) => ({ ...prev, [topic.id]: translated }));
+          newShowTranslatedTopics[topic.id] = true;
+          await delay(500);
+        }
+      }
+      setShowTranslatedTopics(newShowTranslatedTopics);
+
+      const newShowTranslatedSections = {};
+      for (const section of sections) {
+        const sectionLang = section.originalLanguage || detectLanguage(section.content);
+        if (sectionLang !== language) {
+          const translated = await translateVersionMutation.mutateAsync({
+            sourceEntityType: 'section',
+            sourceEntityId: section.id,
+            sourceField: 'content',
+            sourceLanguage: sectionLang,
+            content: section.content,
+            isHtml: true,
+          });
+          setTranslatedSections((prev) => ({ ...prev, [section.id]: translated }));
+          newShowTranslatedSections[section.id] = true;
+          await delay(500);
+        }
+      }
+      setShowTranslatedSections(newShowTranslatedSections);
+    } catch (error) {
+      console.error('Translation error:', error);
+    } finally {
+      setTranslatingAll(false);
+    }
+  };
+
+  const handleToggleTranslateAll = async () => {
+    if (isShowingTranslations) {
+      setShowTranslatedDoc(false);
+      setShowTranslatedTopics({});
+      setShowTranslatedSections({});
+    } else {
+      await translateAll();
+    }
+  };
+
+  const translateAllLabel = language === 'he' ? 'תרגם הכל' : language === 'ar' ? 'ترجم الكل' : 'Translate All';
+  const showOriginalLabel = language === 'he' ? 'הצג מקור' : language === 'ar' ? 'إظهار الأصلي' : 'Show Original';
+  const translatingLabel = language === 'he' ? 'מתרגם...' : language === 'ar' ? 'جاري الترجمة...' : 'Translating...';
 
   const title =
   language === "he" ?
@@ -211,7 +330,7 @@ export default function CurrentVersionModal({
                 </div>
               </div>
               <h2 className="text-2xl text-slate-900 mb-3 text-center font-display font-normal" style={{ fontFamily: "var(--font-display)" }}>
-                {document?.title}
+                {showTranslatedDoc && translatedDocTitle ? translatedDocTitle : document?.title}
               </h2>
               <div className="flex items-center justify-center gap-2 mb-8">
                 <span className="h-px w-10 bg-slate-300" />
@@ -233,7 +352,7 @@ export default function CurrentVersionModal({
                         className="text-xl text-slate-800 border-b border-slate-200 pb-2 font-display font-normal"
                         style={{ fontFamily: "var(--font-display)" }}>
                     
-                      {ti + 1}. {topic.title}
+                      {ti + 1}. {showTranslatedTopics[topic.id] && translatedTopics[topic.id] ? translatedTopics[topic.id] : topic.title}
                     </h3>
                     <div className="space-y-4">
                       {topicSections.map((section, si) =>
@@ -244,7 +363,7 @@ export default function CurrentVersionModal({
                           <div
                             className="flex-1 text-slate-700 leading-relaxed prose prose-sm max-w-none"
                             style={{ fontFamily: SERIF, fontSize: "1.125rem", lineHeight: "1.8" }}
-                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(section.content || "") }} />
+                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(showTranslatedSections[section.id] && translatedSections[section.id] ? translatedSections[section.id] : (section.content || "")) }} />
                       
                         </div>
                         )}
@@ -267,6 +386,26 @@ export default function CurrentVersionModal({
             {fullHistoryLabel}
           </Link>
           <div className="flex gap-2">
+            {needsTranslation && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleToggleTranslateAll}
+                disabled={translatingAll}
+              >
+                {translatingAll ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {translatingLabel}
+                  </>
+                ) : (
+                  <>
+                    <Globe className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {isShowingTranslations ? showOriginalLabel : translateAllLabel}
+                  </>
+                )}
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={handleDownload}>
               <Download className={`w-4 h-4 ${isRTL ? "ml-2" : "mr-2"}`} />
               {downloadLabel}

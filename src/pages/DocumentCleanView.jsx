@@ -553,6 +553,38 @@ export default function DocumentCleanView() {
             </DocumentTitleHeading>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            {needsTranslation && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  const isShowingTranslations = showTranslatedDoc ||
+                    Object.values(showTranslatedTopics).some(Boolean) ||
+                    Object.values(showTranslatedSections).some(Boolean);
+                  if (isShowingTranslations) {
+                    setShowTranslatedDoc(false);
+                    setShowTranslatedTopics({});
+                    setShowTranslatedSections({});
+                  } else {
+                    await translateAllSections();
+                  }
+                }}
+                disabled={translatingAll}
+                className="hidden md:flex"
+              >
+                {translatingAll ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    {t('translating')}
+                  </>
+                ) : (
+                  <>
+                    <Globe className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                    {(showTranslatedDoc || Object.values(showTranslatedTopics).some(Boolean) || Object.values(showTranslatedSections).some(Boolean)) ? t('showOriginal') : t('translateAll')}
+                  </>
+                )}
+              </Button>
+            )}
 
             <Button variant="outline" size="sm" onClick={handleDownload} className="hidden md:flex">
               <Download className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
