@@ -13,6 +13,7 @@ import SuggestionDropZone from "@/components/document/SuggestionDropZone";
 import { computeDropPosition } from "@/components/document/utils/dropPosition";
 import { useDocContent } from "@/components/document/DocumentContentContext";
 import { useVersionTranslation } from "@/components/document/hooks/useVersionTranslation";
+import { useDocumentTranslation } from "@/components/document/TranslationContext";
 
 const detectLanguage = (text) => {
   if (!text) return 'en';
@@ -30,6 +31,10 @@ export default function DocumentTopicCard({ topic, topicIndex, topicProvided }) 
     onNewSection, reorderMutation
   } = useDocContent();
 
+  // Sync topic-title translation with the global "Translate All" toggle so
+  // topic titles are translated alongside section content.
+  const { globalShowTranslated } = useDocumentTranslation();
+
   // Version-aware translation for the topic title.
   // The translation is canonical and shared across all users.
   const {
@@ -46,6 +51,7 @@ export default function DocumentTopicCard({ topic, topicIndex, topicProvided }) 
     content: topic.title,
     isHtml: false,
     sourceLanguage: topic.originalLanguage || detectLanguage(topic.title),
+    globalShowTranslated,
   });
 
   const hasTranslatedTitle = !!translatedTitle;
