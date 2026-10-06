@@ -244,3 +244,268 @@ export async function translateUnit(
     };
   }
 }
+
+// ─── Batch translation ──────────────────────────────────────────────────────
+
+export interface BatchUnitInput {
+  documentId: string;
+  sourceEntityType: string;
+  sourceEntityId: string;
+  sourceField: string;
+  sourceLanguage: string;
+  content: string;
+  isHtml: boolean;
+}
+
+export interface BatchUnitResult {
+  sourceEntityType: string;
+  sourceEntityId: string;
+  sourceField: string;
+  translatedContent: string;
+  status: "ready" | "not_needed" | "failed" | "from_cache";
+  fromCache: boolean;
+  error?: string;
+}
+
+const LLM_CONCURRENCY = 5;
+
+/**
+ * Translate multiple content units in a single batch.
+ *
+ * Optimizations over calling translateUnit in a loop:
+ * 1. Single DB query fetches ALL existing translations for the batch (by
+ *    sourceVersionId $in + sourceContentHash $in) instead of N individual
+ *    queries.
+ * 2. LLM calls for uncached units run in parallel with a concurrency limit
+ *    (LLM_CONCURRENCY) instead of sequentially.
+ * 3. DB writes for cloning/saving translations run in parallel.
+ *
+ * For a document with 20 already-translated sections, this reduces the
+ * cache-lookup phase from ~20 sequential DB queries (~1s) to a single query
+ * (~50ms). For uncached translations, parallel LLM calls cut total time by
+ * up to 5x (the concurrency limit).
+ */
+export async function translateUnitsBatch(
+  base44: any,
+  user: any,
+  documentId: string,
+  targetLanguage: string,
+  units: BatchUnitInput[]
+): Promise<BatchUnitResult[]> {
+  // Precompute version IDs, hashes, and translation needs
+  const prepared = units.map((u) => {
+    const sourceVersionId = buildVersionId(
+      u.sourceEntityType as any,
+      u.sourceEntityId,
+      u.sourceField
+    );
+    const contentHash = hashContent(u.content);
+    const needsTrans =
+      needsTranslation(u.sourceLanguage, targetLanguage) && !!u.content;
+    return { ...u, sourceVersionId, contentHash, needsTrans };
+  });
+
+  const results = new Map<string, BatchUnitResult>();
+
+  // Non-translatable units (same language or empty) — return as-is
+  for (const u of prepared) {
+    if (!u.needsTrans) {
+      results.set(u.sourceVersionId, {
+        sourceEntityType: u.sourceEntityType,
+        sourceEntityId: u.sourceEntityId,
+        sourceField: u.sourceField,
+        translatedContent: u.content,
+        status: "not_needed",
+        fromCache: false,
+      });
+    }
+  }
+
+  const translatable = prepared.filter((u) => u.needsTrans);
+  if (translatable.length === 0) {
+    return prepared.map((u) => results.get(u.sourceVersionId)!);
+  }
+
+  // Phase 1: Single DB query for ALL existing translations
+  const versionIds = translatable.map((u) => u.sourceVersionId);
+  const hashes = [...new Set(translatable.map((u) => u.contentHash))];
+
+  const [existingByVersion, existingByHash] = await Promise.all([
+    base44.asServiceRole.entities.Translation.filter({
+      sourceVersionId: { $in: versionIds },
+      targetLanguage,
+      status: "ready",
+    }),
+    base44.asServiceRole.entities.Translation.filter({
+      sourceContentHash: { $in: hashes },
+      targetLanguage,
+      status: "ready",
+    }).catch(() => []),
+  ]);
+
+  const cacheByVersion = new Map<string, any>();
+  for (const t of existingByVersion) cacheByVersion.set(t.sourceVersionId, t);
+  const cacheByHash = new Map<string, any>();
+  for (const t of existingByHash) cacheByHash.set(t.sourceContentHash, t);
+
+  // Phase 2: Resolve cached translations, collect units needing LLM
+  const needsLLM: typeof translatable = [];
+  const pendingWrites: Promise<any>[] = [];
+
+  for (const u of translatable) {
+    const cached = cacheByVersion.get(u.sourceVersionId);
+
+    if (cached && cached.sourceContentHash === u.contentHash) {
+      // Cache hit — hash matches, return immediately
+      results.set(u.sourceVersionId, {
+        sourceEntityType: u.sourceEntityType,
+        sourceEntityId: u.sourceEntityId,
+        sourceField: u.sourceField,
+        translatedContent: cached.translatedContent,
+        status: "from_cache",
+        fromCache: true,
+      });
+      continue;
+    }
+
+    // Hash mismatch or no cache by version — mark stale if needed
+    if (cached) {
+      pendingWrites.push(
+        base44.asServiceRole.entities.Translation.update(cached.id, {
+          status: "stale",
+        }).catch(() => {})
+      );
+    }
+
+    // Check hash-based reuse
+    const reusable = cacheByHash.get(u.contentHash);
+    if (reusable) {
+      // Clone the reusable translation to this version
+      pendingWrites.push(
+        base44.asServiceRole.entities.Translation.create({
+          documentId,
+          sourceEntityType: u.sourceEntityType,
+          sourceEntityId: u.sourceEntityId,
+          sourceVersionId: u.sourceVersionId,
+          sourceField: u.sourceField,
+          sourceLanguage: u.sourceLanguage,
+          targetLanguage,
+          sourceContentHash: u.contentHash,
+          translatedContent: reusable.translatedContent,
+          status: "ready",
+          translatedBy: user.id,
+        }).catch(() => {})
+      );
+      results.set(u.sourceVersionId, {
+        sourceEntityType: u.sourceEntityType,
+        sourceEntityId: u.sourceEntityId,
+        sourceField: u.sourceField,
+        translatedContent: reusable.translatedContent,
+        status: "from_cache",
+        fromCache: true,
+      });
+    } else {
+      needsLLM.push(u);
+    }
+  }
+
+  // Phase 3: LLM translation for uncached units — parallel with concurrency limit
+  if (needsLLM.length > 0) {
+    const translateOne = async (u: (typeof needsLLM)[0]) => {
+      try {
+        const langName =
+          LANGUAGE_NAMES[targetLanguage as keyof typeof LANGUAGE_NAMES];
+        const prompt = u.isHtml
+          ? `Translate the following HTML content to ${langName}. Preserve all HTML tags exactly as-is. Only translate the text content between tags. Return only the translated HTML with no additional commentary or markdown.\n\nContent to translate:\n${u.content}`
+          : `Translate the following text to ${langName}. Return only the translated text with no commentary or markdown.\n\nText:\n${u.content}`;
+
+        const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
+          prompt,
+          add_context_from_internet: false,
+        });
+
+        let translated =
+          typeof result === "string"
+            ? result
+            : result?.content ||
+              result?.text ||
+              result?.translation ||
+              result?.output ||
+              result?.result ||
+              u.content;
+        translated = String(translated)
+          .replace(/```html\n?/g, "")
+          .replace(/```\n?/g, "")
+          .trim();
+
+        if (!translated || translated.length === 0) {
+          throw new Error("Translation returned empty content");
+        }
+
+        // Save canonical translation
+        pendingWrites.push(
+          base44.asServiceRole.entities.Translation.create({
+            documentId,
+            sourceEntityType: u.sourceEntityType,
+            sourceEntityId: u.sourceEntityId,
+            sourceVersionId: u.sourceVersionId,
+            sourceField: u.sourceField,
+            sourceLanguage: u.sourceLanguage,
+            targetLanguage,
+            sourceContentHash: u.contentHash,
+            translatedContent: translated,
+            status: "ready",
+            translatedBy: user.id,
+          }).catch(() => {})
+        );
+
+        results.set(u.sourceVersionId, {
+          sourceEntityType: u.sourceEntityType,
+          sourceEntityId: u.sourceEntityId,
+          sourceField: u.sourceField,
+          translatedContent: translated,
+          status: "ready",
+          fromCache: false,
+        });
+      } catch (error: any) {
+        pendingWrites.push(
+          base44.asServiceRole.entities.Translation.create({
+            documentId,
+            sourceEntityType: u.sourceEntityType,
+            sourceEntityId: u.sourceEntityId,
+            sourceVersionId: u.sourceVersionId,
+            sourceField: u.sourceField,
+            sourceLanguage: u.sourceLanguage,
+            targetLanguage,
+            sourceContentHash: u.contentHash,
+            translatedContent: "",
+            status: "failed",
+            errorMessage: error.message,
+            translatedBy: user.id,
+          }).catch(() => {})
+        );
+
+        results.set(u.sourceVersionId, {
+          sourceEntityType: u.sourceEntityType,
+          sourceEntityId: u.sourceEntityId,
+          sourceField: u.sourceField,
+          translatedContent: u.content,
+          status: "failed",
+          fromCache: false,
+          error: error.message,
+        });
+      }
+    };
+
+    // Process in chunks of LLM_CONCURRENCY
+    for (let i = 0; i < needsLLM.length; i += LLM_CONCURRENCY) {
+      const chunk = needsLLM.slice(i, i + LLM_CONCURRENCY);
+      await Promise.all(chunk.map(translateOne));
+    }
+  }
+
+  // Wait for all pending DB writes to complete before returning
+  await Promise.all(pendingWrites);
+
+  return prepared.map((u) => results.get(u.sourceVersionId)!);
+}
