@@ -81,21 +81,45 @@ export async function checkSuggestionConsensus(suggestion, document) {
 
 /**
  * מקבל הצעה אוטומטית - מיישם את השינוי במסמך
+ *
+ * SECURITY: This function previously performed the full suggestion acceptance
+ * client-side — writing status:'accepted', creating/updating sections, creating
+ * DocumentVersion records, and updating document consensuses/threshold directly
+ * from the browser. The suggestion's proVotes/conVotes fields are client-writable
+ * (Suggestion update RLS allows the creator), so a creator could forge the vote
+ * counts and trigger acceptance of their own suggestion without genuine community
+ * consensus.
+ *
+ * Acceptance is now handled exclusively server-side: voteOnSuggestionV2 recounts
+ * real Vote records, checks the threshold, and calls processAcceptanceV4 which
+ * CAS-locks the acceptance and performs all mutations with the service role.
+ * This client-side function is retained as a no-op stub for backward
+ * compatibility — it returns false (no acceptance performed) so any residual
+ * caller falls through to the server-side path.
  */
 export async function autoAcceptSuggestion(suggestion, userId, document) {
+  console.warn('[AUTO-ACCEPT] Client-side acceptance has been removed for security. Acceptance is handled server-side by voteOnSuggestionV2 → processAcceptanceV4. No mutations performed.');
+  return false;
+}
+
+// ── Legacy client-side acceptance logic (NEUTERED) ──────────────────────────
+// The code below is retained for reference but is unreachable: autoAcceptSuggestion
+// returns false above. DO NOT re-enable — it trusts client-supplied proVotes/conVotes.
+// All acceptance mutations must go through the server-side processAcceptanceV4.
+async function _disabled_autoAcceptSuggestion(suggestion, userId, document) {
   console.log('🔵'.repeat(40));
   console.log('[AUTO-ACCEPT] ========== AUTO ACCEPT FLOW START ==========');
   console.log('[AUTO-ACCEPT] Called with suggestion ID:', suggestion.id);
   console.log('[AUTO-ACCEPT] Suggestion title:', suggestion.title);
   console.log('[AUTO-ACCEPT] User ID:', userId);
   console.log('[AUTO-ACCEPT] Document ID:', document.id);
-  
+
   // Validate inputs
   if (!suggestion || !suggestion.id) {
     console.error('[AUTO-ACCEPT] ❌ FAILED: Invalid suggestion:', suggestion);
     return false;
   }
-  
+
   if (!document || !document.id) {
     console.error('[AUTO-ACCEPT] ❌ FAILED: Invalid document:', document);
     return false;

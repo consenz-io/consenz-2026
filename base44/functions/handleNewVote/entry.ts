@@ -69,15 +69,25 @@ Deno.serve(async (req) => {
     // Award points if gamification enabled and pro vote — use server-verified direction
     if (document.gamificationEnabled && realVote.vote === 'pro') {
       try {
-        // Idempotency: key the award to the specific Vote record id so that
-        // re-created votes (after a cancel/re-vote toggle) don't re-award
-        // points. Each Vote row fires this automation exactly once.
-        const existingTx = await base44.asServiceRole.entities.PointsTransaction.filter({
-          relatedEntityId: realVote.id,
+        // Idempotency: deduplicate by (suggestionId, voterId) pair, NOT by
+        // the Vote record id. voteOnSuggestionV2 implements cancel/re-vote
+        // as delete-then-create, which mints a new vote id each cycle.
+        // Keying the award to the vote id would re-pay +10 points on every
+        // toggle, allowing unlimited point farming. Instead we key to the
+        // (suggestion, voter) pair so each unique voter awards the creator
+        // exactly once, regardless of how many times the vote row is
+        // re-created.
+        const voterDedupTag = `voter:${realVote.userId}`;
+        const existingTxs = await base44.asServiceRole.entities.PointsTransaction.filter({
+          userId: creator.id,
+          relatedEntityId: suggestion.id,
           action: 'vote_received'
         });
-        if (existingTx.length > 0) {
-          console.log('[VOTE AUTOMATION] Points already awarded for vote', realVote.id, '— skipping');
+        const alreadyAwarded = existingTxs.some(tx =>
+          typeof tx.description === 'string' && tx.description.includes(voterDedupTag)
+        );
+        if (alreadyAwarded) {
+          console.log('[VOTE AUTOMATION] Points already awarded for voter', realVote.userId, 'on suggestion', suggestion.id, '— skipping');
         } else {
           await Promise.all([
             base44.asServiceRole.entities.User.update(creator.id, {
@@ -87,12 +97,12 @@ Deno.serve(async (req) => {
               userId: creator.id,
               amount: 10,
               action: 'vote_received',
-              description: `Received a pro vote on suggestion: ${suggestion.title}`,
-              relatedEntityId: realVote.id,
-              relatedEntityType: 'vote'
+              description: `Received a pro vote (${voterDedupTag}) on suggestion: ${suggestion.title}`,
+              relatedEntityId: suggestion.id,
+              relatedEntityType: 'suggestion'
             })
           ]);
-          console.log('[VOTE AUTOMATION] ✅ Awarded 10 points to creator');
+          console.log('[VOTE AUTOMATION] ✅ Awarded 10 points to creator for voter', realVote.userId);
         }
       } catch (pointsError) {
         console.error('[VOTE AUTOMATION] Points error (non-critical):', pointsError.message);
