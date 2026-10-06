@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Handshake, Download, FileCheck2, Users, Gauge, Globe, Loader2 } from "lucide-react";
 import { createPageUrl } from "@/utils";
@@ -190,6 +190,8 @@ export default function CurrentVersionModal({
       setShowTranslatedDoc(newShowTranslatedDoc);
       setShowTranslatedTopics(newShowTranslatedTopics);
       setShowTranslatedSections(newShowTranslatedSections);
+      // Persist the user's translation preference so it auto-restores on revisit
+      localStorage.setItem(`consenz_translate_doc_${documentId}_${language}`, '1');
     } catch (error) {
       console.error('Translation error:', error);
     } finally {
@@ -197,11 +199,25 @@ export default function CurrentVersionModal({
     }
   };
 
+  // Auto-translate when the modal opens if the user previously enabled
+  // translation for this document+language (shared flag with DocumentCleanView).
+  // Translations are cached in the DB, so this is near-instant.
+  const autoTranslateRan = useRef(false);
+  useEffect(() => {
+    if (!open || autoTranslateRan.current || translatingAll || !document) return;
+    const flag = localStorage.getItem(`consenz_translate_doc_${documentId}_${language}`);
+    if (flag === '1') {
+      autoTranslateRan.current = true;
+      translateAll();
+    }
+  }, [open, document, language, translatingAll, documentId]);
+
   const handleToggleTranslateAll = async () => {
     if (isShowingTranslations) {
       setShowTranslatedDoc(false);
       setShowTranslatedTopics({});
       setShowTranslatedSections({});
+      localStorage.removeItem(`consenz_translate_doc_${documentId}_${language}`);
     } else {
       await translateAll();
     }

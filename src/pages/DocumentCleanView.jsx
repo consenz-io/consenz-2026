@@ -431,12 +431,27 @@ export default function DocumentCleanView() {
       setShowTranslatedDoc(newShowTranslatedDoc);
       setShowTranslatedTopics(newShowTranslatedTopics);
       setShowTranslatedSections(newShowTranslatedSections);
+      // Persist the user's translation preference so it auto-restores on revisit
+      localStorage.setItem(`consenz_translate_doc_${documentId}_${language}`, '1');
     } catch (error) {
       console.error('Translation error:', error);
     } finally {
       setTranslatingAll(false);
     }
   };
+
+  // Auto-translate on mount if the user previously enabled translation for this
+  // document+language. The translations themselves are cached in the DB, so this
+  // is near-instant (batch function checks cache before calling the LLM).
+  const autoTranslateRan = React.useRef(false);
+  React.useEffect(() => {
+    if (autoTranslateRan.current || !document || translatingAll) return;
+    const flag = localStorage.getItem(`consenz_translate_doc_${documentId}_${language}`);
+    if (flag === '1') {
+      autoTranslateRan.current = true;
+      translateAllSections();
+    }
+  }, [document, language, translatingAll, documentId]);
 
   // Find or create a suggestion for a section so users can discuss it via SuggestionSidebar
   const openSectionDiscussion = async (section, snapshotSuggestionId = null) => {
@@ -620,6 +635,7 @@ export default function DocumentCleanView() {
                     setShowTranslatedDoc(false);
                     setShowTranslatedTopics({});
                     setShowTranslatedSections({});
+                    localStorage.removeItem(`consenz_translate_doc_${documentId}_${language}`);
                   } else {
                     await translateAllSections();
                   }
