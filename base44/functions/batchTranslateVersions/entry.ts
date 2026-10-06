@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
-import { translateUnit } from "../../shared/translateLogic.ts";
+import { translateUnitsBatch } from "../../shared/translateLogic.ts";
 import { SUPPORTED_LANGUAGES, detectLanguage } from "../../shared/translationVersioning.ts";
 import { checkDocumentAccess } from "../../shared/documentAuth.ts";
 
@@ -17,10 +17,12 @@ const MAX_UNITS = 100;
 
 /**
  * Batch translation: accepts an array of content units and translates them
- * all in a single request. Each unit is checked against the Translation
- * entity cache first (via translateUnit); only uncached units invoke the LLM.
- * This eliminates N sequential network round-trips + N×500ms client-side
- * delays, making re-translation of an already-translated document near-instant.
+ * all in a single request. Uses translateUnitsBatch which:
+ * 1. Fetches all existing translations in a single DB query (by $in).
+ * 2. Parallelizes LLM calls for uncached units with a concurrency limit.
+ *
+ * This makes re-translation of an already-translated document near-instant
+ * (single DB query instead of N sequential ones).
  */
 export default async function (req: Request): Promise<Response> {
   try {
@@ -52,7 +54,7 @@ export default async function (req: Request): Promise<Response> {
     if (!authorized)
       return Response.json({ error: "Forbidden" }, { status: 403 });
 
-    // Validate all units first — fail fast before any translation work
+    // Validate all units — fail fast before any translation work
     for (let i = 0; i < units.length; i++) {
       const u = units[i];
       if (!u.sourceEntityType || !VALID_ENTITY_TYPES.has(u.sourceEntityType))
@@ -67,29 +69,25 @@ export default async function (req: Request): Promise<Response> {
         return Response.json({ error: `Content too long at index ${i}` }, { status: 400 });
     }
 
-    // Translate all units — translateUnit checks cache first, only calls LLM if needed
-    const results = [];
-    for (const u of units) {
-      const resolvedSourceLanguage = u.sourceLanguage || detectLanguage(u.content);
-      const result = await translateUnit(base44, user, {
-        documentId,
-        sourceEntityType: u.sourceEntityType,
-        sourceEntityId: u.sourceEntityId,
-        sourceField: u.sourceField,
-        sourceLanguage: resolvedSourceLanguage,
-        targetLanguage,
-        content: u.content,
-        isHtml: u.isHtml ?? false,
-      });
-      results.push({
-        sourceEntityType: u.sourceEntityType,
-        sourceEntityId: u.sourceEntityId,
-        sourceField: u.sourceField,
-        translatedContent: result.translatedContent,
-        status: result.status,
-        fromCache: result.fromCache,
-      });
-    }
+    // Prepare units with resolved source languages
+    const preparedUnits = units.map((u) => ({
+      documentId,
+      sourceEntityType: u.sourceEntityType,
+      sourceEntityId: u.sourceEntityId,
+      sourceField: u.sourceField,
+      sourceLanguage: u.sourceLanguage || detectLanguage(u.content),
+      content: u.content,
+      isHtml: u.isHtml ?? false,
+    }));
+
+    // Translate all units — optimized batch with single cache query + parallel LLM
+    const results = await translateUnitsBatch(
+      base44,
+      user,
+      documentId,
+      targetLanguage,
+      preparedUnits
+    );
 
     return Response.json({ results });
   } catch (error: any) {

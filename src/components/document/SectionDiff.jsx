@@ -126,35 +126,38 @@ export default function SectionDiff({
 
       let translatedOriginal = originalContent;
       let anchorTranslatedContent = null;
-
-      if (originalEntityInfo) {
-        // Fetch the section in the viewer's language and (when anchoring) in
-        // the suggestion's source language — i.e. the translation the proposer
-        // saw and edited. The latter is almost always already cached.
-        const basePromises = [
-          translateHtml(originalContent, originalEntityInfo.type, originalEntityInfo.id, originalEntityInfo.field, originalSourceLang, language),
-        ];
-        if (useAnchor) {
-          basePromises.push(
-            translateHtml(originalContent, originalEntityInfo.type, originalEntityInfo.id, originalEntityInfo.field, originalSourceLang, modifiedSourceLang)
-              .catch(() => null)
-          );
-        }
-        const baseResults = await Promise.all(basePromises);
-        translatedOriginal = baseResults[0];
-        anchorTranslatedContent = useAnchor ? baseResults[1] : null;
-      }
-
-      // Translate the proposed edit. When anchoring, pass the section in the
-      // viewer's language (anchorOriginalContent) and the section in the
-      // suggestion's language (anchorTranslatedContent) so the backend can
-      // apply the edit to the original wording instead of re-translating.
       let translatedNew = newContent;
-      if (newEntityInfo) {
-        const anchor = useAnchor && anchorTranslatedContent
-          ? { anchorOriginalContent: translatedOriginal, anchorTranslatedContent }
-          : null;
-        translatedNew = await translateHtml(newContent, newEntityInfo.type, newEntityInfo.id, newEntityInfo.field, modifiedSourceLang, language, anchor);
+
+      if (useAnchor) {
+        // Anchor dependency — sequential: translate original first, then use
+        // it as the anchor for the new content translation.
+        if (originalEntityInfo) {
+          const baseResults = await Promise.all([
+            translateHtml(originalContent, originalEntityInfo.type, originalEntityInfo.id, originalEntityInfo.field, originalSourceLang, language),
+            translateHtml(originalContent, originalEntityInfo.type, originalEntityInfo.id, originalEntityInfo.field, originalSourceLang, modifiedSourceLang)
+              .catch(() => null),
+          ]);
+          translatedOriginal = baseResults[0];
+          anchorTranslatedContent = baseResults[1];
+        }
+        if (newEntityInfo) {
+          const anchor = anchorTranslatedContent
+            ? { anchorOriginalContent: translatedOriginal, anchorTranslatedContent }
+            : null;
+          translatedNew = await translateHtml(newContent, newEntityInfo.type, newEntityInfo.id, newEntityInfo.field, modifiedSourceLang, language, anchor);
+        }
+      } else {
+        // No anchor dependency — parallelize original + new translation
+        const [transOrig, transNew] = await Promise.all([
+          originalEntityInfo
+            ? translateHtml(originalContent, originalEntityInfo.type, originalEntityInfo.id, originalEntityInfo.field, originalSourceLang, language)
+            : Promise.resolve(originalContent),
+          newEntityInfo
+            ? translateHtml(newContent, newEntityInfo.type, newEntityInfo.id, newEntityInfo.field, modifiedSourceLang, language)
+            : Promise.resolve(newContent),
+        ]);
+        translatedOriginal = transOrig;
+        translatedNew = transNew;
       }
 
       setTranslationResult({
