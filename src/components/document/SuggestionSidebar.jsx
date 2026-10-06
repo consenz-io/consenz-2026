@@ -19,6 +19,7 @@ import CommentsSection from "./CommentsSection";
 import SuggestionCountdown from "./SuggestionCountdown";
 import SectionDiff from "./SectionDiff";
 import TranslatableContent from "./TranslatableContent";
+import TranslateAllButton from "./TranslateAllButton";
 import DocumentTextContent from "./DocumentTextContent";
 import { useLanguage } from "@/components/LanguageContext";
 import { cleanDisplayName } from "@/lib/displayName";
@@ -474,6 +475,7 @@ export default function SuggestionSidebar({
             <h2 className="font-semibold text-slate-900 truncate">{suggestion.title}</h2>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <TranslateAllButton />
             <Link to={`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${suggestionId}`}>
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                 <ExternalLink className="w-4 h-4" />

@@ -20,6 +20,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import CommentsSection from "../components/document/CommentsSection";
 import SectionDiff from "../components/document/SectionDiff";
 import TranslatableContent from "../components/document/TranslatableContent";
+import TranslateAllButton from "../components/document/TranslateAllButton";
+import { TranslationProvider } from "../components/document/TranslationContext";
 import DocumentTextContent from "../components/document/DocumentTextContent";
 import { votingQueue } from "../components/document/VotingQueue";
 
@@ -33,7 +35,7 @@ import { toast } from "sonner";
 import { castVote } from "@/components/document/utils/castVote";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
-export default function SuggestionDetail() {
+function SuggestionDetail() {
   const { t, isRTL, language: rawLanguage } = useLanguage();
   const language = rawLanguage || 'he';
   const [searchParams] = useSearchParams();
@@ -585,265 +587,12 @@ export default function SuggestionDetail() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
+    <TranslationProvider>
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6 overflow-x-hidden">
-      <div className="max-w-5xl mx-auto space-y-3 w-full overflow-x-hidden">
+  ...
+    </div>
+    </TranslationProvider>);
 
-        <div className="flex items-start justify-between gap-2">
-          <h1 className="text-slate-900 font-bold flex-1 min-w-0 leading-snug text-xl md:text-xl">
-            {document?.title ?
-            language === 'he' ? `הצעה לעריכה במסמך "${document.title}"` : language === 'ar' ? `اقتراح تعديل في الوثيقة "${document.title}"` : `Suggestion to edit document "${document.title}"` :
-            suggestion.title}
-          </h1>
-          {user && user.id === suggestion.created_by_id && suggestion.status !== 'accepted' &&
-          <button
-            onClick={() => {if (confirm(t('confirmDeleteSuggestion'))) deleteSuggestionMutation.mutate();}}
-            disabled={deleteSuggestionMutation.isPending}
-            className="shrink-0 p-1 text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors"
-            title={t('deleteSuggestion')}>
-            <Trash2 className="w-4 h-4" />
-          </button>
-          }
-        </div>
+  }
 
-        {error &&
-        <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        }
-
-        <Card className="bg-white border-slate-200 w-full overflow-hidden">
-          <CardHeader className="p-4 md:p-6 pb-3">
-            {/* Row 1: metadata (left) + back button & countdown/admin badges (right) */}
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-              <div className="flex items-center gap-2">
-                <BackToDocumentButton suggestion={suggestion} suggestionId={suggestionId} isRTL={isRTL} />
-                {suggestion.timerEndsAt &&
-                <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="sm" status={suggestion.status} />
-                }
-                {suggestion.approvedByAdmin && suggestion.status === 'accepted' &&
-                <Badge variant="outline" className="flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
-                    <ShieldCheck className="w-3 h-3" />
-                    {language === 'he' ? 'אושר ע״י מנהל' : language === 'ar' ? 'تمت الموافقة من المشرف' : 'Admin Approved'}
-                  </Badge>
-                }
-              </div>
-              {/* Metadata strip — type + status + author • date */}
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
-              <Badge variant="outline" className={`text-xs ${suggestion.type === 'delete_section' ? 'bg-red-100 text-red-800 border-red-200' : ''}`}>
-                {suggestion.type === 'new_section' ? t('newSection') :
-                  suggestion.type === 'delete_section' ? language === 'he' ? 'מחיקת סעיף' : language === 'ar' ? 'حذف قسم' : 'Delete Section' :
-                  suggestion.type === 'edit_suggestion' ? t('editSuggestionType') :
-                  t('suggestionToEditSection')}
-              </Badge>
-
-              {suggestion.status === 'rejected' && suggestion.rejectedByAdmin ?
-                <Badge variant="outline" className="bg-red-100 text-red-800 border-red-200 text-xs">
-                    {language === 'he' ? 'נדחתה על ידי אדמין' : language === 'ar' ? 'مرفوضة من المشرف' : 'Rejected by Admin'}
-                  </Badge> :
-                suggestion.status === 'rejected' && !suggestion.rejectedByAdmin ?
-                <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
-                    {language === 'he' ? 'פג תוקפה' : language === 'ar' ? 'انتهت صلاحيتها' : 'Expired'}
-                  </Badge> :
-                <TooltipProvider delayDuration={200}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span>
-                          <Badge variant="outline" className={`${getStatusColor(suggestion.status)} text-xs cursor-default`}>
-                            {t(suggestion.status)}
-                          </Badge>
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        {suggestion.status === 'pending' ? language === 'he' ? 'ממתינה להצבעה' : language === 'ar' ? 'في انتظار التصويت' : 'Awaiting votes' :
-                      suggestion.status === 'accepted' ? language === 'he' ? 'ההצעה התקבלה ויושמה במסמך' : language === 'ar' ? 'تمت الموافقة على الاقتراح' : 'Proposal accepted and applied' :
-                      suggestion.status === 'rejected' ? language === 'he' ? 'ההצעה נדחתה' : language === 'ar' ? 'تم رفض الاقتراح' : 'Proposal rejected' :
-                      suggestion.status === 'discussion' ? language === 'he' ? 'בדיון פתוח' : language === 'ar' ? 'قيد النقاش' : 'Open for discussion' :
-                      suggestion.status}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                }
-
-              <span className="text-slate-500">
-                 {(() => {
-                    const authorName = getUserName(suggestion.created_by_id);
-                    if (authorName) {
-                      return <>{t('by')} <Link to={`${createPageUrl("Profile")}?userId=${suggestion.created_by_id || ''}`} className="hover:underline text-blue-600">{authorName}</Link></>;
-                    }
-                    return <span className="text-slate-400">{language === 'he' ? 'הצבעת קהילה' : language === 'ar' ? 'تصويت المجتمع' : 'Community vote'}</span>;
-                  })()}
-               </span>
-              {suggestion.created_date &&
-                <span className="text-slate-400">
-                  • {parseUserDate(suggestion.created_date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </span>
-                }
-              {suggestion.status === 'rejected' && suggestion.rejectedByAdmin && suggestion.updated_date &&
-                <span className="text-slate-400">
-                  • {language === 'he' ? 'נדחתה ב-' : language === 'ar' ? 'تم الرفض في' : 'Rejected on'} {parseUserDate(suggestion.updated_date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </span>
-                }
-            </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3 p-3 md:p-6 overflow-x-hidden">
-
-            {suggestion.type === 'delete_section' ?
-            <div>
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <div className="prose prose-sm max-w-none text-slate-700 line-through opacity-60" dangerouslySetInnerHTML={{ __html: sanitizeHtml(suggestion.originalContent) }} />
-                  </div>
-                </div> :
-            suggestion.type === 'edit_section' || suggestion.type === 'edit_suggestion' && suggestion.originalContent ?
-            <div>
-                  <div className="relative">
-                    {isAutoAccepting && <div className="absolute inset-0 bg-white/50 rounded-lg flex flex-col items-center justify-center z-10 gap-3"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /><p className="text-sm font-medium text-slate-700">{t('processingSuggestion')}</p></div>}
-                    <SectionDiff originalContent={suggestion.originalContent} newContent={suggestion.newContent} suggestion={suggestion} documentId={suggestion.documentId} sectionId={suggestion.sectionId} section={section} />
-                  </div>
-                  {(suggestion.explanation || user && user.id === suggestion.created_by_id) &&
-              <SuggestionExplanationBlock
-                suggestion={suggestion}
-                user={user}
-                isEditingExplanation={isEditingExplanation}
-                setIsEditingExplanation={setIsEditingExplanation}
-                editedExplanation={editedExplanation}
-                setEditedExplanation={setEditedExplanation}
-                updateExplanationMutation={updateExplanationMutation}
-                queryClient={queryClient}
-                suggestionId={suggestionId}
-                isRTL={isRTL} />
-
-              }
-                </div> :
-            suggestion.type === 'new_section' ?
-            <div>
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <TranslatableContent content={suggestion.newContent} entity={suggestion} entityType="Suggestion" sourceField="newContent" documentId={suggestion.documentId} onUpdate={(updated) => queryClient.setQueryData(['suggestion', suggestionId], updated)} className="prose prose-sm max-w-none" renderContent={(content) => <DocumentTextContent content={content} />} />
-                  </div>
-                  {(suggestion.explanation || user && user.id === suggestion.created_by_id) &&
-              <SuggestionExplanationBlock
-                suggestion={suggestion}
-                user={user}
-                isEditingExplanation={isEditingExplanation}
-                setIsEditingExplanation={setIsEditingExplanation}
-                editedExplanation={editedExplanation}
-                setEditedExplanation={setEditedExplanation}
-                updateExplanationMutation={updateExplanationMutation}
-                queryClient={queryClient}
-                suggestionId={suggestionId}
-                isRTL={isRTL} />
-
-              }
-                </div> :
-            null
-            }
-
-            {suggestion.type === 'new_section' && suggestion.status === 'pending' &&
-            <div>
-                <Button variant="outline" onClick={() => setShowEditSuggestionModal(true)} className="w-full">
-                  <Edit2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
-                  {language === 'he' ? 'הצעת עריכה להצעה זו' : language === 'ar' ? 'اقترح تعديلاً على هذا الاقتراح' : 'Suggest an Edit to this Suggestion'}
-                </Button>
-              </div>
-            }
-
-            {document?.votingButtonsEnabled &&
-            <div className="pt-3 border-t space-y-3">
-
-                {/* For closed suggestions: show VotingProgressSection in read-only mode */}
-                {suggestion.status !== 'pending' ?
-              <VotingProgressSection
-                suggestion={suggestion}
-                document={document}
-                userVote={userVote}
-                voteMutation={voteMutation}
-                isRTL={isRTL}
-                readOnly={true}
-                acceptedDate={suggestion.status === 'accepted' ? suggestion.updated_date : undefined}
-                rejectedDate={suggestion.status === 'rejected' ? suggestion.updated_date : undefined} /> :
-
-              <>
-                      {/* For pending suggestions: use VotingProgressSection (same as sidebar/document) */}
-                      <VotingProgressSection
-                  suggestion={suggestion}
-                  document={document}
-                  userVote={userVote}
-                  voteMutation={{ mutate: (vote) => {if (!user) {base44.auth.redirectToLogin(window.location.href);return;}voteMutation.mutate(vote);}, isPending: voteMutation.isPending || rateLimitRetryAfter !== null, isAccepting }}
-                  isRTL={isRTL}
-                  readOnly={false} />
-                
-                      {rateLimitRetryAfter &&
-                <div className="flex items-center justify-center gap-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-                          <Clock className="w-4 h-4 text-amber-600 animate-pulse" />
-                          <p className="text-xs font-medium text-amber-800">
-                            {language === 'he' ? `אנא המתן ${rateLimitRetryAfter} שניות` : language === 'ar' ? `يرجى الانتظار ${rateLimitRetryAfter} ثانية` : `Please wait ${rateLimitRetryAfter} seconds`}
-                          </p>
-                        </div>
-                }
-                    </>
-              }
-
-                {isAdmin && suggestion.status === 'pending' &&
-              <div className="flex gap-2 pt-3 border-t">
-                     <Button onClick={() => updateStatusMutation.mutate('accepted')} disabled={updateStatusMutation.isPending} className="flex-1 bg-green-600 hover:bg-green-700">
-                       {updateStatusMutation.isPending ? <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} /> : <CheckCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
-                       {t('acceptSuggestion')}
-                     </Button>
-                     <Button onClick={() => updateStatusMutation.mutate('rejected')} disabled={updateStatusMutation.isPending} variant="destructive" className="flex-1">
-                       {updateStatusMutation.isPending ? <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} /> : <XCircle className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
-                       {t('rejectSuggestion')}
-                     </Button>
-                   </div>
-              }
-
-                {isAdmin && suggestion.status === 'rejected' &&
-              <div className="pt-3 border-t">
-                     <Button onClick={() => updateStatusMutation.mutate('pending')} disabled={updateStatusMutation.isPending} className="w-full bg-blue-600 hover:bg-blue-700">
-                       {updateStatusMutation.isPending ? <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} /> : <Clock className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />}
-                       {language === 'he' ? 'החזר להצבעה' : language === 'ar' ? 'إعادة التصويت' : 'Restore to Voting'}
-                     </Button>
-                   </div>
-              }
-              </div>
-            }
-          </CardContent>
-        </Card>
-
-        {suggestionChain && suggestionChain.length > 1 &&
-        <Card className="bg-white border-slate-200 w-full overflow-hidden">
-            <CardHeader className="p-4 md:p-6">
-              <CardTitle className="text-base md:text-lg">{t('suggestionEditHistory')}</CardTitle>
-            </CardHeader>
-            <CardContent className="p-3 md:p-6">
-              <SuggestionChainNavigation
-              chain={suggestionChain}
-              currentIndex={currentSuggestionIndexInChain}
-              isRTL={isRTL}
-              language={language}
-              getUserName={getUserName}
-              onNavigate={(id) => navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${id}`)} />
-            
-            </CardContent>
-          </Card>
-        }
-
-        <Card className="bg-white border-slate-200 w-full overflow-hidden">
-          <CardHeader className="p-4 md:p-6">
-            <CardTitle className="text-base md:text-lg">{t('commentsOnSuggestion')} ({totalCommentsCount})</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 md:p-6 overflow-x-hidden">
-            <CommentsSection entityType="suggestion" entityId={suggestionId} user={user} documentId={suggestion.documentId} scrollToCommentId={commentId} />
-          </CardContent>
-        </Card>
-      </div>
-
-      {showEditSectionModal && section &&
-      <CreateSuggestionModal document={document} topics={topics} sections={sections} editingSection={{ id: section.id, topicId: section.topicId }} user={user} onClose={() => setShowEditSectionModal(false)} isAdmin={isAdmin} onSuggestionCreated={(newSuggestionId) => {setShowEditSectionModal(false);navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${newSuggestionId}`);}} />
-      }
-      {showEditSuggestionModal &&
-      <CreateSuggestionModal document={document} topics={topics} sections={sections} editingSuggestion={suggestion} user={user} onClose={() => setShowEditSuggestionModal(false)} isAdmin={isAdmin} onSuggestionCreated={(newSuggestionId) => {setShowEditSuggestionModal(false);navigate(`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${newSuggestionId}`);}} />
-      }
-    </div>);
-
-}
+export default SuggestionDetail;

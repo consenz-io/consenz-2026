@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "@/components/LanguageContext";
@@ -113,6 +113,20 @@ export function useVersionTranslation({
       setLocalShowTranslated(true);
     },
   });
+
+  // Auto-trigger translation when "Translate All" is activated and this
+  // unit hasn't been translated yet. Guarded by a ref so a failed
+  // translation doesn't retry in a loop.
+  const autoTranslateInitiated = useRef(false);
+  useEffect(() => {
+    if (globalShowTranslated && needsTranslation && !translatedContent && !translateMutation.isPending && !autoTranslateInitiated.current) {
+      autoTranslateInitiated.current = true;
+      translateMutation.mutate();
+    }
+    if (!globalShowTranslated) {
+      autoTranslateInitiated.current = false;
+    }
+  }, [globalShowTranslated, needsTranslation, translatedContent]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleToggle = useCallback(() => {
     if (translatedContent) {
