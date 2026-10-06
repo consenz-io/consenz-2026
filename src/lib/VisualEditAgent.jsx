@@ -264,15 +264,23 @@ export default function VisualEditAgent() {
 			return;
 		}
 
-		// Update classes for all matching elements
+		// Update classes for all matching elements.
+		// Use setAttribute('class', ...) instead of element.className = ... because
+		// SVG elements expose className as a read-only SVGAnimatedString (it has
+		// only a getter), so assigning to it throws a TypeError.
+		const setClass = (element, value) => element.setAttribute('class', value);
+		const getClass = (element) =>
+			typeof element.className === 'string'
+				? element.className
+				: element.className?.baseVal || element.getAttribute('class') || '';
+
 		elements.forEach(element => {
 			if (replace) {
 				// For reverts, replace classes completely
-				element.className = classes;
+				setClass(element, classes);
 			} else {
 				// For normal updates, merge with existing classes
-				const currentClasses = element.className?.baseVal || element.className || '';
-				element.className = twMerge(currentClasses, classes);
+				setClass(element, twMerge(getClass(element), classes));
 			}
 		});
 
