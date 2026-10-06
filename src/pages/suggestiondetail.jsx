@@ -719,7 +719,7 @@ export default function SuggestionDetail() {
             suggestion.type === 'new_section' ?
             <div>
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <TranslatableContent content={suggestion.newContent} entity={suggestion} entityType="Suggestion" documentId={suggestion.documentId} onUpdate={(updated) => queryClient.setQueryData(['suggestion', suggestionId], updated)} className="prose prose-sm max-w-none" renderContent={(content) => <DocumentTextContent content={content} />} />
+                    <TranslatableContent content={suggestion.newContent} entity={suggestion} entityType="Suggestion" sourceField="newContent" documentId={suggestion.documentId} onUpdate={(updated) => queryClient.setQueryData(['suggestion', suggestionId], updated)} className="prose prose-sm max-w-none" renderContent={(content) => <DocumentTextContent content={content} />} />
                   </div>
                   {(suggestion.explanation || user && user.id === suggestion.created_by_id) &&
               <SuggestionExplanationBlock

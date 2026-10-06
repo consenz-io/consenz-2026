@@ -68,6 +68,7 @@ const SuggestionView = React.memo(function SuggestionView({
               content={suggestion.explanation}
               entity={suggestion}
               entityType="Suggestion"
+              sourceField="explanation"
               documentId={document?.id}
               className="text-slate-700 text-base whitespace-pre-wrap" />
             
@@ -91,6 +92,7 @@ const SuggestionView = React.memo(function SuggestionView({
               content={suggestion.explanation}
               entity={suggestion}
               entityType="Suggestion"
+              sourceField="explanation"
               documentId={document?.id}
               className="text-slate-600" />
             
@@ -103,6 +105,7 @@ const SuggestionView = React.memo(function SuggestionView({
               content={suggestion.newContent}
               entity={suggestion}
               entityType="Suggestion"
+              sourceField="newContent"
               documentId={document?.id}
               className="prose prose-sm max-w-none"
               renderContent={(content) =>
@@ -117,6 +120,7 @@ const SuggestionView = React.memo(function SuggestionView({
               content={suggestion.explanation}
               entity={suggestion}
               entityType="Suggestion"
+              sourceField="explanation"
               documentId={document?.id}
               className="text-slate-600" />
             

@@ -593,6 +593,7 @@ export default function SuggestionSidebar({
                   content={suggestion.newContent}
                   entity={suggestion}
                   entityType="Suggestion"
+                  sourceField="newContent"
                   documentId={suggestion.documentId}
                   className="prose prose-sm max-w-none"
                   renderContent={(content) => (

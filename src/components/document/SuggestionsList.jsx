@@ -103,6 +103,7 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
                         content={suggestion.explanation}
                         entity={suggestion}
                         entityType="Suggestion"
+                        sourceField="explanation"
                         documentId={document.id}
                         className="text-sm"
                       />
@@ -114,6 +115,7 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
                         content={suggestion.newContent}
                         entity={suggestion}
                         entityType="Suggestion"
+                        sourceField="newContent"
                         documentId={document.id}
                         className="text-sm text-slate-700 line-clamp-3"
                       />
