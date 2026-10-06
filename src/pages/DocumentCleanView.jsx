@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
 import ChangeBlockDiffView from "@/components/document/ChangeBlockDiffView";
+import { HistoryTranslatableContent, HistoryTranslatableDiff } from "@/components/document/HistoryTranslatableContent";
 import DocumentTitleHeading from "@/components/document/DocumentTitleHeading";
 import VersionNavigation from "@/components/document/VersionNavigation";
 import DocumentSnapshot from "@/components/document/DocumentSnapshot";
@@ -43,6 +44,12 @@ export default function DocumentCleanView() {
   const [showTranslatedTopics, setShowTranslatedTopics] = useState({});
   const [showTranslatedSections, setShowTranslatedSections] = useState({});
   const [translatingAll, setTranslatingAll] = useState(false);
+
+  // Whether "Translate All" is currently active — drives auto-translation of
+  // historical version content when browsing between versions.
+  const isTranslateAllActive = showTranslatedDoc ||
+    Object.values(showTranslatedTopics).some(Boolean) ||
+    Object.values(showTranslatedSections).some(Boolean);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
   const [openSuggestionId, setOpenSuggestionId] = useState(null);
   const [openingSectionId, setOpeningSectionId] = useState(null); // loading state per section
@@ -849,14 +856,17 @@ export default function DocumentCleanView() {
                                     <Badge className="mb-2 bg-red-100 text-red-800 text-xs">
                                      {language === 'he' ? 'סעיף נמחק - לחץ לצפייה בדיון' : language === 'ar' ? 'تم حذف القسم - انقر لعرض النقاش' : 'Section Deleted - Click to view discussion'}
                                    </Badge>
-                                   <div
-                                className="prose prose-sm max-w-none text-red-700 font-bold line-through"
-                                style={{
-                                  fontFamily: "var(--font-document)",
-                                  fontSize: "1.125rem",
-                                  lineHeight: "1.8"
-                                }}
-                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentSnapshot?.deletedSectionContent || displayedContent) }} />
+                                   <HistoryTranslatableContent
+                                   content={currentSnapshot?.deletedSectionContent || displayedContent}
+                                   documentId={documentId}
+                                   sourceEntityId={`${section.id}_v${currentVersionIndex}_deleted`}
+                                   showTranslated={isTranslateAllActive}
+                                   className="prose prose-sm max-w-none text-red-700 font-bold line-through"
+                                   style={{
+                                   fontFamily: "var(--font-document)",
+                                   fontSize: "1.125rem",
+                                   lineHeight: "1.8"
+                                   }} />
                               
                                  </div> :
                             isDirectlyEdited ?
@@ -868,9 +878,12 @@ export default function DocumentCleanView() {
                                     <Badge className="mb-2 bg-amber-100 text-amber-800 text-xs">
                                       {language === 'he' ? '✏️ עריכה ישירה של מנהל' : language === 'ar' ? '✏️ تعديل مباشر من المسؤول' : '✏️ Direct Admin Edit'}
                                     </Badge>
-                                    <ChangeBlockDiffView
+                                    <HistoryTranslatableDiff
                                 originalContent={currentSnapshot?.oldContent || displayedContent}
-                                newContent={currentSnapshot?.newContent || displayedContent} />
+                                newContent={currentSnapshot?.newContent || displayedContent}
+                                documentId={documentId}
+                                sourceEntityIdBase={`${section.id}_v${currentVersionIndex}`}
+                                showTranslated={isTranslateAllActive} />
                               
                                   </div> :
                             isViewingHistory && isNewlyCreatedSection ?
@@ -882,14 +895,17 @@ export default function DocumentCleanView() {
                                     <Badge className="mb-2 bg-green-100 text-green-800 text-xs">
                                       {language === 'he' ? 'סעיף חדש - לחץ לצפייה בדיון' : language === 'ar' ? 'قسم جديد - انقر لعرض النقاش' : 'New Section - Click to view discussion'}
                                     </Badge>
-                                    <div
+                                    <HistoryTranslatableContent
+                                content={currentSnapshot?.newSectionContent || displayedContent}
+                                documentId={documentId}
+                                sourceEntityId={`${section.id}_v${currentVersionIndex}_new`}
+                                showTranslated={isTranslateAllActive}
                                 className="prose prose-sm max-w-none text-green-800"
                                 style={{
                                   fontFamily: "var(--font-document)",
                                   fontSize: "1.125rem",
                                   lineHeight: "1.8"
-                                }}
-                                dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentSnapshot?.newSectionContent || displayedContent) }} />
+                                }} />
                               
                                   </div> :
                             isViewingHistory && hasChanged ?
@@ -904,12 +920,31 @@ export default function DocumentCleanView() {
                                       {currentSnapshot?.suggestionId && (language === 'he' ? ' - לחץ לצפייה בדיון' : language === 'ar' ? ' - انقر لعرض النقاش' : ' - Click to view discussion')}
                                     </Badge>
                                   </div>
-                                  <ChangeBlockDiffView
+                                  <HistoryTranslatableDiff
                                 originalContent={oldContent}
-                                newContent={currentSnapshot?.newContent} />
+                                newContent={currentSnapshot?.newContent}
+                                documentId={documentId}
+                                sourceEntityIdBase={`${section.id}_v${currentVersionIndex}`}
+                                showTranslated={isTranslateAllActive} />
                               
                                 </div> :
 
+                            isViewingHistory ? (
+                              <HistoryTranslatableContent
+                                content={displayedContent}
+                                documentId={documentId}
+                                sourceEntityId={`${section.id}_v${currentVersionIndex}_display`}
+                                showTranslated={isTranslateAllActive}
+                                className={`text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none cursor-pointer hover:bg-slate-50/50 p-2 rounded transition-colors ${openingSectionId === section.id ? 'opacity-60 pointer-events-none' : ''}`}
+                                onClick={() => openSectionDiscussion(section)}
+                                style={{
+                                  fontFamily: "var(--font-document)",
+                                  fontSize: "1.125rem",
+                                  lineHeight: "1.8",
+                                  letterSpacing: "0.01em"
+                                }}
+                              />
+                            ) : (
                             <>
                                     <div
                                 className={`text-slate-700 leading-relaxed prose prose-sm md:prose prose-slate max-w-none cursor-pointer hover:bg-slate-50/50 p-2 rounded transition-colors ${openingSectionId === section.id ? 'opacity-60 pointer-events-none' : ''}`}
@@ -963,6 +998,7 @@ export default function DocumentCleanView() {
                                       </Button>
                               }
                                   </>
+                            )
                             }
                                 </div>
                               </div>
