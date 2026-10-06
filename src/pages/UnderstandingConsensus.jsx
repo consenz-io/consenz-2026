@@ -17,7 +17,17 @@ export default function UnderstandingConsensus() {
   const { t, isRTL, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
-  const returnUrl = searchParams.get('returnUrl');
+  // Validate returnUrl — same-origin relative paths only. Prevents
+  // javascript:/data: URI DOM-XSS and open-redirect via attacker-crafted links.
+  const rawReturnUrl = searchParams.get('returnUrl');
+  const isSafeUrl = (url) => {
+    if (typeof url !== 'string') return false;
+    const trimmed = url.trim().toLowerCase();
+    if (trimmed.includes('\\')) return false;
+    if (trimmed.startsWith('/') && !trimmed.startsWith('//')) return true;
+    return false;
+  };
+  const returnUrl = isSafeUrl(rawReturnUrl) ? rawReturnUrl : null;
 
   const { data: document, isLoading: docLoading } = useQuery({
     queryKey: ['document', documentId],
