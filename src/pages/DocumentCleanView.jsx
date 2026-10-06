@@ -929,7 +929,7 @@ export default function DocumentCleanView() {
                               
                                 </div> :
 
-                            isViewingHistory ? (
+                            isViewingHistory && !(isTranslateAllActive && displayedContent === section.content && translatedSections[section.id]) ? (
                               <HistoryTranslatableContent
                                 content={displayedContent}
                                 documentId={documentId}

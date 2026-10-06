@@ -37,13 +37,16 @@ export function HistoryTranslatableContent({
     globalShowTranslated: showTranslated,
   });
 
-  const initiated = useRef(false);
+  // Track which content we've already requested — reset whenever the content
+  // changes (the component stays mounted while browsing between versions).
+  const initiatedFor = useRef(null);
+  const requestKey = `${sourceEntityId}|${content}`;
   useEffect(() => {
-    if (showTranslated && needsTranslation && !translatedContent && !isTranslating && !initiated.current) {
-      initiated.current = true;
+    if (showTranslated && needsTranslation && !translatedContent && !isTranslating && initiatedFor.current !== requestKey) {
+      initiatedFor.current = requestKey;
       translate();
     }
-  }, [showTranslated, needsTranslation, translatedContent, isTranslating, translate]);
+  }, [showTranslated, needsTranslation, translatedContent, isTranslating, translate, requestKey]);
 
   const isValid = translatedContent && translatedContent.length > 1;
   const displayContent = showTranslated && isValid ? translatedContent : content;
@@ -100,17 +103,18 @@ export function HistoryTranslatableDiff({
     globalShowTranslated: showTranslated,
   });
 
-  const initiated = useRef(false);
+  const initiatedFor = useRef(null);
+  const requestKey = `${sourceEntityIdBase}|${originalContent}|${newContent}`;
   useEffect(() => {
-    if (!showTranslated || initiated.current) return;
-    initiated.current = true;
+    if (!showTranslated || initiatedFor.current === requestKey) return;
+    initiatedFor.current = requestKey;
     if (oldTranslation.needsTranslation && !oldTranslation.translatedContent && !oldTranslation.isTranslating) {
       oldTranslation.translate();
     }
     if (newTranslation.needsTranslation && !newTranslation.translatedContent && !newTranslation.isTranslating) {
       newTranslation.translate();
     }
-  }, [showTranslated]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [showTranslated, requestKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const oldValid = oldTranslation.translatedContent && oldTranslation.translatedContent.length > 1;
   const newValid = newTranslation.translatedContent && newTranslation.translatedContent.length > 1;
