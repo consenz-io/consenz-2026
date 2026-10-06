@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { authorizeInternalOrUser } from '../../shared/authGate.ts';
-import { buildTranslations } from '../../shared/notificationTranslations.ts';
+import { buildTranslations, t } from '../../shared/notificationTranslations.ts';
 
 Deno.serve(async (req) => {
   try {

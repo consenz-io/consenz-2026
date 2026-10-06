@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { calculateContributors, calculateActiveVoterCount, computeConsensusUpdate } from '../../shared/consensusLogic.ts';
-import { buildTranslations } from '../../shared/notificationTranslations.ts';
+import { buildTranslations, t } from '../../shared/notificationTranslations.ts';
+import { checkDocumentAccess } from '../../shared/documentAuth.ts';
 
 // In-memory lock to prevent the same user voting on the same section concurrently
 const processingVotes = new Set();
