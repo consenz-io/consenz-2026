@@ -8,6 +8,7 @@ import { Download, Globe, Loader2, ArrowLeft, ArrowRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
+import { needsTranslationHighlight, TRANSLATE_HIGHLIGHT_CLASS } from "@/components/document/translateHighlight";
 import ChangeBlockDiffView from "@/components/document/ChangeBlockDiffView";
 import { HistoryTranslatableContent, HistoryTranslatableDiff } from "@/components/document/HistoryTranslatableContent";
 import DocumentTitleHeading from "@/components/document/DocumentTitleHeading";
@@ -648,7 +649,7 @@ export default function DocumentCleanView() {
                   }
                 }}
                 disabled={translatingAll}
-                className="hidden md:flex"
+                className={`hidden md:flex ${needsTranslationHighlight(document, language) && !(showTranslatedDoc || Object.values(showTranslatedTopics).some(Boolean) || Object.values(showTranslatedSections).some(Boolean)) ? TRANSLATE_HIGHLIGHT_CLASS : ''}`}
               >
                 {translatingAll ? (
                   <>

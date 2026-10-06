@@ -24,6 +24,8 @@ import FloatingSuggestionNav from "../components/document/FloatingSuggestionNav"
 import CurrentVersionButton from "../components/document/CurrentVersionButton";
 import DocumentDiscussionButton from "../components/document/DocumentDiscussionButton";
 import CurrentVersionModal from "../components/document/CurrentVersionModal";
+import TranslateAllButton from "../components/document/TranslateAllButton";
+import { needsTranslationHighlight } from "../components/document/translateHighlight";
 
 // Lazy load heavy modals
 const CreateSuggestionModal = React.lazy(() => import("../components/document/CreateSuggestionModal"));
@@ -557,12 +559,17 @@ export default function DocumentView() {
                   count={documentComments.length}
                   onClick={() => setShowDescriptionComments(!showDescriptionComments)}
                 />
-                <CurrentVersionButton
-                  language={language}
-                  isRTL={isRTL}
-                  lastVersionDate={lastVersionDate}
-                  onClick={() => setShowCurrentVersion(true)}
-                />
+                <div className="flex items-center gap-2 flex-wrap">
+                  {needsTranslationHighlight(document, language) && (
+                    <TranslateAllButton document={document} />
+                  )}
+                  <CurrentVersionButton
+                    language={language}
+                    isRTL={isRTL}
+                    lastVersionDate={lastVersionDate}
+                    onClick={() => setShowCurrentVersion(true)}
+                  />
+                </div>
               </div>
             </div>
 

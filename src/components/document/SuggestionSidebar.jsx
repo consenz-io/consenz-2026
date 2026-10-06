@@ -475,7 +475,7 @@ export default function SuggestionSidebar({
             <h2 className="font-semibold text-slate-900 truncate">{suggestion.title}</h2>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <TranslateAllButton />
+            <TranslateAllButton document={document || parentDocument} />
             <Link to={`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${suggestionId}`}>
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                 <ExternalLink className="w-4 h-4" />

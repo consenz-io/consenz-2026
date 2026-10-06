@@ -364,6 +364,27 @@ button:focus-visible {
   border-radius: 8px;
 }
 
+/* Translate All button highlight — draws attention when the document is
+   written in a language different from the UI/system language. */
+@keyframes translate-all-highlight-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.45);
+    border-color: #3b82f6;
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.2), 0 0 18px rgba(59, 130, 246, 0.4);
+    border-color: #2563eb;
+  }
+}
+
+.translate-all-highlight {
+  animation: translate-all-highlight-pulse 1.8s ease-in-out infinite;
+  border-color: #3b82f6 !important;
+  color: #1d4ed8 !important;
+  background-color: #eff6ff !important;
+  font-weight: 700 !important;
+}
+
 /* Tutorial mobile: add scroll space at the bottom so target elements can be scrolled above the sheet */
 body.tutorial-mobile-active #main-content > div {
   padding-bottom: 340px !important;

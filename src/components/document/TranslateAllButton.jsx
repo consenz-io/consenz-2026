@@ -3,17 +3,23 @@ import { Button } from "@/components/ui/button";
 import { Languages, Loader2 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { useDocumentTranslation } from "./TranslationContext";
+import { needsTranslationHighlight, TRANSLATE_HIGHLIGHT_CLASS } from "./translateHighlight";
 
 /**
  * "Translate All" toggle button for views that use TranslatableContent
  * components inside a TranslationProvider. When activated, every
  * TranslatableContent in the tree auto-translates via the
  * useVersionTranslation hook's globalShowTranslated effect.
+ *
+ * Pass the `document` to automatically highlight the button when the document
+ * is written in a language different from the UI language.
  */
-export default function TranslateAllButton({ className = "" }) {
+export default function TranslateAllButton({ className = "", document }) {
   const { t, language } = useLanguage();
   const { globalShowTranslated, setGlobalShowTranslated, isTranslatingAll } =
     useDocumentTranslation();
+
+  const highlight = needsTranslationHighlight(document, language) && !globalShowTranslated;
 
   const label = globalShowTranslated
     ? language === "he"
@@ -32,7 +38,7 @@ export default function TranslateAllButton({ className = "" }) {
         e.stopPropagation();
         setGlobalShowTranslated(!globalShowTranslated);
       }}
-      className={`gap-1.5 ${className}`}
+      className={`gap-1.5 ${highlight ? TRANSLATE_HIGHLIGHT_CLASS : ''} ${className}`}
       disabled={isTranslatingAll}
     >
       {isTranslatingAll ? (

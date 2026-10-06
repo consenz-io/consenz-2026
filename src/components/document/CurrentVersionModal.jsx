@@ -15,6 +15,7 @@ import { useMutation } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { parseUserDate } from "@/components/utils/dateFormatter";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import { needsTranslationHighlight, TRANSLATE_HIGHLIGHT_CLASS } from "./translateHighlight";
 
 const SERIF = "var(--font-document)";
 
@@ -437,6 +438,7 @@ export default function CurrentVersionModal({
                 size="sm"
                 onClick={handleToggleTranslateAll}
                 disabled={translatingAll}
+                className={needsTranslationHighlight(document, language) && !isShowingTranslations ? TRANSLATE_HIGHLIGHT_CLASS : ''}
               >
                 {translatingAll ? (
                   <>
