@@ -23,6 +23,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import SectionDiff from "./SectionDiff";
 import CommentsSection from "./CommentsSection";
 import TranslatableContent from "./TranslatableContent";
+import VersionTranslatableContent from "./VersionTranslatableContent";
 import VotingProgressSection from "./VotingProgressSection";
 import SectionCommentsFooter from "./SectionCommentsFooter";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
@@ -374,18 +375,13 @@ export default function SectionVersionCarousel({
               newContent={currentVer?.content}
               documentId={documentId}
               sectionId={sectionId}
+              originalVersion={prevVer}
+              newVersion={currentVer}
             />
           ) : (
-            <div
-              className="prose prose-sm max-w-none text-slate-700 p-3 bg-slate-50 rounded-lg"
-              style={{
-                direction: isRTL ? "rtl" : "ltr",
-                textAlign: isRTL ? "right" : "left",
-                fontFamily: "var(--font-document)",
-                fontSize: "1rem",
-                lineHeight: "1.75",
-              }}
-              dangerouslySetInnerHTML={{ __html: sanitizeHtml(currentVer?.content) }}
+            <VersionTranslatableContent
+              version={currentVer}
+              documentId={documentId}
             />
           )}
 
