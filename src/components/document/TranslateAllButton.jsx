@@ -14,7 +14,7 @@ import { needsTranslationHighlight, TRANSLATE_HIGHLIGHT_CLASS } from "./translat
  * Pass the `document` to automatically highlight the button when the document
  * is written in a language different from the UI language.
  */
-export default function TranslateAllButton({ className = "", document }) {
+export default function TranslateAllButton({ className = "", document, onActivate }) {
   const { t, language } = useLanguage();
   const { globalShowTranslated, setGlobalShowTranslated, isTranslatingAll } =
     useDocumentTranslation();
@@ -36,7 +36,13 @@ export default function TranslateAllButton({ className = "", document }) {
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        setGlobalShowTranslated(!globalShowTranslated);
+        // Turning ON: use batch handler if provided (pre-populates cache in 1
+        // request); otherwise just toggle. Turning OFF: always just toggle.
+        if (!globalShowTranslated && onActivate) {
+          onActivate();
+        } else {
+          setGlobalShowTranslated(!globalShowTranslated);
+        }
       }}
       className={`gap-1.5 ${highlight ? TRANSLATE_HIGHLIGHT_CLASS : ''} ${className}`}
       disabled={isTranslatingAll}

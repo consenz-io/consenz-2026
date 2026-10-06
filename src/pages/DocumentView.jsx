@@ -24,7 +24,7 @@ import FloatingSuggestionNav from "../components/document/FloatingSuggestionNav"
 import CurrentVersionButton from "../components/document/CurrentVersionButton";
 import DocumentDiscussionButton from "../components/document/DocumentDiscussionButton";
 import CurrentVersionModal from "../components/document/CurrentVersionModal";
-import TranslateAllButton from "../components/document/TranslateAllButton";
+import DocumentTranslateAllButton from "../components/document/DocumentTranslateAllButton";
 import { needsTranslationHighlight } from "../components/document/translateHighlight";
 
 // Lazy load heavy modals
@@ -578,7 +578,7 @@ export default function DocumentView() {
                 />
                 <div className="flex items-center gap-2 flex-wrap">
                   {needsTranslationHighlight(document, language) && (
-                    <TranslateAllButton document={document} />
+                    <DocumentTranslateAllButton document={document} topics={topics} sections={sections} />
                   )}
                   <CurrentVersionButton
                     language={language}
